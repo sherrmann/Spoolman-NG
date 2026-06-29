@@ -62,25 +62,27 @@ def _compile_json_array_element_default(element: _JsonArrayElement, compiler: ob
     return f"JSON_EXTRACT({col_sql}, '$[{element.index}]')"
 
 
+# Single source of truth: each entity type -> (its extra-field table, the owning-entity id column).
+_ENTITY_FIELD_TABLES: dict[EntityType, tuple[type[models.Base], InstrumentedAttribute[int]]] = {
+    EntityType.spool: (models.SpoolField, models.SpoolField.spool_id),
+    EntityType.filament: (models.FilamentField, models.FilamentField.filament_id),
+    EntityType.vendor: (models.VendorField, models.VendorField.vendor_id),
+}
+
+
 def _get_field_table_for_entity(entity_type: EntityType) -> type[models.Base]:
     """Map an entity type to its extra-field table."""
-    if entity_type == EntityType.spool:
-        return models.SpoolField
-    if entity_type == EntityType.filament:
-        return models.FilamentField
-    if entity_type == EntityType.vendor:
-        return models.VendorField
-    raise ValueError(f"Unknown entity type: {entity_type}")
+    try:
+        return _ENTITY_FIELD_TABLES[entity_type][0]
+    except KeyError:
+        raise ValueError(f"Unknown entity type: {entity_type}") from None
 
 
 def _get_entity_id_column(field_table: type[models.Base]) -> InstrumentedAttribute[int]:
     """Map an extra-field table to its owning entity id column."""
-    if field_table == models.SpoolField:
-        return models.SpoolField.spool_id
-    if field_table == models.FilamentField:
-        return models.FilamentField.filament_id
-    if field_table == models.VendorField:
-        return models.VendorField.vendor_id
+    for table, id_column in _ENTITY_FIELD_TABLES.values():
+        if field_table == table:
+            return id_column
     raise ValueError(f"Unknown field table: {field_table}")
 
 
