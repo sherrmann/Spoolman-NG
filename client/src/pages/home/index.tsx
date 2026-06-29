@@ -9,12 +9,14 @@ import {
   WarningOutlined,
 } from "@ant-design/icons";
 import { useList, useNavigation, useTranslate } from "@refinedev/core";
-import { Button, Tabs, theme, Tooltip } from "antd";
+import { Button, Result, Tabs, theme, Tooltip } from "antd";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import utc from "dayjs/plugin/utc";
+import { useContext } from "react";
 import { Trans } from "react-i18next";
 import { Link, useNavigate } from "react-router";
+import { ColorModeContext } from "../../contexts/color-mode";
 import { formatWeight } from "../../utils/parsing";
 import { useCurrencyFormatter } from "../../utils/settings";
 import { IFilament } from "../filaments/model";
@@ -29,7 +31,8 @@ const { useToken } = theme;
 // Dark surface palette — works on top of the app's existing dark background
 export const Home = () => {
   const { token } = useToken();
-  const isDark = token.colorBgBase !== "#fff" && token.colorBgBase !== "#ffffff";
+  const { mode } = useContext(ColorModeContext);
+  const isDark = mode === "dark";
 
   const S = isDark
     ? { lowest: "#1a1a1a", low: "#1f1f1f", base: "#252525", high: "#2a2a2a", highest: "#313131" }
@@ -56,6 +59,7 @@ export const Home = () => {
   const allSpools = spoolsAll.result?.data ?? [];
   const hasSpools = allSpools.length > 0;
   const isLoading = spoolsAll.query.isLoading;
+  const isError = spoolsAll.query.isError;
 
   // --- Calculations ---
   const totalRemainingWeight = allSpools.reduce(
@@ -153,6 +157,23 @@ export const Home = () => {
     return (
       <div className="dashboard" style={{ paddingTop: 64, textAlign: "center", opacity: 0.3 }}>
         Loading...
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="dashboard">
+        <Result
+          status="error"
+          title={t("home.load_error_title", "Failed to load spools")}
+          subTitle={t("home.load_error_desc", "There was a problem loading your spools. Please try again.")}
+          extra={
+            <Button type="primary" onClick={() => spoolsAll.query.refetch()}>
+              {t("buttons.refresh")}
+            </Button>
+          }
+        />
       </div>
     );
   }

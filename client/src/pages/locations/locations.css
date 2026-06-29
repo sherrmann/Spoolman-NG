@@ -25,14 +25,6 @@
   cursor: -webkit-grab;
 }
 
-.loc-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-
 .loc-container h3 {
   display: flex;
   align-items: center;
@@ -42,7 +34,7 @@
   width: 100%;
   margin: 0;
   padding: 12px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(128, 128, 128, 0.2);
 }
 
 .loc-container h3 span {
@@ -83,18 +75,7 @@
   flex-direction: column;
   gap: 6px;
   min-height: 60px;
-  max-height: 500px;
-  overflow-y: auto;
   flex: 1;
-}
-
-.loc-container .loc-spools::-webkit-scrollbar {
-  width: 4px;
-}
-
-.loc-container .loc-spools::-webkit-scrollbar-thumb {
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.1);
 }
 
 .loc-container .spool {
@@ -154,23 +135,6 @@
   height: 100%;
   border-radius: 2px;
   transition: width 0.3s ease;
-}
-
-.newLocContainer {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 120px;
-  border-radius: 12px;
-  border: 2px dashed rgba(255, 255, 255, 0.1);
-  transition:
-    border-color 0.2s ease,
-    background 0.2s ease;
-}
-
-.newLocContainer:hover {
-  border-color: rgba(255, 255, 255, 0.25);
-  background: rgba(255, 255, 255, 0.02);
 }
 
 .loc-empty-state {

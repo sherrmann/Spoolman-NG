@@ -2,6 +2,7 @@ import { FileOutlined, HighlightOutlined, UserOutlined } from "@ant-design/icons
 import { List as RefineList } from "@refinedev/antd";
 import { useTranslate } from "@refinedev/core";
 import { Card, List, theme } from "antd";
+import Title from "antd/es/typography/Title";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { Trans } from "react-i18next";
@@ -46,7 +47,7 @@ export const Help = () => {
             i18nKey={"help.description"}
             components={{
               p: <p style={{ marginBottom: 12, lineHeight: 1.7 }} />,
-              title: <span style={{ display: "none" }} />,
+              title: <Title level={4} />,
               filamentCreateLink: <Link to="/filament/create" />,
               spoolCreateLink: <Link to="/spool/create" />,
               vendorCreateLink: <Link to="/vendor/create" />,
