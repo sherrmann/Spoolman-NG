@@ -5,7 +5,7 @@ import TextArea from "antd/es/input/TextArea";
 import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { EntityType, useGetFields } from "../../utils/queryFields";
-import { useGetSetting } from "../../utils/querySettings";
+import { parseStringSettingValue, useGetSetting } from "../../utils/querySettings";
 import { useSavedState } from "../../utils/saveload";
 import { useGetSpoolsByIds } from "../spools/functions";
 import { ISpool } from "../spools/model";
@@ -26,10 +26,8 @@ interface SpoolQRCodePrintingDialog {
 const SpoolQRCodePrintingDialog = ({ spoolIds }: SpoolQRCodePrintingDialog) => {
   const t = useTranslate();
   const baseUrlSetting = useGetSetting("base_url");
-  const baseUrlRoot =
-    baseUrlSetting.data?.value !== undefined && JSON.parse(baseUrlSetting.data?.value) !== ""
-      ? JSON.parse(baseUrlSetting.data?.value)
-      : window.location.origin;
+  const baseUrl = parseStringSettingValue(baseUrlSetting.data?.value);
+  const baseUrlRoot = baseUrl !== "" ? baseUrl : window.location.origin;
   const [messageApi, contextHolder] = message.useMessage();
   const [useHTTPUrl, setUseHTTPUrl] = useSavedState("print-useHTTPUrl", false);
 
@@ -235,12 +233,15 @@ Spool Weight: {filament.spool_weight} g
       <QRCodePrintingDialog
         printSettings={curPreset.labelSettings}
         setPrintSettings={(newSettings) => {
-          curPreset.labelSettings = newSettings;
-          updateCurrentPreset(curPreset);
+          updateCurrentPreset({ ...curPreset, labelSettings: newSettings });
         }}
         baseUrlRoot={baseUrlRoot}
         useHTTPUrl={useHTTPUrl}
         setUseHTTPUrl={setUseHTTPUrl}
+        previewValues={{
+          default: "WEB+SPOOLMAN:S-{id}",
+          url: `${baseUrlRoot}/spool/show/{id}`,
+        }}
         extraSettingsStart={
           <>
             <Form.Item label={t("printing.generic.settings")}>
@@ -292,8 +293,15 @@ Spool Weight: {filament.spool_weight} g
               <Input
                 value={curPreset.labelSettings.printSettings?.name}
                 onChange={(e) => {
-                  curPreset.labelSettings.printSettings.name = e.target.value;
-                  updateCurrentPreset(curPreset);
+                  // Triple-spread: name is 3 levels deep; each level must be copied to
+                  // avoid mutating the preset array element referenced by curPreset.
+                  updateCurrentPreset({
+                    ...curPreset,
+                    labelSettings: {
+                      ...curPreset.labelSettings,
+                      printSettings: { ...curPreset.labelSettings.printSettings, name: e.target.value },
+                    },
+                  });
                 }}
               />
             </Form.Item>
@@ -321,8 +329,7 @@ Spool Weight: {filament.spool_weight} g
                 value={template}
                 rows={8}
                 onChange={(newValue) => {
-                  curPreset.template = newValue.target.value;
-                  updateCurrentPreset(curPreset);
+                  updateCurrentPreset({ ...curPreset, template: newValue.target.value });
                 }}
               />
             </Form.Item>

@@ -100,9 +100,12 @@ const SpoolSelectModal = ({ description, onContinue }: Props) => {
   };
 
   // State for the select/unselect all checkbox
-  const isAllFilteredSelected = dataSource.every((spool) => selectedItems.includes(spool.id));
+  // Memoised Set for O(1) membership checks — avoids O(n²) when dataSource and
+  // selectedItems are both large (many loaded spools, many already selected).
+  const selectedSet = useMemo(() => new Set(selectedItems), [selectedItems]);
+  const isAllFilteredSelected = dataSource.length > 0 && dataSource.every((spool) => selectedSet.has(spool.id));
   const isSomeButNotAllFilteredSelected =
-    dataSource.some((spool) => selectedItems.includes(spool.id)) && !isAllFilteredSelected;
+    dataSource.some((spool) => selectedSet.has(spool.id)) && !isAllFilteredSelected;
 
   const commonProps = {
     t,
@@ -126,12 +129,12 @@ const SpoolSelectModal = ({ description, onContinue }: Props) => {
           tableLayout="auto"
           dataSource={dataSource}
           pagination={false}
-          scroll={{ y: 200 }}
+          scroll={{ x: "max-content", y: 400 }}
           columns={removeUndefined([
             {
               width: 50,
               render: (_, item: ISpool) => (
-                <Checkbox checked={selectedItems.includes(item.id)} onChange={() => handleSelectItem(item.id)} />
+                <Checkbox checked={selectedSet.has(item.id)} onChange={() => handleSelectItem(item.id)} />
               ),
             },
             SortedColumn({

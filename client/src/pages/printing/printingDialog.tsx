@@ -17,6 +17,7 @@ import {
 import * as htmlToImage from "html-to-image";
 import { ReactElement, useRef } from "react";
 import { useReactToPrint } from "react-to-print";
+import { formatNumberOnUserInput, numberParser } from "../../utils/parsing";
 import { useSavedState } from "../../utils/saveload";
 import { PrintSettings } from "./printing";
 
@@ -178,13 +179,26 @@ const PrintingDialog = ({
     );
   });
 
-  const saveAsImage = () => {
-    const hasPrinted: Element[] = [];
+  const getPrintItems = () => {
+    const root = contentRef.current ?? document;
+    return Array.from(root.getElementsByClassName("print-qrcode-item"));
+  };
 
-    Array.from(document.getElementsByClassName("print-qrcode-item")).forEach(async (item) => {
+  const saveAsImage = async () => {
+    const hasPrinted: Element[] = [];
+    const items = getPrintItems();
+
+    for (const item of items) {
       // Prevent printing copies
+      let isDuplicate = false;
       for (let i = 0; i < hasPrinted.length; i += 1) {
-        if (item.isEqualNode(hasPrinted[i])) return;
+        if (item.isEqualNode(hasPrinted[i])) {
+          isDuplicate = true;
+          break;
+        }
+      }
+      if (isDuplicate) {
+        continue;
       }
       hasPrinted.push(item);
 
@@ -199,7 +213,7 @@ const PrintingDialog = ({
       link.href = url;
       link.download = "spoolmanlabel.png";
       link.click();
-    });
+    }
   };
 
   return (
@@ -368,6 +382,8 @@ const PrintingDialog = ({
                     step={0.01}
                     style={{ margin: "0 16px" }}
                     value={previewScale}
+                    formatter={formatNumberOnUserInput}
+                    parser={numberParser}
                     onChange={(value) => {
                       setPreviewScale(value ?? 0.1);
                     }}
@@ -415,6 +431,8 @@ const PrintingDialog = ({
                         value={customPaperSize.width}
                         min={0.1}
                         addonAfter="mm"
+                        formatter={formatNumberOnUserInput}
+                        parser={numberParser}
                         onChange={(value) => {
                           customPaperSize.width = value ?? 0;
                           printSettings.customPaperSize = customPaperSize;
@@ -430,6 +448,8 @@ const PrintingDialog = ({
                         value={customPaperSize.height}
                         min={0.1}
                         addonAfter="mm"
+                        formatter={formatNumberOnUserInput}
+                        parser={numberParser}
                         onChange={(value) => {
                           customPaperSize.height = value ?? 0;
                           printSettings.customPaperSize = customPaperSize;
@@ -515,6 +535,8 @@ const PrintingDialog = ({
                         style={{ margin: "0 16px" }}
                         value={margin.left}
                         addonAfter="mm"
+                        formatter={formatNumberOnUserInput}
+                        parser={numberParser}
                         onChange={(value) => {
                           margin.left = value ?? 0;
                           printSettings.margin = margin;
@@ -546,6 +568,8 @@ const PrintingDialog = ({
                         style={{ margin: "0 16px" }}
                         value={margin.top}
                         addonAfter="mm"
+                        formatter={formatNumberOnUserInput}
+                        parser={numberParser}
                         onChange={(value) => {
                           margin.top = value ?? 0;
                           printSettings.margin = margin;
@@ -577,6 +601,8 @@ const PrintingDialog = ({
                         style={{ margin: "0 16px" }}
                         value={margin.right}
                         addonAfter="mm"
+                        formatter={formatNumberOnUserInput}
+                        parser={numberParser}
                         onChange={(value) => {
                           margin.right = value ?? 0;
                           printSettings.margin = margin;
@@ -608,6 +634,8 @@ const PrintingDialog = ({
                         style={{ margin: "0 16px" }}
                         value={margin.bottom}
                         addonAfter="mm"
+                        formatter={formatNumberOnUserInput}
+                        parser={numberParser}
                         onChange={(value) => {
                           margin.bottom = value ?? 0;
                           printSettings.margin = margin;
@@ -641,6 +669,8 @@ const PrintingDialog = ({
                         style={{ margin: "0 16px" }}
                         value={printerMargin.left}
                         addonAfter="mm"
+                        formatter={formatNumberOnUserInput}
+                        parser={numberParser}
                         onChange={(value) => {
                           printerMargin.left = value ?? 0;
                           printSettings.printerMargin = printerMargin;
@@ -672,6 +702,8 @@ const PrintingDialog = ({
                         style={{ margin: "0 16px" }}
                         value={printerMargin.top}
                         addonAfter="mm"
+                        formatter={formatNumberOnUserInput}
+                        parser={numberParser}
                         onChange={(value) => {
                           printerMargin.top = value ?? 0;
                           printSettings.printerMargin = printerMargin;
@@ -703,6 +735,8 @@ const PrintingDialog = ({
                         style={{ margin: "0 16px" }}
                         value={printerMargin.right}
                         addonAfter="mm"
+                        formatter={formatNumberOnUserInput}
+                        parser={numberParser}
                         onChange={(value) => {
                           printerMargin.right = value ?? 0;
                           printSettings.printerMargin = printerMargin;
@@ -734,6 +768,8 @@ const PrintingDialog = ({
                         style={{ margin: "0 16px" }}
                         value={printerMargin.bottom}
                         addonAfter="mm"
+                        formatter={formatNumberOnUserInput}
+                        parser={numberParser}
                         onChange={(value) => {
                           printerMargin.bottom = value ?? 0;
                           printSettings.printerMargin = printerMargin;
@@ -766,6 +802,8 @@ const PrintingDialog = ({
                         style={{ margin: "0 16px" }}
                         value={spacing.horizontal}
                         addonAfter="mm"
+                        formatter={formatNumberOnUserInput}
+                        parser={numberParser}
                         onChange={(value) => {
                           spacing.horizontal = value ?? 0;
                           printSettings.spacing = spacing;
@@ -797,6 +835,8 @@ const PrintingDialog = ({
                         style={{ margin: "0 16px" }}
                         value={spacing.vertical}
                         addonAfter="mm"
+                        formatter={formatNumberOnUserInput}
+                        parser={numberParser}
                         onChange={(value) => {
                           spacing.vertical = value ?? 0;
                           printSettings.spacing = spacing;

@@ -12,6 +12,7 @@ from sqlalchemy.orm import contains_eager, joinedload
 
 from spoolman.api.v1.models import EventType, Filament, FilamentEvent, MultiColorDirection
 from spoolman.database import models, vendor
+from spoolman.database.extra_field_query import apply_extra_field_filters_and_sort
 from spoolman.database.utils import (
     SortOrder,
     add_where_clause_int_in,
@@ -21,6 +22,7 @@ from spoolman.database.utils import (
     parse_nested_field,
 )
 from spoolman.exceptions import ItemDeleteError, ItemNotFoundError
+from spoolman.extra_field_registry import EntityType
 from spoolman.math import delta_e, hex_to_rgb, rgb_to_lab
 from spoolman.ws import websocket_manager
 
@@ -92,16 +94,63 @@ async def get_by_id(db: AsyncSession, filament_id: int) -> models.Filament:
     return filament
 
 
+def _build_search_filters(search: str) -> list:
+    """Build search filter conditions for filament search.
+
+    Supports comma-separated terms, exact matching (quoted strings), fuzzy matching,
+    and numeric ID matching.
+
+    Args:
+        search: Comma-separated search query with optional quoted exact-match terms.
+
+    Returns:
+        List of SQLAlchemy filter conditions to be combined with OR.
+
+    """
+    search_conditions = []
+    for value_part in search.split(","):
+        if len(value_part) == 0:
+            continue
+
+        if value_part[0] == '"' and value_part[-1] == '"':
+            exact_value = value_part[1:-1]
+            search_conditions.extend(
+                [
+                    models.Vendor.name == exact_value,
+                    models.Filament.name == exact_value,
+                    models.Filament.material == exact_value,
+                    models.Filament.article_number == exact_value,
+                ],
+            )
+            if exact_value.lstrip("-").isdigit():
+                search_conditions.append(models.Filament.id == int(exact_value))
+        else:
+            fuzzy_value = f"%{value_part}%"
+            search_conditions.extend(
+                [
+                    models.Vendor.name.ilike(fuzzy_value),
+                    models.Filament.name.ilike(fuzzy_value),
+                    models.Filament.material.ilike(fuzzy_value),
+                    models.Filament.article_number.ilike(fuzzy_value),
+                    sqlalchemy.cast(models.Filament.id, sqlalchemy.String).ilike(fuzzy_value),
+                ],
+            )
+
+    return search_conditions
+
+
 async def find(
     *,
     db: AsyncSession,
     ids: list[int] | None = None,
+    search: str | None = None,
     vendor_name: str | None = None,
     vendor_id: int | Sequence[int] | None = None,
     name: str | None = None,
     material: str | None = None,
     article_number: str | None = None,
     external_id: str | None = None,
+    extra_field_filters: dict[str, str] | None = None,
     sort_by: dict[str, SortOrder] | None = None,
     limit: int | None = None,
     offset: int = 0,
@@ -126,22 +175,38 @@ async def find(
     stmt = add_where_clause_str_opt(stmt, models.Filament.material, material)
     stmt = add_where_clause_str_opt(stmt, models.Filament.article_number, article_number)
     stmt = add_where_clause_str_opt(stmt, models.Filament.external_id, external_id)
+    if search is not None:
+        search_conditions = _build_search_filters(search)
+        if search_conditions:
+            stmt = stmt.where(sqlalchemy.or_(*search_conditions))
 
     total_count = None
 
-    if limit is not None:
-        total_count_stmt = stmt.with_only_columns(func.count(), maintain_column_froms=True)
-        total_count = (await db.execute(total_count_stmt)).scalar()
-
-        stmt = stmt.offset(offset).limit(limit)
+    stmt = await apply_extra_field_filters_and_sort(
+        db=db,
+        stmt=stmt,
+        base_obj=models.Filament,
+        entity_type=EntityType.filament,
+        extra_field_filters=extra_field_filters,
+        sort_by=sort_by,
+    )
 
     if sort_by is not None:
         for fieldstr, order in sort_by.items():
+            # Check if this is a custom field sort
+            if fieldstr.startswith("extra."):
+                continue
+
             field = parse_nested_field(models.Filament, fieldstr)
             if order == SortOrder.ASC:
                 stmt = stmt.order_by(field.asc())
             elif order == SortOrder.DESC:
                 stmt = stmt.order_by(field.desc())
+
+    if limit is not None:
+        total_count_stmt = stmt.with_only_columns(func.count(), maintain_column_froms=True).order_by(None)
+        total_count = (await db.execute(total_count_stmt)).scalar()
+        stmt = stmt.offset(offset).limit(limit)
 
     rows = await db.execute(
         stmt,
