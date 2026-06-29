@@ -30,7 +30,18 @@ def upgrade() -> None:
         )
     )
 
-    # 3. Recreate the table: drop spool_id, make filament_id NOT NULL with FK
+    # 3. Drop the spool_id foreign key explicitly. PostgreSQL/CockroachDB drop it
+    #    together with the column, but MySQL/MariaDB refuse to drop a column that a
+    #    foreign key still references. The FK was created unnamed, so reflect its
+    #    real name. SQLite has no named FK to drop and is handled by the batch
+    #    recreate below.
+    if connection.dialect.name != "sqlite":
+        inspector = sa.inspect(connection)
+        for fk in inspector.get_foreign_keys("calibration_session"):
+            if fk["constrained_columns"] == ["spool_id"] and fk.get("name"):
+                op.drop_constraint(fk["name"], "calibration_session", type_="foreignkey")
+
+    # 4. Drop spool_id, make filament_id NOT NULL with FK
     with op.batch_alter_table("calibration_session", recreate="auto") as batch_op:
         batch_op.drop_column("spool_id")
         batch_op.alter_column("filament_id", existing_type=sa.Integer(), nullable=False)
@@ -45,8 +56,14 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Move filament_id -> spool_id (data cannot be recovered; spool_id will be NULL)."""
+    connection = op.get_bind()
+
     with op.batch_alter_table("calibration_session") as batch_op:
         batch_op.add_column(sa.Column("spool_id", sa.Integer(), nullable=True))
+
+    # Drop the named filament_id FK before dropping its column (MySQL/MariaDB).
+    if connection.dialect.name != "sqlite":
+        op.drop_constraint("fk_calibration_session_filament_id", "calibration_session", type_="foreignkey")
 
     with op.batch_alter_table("calibration_session", recreate="auto") as batch_op:
         batch_op.drop_column("filament_id")
