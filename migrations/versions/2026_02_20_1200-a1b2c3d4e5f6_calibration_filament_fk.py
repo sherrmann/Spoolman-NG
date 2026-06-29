@@ -31,7 +31,7 @@ def upgrade() -> None:
     )
 
     # 3. Recreate the table: drop spool_id, make filament_id NOT NULL with FK
-    with op.batch_alter_table("calibration_session", recreate="always") as batch_op:
+    with op.batch_alter_table("calibration_session", recreate="auto") as batch_op:
         batch_op.drop_column("spool_id")
         batch_op.alter_column("filament_id", existing_type=sa.Integer(), nullable=False)
         batch_op.create_foreign_key(
@@ -48,7 +48,7 @@ def downgrade() -> None:
     with op.batch_alter_table("calibration_session") as batch_op:
         batch_op.add_column(sa.Column("spool_id", sa.Integer(), nullable=True))
 
-    with op.batch_alter_table("calibration_session", recreate="always") as batch_op:
+    with op.batch_alter_table("calibration_session", recreate="auto") as batch_op:
         batch_op.drop_column("filament_id")
         batch_op.create_foreign_key(
             "fk_calibration_session_spool_id",
