@@ -453,19 +453,13 @@ async def find_lot_numbers(
     return [row[0] for row in rows.all() if row[0] is not None]
 
 
-async def spool_changed(spool: models.Spool, typ: EventType, delta: Optional[dict] = None) -> None:
+async def spool_changed(spool: models.Spool, typ: EventType, delta: dict | None = None) -> None:
     """Notify websocket clients that a spool has changed."""
     try:
         spool = Spool.from_db(spool)
         await websocket_manager.send(
             ("spool", str(spool.id)),
-            SpoolEvent(
-                type=typ,
-                resource="spool",
-                date=datetime.utcnow(),
-                payload=spool,
-                payload_extras=delta 
-            ),
+            SpoolEvent(type=typ, resource="spool", date=datetime.utcnow(), payload=spool, payload_extras=delta),
         )
     except Exception:
         # Important to have a catch-all here since we don't want to stop the call if this fails.

@@ -129,7 +129,6 @@ export const FilamentCreate = (props: IResourceComponentsProps & CreateOrClonePr
     }
   };
 
-
   // Use useEffect to update the form's initialValues when the extra fields are loaded
   // This is necessary because the form is rendered before the extra fields are loaded
   useEffect(() => {
@@ -173,14 +172,19 @@ export const FilamentCreate = (props: IResourceComponentsProps & CreateOrClonePr
       />
       <Form {...formProps} layout="vertical">
         <Form.Item label={t("filament.form.import_3dfp")} help={t("filament.form.import_3dfp_help")}>
-          <Space.Compact style={{ width: '100%' }}>
+          <Space.Compact style={{ width: "100%" }}>
             <Input
               value={profileId}
               onChange={(e) => setProfileId(e.target.value)}
-              onPressEnter={(e) => { e.preventDefault(); fetchProfile(); }}
+              onPressEnter={(e) => {
+                e.preventDefault();
+                fetchProfile();
+              }}
               placeholder={t("filament.form.import_3dfp_placeholder")}
             />
-            <Button type="primary" onClick={fetchProfile}>{t("filament.buttons.fetch")}</Button>
+            <Button type="primary" onClick={fetchProfile}>
+              {t("filament.buttons.fetch")}
+            </Button>
           </Space.Compact>
         </Form.Item>
         <Form.Item

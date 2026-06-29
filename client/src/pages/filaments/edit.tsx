@@ -1,6 +1,19 @@
 import { Edit, useForm, useSelect } from "@refinedev/antd";
 import { HttpError, useTranslate, useApiUrl, useInvalidate } from "@refinedev/core";
-import { Alert, ColorPicker, DatePicker, Form, Input, InputNumber, message, Radio, Select, Typography, Space, Button } from "antd";
+import {
+  Alert,
+  ColorPicker,
+  DatePicker,
+  Form,
+  Input,
+  InputNumber,
+  message,
+  Radio,
+  Select,
+  Typography,
+  Space,
+  Button,
+} from "antd";
 import TextArea from "antd/es/input/TextArea";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
@@ -103,7 +116,7 @@ export const FilamentEdit = () => {
       multi_color_direction: filament.multi_color_direction,
       settings_extruder_temp: filament.extruder_temp || undefined,
       settings_bed_temp: filament.bed_temp || undefined,
-    } as any);
+    } as Parameters<NonNullable<typeof formProps.form>["setFieldsValue"]>[0]);
   };
 
   const fetchProfile = async () => {
@@ -171,14 +184,19 @@ export const FilamentEdit = () => {
           <DatePicker disabled showTime format="YYYY-MM-DD HH:mm:ss" />
         </Form.Item>
         <Form.Item label={t("filament.form.import_3dfp")} help={t("filament.form.import_3dfp_help")}>
-          <Space.Compact style={{ width: '100%' }}>
+          <Space.Compact style={{ width: "100%" }}>
             <Input
               value={profileId}
               onChange={(e) => setProfileId(e.target.value)}
-              onPressEnter={(e) => { e.preventDefault(); fetchProfile(); }}
+              onPressEnter={(e) => {
+                e.preventDefault();
+                fetchProfile();
+              }}
               placeholder={t("filament.form.import_3dfp_placeholder")}
             />
-            <Button type="primary" onClick={fetchProfile}>{t("filament.buttons.fetch")}</Button>
+            <Button type="primary" onClick={fetchProfile}>
+              {t("filament.buttons.fetch")}
+            </Button>
           </Space.Compact>
         </Form.Item>
         <Form.Item

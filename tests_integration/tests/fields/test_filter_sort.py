@@ -581,7 +581,6 @@ async def test_empty_filter(entity_type: str, random_filament: dict[str, Any]) -
         httpx.delete(f"{URL}/api/v1/{entity_type}/{id2}").raise_for_status()
 
 
-
 # ---------------------------------------------------------------------------
 # Invalid filter values → 400 (all entity types)
 # ---------------------------------------------------------------------------
