@@ -57,6 +57,10 @@ class Filament(Base):
         cascade="save-update, merge, delete, delete-orphan",
         lazy="joined",
     )
+    calibration_sessions: Mapped[list["CalibrationSession"]] = relationship(
+        back_populates="filament",
+        cascade="save-update, merge, delete, delete-orphan",
+    )
 
 
 class Spool(Base):
@@ -89,6 +93,7 @@ class CalibrationSession(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     registered: Mapped[datetime] = mapped_column()
     filament_id: Mapped[int] = mapped_column(ForeignKey("filament.id", ondelete="CASCADE"))
+    filament: Mapped["Filament"] = relationship(back_populates="calibration_sessions")
     status: Mapped[str] = mapped_column(String(32))
     started_at: Mapped[datetime | None] = mapped_column()
     completed_at: Mapped[datetime | None] = mapped_column()
