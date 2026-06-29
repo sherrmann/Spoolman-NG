@@ -21,14 +21,14 @@ def upgrade() -> None:
         "calibration_session",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("registered", sa.DateTime(), nullable=False),
-        sa.Column("spool_id", sa.Integer(), nullable=False),
+        sa.Column("filament_id", sa.Integer(), nullable=False),
         sa.Column("status", sa.String(length=32), nullable=False),
         sa.Column("started_at", sa.DateTime(), nullable=True),
         sa.Column("completed_at", sa.DateTime(), nullable=True),
         sa.Column("printer_name", sa.String(length=256), nullable=True),
         sa.Column("nozzle_diameter", sa.Float(), nullable=True),
         sa.Column("notes", sa.String(length=1024), nullable=True),
-        sa.ForeignKeyConstraint(["spool_id"], ["spool.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(["filament_id"], ["filament.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(op.f("ix_calibration_session_id"), "calibration_session", ["id"], unique=False)
