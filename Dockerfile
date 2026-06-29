@@ -81,6 +81,6 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
     port = os.getenv('SPOOLMAN_PORT', '8000'); \
     base = os.getenv('SPOOLMAN_BASE_PATH', '').strip('/'); \
     path = f'/{base}/api/v1/health'.replace('//', '/'); \
-    urllib.request.urlopen(f'http://localhost:{port}{path}')" || exit 1
+    urllib.request.urlopen(f'http://localhost:{port}{path}', timeout=5)" || exit 1
 
 ENTRYPOINT ["/home/app/spoolman/entrypoint.sh"]

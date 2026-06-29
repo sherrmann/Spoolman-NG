@@ -1,5 +1,5 @@
 import { Edit, useForm, useSelect } from "@refinedev/antd";
-import { HttpError, useTranslate, useApiUrl, useInvalidate } from "@refinedev/core";
+import { HttpError, useTranslate, useInvalidate } from "@refinedev/core";
 import {
   Alert,
   ColorPicker,
@@ -24,7 +24,7 @@ import { EntityType, useGetFields } from "../../utils/queryFields";
 import { getCurrencySymbol, useCurrency } from "../../utils/settings";
 import { IVendor } from "../vendors/model";
 import { getOrCreateVendorFromExternal } from "../vendors/functions";
-import { ExternalFilament } from "../../utils/queryExternalDB";
+import { ExternalFilament, fetchExternalProfile } from "../../utils/queryExternalDB";
 import { IFilament, IFilamentParsedExtras } from "./model";
 
 /*
@@ -42,7 +42,6 @@ export const FilamentEdit = () => {
   const currency = useCurrency();
   const [colorType, setColorType] = useState<"single" | "multi">("single");
   const [profileId, setProfileId] = useState("");
-  const apiUrl = useApiUrl();
   const invalidate = useInvalidate();
 
   const { formProps, saveButtonProps } = useForm<IFilament, HttpError, IFilament, IFilament>({
@@ -122,30 +121,7 @@ export const FilamentEdit = () => {
   const fetchProfile = async () => {
     if (!profileId) return;
     try {
-      const response = await fetch(`${apiUrl}/external/profile/${profileId}`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch profile");
-      }
-      const data = await response.json();
-
-      const filament: ExternalFilament = {
-        id: profileId,
-        manufacturer: data.manufacturer,
-        name: data.name,
-        material: data.material,
-        density: data.density,
-        diameter: data.diameter,
-        weight: data.weight,
-        spool_weight: data.spool_weight,
-        color_hex: data.color_hex,
-        color_hexes: data.color_hexes,
-        multi_color_direction: data.multi_color_direction,
-        extruder_temp: data.extruder_temp,
-        bed_temp: data.bed_temp,
-        translucent: false,
-        glow: false,
-      };
-
+      const filament = await fetchExternalProfile(profileId);
       await importFilament(filament);
       message.success(t("filament.form.import_3dfp_success"));
     } catch (err) {

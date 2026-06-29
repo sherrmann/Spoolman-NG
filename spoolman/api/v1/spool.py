@@ -16,7 +16,7 @@ from spoolman.database import spool
 from spoolman.database.database import get_db_session
 from spoolman.database.utils import parse_sort
 from spoolman.exceptions import ItemCreateError, SpoolMeasureError
-from spoolman.extra_fields import EntityType, get_extra_fields, validate_extra_field_dict
+from spoolman.extra_fields import EXTRA_FIELD_PREFIX, EntityType, get_extra_fields, validate_extra_field_dict
 from spoolman.ws import websocket_manager
 
 logger = logging.getLogger(__name__)
@@ -284,8 +284,8 @@ async def find(
     extra_field_filters = {}
     query_params = request.query_params
     for key, value in query_params.items():
-        if key.startswith("extra."):
-            field_key = key[6:]  # Remove "extra." prefix
+        if key.startswith(EXTRA_FIELD_PREFIX):
+            field_key = key[len(EXTRA_FIELD_PREFIX) :]  # Remove "extra." prefix
             extra_field_filters[field_key] = value
 
     try:

@@ -12,73 +12,54 @@ from sqlalchemy.sql.expression import FunctionElement
 
 from spoolman.database import models
 from spoolman.database.utils import SortOrder
-from spoolman.extra_field_registry import EntityType, ExtraField, ExtraFieldType, get_extra_fields
+from spoolman.extra_field_registry import (
+    EXTRA_FIELD_PREFIX,
+    EntityType,
+    ExtraField,
+    ExtraFieldType,
+    get_extra_fields,
+)
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
     from sqlalchemy.orm.attributes import InstrumentedAttribute
 
 
-class _JsonArrayFirstElement(FunctionElement):
-    """Cross-database helper: return the first element of a JSON array stored as text."""
+class _JsonArrayElement(FunctionElement):
+    """Cross-database helper: return the element at ``index`` of a JSON array stored as text."""
 
-    name = "json_array_first_element"
-    inherit_cache = True
+    name = "json_array_element"
+    # The array index is carried as a Python attribute that affects the generated SQL, so the
+    # statement cache must not treat two instances with different indices as equivalent.
+    inherit_cache = False
+
+    def __init__(self, col_expr: object, index: int) -> None:
+        super().__init__(col_expr)
+        self.index = index
 
 
-@compiles(_JsonArrayFirstElement, "postgresql")
-def _compile_json_array_first_pg(element: _JsonArrayFirstElement, compiler: object, **kw: object) -> str:  # type: ignore[misc]
-    """PostgreSQL: CAST(value AS JSON)->>'0' returns the first element as TEXT."""
+@compiles(_JsonArrayElement, "postgresql")
+def _compile_json_array_element_pg(element: _JsonArrayElement, compiler: object, **kw: object) -> str:  # type: ignore[misc]
+    """PostgreSQL: CAST(value AS JSON)->>N returns the Nth element as TEXT."""
     (col_expr,) = element.clauses
     col_sql = compiler.process(col_expr, **kw)  # type: ignore[union-attr]
-    return f"(CAST({col_sql} AS JSON)->>0)"
+    return f"(CAST({col_sql} AS JSON)->>{element.index})"
 
 
-@compiles(_JsonArrayFirstElement, "cockroachdb")
-def _compile_json_array_first_cockroach(element: _JsonArrayFirstElement, compiler: object, **kw: object) -> str:  # type: ignore[misc]
-    """CockroachDB: CAST(value AS JSONB)->>0 returns the first element as TEXT (no json_extract())."""
+@compiles(_JsonArrayElement, "cockroachdb")
+def _compile_json_array_element_cockroach(element: _JsonArrayElement, compiler: object, **kw: object) -> str:  # type: ignore[misc]
+    """CockroachDB: CAST(value AS JSONB)->>N returns the Nth element as TEXT (no json_extract())."""
     (col_expr,) = element.clauses
     col_sql = compiler.process(col_expr, **kw)  # type: ignore[union-attr]
-    return f"(CAST({col_sql} AS JSONB)->>0)"
+    return f"(CAST({col_sql} AS JSONB)->>{element.index})"
 
 
-@compiles(_JsonArrayFirstElement)
-def _compile_json_array_first_default(element: _JsonArrayFirstElement, compiler: object, **kw: object) -> str:  # type: ignore[misc]
-    """SQLite/MariaDB: json_extract(value, '$[0]') returns the first element as a scalar."""
+@compiles(_JsonArrayElement)
+def _compile_json_array_element_default(element: _JsonArrayElement, compiler: object, **kw: object) -> str:  # type: ignore[misc]
+    """SQLite/MariaDB: json_extract(value, '$[N]') returns the Nth element as a scalar."""
     (col_expr,) = element.clauses
     col_sql = compiler.process(col_expr, **kw)  # type: ignore[union-attr]
-    return f"JSON_EXTRACT({col_sql}, '$[0]')"
-
-
-class _JsonArraySecondElement(FunctionElement):
-    """Cross-database helper: return the second element of a JSON array stored as text."""
-
-    name = "json_array_second_element"
-    inherit_cache = True
-
-
-@compiles(_JsonArraySecondElement, "postgresql")
-def _compile_json_array_second_pg(element: _JsonArraySecondElement, compiler: object, **kw: object) -> str:  # type: ignore[misc]
-    """PostgreSQL: CAST(value AS JSON)->>'1' returns the second element as TEXT."""
-    (col_expr,) = element.clauses
-    col_sql = compiler.process(col_expr, **kw)  # type: ignore[union-attr]
-    return f"(CAST({col_sql} AS JSON)->>1)"
-
-
-@compiles(_JsonArraySecondElement, "cockroachdb")
-def _compile_json_array_second_cockroach(element: _JsonArraySecondElement, compiler: object, **kw: object) -> str:  # type: ignore[misc]
-    """CockroachDB: CAST(value AS JSONB)->>1 returns the second element as TEXT (no json_extract())."""
-    (col_expr,) = element.clauses
-    col_sql = compiler.process(col_expr, **kw)  # type: ignore[union-attr]
-    return f"(CAST({col_sql} AS JSONB)->>1)"
-
-
-@compiles(_JsonArraySecondElement)
-def _compile_json_array_second_default(element: _JsonArraySecondElement, compiler: object, **kw: object) -> str:  # type: ignore[misc]
-    """SQLite/MariaDB: json_extract(value, '$[1]') returns the second element as a scalar."""
-    (col_expr,) = element.clauses
-    col_sql = compiler.process(col_expr, **kw)  # type: ignore[union-attr]
-    return f"JSON_EXTRACT({col_sql}, '$[1]')"
+    return f"JSON_EXTRACT({col_sql}, '$[{element.index}]')"
 
 
 def _get_field_table_for_entity(entity_type: EntityType) -> type[models.Base]:
@@ -103,6 +84,15 @@ def _get_entity_id_column(field_table: type[models.Base]) -> InstrumentedAttribu
     raise ValueError(f"Unknown field table: {field_table}")
 
 
+def _escape_like(value: str) -> str:
+    r"""Escape LIKE/ILIKE wildcards so user-supplied text is matched literally.
+
+    Without this a value like ``50%`` would have its ``%``/``_`` treated as wildcards and over-match.
+    Use together with ``escape="\\"`` on the ilike()/like() call.
+    """
+    return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
 def _parse_boolean_filter(value: str) -> bool:
     """Parse a boolean filter using explicit true/false tokens only."""
     normalized = value.strip().lower()
@@ -123,7 +113,9 @@ async def apply_extra_field_filters_and_sort(
     sort_by: dict[str, SortOrder] | None,
 ) -> Select:
     """Apply extra-field filtering and sorting to a query."""
-    if not extra_field_filters and not (sort_by is not None and any(field.startswith("extra.") for field in sort_by)):
+    if not extra_field_filters and not (
+        sort_by is not None and any(field.startswith(EXTRA_FIELD_PREFIX) for field in sort_by)
+    ):
         return stmt
 
     extra_fields = await get_extra_fields(db, entity_type)
@@ -146,10 +138,10 @@ async def apply_extra_field_filters_and_sort(
 
     if sort_by is not None:
         for field_name, order in sort_by.items():
-            if not field_name.startswith("extra."):
+            if not field_name.startswith(EXTRA_FIELD_PREFIX):
                 continue
 
-            field_key = field_name[6:]
+            field_key = field_name[len(EXTRA_FIELD_PREFIX) :]
             extra_field = extra_fields_dict.get(field_key)
             if extra_field is None:
                 continue
@@ -209,7 +201,7 @@ def add_where_clause_extra_field(  # noqa: C901, PLR0912, PLR0915
             field_condition = (
                 field_table.value == json.dumps(parsed_value)
                 if exact_match
-                else field_table.value.ilike(f"%{parsed_value}%")
+                else field_table.value.ilike(f"%{_escape_like(parsed_value)}%", escape="\\")
             )
         elif field_type == ExtraFieldType.integer:
             if ":" in parsed_value:
@@ -262,7 +254,7 @@ def add_where_clause_extra_field(  # noqa: C901, PLR0912, PLR0915
             field_condition = field_table.value == json.dumps(_parse_boolean_filter(parsed_value))
         elif field_type == ExtraFieldType.choice:
             if multi_choice:
-                field_condition = field_table.value.like(f'%"{parsed_value}"%')
+                field_condition = field_table.value.like(f'%"{_escape_like(parsed_value)}"%', escape="\\")
             else:
                 field_condition = field_table.value == json.dumps(parsed_value)
         elif field_type == ExtraFieldType.datetime:
@@ -292,11 +284,11 @@ def add_where_clause_extra_field(  # noqa: C901, PLR0912, PLR0915
                 cast_type = sqlalchemy.Integer if field_type == ExtraFieldType.integer_range else sqlalchemy.Float
                 if min_val_str:
                     # stored_min >= filter_min: the range starts at or after the requested minimum.
-                    stored_min = sqlalchemy.cast(_JsonArrayFirstElement(field_table.value), cast_type)
+                    stored_min = sqlalchemy.cast(_JsonArrayElement(field_table.value, 0), cast_type)
                     range_conditions.append(stored_min >= converter(min_val_str))
                 if max_val_str:
                     # stored_max <= filter_max: the range ends at or before the requested maximum.
-                    stored_max = sqlalchemy.cast(_JsonArraySecondElement(field_table.value), cast_type)
+                    stored_max = sqlalchemy.cast(_JsonArrayElement(field_table.value, 1), cast_type)
                     range_conditions.append(stored_max <= converter(max_val_str))
             except (ValueError, TypeError) as exc:
                 range_kind = "integer" if field_type == ExtraFieldType.integer_range else "float"
@@ -351,7 +343,7 @@ def add_order_by_extra_field(
     elif field_type in (ExtraFieldType.integer_range, ExtraFieldType.float_range):
         cast_type = sqlalchemy.Integer if field_type == ExtraFieldType.integer_range else sqlalchemy.Float
         # Use dialect-specific JSON first-element extraction, then cast to numeric.
-        sort_expr = sqlalchemy.cast(_JsonArrayFirstElement(value_subq), cast_type)
+        sort_expr = sqlalchemy.cast(_JsonArrayElement(value_subq, 0), cast_type)
     else:
         sort_expr = value_subq
 

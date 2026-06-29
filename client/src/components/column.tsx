@@ -8,6 +8,7 @@ import { AlignType } from "rc-table/lib/interface";
 import { Link } from "react-router";
 import { getFiltersForField, typeFilters } from "../utils/filtering";
 import { enrichText } from "../utils/parsing";
+import i18n from "../i18n";
 import { Field, FieldType } from "../utils/queryFields";
 import { TableState } from "../utils/saveload";
 import { getSortOrderForField, typeSorters } from "../utils/sorting";
@@ -27,34 +28,51 @@ const FilterDropdownLoading = () => {
   );
 };
 
+// Shared Reset/OK footer used by the custom-field filter dropdowns below.
+// antd renders filterDropdown via a callback that only receives FilterDropdownProps, so these
+// components cannot take a translate prop and must not use hooks; translate via the i18n instance.
+function FilterDropdownFooter({
+  hasValue,
+  confirm,
+  clearFilters,
+}: {
+  hasValue: boolean;
+  confirm: FilterDropdownProps["confirm"];
+  clearFilters: FilterDropdownProps["clearFilters"];
+}) {
+  return (
+    <div className="ant-table-filter-dropdown-btns">
+      <Button
+        type="link"
+        size="small"
+        disabled={!hasValue}
+        onClick={() => {
+          clearFilters?.();
+          confirm();
+        }}
+      >
+        {i18n.t("buttons.clear")}
+      </Button>
+      <Button type="primary" size="small" onClick={() => confirm()}>
+        {i18n.t("table.filter.ok")}
+      </Button>
+    </div>
+  );
+}
+
 function TextFilterDropdown({ setSelectedKeys, selectedKeys, confirm, clearFilters }: FilterDropdownProps) {
   const hasValue = selectedKeys.length > 0;
   return (
     <>
       <div style={{ padding: "8px" }}>
         <Input
-          placeholder="Search..."
+          placeholder={i18n.t("table.filter.search")}
           value={selectedKeys[0] as string}
           onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
           onPressEnter={() => confirm()}
         />
       </div>
-      <div className="ant-table-filter-dropdown-btns">
-        <Button
-          type="link"
-          size="small"
-          disabled={!hasValue}
-          onClick={() => {
-            clearFilters?.();
-            confirm();
-          }}
-        >
-          Reset
-        </Button>
-        <Button type="primary" size="small" onClick={() => confirm()}>
-          OK
-        </Button>
-      </div>
+      <FilterDropdownFooter hasValue={hasValue} confirm={confirm} clearFilters={clearFilters} />
     </>
   );
 }
@@ -88,34 +106,19 @@ function NumberRangeFilterDropdown({
     <>
       <div style={{ padding: "8px", display: "flex", flexDirection: "column", gap: 4 }}>
         <InputNumber
-          placeholder="Min..."
+          placeholder={i18n.t("table.filter.min")}
           value={minVal}
           precision={precision ?? 0}
           onChange={(value) => updateKeys(value, maxVal)}
         />
         <InputNumber
-          placeholder="Max..."
+          placeholder={i18n.t("table.filter.max")}
           value={maxVal}
           precision={precision ?? 0}
           onChange={(value) => updateKeys(minVal, value)}
         />
       </div>
-      <div className="ant-table-filter-dropdown-btns">
-        <Button
-          type="link"
-          size="small"
-          disabled={!hasValue}
-          onClick={() => {
-            clearFilters?.();
-            confirm();
-          }}
-        >
-          Reset
-        </Button>
-        <Button type="primary" size="small" onClick={() => confirm()}>
-          OK
-        </Button>
-      </div>
+      <FilterDropdownFooter hasValue={hasValue} confirm={confirm} clearFilters={clearFilters} />
     </>
   );
 }
@@ -145,34 +148,19 @@ function DateTimeRangeFilterDropdown({ setSelectedKeys, selectedKeys, confirm, c
         <DatePicker
           showTime={{ use12Hours: false }}
           format="YYYY-MM-DD HH:mm:ss"
-          placeholder="From..."
+          placeholder={i18n.t("table.filter.from")}
           value={fromVal}
           onChange={(date) => updateKeys(date, toVal)}
         />
         <DatePicker
           showTime={{ use12Hours: false }}
           format="YYYY-MM-DD HH:mm:ss"
-          placeholder="To..."
+          placeholder={i18n.t("table.filter.to")}
           value={toVal}
           onChange={(date) => updateKeys(fromVal, date)}
         />
       </div>
-      <div className="ant-table-filter-dropdown-btns">
-        <Button
-          type="link"
-          size="small"
-          disabled={!hasValue}
-          onClick={() => {
-            clearFilters?.();
-            confirm();
-          }}
-        >
-          Reset
-        </Button>
-        <Button type="primary" size="small" onClick={() => confirm()}>
-          OK
-        </Button>
-      </div>
+      <FilterDropdownFooter hasValue={hasValue} confirm={confirm} clearFilters={clearFilters} />
     </>
   );
 }

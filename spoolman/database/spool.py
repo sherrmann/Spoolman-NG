@@ -2,7 +2,7 @@
 
 import logging
 from collections.abc import Sequence
-from datetime import datetime, timezone
+from datetime import datetime
 
 import sqlalchemy
 from sqlalchemy import case, func
@@ -21,6 +21,7 @@ from spoolman.database.utils import (
     add_where_clause_str,
     add_where_clause_str_opt,
     parse_nested_field,
+    utc_timezone_naive,
 )
 from spoolman.exceptions import ItemCreateError, ItemNotFoundError, SpoolMeasureError
 from spoolman.extra_field_registry import EntityType
@@ -28,11 +29,6 @@ from spoolman.math import weight_from_length
 from spoolman.ws import websocket_manager
 
 logger = logging.getLogger(__name__)
-
-
-def utc_timezone_naive(dt: datetime) -> datetime:
-    """Convert a datetime object to UTC and remove timezone info."""
-    return dt.astimezone(tz=timezone.utc).replace(tzinfo=None)
 
 
 async def create(

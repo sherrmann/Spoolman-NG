@@ -1,6 +1,7 @@
 """Utility functions for the database module."""
 
 from collections.abc import Sequence
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, TypeVar
 
@@ -9,6 +10,11 @@ from sqlalchemy import Select
 from sqlalchemy.orm import attributes
 
 from spoolman.database import models
+
+
+def utc_timezone_naive(dt: datetime) -> datetime:
+    """Convert a datetime object to UTC and remove timezone info."""
+    return dt.astimezone(tz=timezone.utc).replace(tzinfo=None)
 
 
 class SortOrder(Enum):

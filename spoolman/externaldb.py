@@ -126,7 +126,18 @@ def get_external_db_url() -> str:
 
 def get_external_db_sync_interval() -> int:
     """Get the external database sync interval from environment variables. Defaults to DEFAULT_SYNC_INTERVAL."""
-    return int(os.getenv("EXTERNAL_DB_SYNC_INTERVAL", DEFAULT_SYNC_INTERVAL))
+    raw = os.getenv("EXTERNAL_DB_SYNC_INTERVAL")
+    if raw is None:
+        return DEFAULT_SYNC_INTERVAL
+    try:
+        return int(raw)
+    except ValueError:
+        logger.warning(
+            "Invalid EXTERNAL_DB_SYNC_INTERVAL value %r, falling back to default of %d seconds.",
+            raw,
+            DEFAULT_SYNC_INTERVAL,
+        )
+        return DEFAULT_SYNC_INTERVAL
 
 
 async def _download_file(url: str) -> bytes:

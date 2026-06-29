@@ -19,6 +19,9 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+# Prefix used on query-string keys and sort fields to address an extra field, e.g. "extra.my_field".
+EXTRA_FIELD_PREFIX = "extra."
+
 
 class EntityType(Enum):
     vendor = "vendor"

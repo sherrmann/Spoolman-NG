@@ -12,6 +12,7 @@ from spoolman.database import spool as db_spool
 from spoolman.database import vendor as db_vendor
 from spoolman.exceptions import ItemNotFoundError
 from spoolman.extra_field_registry import (
+    EXTRA_FIELD_PREFIX,
     EntityType,
     ExtraField,
     ExtraFieldParameters,
@@ -28,6 +29,7 @@ from spoolman.settings import parse_setting
 logger = logging.getLogger(__name__)
 
 __all__ = [
+    "EXTRA_FIELD_PREFIX",
     "EntityType",
     "ExtraField",
     "ExtraFieldParameters",

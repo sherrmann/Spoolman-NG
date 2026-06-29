@@ -1,21 +1,17 @@
 """Helper functions for interacting with calibration database objects."""
 
 import logging
-from datetime import datetime, timezone
+from datetime import datetime
 
 import sqlalchemy
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
 from spoolman.database import models
+from spoolman.database.utils import utc_timezone_naive
 from spoolman.exceptions import ItemNotFoundError
 
 logger = logging.getLogger(__name__)
-
-
-def utc_timezone_naive(dt: datetime) -> datetime:
-    """Convert a datetime object to UTC and remove timezone info."""
-    return dt.astimezone(tz=timezone.utc).replace(tzinfo=None)
 
 
 # ---------------------------------------------------------------------------

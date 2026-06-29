@@ -868,7 +868,9 @@ export const CalibrationWizard = ({ open, session, onClose, onComplete }: Props)
       form.setFieldsValue(savedValues.current[startType]);
     }
     setStep(startIdx);
-  }, [open]);
+    // Depend on session.id too: if the wizard stays mounted while the parent swaps in a different
+    // session (resuming another one), re-initialise instead of showing the previous session's state.
+  }, [open, session.id]);
 
   // ---- Navigation -------------------------------------------------------
 
@@ -946,6 +948,7 @@ export const CalibrationWizard = ({ open, session, onClose, onComplete }: Props)
   };
 
   const handleSaveAsSkipped = () => {
+    if (isLoading) return; // Guard against double-submit while a create/update is already in flight.
     // Sentinel convention: outputs: { _skipped: true } marks a step the user deliberately skipped
     // (e.g. Input Shaping on a printer with built-in IS). CalibrationSection reads this to show
     // a "Skipped" tag instead of "Done" / "Incomplete".
