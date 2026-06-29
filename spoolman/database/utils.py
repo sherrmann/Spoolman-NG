@@ -16,6 +16,25 @@ class SortOrder(Enum):
     DESC = 2
 
 
+def parse_sort(sort: str | None) -> dict[str, "SortOrder"]:
+    """Parse a sort query string of comma-separated "field:direction" items.
+
+    Raises ValueError (mapped to HTTP 400 by the endpoints) for malformed input instead of letting
+    an unpacking ValueError / KeyError surface as a 500.
+    """
+    sort_by: dict[str, SortOrder] = {}
+    if sort is None:
+        return sort_by
+    for sort_item in sort.split(","):
+        field, sep, direction = sort_item.partition(":")
+        if not sep or direction.upper() not in SortOrder.__members__:
+            raise ValueError(
+                f"Invalid sort item '{sort_item}'. Expected '<field>:asc' or '<field>:desc'.",
+            )
+        sort_by[field] = SortOrder[direction.upper()]
+    return sort_by
+
+
 def parse_nested_field(base_obj: type[models.Base], field: str) -> attributes.InstrumentedAttribute[Any]:
     """Parse a nested field string into a sqlalchemy field object."""
     fields = field.split(".")

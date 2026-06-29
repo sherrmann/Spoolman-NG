@@ -203,17 +203,16 @@ export const StepResultDrawer = ({ open, sessionId, step, onSuccess, onClose }: 
     }
   }, [inputValues, paMethod]);
 
-  // VFA: auto-compute avoidance speed range from artifact speeds list
+  // VFA: auto-compute avoidance speed range from the artifact speeds list.
+  // Only write when the list has entries. The list starts empty and is not seeded from saved data,
+  // so nulling on empty would wipe the min/max loaded when editing an existing VFA step result (and
+  // would clobber directly-typed values). Removing all entries leaves the last computed values.
   useEffect(() => {
-    if (stepType !== "vfa") return;
+    if (stepType !== "vfa" || artifactSpeeds.length === 0) return;
     const current: Record<string, unknown> = form.getFieldValue("result") ?? {};
-    if (artifactSpeeds.length === 0) {
-      form.setFieldValue("result", { ...current, min_avoidance_speed: null, max_avoidance_speed: null });
-    } else {
-      const min = Math.min(...artifactSpeeds);
-      const max = Math.max(...artifactSpeeds);
-      form.setFieldValue("result", { ...current, min_avoidance_speed: min, max_avoidance_speed: max });
-    }
+    const min = Math.min(...artifactSpeeds);
+    const max = Math.max(...artifactSpeeds);
+    form.setFieldValue("result", { ...current, min_avoidance_speed: min, max_avoidance_speed: max });
   }, [artifactSpeeds]);
 
   // Computed flow results

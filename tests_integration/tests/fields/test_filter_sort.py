@@ -168,6 +168,46 @@ async def test_float_filter_and_sort(entity_type: str, random_filament: dict[str
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("entity_type", ["spool", "filament", "vendor"])
+async def test_float_filter_whole_number(entity_type: str, random_filament: dict[str, Any]) -> None:
+    """Exact-match filtering a float field by a whole number must work regardless of stored form.
+
+    Regression test: a whole-number float may be persisted as "5" (e.g. JS JSON.stringify(5)) or
+    "5.0". The filter previously only matched json.dumps(float(x)) == "5.0", silently missing the
+    "5" form.
+    """
+    field_key = "test_whole_float_field"
+    httpx.post(
+        f"{URL}/api/v1/field/{entity_type}/{field_key}",
+        json={"name": "Whole float field", "field_type": "float"},
+    ).raise_for_status()
+    id_int_form = _create_entity(entity_type, {field_key: json.dumps(5)}, random_filament)  # stored "5"
+    id_float_form = _create_entity(entity_type, {field_key: json.dumps(7.0)}, random_filament)  # stored "7.0"
+    other = _create_entity(entity_type, {field_key: json.dumps(2.5)}, random_filament)
+
+    def matching_ids(query_value: str) -> set[int]:
+        result = httpx.get(f"{URL}/api/v1/{entity_type}", params={f"extra.{field_key}": query_value})
+        result.raise_for_status()
+        return {item["id"] for item in result.json()}
+
+    try:
+        # Query "5" must match the value stored as "5".
+        ids = matching_ids("5")
+        assert id_int_form in ids
+        assert other not in ids
+
+        # Query "5.0" must also match the value stored as "5".
+        assert id_int_form in matching_ids("5.0")
+
+        # Query "7" must match the value stored as "7.0".
+        assert id_float_form in matching_ids("7")
+    finally:
+        httpx.delete(f"{URL}/api/v1/field/{entity_type}/{field_key}").raise_for_status()
+        for entity_id in (id_int_form, id_float_form, other):
+            httpx.delete(f"{URL}/api/v1/{entity_type}/{entity_id}").raise_for_status()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("entity_type", ["spool", "filament", "vendor"])
 async def test_integer_range_filter_and_sort(entity_type: str, random_filament: dict[str, Any]) -> None:
     """Test filter and sort by a custom integer_range field for all entity types."""
     field_key = "test_int_range_field"

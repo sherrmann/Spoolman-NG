@@ -37,7 +37,7 @@ async def export_spools(
     allow_archived: Annotated[
         bool,
         Query(description="Whether to include archived spools in the export."),
-    ] = False,
+    ] = True,
 ) -> Response:
     all_spools, _ = await spool.find(db=db, allow_archived=allow_archived)
     return await _export(all_spools, fmt)

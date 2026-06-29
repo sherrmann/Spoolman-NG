@@ -105,6 +105,42 @@ def test_list_sessions_by_filament(random_filament: dict[str, Any]):
     httpx.delete(f"{URL}/api/v1/calibration/session/{s2['id']}").raise_for_status()
 
 
+def test_list_sessions_pagination_with_steps(random_filament: dict[str, Any]):
+    """Pagination must count sessions, not joined step rows.
+
+    Regression test: list_sessions previously joinedloaded the to-many `steps` collection together
+    with LIMIT/OFFSET, so the limit applied to joined rows. A session with multiple steps then ate
+    several limit slots, returning too few sessions and splitting a session's steps across pages.
+    """
+    session_ids = []
+    for i in range(3):
+        session = httpx.post(
+            f"{URL}/api/v1/calibration/session",
+            json={"filament_id": random_filament["id"], "status": "planned", "notes": f"session {i}"},
+        ).json()
+        session_ids.append(session["id"])
+        # Two step results per session so the buggy join would multiply rows.
+        for step_type in ("temperature", "flow_rate"):
+            httpx.post(
+                f"{URL}/api/v1/calibration/session/{session['id']}/step",
+                json={"step_type": step_type},
+            ).raise_for_status()
+
+    # Limit below the number of joined rows (3 sessions * 2 steps = 6) but >= session count.
+    result = httpx.get(f"{URL}/api/v1/calibration/session?filament_id={random_filament['id']}&limit=2")
+    result.raise_for_status()
+    page = result.json()
+
+    assert int(result.headers["x-total-count"]) == 3
+    # Exactly `limit` whole sessions are returned, each with its full set of steps intact.
+    assert len(page) == 2
+    assert all(len(s["steps"]) == 2 for s in page)
+
+    # Cleanup
+    for session_id in session_ids:
+        httpx.delete(f"{URL}/api/v1/calibration/session/{session_id}").raise_for_status()
+
+
 def test_update_session(random_session: dict[str, Any]):
     """Update a session's status and printer name."""
     session_id = random_session["id"]

@@ -181,17 +181,17 @@ function StepContent({ stepType, onSkipStep }: { stepType: CalibrationStepType; 
     }
   }, [inputValues, paMethod]);
 
-  // VFA: auto-compute min/max avoidance speed from artifact speeds list
+  // VFA: auto-compute min/max avoidance speed from the artifact speeds list.
+  // Only write when the list has entries. When it is empty we must NOT null the fields: the list
+  // starts empty on mount (it is never seeded from saved data), so nulling here would wipe the
+  // min/max restored when editing/resuming a saved VFA step, and would also clobber values the user
+  // typed directly. Removing all entries therefore leaves the last computed values in place.
   useEffect(() => {
-    if (stepType !== "vfa") return;
+    if (stepType !== "vfa" || artifactSpeeds.length === 0) return;
     const current: Record<string, unknown> = form.getFieldValue("result") ?? {};
-    if (artifactSpeeds.length === 0) {
-      form.setFieldValue("result", { ...current, min_avoidance_speed: null, max_avoidance_speed: null });
-    } else {
-      const min = Math.min(...artifactSpeeds);
-      const max = Math.max(...artifactSpeeds);
-      form.setFieldValue("result", { ...current, min_avoidance_speed: min, max_avoidance_speed: max });
-    }
+    const min = Math.min(...artifactSpeeds);
+    const max = Math.max(...artifactSpeeds);
+    form.setFieldValue("result", { ...current, min_avoidance_speed: min, max_avoidance_speed: max });
   }, [artifactSpeeds]);
 
   const addArtifactSpeed = () => {

@@ -261,6 +261,7 @@ async def delete(db: AsyncSession, spool_id: int) -> None:
     spool = await get_by_id(db, spool_id)
     await spool_changed(spool, EventType.DELETED)
     await db.delete(spool)
+    await db.commit()  # Flush immediately so the deletion is durable and errors propagate in this request.
 
 
 async def clear_extra_field(db: AsyncSession, key: str) -> None:
@@ -270,7 +271,7 @@ async def clear_extra_field(db: AsyncSession, key: str) -> None:
     )
 
 
-async def use_weight_safe(db: AsyncSession, spool_id: int, weight: float) -> None:
+async def use_weight_safe(db: AsyncSession, spool_id: int, weight: float) -> float:
     """Consume filament from a spool by weight in a way that is safe against race conditions.
 
     Args:
@@ -278,7 +279,29 @@ async def use_weight_safe(db: AsyncSession, spool_id: int, weight: float) -> Non
         spool_id (int): Spool ID
         weight (float): Filament weight to consume, in grams
 
+    Returns:
+        float: The actual change applied to used_weight after clamping at zero. This equals
+            ``weight`` unless the result would have gone negative, in which case used_weight is
+            clamped to 0 and the returned delta is only what was actually consumed.
+
     """
+    # Consumption (weight >= 0) can never trigger the clamp at zero, so the applied delta always
+    # equals the requested weight. Keep this path a single atomic UPDATE with no preceding read:
+    # adding a read-before-write here turns concurrent uses into read/write transactions that
+    # deadlock (MariaDB) or hit serialization retries (CockroachDB SERIALIZABLE), losing updates.
+    if weight >= 0:
+        await db.execute(
+            sqlalchemy.update(models.Spool)
+            .where(models.Spool.id == spool_id)
+            .values(used_weight=models.Spool.used_weight + weight),
+        )
+        return weight
+
+    # Refill (weight < 0) may clamp used_weight at 0, so read the prior value to report the real
+    # applied delta. Refills are not part of the high-concurrency hot path.
+    used_before = (
+        await db.execute(sqlalchemy.select(models.Spool.used_weight).where(models.Spool.id == spool_id))
+    ).scalar_one_or_none()
     await db.execute(
         sqlalchemy.update(models.Spool)
         .where(models.Spool.id == spool_id)
@@ -289,6 +312,9 @@ async def use_weight_safe(db: AsyncSession, spool_id: int, weight: float) -> Non
             ),
         ),
     )
+    if used_before is None:
+        return weight  # Spool not found; caller's get_by_id will raise ItemNotFoundError.
+    return max(0.0, used_before + weight) - used_before
 
 
 async def use_weight(db: AsyncSession, spool_id: int, weight: float) -> models.Spool:
@@ -306,7 +332,7 @@ async def use_weight(db: AsyncSession, spool_id: int, weight: float) -> models.S
         models.Spool: Updated spool object
 
     """
-    await use_weight_safe(db, spool_id, weight)
+    weight_delta = await use_weight_safe(db, spool_id, weight)
 
     spool = await get_by_id(db, spool_id)
 
@@ -315,7 +341,7 @@ async def use_weight(db: AsyncSession, spool_id: int, weight: float) -> models.S
     spool.last_used = datetime.utcnow().replace(microsecond=0)
 
     await db.commit()
-    await spool_changed(spool, EventType.UPDATED, {"weight_delta": weight})
+    await spool_changed(spool, EventType.UPDATED, {"weight_delta": weight_delta})
     return spool
 
 
@@ -351,7 +377,7 @@ async def use_length(db: AsyncSession, spool_id: int, length: float) -> models.S
         diameter=filament_info[0],
         density=filament_info[1],
     )
-    await use_weight_safe(db, spool_id, weight)
+    weight_delta = await use_weight_safe(db, spool_id, weight)
 
     # Get spool with new weight and update first_used and last_used
     spool = await get_by_id(db, spool_id)
@@ -361,7 +387,7 @@ async def use_length(db: AsyncSession, spool_id: int, length: float) -> models.S
     spool.last_used = datetime.utcnow().replace(microsecond=0)
 
     await db.commit()
-    await spool_changed(spool, EventType.UPDATED, {"weight_delta": weight})
+    await spool_changed(spool, EventType.UPDATED, {"weight_delta": weight_delta})
     return spool
 
 

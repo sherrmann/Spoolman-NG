@@ -248,9 +248,16 @@ def add_where_clause_extra_field(  # noqa: C901, PLR0912, PLR0915
                 field_condition = sqlalchemy.and_(*float_conditions)
             else:
                 try:
-                    field_condition = field_table.value == json.dumps(float(parsed_value))
+                    float_value = float(parsed_value)
                 except ValueError as exc:
                     raise ValueError(f"Invalid float filter value for '{field_key}': {parsed_value}") from exc
+                # Values are stored as the verbatim JSON the client sent. A whole-number float may be
+                # persisted as "5" (e.g. JS JSON.stringify(5)) or "5.0", so match both forms instead
+                # of only json.dumps(float(...)) (which is "5.0" and would miss "5").
+                value_candidates = {json.dumps(float_value)}
+                if float_value.is_integer():
+                    value_candidates.add(json.dumps(int(float_value)))
+                field_condition = field_table.value.in_(sorted(value_candidates))
         elif field_type == ExtraFieldType.boolean:
             field_condition = field_table.value == json.dumps(_parse_boolean_filter(parsed_value))
         elif field_type == ExtraFieldType.choice:

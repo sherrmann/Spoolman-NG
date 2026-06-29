@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 
 import sqlalchemy
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, selectinload
 
 from spoolman.database import models
 from spoolman.exceptions import ItemNotFoundError
@@ -86,10 +86,13 @@ async def list_sessions(
     if limit is not None:
         query = query.limit(limit)
 
-    # Eagerly load steps for each session
-    query = query.options(joinedload(models.CalibrationSession.steps))
+    # Eagerly load steps for each session. Use selectinload (a separate IN query) rather than
+    # joinedload here: joining a to-many collection multiplies result rows, so LIMIT/OFFSET would
+    # paginate joined rows instead of sessions (returning the wrong number of sessions and splitting
+    # a session's steps across page boundaries). selectinload applies the limit to the session query.
+    query = query.options(selectinload(models.CalibrationSession.steps))
     result = await db.execute(query)
-    items = list(result.unique().scalars().all())
+    items = list(result.scalars().all())
     return items, total_count
 
 
@@ -113,6 +116,7 @@ async def delete_session(db: AsyncSession, session_id: int) -> None:
     """Delete a calibration session (cascades to step results)."""
     db_item = await get_session(db, session_id)
     await db.delete(db_item)
+    await db.commit()
 
 
 # ---------------------------------------------------------------------------
@@ -180,3 +184,4 @@ async def delete_step_result(db: AsyncSession, step_id: int) -> None:
     """Delete a calibration step result."""
     db_item = await get_step_result(db, step_id)
     await db.delete(db_item)
+    await db.commit()
