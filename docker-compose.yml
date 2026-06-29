@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   spoolman:
     image: ghcr.io/donkie/spoolman:latest # Also available at dockerhub: donkieyo/spoolman:latest
