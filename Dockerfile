@@ -45,10 +45,19 @@ LABEL org.opencontainers.image.source=https://github.com/sherrmann/Spoolman
 LABEL org.opencontainers.image.description="Spoolman NG - a community-maintained continuation of Spoolman. Keep track of your inventory of 3D-printer filament spools."
 LABEL org.opencontainers.image.licenses=MIT
 
-# Install gosu for privilege dropping and libusb for NFC reader support
+# Install gosu for privilege dropping and libusb for NFC reader support.
+# libstdc++6 and libpq5 are runtime shared libs for extensions that have no
+# armv7 wheel and are therefore compiled from source in the builder stage:
+# greenlet (C++; used by SQLAlchemy's async engine on every backend) needs
+# libstdc++6, and psycopg2 (PostgreSQL) links libpq. On amd64/arm64 these come
+# from prebuilt wheels that don't need the libs added here, but the 32-bit ARM
+# image does — without them the container fails to start (greenlet) or can't
+# reach PostgreSQL (psycopg2).
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gosu \
     libusb-1.0-0 \
+    libstdc++6 \
+    libpq5 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
