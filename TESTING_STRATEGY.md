@@ -271,3 +271,39 @@ no refactor needed, only fixtures.
 3. Extract `home/analytics.ts` and land `analytics.test.ts` (hand-computed KPI + one invariant).
 4. Wire the two CI jobs and publish coverage. These three exemplars set the pattern every later
    phase copies.
+
+---
+
+## 8. Implementation status
+
+**Done (Phase 0 + Phase 1 pure-logic + gate wiring):**
+
+- **Infra, both stacks.** Backend: `hypothesis`, `time-machine`, `respx`, `cbor2` dev deps + NFC
+  fixtures. Frontend: Vitest 4 + jsdom + Testing Library + MSW, `vitest.config.ts`, `src/test/setup.ts`,
+  `npm test`/`test:coverage` scripts.
+- **~407 behavioral tests, all green:** backend `tests/` (TigerTag/QIDI/OpenPrintTag codecs, env,
+  extra-field registry, `_build_search_filters`, externaldb config, CalVer, 3DFP parser); frontend
+  (dashboard `analytics`, `saveload`, `url`, `scan` round-trip, `tigertagCodec` cross-impl,
+  `querySettings`, `filtering`, `parsing`, `spoolCardHelpers`).
+- **Seams extracted** (behavior-preserving): `home/analytics.ts`, `bump.calver`,
+  `externaldb.parse_3dfp_html`, `scan.ts` (`buildScanPayload`/`parseScanResult`), `spoolCardHelpers.ts`.
+- **Gates wired:** backend `unit-tests` job now uses `--cov-branch`; new `client-tests` CI job runs
+  `npm run test:coverage`; Vitest per-module coverage thresholds enforced on the tested pure modules;
+  mutation testing configured (`[tool.mutmut]`, `client/stryker.config.json`) and run by a dedicated
+  manual/weekly `mutation.yml` workflow (kept off the per-PR path).
+
+**Bugs surfaced by the tests (behavior pinned, source unchanged — flagged for a deliberate fix):**
+`OpenPrintTagData.effective_instance_uuid`/`effective_brand_uuid` pass `bytes` to `uuid.uuid5` and
+raise `TypeError` when a UID/brand is present; the low-stock **sort** comparator in `analytics.ts`
+uses a different weight fallback than the **filter** (dead defensive branches).
+
+**Remaining (follow-up):**
+
+- Phase 1 tail: `_detect_tag_format`, pure `*_lookup.py` mappings, `renderLabelContents`,
+  `inputNumberRange.parseInputNumberValue`, `dataProvider` custom-field query build,
+  `client.py` `tweak_manifest` extraction + test.
+- Phase 2 (integration): NFC `/lookup`/`/bind`/`/encode`, filament `/search`, extra-field
+  filter/sort behavior, `use_weight_safe` concurrency, hishel cache, Starlette `FileResponse`.
+- Phase 3 (component): dashboard render states, print dialog, i18n `<Trans>`, `authReloadHandler`.
+- Phase 4: Playwright e2e for the SW/manifest flows; establish the mutation-score baseline and
+  promote it to a hard gate.

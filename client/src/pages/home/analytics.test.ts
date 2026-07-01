@@ -234,6 +234,13 @@ describe("registeredWithinDays", () => {
     const exactly30 = spool({ registered: now.subtract(30, "day").toISOString() });
     expect(registeredWithinDays([exactly30], 30, now)).toBe(0);
   });
+
+  it("defaults 'now' to the current time when omitted", () => {
+    // Exercises the default-parameter branch; empty input keeps it clock-independent.
+    expect(registeredWithinDays([], 30)).toBe(0);
+    // A spool registered in the far past is never within a 30-day window of "now".
+    expect(registeredWithinDays([spool({ registered: "2000-01-01T00:00:00Z" })], 30)).toBe(0);
+  });
 });
 
 describe("presentation helpers", () => {
