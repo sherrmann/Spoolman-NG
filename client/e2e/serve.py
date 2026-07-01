@@ -33,20 +33,17 @@ from starlette.routing import Mount, Route
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
-from spoolman.client import SinglePageApplication  # noqa: E402  (needs sys.path tweak first)
+from spoolman import env  # noqa: E402  (needs sys.path tweak first)
+from spoolman.client import SinglePageApplication  # noqa: E402
 
 DIST_DIR = REPO_ROOT / "client" / "dist"
 
 
-def _base_path() -> str:
-    """Normalise SPOOLMAN_BASE_PATH exactly like ``spoolman.env.get_base_path``."""
-    raw = os.getenv("SPOOLMAN_BASE_PATH", "")
-    return "" if len(raw) == 0 else "/" + raw.strip("/")
-
-
 def build_app() -> Starlette:
     """Assemble the client-serving app for the configured base path."""
-    base_path = _base_path()
+    # Reuse the real backend normalisation of SPOOLMAN_BASE_PATH so this harness can't
+    # drift from the app (leading "/", no trailing "/", "" at the root).
+    base_path = env.get_base_path()
 
     if not DIST_DIR.is_dir():
         msg = f"client build not found at {DIST_DIR}; run `npm run build` first"
