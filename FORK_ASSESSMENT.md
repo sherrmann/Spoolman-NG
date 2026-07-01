@@ -75,19 +75,20 @@ translations, governance, and documentation.
    `https://donkie.github.io/SpoolmanDB/`. This is a *runtime* dependency on the abandoned
    upstream's GitHub Pages: if the repo is archived/deleted, filament sync breaks for every
    default install, and the data will go stale regardless.
-   → Fork SpoolmanDB (repo + Pages + its build workflow), switch the default URL, and take
-   over/mirror its contribution flow. This is the single most important dependency to own.
+   ⏳ *In progress:* `sherrmann/SpoolmanDB` has been forked, but its GitHub Pages is not
+   serving yet (`https://sherrmann.github.io/SpoolmanDB/filaments.json` → 404). Enable
+   Actions + Pages on the fork and run its deploy workflow, then switch the default URL
+   here (`externaldb.py`, `.env.example`, README, CONTRIBUTING).
 2. **Translation pipeline** — README points contributors to upstream's Weblate project
    (`hosted.weblate.org/projects/spoolman/`), which feeds the *upstream* repo. The fork
    currently has **no way to receive translation updates**.
    → Register a Spoolman NG project on Hosted Weblate (free for libre projects) or document
    a PR-based translation workflow; update README.
-3. **Translate the fork's new features** — English has 439 keys; other locales carry ~68%
-   and **0 of the 53 NFC keys** (labels/dashboard keys similarly missing); `et` and
-   `hi-Latn` are <15% complete. New features are English-only for non-English users today.
-   → Seed machine-translated or English-fallback entries where acceptable, then let Weblate
-   fill in. ✅ *Done:* `client/scripts/check-i18n.js` now reports per-locale key coverage
-   on every CI run.
+3. ✅ **Translate the fork's new features** — *done:* all 27 locales seeded with AI
+   translations to 99–100% key coverage (from ~68%; `et`/`hi-Latn` from <15%, both now
+   selectable in the UI for the first time). Existing human translations untouched;
+   placeholders validated programmatically. Native-speaker review remains welcome via PRs.
+   `client/scripts/check-i18n.js` reports per-locale coverage on every CI run.
 4. **In-app links point at upstream** —
    ✅ *Done:* the help page now links to this repo's Integrations section.
    *Open:* `client/src/components/header/index.tsx:62` (Ko-fi → `ko-fi.com/donkie`) —
@@ -162,9 +163,12 @@ translations, governance, and documentation.
 
 - ✅ **Done on this branch:** issue-manager workflow removed; help link points at the
   fork; SECURITY.md + README security section; CONTRIBUTING.md; PR template; per-locale
-  i18n coverage report in CI; README translation/SpoolmanDB notes corrected.
-- **Week 1 (P0 core, needs maintainer/external access):** fork SpoolmanDB + switch the
-  default URL; register a Weblate project; decide the Ko-fi/FUNDING question.
-- **Weeks 2–3 (P1):** seed missing locale keys, mirror wiki docs.
+  i18n coverage report in CI; README translation/SpoolmanDB notes corrected; all 27
+  locales seeded to 99–100% coverage (et and hi-Latn newly enabled in the UI).
+- **Week 1 (P0 core, needs maintainer/external access):** enable Actions + Pages on the
+  forked sherrmann/SpoolmanDB and switch the default URL; Weblate later (AI-seeded
+  translations in place meanwhile); Ko-fi link deliberately kept on the original author
+  for now — revisit together with FUNDING.yml.
+- **Weeks 2–3 (P1):** mirror wiki docs.
 - **Week 4+ (P2/P3):** fix the two pinned bugs, cascade migration, auto_create guard,
   upstream backlog sweep, community channels, integration outreach.
