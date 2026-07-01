@@ -91,10 +91,9 @@ translations, governance, and documentation.
    *Open:* `client/src/components/header/index.tsx:62` (Ko-fi → `ko-fi.com/donkie`) —
    decide deliberately whether the donation link should keep honoring the original author,
    point at the fork maintainer, or be removed (align with FUNDING.yml, TODO 9).
-5. **Docs/wiki story** — README links installation, Prometheus, and general docs to the
-   upstream wiki (`README.md:24,45,114`), which the fork cannot edit and which may vanish.
-   → Mirror the load-bearing wiki pages (Installation, Integrations, Filament Usage
-   History) into `docs/` or the fork's wiki and relink. Keep an attribution note.
+5. ✅ **Docs/wiki story** — *done:* fork-owned `docs/installation.md` (install paths, full
+   env-var reference, backups, Moonraker updates) and `docs/monitoring.md` (Prometheus)
+   authored from repo sources; README links point at them instead of the upstream wiki.
 
 ### P1 — Community & governance (needed before inviting many users/contributors)
 
@@ -124,19 +123,20 @@ translations, governance, and documentation.
     upstream. Keep, but make the "continuation of an unmaintained project" wording
     consistent everywhere (README does this well already).
 
-### P2 — Hardening & known bugs (tracked, not yet fixed)
+### P2 — Hardening & known bugs
 
-13. **OpenPrintTag UUID bug** — `effective_instance_uuid`/`effective_brand_uuid` pass
-    `bytes` to `uuid.uuid5` and raise `TypeError`; behavior is pinned by tests awaiting a
-    deliberate fix (see `TESTING_STRATEGY.md` §8).
-14. **Low-stock sort/filter inconsistency** — the dashboard's low-stock sort comparator
-    uses a different weight-fallback chain than the filter; also pinned, not fixed.
-15. **Abuse-resistance for `auto_create`** — add a duplicate-guard test (N forged tags with
-    identical material/color → ≤1 spool) and consider a simple rate limit on
-    `/api/v1/nfc/lookup`.
-16. **DB-level cascade on `*Field` tables** — Vendor/Filament/SpoolField FKs rely on
-    ORM-level cascade only; add a migration setting `ondelete="CASCADE"` for
-    defense-in-depth against direct SQL deletes.
+13. ✅ **OpenPrintTag UUID bug** — *fixed:* UUID derivation now uses an RFC 4122 helper
+    that produces the identical UUID on every supported interpreter (3.10 native installs
+    no longer crash; Docker-created bindings unchanged); tests assert golden values.
+14. ✅ **Low-stock sort/filter inconsistency** — *fixed:* filter and sort share one
+    `remainingFraction` fallback chain.
+15. ✅ **Abuse-resistance for `auto_create`** — *done:* auto-creation is idempotent per
+    tag payload (payload-hash binding + duplicate check), concurrent scans serialize
+    behind a lock, and `create-from-tag` retries return the already-bound spool.
+    Integration tests fail without the guard and pass with it.
+16. ✅ **DB-level cascade on `*Field` tables** — *done:* migration `e7a41c9d2b53` adds
+    `ondelete="CASCADE"` on all three FKs (batch rebuild on SQLite, reflected constraint
+    names elsewhere); models updated to match.
 17. **Dashboard analytics at scale** — aggregation is client-side over the full spool list;
     fine for <1k spools, worth a benchmark at 5–10k and, if needed, an optional
     server-side `/api/v1/spool/analytics` aggregate endpoint.
@@ -166,6 +166,8 @@ translations, governance, and documentation.
   verified end-to-end. Weblate deferred (AI-seeded translations in place meanwhile);
   Ko-fi link deliberately kept on the original author for now — revisit together with
   FUNDING.yml.
-- **Weeks 2–3 (P1):** mirror wiki docs.
-- **Week 4+ (P2/P3):** fix the two pinned bugs, cascade migration, auto_create guard,
-  upstream backlog sweep, community channels, integration outreach.
+- ✅ **P2 hardening done:** both pinned bugs fixed, auto_create duplicate guard,
+  cascade migration, fork-owned installation/monitoring docs.
+- **Remaining (needs maintainer decisions or external accounts):** Ko-fi/FUNDING,
+  Weblate project, upstream backlog sweep, community channels, integration outreach,
+  analytics-at-scale benchmark, e2e long tail.
