@@ -48,4 +48,39 @@ test.describe("spool journey", () => {
     await saveButton(page).click();
     await expect(page).toHaveURL(atPath("/spool"));
   });
+
+  test("adjust filament usage → archive", async ({ page, request }) => {
+    const filament = await seedFilament(request);
+    const spoolRes = await request.post(`${APP_BASE_URL}/api/v1/spool`, {
+      data: { filament_id: filament.id, initial_weight: 1000, used_weight: 200 },
+    });
+    const spoolId = (await spoolRes.json()).id;
+
+    await page.goto(`${APP_BASE_URL}/spool/show/${spoolId}`);
+
+    // Adjust: open the modal, consume 100 g by weight, submit → PUT /use.
+    await page.getByRole("button", { name: /Adjust Spool Filament/ }).click();
+    const modal = page.locator(".ant-modal-content");
+    await expect(modal.getByText("Adjust Spool Filament").first()).toBeVisible();
+    await modal.getByText("Weight", { exact: true }).click();
+    await modal.getByLabel("Consume Amount").fill("100");
+    const [useRes] = await Promise.all([
+      page.waitForResponse((r) => /\/spool\/\d+\/use$/.test(r.url()) && r.request().method() === "PUT"),
+      page.getByRole("button", { name: "OK" }).click(),
+    ]);
+    expect(useRes.ok()).toBeTruthy();
+
+    // Archive: header button → confirm dialog (remaining > 0) → PATCH archived=true.
+    await page
+      .locator("button")
+      .filter({ hasText: /^Archive$/ })
+      .click();
+    const [archiveRes] = await Promise.all([
+      page.waitForResponse((r) => /\/spool\/\d+$/.test(r.url()) && r.request().method() === "PATCH"),
+      page.locator(".ant-modal-confirm .ant-btn-primary").click(),
+    ]);
+    expect(archiveRes.ok()).toBeTruthy();
+    // The header now offers to unarchive.
+    await expect(page.locator("button").filter({ hasText: /^Unarchive$/ })).toBeVisible();
+  });
 });
