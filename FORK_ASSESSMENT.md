@@ -71,14 +71,11 @@ translations, governance, and documentation.
 
 ### P0 — Decouple from abandoned upstream infrastructure (breaks users if upstream rots)
 
-1. **SpoolmanDB default URL** — `spoolman/externaldb.py:22` and `.env.example:58` default to
-   `https://donkie.github.io/SpoolmanDB/`. This is a *runtime* dependency on the abandoned
-   upstream's GitHub Pages: if the repo is archived/deleted, filament sync breaks for every
-   default install, and the data will go stale regardless.
-   ⏳ *In progress:* `sherrmann/SpoolmanDB` has been forked, but its GitHub Pages is not
-   serving yet (`https://sherrmann.github.io/SpoolmanDB/filaments.json` → 404). Enable
-   Actions + Pages on the fork and run its deploy workflow, then switch the default URL
-   here (`externaldb.py`, `.env.example`, README, CONTRIBUTING).
+1. ✅ **SpoolmanDB default URL** — *done:* `sherrmann/SpoolmanDB` is forked, its Pages
+   deployment is live, and the default in `externaldb.py`/`.env.example` (plus
+   README/CONTRIBUTING links) now points at `https://sherrmann.github.io/SpoolmanDB/`.
+   Verified end-to-end: Spoolman's sync code parses 6,957 filaments and 33 materials
+   from the fork-hosted instance. The filament catalog is now fully owned by the fork.
 2. **Translation pipeline** — README points contributors to upstream's Weblate project
    (`hosted.weblate.org/projects/spoolman/`), which feeds the *upstream* repo. The fork
    currently has **no way to receive translation updates**.
@@ -165,10 +162,10 @@ translations, governance, and documentation.
   fork; SECURITY.md + README security section; CONTRIBUTING.md; PR template; per-locale
   i18n coverage report in CI; README translation/SpoolmanDB notes corrected; all 27
   locales seeded to 99–100% coverage (et and hi-Latn newly enabled in the UI).
-- **Week 1 (P0 core, needs maintainer/external access):** enable Actions + Pages on the
-  forked sherrmann/SpoolmanDB and switch the default URL; Weblate later (AI-seeded
-  translations in place meanwhile); Ko-fi link deliberately kept on the original author
-  for now — revisit together with FUNDING.yml.
+- ✅ **SpoolmanDB owned:** default URL switched to the live fork-hosted instance,
+  verified end-to-end. Weblate deferred (AI-seeded translations in place meanwhile);
+  Ko-fi link deliberately kept on the original author for now — revisit together with
+  FUNDING.yml.
 - **Weeks 2–3 (P1):** mirror wiki docs.
 - **Week 4+ (P2/P3):** fix the two pinned bugs, cascade migration, auto_create guard,
   upstream backlog sweep, community channels, integration outreach.
