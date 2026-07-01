@@ -27,7 +27,7 @@ Spoolman NG is a self-hosted web service designed to help you efficiently manage
 * **Filament Management**: Keep comprehensive records of filament types, manufacturers, and individual spools.
 * **API Integration**: The [REST API](https://sherrmann.github.io/Spoolman/) allows easy integration with other software, facilitating automated workflows and data exchange.
 * **Real-Time Updates**: Stay informed with live spool updates through Websockets, providing immediate feedback during printing operations.
-* **Central Filament Database**: A community-supported database of manufacturers and filaments simplify adding new spools to your inventory. By default Spoolman syncs from [SpoolmanDB](https://github.com/Donkie/SpoolmanDB), which is hosted by the original (now unmaintained) project — point `EXTERNAL_DB_URL` at another instance to override it.
+* **Central Filament Database**: A community-supported database of manufacturers and filaments simplify adding new spools to your inventory. Spoolman NG syncs from its own [SpoolmanDB](https://github.com/sherrmann/SpoolmanDB) (continuing the original database) — contribute filaments there, or point `EXTERNAL_DB_URL` at another instance.
 * **Web-Based Client**: Spoolman includes a built-in web client that lets you manage data effortlessly:
   * View, create, edit, and delete filament data.
   * Add custom fields to tailor information to your specific needs.

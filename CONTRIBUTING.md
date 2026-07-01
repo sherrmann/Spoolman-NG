@@ -68,9 +68,10 @@ directly: edit `client/public/locales/<lang>/common.json`, using
 ## Filament database
 
 The catalog of manufacturers and filaments lives in
-[SpoolmanDB](https://github.com/Donkie/SpoolmanDB) (currently still the
-upstream-hosted instance — see `EXTERNAL_DB_URL` in `.env.example` to point at
-another one).
+[SpoolmanDB](https://github.com/sherrmann/SpoolmanDB) — the fork-maintained
+continuation of the original database. Contribute new filaments and
+manufacturers there; Spoolman NG installs sync from it by default (see
+`EXTERNAL_DB_URL` in `.env.example` to point at another instance).
 
 ## Security issues
 
