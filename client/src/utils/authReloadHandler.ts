@@ -33,10 +33,6 @@ export async function reloadOnAuthFailure(): Promise<void> {
   window.location.reload();
 }
 
-// Guard against double-registration: in dev, Vite/React fast refresh can
-// re-evaluate this module, which would otherwise stack duplicate interceptors
-// and fire multiple reloads per 401. The flag lives on the shared axios
-// instance (not module scope) so it survives module re-evaluation.
 interface AuthError {
   response?: { status?: number };
   config?: { method?: string };

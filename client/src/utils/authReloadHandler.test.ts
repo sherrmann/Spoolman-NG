@@ -18,6 +18,9 @@ function stubLocation() {
 }
 
 beforeEach(() => {
+  // Clear the persisted cooldown flag ("spoolmanAuthReloadedAt") so reload
+  // suppression can't leak between cases and make results order-dependent.
+  localStorage.clear();
   vi.useFakeTimers();
   stubLocation();
 });
