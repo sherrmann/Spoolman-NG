@@ -31,19 +31,17 @@ export function totalValue(spools: ISpool[]): number {
   return spools.reduce((sum, s) => sum + (s.price ?? 0), 0);
 }
 
+/** Remaining stock fraction of one spool; a missing remaining weight counts as a full spool. */
+function remainingFraction(s: ISpool): number {
+  const total = s.initial_weight ?? s.filament.weight ?? DEFAULT_TOTAL_WEIGHT;
+  return (s.remaining_weight ?? total) / total;
+}
+
 /** Spools below the low-stock threshold, ordered most-depleted first. */
 export function lowStockSpools(spools: ISpool[]): ISpool[] {
   return spools
-    .filter((s) => {
-      const total = s.initial_weight ?? s.filament.weight ?? DEFAULT_TOTAL_WEIGHT;
-      const remaining = s.remaining_weight ?? total;
-      return remaining / total < LOW_STOCK_THRESHOLD;
-    })
-    .sort((a, b) => {
-      const pctA = (a.remaining_weight ?? 0) / (a.initial_weight ?? a.filament.weight ?? DEFAULT_TOTAL_WEIGHT);
-      const pctB = (b.remaining_weight ?? 0) / (b.initial_weight ?? b.filament.weight ?? DEFAULT_TOTAL_WEIGHT);
-      return pctA - pctB;
-    });
+    .filter((s) => remainingFraction(s) < LOW_STOCK_THRESHOLD)
+    .sort((a, b) => remainingFraction(a) - remainingFraction(b));
 }
 
 /** The most-recently-used spools, newest first, capped at `limit`. Does not mutate the input. */
