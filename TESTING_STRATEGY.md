@@ -405,18 +405,21 @@ Wired as a per-PR CI job (`e2e` in `ci.yml`: build client → `uv sync` → `pla
 
 Beyond the static PWA harness, a third Playwright server runs the **real** backend
 (`uvicorn spoolman.main:app`) on a fresh temp SQLite DB, serving the API + built client, so
-journey tests drive the actual app end-to-end (`client/e2e/journeys/`). Current journeys:
-vendor CRUD (create → show → edit → clone), filament CRUD, spool (seed filament via API →
-select in the searchable form → show → edit), the home dashboard (seeded low-stock spool → KPI
-cards + breakdowns render), and settings (general form save + extra-fields page). Robust
-selector patterns for a no-`data-testid`, i18n UI live in `e2e/helpers.ts` (exact-text buttons
-to dodge icon `aria-label` pollution, id-from-POST-response navigation, hash-tolerant URL
-matching).
+journey tests drive the actual app end-to-end (`client/e2e/journeys/`). 20 journeys cover:
+vendor / filament / spool CRUD (create → show → edit → clone); spool create via the searchable
+filament select, the quantity-stepper batch create, and the adjust-usage (`PUT /use`) → archive
+(`PATCH`) → unarchive lifecycle; the home dashboard (seeded low-stock spool → KPI cards +
+breakdowns); settings (general save + extra-fields manager); a seeded custom field rendering in
+the settings table and the create form; the locations page + new-location modal; the printing /
+QR dialog; the help page; the NFC bind/encode modals; and the spool-list controls (archived
+toggle, clear filters, columns). Robust selector patterns for a no-`data-testid`, i18n UI live in
+`e2e/helpers.ts` (exact-text buttons to dodge icon `aria-label` pollution, id-from-POST-response
+navigation, hash-tolerant URL matching).
 
 **Client code coverage from e2e** is instrumented (`E2E_COVERAGE=1 npm run test:e2e`): the build
 emits inline source maps, a fixture captures each test's Chromium V8 coverage, and a global
 teardown aggregates it back onto `client/src` via `monocart-coverage-reports` (`coverage-e2e/`).
-The suite currently exercises **~52% of loaded client lines**. Note the denominator is
+The suite currently exercises **~60% of loaded client lines**. Note the denominator is
 loaded-and-mapped source, so it *grows* as journeys visit more lazy-loaded pages — driving it
 toward 100% is an ongoing effort. Some paths are not reachable by headless e2e at all (Web NFC
 hardware, the native print dialog, the 25 locale bundles, WebSocket live-update races), so 100%
@@ -424,8 +427,9 @@ app-wide is approached, not a literal target; the journey set is expanded increm
 
 **Remaining (follow-up):**
 
-- More journeys to raise e2e coverage: spool adjust/archive/use, list filters/sort/columns,
-  locations drag-drop, printing/QR dialog, clone edge cases, extra-field create→list round-trip.
+- Higher-coverage long-tail journeys: the calibration wizard (multi-step session flow),
+  print-dialog setting permutations, filament multi-color / 3DFP-import form paths, list
+  filter/sort permutations, locations drag-drop, and error/empty-state branches.
 
 - Phase 3 (component): print-dialog default-resolution, i18n `<Trans>` rendering (both need
   rendering provider-heavy components; the print-dialog updates are plain immutable spreads now).
