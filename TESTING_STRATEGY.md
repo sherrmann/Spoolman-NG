@@ -297,13 +297,22 @@ no refactor needed, only fixtures.
 raise `TypeError` when a UID/brand is present; the low-stock **sort** comparator in `analytics.ts`
 uses a different weight fallback than the **filter** (dead defensive branches).
 
+**Also done — Phase 1 tail + first Phase 2 integration:**
+
+- Phase 1 tail: `_detect_tag_format`, pure `map_spool_to_tigertag`/`map_spool_to_qidi` +
+  `_make_nfc_tag_id`, extracted+tested `client.py` `tweak_manifest`, `renderLabelContents`
+  (rendered-DOM), `inputNumberRange` parsers, and a shared `serializeFilterValues`
+  (`dataProvider` custom-field query build).
+- **In-process integration harness** (`tests/integration/`): FastAPI routers over a temp
+  SQLite DB via httpx ASGI transport — no Docker, runs in the fast unit job, complements the
+  Docker multi-DB suite. Covers: filament `/search`, NFC `/encode`→`/lookup` round-trip and
+  `/bind` duplicate-rejection, spool `/use` consumption + refill-clamp (`use_weight_safe`),
+  and extra-field filtering incl. the `_escape_like` literal-`%`/`_` regression.
+
 **Remaining (follow-up):**
 
-- Phase 1 tail: `_detect_tag_format`, pure `*_lookup.py` mappings, `renderLabelContents`,
-  `inputNumberRange.parseInputNumberValue`, `dataProvider` custom-field query build,
-  `client.py` `tweak_manifest` extraction + test.
-- Phase 2 (integration): NFC `/lookup`/`/bind`/`/encode`, filament `/search`, extra-field
-  filter/sort behavior, `use_weight_safe` concurrency, hishel cache, Starlette `FileResponse`.
+- Phase 2 tail: extra-field **sort** + range/boolean filters, hishel cache behavior, Starlette
+  `FileResponse` asset serving (needs a built `dist/`), `use_weight_safe` true-concurrency.
 - Phase 3 (component): dashboard render states, print dialog, i18n `<Trans>`, `authReloadHandler`.
 - Phase 4: Playwright e2e for the SW/manifest flows; establish the mutation-score baseline and
   promote it to a hard gate.

@@ -15,7 +15,8 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy.engine import URL
 from sqlalchemy.ext.asyncio import create_async_engine
 
-from spoolman.api.v1 import filament, nfc, spool, vendor
+from spoolman import extra_field_registry
+from spoolman.api.v1 import field, filament, nfc, spool, vendor
 from spoolman.database import database as db_module
 from spoolman.database.models import Base
 
@@ -35,11 +36,16 @@ async def client(tmp_path: Path) -> AsyncIterator[AsyncClient]:
 
     db_module.setup_db(url)
 
+    # The extra-field registry keeps a module-level cache; clear it so a field
+    # defined in one test's DB doesn't leak into the next.
+    extra_field_registry.extra_field_cache.clear()
+
     app = FastAPI()
     app.include_router(filament.router, prefix="/api/v1")
     app.include_router(vendor.router, prefix="/api/v1")
     app.include_router(spool.router, prefix="/api/v1")
     app.include_router(nfc.router, prefix="/api/v1")
+    app.include_router(field.router, prefix="/api/v1")
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as http_client:
