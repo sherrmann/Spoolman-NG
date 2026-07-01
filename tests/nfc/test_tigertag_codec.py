@@ -37,25 +37,25 @@ def _golden_payload() -> bytes:
     #        offset  bytes         field                       value
     buf[0:4] = bytes.fromhex("5bf59264")  # id_tigertag  = TigerTag Maker v1
     buf[4:8] = bytes.fromhex("0000002a")  # id_product   = 42
-    buf[8:10] = bytes.fromhex("0007")     # id_material  = 7
-    buf[10] = 0x03                        # aspect_1     = 3
-    buf[11] = 0x00                        # aspect_2     = 0 (ignored by decoder)
-    buf[12] = 0x8E                        # id_type      = 142 (filament)
-    buf[13] = 0x01                        # id_diameter  = 1  -> 1.75 mm
-    buf[14:16] = bytes.fromhex("0005")    # id_brand     = 5
+    buf[8:10] = bytes.fromhex("0007")  # id_material  = 7
+    buf[10] = 0x03  # aspect_1     = 3
+    buf[11] = 0x00  # aspect_2     = 0 (ignored by decoder)
+    buf[12] = 0x8E  # id_type      = 142 (filament)
+    buf[13] = 0x01  # id_diameter  = 1  -> 1.75 mm
+    buf[14:16] = bytes.fromhex("0005")  # id_brand     = 5
     buf[16:20] = bytes.fromhex("ff8800ff")  # color RGBA  = #ff8800, alpha 255
     buf[20:24] = bytes.fromhex("0003e801")  # weight_unit = (1000<<8)|1 -> 1000 g
-    buf[24:26] = bytes.fromhex("00d2")    # nozzle_min   = 210
-    buf[26:28] = bytes.fromhex("00e6")    # nozzle_max   = 230
-    buf[28] = 0x50                        # drying_temp  = 80
-    buf[29] = 0x08                        # drying_time  = 8 h
-    buf[30:32] = bytes.fromhex("0000")    # reserved
+    buf[24:26] = bytes.fromhex("00d2")  # nozzle_min   = 210
+    buf[26:28] = bytes.fromhex("00e6")  # nozzle_max   = 230
+    buf[28] = 0x50  # drying_temp  = 80
+    buf[29] = 0x08  # drying_time  = 8 h
+    buf[30:32] = bytes.fromhex("0000")  # reserved
     buf[32:36] = bytes.fromhex("30000000")  # timestamp  = 0x30000000
-    buf[36] = 0x3C                        # bed_temp_min = 60
-    buf[37] = 0x46                        # bed_temp_max = 70
+    buf[36] = 0x3C  # bed_temp_min = 60
+    buf[37] = 0x46  # bed_temp_max = 70
     buf[54:58] = bytes.fromhex("0001f600")  # emoji       = U+1F600
     msg = b"PLA Orange"
-    buf[58 : 58 + len(msg)] = msg         # user_message (null-padded to 28)
+    buf[58 : 58 + len(msg)] = msg  # user_message (null-padded to 28)
     return bytes(buf)
 
 

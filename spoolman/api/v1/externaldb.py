@@ -79,7 +79,7 @@ async def materials() -> FileResponse:
     name="Get external filament by 3D Filament Profiles ID",
     response_model_exclude_none=True,
 )
-async def profile(profile_id: str) -> dict | None:
+async def profile(profile_id: str) -> dict:
     """Fetch filament data from 3dfilamentprofiles.com."""
     if not profile_id.isdigit():
         raise HTTPException(status_code=400, detail="Invalid profile ID; expected a numeric ID.")

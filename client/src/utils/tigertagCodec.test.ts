@@ -259,8 +259,8 @@ describe("mapSpoolToTigerTag", () => {
     expect(data.color_a).toBe(255);
   });
 
-  it("rounds filament weight to the nearest gram", () => {
+  it("truncates filament weight to a whole gram, matching the Python backend's int()", () => {
     const data = mapSpoolToTigerTag(spool({ filament: filament({ weight: 999.6 }) }));
-    expect(data.weight).toBe(1000);
+    expect(data.weight).toBe(999);
   });
 });

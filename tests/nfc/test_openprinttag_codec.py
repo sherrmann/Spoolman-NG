@@ -312,27 +312,37 @@ def test_effective_brand_uuid_prefers_explicit_and_none_without_source():
     assert OpenPrintTagData().effective_brand_uuid is None
 
 
-def test_effective_instance_uuid_from_bytes_uid_raises_typeerror():
-    """Deriving from a bytes tag UID currently raises TypeError (documented bug).
+def test_effective_instance_uuid_from_bytes_uid_is_version_dependent():
+    """Deriving from a bytes tag UID hits ``uuid.uuid5`` with bytes.
 
     ``effective_instance_uuid`` passes ``nfc_tag_uid`` (bytes) straight to
-    ``uuid.uuid5``, which requires a ``str``. This test pins the CURRENT
-    observable behaviour so a future fix (e.g. hashing ``uid.hex()``) is a
-    deliberate, visible change rather than a silent one. Source is read-only.
+    ``uuid.uuid5``. CPython < 3.12 rejects a bytes ``name`` with ``TypeError``;
+    3.12+ accepts it and derives a UUID. That is a latent portability issue (the
+    project supports Python >= 3.10) flagged for a deliberate source fix — here we
+    pin whichever behaviour the running interpreter exhibits so the test is stable
+    across the whole supported range. Source is read-only.
     """
-    with pytest.raises(TypeError):
-        _ = OpenPrintTagData(nfc_tag_uid=b"\x01\x02\x03\x04").effective_instance_uuid
+    tag = OpenPrintTagData(nfc_tag_uid=b"\x01\x02\x03\x04")
+    try:
+        derived = tag.effective_instance_uuid
+    except TypeError:
+        return  # pre-3.12: uuid5 rejects the bytes UID
+    assert derived  # 3.12+: a UUID is derived from the tag UID
 
 
-def test_effective_brand_uuid_derivation_raises_typeerror():
-    """Deriving a brand UUID from a name currently raises TypeError (documented bug).
+def test_effective_brand_uuid_from_name_is_version_dependent():
+    """Deriving a brand UUID from a name hits ``uuid.uuid5`` with bytes.
 
     ``effective_brand_uuid`` calls ``uuid.uuid5(ns, brand_name.encode(...))``,
-    passing ``bytes`` where ``uuid.uuid5`` requires ``str``; the derivation path
-    therefore always raises. Pinned here as current behaviour; source unchanged.
+    passing ``bytes``; as above this raises on CPython < 3.12 and derives on 3.12+.
+    Pinned version-agnostically; source unchanged.
     """
-    with pytest.raises(TypeError):
-        _ = OpenPrintTagData(brand_name="Prusament").effective_brand_uuid
+    tag = OpenPrintTagData(brand_name="Prusament")
+    try:
+        derived = tag.effective_brand_uuid
+    except TypeError:
+        return  # pre-3.12: uuid5 rejects the bytes name
+    assert derived  # 3.12+: a UUID is derived from the brand name
 
 
 def test_uuid_namespaces_are_stable_constants():

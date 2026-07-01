@@ -12,10 +12,10 @@ from spoolman.api.v1.externaldb import parse_3dfp_html
 # A single embedded line carrying the escaped-JSON profile fields, plus a
 # separate data-color attribute elsewhere in the document.
 BRAND_LINE = (
-    r'...\"brand_name\":\"Prusament\",\"material\":\"PLA\",\"material_type\":\"Basic\",'
-    r'\"color\":\"Galaxy Black\",\"rgb\":\"#1a1a2e\",\"density\":1.24,\"diameter\":1750,'
-    r'\"nominal_weight\":1000,\"spool_weight\":230,\"temp_max\":230,\"temp_min\":210,'
-    r'\"bed_temp_max\":60,\"bed_temp_min\":50}'
+    r"...\"brand_name\":\"Prusament\",\"material\":\"PLA\",\"material_type\":\"Basic\","
+    r"\"color\":\"Galaxy Black\",\"rgb\":\"#1a1a2e\",\"density\":1.24,\"diameter\":1750,"
+    r"\"nominal_weight\":1000,\"spool_weight\":230,\"temp_max\":230,\"temp_min\":210,"
+    r"\"bed_temp_max\":60,\"bed_temp_min\":50}"
 )
 
 
@@ -61,7 +61,7 @@ def test_missing_brand_line_returns_none():
 
 
 def test_blank_brand_name_is_skipped():
-    blank = r'...\"brand_name\":\"\",\"material\":\"PLA\"...'
+    blank = r"...\"brand_name\":\"\",\"material\":\"PLA\"..."
     assert parse_3dfp_html(_page(brand_line=blank)) is None
 
 
@@ -79,7 +79,7 @@ def test_single_data_color_overrides_color_hex_without_multi_direction():
 
 
 def test_partial_profile_only_extracts_present_fields():
-    minimal = r'...\"brand_name\":\"Generic\",\"material\":\"PETG\"...'
+    minimal = r"...\"brand_name\":\"Generic\",\"material\":\"PETG\"..."
     data = parse_3dfp_html(_page(brand_line=minimal))
     assert data["manufacturer"] == "Generic"
     assert data["material"] == "PETG"
