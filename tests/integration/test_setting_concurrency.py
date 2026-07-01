@@ -17,7 +17,10 @@ HEADERS = {"content-type": "application/json"}
 
 async def test_concurrent_first_time_setting_saves_all_succeed(client: AsyncClient):
     responses = await asyncio.gather(
-        *(client.post("/api/v1/setting/currency", content=json.dumps(json.dumps("USD")), headers=HEADERS) for _ in range(5)),
+        *(
+            client.post("/api/v1/setting/currency", content=json.dumps(json.dumps("USD")), headers=HEADERS)
+            for _ in range(5)
+        ),
     )
     assert [r.status_code for r in responses] == [200] * 5
 
