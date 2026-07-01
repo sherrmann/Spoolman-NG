@@ -49,6 +49,35 @@ test.describe("spool journey", () => {
     await expect(page).toHaveURL(atPath("/spool"));
   });
 
+  test("create multiple spools via the quantity stepper", async ({ page, request }) => {
+    const filament = await seedFilament(request);
+
+    await page.goto(`${APP_BASE_URL}/spool/create`);
+    const filamentSelect = page.getByLabel("Filament");
+    await filamentSelect.click();
+    await filamentSelect.pressSequentially(filament.name);
+    await page.locator(".ant-select-item-option").filter({ hasText: filament.name }).first().click();
+
+    // Bump the quantity to 3 with the + stepper (the button right after the
+    // quantity input's antd wrapper), then create the batch.
+    const plus = page.locator(".ant-input-number:has(#qty-input) + button");
+    await plus.click();
+    await plus.click();
+    await expect(page.locator("#qty-input")).toHaveValue("3");
+
+    let posts = 0;
+    page.on("response", (r) => {
+      if (/\/api\/v1\/spool$/.test(r.url()) && r.request().method() === "POST") posts += 1;
+    });
+    await page
+      .locator("button")
+      .filter({ hasText: /^Save$/ })
+      .click();
+    await expect(page).toHaveURL(atPath("/spool"));
+    // The batch fires one create per unit; they settle just after the redirect.
+    await expect.poll(() => posts, { timeout: 10_000 }).toBeGreaterThanOrEqual(3);
+  });
+
   test("adjust filament usage → archive", async ({ page, request }) => {
     const filament = await seedFilament(request);
     const spoolRes = await request.post(`${APP_BASE_URL}/api/v1/spool`, {
