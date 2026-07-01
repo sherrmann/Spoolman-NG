@@ -86,13 +86,13 @@ translations, governance, and documentation.
    and **0 of the 53 NFC keys** (labels/dashboard keys similarly missing); `et` and
    `hi-Latn` are <15% complete. New features are English-only for non-English users today.
    → Seed machine-translated or English-fallback entries where acceptable, then let Weblate
-   fill in; extend `client/scripts/check-i18n.js` to report per-locale key coverage
-   (currently it only checks folders exist and are ≥10 kB).
+   fill in. ✅ *Done:* `client/scripts/check-i18n.js` now reports per-locale key coverage
+   on every CI run.
 4. **In-app links point at upstream** —
-   `client/src/components/header/index.tsx:62` (Ko-fi → `ko-fi.com/donkie`),
-   `client/src/pages/help/index.tsx:54` (help → `Donkie/Spoolman#integration-status`).
-   → Point the help link at the fork; decide deliberately whether the donation link should
-   keep honoring the original author, point at the fork maintainer, or be removed.
+   ✅ *Done:* the help page now links to this repo's Integrations section.
+   *Open:* `client/src/components/header/index.tsx:62` (Ko-fi → `ko-fi.com/donkie`) —
+   decide deliberately whether the donation link should keep honoring the original author,
+   point at the fork maintainer, or be removed (align with FUNDING.yml, TODO 9).
 5. **Docs/wiki story** — README links installation, Prometheus, and general docs to the
    upstream wiki (`README.md:24,45,114`), which the fork cannot edit and which may vanish.
    → Mirror the load-bearing wiki pages (Installation, Integrations, Filament Usage
@@ -100,25 +100,23 @@ translations, governance, and documentation.
 
 ### P1 — Community & governance (needed before inviting many users/contributors)
 
-6. **CONTRIBUTING.md** — dev setup (uv, npm, lefthook), PR process, testing expectations
-   (the bar is high here — say so), how to contribute translations and SpoolmanDB entries.
-7. **SECURITY.md + README security section** — Spoolman has **no authentication by
-   design** (trusted-LAN model). New fork endpoints inherit this and raise the stakes:
-   `POST /api/v1/nfc/write` writes physical tags, `POST /api/v1/nfc/lookup?auto_create=true`
-   / `create-from-tag` create spools unauthenticated. Document the threat model, recommend
-   a reverse-auth proxy (Authelia/OAuth2-Proxy) for anything internet-facing, and define a
-   private vulnerability-reporting channel (GitHub security advisories).
-8. **Fix or remove the Issue Manager workflow** — the scheduled run fails every night:
+6. ✅ **CONTRIBUTING.md** — *done:* dev setup (uv, npm, lefthook), PR process, testing
+   expectations, translation and SpoolmanDB contribution guidance.
+7. ✅ **SECURITY.md + README security section** — *done:* threat model (no auth by
+   design, trusted-LAN model; `nfc/write` and `auto_create` raise the stakes),
+   reverse-proxy/VPN guidance for internet exposure, private reporting via GitHub
+   security advisories.
+8. ✅ **Issue Manager workflow removed** — the scheduled run failed every night because
    `tiangolo/issue-manager@0.8.0`'s Docker image is broken
-   (`ModuleNotFoundError: typing_extensions`). Upgrade the action or delete the workflow;
-   also reconsider whether auto-closing issues is right for a young fork.
+   (`ModuleNotFoundError: typing_extensions`), and auto-closing issues is premature for a
+   young fork. Reintroduce a maintained action later if triage volume warrants it.
 9. **FUNDING.yml** — currently the untouched GitHub placeholder. Fill in the fork's funding
    (consistent with whatever decision is made for the in-app Ko-fi link, TODO 4).
 10. **Bus factor / ownership** — 100% of fork commits are one person; Docker Hub publishing
     runs under the personal `cookiemonster95` account (`ci.yml:653,666`). Consider a GitHub
     org (also gives the fork a neutral home if other maintainers join), a Docker Hub org or
-    GHCR-only distribution, and at least one co-maintainer with release rights. Add a PR
-    template (with an "added strings → i18n" checklist item).
+    GHCR-only distribution, and at least one co-maintainer with release rights.
+    ✅ *Done:* PR template with tests/i18n/API-compat/migration checklist.
 11. **Upstream backlog triage** — upstream had ~830 issues/PRs; the fork merged four
     high-value PRs. Sweep upstream's open PRs/issues once for remaining well-tested,
     popular changes (and known bugs with fixes attached) worth adopting, and say publicly
@@ -162,9 +160,11 @@ translations, governance, and documentation.
 
 ## 4. Suggested sequencing
 
-- **Week 1 (P0 core):** fork SpoolmanDB + switch default URL; register Weblate project;
-  fix in-app help/Ko-fi links; fix/remove issue-manager workflow.
-- **Weeks 2–3 (P1):** CONTRIBUTING, SECURITY + README security section, FUNDING, PR
-  template, i18n coverage check in CI, seed missing locale keys, mirror wiki docs.
+- ✅ **Done on this branch:** issue-manager workflow removed; help link points at the
+  fork; SECURITY.md + README security section; CONTRIBUTING.md; PR template; per-locale
+  i18n coverage report in CI; README translation/SpoolmanDB notes corrected.
+- **Week 1 (P0 core, needs maintainer/external access):** fork SpoolmanDB + switch the
+  default URL; register a Weblate project; decide the Ko-fi/FUNDING question.
+- **Weeks 2–3 (P1):** seed missing locale keys, mirror wiki docs.
 - **Week 4+ (P2/P3):** fix the two pinned bugs, cascade migration, auto_create guard,
   upstream backlog sweep, community channels, integration outreach.
