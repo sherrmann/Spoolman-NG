@@ -137,15 +137,20 @@ translations, governance, and documentation.
 16. ✅ **DB-level cascade on `*Field` tables** — *done:* migration `e7a41c9d2b53` adds
     `ondelete="CASCADE"` on all three FKs (batch rebuild on SQLite, reflected constraint
     names elsewhere); models updated to match.
-17. **Dashboard analytics at scale** — aggregation is client-side over the full spool list;
-    fine for <1k spools, worth a benchmark at 5–10k and, if needed, an optional
-    server-side `/api/v1/spool/analytics` aggregate endpoint.
+17. ✅ **Dashboard analytics at scale** — *done:* benchmarked (`npm run bench`) at
+    1k/5k/10k synthetic spools. After fixing `recentSpools` to parse dates once
+    (was re-parsing per sort comparison), the full home-page aggregation takes ~43ms
+    at 10k spools — client-side aggregation is fine; no server-side endpoint needed.
 
 ### P3 — Polish / long tail
 
-18. **e2e long tail** from `TESTING_STRATEGY.md` §8 "Remaining": calibration wizard,
-    print-dialog permutations, 3DFP import journey, list filter/sort, locations
-    drag-and-drop, error/empty branches, i18n `<Trans>` rendering.
+18. ✅ **e2e long tail** — *done:* journeys added for the calibration wizard (skip-to-
+    finish + cancel/resume), print dialog (selection step, template editing + live
+    preview), list filter/sort, error branches (3DFP failure, 404), and locations card
+    grouping; plus a component test rendering `help.description` through real i18next
+    to pin `<Trans>` interpolation. The locations drag itself is hover-driven react-dnd
+    that Playwright cannot drive reliably — the resulting PATCH is covered at the API
+    level with UI assertions on the regrouped state. Full journey suite: 22 passing.
 19. **Community channels** — enable GitHub Discussions (or link a Matrix/Discord) so
     support questions don't all become issues; announce the fork where users will look
     (upstream issue tracker if possible, r/klippers, Moonraker/Fluidd/Mainsail docs which
@@ -168,6 +173,7 @@ translations, governance, and documentation.
   FUNDING.yml.
 - ✅ **P2 hardening done:** both pinned bugs fixed, auto_create duplicate guard,
   cascade migration, fork-owned installation/monitoring docs.
+- ✅ **P3 done:** analytics benchmarked at 10k spools (~43ms after the recentSpools
+  fix — no server endpoint needed); e2e long tail covered (22 journeys passing).
 - **Remaining (needs maintainer decisions or external accounts):** Ko-fi/FUNDING,
-  Weblate project, upstream backlog sweep, community channels, integration outreach,
-  analytics-at-scale benchmark, e2e long tail.
+  Weblate project, upstream backlog sweep, community channels, integration outreach.
