@@ -1,6 +1,13 @@
 import { CrudFilter } from "@refinedev/core";
 import { describe, expect, it } from "vitest";
-import { getCustomFieldFilters, getFiltersForField, removeUndefined, searchMatches, typeFilters } from "./filtering";
+import {
+  getCustomFieldFilters,
+  getFiltersForField,
+  removeUndefined,
+  searchMatches,
+  serializeFilterValues,
+  typeFilters,
+} from "./filtering";
 
 // Behavioral tests for the pure filter helpers in filtering.ts.
 // Oracle: the documented contract (JSDoc) plus refine's CrudFilter shape
@@ -150,5 +157,20 @@ describe("searchMatches", () => {
     // "".split(" ") === [""] and every string includes "", so an empty query always matches.
     expect(searchMatches("", "anything")).toBe(true);
     expect(searchMatches("", "")).toBe(true);
+  });
+});
+
+describe("serializeFilterValues", () => {
+  it("joins values with commas", () => {
+    expect(serializeFilterValues(["a", "b", "c"])).toBe("a,b,c");
+  });
+
+  it("maps the '<empty>' sentinel to a real empty value", () => {
+    expect(serializeFilterValues(["<empty>"])).toBe("");
+    expect(serializeFilterValues(["a", "<empty>", "b"])).toBe("a,,b");
+  });
+
+  it("returns an empty string for an empty list", () => {
+    expect(serializeFilterValues([])).toBe("");
   });
 });
