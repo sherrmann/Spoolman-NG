@@ -6,6 +6,7 @@ import { strToU8, zipSync } from "fflate";
 import {
   addBox,
   addExtrudedConvexPolygon,
+  addExtrudedPlateWithHangerTab,
   addExtrudedPlateWithHole,
   emptyMesh,
   Mesh,
@@ -27,7 +28,21 @@ export interface SwatchMeshes {
 export function buildSwatchMeshes(layout: SwatchLayout): SwatchMeshes {
   const base = emptyMesh();
   const outline = roundedRectanglePolygon(layout.widthMm, layout.heightMm, layout.cornerRadiusMm, CORNER_SEGMENTS);
-  if (layout.hole) {
+  if (layout.hangerTab) {
+    addExtrudedPlateWithHangerTab(
+      base,
+      outline,
+      // The card's 2D top edge (y = 0) is y = heightMm in 3D (y up).
+      {
+        cx: layout.hangerTab.cx,
+        edgeY: layout.heightMm,
+        holeR: layout.hangerTab.holeR,
+        outerR: layout.hangerTab.outerR,
+      },
+      0,
+      layout.baseThicknessMm,
+    );
+  } else if (layout.hole) {
     addExtrudedPlateWithHole(
       base,
       outline,

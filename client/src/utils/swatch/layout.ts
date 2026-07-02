@@ -51,6 +51,17 @@ export interface SwatchHole {
   r: number;
 }
 
+/**
+ * A hanger tab on the card's top edge: an upside-down-U arch protruding
+ * `outerR` above the card, around a nail hole of radius `holeR` centered on
+ * the edge at x = cx (half in the tab, half punched through the card).
+ */
+export interface SwatchHangerTab {
+  cx: number;
+  outerR: number;
+  holeR: number;
+}
+
 /** The geometry and content recipe of a swatch style. */
 export interface SwatchStyleSpec {
   widthMm: number;
@@ -70,8 +81,15 @@ export interface SwatchStyleSpec {
    * Optional keychain hole. The layout only makes room for a hole on the left
    * side of the card (the text block starts right of it); keep its collar
    * (1.6x the radius) inside the card outline — see addExtrudedPlateWithHole.
+   * Mutually exclusive with hangerTab.
    */
   hole?: SwatchHole;
+  /**
+   * Optional hanger tab on the top edge (for a nail or screw). Keep the hole's
+   * dip into the card (holeR) smaller than marginMm so it clears the marking,
+   * and cx ± outerR within the card width. Mutually exclusive with hole.
+   */
+  hangerTab?: SwatchHangerTab;
   /** The text lines to emboss; empty-text lines are skipped. */
   composeLines(input: SwatchInput): SwatchLineSpec[];
 }
@@ -102,6 +120,8 @@ export interface SwatchLayout {
   markingColor: MarkingColor;
   /** Keychain hole through the card, if the style has one. */
   hole?: SwatchHole;
+  /** Hanger tab above the top edge, if the style has one. */
+  hangerTab?: SwatchHangerTab;
   /** All raised marking geometry (text pixels and QR modules). */
   markRects: MarkRect[];
   textLines: SwatchTextLine[];
@@ -283,6 +303,7 @@ export function buildSwatchLayout(input: SwatchInput, spec: SwatchStyleSpec): Sw
     baseColorHexes,
     markingColor,
     hole: spec.hole,
+    hangerTab: spec.hangerTab,
     markRects,
     textLines,
     qr: { x: qrX, y: qrY, sizeMm: spec.qrAreaMm, moduleCount, moduleSizeMm, ecLevel, inverted },

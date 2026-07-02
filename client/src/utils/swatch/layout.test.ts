@@ -229,3 +229,22 @@ describe("keychain hole support", () => {
     }
   });
 });
+
+describe("hanger tab support", () => {
+  const TAB = { cx: 37.5, outerR: 5.5, holeR: 2.5 };
+  const TAB_SPEC: SwatchStyleSpec = { ...TEST_SPEC, hangerTab: TAB };
+
+  it("passes the hanger tab through to the layout", () => {
+    expect(buildSwatchLayout(FULL_INPUT, TAB_SPEC).hangerTab).toEqual(TAB);
+    expect(buildSwatchLayout(FULL_INPUT, TEST_SPEC).hangerTab).toBeUndefined();
+  });
+
+  it("keeps the marking clear of the nail hole dipping into the card", () => {
+    const layout = buildSwatchLayout(FULL_INPUT, TAB_SPEC);
+    for (const rect of layout.markRects) {
+      const nearestX = Math.min(Math.max(TAB.cx, rect.x), rect.x + rect.w);
+      const nearestY = Math.min(Math.max(0, rect.y), rect.y + rect.h);
+      expect(Math.hypot(nearestX - TAB.cx, nearestY - 0)).toBeGreaterThanOrEqual(TAB.holeR);
+    }
+  });
+});

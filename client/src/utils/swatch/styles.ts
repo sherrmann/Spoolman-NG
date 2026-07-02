@@ -17,8 +17,9 @@
 // 0.4 mm nozzle, and keep line scales ≥ minPixelScaleMm for legible text.
 // A style may punch a keychain hole through the card via `hole` — place it on
 // the left side (the text block starts right of its rim) and keep its collar
-// square (1.6x the radius) inside the card outline; the contract tests verify
-// the marking keeps clear of it.
+// square (1.6x the radius) inside the card outline — or grow a hanger tab on
+// the top edge via `hangerTab` (not both); the contract tests verify the
+// marking keeps clear of either hole.
 
 import {
   SwatchInput,
@@ -91,6 +92,33 @@ const keychain: SwatchStyle = {
   },
 };
 
+/** The classic card with an upside-down-U tab on top, to hang it on a nail. */
+const hanger: SwatchStyle = {
+  key: "hanger",
+  name: "Hanger",
+  spec: {
+    widthMm: 75,
+    heightMm: 34,
+    baseThicknessMm: 2.4,
+    markingThicknessMm: 0.2,
+    cornerRadiusMm: 3,
+    marginMm: 3,
+    qrAreaMm: 20,
+    textQrGapMm: 2.5,
+    lineGapMm: 1.2,
+    minPixelScaleMm: 0.4,
+    // 5mm nail hole centered on the top edge, under a 3mm-thick arch.
+    hangerTab: { cx: 37.5, outerR: 5.5, holeR: 2.5 },
+    composeLines: (input: SwatchInput) => [
+      { text: input.vendorName ?? "", scale: 0.5 },
+      { text: input.name ?? "", scale: 0.65 },
+      { text: materialDiameterText(input), scale: 0.5 },
+      { text: temperaturesText(input), scale: 0.5 },
+      { text: idWeightText(input), scale: 0.45 },
+    ],
+  },
+};
+
 /** A small tag for sample boxes: just the essentials next to the QR code. */
 const compact: SwatchStyle = {
   key: "compact",
@@ -140,7 +168,7 @@ const card: SwatchStyle = {
   },
 };
 
-export const SWATCH_STYLES: readonly SwatchStyle[] = [classic, keychain, compact, card];
+export const SWATCH_STYLES: readonly SwatchStyle[] = [classic, keychain, hanger, compact, card];
 
 export const DEFAULT_SWATCH_STYLE_KEY = classic.key;
 

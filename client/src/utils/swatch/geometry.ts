@@ -169,6 +169,70 @@ export function addExtrudedPlateWithHole(
   }
 }
 
+export interface EdgeHangerTab {
+  /** Hole center x; the hole sits centered on the plate's top edge. */
+  cx: number;
+  /** The plate's top edge y coordinate (the hole center's y). */
+  edgeY: number;
+  holeR: number;
+  /** Outer radius of the tab arch protruding above the edge; must exceed 1.6x holeR. */
+  outerR: number;
+}
+
+/**
+ * Extrude a convex plate outline with a hanger tab on its top edge: a
+ * half-annulus arch (an upside-down U) protruding above the edge, around a
+ * nail hole that straddles the edge — half in the tab, half punched through
+ * the plate. Built from touching convex prisms like addExtrudedPlateWithHole.
+ *
+ * The hole's collar square (1.6x holeR) must lie inside the outline
+ * horizontally, and the tab (cx ± outerR) must stay within the plate's width.
+ */
+export function addExtrudedPlateWithHangerTab(
+  mesh: Mesh,
+  outline: ReadonlyArray<readonly [number, number]>,
+  tab: EdgeHangerTab,
+  z0: number,
+  z1: number,
+  holeSegments = 16,
+): void {
+  const s = tab.holeR * 1.6; // half-size of the square collar below the edge
+  const [sx0, sx1] = [tab.cx - s, tab.cx + s];
+
+  // Tile the plate minus the collar square's below-edge half: everything left
+  // of the collar, everything right of it, and the column below it.
+  addExtrudedConvexPolygon(mesh, clipConvexPolygon(outline, 1, 0, sx0), z0, z1);
+  addExtrudedConvexPolygon(mesh, clipConvexPolygon(outline, -1, 0, -sx1), z0, z1);
+  const column = clipConvexPolygon(clipConvexPolygon(outline, -1, 0, -sx0), 1, 0, sx1);
+  addExtrudedConvexPolygon(mesh, clipConvexPolygon(column, 0, 1, tab.edgeY - s), z0, z1);
+
+  // One convex quad per angular segment around the hole. Above the edge the
+  // quads run out to the tab's outer circle (forming the arch); below it they
+  // run out to the collar square (filling the plate around the hole).
+  const point = (angle: number, radius: number): [number, number] => [
+    tab.cx + radius * Math.cos(angle),
+    tab.edgeY + radius * Math.sin(angle),
+  ];
+  for (let i = 0; i < holeSegments; i++) {
+    const angle0 = (2 * Math.PI * i) / holeSegments;
+    const angle1 = (2 * Math.PI * (i + 1)) / holeSegments;
+    const aboveEdge = i < holeSegments / 2;
+    const outerRadius = (angle: number) =>
+      aboveEdge ? tab.outerR : s / Math.max(Math.abs(Math.cos(angle)), Math.abs(Math.sin(angle)));
+    addExtrudedConvexPolygon(
+      mesh,
+      dedupPolygon([
+        point(angle0, tab.holeR),
+        point(angle0, outerRadius(angle0)),
+        point(angle1, outerRadius(angle1)),
+        point(angle1, tab.holeR),
+      ]),
+      z0,
+      z1,
+    );
+  }
+}
+
 /**
  * Counter-clockwise outline of a rectangle with rounded corners, with its
  * lower-left corner at (0,0).

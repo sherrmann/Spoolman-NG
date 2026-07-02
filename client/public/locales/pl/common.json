@@ -306,6 +306,7 @@
       "styles": {
         "classic": "Klasyczny",
         "keychain": "Brelok",
+        "hanger": "Zawieszka",
         "compact": "Kompaktowy",
         "card": "Karta"
       },
