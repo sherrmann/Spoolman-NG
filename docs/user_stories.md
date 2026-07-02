@@ -82,12 +82,10 @@ This document catalogs what people realistically want to do with Spoolman NG and
 ## Top improvement themes
 
 1. **Ship authentication.** Rows 66–69 are all Missing and are the fork's own stated adoption ceiling; start with the road-mapped opt-in bearer token, then optional accounts and read-only/admin roles.
-2. **Persist a per-use event log.** One durable usage-history table unlocks in-app usage-over-time (row 16), cost-per-print and spend trends (row 63), and job/printer/user attribution (row 64) — all Missing today because only a running counter exists.
+2. **Persist a per-use event log.** One durable usage-history table unlocks in-app usage-over-time (row 16), cost-per-print and spend trends (row 63), and job/printer/user attribution (row 64) — none of which exist today because only a running weight counter is kept (row 63 already surfaces total value, but not these).
 3. **Bring data portability into the UI.** Export (row 61), backup trigger (row 62), and restore (row 55) exist only as API calls or manual steps, and import (row 65) is absent; add buttons plus a round-tripping CSV/JSON import.
 4. **Close the update lifecycle gap.** Document per-deployment update commands (row 52), add an upstream update-available check (row 58) and a self-updater (row 59), and take an automatic pre-migration backup (row 53).
 5. **Make search and bulk editing first-class.** Wire the existing but unused backend free-text and color search into a search box (row 18), add numeric range filters (row 19), and add multi-row bulk actions (row 20).
 6. **Write the missing platform and hardware docs.** A Synology Container Manager guide (row 51), NFC reader and HTTPS setup (row 28), and armv7 caveats (row 46) would remove real onboarding friction.
 7. **Harden ecosystem integrations.** Add contract tests and redirect Moonraker, Mainsail, Fluidd, OctoPrint, and Home Assistant docs to this fork (rows 33–36), and ship a Grafana dashboard (row 42) and a smart-scale reference bridge (row 15).
 8. **Polish two quiet footguns.** Keep row actions usable on phones (row 23) and actually consume the vendor default tare weight that is captured but ignored (row 9).
-</content>
-</invoke>
