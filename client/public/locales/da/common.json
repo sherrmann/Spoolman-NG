@@ -293,6 +293,7 @@
       "style": "Stil",
       "styles": {
         "classic": "Klassisk",
+        "keychain": "Nøglering",
         "compact": "Kompakt",
         "card": "Kort"
       },

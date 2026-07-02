@@ -335,6 +335,7 @@
       "style": "Stil",
       "styles": {
         "classic": "Clasic",
+        "keychain": "Breloc",
         "compact": "Compact",
         "card": "Card"
       },

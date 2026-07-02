@@ -306,6 +306,7 @@
       "style": "Styl",
       "styles": {
         "classic": "Klasický",
+        "keychain": "Klíčenka",
         "compact": "Kompaktní",
         "card": "Karta"
       },

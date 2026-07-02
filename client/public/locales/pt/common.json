@@ -294,6 +294,7 @@
       "style": "Estilo",
       "styles": {
         "classic": "Clássico",
+        "keychain": "Porta-chaves",
         "compact": "Compacto",
         "card": "Cartão"
       },

@@ -293,6 +293,7 @@
       "style": "Style",
       "styles": {
         "classic": "Classic",
+        "keychain": "Keychain",
         "compact": "Compact",
         "card": "Card"
       },

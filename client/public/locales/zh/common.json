@@ -302,6 +302,7 @@
       "style": "样式",
       "styles": {
         "classic": "经典",
+        "keychain": "钥匙扣",
         "compact": "紧凑",
         "card": "卡片"
       },

@@ -252,6 +252,7 @@
       "style": "สไตล์",
       "styles": {
         "classic": "คลาสสิก",
+        "keychain": "พวงกุญแจ",
         "compact": "กะทัดรัด",
         "card": "การ์ด"
       },

@@ -304,6 +304,7 @@
       "style": "Stil",
       "styles": {
         "classic": "Klassisch",
+        "keychain": "Schlüsselanhänger",
         "compact": "Kompakt",
         "card": "Karte"
       },

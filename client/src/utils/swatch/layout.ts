@@ -20,6 +20,8 @@ const QR_QUIET_MODULES = 2;
 /** Below this module size a 0.4mm nozzle cannot print the QR reliably. */
 const MIN_QR_MODULE_MM = 0.4;
 const TRUNCATION_SUFFIX = "..";
+/** Horizontal clearance between a keychain hole and the text block. */
+const HOLE_TEXT_GAP_MM = 2;
 
 export interface SwatchInput {
   id: number;
@@ -42,6 +44,13 @@ export interface SwatchLineSpec {
   scale: number;
 }
 
+/** A circular keychain hole punched through the card, in mm from the top-left corner. */
+export interface SwatchHole {
+  cx: number;
+  cy: number;
+  r: number;
+}
+
 /** The geometry and content recipe of a swatch style. */
 export interface SwatchStyleSpec {
   widthMm: number;
@@ -57,6 +66,12 @@ export interface SwatchStyleSpec {
   lineGapMm: number;
   /** Smallest printable glyph-pixel size; below this, lines are truncated instead. */
   minPixelScaleMm: number;
+  /**
+   * Optional keychain hole. The layout only makes room for a hole on the left
+   * side of the card (the text block starts right of it); keep its collar
+   * (1.6x the radius) inside the card outline — see addExtrudedPlateWithHole.
+   */
+  hole?: SwatchHole;
   /** The text lines to emboss; empty-text lines are skipped. */
   composeLines(input: SwatchInput): SwatchLineSpec[];
 }
@@ -85,6 +100,8 @@ export interface SwatchLayout {
   /** Normalized "#rrggbb" filament colors; empty if unknown. */
   baseColorHexes: string[];
   markingColor: MarkingColor;
+  /** Keychain hole through the card, if the style has one. */
+  hole?: SwatchHole;
   /** All raised marking geometry (text pixels and QR modules). */
   markRects: MarkRect[];
   textLines: SwatchTextLine[];
@@ -237,8 +254,12 @@ export function buildSwatchLayout(input: SwatchInput, spec: SwatchStyleSpec): Sw
     appendRunRects(markRects, cells, qrX, qrY + row * moduleSizeMm, moduleSizeMm);
   }
 
-  // Text block on the left, vertically centered.
-  const textMaxWidthMm = qrX - spec.textQrGapMm - spec.marginMm;
+  // Text block on the left, vertically centered. A keychain hole sits left of
+  // the text, so the block starts right of its rim.
+  const textStartXMm = spec.hole
+    ? Math.max(spec.marginMm, spec.hole.cx + spec.hole.r + HOLE_TEXT_GAP_MM)
+    : spec.marginMm;
+  const textMaxWidthMm = qrX - spec.textQrGapMm - textStartXMm;
   const textLines = spec
     .composeLines(input)
     .filter((line) => line.text !== "")
@@ -249,7 +270,7 @@ export function buildSwatchLayout(input: SwatchInput, spec: SwatchStyleSpec): Sw
   const textAreaHeightMm = spec.heightMm - 2 * spec.marginMm;
   let y = spec.marginMm + Math.max(0, (textAreaHeightMm - totalTextHeightMm) / 2);
   for (const line of textLines) {
-    appendTextRects(markRects, line, spec.marginMm, y);
+    appendTextRects(markRects, line, textStartXMm, y);
     y += GLYPH_HEIGHT * line.scale + spec.lineGapMm;
   }
 
@@ -261,6 +282,7 @@ export function buildSwatchLayout(input: SwatchInput, spec: SwatchStyleSpec): Sw
     cornerRadiusMm: spec.cornerRadiusMm,
     baseColorHexes,
     markingColor,
+    hole: spec.hole,
     markRects,
     textLines,
     qr: { x: qrX, y: qrY, sizeMm: spec.qrAreaMm, moduleCount, moduleSizeMm, ecLevel, inverted },

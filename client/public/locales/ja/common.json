@@ -291,6 +291,7 @@
       "style": "スタイル",
       "styles": {
         "classic": "クラシック",
+        "keychain": "キーホルダー",
         "compact": "コンパクト",
         "card": "カード"
       },

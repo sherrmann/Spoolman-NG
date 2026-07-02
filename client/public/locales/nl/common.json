@@ -326,6 +326,7 @@
       "style": "Stijl",
       "styles": {
         "classic": "Klassiek",
+        "keychain": "Sleutelhanger",
         "compact": "Compact",
         "card": "Kaart"
       },

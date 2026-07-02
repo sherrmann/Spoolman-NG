@@ -191,6 +191,7 @@
       "style": "Estilo",
       "styles": {
         "classic": "Clásico",
+        "keychain": "Llavero",
         "compact": "Compacto",
         "card": "Tarjeta"
       },

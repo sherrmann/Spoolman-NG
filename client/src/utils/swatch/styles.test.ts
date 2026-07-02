@@ -119,6 +119,16 @@ describe.each(SWATCH_STYLES.map((style) => [style.key, style] as const))("style 
       expect(layout.qr.moduleSizeMm).toBeGreaterThanOrEqual(0.4);
     });
 
+    it("keeps the marking clear of the keychain hole", () => {
+      const hole = style.spec.hole;
+      if (!hole) return;
+      for (const rect of layout.markRects) {
+        const nearestX = Math.min(Math.max(hole.cx, rect.x), rect.x + rect.w);
+        const nearestY = Math.min(Math.max(hole.cy, rect.y), rect.y + rect.h);
+        expect(Math.hypot(nearestX - hole.cx, nearestY - hole.cy)).toBeGreaterThanOrEqual(hole.r - 1e-9);
+      }
+    });
+
     it("builds watertight meshes with the marking exactly one layer above the base", () => {
       const { base, marking } = buildSwatchMeshes(layout);
       assertWatertight(base);
@@ -126,6 +136,11 @@ describe.each(SWATCH_STYLES.map((style) => [style.key, style] as const))("style 
       const baseBounds = meshBounds(base);
       expect(baseBounds.min[2]).toBe(0);
       expect(baseBounds.max[2]).toBeCloseTo(style.spec.baseThicknessMm, 9);
+      // the base (incl. any keychain-hole collar) must stay within the card footprint
+      expect(baseBounds.min[0]).toBeGreaterThanOrEqual(-1e-6);
+      expect(baseBounds.max[0]).toBeLessThanOrEqual(style.spec.widthMm + 1e-6);
+      expect(baseBounds.min[1]).toBeGreaterThanOrEqual(-1e-6);
+      expect(baseBounds.max[1]).toBeLessThanOrEqual(style.spec.heightMm + 1e-6);
       const markingBounds = meshBounds(marking);
       expect(markingBounds.min[2]).toBeCloseTo(style.spec.baseThicknessMm, 9);
       expect(markingBounds.max[2]).toBeCloseTo(style.spec.baseThicknessMm + style.spec.markingThicknessMm, 9);

@@ -200,3 +200,32 @@ describe("buildSwatchLayout", () => {
     expect(layout.qr.moduleSizeMm).toBeGreaterThanOrEqual(0.4);
   });
 });
+
+describe("keychain hole support", () => {
+  const HOLE = { cx: 6, cy: 17, r: 2.4 };
+  const HOLE_SPEC: SwatchStyleSpec = { ...TEST_SPEC, hole: HOLE };
+
+  it("passes the hole through to the layout", () => {
+    expect(buildSwatchLayout(FULL_INPUT, HOLE_SPEC).hole).toEqual(HOLE);
+    expect(buildSwatchLayout(FULL_INPUT, TEST_SPEC).hole).toBeUndefined();
+  });
+
+  it("starts the text block right of the hole rim", () => {
+    const layout = buildSwatchLayout(FULL_INPUT, HOLE_SPEC);
+    const textRects = layout.markRects.filter((rect) => rect.x + rect.w < layout.qr.x);
+    expect(textRects.length).toBeGreaterThan(0);
+    for (const rect of textRects) {
+      // hole rim (8.4mm) plus the 2mm clearance
+      expect(rect.x).toBeGreaterThanOrEqual(HOLE.cx + HOLE.r + 2 - 1e-9);
+    }
+  });
+
+  it("keeps every marking rect clear of the hole disc", () => {
+    const layout = buildSwatchLayout(FULL_INPUT, HOLE_SPEC);
+    for (const rect of layout.markRects) {
+      const nearestX = Math.min(Math.max(HOLE.cx, rect.x), rect.x + rect.w);
+      const nearestY = Math.min(Math.max(HOLE.cy, rect.y), rect.y + rect.h);
+      expect(Math.hypot(nearestX - HOLE.cx, nearestY - HOLE.cy)).toBeGreaterThanOrEqual(HOLE.r);
+    }
+  });
+});

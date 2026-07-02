@@ -3,7 +3,14 @@
 // so slicers import it as a single multi-part, multi-color model.
 
 import { strToU8, zipSync } from "fflate";
-import { addBox, addExtrudedConvexPolygon, emptyMesh, Mesh, roundedRectanglePolygon } from "./geometry";
+import {
+  addBox,
+  addExtrudedConvexPolygon,
+  addExtrudedPlateWithHole,
+  emptyMesh,
+  Mesh,
+  roundedRectanglePolygon,
+} from "./geometry";
 import { SwatchLayout } from "./layout";
 
 const MODEL_NAMESPACE = "http://schemas.microsoft.com/3dmanufacturing/core/2015/02";
@@ -19,12 +26,19 @@ export interface SwatchMeshes {
 /** Build the 3D meshes for a layout, converting from top-left 2D to 3D coordinates (y up). */
 export function buildSwatchMeshes(layout: SwatchLayout): SwatchMeshes {
   const base = emptyMesh();
-  addExtrudedConvexPolygon(
-    base,
-    roundedRectanglePolygon(layout.widthMm, layout.heightMm, layout.cornerRadiusMm, CORNER_SEGMENTS),
-    0,
-    layout.baseThicknessMm,
-  );
+  const outline = roundedRectanglePolygon(layout.widthMm, layout.heightMm, layout.cornerRadiusMm, CORNER_SEGMENTS);
+  if (layout.hole) {
+    addExtrudedPlateWithHole(
+      base,
+      outline,
+      // The layout's hole is in top-left 2D coordinates; flip to 3D (y up).
+      { cx: layout.hole.cx, cy: layout.heightMm - layout.hole.cy, r: layout.hole.r },
+      0,
+      layout.baseThicknessMm,
+    );
+  } else {
+    addExtrudedConvexPolygon(base, outline, 0, layout.baseThicknessMm);
+  }
   const marking = emptyMesh();
   for (const rect of layout.markRects) {
     addBox(

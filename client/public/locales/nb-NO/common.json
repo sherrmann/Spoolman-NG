@@ -92,6 +92,7 @@
       "style": "Stil",
       "styles": {
         "classic": "Klassisk",
+        "keychain": "Nøkkelring",
         "compact": "Kompakt",
         "card": "Kort"
       },

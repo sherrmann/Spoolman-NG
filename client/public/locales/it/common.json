@@ -295,6 +295,7 @@
       "style": "Stile",
       "styles": {
         "classic": "Classico",
+        "keychain": "Portachiavi",
         "compact": "Compatto",
         "card": "Scheda"
       },
