@@ -59,7 +59,7 @@ translations, governance, and documentation.
 
 - Release automation, CalVer, GHCR/Docker Hub publishing, Moonraker update path.
 - `scripts/install.sh`, `docker-compose.yml`, README install instructions — all point at the fork.
-- API docs published independently to `sherrmann.github.io/Spoolman` (`apidocs.yml`).
+- API docs published independently to `sherrmann.github.io/Spoolman-NG` (`apidocs.yml`).
 - Issue templates are neutral (no upstream references); dependabot configured for pip + npm.
 - Migration chain linear; calibration tables use proper FKs with `ondelete="CASCADE"`.
 - No TODO/FIXME debt introduced by the fork; known bugs are pinned by tests and documented.

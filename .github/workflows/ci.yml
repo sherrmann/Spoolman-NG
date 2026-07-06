@@ -18,7 +18,7 @@ env:
   # Use the fork owner's namespace so build-cache and image pushes go to a
   # registry this repo can write to. (GHCR image names must be lowercase;
   # github.repository_owner is lowercase for this fork.)
-  GHCR_IMAGE: ${{ github.repository_owner }}/spoolman
+  GHCR_IMAGE: ${{ github.repository_owner }}/spoolman-ng
 
 jobs:
   #
@@ -650,7 +650,7 @@ jobs:
           flavor: |
             latest=false
           images: |
-            docker.io/cookiemonster95/spoolman
+            docker.io/cookiemonster95/spoolman-ng
           tags: |
             type=raw,value=edge
             type=sha,format=short
@@ -741,8 +741,8 @@ jobs:
             ### Docker images
             Multi-arch images are published to GHCR and Docker Hub:
             ```
-            docker pull ghcr.io/sherrmann/spoolman:${{ steps.ver.outputs.version }}
-            docker pull docker.io/cookiemonster95/spoolman:${{ steps.ver.outputs.version }}
+            docker pull ghcr.io/${{ env.GHCR_IMAGE }}:${{ steps.ver.outputs.version }}
+            docker pull docker.io/cookiemonster95/spoolman-ng:${{ steps.ver.outputs.version }}
             ```
             Also tagged `:latest` (newest release) and `:edge` (latest `master`). Architectures: `amd64`, `arm64`, and `armv7` (all with NFC support).
 

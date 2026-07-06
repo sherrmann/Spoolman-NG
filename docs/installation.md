@@ -14,7 +14,7 @@ options, backups, and Moonraker-managed updates.
 ```yaml
 services:
   spoolman:
-    image: ghcr.io/sherrmann/spoolman:latest # or cookiemonster95/spoolman:latest on Docker Hub
+    image: ghcr.io/sherrmann/spoolman-ng:latest # or cookiemonster95/spoolman-ng:latest on Docker Hub
     restart: unless-stopped
     volumes:
       # Mount the host directory "./data" into the container, keeping your
@@ -41,7 +41,7 @@ One line fetches the latest release and runs the installer (sets up
 systemd service):
 
 ```bash
-curl -fsSL https://github.com/sherrmann/Spoolman/releases/latest/download/spoolman.zip -o spoolman.zip \
+curl -fsSL https://github.com/sherrmann/Spoolman-NG/releases/latest/download/spoolman.zip -o spoolman.zip \
   && unzip spoolman.zip -d ~/Spoolman && cd ~/Spoolman && ./scripts/install.sh
 ```
 
@@ -61,7 +61,7 @@ Add this to `moonraker.conf` (adjust `path` to your install directory):
 [update_manager spoolman]
 type: web
 channel: stable
-repo: sherrmann/Spoolman
+repo: sherrmann/Spoolman-NG
 path: ~/Spoolman
 ```
 
