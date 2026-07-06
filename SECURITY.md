@@ -29,7 +29,7 @@ published Docker images.
 
 Please do **not** open a public issue for security problems. Instead, report
 privately via
-[GitHub Security Advisories](https://github.com/sherrmann/Spoolman/security/advisories/new).
+[GitHub Security Advisories](https://github.com/sherrmann/Spoolman-NG/security/advisories/new).
 
 Include the version (or image tag), reproduction steps, and impact. You should
 receive an initial response within 14 days. Fixes are published as a regular
