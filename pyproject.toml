@@ -1,6 +1,6 @@
 [project]
 name = "spoolman"
-version = "2026.6.1"
+version = "2026.7.0"
 description = "Spoolman NG - a self-hosted web service that keeps track of your 3D-printer filament spools."
 license = "MIT"
 readme = "README.md"
@@ -37,10 +37,10 @@ dependencies = [
 requires-python = ">=3.10"
 
 [project.urls]
-Homepage = "https://github.com/sherrmann/Spoolman"
-Repository = "https://github.com/sherrmann/Spoolman"
-Issues = "https://github.com/sherrmann/Spoolman/issues"
-Documentation = "https://sherrmann.github.io/Spoolman/"
+Homepage = "https://github.com/sherrmann/Spoolman-NG"
+Repository = "https://github.com/sherrmann/Spoolman-NG"
+Issues = "https://github.com/sherrmann/Spoolman-NG/issues"
+Documentation = "https://sherrmann.github.io/Spoolman-NG/"
 
 [project.optional-dependencies]
 # cbor2 6.x is a Rust extension with no 32-bit-ARM wheel, so on armv7 we use the

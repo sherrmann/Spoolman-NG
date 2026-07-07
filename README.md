@@ -13,19 +13,19 @@ _Keep track of your inventory of 3D-printer filament spools._
 >
 > | | |
 > |---|---|
-> | **GHCR** | `ghcr.io/sherrmann/spoolman` |
-> | **Docker Hub** | `cookiemonster95/spoolman` |
+> | **GHCR** | `ghcr.io/sherrmann/spoolman-ng` |
+> | **Docker Hub** | `cookiemonster95/spoolman-ng` |
 
 Spoolman NG is a self-hosted web service designed to help you efficiently manage your 3D printer filament spools and monitor their usage. It acts as a centralized database that seamlessly integrates with popular 3D printing software like [OctoPrint](https://octoprint.org/) and [Klipper](https://www.klipper3d.org/)/[Moonraker](https://moonraker.readthedocs.io/en/latest/). When connected, it automatically updates spool weights as printing progresses, giving you real-time insights into filament usage.
 
-[![GitHub Release](https://img.shields.io/github/v/release/sherrmann/Spoolman)](https://github.com/sherrmann/Spoolman/releases)
-[![API Docs](https://img.shields.io/badge/API-docs-blue)](https://sherrmann.github.io/Spoolman/)
+[![GitHub Release](https://img.shields.io/github/v/release/sherrmann/Spoolman-NG)](https://github.com/sherrmann/Spoolman-NG/releases)
+[![API Docs](https://img.shields.io/badge/API-docs-blue)](https://sherrmann.github.io/Spoolman-NG/)
 [![Fork of Donkie/Spoolman](https://img.shields.io/badge/fork%20of-Donkie%2FSpoolman-lightgrey)](https://github.com/Donkie/Spoolman)
 [![Docs](https://img.shields.io/badge/Docs-installation%20%26%20monitoring-blue)](docs/installation.md)
 
 ### Features
 * **Filament Management**: Keep comprehensive records of filament types, manufacturers, and individual spools.
-* **API Integration**: The [REST API](https://sherrmann.github.io/Spoolman/) allows easy integration with other software, facilitating automated workflows and data exchange.
+* **API Integration**: The [REST API](https://sherrmann.github.io/Spoolman-NG/) allows easy integration with other software, facilitating automated workflows and data exchange.
 * **Real-Time Updates**: Stay informed with live spool updates through Websockets, providing immediate feedback during printing operations.
 * **Central Filament Database**: A community-supported database of manufacturers and filaments simplify adding new spools to your inventory. Spoolman NG syncs from its own [SpoolmanDB](https://github.com/sherrmann/SpoolmanDB) (continuing the original database) — contribute filaments there, or point `EXTERNAL_DB_URL` at another instance.
 * **Web-Based Client**: Spoolman includes a built-in web client that lets you manage data effortlessly:
@@ -70,7 +70,7 @@ A minimal `docker-compose.yml`:
 ```yaml
 services:
   spoolman:
-    image: ghcr.io/sherrmann/spoolman:latest # or cookiemonster95/spoolman:latest on Docker Hub
+    image: ghcr.io/sherrmann/spoolman-ng:latest # or cookiemonster95/spoolman-ng:latest on Docker Hub
     restart: unless-stopped
     volumes:
       - ./data:/home/app/.local/share/spoolman
@@ -87,6 +87,8 @@ Then open `http://localhost:7912`. Image tags:
 * `:edge` — the latest `master` build
 * `:sha-<commit>` — a specific commit
 
+> **Coming from `ghcr.io/sherrmann/spoolman`?** The images moved with the repository rename to `Spoolman-NG`: the old `ghcr.io/sherrmann/spoolman` / `cookiemonster95/spoolman` names stay pullable but are frozen at the last tag published before the rename. Point your compose file at `ghcr.io/sherrmann/spoolman-ng` (or `cookiemonster95/spoolman-ng`) — your data volume and settings carry over unchanged.
+
 > **Windows & macOS:** use Docker. The native install below is Linux-only (it relies on `bash` + `systemd`).
 
 ### Native install (Linux, no Docker)
@@ -94,7 +96,7 @@ Then open `http://localhost:7912`. Image tags:
 Best for running Spoolman directly on a host — e.g. on a Raspberry Pi next to Klipper/Moonraker. One line fetches the latest release and runs the installer (it sets up `uv`, the Python dependencies, and an optional `systemd` service):
 
 ```bash
-curl -fsSL https://github.com/sherrmann/Spoolman/releases/latest/download/spoolman.zip -o spoolman.zip \
+curl -fsSL https://github.com/sherrmann/Spoolman-NG/releases/latest/download/spoolman.zip -o spoolman.zip \
   && unzip spoolman.zip -d ~/Spoolman && cd ~/Spoolman && ./scripts/install.sh
 ```
 
@@ -110,7 +112,7 @@ If you run Klipper, you can update Spoolman NG straight from Mainsail/Fluidd. Ad
 [update_manager spoolman]
 type: web
 channel: stable
-repo: sherrmann/Spoolman
+repo: sherrmann/Spoolman-NG
 path: ~/Spoolman
 ```
 

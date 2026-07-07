@@ -60,7 +60,7 @@ describe("help page <Trans> interpolation", () => {
     expect(screen.getByRole("link", { name: "Manufacturer" })).toHaveAttribute("href", "/vendor/create");
     expect(screen.getByRole("link", { name: "Spoolman README" })).toHaveAttribute(
       "href",
-      "https://github.com/sherrmann/Spoolman#integrations",
+      "https://github.com/sherrmann/Spoolman-NG#integrations",
     );
 
     // The self-closing <itemsHelp/> tag renders the embedded resources list.
