@@ -8,12 +8,12 @@ import {
   ToolOutlined,
   ToTopOutlined,
 } from "@ant-design/icons";
-import { List, useTable } from "@refinedev/antd";
+import { List, TextField, useTable } from "@refinedev/antd";
 import { useInvalidate, useNavigation, useTranslate } from "@refinedev/core";
-import { Button, Dropdown, Modal, Table } from "antd";
+import { Button, Dropdown, Grid, message, Modal, Table } from "antd";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
-import { useCallback, useMemo, useState } from "react";
+import { Key, useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import {
   Action,
@@ -22,11 +22,11 @@ import {
   DateColumn,
   FilteredQueryColumn,
   NumberColumn,
-  RichColumn,
   SortedColumn,
   SpoolIconColumn,
 } from "../../components/column";
 import { useLiveify } from "../../components/liveify";
+import { NumberFieldUnit } from "../../components/numberField";
 import {
   useSpoolmanFilamentFilter,
   useSpoolmanLocations,
@@ -34,10 +34,13 @@ import {
   useSpoolmanMaterials,
 } from "../../components/otherModels";
 import { removeUndefined } from "../../utils/filtering";
+import { enrichText } from "../../utils/parsing";
 import { EntityType, useGetFields } from "../../utils/queryFields";
 import { TableState, useInitialTableState, useSavedState, useStoreInitialState } from "../../utils/saveload";
-import { useCurrencyFormatter } from "../../utils/settings";
+import { getCurrencySymbol, useCurrency, useCurrencyFormatter } from "../../utils/settings";
+import { useLocations } from "../locations/functions";
 import { setSpoolArchived, useSpoolAdjustModal } from "./functions";
+import { EditableLocationCell, EditableNumberCell, EditableTextCell } from "./inlineEdit";
 import { ISpool } from "./model";
 
 dayjs.extend(utc);
@@ -103,7 +106,29 @@ export const SpoolList = () => {
   const navigate = useNavigate();
   const extraFields = useGetFields(EntityType.spool);
   const currencyFormatter = useCurrencyFormatter();
+  const currency = useCurrency();
   const { openSpoolAdjustModal, spoolAdjustModal } = useSpoolAdjustModal();
+
+  // Inline cell editing is a pointer-device affordance; gate it to desktop using
+  // the same breakpoint mechanism the header uses (Grid.useBreakpoint / !md).
+  const screens = Grid.useBreakpoint();
+  const inlineEditEnabled = !!screens.md;
+
+  // antd message instance (with its context holder rendered below) for inline
+  // edit error toasts, matching the app's existing message.useMessage() pattern.
+  const [messageApi, messageContextHolder] = message.useMessage();
+
+  // Location options for the inline Select: existing locations from settings +
+  // locations already in use, deduped — mirroring the create/edit spool form.
+  const settingsLocations = useLocations();
+  const usedLocations = useSpoolmanLocations(true);
+  const locationOptions = useMemo(() => {
+    const merged = [...(settingsLocations ?? [])];
+    (usedLocations.data ?? []).forEach((loc) => {
+      if (loc && !merged.includes(loc)) merged.push(loc);
+    });
+    return merged;
+  }, [settingsLocations, usedLocations.data]);
 
   const allColumnsWithExtraFields = [...allColumns, ...(extraFields.data?.map((field) => "extra." + field.key) ?? [])];
 
@@ -160,6 +185,10 @@ export const SpoolList = () => {
 
   // Create state for the columns to show
   const [showColumns, setShowColumns] = useState<string[]>(initialState.showColumns ?? defaultColumns);
+
+  // Row selection drives the "Print Labels" toolbar action: with rows selected, printing
+  // skips the in-page spool selector and jumps straight to the label dialog for those spools.
+  const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
 
   // Store state in local storage
   const tableState: TableState = {
@@ -264,13 +293,21 @@ export const SpoolList = () => {
             type="primary"
             icon={<PrinterOutlined />}
             onClick={() => {
-              navigate("print");
+              if (selectedRowKeys.length > 0) {
+                const params = new URLSearchParams();
+                selectedRowKeys.forEach((key) => params.append("spools", String(key)));
+                // The selection's job is done once it's in the URL; clear it so it
+                // doesn't linger when the user returns from printing.
+                setSelectedRowKeys([]);
+                navigate(`print?${params.toString()}`);
+              } else {
+                navigate("print");
+              }
             }}
           >
             {t("printing.qrcode.button")}
           </Button>
           <Button
-            type="primary"
             icon={<InboxOutlined />}
             onClick={() => {
               setShowArchived(!showArchived);
@@ -279,7 +316,6 @@ export const SpoolList = () => {
             {showArchived ? t("buttons.hideArchived") : t("buttons.showArchived")}
           </Button>
           <Button
-            type="primary"
             icon={<FilterOutlined />}
             onClick={() => {
               setFilters([], "replace");
@@ -317,14 +353,13 @@ export const SpoolList = () => {
               },
             }}
           >
-            <Button type="primary" icon={<EditOutlined />}>
-              {t("buttons.hideColumns")}
-            </Button>
+            <Button icon={<EditOutlined />}>{t("buttons.hideColumns")}</Button>
           </Dropdown>
           {defaultButtons}
         </>
       )}
     >
+      {messageContextHolder}
       {spoolAdjustModal}
       <Table
         {...tableProps}
@@ -333,6 +368,11 @@ export const SpoolList = () => {
         scroll={{ x: "max-content" }}
         dataSource={dataSource}
         rowKey="id"
+        rowSelection={{
+          selectedRowKeys,
+          onChange: setSelectedRowKeys,
+          preserveSelectedRowKeys: true,
+        }}
         // Make archived rows greyed out
         onRow={(record) => {
           if (record.archived) {
@@ -366,6 +406,7 @@ export const SpoolList = () => {
                 : record.filament.color_hex,
             dataId: "filament.combined_name",
             filterValueQuery: useSpoolmanFilamentFilter(),
+            clickAffordance: true,
           }),
           FilteredQueryColumn({
             ...commonProps,
@@ -380,30 +421,80 @@ export const SpoolList = () => {
             i18ncat: "spool",
             align: "right",
             width: 80,
-            render: (_, obj: ISpoolCollapsed) => {
-              if (obj.price === undefined) {
-                return "";
-              }
-              return currencyFormatter.format(obj.price);
-            },
+            render: (_, obj: ISpoolCollapsed) => (
+              <EditableNumberCell
+                spoolId={obj.id}
+                field="price"
+                editable={inlineEditEnabled}
+                messageApi={messageApi}
+                t={t}
+                value={obj.price}
+                precision={2}
+                align="right"
+                addonAfter={getCurrencySymbol(undefined, currency)}
+                display={obj.price === undefined ? "" : currencyFormatter.format(obj.price)}
+              />
+            ),
           }),
-          NumberColumn({
+          SortedColumn({
             ...commonProps,
             id: "used_weight",
             i18ncat: "spool",
             align: "right",
-            unit: "g",
-            maxDecimals: 0,
             width: 110,
+            render: (_, obj: ISpoolCollapsed) => (
+              <EditableNumberCell
+                spoolId={obj.id}
+                field="used_weight"
+                editable={inlineEditEnabled}
+                messageApi={messageApi}
+                t={t}
+                value={obj.used_weight}
+                unit="g"
+                align="right"
+                display={
+                  obj.used_weight === null || obj.used_weight === undefined ? (
+                    <TextField value="" />
+                  ) : (
+                    <NumberFieldUnit
+                      value={obj.used_weight}
+                      unit="g"
+                      options={{ maximumFractionDigits: 0, minimumFractionDigits: 0 }}
+                    />
+                  )
+                }
+              />
+            ),
           }),
-          NumberColumn({
+          SortedColumn({
             ...commonProps,
             id: "remaining_weight",
             i18ncat: "spool",
-            unit: "g",
-            maxDecimals: 0,
-            defaultText: t("unknown"),
+            align: "right",
             width: 110,
+            render: (_, obj: ISpoolCollapsed) => (
+              <EditableNumberCell
+                spoolId={obj.id}
+                field="remaining_weight"
+                editable={inlineEditEnabled}
+                messageApi={messageApi}
+                t={t}
+                value={obj.remaining_weight}
+                unit="g"
+                align="right"
+                display={
+                  obj.remaining_weight === null || obj.remaining_weight === undefined ? (
+                    <TextField value={t("unknown")} />
+                  ) : (
+                    <NumberFieldUnit
+                      value={obj.remaining_weight}
+                      unit="g"
+                      options={{ maximumFractionDigits: 0, minimumFractionDigits: 0 }}
+                    />
+                  )
+                }
+              />
+            ),
           }),
           NumberColumn({
             ...commonProps,
@@ -428,6 +519,18 @@ export const SpoolList = () => {
             i18ncat: "spool",
             filterValueQuery: useSpoolmanLocations(),
             width: 120,
+            render: (_, obj: ISpoolCollapsed) => (
+              <EditableLocationCell
+                spoolId={obj.id}
+                field="location"
+                editable={inlineEditEnabled}
+                messageApi={messageApi}
+                t={t}
+                value={obj.location}
+                options={locationOptions}
+                display={obj.location ?? ""}
+              />
+            ),
           }),
           FilteredQueryColumn({
             ...commonProps,
@@ -457,11 +560,23 @@ export const SpoolList = () => {
               field,
             });
           }) ?? []),
-          RichColumn({
+          SortedColumn({
             ...commonProps,
             id: "comment",
             i18ncat: "spool",
             width: 150,
+            render: (_, obj: ISpoolCollapsed) => (
+              <EditableTextCell
+                spoolId={obj.id}
+                field="comment"
+                editable={inlineEditEnabled}
+                messageApi={messageApi}
+                t={t}
+                value={obj.comment}
+                maxLength={1024}
+                display={enrichText(obj.comment)}
+              />
+            ),
           }),
           ActionsColumn(t("table.actions"), actions),
         ])}
