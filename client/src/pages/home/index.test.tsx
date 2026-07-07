@@ -68,7 +68,7 @@ function setSpoolQuery({ data = [], isLoading = false, isError = false, refetch 
 function renderHome() {
   return render(
     <MemoryRouter>
-      <ColorModeContext.Provider value={{ mode: "dark", setMode: () => {} }}>
+      <ColorModeContext.Provider value={{ mode: "dark", preference: "dark", setPreference: () => {} }}>
         <Home />
       </ColorModeContext.Provider>
     </MemoryRouter>,
