@@ -2,6 +2,8 @@
 # and leave all files detected as binary untouched.
 * text=auto
 
-# Never modify line endings of our bash scripts
-*.sh -crlf
+# Shell scripts must stay LF even on Windows checkouts ("-crlf" is legacy
+# syntax that text=auto overrides; a CRLF entrypoint.sh breaks the Docker
+# image with "exec: no such file or directory").
+*.sh text eol=lf
 .env.example text eol=lf
