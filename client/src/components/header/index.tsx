@@ -1,9 +1,9 @@
-import { DownOutlined } from "@ant-design/icons";
+import { DesktopOutlined, DownOutlined, MoonOutlined, SunOutlined } from "@ant-design/icons";
 import type { RefineThemedLayoutHeaderProps } from "@refinedev/antd";
 import { useGetLocale, useSetLocale, useTranslate } from "@refinedev/core";
-import { Grid, Layout as AntdLayout, Button, Dropdown, MenuProps, Space, Switch, theme } from "antd";
+import { Grid, Layout as AntdLayout, Button, Dropdown, MenuProps, Segmented, Space, theme } from "antd";
 import React, { useContext } from "react";
-import { ColorModeContext } from "../../contexts/color-mode";
+import { ColorModeContext, ThemePreference } from "../../contexts/color-mode";
 import { getBasePath } from "../../utils/url";
 import { Version } from "../version";
 
@@ -16,12 +16,18 @@ export const Header = ({ sticky }: RefineThemedLayoutHeaderProps) => {
   const { token } = useToken();
   const locale = useGetLocale();
   const changeLanguage = useSetLocale();
-  const { mode, setMode } = useContext(ColorModeContext);
+  const { preference, setPreference } = useContext(ColorModeContext);
   const t = useTranslate();
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
 
   const currentLocale = locale();
+
+  const themeOptions = [
+    { value: "system", icon: <DesktopOutlined />, title: t("theme.system") },
+    { value: "light", icon: <SunOutlined />, title: t("theme.light") },
+    { value: "dark", icon: <MoonOutlined />, title: t("theme.dark") },
+  ];
 
   const menuItems: MenuProps["items"] = [...(Object.keys(languages) || [])].sort().map((lang: string) => ({
     key: lang,
@@ -80,11 +86,11 @@ export const Header = ({ sticky }: RefineThemedLayoutHeaderProps) => {
             </Space>
           </Button>
         </Dropdown>
-        <Switch
-          checkedChildren="🌛"
-          unCheckedChildren="🔆"
-          onChange={() => setMode(mode === "light" ? "dark" : "light")}
-          defaultChecked={mode === "dark"}
+        <Segmented
+          aria-label={t("theme.label")}
+          options={themeOptions}
+          value={preference}
+          onChange={(value) => setPreference(value as ThemePreference)}
         />
         <ScanModal />
       </Space>
