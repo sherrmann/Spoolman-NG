@@ -96,9 +96,7 @@ function DisplayShell({
       }}
     >
       <span>{children}</span>
-      <EditOutlined
-        style={{ fontSize: 12, opacity: hover ? 0.65 : 0.15, transition: "opacity 0.15s", flex: "none" }}
-      />
+      <EditOutlined style={{ fontSize: 12, opacity: hover ? 0.65 : 0.15, transition: "opacity 0.15s", flex: "none" }} />
     </span>
   );
 }

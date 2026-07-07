@@ -14,7 +14,8 @@ imported (the service imports it lazily inside ``_try_connect`` only).
 import sys
 import time
 import types
-from typing import Any
+from collections.abc import Callable
+from typing import NoReturn
 
 import pytest
 
@@ -34,25 +35,28 @@ class PollingFrontend:
     """
 
     def __init__(self) -> None:
+        """Count how often nfcpy would have called terminate()."""
         self.terminate_calls = 0
 
-    def connect(self, rdwr: dict, terminate: Any) -> None:  # noqa: ARG002
+    def connect(self, rdwr: dict, terminate: Callable[[], bool]) -> None:  # noqa: ARG002
+        """Poll like nfcpy: check terminate() between rounds, abort when it returns True."""
         for _ in range(_POLL_SAFETY_CAP):
             if terminate():
-                return None
+                return
             self.terminate_calls += 1
             time.sleep(0.001)
         pytest.fail("terminate() never returned True — deadline logic is broken")
-        return None
 
 
 class FakeTag:
     """Fake NTAG213: read(page) returns 16 bytes (4 pages) stamped with the page number."""
 
     def __init__(self) -> None:
+        """Track which pages the service reads."""
         self.pages_read: list[int] = []
 
     def read(self, page: int) -> bytes:
+        """Return 4 pages (16 bytes) stamped with the requested page number."""
         self.pages_read.append(page)
         return bytes([page]) * 16
 
@@ -60,14 +64,16 @@ class FakeTag:
 class TagFrontend:
     """Fake frontend where a tag is present immediately."""
 
-    def __init__(self, tag: Any) -> None:
+    def __init__(self, tag: FakeTag) -> None:
+        """Store the tag to hand out on connect."""
         self.tag = tag
 
-    def connect(self, rdwr: dict, terminate: Any) -> Any:  # noqa: ARG002
+    def connect(self, rdwr: dict, terminate: Callable[[], bool]) -> FakeTag:  # noqa: ARG002
+        """Return the preset tag immediately, as nfcpy does when one is on the reader."""
         return self.tag
 
 
-def _connected_service(clf: Any) -> NfcService:
+def _connected_service(clf: object) -> NfcService:
     """Build a service with an injected fake frontend, bypassing hardware setup."""
     service = NfcService()
     service._clf = clf  # noqa: SLF001
@@ -111,7 +117,7 @@ def test_read_tag_returns_full_ntag213_user_memory() -> None:
 
 def test_read_tag_marks_service_for_reconnect_on_reader_disconnect() -> None:
     class DisconnectingFrontend:
-        def connect(self, rdwr: dict, terminate: Any) -> Any:  # noqa: ARG002
+        def connect(self, rdwr: dict, terminate: Callable[[], bool]) -> NoReturn:  # noqa: ARG002
             raise OSError("USB device unplugged")
 
     service = _connected_service(DisconnectingFrontend())

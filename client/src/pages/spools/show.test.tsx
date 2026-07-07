@@ -152,9 +152,7 @@ describe("SpoolShow split Archive/Delete button", () => {
     await userEvent.click(await screen.findByText("buttons.delete"));
 
     // Confirmation dialog is up; nothing deleted yet.
-    expect(
-      await screen.findByText("buttons.confirm", { selector: ".ant-modal-confirm-title" }),
-    ).toBeInTheDocument();
+    expect(await screen.findByText("buttons.confirm", { selector: ".ant-modal-confirm-title" })).toBeInTheDocument();
     expect(deleteMutate).not.toHaveBeenCalled();
 
     await userEvent.click(screen.getByRole("button", { name: "buttons.delete" }));
