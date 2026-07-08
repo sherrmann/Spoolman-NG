@@ -29,8 +29,6 @@ async def test_vendor_name_sorts_case_insensitively(client: AsyncClient):
 
 async def test_filament_name_sorts_case_insensitively(client: AsyncClient):
     for name in ["zebra", "Apple", "mango"]:
-        assert (
-            await client.post(FIL, json={"density": 1.24, "diameter": 1.75, "name": name})
-        ).status_code == 200
+        assert (await client.post(FIL, json={"density": 1.24, "diameter": 1.75, "name": name})).status_code == 200
 
     assert await _names_sorted(client, FIL, "name") == ["Apple", "mango", "zebra"]
