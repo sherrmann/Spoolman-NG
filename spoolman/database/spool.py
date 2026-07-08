@@ -280,6 +280,7 @@ async def update(
 ) -> models.Spool:
     """Update the fields of a spool object."""
     spool = await get_by_id(db, spool_id)
+    used_weight_before = spool.used_weight
     for k, v in data.items():
         if k == "filament_id":
             spool.filament = await filament.get_by_id(db, v)
@@ -298,6 +299,10 @@ async def update(
             spool.extra.extend([models.SpoolField(key=k, value=v) for k, v in v.items()])
         else:
             setattr(spool, k, v)
+    # Record a usage event when a manual edit changed used_weight (e.g. the "reset usage" action,
+    # #77). first_used/last_used are intentionally not touched here — this is an edit, not a use.
+    if spool.used_weight != used_weight_before:
+        _record_usage_event(db, spool_id, "update", spool.used_weight - used_weight_before)
     await db.commit()
     await spool_changed(spool, EventType.UPDATED)
     return spool
@@ -306,11 +311,50 @@ async def update(
 async def delete(db: AsyncSession, spool_id: int) -> None:
     """Delete a spool object."""
     spool = await get_by_id(db, spool_id)
+    # Remove usage events explicitly: SQLite doesn't enforce the FK's ON DELETE CASCADE, and there
+    # is no ORM relationship (see models.SpoolUsageEvent) to cascade them. Same transaction as the
+    # spool delete. Issue #50.
+    await db.execute(
+        sqlalchemy.delete(models.SpoolUsageEvent).where(models.SpoolUsageEvent.spool_id == spool_id),
+    )
     await db.delete(spool)
     # Commit before notifying so the deletion is durable and visible to subsequent
     # requests; post-commit notification must be the last, infallible step.
     await db.commit()
     await spool_changed(spool, EventType.DELETED)
+
+
+async def get_usage_events(
+    db: AsyncSession,
+    spool_id: int,
+    limit: int | None = None,
+    offset: int = 0,
+) -> tuple[list[models.SpoolUsageEvent], int]:
+    """Return a spool's usage events, most recent first, with the total count (#50)."""
+    base = sqlalchemy.select(models.SpoolUsageEvent).where(models.SpoolUsageEvent.spool_id == spool_id)
+    total = (
+        await db.execute(
+            sqlalchemy.select(func.count()).select_from(base.order_by(None).subquery()),
+        )
+    ).scalar_one()
+    stmt = base.order_by(models.SpoolUsageEvent.time.desc(), models.SpoolUsageEvent.id.desc())
+    if limit is not None:
+        stmt = stmt.offset(offset).limit(limit)
+    rows = await db.execute(stmt)
+    return list(rows.scalars().all()), total
+
+
+async def find_usage_event_by_key(
+    db: AsyncSession,
+    spool_id: int,
+    idempotency_key: str,
+) -> models.SpoolUsageEvent | None:
+    """Return a prior usage event for this spool with the given idempotency key, if any (#60)."""
+    stmt = sqlalchemy.select(models.SpoolUsageEvent).where(
+        models.SpoolUsageEvent.spool_id == spool_id,
+        models.SpoolUsageEvent.idempotency_key == idempotency_key,
+    )
+    return (await db.execute(stmt)).scalars().first()
 
 
 async def clear_extra_field(db: AsyncSession, key: str) -> None:
@@ -319,6 +363,35 @@ async def clear_extra_field(db: AsyncSession, key: str) -> None:
         sqlalchemy.delete(models.SpoolField).where(models.SpoolField.key == key),
     )
     await db.commit()
+
+
+def _record_usage_event(
+    db: AsyncSession,
+    spool_id: int,
+    event_type: str,
+    delta: float,
+    *,
+    measured_weight: float | None = None,
+    comment: str | None = None,
+    idempotency_key: str | None = None,
+) -> None:
+    """Stage a usage-event row in the current session (#50).
+
+    Added — not committed — so it lands in the same transaction as the weight mutation it records.
+    `delta` is the change actually applied to used_weight (sign: consumed positive, refilled
+    negative), i.e. exactly what use_weight_safe returns.
+    """
+    db.add(
+        models.SpoolUsageEvent(
+            spool_id=spool_id,
+            time=datetime.utcnow().replace(microsecond=0),
+            event_type=event_type,
+            delta=delta,
+            measured_weight=measured_weight,
+            comment=comment,
+            idempotency_key=idempotency_key,
+        ),
+    )
 
 
 async def use_weight_safe(db: AsyncSession, spool_id: int, weight: float) -> float:
@@ -367,16 +440,31 @@ async def use_weight_safe(db: AsyncSession, spool_id: int, weight: float) -> flo
     return max(0.0, used_before + weight) - used_before
 
 
-async def use_weight(db: AsyncSession, spool_id: int, weight: float) -> models.Spool:
+async def use_weight(
+    db: AsyncSession,
+    spool_id: int,
+    weight: float,
+    *,
+    event_type: str = "use",
+    measured_weight: float | None = None,
+    comment: str | None = None,
+    idempotency_key: str | None = None,
+) -> models.Spool:
     """Consume filament from a spool by weight.
 
     Increases the used_weight attribute of the spool.
     Updates the first_used and last_used attributes where appropriate.
+    Records a usage event in the same transaction (#50). measure() passes event_type="measure"
+    (plus the gross measured_weight) so the record reflects the real caller rather than "use".
 
     Args:
         db (AsyncSession): Database session
         spool_id (int): Spool ID
         weight (float): Filament weight to consume, in grams
+        event_type (str): Usage event type to record ("use" or, from measure(), "measure").
+        measured_weight (float | None): Gross measured weight to store on the event (measure only).
+        comment (str | None): Optional comment to record with the event.
+        idempotency_key (str | None): Optional key stored with the event to make the call replay-safe.
 
     Returns:
         models.Spool: Updated spool object
@@ -390,21 +478,40 @@ async def use_weight(db: AsyncSession, spool_id: int, weight: float) -> models.S
         spool.first_used = datetime.utcnow().replace(microsecond=0)
     spool.last_used = datetime.utcnow().replace(microsecond=0)
 
+    _record_usage_event(
+        db,
+        spool_id,
+        event_type,
+        weight_delta,
+        measured_weight=measured_weight,
+        comment=comment,
+        idempotency_key=idempotency_key,
+    )
     await db.commit()
     await spool_changed(spool, EventType.UPDATED, {"weight_delta": weight_delta})
     return spool
 
 
-async def use_length(db: AsyncSession, spool_id: int, length: float) -> models.Spool:
+async def use_length(
+    db: AsyncSession,
+    spool_id: int,
+    length: float,
+    *,
+    comment: str | None = None,
+    idempotency_key: str | None = None,
+) -> models.Spool:
     """Consume filament from a spool by length.
 
     Increases the used_weight attribute of the spool.
     Updates the first_used and last_used attributes where appropriate.
+    Records a usage event in the same transaction (#50).
 
     Args:
         db (AsyncSession): Database session
         spool_id (int): Spool ID
         length (float): Length of filament to consume, in mm
+        comment (str | None): Optional comment to record with the event.
+        idempotency_key (str | None): Optional key stored with the event to make the call replay-safe.
 
     Returns:
         models.Spool: Updated spool object
@@ -436,21 +543,32 @@ async def use_length(db: AsyncSession, spool_id: int, length: float) -> models.S
         spool.first_used = datetime.utcnow().replace(microsecond=0)
     spool.last_used = datetime.utcnow().replace(microsecond=0)
 
+    _record_usage_event(db, spool_id, "use", weight_delta, comment=comment, idempotency_key=idempotency_key)
     await db.commit()
     await spool_changed(spool, EventType.UPDATED, {"weight_delta": weight_delta})
     return spool
 
 
-async def measure(db: AsyncSession, spool_id: int, weight: float) -> models.Spool:
+async def measure(
+    db: AsyncSession,
+    spool_id: int,
+    weight: float,
+    *,
+    comment: str | None = None,
+    idempotency_key: str | None = None,
+) -> models.Spool:
     """Record usage based on current gross weight of spool.
 
     Increases the used_weight attribute of the spool.
     Updates the first_used and last_used attributes where appropriate.
+    The recorded usage event is tagged type="measure" and carries the gross measured weight (#50).
 
     Args:
         db (AsyncSession): Database session
         spool_id (int): Spool ID
         weight (float): Length of filament to consume, in mm
+        comment (str | None): Optional comment to record with the event.
+        idempotency_key (str | None): Optional key stored with the event to make the call replay-safe.
 
     Returns:
         models.Spool: Updated spool object
@@ -494,7 +612,15 @@ async def measure(db: AsyncSession, spool_id: int, weight: float) -> models.Spoo
 
     # if the measurement is greater than the initial weight, set the initial weight to the measurement
     if weight > initial_gross_weight:
-        return await reset_initial_weight(db, spool_id, weight - spool_weight)
+        return await reset_initial_weight(
+            db,
+            spool_id,
+            weight - spool_weight,
+            event_type="measure",
+            measured_weight=weight,
+            comment=comment,
+            idempotency_key=idempotency_key,
+        )
 
     # Calculate the current net weight
     current_use = initial_gross_weight - spool_info[1]
@@ -506,7 +632,15 @@ async def measure(db: AsyncSession, spool_id: int, weight: float) -> models.Spoo
     if (initial_gross_weight - weight_to_use) < spool_weight:
         weight_to_use = current_use - spool_weight
 
-    return await use_weight(db, spool_id, weight_to_use)
+    return await use_weight(
+        db,
+        spool_id,
+        weight_to_use,
+        event_type="measure",
+        measured_weight=weight,
+        comment=comment,
+        idempotency_key=idempotency_key,
+    )
 
 
 async def find_locations(
@@ -542,12 +676,35 @@ async def spool_changed(spool: models.Spool, typ: EventType, delta: dict | None 
         logger.exception("Failed to send websocket message")
 
 
-async def reset_initial_weight(db: AsyncSession, spool_id: int, weight: float) -> models.Spool:
-    """Reset inital weight to new weight and used_weight to 0."""
+async def reset_initial_weight(
+    db: AsyncSession,
+    spool_id: int,
+    weight: float,
+    *,
+    event_type: str = "measure",
+    measured_weight: float | None = None,
+    comment: str | None = None,
+    idempotency_key: str | None = None,
+) -> models.Spool:
+    """Reset inital weight to new weight and used_weight to 0.
+
+    Records a usage event whose delta is the drop in used_weight (used_weight goes to 0). Only
+    called from measure() today, hence the "measure" default event type. Issue #50.
+    """
     spool = await get_by_id(db, spool_id)
 
+    delta = -spool.used_weight
     spool.initial_weight = weight
     spool.used_weight = 0
+    _record_usage_event(
+        db,
+        spool_id,
+        event_type,
+        delta,
+        measured_weight=measured_weight,
+        comment=comment,
+        idempotency_key=idempotency_key,
+    )
     await db.commit()
     await spool_changed(spool, EventType.UPDATED)
     return spool
