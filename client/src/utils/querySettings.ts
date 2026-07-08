@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiFetch } from "./authReloadHandler";
 import { getAPIURL } from "./url";
 
 interface SettingResponseValue {
@@ -26,7 +27,7 @@ export function useGetSettings() {
   return useQuery<SettingsResponse>({
     queryKey: ["settings"],
     queryFn: async () => {
-      const response = await fetch(`${getAPIURL()}/setting/`);
+      const response = await apiFetch(`${getAPIURL()}/setting/`);
       return response.json();
     },
   });
@@ -36,7 +37,7 @@ export function useGetSetting(key: string) {
   return useQuery<SettingResponseValue>({
     queryKey: ["settings", key],
     queryFn: async () => {
-      const response = await fetch(`${getAPIURL()}/setting/${key}`);
+      const response = await apiFetch(`${getAPIURL()}/setting/${key}`);
       return response.json();
     },
   });

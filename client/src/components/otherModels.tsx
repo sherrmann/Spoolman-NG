@@ -3,6 +3,7 @@ import { Tooltip } from "antd";
 import { ColumnFilterItem } from "antd/es/table/interface";
 import { IFilament } from "../pages/filaments/model";
 import { IVendor } from "../pages/vendors/model";
+import { apiFetch } from "../utils/authReloadHandler";
 import { getAPIURL } from "../utils/url";
 
 export function useSpoolmanFilamentFilter(enabled: boolean = false) {
@@ -10,7 +11,7 @@ export function useSpoolmanFilamentFilter(enabled: boolean = false) {
     enabled: enabled,
     queryKey: ["filaments"],
     queryFn: async () => {
-      const response = await fetch(getAPIURL() + "/filament");
+      const response = await apiFetch(getAPIURL() + "/filament");
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
@@ -90,7 +91,7 @@ export function useSpoolmanFilamentNames(enabled: boolean = false) {
     enabled: enabled,
     queryKey: ["filaments"],
     queryFn: async () => {
-      const response = await fetch(getAPIURL() + "/filament");
+      const response = await apiFetch(getAPIURL() + "/filament");
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
@@ -118,7 +119,7 @@ export function useSpoolmanVendors(enabled: boolean = false) {
     enabled: enabled,
     queryKey: ["vendors"],
     queryFn: async () => {
-      const response = await fetch(getAPIURL() + "/vendor");
+      const response = await apiFetch(getAPIURL() + "/vendor");
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
@@ -139,7 +140,7 @@ export function useSpoolmanMaterials(enabled: boolean = false) {
     enabled: enabled,
     queryKey: ["materials"],
     queryFn: async () => {
-      const response = await fetch(getAPIURL() + "/material");
+      const response = await apiFetch(getAPIURL() + "/material");
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
@@ -156,7 +157,7 @@ export function useSpoolmanArticleNumbers(enabled: boolean = false) {
     enabled: enabled,
     queryKey: ["articleNumbers"],
     queryFn: async () => {
-      const response = await fetch(getAPIURL() + "/article-number");
+      const response = await apiFetch(getAPIURL() + "/article-number");
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
@@ -173,7 +174,7 @@ export function useSpoolmanLotNumbers(enabled: boolean = false) {
     enabled: enabled,
     queryKey: ["lotNumbers"],
     queryFn: async () => {
-      const response = await fetch(getAPIURL() + "/lot-number");
+      const response = await apiFetch(getAPIURL() + "/lot-number");
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
@@ -190,7 +191,7 @@ export function useSpoolmanLocations(enabled: boolean = false) {
     enabled: enabled,
     queryKey: ["locations"],
     queryFn: async () => {
-      const response = await fetch(getAPIURL() + "/location");
+      const response = await apiFetch(getAPIURL() + "/location");
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
