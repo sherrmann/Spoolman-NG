@@ -107,7 +107,8 @@ describe("SpoolShow split Archive/Delete button", () => {
   });
 
   afterEach(() => {
-    // Modal.confirm renders into its own root outside the RTL tree; clean it up.
+    // Modal.confirm renders into its own root outside the RTL tree; clean it up. The React-19
+    // scheduler task this queues is drained by the global afterEach flush in src/test/setup.ts.
     Modal.destroyAll();
   });
 

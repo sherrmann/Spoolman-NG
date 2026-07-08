@@ -14,6 +14,8 @@ export interface TableState {
   // User-defined column order (list of column ids), persisted per table (#94). Columns not present
   // keep their default relative position. localStorage only, like showColumns.
   columnOrder?: string[];
+  // User-set column widths in px, keyed by column id (#90). Columns absent keep their default width.
+  columnWidths?: Record<string, number>;
 }
 
 /**
@@ -60,7 +62,8 @@ export function useInitialTableState(tableId: string): TableState {
     const pagination = parseSaved<Pagination>(readSaved(tableId, "pagination"), { currentPage: 1, pageSize: 20 });
     const showColumns = parseSaved<string[] | undefined>(readSaved(tableId, "showColumns"), undefined);
     const columnOrder = parseSaved<string[] | undefined>(readSaved(tableId, "columnOrder"), undefined);
-    return { sorters, filters, pagination, showColumns, columnOrder };
+    const columnWidths = parseSaved<Record<string, number> | undefined>(readSaved(tableId, "columnWidths"), undefined);
+    return { sorters, filters, pagination, showColumns, columnOrder, columnWidths };
   });
   return initialState;
 }
@@ -122,6 +125,16 @@ export function useStoreInitialState(tableId: string, state: TableState) {
       }
     }
   }, [tableId, state.columnOrder]);
+
+  useEffect(() => {
+    if (isLocalStorageAvailable) {
+      if (state.columnWidths === undefined || Object.keys(state.columnWidths).length === 0) {
+        localStorage.removeItem(`${tableId}-columnWidths`);
+      } else {
+        localStorage.setItem(`${tableId}-columnWidths`, JSON.stringify(state.columnWidths));
+      }
+    }
+  }, [tableId, state.columnWidths]);
 }
 
 export function useSavedState<T>(id: string, defaultValue: T) {
