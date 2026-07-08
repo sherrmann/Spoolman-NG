@@ -520,6 +520,8 @@ async def create(  # noqa: ANN201
         extra=body.extra,
     )
 
+    # The stock aggregates are a read-time view; POST returns the stored resource unchanged so the
+    # create response shape stays identical to before this feature (integrations POSTing are unaffected).
     return Filament.from_db(db_item)
 
 
