@@ -105,6 +105,30 @@ def get_database() -> str | None:
     return os.getenv("SPOOLMAN_DB_NAME")
 
 
+def get_api_token() -> str | None:
+    """Get the optional API bearer token from environment variables.
+
+    When set, all /api/v1 endpoints require an `Authorization: Bearer <token>` header (websockets
+    accept it as a `?token=` query parameter). Unset — the default — means no authentication, i.e.
+    exactly the previous behaviour. See spoolman/auth.py. Issue #48.
+    """
+    token = os.getenv("SPOOLMAN_API_TOKEN")
+    # Treat an empty/whitespace value as unset so a blank env var can't half-enable auth.
+    if token is not None and token.strip() == "":
+        return None
+    return token
+
+
+def get_db_schema() -> str | None:
+    """Get the DB schema (search_path) from environment variables.
+
+    Only meaningful for PostgreSQL/CockroachDB, where it selects the schema tables live in on a
+    shared database (e.g. Supabase). Returns None if unset. See spoolman/database/database.py for
+    where it is applied (and where it is ignored, with a warning, for MySQL/SQLite). Issue #78.
+    """
+    return os.getenv("SPOOLMAN_DB_SCHEMA")
+
+
 def get_query() -> dict[str, str] | None:
     """Get the DB query from environment variables.
 

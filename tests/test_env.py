@@ -80,6 +80,40 @@ def test_bool_helper_raises_on_invalid_value(
         helper()
 
 
+# --- get_api_token (#48) ----------------------------------------------------
+
+
+def test_api_token_defaults_to_none(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Unset SPOOLMAN_API_TOKEN means no auth (default behaviour)."""
+    monkeypatch.delenv("SPOOLMAN_API_TOKEN", raising=False)
+    assert env.get_api_token() is None
+
+
+def test_api_token_returns_set_value(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("SPOOLMAN_API_TOKEN", "secret")
+    assert env.get_api_token() == "secret"
+
+
+@pytest.mark.parametrize("blank", ["", "   "])
+def test_api_token_blank_is_treated_as_unset(monkeypatch: pytest.MonkeyPatch, blank: str) -> None:
+    """A blank value must not half-enable auth."""
+    monkeypatch.setenv("SPOOLMAN_API_TOKEN", blank)
+    assert env.get_api_token() is None
+
+
+# --- get_db_schema (#78) ----------------------------------------------------
+
+
+def test_db_schema_defaults_to_none(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("SPOOLMAN_DB_SCHEMA", raising=False)
+    assert env.get_db_schema() is None
+
+
+def test_db_schema_returns_set_value(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("SPOOLMAN_DB_SCHEMA", "spoolman")
+    assert env.get_db_schema() == "spoolman"
+
+
 # --- get_nfc_reader_type ----------------------------------------------------
 
 

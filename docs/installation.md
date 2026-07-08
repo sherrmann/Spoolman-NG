@@ -87,6 +87,7 @@ Every variable is optional unless noted. In Docker, set them under
 | `SPOOLMAN_DB_PASSWORD` | — | Database password. |
 | `SPOOLMAN_DB_PASSWORD_FILE` | — | Path to a file containing the password (e.g. a Docker secret); alternative to `SPOOLMAN_DB_PASSWORD`. |
 | `SPOOLMAN_DB_QUERY` | — | Extra connection query parameters, e.g. `unix_socket=/path/to/mysql.sock`. |
+| `SPOOLMAN_DB_SCHEMA` | — | PostgreSQL/CockroachDB only: schema (search_path) to place Spoolman's tables in on a shared database (e.g. Supabase). Created automatically if missing. Ignored, with a warning, for MySQL/SQLite. |
 
 With SQLite (the default), the database file is `spoolman.db` inside the data
 directory. Schema migrations run automatically on every startup, for all
@@ -118,6 +119,7 @@ database types.
 
 | Variable | Default | Description |
 |---|---|---|
+| `SPOOLMAN_API_TOKEN` | — | When set, all `/api/v1` requests require `Authorization: Bearer <token>` (websockets use a `?token=` query parameter), except `GET /api/v1/health` and the OpenAPI docs. `/metrics` and the web assets are not gated. A single shared secret, not per-user accounts. See [Security & exposure](../README.md#security--exposure). |
 | `SPOOLMAN_DEBUG_MODE` | `FALSE` | Relaxes CORS to all origins. Never enable in production. |
 | `SPOOLMAN_CORS_ORIGIN` | — | Comma-separated allowed CORS origins (or `*`). |
 

@@ -18,6 +18,30 @@ from spoolman.prometheus.metrics import filament_metrics, spool_metrics
 logger = logging.getLogger(__name__)
 
 
+# asyncpg-based drivers where a schema/search_path is meaningful (#78).
+_SCHEMA_DRIVERS = ("postgresql+asyncpg", "cockroachdb+asyncpg")
+
+
+def apply_schema_connect_args(connect_args: dict, drivername: str, schema: str | None) -> None:
+    """Apply an optional SPOOLMAN_DB_SCHEMA (#78) to a set of engine connect_args.
+
+    For asyncpg backends this sets server_settings.search_path, scoping every statement — the app's
+    and Alembic's, since both go through Database.connect() — to the chosen schema. MySQL and SQLite
+    have no schema concept, so the setting is logged and ignored rather than silently misapplied.
+    """
+    if not schema:
+        return
+    if drivername in _SCHEMA_DRIVERS:
+        server_settings = connect_args.setdefault("server_settings", {})
+        server_settings["search_path"] = schema
+    else:
+        logger.warning(
+            "SPOOLMAN_DB_SCHEMA is set to '%s' but the '%s' backend has no schema concept; ignoring it.",
+            schema,
+            drivername,
+        )
+
+
 def get_connection_url() -> URL:
     """Construct the connection URL for the database based on environment variables."""
     db_type = env.get_database_type()
@@ -78,6 +102,9 @@ class Database:
         connect_args = {}
         if self.connection_url.drivername == "sqlite+aiosqlite":
             connect_args["timeout"] = 60
+
+        apply_schema_connect_args(connect_args, self.connection_url.drivername, env.get_db_schema())
+
         connection_options = {}
         if self.connection_url.drivername == "mysql+aiomysql":
             connection_options["pool_recycle"] = 3600
