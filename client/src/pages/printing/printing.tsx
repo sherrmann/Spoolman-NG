@@ -1,6 +1,10 @@
-import { ReactElement } from "react";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import { ReactElement, ReactNode } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { useGetSetting, useSetSetting } from "../../utils/querySettings";
+
+dayjs.extend(utc);
 
 export interface PrintSettings {
   id: string;
@@ -15,12 +19,18 @@ export interface PrintSettings {
   paperSize?: string;
   customPaperSize?: { width: number; height: number };
   borderShowMode?: "none" | "border" | "grid";
+  // #71: "auto" (default) leaves @page size to the printer driver — today's behavior. "label" emits an
+  // explicit @page size matching the paper dimensions so roll/label printers (e.g. Brother QL) print
+  // at the right geometry/orientation. Old presets lack the key and default to "auto".
+  pageSizeMode?: "auto" | "label";
 }
 
 export interface QRCodePrintSettings {
   showContent?: boolean;
   showQRCodeMode?: "no" | "simple" | "withIcon";
   textSize?: number;
+  // QR image padding in mm (#59). Optional — old presets default to 2 at read time.
+  qrPadding?: number;
   printSettings: PrintSettings;
 }
 
@@ -79,25 +89,48 @@ function getTagValue(tag: string, obj: GenericObject): any {
   return value;
 }
 
-function applyNewline(text: string): ReactElement[] {
-  return text.split("\n").map((line, idx, arr) => (
-    <span key={idx}>
-      {line}
-      {idx < arr.length - 1 && <br />}
-    </span>
-  ));
+// Datetime tags render raw (an ISO UTC string) unless a format is given, in which case they are
+// converted to local time and formatted with dayjs. Matched on the last path segment so both
+// `registered` and `filament.registered` / `vendor.registered` work. Issue #58.
+const DATETIME_TAGS = new Set(["registered", "first_used", "last_used"]);
+
+// Private-use sentinel marking a conditional block that resolved to nothing, so a line that becomes
+// empty solely because of it can be dropped without a blank line remaining. Issue #64.
+const SUPPRESSED = "\uE000";
+
+// A `{tag:fmt}` spec splits on the FIRST colon — a datetime format (e.g. "YYYY-MM-DD HH:mm") itself
+// contains colons, which must stay with the format, not the tag.
+function splitTagAndFormat(rawTag: string): [string, string | undefined] {
+  const colon = rawTag.indexOf(":");
+  if (colon === -1) return [rawTag, undefined];
+  return [rawTag.slice(0, colon), rawTag.slice(colon + 1)];
 }
 
-function applyTextFormatting(text: string): ReactElement[] {
-  const regex = /\*\*([\w\W]*?)\*\*/g;
-  const parts = text.split(regex);
-  // Map over the parts and wrap matched text with <b> tags
-  const elements = parts.map((part, index) => {
-    // Even index: outside asterisks, odd index: inside asterisks (to be bolded)
-    const node = applyNewline(part);
-    return index % 2 === 0 ? <span key={index}>{node}</span> : <b key={index}>{node}</b>;
-  });
-  return elements;
+// Apply an optional `{tag:fmt}` format. No format ⇒ the raw value (byte-identical to before this
+// feature). Datetime tags use dayjs in local time; a numeric decimal pattern (e.g. "0.0") rounds a
+// number via toFixed. Anything else falls back to the raw value. Issue #58.
+function formatTagValue(tagName: string, value: unknown, fmt: string | undefined): string {
+  if (fmt === undefined) return `${value}`;
+
+  const lastPart = tagName.split(".").pop() ?? tagName;
+  if (DATETIME_TAGS.has(lastPart)) {
+    const parsed = dayjs.utc(value as never).local();
+    return parsed.isValid() ? parsed.format(fmt) : `${value}`;
+  }
+
+  // A decimal pattern like "0", "0.0", "0.00" ⇒ that many decimal places.
+  const numeric = fmt.match(/^0*(?:\.(0+))?$/);
+  if (numeric && typeof value === "number") {
+    return value.toFixed(numeric[1]?.length ?? 0);
+  }
+  return `${value}`;
+}
+
+function applyBold(text: string): ReactNode[] {
+  // Even index: outside asterisks, odd index: inside asterisks (to be bolded).
+  return text
+    .split(/\*\*([\w\W]*?)\*\*/g)
+    .map((part, index) => (index % 2 === 0 ? <span key={index}>{part}</span> : <b key={index}>{part}</b>));
 }
 
 export function renderLabelContents(template: string, obj: GenericObject): ReactElement {
@@ -106,23 +139,49 @@ export function renderLabelContents(template: string, obj: GenericObject): React
   let label_text = template;
   matches.forEach((match) => {
     if ((match[0].match(/{/g) || []).length == 1) {
-      const tag = match[0].replace(/[{}]/g, "");
+      const [tag, fmt] = splitTagAndFormat(match[0].replace(/[{}]/g, ""));
+      // `{size:N}` is a line directive, not a data tag — leave it for the line renderer below.
+      if (tag === "size") return;
       const tagValue = getTagValue(tag, obj);
-      label_text = label_text.replace(match[0], tagValue);
+      const rendered = tagValue === "?" ? "?" : formatTagValue(tag, tagValue, fmt);
+      label_text = label_text.replace(match[0], rendered);
     } else if ((match[0].match(/{/g) || []).length == 2) {
       const structure = match[0].match(/{(.*?){(.*?)}(.*?)}/);
       if (structure != null) {
-        const tag = structure[2];
+        const [tag, fmt] = splitTagAndFormat(structure[2]);
         const tagValue = getTagValue(tag, obj);
         if (tagValue == "?") {
-          label_text = label_text.replace(match[0], "");
+          // #64: mark it so an otherwise-empty line can be removed entirely below.
+          label_text = label_text.replace(match[0], SUPPRESSED);
         } else {
-          label_text = label_text.replace(match[0], structure[1] + tagValue + structure[3]);
+          label_text = label_text.replace(match[0], structure[1] + formatTagValue(tag, tagValue, fmt) + structure[3]);
         }
       }
     }
   });
 
-  // Split string on \n into individual lines
-  return <>{applyTextFormatting(label_text)}</>;
+  // #64: a line that is empty only because a conditional block was suppressed is dropped (its newline
+  // consumed) so no blank line prints; lines the user left blank on purpose are untouched. Then strip
+  // any leftover sentinels from surviving lines.
+  const lines = label_text
+    .split("\n")
+    .filter((line) => !(line.includes(SUPPRESSED) && line.split(SUPPRESSED).join("").trim() === ""))
+    .map((line) => line.split(SUPPRESSED).join(""));
+
+  return (
+    <>
+      {lines.map((line, idx) => {
+        // #58: a leading `{size:N}` scales this whole line to N× the base font size.
+        const sizeMatch = line.match(/^{size:([\d.]+)}/);
+        const scale = sizeMatch ? parseFloat(sizeMatch[1]) : undefined;
+        const content = sizeMatch ? line.slice(sizeMatch[0].length) : line;
+        return (
+          <span key={idx} style={scale && !Number.isNaN(scale) ? { fontSize: `${scale}em` } : undefined}>
+            {applyBold(content)}
+            {idx < lines.length - 1 && <br />}
+          </span>
+        );
+      })}
+    </>
+  );
 }
