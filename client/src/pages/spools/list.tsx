@@ -96,6 +96,7 @@ const allColumns: (keyof ISpoolCollapsed & string)[] = [
   "price",
   "used_weight",
   "remaining_weight",
+  "spool_weight",
   "used_length",
   "remaining_length",
   "location",
@@ -108,8 +109,11 @@ const allColumns: (keyof ISpoolCollapsed & string)[] = [
 const defaultColumns = allColumns.filter(
   // Vendor is available as an opt-in column/filter but hidden by default so the list
   // stays uncluttered (the vendor already shows in the combined filament name). Issue #86.
+  // spool_weight (empty/tare weight) is likewise an opt-in column hidden by default. Issue #115.
   (column_id) =>
-    ["registered", "used_length", "remaining_length", "lot_nr", "filament.vendor.name"].indexOf(column_id) === -1,
+    ["registered", "used_length", "remaining_length", "lot_nr", "filament.vendor.name", "spool_weight"].indexOf(
+      column_id,
+    ) === -1,
 );
 
 export const SpoolList = () => {
@@ -552,6 +556,15 @@ export const SpoolList = () => {
           }),
           NumberColumn({
             ...commonProps,
+            id: "spool_weight",
+            i18ncat: "spool",
+            unit: "g",
+            maxDecimals: 0,
+            defaultText: t("unknown"),
+            width: 110,
+          }),
+          NumberColumn({
+            ...commonProps,
             id: "used_length",
             i18ncat: "spool",
             unit: "mm",
@@ -597,16 +610,19 @@ export const SpoolList = () => {
             ...commonProps,
             id: "first_used",
             i18ncat: "spool",
+            width: 130,
           }),
           DateColumn({
             ...commonProps,
             id: "last_used",
             i18ncat: "spool",
+            width: 130,
           }),
           DateColumn({
             ...commonProps,
             id: "registered",
             i18ncat: "spool",
+            width: 130,
           }),
           ...(extraFields.data?.map((field) => {
             return CustomFieldColumn({
