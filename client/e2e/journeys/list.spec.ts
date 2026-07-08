@@ -16,6 +16,9 @@ test.describe("spool list interactions", () => {
     // Clear filters resets the table state.
     await page.getByRole("button", { name: "Clear Filters" }).click();
 
+    // Column headers carry a drag-to-resize handle (#90).
+    await expect(page.locator('th [aria-label="resize-column"]').first()).toBeVisible();
+
     // The Columns manager popover opens and lists toggleable/reorderable columns (#94).
     await page.getByRole("button", { name: /Columns/ }).click();
     const columnsPopover = page.locator(".ant-popover").first();

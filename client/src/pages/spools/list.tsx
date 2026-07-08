@@ -13,7 +13,7 @@ import { useInvalidate, useNavigation, useTranslate } from "@refinedev/core";
 import { Button, Grid, Input, message, Modal, Table } from "antd";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
-import { Key, useCallback, useMemo, useState } from "react";
+import { HTMLAttributes, Key, useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import {
   Action,
@@ -36,8 +36,9 @@ import {
   useSpoolmanMaterials,
   useSpoolmanVendors,
 } from "../../components/otherModels";
-import { computeEffectiveOrder, moveInOrder, orderColumns } from "../../utils/columnOrder";
+import { columnIdOf, computeEffectiveOrder, moveInOrder, orderColumns } from "../../utils/columnOrder";
 import { removeUndefined } from "../../utils/filtering";
+import { ResizableHeaderCell } from "../../components/resizableHeaderCell";
 import { enrichText } from "../../utils/parsing";
 import { EntityType, useGetFields } from "../../utils/queryFields";
 import { TableState, useInitialTableState, useSavedState, useStoreInitialState } from "../../utils/saveload";
@@ -242,6 +243,26 @@ export const SpoolList = () => {
     setColumnOrder(moveInOrder(effectiveOrder, fromIndex, toIndex));
   };
 
+  // User-set column widths (#90); merged over each column's default width and persisted per table.
+  const [columnWidths, setColumnWidths] = useState<Record<string, number> | undefined>(initialState.columnWidths);
+  const resizeColumn = (columnId: string, width: number) => {
+    setColumnWidths({ ...(columnWidths ?? {}), [columnId]: Math.round(width) });
+  };
+
+  // Override each data column's width with the user's saved width and hand its id + resize callback to
+  // the header cell so it can render a drag handle (#90). Id-less columns (actions) aren't resizable.
+  const applyColumnWidths = <T extends { dataIndex?: unknown }>(cols: T[]): T[] =>
+    cols.map((col) => {
+      const id = columnIdOf(col);
+      if (!id) return col;
+      return {
+        ...col,
+        width: columnWidths?.[id] ?? (col as { width?: number | string }).width,
+        onHeaderCell: () =>
+          ({ columnId: id, onResize: resizeColumn }) as unknown as HTMLAttributes<HTMLTableCellElement>,
+      } as T;
+    });
+
   // Row selection drives the "Print Labels" toolbar action: with rows selected, printing
   // skips the in-page spool selector and jumps straight to the label dialog for those spools.
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
@@ -253,6 +274,7 @@ export const SpoolList = () => {
     pagination: { currentPage: currentPage, pageSize },
     showColumns,
     columnOrder,
+    columnWidths,
   };
   useStoreInitialState(namespace, tableState);
 
@@ -430,6 +452,7 @@ export const SpoolList = () => {
         sticky
         tableLayout="auto"
         scroll={{ x: "max-content" }}
+        components={{ header: { cell: ResizableHeaderCell } }}
         dataSource={dataSource}
         rowKey="id"
         rowSelection={{
@@ -450,243 +473,245 @@ export const SpoolList = () => {
             return {};
           }
         }}
-        columns={orderColumns(
-          removeUndefined([
-            SortedColumn({
-              ...commonProps,
-              id: "id",
-              i18ncat: "spool",
-              width: 70,
-            }),
-            SpoolIconColumn({
-              ...commonProps,
-              id: "filament.combined_name",
-              i18nkey: "spool.fields.filament_name",
-              color: (record: ISpoolCollapsed) =>
-                record.filament.multi_color_hexes
-                  ? {
-                      colors: record.filament.multi_color_hexes.split(","),
-                      vertical: record.filament.multi_color_direction === "longitudinal",
-                    }
-                  : record.filament.color_hex,
-              dataId: "filament.combined_name",
-              filterValueQuery: useSpoolmanFilamentFilter(),
-              clickAffordance: true,
-            }),
-            FilteredQueryColumn({
-              ...commonProps,
-              id: "filament.vendor.name",
-              i18nkey: "spool.fields.vendor_name",
-              filterValueQuery: useSpoolmanVendors(),
-              width: 120,
-            }),
-            // Standalone filament name (#94): the Name half of the split, with the color icon. Opt-in;
-            // pair with the Vendor column above and hide the combined name column for a two-column split.
-            SpoolIconColumn({
-              ...commonProps,
-              id: "filament.name",
-              i18nkey: "spool.fields.filament_name_only",
-              color: (record: ISpoolCollapsed) =>
-                record.filament.multi_color_hexes
-                  ? {
-                      colors: record.filament.multi_color_hexes.split(","),
-                      vertical: record.filament.multi_color_direction === "longitudinal",
-                    }
-                  : record.filament.color_hex,
-              dataId: "filament.name",
-              filterValueQuery: useSpoolmanFilamentFilter(),
-              clickAffordance: true,
-            }),
-            FilteredQueryColumn({
-              ...commonProps,
-              id: "filament.material",
-              i18nkey: "spool.fields.material",
-              filterValueQuery: useSpoolmanMaterials(),
-              width: 120,
-            }),
-            SortedColumn({
-              ...commonProps,
-              id: "price",
-              i18ncat: "spool",
-              align: "right",
-              width: 80,
-              render: (_, obj: ISpoolCollapsed) => (
-                <EditableNumberCell
-                  spoolId={obj.id}
-                  field="price"
-                  editable={inlineEditEnabled}
-                  messageApi={messageApi}
-                  t={t}
-                  value={obj.price ?? undefined}
-                  precision={2}
-                  align="right"
-                  addonAfter={getCurrencySymbol(undefined, currency)}
-                  display={obj.price === undefined || obj.price === null ? "" : currencyFormatter.format(obj.price)}
-                />
-              ),
-            }),
-            SortedColumn({
-              ...commonProps,
-              id: "used_weight",
-              i18ncat: "spool",
-              align: "right",
-              width: 110,
-              render: (_, obj: ISpoolCollapsed) => (
-                <EditableNumberCell
-                  spoolId={obj.id}
-                  field="used_weight"
-                  editable={inlineEditEnabled}
-                  messageApi={messageApi}
-                  t={t}
-                  value={obj.used_weight}
-                  unit="g"
-                  align="right"
-                  display={
-                    obj.used_weight === null || obj.used_weight === undefined ? (
-                      <TextField value="" />
-                    ) : (
-                      <NumberFieldUnit
-                        value={obj.used_weight}
-                        unit="g"
-                        autoScale={unitScaling}
-                        options={{ maximumFractionDigits: 0, minimumFractionDigits: 0 }}
-                      />
-                    )
-                  }
-                />
-              ),
-            }),
-            SortedColumn({
-              ...commonProps,
-              id: "remaining_weight",
-              i18ncat: "spool",
-              align: "right",
-              width: 110,
-              render: (_, obj: ISpoolCollapsed) => (
-                <EditableNumberCell
-                  spoolId={obj.id}
-                  field="remaining_weight"
-                  editable={inlineEditEnabled}
-                  messageApi={messageApi}
-                  t={t}
-                  value={obj.remaining_weight}
-                  unit="g"
-                  align="right"
-                  display={
-                    obj.remaining_weight === null || obj.remaining_weight === undefined ? (
-                      <TextField value={t("unknown")} />
-                    ) : (
-                      <NumberFieldUnit
-                        value={obj.remaining_weight}
-                        unit="g"
-                        autoScale={unitScaling}
-                        options={{ maximumFractionDigits: 0, minimumFractionDigits: 0 }}
-                      />
-                    )
-                  }
-                />
-              ),
-            }),
-            NumberColumn({
-              ...commonProps,
-              id: "spool_weight",
-              i18ncat: "spool",
-              unit: "g",
-              maxDecimals: 0,
-              defaultText: t("unknown"),
-              width: 110,
-              autoScale: unitScaling,
-            }),
-            NumberColumn({
-              ...commonProps,
-              id: "used_length",
-              i18ncat: "spool",
-              unit: "mm",
-              maxDecimals: 0,
-              width: 120,
-              autoScale: unitScaling,
-            }),
-            NumberColumn({
-              ...commonProps,
-              id: "remaining_length",
-              i18ncat: "spool",
-              unit: "mm",
-              maxDecimals: 0,
-              defaultText: t("unknown"),
-              width: 120,
-              autoScale: unitScaling,
-            }),
-            FilteredQueryColumn({
-              ...commonProps,
-              id: "location",
-              i18ncat: "spool",
-              filterValueQuery: useSpoolmanLocations(),
-              width: 120,
-              render: (_, obj: ISpoolCollapsed) => (
-                <EditableLocationCell
-                  spoolId={obj.id}
-                  field="location"
-                  editable={inlineEditEnabled}
-                  messageApi={messageApi}
-                  t={t}
-                  value={obj.location}
-                  options={locationOptions}
-                  display={obj.location ?? ""}
-                />
-              ),
-            }),
-            FilteredQueryColumn({
-              ...commonProps,
-              id: "lot_nr",
-              i18ncat: "spool",
-              filterValueQuery: useSpoolmanLotNumbers(),
-              width: 120,
-            }),
-            DateColumn({
-              ...commonProps,
-              id: "first_used",
-              i18ncat: "spool",
-              width: 130,
-            }),
-            DateColumn({
-              ...commonProps,
-              id: "last_used",
-              i18ncat: "spool",
-              width: 130,
-            }),
-            DateColumn({
-              ...commonProps,
-              id: "registered",
-              i18ncat: "spool",
-              width: 130,
-            }),
-            ...(extraFields.data?.map((field) => {
-              return CustomFieldColumn({
+        columns={applyColumnWidths(
+          orderColumns(
+            removeUndefined([
+              SortedColumn({
                 ...commonProps,
-                field,
-              });
-            }) ?? []),
-            SortedColumn({
-              ...commonProps,
-              id: "comment",
-              i18ncat: "spool",
-              width: 150,
-              render: (_, obj: ISpoolCollapsed) => (
-                <EditableTextCell
-                  spoolId={obj.id}
-                  field="comment"
-                  editable={inlineEditEnabled}
-                  messageApi={messageApi}
-                  t={t}
-                  value={obj.comment}
-                  maxLength={1024}
-                  display={enrichText(obj.comment)}
-                />
-              ),
-            }),
-            ActionsColumn(t("table.actions"), actions),
-          ]),
-          effectiveOrder,
+                id: "id",
+                i18ncat: "spool",
+                width: 70,
+              }),
+              SpoolIconColumn({
+                ...commonProps,
+                id: "filament.combined_name",
+                i18nkey: "spool.fields.filament_name",
+                color: (record: ISpoolCollapsed) =>
+                  record.filament.multi_color_hexes
+                    ? {
+                        colors: record.filament.multi_color_hexes.split(","),
+                        vertical: record.filament.multi_color_direction === "longitudinal",
+                      }
+                    : record.filament.color_hex,
+                dataId: "filament.combined_name",
+                filterValueQuery: useSpoolmanFilamentFilter(),
+                clickAffordance: true,
+              }),
+              FilteredQueryColumn({
+                ...commonProps,
+                id: "filament.vendor.name",
+                i18nkey: "spool.fields.vendor_name",
+                filterValueQuery: useSpoolmanVendors(),
+                width: 120,
+              }),
+              // Standalone filament name (#94): the Name half of the split, with the color icon. Opt-in;
+              // pair with the Vendor column above and hide the combined name column for a two-column split.
+              SpoolIconColumn({
+                ...commonProps,
+                id: "filament.name",
+                i18nkey: "spool.fields.filament_name_only",
+                color: (record: ISpoolCollapsed) =>
+                  record.filament.multi_color_hexes
+                    ? {
+                        colors: record.filament.multi_color_hexes.split(","),
+                        vertical: record.filament.multi_color_direction === "longitudinal",
+                      }
+                    : record.filament.color_hex,
+                dataId: "filament.name",
+                filterValueQuery: useSpoolmanFilamentFilter(),
+                clickAffordance: true,
+              }),
+              FilteredQueryColumn({
+                ...commonProps,
+                id: "filament.material",
+                i18nkey: "spool.fields.material",
+                filterValueQuery: useSpoolmanMaterials(),
+                width: 120,
+              }),
+              SortedColumn({
+                ...commonProps,
+                id: "price",
+                i18ncat: "spool",
+                align: "right",
+                width: 80,
+                render: (_, obj: ISpoolCollapsed) => (
+                  <EditableNumberCell
+                    spoolId={obj.id}
+                    field="price"
+                    editable={inlineEditEnabled}
+                    messageApi={messageApi}
+                    t={t}
+                    value={obj.price ?? undefined}
+                    precision={2}
+                    align="right"
+                    addonAfter={getCurrencySymbol(undefined, currency)}
+                    display={obj.price === undefined || obj.price === null ? "" : currencyFormatter.format(obj.price)}
+                  />
+                ),
+              }),
+              SortedColumn({
+                ...commonProps,
+                id: "used_weight",
+                i18ncat: "spool",
+                align: "right",
+                width: 110,
+                render: (_, obj: ISpoolCollapsed) => (
+                  <EditableNumberCell
+                    spoolId={obj.id}
+                    field="used_weight"
+                    editable={inlineEditEnabled}
+                    messageApi={messageApi}
+                    t={t}
+                    value={obj.used_weight}
+                    unit="g"
+                    align="right"
+                    display={
+                      obj.used_weight === null || obj.used_weight === undefined ? (
+                        <TextField value="" />
+                      ) : (
+                        <NumberFieldUnit
+                          value={obj.used_weight}
+                          unit="g"
+                          autoScale={unitScaling}
+                          options={{ maximumFractionDigits: 0, minimumFractionDigits: 0 }}
+                        />
+                      )
+                    }
+                  />
+                ),
+              }),
+              SortedColumn({
+                ...commonProps,
+                id: "remaining_weight",
+                i18ncat: "spool",
+                align: "right",
+                width: 110,
+                render: (_, obj: ISpoolCollapsed) => (
+                  <EditableNumberCell
+                    spoolId={obj.id}
+                    field="remaining_weight"
+                    editable={inlineEditEnabled}
+                    messageApi={messageApi}
+                    t={t}
+                    value={obj.remaining_weight}
+                    unit="g"
+                    align="right"
+                    display={
+                      obj.remaining_weight === null || obj.remaining_weight === undefined ? (
+                        <TextField value={t("unknown")} />
+                      ) : (
+                        <NumberFieldUnit
+                          value={obj.remaining_weight}
+                          unit="g"
+                          autoScale={unitScaling}
+                          options={{ maximumFractionDigits: 0, minimumFractionDigits: 0 }}
+                        />
+                      )
+                    }
+                  />
+                ),
+              }),
+              NumberColumn({
+                ...commonProps,
+                id: "spool_weight",
+                i18ncat: "spool",
+                unit: "g",
+                maxDecimals: 0,
+                defaultText: t("unknown"),
+                width: 110,
+                autoScale: unitScaling,
+              }),
+              NumberColumn({
+                ...commonProps,
+                id: "used_length",
+                i18ncat: "spool",
+                unit: "mm",
+                maxDecimals: 0,
+                width: 120,
+                autoScale: unitScaling,
+              }),
+              NumberColumn({
+                ...commonProps,
+                id: "remaining_length",
+                i18ncat: "spool",
+                unit: "mm",
+                maxDecimals: 0,
+                defaultText: t("unknown"),
+                width: 120,
+                autoScale: unitScaling,
+              }),
+              FilteredQueryColumn({
+                ...commonProps,
+                id: "location",
+                i18ncat: "spool",
+                filterValueQuery: useSpoolmanLocations(),
+                width: 120,
+                render: (_, obj: ISpoolCollapsed) => (
+                  <EditableLocationCell
+                    spoolId={obj.id}
+                    field="location"
+                    editable={inlineEditEnabled}
+                    messageApi={messageApi}
+                    t={t}
+                    value={obj.location}
+                    options={locationOptions}
+                    display={obj.location ?? ""}
+                  />
+                ),
+              }),
+              FilteredQueryColumn({
+                ...commonProps,
+                id: "lot_nr",
+                i18ncat: "spool",
+                filterValueQuery: useSpoolmanLotNumbers(),
+                width: 120,
+              }),
+              DateColumn({
+                ...commonProps,
+                id: "first_used",
+                i18ncat: "spool",
+                width: 130,
+              }),
+              DateColumn({
+                ...commonProps,
+                id: "last_used",
+                i18ncat: "spool",
+                width: 130,
+              }),
+              DateColumn({
+                ...commonProps,
+                id: "registered",
+                i18ncat: "spool",
+                width: 130,
+              }),
+              ...(extraFields.data?.map((field) => {
+                return CustomFieldColumn({
+                  ...commonProps,
+                  field,
+                });
+              }) ?? []),
+              SortedColumn({
+                ...commonProps,
+                id: "comment",
+                i18ncat: "spool",
+                width: 150,
+                render: (_, obj: ISpoolCollapsed) => (
+                  <EditableTextCell
+                    spoolId={obj.id}
+                    field="comment"
+                    editable={inlineEditEnabled}
+                    messageApi={messageApi}
+                    t={t}
+                    value={obj.comment}
+                    maxLength={1024}
+                    display={enrichText(obj.comment)}
+                  />
+                ),
+              }),
+              ActionsColumn(t("table.actions"), actions),
+            ]),
+            effectiveOrder,
+          ),
         )}
       />
     </List>
