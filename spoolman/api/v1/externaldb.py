@@ -5,9 +5,10 @@ import logging
 import os
 import re
 from pathlib import Path
+from typing import Annotated
 
 import httpx
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import FileResponse
 from pydantic import ValidationError
 
@@ -64,8 +65,43 @@ def _validate_external_filament(entry: dict) -> ExternalFilament | None:
     name="Get all external filaments",
     response_model_exclude_none=True,
 )
-async def filaments() -> list[ExternalFilament]:
-    """Get all external filaments from all sources."""
+async def filaments(
+    manufacturer: Annotated[
+        str | None,
+        Query(description="Filter by manufacturer (case-insensitive substring)."),
+    ] = None,
+    name: Annotated[
+        str | None,
+        Query(description="Filter by filament name (case-insensitive substring)."),
+    ] = None,
+    material: Annotated[
+        str | None,
+        Query(description="Filter by material (case-insensitive substring)."),
+    ] = None,
+    color_hex: Annotated[
+        str | None,
+        Query(description="Filter by exact single-colour hex, with or without a leading '#'."),
+    ] = None,
+    diameter: Annotated[
+        float | None,
+        Query(description="Filter by exact filament diameter in mm."),
+    ] = None,
+    weight: Annotated[
+        float | None,
+        Query(description="Filter by exact net spool weight in grams."),
+    ] = None,
+    external_id: Annotated[
+        str | None,
+        Query(alias="id", description="Filter by exact external filament ID."),
+    ] = None,
+) -> list[ExternalFilament]:
+    """Get all external filaments from all sources, optionally filtered.
+
+    All filters are optional and combined with AND; text filters are case-insensitive
+    substring matches. Passing none reproduces the previous "return everything" behaviour,
+    so this stays backward compatible while letting constrained clients (ESP32/Bambu-tag
+    readers) fetch a narrow slice instead of the whole multi-MB catalog. Issue #108.
+    """
     merged: list[dict] = _load_filament_source(get_filaments_file(), "spoolmandb")
     if is_tigertag_enabled():
         merged.extend(_load_filament_source(get_tigertag_filaments_file(), "tigertag"))
@@ -73,7 +109,28 @@ async def filaments() -> list[ExternalFilament]:
     # Return validated models so FastAPI applies the declared response_model (validation +
     # exclude_none) instead of emitting the raw merged dicts; malformed entries are dropped above
     # rather than 500-ing the whole endpoint.
-    return [model for model in (_validate_external_filament(e) for e in merged) if model is not None]
+    result = [model for model in (_validate_external_filament(e) for e in merged) if model is not None]
+
+    if manufacturer is not None:
+        needle = manufacturer.lower()
+        result = [f for f in result if needle in f.manufacturer.lower()]
+    if name is not None:
+        needle = name.lower()
+        result = [f for f in result if needle in f.name.lower()]
+    if material is not None:
+        needle = material.lower()
+        result = [f for f in result if needle in f.material.lower()]
+    if color_hex is not None:
+        needle = color_hex.lstrip("#").lower()
+        result = [f for f in result if f.color_hex is not None and f.color_hex.lower() == needle]
+    if diameter is not None:
+        result = [f for f in result if f.diameter == diameter]
+    if weight is not None:
+        result = [f for f in result if f.weight == weight]
+    if external_id is not None:
+        result = [f for f in result if f.id == external_id]
+
+    return result
 
 
 @router.get(
