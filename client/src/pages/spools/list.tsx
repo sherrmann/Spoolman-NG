@@ -10,7 +10,7 @@ import {
 } from "@ant-design/icons";
 import { List, TextField, useTable } from "@refinedev/antd";
 import { useInvalidate, useNavigation, useTranslate } from "@refinedev/core";
-import { Button, Grid, Input, message, Modal, Table } from "antd";
+import { Button, Grid, Input, message, Modal, Space, Table } from "antd";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { HTMLAttributes, Key, useCallback, useMemo, useState } from "react";
@@ -39,7 +39,7 @@ import {
 import { columnIdOf, computeEffectiveOrder, moveInOrder, orderColumns } from "../../utils/columnOrder";
 import { removeUndefined } from "../../utils/filtering";
 import { ResizableHeaderCell } from "../../components/resizableHeaderCell";
-import { enrichText } from "../../utils/parsing";
+import { enrichText, formatWeight } from "../../utils/parsing";
 import { EntityType, useGetFields } from "../../utils/queryFields";
 import { TableState, useInitialTableState, useSavedState, useStoreInitialState } from "../../utils/saveload";
 import { getCurrencySymbol, useCurrency, useCurrencyFormatter, useUnitScaling } from "../../utils/settings";
@@ -285,6 +285,21 @@ export const SpoolList = () => {
   );
   const dataSource = useLiveify("spool", queryDataSource, collapseSpool);
 
+  // Opt-in totals row (#134). The list is server-paginated, so this sums the currently-shown rows
+  // (labeled as such) rather than the whole filtered set. Off by default to keep the list uncluttered.
+  const [showTotals, setShowTotals] = useSavedState("spoolList-showTotals", false);
+  const totals = useMemo(() => {
+    let remaining = 0;
+    let used = 0;
+    let price = 0;
+    for (const s of dataSource) {
+      remaining += s.remaining_weight ?? 0;
+      used += s.used_weight ?? 0;
+      price += s.price ?? 0;
+    }
+    return { count: dataSource.length, remaining, used, price };
+  }, [dataSource]);
+
   // Function for opening an ant design modal that asks for confirmation for archiving a spool
   const archiveSpool = async (spool: ISpoolCollapsed, archive: boolean) => {
     await setSpoolArchived(spool, archive);
@@ -441,6 +456,9 @@ export const SpoolList = () => {
               return { id: column_id, label: t(translateColumnI18nKey(column_id)) };
             })}
           />
+          <Button onClick={() => setShowTotals(!showTotals)}>
+            {showTotals ? t("spool.totals.hide") : t("spool.totals.show")}
+          </Button>
           {defaultButtons}
         </>
       )}
@@ -453,6 +471,32 @@ export const SpoolList = () => {
         tableLayout="auto"
         scroll={{ x: "max-content" }}
         components={{ header: { cell: ResizableHeaderCell } }}
+        summary={
+          showTotals
+            ? () => (
+                <Table.Summary>
+                  <Table.Summary.Row>
+                    {/* Server-paginated, so this totals the shown rows (labeled as such). One spanning
+                        cell keeps the row robust against column reorder/resize/visibility. #134 */}
+                    <Table.Summary.Cell index={0} colSpan={showColumns.length + 2}>
+                      <Space split="·" wrap>
+                        <span>{t("spool.totals.shown", { count: totals.count })}</span>
+                        <span>
+                          {t("spool.fields.remaining_weight")}: {formatWeight(totals.remaining)}
+                        </span>
+                        <span>
+                          {t("spool.fields.used_weight")}: {formatWeight(totals.used)}
+                        </span>
+                        <span>
+                          {t("spool.fields.price")}: {currencyFormatter.format(totals.price)}
+                        </span>
+                      </Space>
+                    </Table.Summary.Cell>
+                  </Table.Summary.Row>
+                </Table.Summary>
+              )
+            : undefined
+        }
         dataSource={dataSource}
         rowKey="id"
         rowSelection={{

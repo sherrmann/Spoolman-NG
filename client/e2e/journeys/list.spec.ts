@@ -19,6 +19,12 @@ test.describe("spool list interactions", () => {
     // Column headers carry a drag-to-resize handle (#90).
     await expect(page.locator('th [aria-label="resize-column"]').first()).toBeVisible();
 
+    // Totals row toggles on and shows a summary of the shown spools (#134).
+    await page.getByRole("button", { name: /Show Totals/ }).click();
+    await expect(page.getByText(/spools? shown/)).toBeVisible();
+    await page.getByRole("button", { name: /Hide Totals/ }).click();
+    await expect(page.getByText(/spools? shown/)).toHaveCount(0);
+
     // The Columns manager popover opens and lists toggleable/reorderable columns (#94).
     await page.getByRole("button", { name: /Columns/ }).click();
     const columnsPopover = page.locator(".ant-popover").first();

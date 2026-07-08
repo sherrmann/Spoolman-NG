@@ -240,6 +240,12 @@
   },
   "spool": {
     "spool": "Spools",
+    "totals": {
+      "show": "Show Totals",
+      "hide": "Hide Totals",
+      "shown_one": "{{count}} spool shown",
+      "shown_other": "{{count}} spools shown"
+    },
     "fields": {
       "id": "ID",
       "filament_name": "Filament",
