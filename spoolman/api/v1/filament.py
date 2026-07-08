@@ -114,6 +114,24 @@ class FilamentParameters(BaseModel):
         ),
         examples=["polymaker_pla_polysonicblack_1000_175"],
     )
+    low_stock_threshold: float | None = Field(
+        None,
+        ge=0,
+        description=(
+            "Optional low-stock alert threshold, in grams. When the total remaining weight across all "
+            "non-archived spools of this filament drops below this value, the filament is flagged as low stock."
+        ),
+        examples=[500],
+    )
+    reserve_count: int | None = Field(
+        None,
+        ge=0,
+        description=(
+            "Number of unopened spare spools of this filament kept in reserve, tracked without needing a "
+            "separate Spool row for each unit."
+        ),
+        examples=[2],
+    )
     extra: dict[str, str] | None = Field(
         None,
         description="Extra fields for this filament.",
@@ -384,12 +402,21 @@ async def find(
     except ValueError as e:
         return JSONResponse(status_code=400, content=Message(message=str(e)).dict())
 
+    # Populate the per-filament spool_count / remaining_weight aggregates (issues #49 / #53) for the
+    # returned page in a single grouped query, then attach them to each response object.
+    aggregates = await filament.get_aggregates(db, [db_item.id for db_item in db_items])
+    filaments_out = [
+        Filament.from_db(
+            db_item,
+            spool_count=aggregates.get(db_item.id, (None, None))[0],
+            remaining_weight=aggregates.get(db_item.id, (None, None))[1],
+        )
+        for db_item in db_items
+    ]
+
     # Set x-total-count header for pagination
     return JSONResponse(
-        content=jsonable_encoder(
-            (Filament.from_db(db_item) for db_item in db_items),
-            exclude_none=True,
-        ),
+        content=jsonable_encoder(filaments_out, exclude_none=True),
         headers={"x-total-count": str(total_count)},
     )
 
@@ -427,7 +454,8 @@ async def get(
     filament_id: int,
 ) -> Filament:
     db_item = await filament.get_by_id(db, filament_id)
-    return Filament.from_db(db_item)
+    spool_count, remaining_weight = (await filament.get_aggregates(db, [filament_id])).get(filament_id, (0, 0.0))
+    return Filament.from_db(db_item, spool_count=spool_count, remaining_weight=remaining_weight)
 
 
 @router.websocket(
@@ -487,6 +515,8 @@ async def create(  # noqa: ANN201
         multi_color_hexes=body.multi_color_hexes,
         multi_color_direction=body.multi_color_direction,
         external_id=body.external_id,
+        low_stock_threshold=body.low_stock_threshold,
+        reserve_count=body.reserve_count,
         extra=body.extra,
     )
 

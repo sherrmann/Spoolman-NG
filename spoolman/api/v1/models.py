@@ -98,6 +98,22 @@ class Vendor(BaseModel):
         ),
         examples=["eSun"],
     )
+    filament_count: int | None = Field(
+        None,
+        description=(
+            "Aggregate: number of filament types from this vendor. "
+            "Only populated on the vendor list and detail endpoints; null in nested/websocket payloads."
+        ),
+        examples=[4],
+    )
+    spool_count: int | None = Field(
+        None,
+        description=(
+            "Aggregate: number of non-archived spools across this vendor's filaments. "
+            "Only populated on the vendor list and detail endpoints; null in nested/websocket payloads."
+        ),
+        examples=[9],
+    )
     extra: dict[str, str] = Field(
         description=(
             "Extra fields for this vendor. All values are JSON-encoded data. "
@@ -106,8 +122,17 @@ class Vendor(BaseModel):
     )
 
     @staticmethod
-    def from_db(item: models.Vendor) -> "Vendor":
-        """Create a new Pydantic vendor object from a database vendor object."""
+    def from_db(
+        item: models.Vendor,
+        *,
+        filament_count: int | None = None,
+        spool_count: int | None = None,
+    ) -> "Vendor":
+        """Create a new Pydantic vendor object from a database vendor object.
+
+        The optional filament_count/spool_count aggregates are supplied by the vendor list and detail
+        endpoints; they are left null in nested (filament.vendor) and websocket payloads.
+        """
         return Vendor(
             id=item.id,
             registered=item.registered,
@@ -115,6 +140,8 @@ class Vendor(BaseModel):
             comment=item.comment,
             empty_spool_weight=item.empty_spool_weight,
             external_id=item.external_id,
+            filament_count=filament_count,
+            spool_count=spool_count,
             extra={field.key: field.value for field in item.extra},
         )
 
@@ -217,6 +244,41 @@ class Filament(BaseModel):
         ),
         examples=["polymaker_pla_polysonicblack_1000_175"],
     )
+    low_stock_threshold: float | None = Field(
+        None,
+        ge=0,
+        description=(
+            "Optional low-stock alert threshold, in grams. When the total remaining weight across all "
+            "non-archived spools of this filament drops below this value, the filament is flagged as low stock."
+        ),
+        examples=[500],
+    )
+    reserve_count: int | None = Field(
+        None,
+        ge=0,
+        description=(
+            "Number of unopened spare spools of this filament kept in reserve, tracked without needing a "
+            "separate Spool row for each unit."
+        ),
+        examples=[2],
+    )
+    spool_count: int | None = Field(
+        None,
+        description=(
+            "Aggregate: number of non-archived spools of this filament type. "
+            "Only populated on the filament list and detail endpoints; null in nested/websocket payloads."
+        ),
+        examples=[3],
+    )
+    remaining_weight: float | None = Field(
+        None,
+        description=(
+            "Aggregate: total estimated remaining weight, in grams, across all non-archived spools of this "
+            "filament type. Only populated on the filament list and detail endpoints; null in nested/websocket "
+            "payloads."
+        ),
+        examples=[2500.0],
+    )
     extra: dict[str, str] = Field(
         description=(
             "Extra fields for this filament. All values are JSON-encoded data. "
@@ -225,8 +287,18 @@ class Filament(BaseModel):
     )
 
     @staticmethod
-    def from_db(item: models.Filament) -> "Filament":
-        """Create a new Pydantic filament object from a database filament object."""
+    def from_db(
+        item: models.Filament,
+        *,
+        spool_count: int | None = None,
+        remaining_weight: float | None = None,
+    ) -> "Filament":
+        """Create a new Pydantic filament object from a database filament object.
+
+        The optional spool_count/remaining_weight aggregates are passed in by the list and detail
+        endpoints; they are left null everywhere else (nested spool.filament, websocket events) so
+        the read path stays free of an N+1 aggregate query.
+        """
         return Filament(
             id=item.id,
             registered=item.registered,
@@ -248,6 +320,10 @@ class Filament(BaseModel):
                 MultiColorDirection(item.multi_color_direction) if item.multi_color_direction is not None else None
             ),
             external_id=item.external_id,
+            low_stock_threshold=item.low_stock_threshold,
+            reserve_count=item.reserve_count,
+            spool_count=spool_count,
+            remaining_weight=remaining_weight,
             extra={field.key: field.value for field in item.extra},
         )
 

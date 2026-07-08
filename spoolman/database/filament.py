@@ -5,7 +5,7 @@ from collections.abc import Sequence
 from datetime import datetime
 
 import sqlalchemy
-from sqlalchemy import func, select
+from sqlalchemy import case, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import contains_eager, joinedload
@@ -47,6 +47,8 @@ async def create(
     multi_color_hexes: str | None = None,
     multi_color_direction: MultiColorDirection | None = None,
     external_id: str | None = None,
+    low_stock_threshold: float | None = None,
+    reserve_count: int | None = None,
     extra: dict[str, str] | None = None,
 ) -> models.Filament:
     """Add a new filament to the database."""
@@ -75,6 +77,8 @@ async def create(
         multi_color_hexes=multi_color_hexes,
         multi_color_direction=multi_color_direction.value if multi_color_direction is not None else None,
         external_id=external_id,
+        low_stock_threshold=low_stock_threshold,
+        reserve_count=reserve_count,
         extra=[models.FilamentField(key=k, value=v) for k, v in (extra or {}).items()],
     )
     db.add(filament)
@@ -140,7 +144,65 @@ def _build_search_filters(search: str) -> list:
     return search_conditions
 
 
-async def find(
+# Aggregate sort keys understood by find(); they don't map to a Filament column but to the
+# per-filament spool rollup below (issues #49 / #53).
+_AGGREGATE_SORT_FIELDS = frozenset({"spool_count", "remaining_weight"})
+
+
+def _active_spool_condition() -> sqlalchemy.ColumnElement[bool]:
+    """Match spools that count towards in-stock aggregates: not archived (archived is false or null)."""
+    return sqlalchemy.or_(models.Spool.archived.is_(False), models.Spool.archived.is_(None))
+
+
+def _remaining_weight_per_spool() -> sqlalchemy.ColumnElement[float]:
+    """Per-spool remaining weight, clamped at 0, matching Spool.from_db's estimate.
+
+    Uses the spool's own initial_weight when set, otherwise falls back to the filament's full-spool
+    weight — the same precedence the single-spool read path uses.
+    """
+    net = func.coalesce(models.Spool.initial_weight, models.Filament.weight) - models.Spool.used_weight
+    return case((net > 0, net), else_=0.0)
+
+
+def _filament_aggregate_subquery() -> sqlalchemy.Subquery:
+    """Subquery of (filament_id, spool_count, remaining_weight) grouped over non-archived spools."""
+    return (
+        select(
+            models.Spool.filament_id.label("filament_id"),
+            func.count(models.Spool.id).label("spool_count"),
+            func.coalesce(func.sum(_remaining_weight_per_spool()), 0.0).label("remaining_weight"),
+        )
+        .join(models.Filament, models.Filament.id == models.Spool.filament_id)
+        .where(_active_spool_condition())
+        .group_by(models.Spool.filament_id)
+        .subquery()
+    )
+
+
+async def get_aggregates(db: AsyncSession, filament_ids: list[int]) -> dict[int, tuple[int, float]]:
+    """Return {filament_id: (spool_count, remaining_weight)} for the given filaments.
+
+    Filaments with no non-archived spools are reported as (0, 0.0) rather than omitted. Runs as a
+    single grouped query over the given ids, keeping the list read path free of an N+1 pattern.
+    """
+    if not filament_ids:
+        return {}
+    stmt = (
+        select(
+            models.Spool.filament_id,
+            func.count(models.Spool.id),
+            func.coalesce(func.sum(_remaining_weight_per_spool()), 0.0),
+        )
+        .join(models.Filament, models.Filament.id == models.Spool.filament_id)
+        .where(_active_spool_condition(), models.Spool.filament_id.in_(filament_ids))
+        .group_by(models.Spool.filament_id)
+    )
+    rows = await db.execute(stmt)
+    found = {int(fid): (int(count), float(remaining)) for fid, count, remaining in rows.all()}
+    return {fid: found.get(fid, (0, 0.0)) for fid in filament_ids}
+
+
+async def find(  # noqa: C901
     *,
     db: AsyncSession,
     ids: list[int] | None = None,
@@ -192,10 +254,27 @@ async def find(
         sort_by=sort_by,
     )
 
+    # Sorting by a per-filament aggregate (#49 spool_count / #53 remaining_weight) needs the rollup
+    # subquery joined in. It is a left join on a filament_id-grouped derived table, so it adds at most
+    # one row per filament and does not disturb the pagination count below.
+    aggregate_subq: sqlalchemy.Subquery | None = None
+    if sort_by is not None and _AGGREGATE_SORT_FIELDS.intersection(sort_by):
+        aggregate_subq = _filament_aggregate_subquery()
+        stmt = stmt.outerjoin(aggregate_subq, aggregate_subq.c.filament_id == models.Filament.id)
+
     if sort_by is not None:
         for fieldstr, order in sort_by.items():
             # Check if this is a custom field sort
             if fieldstr.startswith("extra."):
+                continue
+
+            if fieldstr == "spool_count" and aggregate_subq is not None:
+                stmt = stmt.order_by(order_by_expression(func.coalesce(aggregate_subq.c.spool_count, 0), order))
+                continue
+            if fieldstr == "remaining_weight" and aggregate_subq is not None:
+                stmt = stmt.order_by(
+                    order_by_expression(func.coalesce(aggregate_subq.c.remaining_weight, 0.0), order),
+                )
                 continue
 
             field = parse_nested_field(models.Filament, fieldstr)

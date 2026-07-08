@@ -50,6 +50,35 @@ async def get_by_id(db: AsyncSession, vendor_id: int) -> models.Vendor:
     return vendor
 
 
+async def get_aggregates(db: AsyncSession, vendor_ids: list[int]) -> dict[int, tuple[int, int]]:
+    """Return {vendor_id: (filament_count, spool_count)} for the given vendors (issue #49).
+
+    filament_count counts filament types from the vendor; spool_count counts non-archived spools
+    across those filaments. Vendors with none are reported as (0, 0). Two small grouped queries keep
+    the list read path free of an N+1 pattern.
+    """
+    if not vendor_ids:
+        return {}
+
+    filament_count_stmt = (
+        select(models.Filament.vendor_id, func.count(models.Filament.id))
+        .where(models.Filament.vendor_id.in_(vendor_ids))
+        .group_by(models.Filament.vendor_id)
+    )
+    filament_counts = {int(vid): int(count) for vid, count in (await db.execute(filament_count_stmt)).all()}
+
+    active_spool = sqlalchemy.or_(models.Spool.archived.is_(False), models.Spool.archived.is_(None))
+    spool_count_stmt = (
+        select(models.Filament.vendor_id, func.count(models.Spool.id))
+        .join(models.Spool, models.Spool.filament_id == models.Filament.id)
+        .where(models.Filament.vendor_id.in_(vendor_ids), active_spool)
+        .group_by(models.Filament.vendor_id)
+    )
+    spool_counts = {int(vid): int(count) for vid, count in (await db.execute(spool_count_stmt)).all()}
+
+    return {vid: (filament_counts.get(vid, 0), spool_counts.get(vid, 0)) for vid in vendor_ids}
+
+
 async def find(
     *,
     db: AsyncSession,

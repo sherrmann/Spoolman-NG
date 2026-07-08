@@ -52,6 +52,12 @@ class Filament(Base):
     multi_color_hexes: Mapped[str | None] = mapped_column(String(128))
     multi_color_direction: Mapped[str | None] = mapped_column(String(16))
     external_id: Mapped[str | None] = mapped_column(String(256))
+    low_stock_threshold: Mapped[float | None] = mapped_column(
+        comment="Alert when total remaining weight across this filament's spools drops below this, in grams.",
+    )
+    reserve_count: Mapped[int | None] = mapped_column(
+        comment="Number of unopened spare spools of this filament kept in reserve, tracked without a Spool row each.",
+    )
     extra: Mapped[list["FilamentField"]] = relationship(
         back_populates="filament",
         cascade="save-update, merge, delete, delete-orphan",
