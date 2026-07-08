@@ -1,5 +1,5 @@
 import { CopyOutlined, DeleteOutlined, PlusOutlined, SaveOutlined } from "@ant-design/icons";
-import { useTranslate } from "@refinedev/core";
+import { useInvalidate, useTranslate, useUpdate } from "@refinedev/core";
 import { Button, Flex, Form, Input, Modal, Popconfirm, Select, Table, Typography, message } from "antd";
 import TextArea from "antd/es/input/TextArea";
 import { useState } from "react";
@@ -13,10 +13,23 @@ import { IFilament } from "../filaments/model";
 import {
   SpoolQRCodePrintSettings,
   renderLabelContents,
+  renderLabelTemplateString,
   useGetPrintSettings as useGetPrintPresets,
   useSetPrintSettings as useSetPrintPresets,
 } from "./printing";
-import QRCodePrintingDialog from "./qrCodePrintingDialog";
+import QRCodePrintingDialog, { SwatchColor } from "./qrCodePrintingDialog";
+
+// A filament's colour as the swatch shape (#114): multi-colour object when it has multiple hexes,
+// otherwise the single hex string (or undefined for colourless filaments).
+function filamentSwatchColor(filament: IFilament): SwatchColor | undefined {
+  if (filament.multi_color_hexes) {
+    return {
+      colors: filament.multi_color_hexes.split(","),
+      vertical: filament.multi_color_direction === "longitudinal",
+    };
+  }
+  return filament.color_hex;
+}
 
 const { Text } = Typography;
 
@@ -31,6 +44,8 @@ const FilamentQRCodePrintingDialog = ({ filamentIds }: FilamentQRCodePrintingDia
   const baseUrlRoot = baseUrl !== "" ? baseUrl : window.location.origin;
   const [messageApi, contextHolder] = message.useMessage();
   const [useHTTPUrl, setUseHTTPUrl] = useSavedState("print-useHTTPUrl-filament", false);
+  const { mutate: updateFilament } = useUpdate();
+  const invalidate = useInvalidate();
 
   const itemQueries = useGetFilamentsByIds(filamentIds);
   const items = itemQueries
@@ -38,6 +53,22 @@ const FilamentQRCodePrintingDialog = ({ filamentIds }: FilamentQRCodePrintingDia
       return itemQuery.data ?? null;
     })
     .filter((item) => item !== null) as IFilament[];
+
+  // Stamp label_printed_at on every printed filament (#93/#755), mirroring the spool flow.
+  const markPrinted = () => {
+    const stamp = new Date().toISOString();
+    items.forEach((filament) => {
+      updateFilament({
+        resource: "filament",
+        id: filament.id,
+        values: { label_printed_at: stamp },
+        successNotification: false,
+        errorNotification: false,
+        mutationMode: "pessimistic",
+      });
+    });
+    invalidate({ resource: "filament", invalidates: ["list"] });
+  };
 
   const [selectedPresetState, setSelectedPresetState] = useSavedState<string | undefined>(
     "selectedPresetFilament",
@@ -140,6 +171,8 @@ const FilamentQRCodePrintingDialog = ({ filamentIds }: FilamentQRCodePrintingDia
   }
 
   const [templateHelpOpen, setTemplateHelpOpen] = useState(false);
+  // #137: an optional custom QR payload template overrides the standard scanner payload.
+  const customQrPayload = curPreset.labelSettings.customQrPayload;
   const template =
     curPreset.template ??
     `**{vendor.name} - {name}
@@ -276,8 +309,11 @@ const FilamentQRCodePrintingDialog = ({ filamentIds }: FilamentQRCodePrintingDia
             </Form.Item>
           </>
         }
+        onPrinted={markPrinted}
         items={items.map((filament) => ({
-          value: buildScanPayload("filament", filament.id, useHTTPUrl ? baseUrlRoot : undefined),
+          value: customQrPayload
+            ? renderLabelTemplateString(customQrPayload, filament)
+            : buildScanPayload("filament", filament.id, useHTTPUrl ? baseUrlRoot : undefined),
           label: (
             <p
               style={{
@@ -289,7 +325,7 @@ const FilamentQRCodePrintingDialog = ({ filamentIds }: FilamentQRCodePrintingDia
               {renderLabelContents(template, filament)}
             </p>
           ),
-          errorLevel: "H",
+          color: filamentSwatchColor(filament),
         }))}
         extraSettings={
           <>

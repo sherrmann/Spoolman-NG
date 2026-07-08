@@ -1,4 +1,4 @@
-import { FileImageOutlined, PrinterOutlined } from "@ant-design/icons";
+import { FileImageOutlined, PrinterOutlined, TagOutlined } from "@ant-design/icons";
 import { useTranslate } from "@refinedev/core";
 import {
   Button,
@@ -20,6 +20,7 @@ import { ReactElement, useRef } from "react";
 import { useReactToPrint } from "react-to-print";
 import { formatNumberOnUserInput, numberParser } from "../../utils/parsing";
 import { useSavedState } from "../../utils/saveload";
+import { bitmapToZpl } from "../../utils/zpl";
 import { PrintSettings } from "./printing";
 
 /** Decode a `data:image/png;base64,...` URL into raw bytes for zipping. */
@@ -53,6 +54,9 @@ interface PrintingDialogProps {
   extraSettings?: ReactElement;
   extraSettingsStart?: ReactElement;
   extraButtons?: ReactElement;
+  // Fired after the user actually produces label output (print, image or ZPL). Used by the
+  // label-printed tracking flow (#93) to stamp label_printed_at on the printed items.
+  onPrinted?: () => void;
 }
 
 interface PaperDimensions {
@@ -85,6 +89,28 @@ const paperDimensions: { [key: string]: PaperDimensions } = {
     width: 279,
     height: 432,
   },
+  // Curated single-label sizes for thermal/roll label printers (#141). Selecting one and setting
+  // columns/rows to 1 (plus "Match label" page size, #71) prints a single label at true geometry.
+  "Label 89×36 mm": {
+    width: 89,
+    height: 36,
+  },
+  "Label 62×29 mm": {
+    width: 62,
+    height: 29,
+  },
+  "Label 57×32 mm": {
+    width: 57,
+    height: 32,
+  },
+  "Label 50×30 mm": {
+    width: 50,
+    height: 30,
+  },
+  "Label 40×30 mm": {
+    width: 40,
+    height: 30,
+  },
 };
 
 const PrintingDialog = ({
@@ -95,6 +121,7 @@ const PrintingDialog = ({
   extraSettings,
   extraSettingsStart,
   extraButtons,
+  onPrinted,
 }: PrintingDialogProps) => {
   const t = useTranslate();
 
@@ -120,7 +147,9 @@ const PrintingDialog = ({
   const pageSizeValue = pageSizeMode === "label" ? `${paperWidth}mm ${paperHeight}mm` : "auto";
 
   const contentRef = useRef<HTMLDivElement>(null);
-  const reactToPrintFn = useReactToPrint({ contentRef });
+  // onAfterPrint fires once the browser print dialog closes — the point at which we consider the
+  // labels printed and stamp label_printed_at (#93).
+  const reactToPrintFn = useReactToPrint({ contentRef, onAfterPrint: onPrinted });
 
   const itemWidth = (paperWidth - margin.left - margin.right - spacing.horizontal) / paperColumns - spacing.horizontal;
   const itemHeight = (paperHeight - margin.top - margin.bottom - spacing.vertical) / paperRows - spacing.vertical;
@@ -241,12 +270,57 @@ const PrintingDialog = ({
     if (names.length === 1) {
       // A single label downloads as a plain PNG.
       downloadBlob(new Blob([files[names[0]] as BlobPart], { type: "image/png" }), names[0]);
+      onPrinted?.();
       return;
     }
     // Bundle every label into one zip so the browser can't throttle/drop rapid successive
     // downloads (Chromium caps them at ~10), and every entry gets a unique name. Issue #72.
     const zipped = zipSync(files);
     downloadBlob(new Blob([zipped as BlobPart], { type: "application/zip" }), "spoolman-labels.zip");
+    onPrinted?.();
+  };
+
+  // Export each label as ZPL for Zebra/label printers (#102). v1 rasters the on-screen label to a
+  // 1-bit ^GFA graphic (same html-to-image render as "Save as image"), so the output matches the
+  // preview pixel-for-pixel without re-implementing the layout in ZPL.
+  const saveAsZpl = async () => {
+    const hasPrinted: Element[] = [];
+    const items = getPrintItems();
+    const files: Record<string, Uint8Array> = {};
+    let index = 0;
+
+    for (const item of items) {
+      if (hasPrinted.some((printed) => item.isEqualNode(printed))) {
+        continue;
+      }
+      hasPrinted.push(item);
+
+      const canvas = await htmlToImage.toCanvas(item as HTMLElement, {
+        backgroundColor: "#FFF",
+        cacheBust: true,
+      });
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        continue;
+      }
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const zpl = bitmapToZpl({ data: imageData.data, width: canvas.width, height: canvas.height });
+      index += 1;
+      files[`spoolmanlabel-${index}.zpl`] = new TextEncoder().encode(zpl);
+    }
+
+    const names = Object.keys(files);
+    if (names.length === 0) {
+      return;
+    }
+    if (names.length === 1) {
+      downloadBlob(new Blob([files[names[0]] as BlobPart], { type: "text/plain" }), names[0]);
+      onPrinted?.();
+      return;
+    }
+    const zipped = zipSync(files);
+    downloadBlob(new Blob([zipped as BlobPart], { type: "application/zip" }), "spoolman-labels-zpl.zip");
+    onPrinted?.();
   };
 
   return (
@@ -905,6 +979,9 @@ const PrintingDialog = ({
             {extraButtons}
             <Button type="primary" icon={<FileImageOutlined />} size="large" onClick={saveAsImage}>
               {t("printing.generic.saveAsImage")}
+            </Button>
+            <Button type="primary" icon={<TagOutlined />} size="large" onClick={saveAsZpl}>
+              {t("printing.generic.saveAsZpl")}
             </Button>
             <Button type="primary" icon={<PrinterOutlined />} size="large" onClick={() => reactToPrintFn()}>
               {t("printing.generic.print")}
