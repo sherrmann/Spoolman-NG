@@ -14,12 +14,36 @@ import {
   Slider,
   Space,
 } from "antd";
+import { zipSync } from "fflate";
 import * as htmlToImage from "html-to-image";
 import { ReactElement, useRef } from "react";
 import { useReactToPrint } from "react-to-print";
 import { formatNumberOnUserInput, numberParser } from "../../utils/parsing";
 import { useSavedState } from "../../utils/saveload";
 import { PrintSettings } from "./printing";
+
+/** Decode a `data:image/png;base64,...` URL into raw bytes for zipping. */
+function dataUrlToBytes(dataUrl: string): Uint8Array {
+  const base64 = dataUrl.slice(dataUrl.indexOf(",") + 1);
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
+/** Trigger a single browser download for a blob. */
+function downloadBlob(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
 
 interface PrintingDialogProps {
   items: ReactElement[];
@@ -90,6 +114,10 @@ const PrintingDialog = ({
 
   const paperWidth = paperSize === "custom" ? customPaperSize.width : paperDimensions[paperSize].width;
   const paperHeight = paperSize === "custom" ? customPaperSize.height : paperDimensions[paperSize].height;
+
+  // #71: emit an explicit @page size only when the user opts in; "auto" keeps the previous behavior.
+  const pageSizeMode = printSettings?.pageSizeMode || "auto";
+  const pageSizeValue = pageSizeMode === "label" ? `${paperWidth}mm ${paperHeight}mm` : "auto";
 
   const contentRef = useRef<HTMLDivElement>(null);
   const reactToPrintFn = useReactToPrint({ contentRef });
@@ -187,17 +215,12 @@ const PrintingDialog = ({
   const saveAsImage = async () => {
     const hasPrinted: Element[] = [];
     const items = getPrintItems();
+    const files: Record<string, Uint8Array> = {};
+    let index = 0;
 
     for (const item of items) {
-      // Prevent printing copies
-      let isDuplicate = false;
-      for (let i = 0; i < hasPrinted.length; i += 1) {
-        if (item.isEqualNode(hasPrinted[i])) {
-          isDuplicate = true;
-          break;
-        }
-      }
-      if (isDuplicate) {
+      // Skip visually-identical duplicates (e.g. itemCopies).
+      if (hasPrinted.some((printed) => item.isEqualNode(printed))) {
         continue;
       }
       hasPrinted.push(item);
@@ -207,13 +230,23 @@ const PrintingDialog = ({
         backgroundColor: "#FFF",
         cacheBust: true,
       });
-
-      // Download image
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "spoolmanlabel.png";
-      link.click();
+      index += 1;
+      files[`spoolmanlabel-${index}.png`] = dataUrlToBytes(url);
     }
+
+    const names = Object.keys(files);
+    if (names.length === 0) {
+      return;
+    }
+    if (names.length === 1) {
+      // A single label downloads as a plain PNG.
+      downloadBlob(new Blob([files[names[0]] as BlobPart], { type: "image/png" }), names[0]);
+      return;
+    }
+    // Bundle every label into one zip so the browser can't throttle/drop rapid successive
+    // downloads (Chromium caps them at ~10), and every entry gets a unique name. Issue #72.
+    const zipped = zipSync(files);
+    downloadBlob(new Blob([zipped as BlobPart], { type: "application/zip" }), "spoolman-labels.zip");
   };
 
   return (
@@ -254,7 +287,7 @@ const PrintingDialog = ({
                   }
                     
                   @page {
-                    size: auto;
+                    size: ${pageSizeValue};
                     margin: 0;
                   }
                   .print-container {
@@ -458,6 +491,21 @@ const PrintingDialog = ({
                       />
                     </Col>
                   </Row>
+                </Form.Item>
+                <Form.Item
+                  label={t("printing.generic.pageSizeMode.label")}
+                  tooltip={t("printing.generic.pageSizeMode.tooltip")}
+                >
+                  <Select
+                    value={pageSizeMode}
+                    onChange={(value) => {
+                      printSettings.pageSizeMode = value;
+                      setPrintSettings(printSettings);
+                    }}
+                  >
+                    <Select.Option value="auto">{t("printing.generic.pageSizeMode.auto")}</Select.Option>
+                    <Select.Option value="label">{t("printing.generic.pageSizeMode.matchLabel")}</Select.Option>
+                  </Select>
                 </Form.Item>
                 <Form.Item label={t("printing.generic.columns")}>
                   <Row>

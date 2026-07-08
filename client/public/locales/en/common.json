@@ -98,6 +98,12 @@
       "paperSize": "Paper Size",
       "customSize": "Custom",
       "dimensions": "Dimensions",
+      "pageSizeMode": {
+        "label": "Page Size",
+        "tooltip": "\"Automatic\" lets the printer/browser choose the page geometry (default). \"Match label size\" emits an explicit @page size from the paper dimensions above — use this for roll/label printers (e.g. Brother QL) so labels print at the right size and orientation. Best supported in Chrome.",
+        "auto": "Automatic (printer default)",
+        "matchLabel": "Match label size"
+      },
       "showBorder": "Show Border",
       "previewScale": "Preview Scale",
       "skipItems": "Skip Items",
@@ -134,8 +140,9 @@
       "button": "Print Labels",
       "title": "Label Printing",
       "template": "Label Template",
-      "templateHelp": "Use {} to insert values of the spool object as text. For example, {id} will be replaced with the spool id, or {filament.material} will be replaced with the material of the spool. if a value is missing it will be replaced with \"?\". A second set of {} can be used to remove this. In addition, any text between the sets of {} will be removed if the value is missing. For example, {Lot Nr: {lot_nr}} will only show the label if the spool has a lot number. Enclose text with double asterix ** to make it bold. Click the button to view a list of all available tags.",
+      "templateHelp": "Use {} to insert values of the spool object as text. For example, {id} will be replaced with the spool id, or {filament.material} will be replaced with the material of the spool. if a value is missing it will be replaced with \"?\". A second set of {} can be used to remove this. In addition, any text between the sets of {} will be removed if the value is missing. For example, {Lot Nr: {lot_nr}} will only show the label if the spool has a lot number. Enclose text with double asterix ** to make it bold. Add a format after a colon: numbers like {remaining_weight:0.0} round to that many decimals, and dates like {registered:YYYY-MM-DD HH:mm} format the date/time in your local time zone. Start a line with {size:1.5} to scale that whole line (here 1.5×). Click the button to view a list of all available tags.",
       "textSize": "Label Text Size",
+      "qrPadding": "QR Padding",
       "showContent": "Print Label",
       "useHTTPUrl": {
         "label": "QR code link",
