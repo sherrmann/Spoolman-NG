@@ -59,6 +59,12 @@
     "reset": "Reset view settings & reload",
     "home": "Go to home page"
   },
+  "apiToken": {
+    "title": "API token required",
+    "help": "This Spoolman instance requires an API token. Enter it to continue; it is stored in this browser.",
+    "placeholder": "API token",
+    "submit": "Save token"
+  },
   "yes": "Yes",
   "no": "No",
   "colorFilter": {

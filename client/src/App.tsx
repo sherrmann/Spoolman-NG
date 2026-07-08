@@ -21,6 +21,7 @@ import { Locale } from "antd/es/locale";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BrowserRouter, Outlet, Route, Routes } from "react-router";
+import { ApiTokenModal } from "./components/apiTokenModal";
 import dataProvider from "./components/dataProvider";
 import { ErrorBoundary } from "./components/errorBoundary";
 import { Favicon } from "./components/favicon";
@@ -237,6 +238,7 @@ function App() {
                 <DocumentTitleHandler />
                 <ReactQueryDevtools />
                 <Favicon url={getBasePath() + "/favicon.svg"} />
+                <ApiTokenModal />
               </Refine>
             </ErrorBoundary>
           </ConfigProvider>

@@ -1,5 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { clearApiToken, setApiToken, useApiTokenModal } from "./apiToken";
 import { apiFetch, handleAuthResponseError, reloadIfAuthFailed, reloadOnAuthFailure } from "./authReloadHandler";
+
+/** A minimal Response stub whose headers.get returns the given WWW-Authenticate value. */
+function mockResponse(status: number, wwwAuthenticate: string | null = null): Response {
+  return {
+    status,
+    headers: { get: (h: string) => (h.toLowerCase() === "www-authenticate" ? wwwAuthenticate : null) },
+  } as unknown as Response;
+}
 
 // Regression cover for the 401 auto-reload behavior (TESTING_CANDIDATES row 58c):
 // reload only for idempotent requests, a cooldown to bound reload loops, and SW
@@ -93,25 +102,46 @@ describe("handleAuthResponseError", () => {
 // The bare-fetch reads (settings/fields/external/info/autocomplete) now route through
 // apiFetch, extending the axios-only 401 recovery to the second transport. Issue #47.
 describe("apiFetch", () => {
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    clearApiToken();
+    useApiTokenModal.setState({ open: false });
+  });
 
-  it("reloads on a 401 GET and returns the response unchanged", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ status: 401 } as Response));
+  it("reloads on a 401 GET (proxy) and returns the response unchanged", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse(401)));
     const res = await apiFetch("/api/v1/setting/");
     expect(res.status).toBe(401);
     expect(reloadSpy).toHaveBeenCalledOnce();
   });
 
   it("does NOT reload on a 401 for a mutating request", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ status: 401 } as Response));
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse(401)));
     await apiFetch("/api/v1/setting/x", { method: "POST" });
     expect(reloadSpy).not.toHaveBeenCalled();
   });
 
   it("does NOT reload on a successful read", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ status: 200 } as Response));
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse(200)));
     await apiFetch("/api/v1/setting/");
     expect(reloadSpy).not.toHaveBeenCalled();
+  });
+
+  // Issue #48: a 401 from Spoolman's own token check opens the token modal instead of reloading.
+  it("opens the token modal (not reload) on a 401 with WWW-Authenticate: Bearer", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse(401, "Bearer")));
+    await apiFetch("/api/v1/setting/");
+    expect(useApiTokenModal.getState().open).toBe(true);
+    expect(reloadSpy).not.toHaveBeenCalled();
+  });
+
+  it("attaches the stored API token as a bearer header", async () => {
+    setApiToken("tok");
+    const fetchMock = vi.fn().mockResolvedValue(mockResponse(200));
+    vi.stubGlobal("fetch", fetchMock);
+    await apiFetch("/api/v1/setting/");
+    const init = fetchMock.mock.calls[0][1] as RequestInit;
+    expect((init.headers as Record<string, string>).Authorization).toBe("Bearer tok");
   });
 });
 
@@ -121,7 +151,7 @@ describe("reloadIfAuthFailed", () => {
   afterEach(() => vi.unstubAllGlobals());
 
   it("reloads when the probe comes back 401", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ status: 401 } as Response));
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse(401)));
     await reloadIfAuthFailed("/api/v1/info");
     expect(reloadSpy).toHaveBeenCalledOnce();
   });

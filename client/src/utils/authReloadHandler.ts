@@ -1,4 +1,5 @@
 import { axiosInstance } from "@refinedev/simple-rest";
+import { apiAuthHeader, getApiToken, useApiTokenModal } from "./apiToken";
 
 const RELOAD_FLAG_KEY = "spoolmanAuthReloadedAt";
 const RELOAD_COOLDOWN_MS = 30_000;
@@ -41,10 +42,17 @@ export async function reloadOnAuthFailure(): Promise<void> {
  * unaffected. Issue #47.
  */
 export async function apiFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
-  const response = await fetch(input, init);
+  // Attach the API token (if any); an explicit header in init still wins.
+  const headers = { ...apiAuthHeader(), ...((init?.headers as Record<string, string>) ?? {}) };
+  const response = await fetch(input, { ...init, headers });
   if (response.status === 401) {
-    const method = String(init?.method ?? "get").toLowerCase();
-    if (method === "get" || method === "head") void reloadOnAuthFailure();
+    if ((response.headers.get("www-authenticate") ?? "").toLowerCase().includes("bearer")) {
+      // Spoolman's own API token is missing/invalid — prompt for it rather than reloading.
+      useApiTokenModal.getState().requireToken();
+    } else {
+      const method = String(init?.method ?? "get").toLowerCase();
+      if (method === "get" || method === "head") void reloadOnAuthFailure();
+    }
   }
   return response;
 }
@@ -66,7 +74,7 @@ export async function reloadIfAuthFailed(url: string): Promise<void> {
 }
 
 interface AuthError {
-  response?: { status?: number };
+  response?: { status?: number; headers?: Record<string, unknown> };
   config?: { method?: string };
 }
 
@@ -78,8 +86,14 @@ interface AuthError {
  */
 export function handleAuthResponseError(error: AuthError): Promise<never> {
   if (error?.response?.status === 401) {
-    const method = String(error.config?.method ?? "get").toLowerCase();
-    if (method === "get" || method === "head") void reloadOnAuthFailure();
+    const wwwAuth = String(error.response.headers?.["www-authenticate"] ?? "").toLowerCase();
+    if (wwwAuth.includes("bearer")) {
+      // Spoolman's own API token is missing/invalid — prompt for it rather than reloading.
+      useApiTokenModal.getState().requireToken();
+    } else {
+      const method = String(error.config?.method ?? "get").toLowerCase();
+      if (method === "get" || method === "head") void reloadOnAuthFailure();
+    }
   }
   return Promise.reject(error);
 }
@@ -94,5 +108,12 @@ const instance = axiosInstance as typeof axiosInstance & {
 
 if (!instance.__spoolmanAuthReloadInstalled) {
   instance.__spoolmanAuthReloadInstalled = true;
+  // Attach the API token (if any) to every axios request. Reads localStorage per request so a
+  // token entered mid-session takes effect without re-instantiating the client. Issue #48.
+  axiosInstance.interceptors.request.use((config) => {
+    const token = getApiToken();
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    return config;
+  });
   axiosInstance.interceptors.response.use((response) => response, handleAuthResponseError);
 }
