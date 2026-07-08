@@ -51,6 +51,10 @@ class Filament(Base):
     color_hex: Mapped[str | None] = mapped_column(String(8))
     multi_color_hexes: Mapped[str | None] = mapped_column(String(128))
     multi_color_direction: Mapped[str | None] = mapped_column(String(16))
+    color_hue: Mapped[float | None] = mapped_column(
+        comment="Precomputed hue (degrees, 0-360) of the colour, for sortable colour ordering (#113). "
+        "Server-managed, not exposed on the API; NULL when no colour is set.",
+    )
     external_id: Mapped[str | None] = mapped_column(String(256))
     low_stock_threshold: Mapped[float | None] = mapped_column(
         comment="Alert when total remaining weight across this filament's spools drops below this, in grams.",
