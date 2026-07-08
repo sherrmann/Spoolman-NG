@@ -32,9 +32,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-install-project --extra nfc
 
 # Copy and install app
-COPY --chown=app:app migrations /home/app/spoolman/migrations
-COPY --chown=app:app spoolman /home/app/spoolman/spoolman
-COPY --chown=app:app alembic.ini README.md uv.lock pyproject.toml /home/app/spoolman/
+COPY migrations /home/app/spoolman/migrations
+COPY spoolman /home/app/spoolman/spoolman
+COPY alembic.ini README.md uv.lock pyproject.toml /home/app/spoolman/
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --extra nfc
 
@@ -68,9 +68,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ENV LD_PRELOAD=libstdc++.so.6
 
 # Add local user so we don't run as root
-RUN groupmod -g 1000 users \
-    && useradd -u 1000 -U app \
-    && usermod -G users app \
+RUN useradd -u 1000 -U app \
     && mkdir -p /home/app/.local/share/spoolman \
     && chown -R app:app /home/app/.local/share/spoolman
 

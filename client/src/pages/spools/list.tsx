@@ -60,7 +60,10 @@ function collapseSpool(element: ISpool): ISpoolCollapsed {
   } else {
     filament_name = element.filament.name ?? element.filament.id.toString();
   }
-  if (element.price === undefined) {
+  // The REST list omits `price` when unset (response_model_exclude_none), but websocket
+  // live updates send it as `null`. Fall back to the filament price for both cases,
+  // otherwise a live update (e.g. after a weight adjust) blanks the price column until reload.
+  if (element.price === undefined || element.price === null) {
     element.price = element.filament.price;
   }
   return {
@@ -428,11 +431,11 @@ export const SpoolList = () => {
                 editable={inlineEditEnabled}
                 messageApi={messageApi}
                 t={t}
-                value={obj.price}
+                value={obj.price ?? undefined}
                 precision={2}
                 align="right"
                 addonAfter={getCurrencySymbol(undefined, currency)}
-                display={obj.price === undefined ? "" : currencyFormatter.format(obj.price)}
+                display={obj.price === undefined || obj.price === null ? "" : currencyFormatter.format(obj.price)}
               />
             ),
           }),

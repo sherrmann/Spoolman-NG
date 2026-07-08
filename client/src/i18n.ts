@@ -160,6 +160,16 @@ export const languages: { [key: string]: Language } = {
     fullCode: "hi-IN",
     djs: () => import("dayjs/locale/en"),
   },
+  ["ko"]: {
+    name: "한국어",
+    fullCode: "ko-KR",
+    djs: () => import("dayjs/locale/ko"),
+  },
+  ["sl"]: {
+    name: "Slovenščina",
+    fullCode: "sl-SI",
+    djs: () => import("dayjs/locale/sl"),
+  },
 };
 
 i18n
