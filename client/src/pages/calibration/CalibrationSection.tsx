@@ -1,3 +1,4 @@
+import { DATE_TIME_FORMAT_SHORT } from "../../utils/dateFormat";
 import {
   BookOutlined,
   DeleteOutlined,
@@ -396,7 +397,7 @@ export const CalibrationSection = ({ filamentId }: Props) => {
     label: (
       <span>
         <Tag color={STATUS_COLORS[session.status]}>{t(`calibration.status.${session.status}`)}</Tag>
-        {dayjs.utc(session.registered).local().format("YYYY-MM-DD HH:mm")}
+        {dayjs.utc(session.registered).local().format(DATE_TIME_FORMAT_SHORT)}
         {session.printer_name && <Text type="secondary"> &mdash; {session.printer_name}</Text>}
         {session.nozzle_diameter && <Text type="secondary"> &mdash; {session.nozzle_diameter}mm</Text>}
       </span>

@@ -1,3 +1,4 @@
+import { DATE_TIME_FORMAT } from "../../utils/dateFormat";
 import { Edit, useForm } from "@refinedev/antd";
 import { HttpError, useTranslate } from "@refinedev/core";
 import { Alert, DatePicker, Form, Input, InputNumber, message, Typography } from "antd";
@@ -76,7 +77,7 @@ export const VendorEdit = () => {
             value: value ? dayjs(value) : undefined,
           })}
         >
-          <DatePicker disabled showTime format="YYYY-MM-DD HH:mm:ss" />
+          <DatePicker disabled showTime format={DATE_TIME_FORMAT} />
         </Form.Item>
         <Form.Item
           label={t("vendor.fields.name")}
