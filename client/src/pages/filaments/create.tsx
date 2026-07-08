@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { ExtraFieldFormItem, ParsedExtras, StringifiedExtras } from "../../components/extraFields";
 import { FilamentImportModal } from "../../components/filamentImportModal";
 import { MultiColorPicker } from "../../components/multiColorPicker";
+import { suggestDensityForMaterial } from "../../utils/materialDensities";
 import { formatNumberOnUserInput, numberParser, numberParserAllowEmpty } from "../../utils/parsing";
 import { ExternalFilament, fetchExternalProfile } from "../../utils/queryExternalDB";
 import { EntityType, useGetFields } from "../../utils/queryFields";
@@ -263,7 +264,17 @@ export const FilamentCreate = (props: IResourceComponentsProps & CreateOrClonePr
             },
           ]}
         >
-          <Input maxLength={64} />
+          <Input
+            maxLength={64}
+            onChange={(e) => {
+              // Suggest a density for a known material, but only when the field is still
+              // blank so we never overwrite a value the user typed. Issue #54.
+              const suggestion = suggestDensityForMaterial(e.target.value);
+              if (suggestion !== undefined && form.getFieldValue("density") == null) {
+                form.setFieldValue("density", suggestion);
+              }
+            }}
+          />
         </Form.Item>
         <Form.Item
           label={t("filament.fields.price")}
