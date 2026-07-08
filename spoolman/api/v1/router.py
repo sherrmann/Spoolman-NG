@@ -16,7 +16,20 @@ from spoolman.database.database import backup_global_db
 from spoolman.exceptions import ItemNotFoundError
 from spoolman.ws import websocket_manager
 
-from . import calibration, export, externaldb, field, filament, models, nfc, other, setting, spool, vendor
+from . import (
+    calibration,
+    export,
+    externaldb,
+    field,
+    filament,
+    import_,
+    models,
+    nfc,
+    other,
+    setting,
+    spool,
+    vendor,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -115,6 +128,7 @@ app.include_router(other.router)
 app.include_router(externaldb.router)
 app.include_router(nfc.router)
 app.include_router(export.router)
+app.include_router(import_.router)
 
 # Opt-in bearer-token auth (#48): installed only when SPOOLMAN_API_TOKEN is set, so the default
 # deployment is unchanged. Guards this sub-app's HTTP routes and the websocket handshake uniformly.
