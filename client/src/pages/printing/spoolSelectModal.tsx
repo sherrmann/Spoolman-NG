@@ -1,6 +1,6 @@
 import { RightOutlined } from "@ant-design/icons";
 import { useTable } from "@refinedev/antd";
-import { Button, Checkbox, Col, message, Row, Space, Table } from "antd";
+import { Button, Checkbox, Col, Modal, message, Row, Space, Table } from "antd";
 import { t } from "i18next";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
@@ -44,6 +44,9 @@ function collapseSpool(element: ISpool): ISpoolCollapsed {
 const SpoolSelectModal = ({ description, onContinue }: Props) => {
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
   const [showArchived, setShowArchived] = useState(false);
+  // #93: optionally hide spools whose label has already been printed, so a re-print run only shows
+  // spools still needing a label. Purely client-side over the fully-loaded list (pagination is off).
+  const [hidePrinted, setHidePrinted] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
   const navigate = useNavigate();
 
@@ -128,10 +131,16 @@ const SpoolSelectModal = ({ description, onContinue }: Props) => {
     [tableProps.dataSource],
   );
 
+  // The rows actually shown/selectable: optionally drop already-printed spools (#93).
+  const visibleDataSource = useMemo(
+    () => (hidePrinted ? dataSource.filter((spool) => !spool.label_printed_at) : dataSource),
+    [dataSource, hidePrinted],
+  );
+
   // Function to add/remove all filtered items from selected items
   const selectUnselectFiltered = (select: boolean) => {
     setSelectedItems((prevSelected) => {
-      const filtered = dataSource.map((spool) => spool.id).filter((spool) => !prevSelected.includes(spool));
+      const filtered = visibleDataSource.map((spool) => spool.id).filter((spool) => !prevSelected.includes(spool));
       return select ? [...prevSelected, ...filtered] : filtered;
     });
   };
@@ -147,9 +156,10 @@ const SpoolSelectModal = ({ description, onContinue }: Props) => {
   // Memoised Set for O(1) membership checks — avoids O(n²) when dataSource and
   // selectedItems are both large (many loaded spools, many already selected).
   const selectedSet = useMemo(() => new Set(selectedItems), [selectedItems]);
-  const isAllFilteredSelected = dataSource.length > 0 && dataSource.every((spool) => selectedSet.has(spool.id));
+  const isAllFilteredSelected =
+    visibleDataSource.length > 0 && visibleDataSource.every((spool) => selectedSet.has(spool.id));
   const isSomeButNotAllFilteredSelected =
-    dataSource.some((spool) => selectedSet.has(spool.id)) && !isAllFilteredSelected;
+    visibleDataSource.some((spool) => selectedSet.has(spool.id)) && !isAllFilteredSelected;
 
   const commonProps = {
     t,
@@ -157,7 +167,7 @@ const SpoolSelectModal = ({ description, onContinue }: Props) => {
     actions: () => {
       return [];
     },
-    dataSource,
+    dataSource: visibleDataSource,
     tableState,
     sorter: true,
   };
@@ -173,7 +183,7 @@ const SpoolSelectModal = ({ description, onContinue }: Props) => {
               {...tableProps}
               rowKey="id"
               tableLayout="auto"
-              dataSource={dataSource}
+              dataSource={visibleDataSource}
               pagination={false}
               scroll={{ x: "max-content", y: tableScrollY }}
               columns={removeUndefined([
@@ -243,6 +253,24 @@ const SpoolSelectModal = ({ description, onContinue }: Props) => {
                 {t("printing.spoolSelect.showArchived")}
               </Checkbox>
             </Col>
+            <Col span={12}>
+              <Checkbox
+                checked={hidePrinted}
+                onChange={(e) => {
+                  setHidePrinted(e.target.checked);
+                  if (e.target.checked) {
+                    // Drop now-hidden (already-printed) spools from the selection.
+                    setSelectedItems((prevSelected) =>
+                      prevSelected.filter(
+                        (selected) => !dataSource.find((spool) => spool.id === selected)?.label_printed_at,
+                      ),
+                    );
+                  }
+                }}
+              >
+                {t("printing.spoolSelect.hidePrinted")}
+              </Checkbox>
+            </Col>
             <Col span={24}>
               <Button
                 type="primary"
@@ -256,7 +284,20 @@ const SpoolSelectModal = ({ description, onContinue }: Props) => {
                     });
                     return;
                   }
-                  onContinue(dataSource.filter((spool) => selectedItems.includes(spool.id)));
+                  const selectedSpools = dataSource.filter((spool) => selectedItems.includes(spool.id));
+                  // #93: warn before reprinting labels that were already printed.
+                  const alreadyPrinted = selectedSpools.filter((spool) => spool.label_printed_at).length;
+                  if (alreadyPrinted > 0) {
+                    Modal.confirm({
+                      title: t("printing.spoolSelect.reprintConfirmTitle"),
+                      content: t("printing.spoolSelect.reprintConfirmContent", { count: alreadyPrinted }),
+                      okText: t("buttons.continue"),
+                      cancelText: t("buttons.cancel"),
+                      onOk: () => onContinue(selectedSpools),
+                    });
+                    return;
+                  }
+                  onContinue(selectedSpools);
                 }}
               >
                 {t("buttons.continue")}

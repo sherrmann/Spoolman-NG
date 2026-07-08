@@ -2,7 +2,8 @@ import { render } from "@testing-library/react";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { describe, expect, it } from "vitest";
-import { renderLabelContents } from "./printing";
+import { parseScanResult } from "../../utils/scan";
+import { renderLabelContents, renderLabelTemplateString } from "./printing";
 
 dayjs.extend(utc);
 
@@ -127,5 +128,35 @@ describe("renderLabelContents", () => {
   it("does not drop a blank line the template author wrote on purpose", () => {
     const { container } = render(renderLabelContents("A\n\nB", { extra: {} } as never));
     expect(container.querySelectorAll("br")).toHaveLength(2);
+  });
+});
+
+// --- #137: custom QR payload template rendered to a plain string ------------
+describe("renderLabelTemplateString", () => {
+  it("substitutes tags into a plain string (no markup)", () => {
+    expect(renderLabelTemplateString("WEB+SPOOLMAN:S-{id}", { id: 42, extra: {} } as never)).toBe("WEB+SPOOLMAN:S-42");
+  });
+
+  it("resolves nested tags", () => {
+    expect(
+      renderLabelTemplateString("{filament.vendor.name}/{id}", {
+        id: 7,
+        filament: { vendor: { name: "Acme" } },
+        extra: {},
+      } as never),
+    ).toBe("Acme/7");
+  });
+
+  it("collapses a suppressed conditional block to nothing rather than leaving a sentinel", () => {
+    expect(renderLabelTemplateString("A{-{missing}-}B", { extra: {} } as never)).toBe("AB");
+  });
+
+  it("keeps a resolved conditional block", () => {
+    expect(renderLabelTemplateString("id{-{id}-}", { id: 5, extra: {} } as never)).toBe("id-5-");
+  });
+
+  it("produces a payload that still parses as a Spoolman scan target", () => {
+    const payload = renderLabelTemplateString("WEB+SPOOLMAN:S-{id}", { id: 99, extra: {} } as never);
+    expect(parseScanResult(payload)).toEqual({ resource: "spool", id: "99", path: "/spool/show/99" });
   });
 });

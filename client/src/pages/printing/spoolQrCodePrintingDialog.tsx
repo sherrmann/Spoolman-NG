@@ -1,5 +1,5 @@
 import { CopyOutlined, DeleteOutlined, PlusOutlined, SaveOutlined } from "@ant-design/icons";
-import { useTranslate } from "@refinedev/core";
+import { useInvalidate, useTranslate, useUpdate } from "@refinedev/core";
 import { Button, Flex, Form, Input, Modal, Popconfirm, Select, Table, Typography, message } from "antd";
 import TextArea from "antd/es/input/TextArea";
 import { useState } from "react";
@@ -12,10 +12,24 @@ import { ISpool } from "../spools/model";
 import {
   SpoolQRCodePrintSettings,
   renderLabelContents,
+  renderLabelTemplateString,
   useGetPrintSettings as useGetPrintPresets,
   useSetPrintSettings as useSetPrintPresets,
 } from "./printing";
-import QRCodePrintingDialog from "./qrCodePrintingDialog";
+import QRCodePrintingDialog, { SwatchColor } from "./qrCodePrintingDialog";
+
+// The filament colour of a spool as the swatch shape (#114): a multi-colour object when the filament
+// has multiple hexes, otherwise the single hex string (or undefined when the filament has no colour).
+function spoolSwatchColor(spool: ISpool): SwatchColor | undefined {
+  const filament = spool.filament;
+  if (filament?.multi_color_hexes) {
+    return {
+      colors: filament.multi_color_hexes.split(","),
+      vertical: filament.multi_color_direction === "longitudinal",
+    };
+  }
+  return filament?.color_hex;
+}
 
 const { Text } = Typography;
 
@@ -30,6 +44,8 @@ const SpoolQRCodePrintingDialog = ({ spoolIds }: SpoolQRCodePrintingDialog) => {
   const baseUrlRoot = baseUrl !== "" ? baseUrl : window.location.origin;
   const [messageApi, contextHolder] = message.useMessage();
   const [useHTTPUrl, setUseHTTPUrl] = useSavedState("print-useHTTPUrl", false);
+  const { mutate: updateSpool } = useUpdate();
+  const invalidate = useInvalidate();
 
   const itemQueries = useGetSpoolsByIds(spoolIds);
   const items = itemQueries
@@ -37,6 +53,23 @@ const SpoolQRCodePrintingDialog = ({ spoolIds }: SpoolQRCodePrintingDialog) => {
       return itemQuery.data ?? null;
     })
     .filter((item) => item !== null) as ISpool[];
+
+  // Stamp label_printed_at on every printed spool (#93) so the "hide already-printed" filter and the
+  // reprint warning have something to key off. Fired by the dialog once output is actually produced.
+  const markPrinted = () => {
+    const stamp = new Date().toISOString();
+    items.forEach((spool) => {
+      updateSpool({
+        resource: "spool",
+        id: spool.id,
+        values: { label_printed_at: stamp },
+        successNotification: false,
+        errorNotification: false,
+        mutationMode: "pessimistic",
+      });
+    });
+    invalidate({ resource: "spool", invalidates: ["list"] });
+  };
 
   // Selected preset state
   const [selectedPresetState, setSelectedPresetState] = useSavedState<string | undefined>("selectedPreset", undefined);
@@ -150,6 +183,8 @@ const SpoolQRCodePrintingDialog = ({ spoolIds }: SpoolQRCodePrintingDialog) => {
   }
 
   const [templateHelpOpen, setTemplateHelpOpen] = useState(false);
+  // #137: an optional custom QR payload template overrides the standard scanner payload.
+  const customQrPayload = curPreset.labelSettings.customQrPayload;
   const template =
     curPreset.template ??
     `**{filament.vendor.name} - {filament.name}
@@ -307,8 +342,13 @@ Spool Weight: {filament.spool_weight} g
             </Form.Item>
           </>
         }
+        onPrinted={markPrinted}
         items={items.map((spool) => ({
-          value: useHTTPUrl ? `${baseUrlRoot}/spool/show/${spool.id}` : `WEB+SPOOLMAN:S-${spool.id}`,
+          value: customQrPayload
+            ? renderLabelTemplateString(customQrPayload, spool)
+            : useHTTPUrl
+              ? `${baseUrlRoot}/spool/show/${spool.id}`
+              : `WEB+SPOOLMAN:S-${spool.id}`,
           label: (
             <p
               style={{
@@ -320,7 +360,7 @@ Spool Weight: {filament.spool_weight} g
               {renderLabelContents(template, spool)}
             </p>
           ),
-          errorLevel: "H",
+          color: spoolSwatchColor(spool),
         }))}
         extraSettings={
           <>

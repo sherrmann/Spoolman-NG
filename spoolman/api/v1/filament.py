@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+from datetime import datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, Request, WebSocket, WebSocketDisconnect
@@ -201,6 +202,13 @@ class FilamentParameters(BaseModel):
 class FilamentUpdateParameters(FilamentParameters):
     density: float | None = Field(None, gt=0, description="The density of this filament in g/cm3.", examples=[1.24])
     diameter: float | None = Field(None, gt=0, description="The diameter of this filament in mm.", examples=[1.75])
+    label_printed_at: datetime | None = Field(
+        None,
+        description=(
+            "When a label was last printed for this filament type. Set by the label-printing flow; "
+            "pass null to clear the printed marker."
+        ),
+    )
 
     @field_validator("density", "diameter")
     @classmethod

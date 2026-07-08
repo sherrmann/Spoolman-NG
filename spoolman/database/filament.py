@@ -21,6 +21,7 @@ from spoolman.database.utils import (
     add_where_clause_str_opt,
     order_by_expression,
     parse_nested_field,
+    utc_timezone_naive,
 )
 from spoolman.exceptions import ItemDeleteError, ItemNotFoundError
 from spoolman.extra_field_registry import EntityType
@@ -314,6 +315,8 @@ async def update(
             filament.extra = [models.FilamentField(key=k, value=v) for k, v in v.items()]
         elif k == "multi_color_direction":
             filament.multi_color_direction = v.value if v is not None else None
+        elif isinstance(v, datetime):
+            setattr(filament, k, utc_timezone_naive(v))
         else:
             setattr(filament, k, v)
     await db.commit()

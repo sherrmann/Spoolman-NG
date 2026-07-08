@@ -31,6 +31,18 @@ export interface QRCodePrintSettings {
   textSize?: number;
   // QR image padding in mm (#59). Optional — old presets default to 2 at read time.
   qrPadding?: number;
+  // QR error-correction level (#106). Higher = more redundancy but denser modules. Old presets default to "H".
+  qrErrorLevel?: "L" | "M" | "Q" | "H";
+  // Show a colored swatch of the filament colour next to the label text (#114). Default off.
+  showColorSwatch?: boolean;
+  // Where the QR sits relative to the text (#79/#107): "left" (side by side, default), "top" or "bottom".
+  qrPlacement?: "left" | "top" | "bottom";
+  // Lay the label text out in this many CSS columns (#133). Default 1.
+  textColumns?: number;
+  // Optional custom template for the QR payload (#137). Empty/undefined ⇒ the standard scanner payload.
+  customQrPayload?: string;
+  // Optional 1D barcode printed alongside the QR (#138). Default "none".
+  barcode1d?: "none" | "code128";
   printSettings: PrintSettings;
 }
 
@@ -133,7 +145,10 @@ function applyBold(text: string): ReactNode[] {
     .map((part, index) => (index % 2 === 0 ? <span key={index}>{part}</span> : <b key={index}>{part}</b>));
 }
 
-export function renderLabelContents(template: string, obj: GenericObject): ReactElement {
+// Substitute every `{tag}` / `{prefix{tag}suffix}` occurrence in the template against `obj`, returning
+// the raw substituted string (SUPPRESSED sentinels for unresolved conditional blocks still present).
+// Shared by the label renderer and the QR-payload renderer so both use identical tag semantics.
+function substituteTemplateTags(template: string, obj: GenericObject): string {
   // Find all {tags} in the template string and loop over them
   const matches = [...template.matchAll(/{(?:[^}{]|{[^}{]*})*}/gs)];
   let label_text = template;
@@ -159,6 +174,18 @@ export function renderLabelContents(template: string, obj: GenericObject): React
       }
     }
   });
+  return label_text;
+}
+
+// #137: render a template to a plain single-line-safe string for use as the QR payload. Same tag
+// substitution as the label body, but no line/size/bold handling — a scannable payload is one string.
+// Unresolved conditional blocks collapse to nothing.
+export function renderLabelTemplateString(template: string, obj: GenericObject): string {
+  return substituteTemplateTags(template, obj).split(SUPPRESSED).join("");
+}
+
+export function renderLabelContents(template: string, obj: GenericObject): ReactElement {
+  const label_text = substituteTemplateTags(template, obj);
 
   // #64: a line that is empty only because a conditional block was suppressed is dropped (its newline
   // consumed) so no blank line prints; lines the user left blank on purpose are untouched. Then strip

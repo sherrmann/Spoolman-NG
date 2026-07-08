@@ -134,7 +134,8 @@
       "deleteSettingsConfirm": "Are you sure you want to delete this preset?",
       "settingsName": "Preset Name",
       "saveSetting": "Save Presets",
-      "saveAsImage": "Save as Image"
+      "saveAsImage": "Save as Image",
+      "saveAsZpl": "Download ZPL"
     },
     "qrcode": {
       "button": "Print Labels",
@@ -142,8 +143,37 @@
       "template": "Label Template",
       "templateHelp": "Use {} to insert values of the spool object as text. For example, {id} will be replaced with the spool id, or {filament.material} will be replaced with the material of the spool. if a value is missing it will be replaced with \"?\". A second set of {} can be used to remove this. In addition, any text between the sets of {} will be removed if the value is missing. For example, {Lot Nr: {lot_nr}} will only show the label if the spool has a lot number. Enclose text with double asterix ** to make it bold. Add a format after a colon: numbers like {remaining_weight:0.0} round to that many decimals, and dates like {registered:YYYY-MM-DD HH:mm} format the date/time in your local time zone. Start a line with {size:1.5} to scale that whole line (here 1.5×). Click the button to view a list of all available tags.",
       "textSize": "Label Text Size",
+      "textColumns": {
+        "label": "Text Columns",
+        "tooltip": "Lay the label text out across this many columns. Handy for narrow labels with several short lines."
+      },
       "qrPadding": "QR Padding",
       "showContent": "Print Label",
+      "customPayload": {
+        "label": "Custom QR Payload",
+        "tooltip": "Override the scanned QR content with a template (same tags as the label). Leave blank to use the default Spoolman payload. A custom value only scans inside Spoolman if it still matches a recognized format (WEB+SPOOLMAN:S-{id} / F-{id} or a /spool/show/{id} URL)."
+      },
+      "qrErrorLevel": {
+        "label": "QR Error Correction",
+        "tooltip": "Higher levels tolerate more damage/dirt on the label but make the QR code denser (harder to scan when small). H (highest) is the default."
+      },
+      "qrPlacement": {
+        "label": "QR Placement",
+        "tooltip": "Where the QR code sits relative to the label text. Stacking it above or below suits tall, narrow labels.",
+        "left": "Left",
+        "top": "Top",
+        "bottom": "Bottom"
+      },
+      "showColorSwatch": {
+        "label": "Print Color Swatch",
+        "tooltip": "Print a small colored box of the filament color on the label."
+      },
+      "barcode1d": {
+        "label": "1D Barcode",
+        "tooltip": "Optionally print a 1D barcode of the QR payload alongside the QR code, for scanners that only read linear barcodes.",
+        "none": "None",
+        "code128": "Code 128"
+      },
       "useHTTPUrl": {
         "label": "QR code link",
         "tooltip": "Will use proprietary link that will work only if scanned from Spoolman's scanning feature (default). URL uses either the base URL specified in settings, or the current page URL if not set.",
@@ -168,6 +198,10 @@
       "title": "Select Spools",
       "description": "Select spools to print labels for.",
       "showArchived": "Show Archived",
+      "hidePrinted": "Hide Already Printed",
+      "reprintConfirmTitle": "Reprint labels?",
+      "reprintConfirmContent_one": "{{count}} selected spool already has a printed label. Print it again?",
+      "reprintConfirmContent_other": "{{count}} selected spools already have printed labels. Print them again?",
       "noSpoolsSelected": "You have not selected any spools.",
       "selectAll": "Select/Unselect All",
       "selectedTotal_one": "{{count}} spool selected",
@@ -176,6 +210,10 @@
     "filamentSelect": {
       "title": "Select Filaments",
       "description": "Select filaments to print labels for.",
+      "hidePrinted": "Hide Already Printed",
+      "reprintConfirmTitle": "Reprint labels?",
+      "reprintConfirmContent_one": "{{count}} selected filament already has a printed label. Print it again?",
+      "reprintConfirmContent_other": "{{count}} selected filaments already have printed labels. Print them again?",
       "noFilamentsSelected": "You have not selected any filaments.",
       "selectAll": "Select/Unselect All",
       "selectedTotal_one": "{{count}} filament selected",

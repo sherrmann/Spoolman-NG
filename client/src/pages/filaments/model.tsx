@@ -22,6 +22,8 @@ export interface IFilament {
   // Per-filament reorder settings (#109 / #116).
   low_stock_threshold?: number;
   reserve_count?: number;
+  // When a label was last printed for this filament (#93). Absent means never printed.
+  label_printed_at?: string;
   // Server-computed aggregates, only present on the filament list/detail endpoints (#49 / #53).
   spool_count?: number;
   remaining_weight?: number;
