@@ -94,6 +94,13 @@ class SpoolParameters(BaseModel):
 
 class SpoolUpdateParameters(SpoolParameters):
     filament_id: int | None = Field(None, description="The ID of the filament type of this spool.")
+    label_printed_at: datetime | None = Field(
+        None,
+        description=(
+            "When a label was last printed for this spool. Set by the label-printing flow; "
+            "pass null to clear the printed marker."
+        ),
+    )
 
     @field_validator("filament_id")
     @classmethod

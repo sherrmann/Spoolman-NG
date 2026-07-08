@@ -262,6 +262,10 @@ class Filament(BaseModel):
         ),
         examples=[2],
     )
+    label_printed_at: SpoolmanDateTime | None = Field(
+        None,
+        description="When a label was last printed for this filament type. Null means never printed. UTC Timezone.",
+    )
     spool_count: int | None = Field(
         None,
         description=(
@@ -322,6 +326,7 @@ class Filament(BaseModel):
             external_id=item.external_id,
             low_stock_threshold=item.low_stock_threshold,
             reserve_count=item.reserve_count,
+            label_printed_at=item.label_printed_at,
             spool_count=spool_count,
             remaining_weight=remaining_weight,
             extra={field.key: field.value for field in item.extra},
@@ -405,6 +410,10 @@ class Spool(BaseModel):
         examples=[""],
     )
     archived: bool = Field(description="Whether this spool is archived and should not be used anymore.")
+    label_printed_at: SpoolmanDateTime | None = Field(
+        None,
+        description="When a label was last printed for this spool. Null means never printed. UTC Timezone.",
+    )
     extra: dict[str, str] = Field(
         description=(
             "Extra fields for this spool. All values are JSON-encoded data. "
@@ -458,6 +467,7 @@ class Spool(BaseModel):
             lot_nr=item.lot_nr,
             comment=item.comment,
             archived=item.archived if item.archived is not None else False,
+            label_printed_at=item.label_printed_at,
             extra={field.key: field.value for field in item.extra},
         )
 

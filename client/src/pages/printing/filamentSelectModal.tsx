@@ -1,5 +1,5 @@
 import { useTable } from "@refinedev/antd";
-import { Button, Checkbox, Col, Input, message, Pagination, Row, Space, Table } from "antd";
+import { Button, Checkbox, Col, Input, Modal, message, Pagination, Row, Space, Table } from "antd";
 import { t } from "i18next";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
@@ -34,6 +34,8 @@ const FilamentSelectModal = ({ description, onPrint, onExport, initialSelectedId
   const [selectedItems, setSelectedItems] = useState<number[]>(initialSelectedIds ?? []);
   const [messageApi, contextHolder] = message.useMessage();
   const navigate = useNavigate();
+  // #93: hide already-printed filaments. The list is server-paged, so this filters the current page.
+  const [hidePrinted, setHidePrinted] = useState(false);
   const [tableScrollY, setTableScrollY] = useState<number>(300);
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -79,6 +81,10 @@ const FilamentSelectModal = ({ description, onPrint, onExport, initialSelectedId
   // Memoize so the reference is stable across renders when the underlying data is unchanged;
   // otherwise the selectUnselectFiltered useCallback (deps [dataSource]) is rebuilt every render.
   const dataSource = useMemo(() => [...(tableProps.dataSource ?? [])], [tableProps.dataSource]);
+  const visibleDataSource = useMemo(
+    () => (hidePrinted ? dataSource.filter((filament) => !filament.label_printed_at) : dataSource),
+    [dataSource, hidePrinted],
+  );
   const selectedSet = useMemo(() => new Set(selectedItems), [selectedItems]);
   const paginationTotal = tableProps.pagination ? (tableProps.pagination.total ?? 0) : 0;
 
@@ -144,7 +150,7 @@ const FilamentSelectModal = ({ description, onPrint, onExport, initialSelectedId
     (select: boolean) => {
       setSelectedItems((prevSelected) => {
         const nextSelected = new Set(prevSelected);
-        dataSource.forEach((filament) => {
+        visibleDataSource.forEach((filament) => {
           if (select) {
             nextSelected.add(filament.id);
           } else {
@@ -154,7 +160,7 @@ const FilamentSelectModal = ({ description, onPrint, onExport, initialSelectedId
         return Array.from(nextSelected);
       });
     },
-    [dataSource],
+    [visibleDataSource],
   );
 
   const handleSelectItem = useCallback((item: number) => {
@@ -163,17 +169,37 @@ const FilamentSelectModal = ({ description, onPrint, onExport, initialSelectedId
     );
   }, []);
 
-  const isAllFilteredSelected = dataSource.length > 0 && dataSource.every((filament) => selectedSet.has(filament.id));
+  const isAllFilteredSelected =
+    visibleDataSource.length > 0 && visibleDataSource.every((filament) => selectedSet.has(filament.id));
   const isSomeButNotAllFilteredSelected =
-    dataSource.some((filament) => selectedSet.has(filament.id)) && !isAllFilteredSelected;
+    visibleDataSource.some((filament) => selectedSet.has(filament.id)) && !isAllFilteredSelected;
 
   const commonProps = {
     t,
     navigate,
     actions: () => [],
-    dataSource,
+    dataSource: visibleDataSource,
     tableState,
     sorter: true,
+  };
+
+  // #93: warn before (re)printing filament labels that were already printed. Only the current page's
+  // records are loaded, so this checks the selected ids we can see; off-page selections print silently.
+  const runWithReprintGuard = (action: () => void) => {
+    const alreadyPrinted = dataSource.filter(
+      (filament) => selectedSet.has(filament.id) && filament.label_printed_at,
+    ).length;
+    if (alreadyPrinted > 0) {
+      Modal.confirm({
+        title: t("printing.filamentSelect.reprintConfirmTitle"),
+        content: t("printing.filamentSelect.reprintConfirmContent", { count: alreadyPrinted }),
+        okText: t("buttons.continue"),
+        cancelText: t("buttons.cancel"),
+        onOk: action,
+      });
+      return;
+    }
+    action();
   };
 
   const resolvedDescription =
@@ -250,6 +276,14 @@ const FilamentSelectModal = ({ description, onPrint, onExport, initialSelectedId
               }}
             >
               <Checkbox
+                checked={hidePrinted}
+                onChange={(e) => {
+                  setHidePrinted(e.target.checked);
+                }}
+              >
+                {t("printing.filamentSelect.hidePrinted")}
+              </Checkbox>
+              <Checkbox
                 checked={isAllFilteredSelected}
                 indeterminate={isSomeButNotAllFilteredSelected}
                 onChange={(e) => {
@@ -275,7 +309,7 @@ const FilamentSelectModal = ({ description, onPrint, onExport, initialSelectedId
                         });
                         return;
                       }
-                      onPrint(selectedItems);
+                      runWithReprintGuard(() => onPrint(selectedItems));
                     }}
                   >
                     {t("printing.qrcode.button")}
@@ -308,7 +342,7 @@ const FilamentSelectModal = ({ description, onPrint, onExport, initialSelectedId
             rowKey="id"
             tableLayout="fixed"
             pagination={false}
-            dataSource={dataSource}
+            dataSource={visibleDataSource}
             scroll={{ y: tableScrollY, x: "max-content" }}
             columns={removeUndefined([
               {

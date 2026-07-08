@@ -23,6 +23,7 @@ export interface ISpool {
   lot_nr?: string;
   comment?: string;
   archived: boolean;
+  label_printed_at?: string;
   extra: { [key: string]: string };
 }
 

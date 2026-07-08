@@ -58,6 +58,9 @@ class Filament(Base):
     reserve_count: Mapped[int | None] = mapped_column(
         comment="Number of unopened spare spools of this filament kept in reserve, tracked without a Spool row each.",
     )
+    label_printed_at: Mapped[datetime | None] = mapped_column(
+        comment="When a label was last printed for this filament (#93). Null means never printed.",
+    )
     extra: Mapped[list["FilamentField"]] = relationship(
         back_populates="filament",
         cascade="save-update, merge, delete, delete-orphan",
@@ -86,6 +89,9 @@ class Spool(Base):
     lot_nr: Mapped[str | None] = mapped_column(String(64))
     comment: Mapped[str | None] = mapped_column(String(1024))
     archived: Mapped[bool | None] = mapped_column()
+    label_printed_at: Mapped[datetime | None] = mapped_column(
+        comment="When a label was last printed for this spool (#93). Null means never printed.",
+    )
     extra: Mapped[list["SpoolField"]] = relationship(
         back_populates="spool",
         cascade="save-update, merge, delete, delete-orphan",
