@@ -106,14 +106,10 @@ describe("SpoolShow split Archive/Delete button", () => {
     mockedUseDelete.mockReturnValue({ mutate: deleteMutate } as unknown as ReturnType<typeof useDelete>);
   });
 
-  afterEach(async () => {
-    // Modal.confirm renders into its own root outside the RTL tree; clean it up.
+  afterEach(() => {
+    // Modal.confirm renders into its own root outside the RTL tree; clean it up. The React-19
+    // scheduler task this queues is drained by the global afterEach flush in src/test/setup.ts.
     Modal.destroyAll();
-    // destroyAll schedules the modal's unmount via React 19's (MessageChannel-based) scheduler.
-    // Drain the macrotask queue now, while the jsdom window still exists — otherwise that task can
-    // flush after the test environment tears down and throw an unhandled "window is not defined",
-    // which fails the whole vitest run even though every test passed.
-    await new Promise((resolve) => setTimeout(resolve, 0));
   });
 
   it("primary click on an empty spool archives immediately and never deletes", async () => {
