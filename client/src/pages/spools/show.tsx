@@ -41,6 +41,9 @@ export const SpoolShow = () => {
   const t = useTranslate();
   const navigate = useNavigate();
   const extraFields = useGetFields(EntityType.spool);
+  // #83: the filament's own custom fields describe this spool too; show them read-only below the
+  // spool's own fields (they are edited on the filament).
+  const filamentExtraFields = useGetFields(EntityType.filament);
   const currencyFormatter = useCurrencyFormatter();
   const unitScaling = useUnitScaling();
   const invalidate = useInvalidate();
@@ -361,6 +364,14 @@ export const SpoolShow = () => {
       {extraFields?.data?.map((field, index) => (
         <ExtraFieldDisplay key={index} field={field} value={record?.extra[field.key]} />
       ))}
+      {filamentExtraFields?.data && filamentExtraFields.data.length > 0 && (
+        <>
+          <Title level={4}>{t("spool.filament_extra_fields")}</Title>
+          {filamentExtraFields.data.map((field, index) => (
+            <ExtraFieldDisplay key={index} field={field} value={record?.filament.extra?.[field.key]} />
+          ))}
+        </>
+      )}
       <Title level={4}>{t("spool.usage_history.title")}</Title>
       <Table
         size="small"

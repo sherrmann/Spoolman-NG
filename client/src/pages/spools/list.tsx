@@ -143,6 +143,12 @@ export const SpoolList = () => {
   const invalidate = useInvalidate();
   const navigate = useNavigate();
   const extraFields = useGetFields(EntityType.spool);
+  // #83: a filament's own custom fields describe every spool of that filament, so surface them on the
+  // spool list too — as opt-in, display-only columns namespaced "filament.extra.<key>" (a spool field
+  // and a filament field may share a key). Sorting/filtering by them is deferred (needs a FilamentField
+  // cross-join the spool endpoint doesn't have yet), so the columns are read-only.
+  const filamentExtraFields = useGetFields(EntityType.filament);
+  const filamentColumnLabel = useCallback((name: string) => `${name} (${t("spool.fields.filament")})`, [t]);
   const currencyFormatter = useCurrencyFormatter();
   const currency = useCurrency();
   const unitScaling = useUnitScaling();
@@ -169,7 +175,11 @@ export const SpoolList = () => {
     return merged;
   }, [settingsLocations, usedLocations.data]);
 
-  const allColumnsWithExtraFields = [...allColumns, ...(extraFields.data?.map((field) => "extra." + field.key) ?? [])];
+  const allColumnsWithExtraFields = [
+    ...allColumns,
+    ...(extraFields.data?.map((field) => "extra." + field.key) ?? []),
+    ...(filamentExtraFields.data?.map((field) => "filament.extra." + field.key) ?? []),
+  ];
 
   // Load initial state
   const initialState = useInitialTableState(namespace);
@@ -457,6 +467,10 @@ export const SpoolList = () => {
             onVisibleChange={setShowColumns}
             onReorder={moveColumn}
             columns={effectiveOrder.map((column_id) => {
+              if (column_id.indexOf("filament.extra.") === 0) {
+                const field = filamentExtraFields.data?.find((f) => "filament.extra." + f.key === column_id);
+                return { id: column_id, label: field ? filamentColumnLabel(field.name) : column_id };
+              }
               if (column_id.indexOf("extra.") === 0) {
                 const extraField = extraFields.data?.find((field) => "extra." + field.key === column_id);
                 return { id: column_id, label: extraField?.name ?? column_id };
@@ -762,6 +776,15 @@ export const SpoolList = () => {
                 return CustomFieldColumn({
                   ...commonProps,
                   field,
+                });
+              }) ?? []),
+              // #83: the filament's own custom fields, read-only and namespaced under "filament".
+              ...(filamentExtraFields.data?.map((field) => {
+                return CustomFieldColumn({
+                  ...commonProps,
+                  field,
+                  entityPrefix: ["filament"],
+                  title: filamentColumnLabel(field.name),
                 });
               }) ?? []),
               SortedColumn({
