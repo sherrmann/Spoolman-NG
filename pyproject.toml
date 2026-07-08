@@ -66,6 +66,7 @@ dev = [
     "time-machine~=2.14",  # freeze the clock for CalVer / date logic
     "respx~=0.22",         # mock httpx at the transport boundary (externaldb / 3DFP)
     "cbor2>=5.4",          # exercise the OpenPrintTag codec in unit tests
+    "lefthook>=2.1.9",
 ]
 
 [tool.pytest.ini_options]

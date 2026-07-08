@@ -20,10 +20,7 @@ export function typeFilters<Obj>(filters: CrudFilter[]): TypedCrudFilter<Obj>[] 
 // Checked signature: constrains `field` to the object's own keys or a custom
 // (`extra.*`) field, restoring compile-time field-name checking for callers that
 // pass a well-typed field.
-export function getFiltersForField<Obj>(
-  filters: TypedCrudFilter<Obj>[],
-  field: keyof Obj | CustomFieldName,
-): string[];
+export function getFiltersForField<Obj>(filters: TypedCrudFilter<Obj>[], field: keyof Obj | CustomFieldName): string[];
 // Escape hatch for infrastructure that inherently works in string-space (e.g. the
 // generic Column component, whose `id`/`dataId` props are `string | string[]`).
 export function getFiltersForField<Obj>(filters: TypedCrudFilter<Obj>[], field: string): string[];

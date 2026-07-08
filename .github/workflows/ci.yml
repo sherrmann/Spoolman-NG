@@ -73,9 +73,6 @@ jobs:
         with:
           python-version-file: "pyproject.toml"
 
-      - name: Install lefthook
-        run: uv add --dev lefthook
-      
       - name: Install client dependencies
         run: |
           cd client
