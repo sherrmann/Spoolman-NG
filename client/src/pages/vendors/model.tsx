@@ -5,6 +5,9 @@ export interface IVendor {
   comment?: string;
   empty_spool_weight?: number;
   external_id?: string;
+  // Server-computed aggregates, only present on the vendor list/detail endpoints (#49).
+  filament_count?: number;
+  spool_count?: number;
   extra: { [key: string]: string };
 }
 

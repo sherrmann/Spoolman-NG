@@ -282,7 +282,11 @@
       "density": "Density",
       "diameter": "Diameter",
       "weight": "Weight",
+      "spool_count": "Spools",
+      "remaining_weight": "In Stock",
       "spool_weight": "Spool Weight",
+      "low_stock_threshold": "Low-stock Threshold",
+      "reserve_count": "Reserve Spools",
       "article_number": "Article Number",
       "registered": "Registered",
       "comment": "Comment",
@@ -302,6 +306,8 @@
       "price": "Price of a full spool.",
       "weight": "The filament weight of a full spool (net weight). This should not include the weight of the spool itself, only the filament. It is what is usually written on the packaging.",
       "spool_weight": "The weight of an empty spool. Used to determine measured weight of a spool.",
+      "low_stock_threshold": "Flag this filament for reorder when the total remaining weight across its spools drops below this many grams.",
+      "reserve_count": "Number of unopened spare spools you keep on hand, tracked without creating a spool for each one.",
       "article_number": "E.g. EAN, UPC, etc.",
       "multi_color_direction": "Filaments can have multiple colors in two ways: either through coextrusion, like dual-color filaments with consistent multi-colors, or through longitudinal color changes, like gradient filaments that shift colors along the spool."
     },
@@ -354,6 +360,8 @@
     "fields": {
       "id": "ID",
       "name": "Name",
+      "filament_count": "Filaments",
+      "spool_count": "Spools",
       "empty_spool_weight": "Empty Spool Weight",
       "external_id": "External ID",
       "registered": "Registered",
@@ -388,6 +396,8 @@
     "by_material": "By Material",
     "by_location": "By Location",
     "by_vendor": "By Manufacturer",
+    "shopping_list": "Shopping List",
+    "shopping_list_empty": "No filaments below their low-stock threshold.",
     "telemetry_subtitle": "Real-time status of your filament inventory.",
     "create": {
       "spool": "New spool",

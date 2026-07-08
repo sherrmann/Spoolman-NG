@@ -1,4 +1,5 @@
 import dayjs from "dayjs";
+import { IFilament } from "../filaments/model";
 import { ISpool } from "../spools/model";
 
 // Pure, framework-free dashboard analytics extracted from home/index.tsx so the
@@ -42,6 +43,39 @@ export function lowStockSpools(spools: ISpool[]): ISpool[] {
   return spools
     .filter((s) => remainingFraction(s) < LOW_STOCK_THRESHOLD)
     .sort((a, b) => remainingFraction(a) - remainingFraction(b));
+}
+
+export interface LowStockFilament {
+  filament: IFilament;
+  remaining: number;
+  threshold: number;
+}
+
+/**
+ * Filaments to reorder (#109 / #116): those with a low_stock_threshold set whose server-computed
+ * total remaining weight has dropped to or below it. Ordered by largest shortfall first. Filaments
+ * without a threshold, or whose aggregate is not populated, are never flagged.
+ */
+export function lowStockFilaments(filaments: IFilament[]): LowStockFilament[] {
+  return filaments
+    .filter(
+      (f) => f.low_stock_threshold != null && f.remaining_weight != null && f.remaining_weight <= f.low_stock_threshold,
+    )
+    .map((f) => ({
+      filament: f,
+      remaining: f.remaining_weight as number,
+      threshold: f.low_stock_threshold as number,
+    }))
+    .sort((a, b) => b.threshold - b.remaining - (a.threshold - a.remaining));
+}
+
+/** Human label for a filament: "Vendor - Name", falling back to the name or id. */
+export function getFilamentName(filament: IFilament): string {
+  const base = filament.name ?? filament.id.toString();
+  if (filament.vendor && "name" in filament.vendor) {
+    return `${filament.vendor.name} - ${base}`;
+  }
+  return base;
 }
 
 /** The most-recently-used spools, newest first, capped at `limit`. Does not mutate the input. */

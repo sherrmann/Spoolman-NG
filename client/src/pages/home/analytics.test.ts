@@ -6,9 +6,11 @@ import { IVendor } from "../vendors/model";
 import {
   DEFAULT_TOTAL_WEIGHT,
   getColorHex,
+  getFilamentName,
   getSpoolName,
   getWeightPct,
   locationBreakdown,
+  lowStockFilaments,
   lowStockSpools,
   materialBreakdown,
   recentSpools,
@@ -149,6 +151,48 @@ describe("lowStockSpools", () => {
     ];
     const result = lowStockSpools(spools);
     result.forEach((s) => expect(spools).toContain(s));
+  });
+});
+
+describe("lowStockFilaments", () => {
+  it("flags a filament whose aggregate remaining weight is at or below its threshold", () => {
+    const below = filament({ id: 1, low_stock_threshold: 500, remaining_weight: 400 });
+    const atThreshold = filament({ id: 2, low_stock_threshold: 500, remaining_weight: 500 });
+    const above = filament({ id: 3, low_stock_threshold: 500, remaining_weight: 600 });
+    const ids = lowStockFilaments([below, atThreshold, above]).map((f) => f.filament.id);
+    // <= threshold flags; strictly-above does not.
+    expect(ids).toContain(1);
+    expect(ids).toContain(2);
+    expect(ids).not.toContain(3);
+  });
+
+  it("never flags a filament without a threshold set", () => {
+    const noThreshold = filament({ remaining_weight: 10 });
+    expect(lowStockFilaments([noThreshold])).toEqual([]);
+  });
+
+  it("never flags a filament whose aggregate remaining weight is not populated", () => {
+    // e.g. a nested payload where the server left the aggregate null.
+    const noAggregate = filament({ low_stock_threshold: 500 });
+    expect(lowStockFilaments([noAggregate])).toEqual([]);
+  });
+
+  it("orders results by largest shortfall first", () => {
+    const small = filament({ id: 1, low_stock_threshold: 500, remaining_weight: 450 }); // short 50
+    const large = filament({ id: 2, low_stock_threshold: 1000, remaining_weight: 100 }); // short 900
+    const mid = filament({ id: 3, low_stock_threshold: 800, remaining_weight: 500 }); // short 300
+    expect(lowStockFilaments([small, large, mid]).map((f) => f.filament.id)).toEqual([2, 3, 1]);
+  });
+});
+
+describe("getFilamentName", () => {
+  it("prefixes the vendor name when present", () => {
+    expect(getFilamentName(filament({ name: "Galaxy Black", vendor: vendor("Prusa") }))).toBe("Prusa - Galaxy Black");
+  });
+
+  it("falls back to the name, then the id, without a vendor", () => {
+    expect(getFilamentName(filament({ name: "Generic PLA" }))).toBe("Generic PLA");
+    expect(getFilamentName(filament({ id: 7, name: undefined }))).toBe("7");
   });
 });
 
