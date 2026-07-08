@@ -243,6 +243,7 @@
     "fields": {
       "id": "ID",
       "filament_name": "Filament",
+      "filament_name_only": "Name",
       "filament": "Filament",
       "filament_internal": "Internal",
       "filament_external": "External",

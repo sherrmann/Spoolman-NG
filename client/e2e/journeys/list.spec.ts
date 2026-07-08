@@ -16,8 +16,12 @@ test.describe("spool list interactions", () => {
     // Clear filters resets the table state.
     await page.getByRole("button", { name: "Clear Filters" }).click();
 
-    // Columns dropdown opens its menu.
+    // The Columns manager popover opens and lists toggleable/reorderable columns (#94).
     await page.getByRole("button", { name: /Columns/ }).click();
-    await expect(page.locator(".ant-dropdown").first()).toBeVisible();
+    const columnsPopover = page.locator(".ant-popover").first();
+    await expect(columnsPopover).toBeVisible();
+    await expect(columnsPopover.getByText("Material", { exact: true })).toBeVisible();
+    // Each column row carries a drag handle for reordering.
+    await expect(columnsPopover.locator('[aria-label="drag-column"]').first()).toBeVisible();
   });
 });
