@@ -1,3 +1,4 @@
+import { DATE_TIME_FORMAT } from "../../utils/dateFormat";
 import { Edit, useForm, useSelect } from "@refinedev/antd";
 import { HttpError, useTranslate, useInvalidate } from "@refinedev/core";
 import {
@@ -157,7 +158,7 @@ export const FilamentEdit = () => {
             value: value ? dayjs(value) : undefined,
           })}
         >
-          <DatePicker disabled showTime format="YYYY-MM-DD HH:mm:ss" />
+          <DatePicker disabled showTime format={DATE_TIME_FORMAT} />
         </Form.Item>
         <Form.Item label={t("filament.form.import_3dfp")} help={t("filament.form.import_3dfp_help")}>
           <Space.Compact style={{ width: "100%" }}>

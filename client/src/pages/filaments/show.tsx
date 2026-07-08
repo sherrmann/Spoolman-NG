@@ -1,3 +1,4 @@
+import { DATE_TIME_FORMAT } from "../../utils/dateFormat";
 import { DateField, NumberField, Show, TextField } from "@refinedev/antd";
 import { useShow, useTranslate } from "@refinedev/core";
 import { DownOutlined, ExportOutlined, IdcardOutlined, PrinterOutlined } from "@ant-design/icons";
@@ -102,7 +103,7 @@ export const FilamentShow = () => {
       <DateField
         value={dayjs.utc(record?.registered).local()}
         title={dayjs.utc(record?.registered).local().format()}
-        format="YYYY-MM-DD HH:mm:ss"
+        format={DATE_TIME_FORMAT}
       />
       <Title level={5}>{t("filament.fields.name")}</Title>
       <TextField value={record?.name} />

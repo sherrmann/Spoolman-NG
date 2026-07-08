@@ -1,3 +1,4 @@
+import { DATE_TIME_FORMAT } from "../utils/dateFormat";
 import { DateField, TextField } from "@refinedev/antd";
 import { Checkbox, Form, Input, InputNumber, Select, Typography } from "antd";
 import { FormItemProps, Rule } from "antd/es/form";
@@ -68,7 +69,7 @@ export function ExtraFieldDisplay(props: { field: Field; value: string | undefin
         <DateField
           value={dayjs.utc(parsedValue).local()}
           title={dayjs.utc(parsedValue).local().format()}
-          format="YYYY-MM-DD HH:mm:ss"
+          format={DATE_TIME_FORMAT}
         />
       );
     } else if (field.field_type === FieldType.boolean) {

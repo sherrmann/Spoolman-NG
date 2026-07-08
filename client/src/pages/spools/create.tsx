@@ -1,3 +1,4 @@
+import { DATE_TIME_FORMAT } from "../../utils/dateFormat";
 import { MinusOutlined, PlusOutlined } from "@ant-design/icons";
 import { Create, useForm } from "@refinedev/antd";
 import { HttpError, IResourceComponentsProps, useTranslate } from "@refinedev/core";
@@ -288,7 +289,7 @@ export const SpoolCreate = (props: IResourceComponentsProps & CreateOrCloneProps
             value: value ? dayjs(value) : undefined,
           })}
         >
-          <DatePicker showTime format="YYYY-MM-DD HH:mm:ss" />
+          <DatePicker showTime format={DATE_TIME_FORMAT} />
         </Form.Item>
         <Form.Item
           label={t("spool.fields.last_used")}
@@ -302,7 +303,7 @@ export const SpoolCreate = (props: IResourceComponentsProps & CreateOrCloneProps
             value: value ? dayjs(value) : undefined,
           })}
         >
-          <DatePicker showTime format="YYYY-MM-DD HH:mm:ss" />
+          <DatePicker showTime format={DATE_TIME_FORMAT} />
         </Form.Item>
         <Form.Item
           label={t("spool.fields.filament")}

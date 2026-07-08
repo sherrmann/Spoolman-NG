@@ -1,3 +1,4 @@
+import { DATE_TIME_FORMAT_SHORT } from "../../utils/dateFormat";
 import { DownloadOutlined, PrinterOutlined, UploadOutlined } from "@ant-design/icons";
 import { useList, useTranslate } from "@refinedev/core";
 import { Button, Card, Checkbox, Divider, Select, Space, Table, Typography, Upload, message } from "antd";
@@ -182,7 +183,7 @@ export function ImportExportSettings() {
           <Title level={3} style={{ color: "#000" }}>
             {t("settings.import_export.report_heading")}
           </Title>
-          <Text style={{ color: "#000" }}>{dayjs().format("YYYY-MM-DD HH:mm")}</Text>
+          <Text style={{ color: "#000" }}>{dayjs().format(DATE_TIME_FORMAT_SHORT)}</Text>
           <Card size="small" style={{ marginTop: 12 }}>
             <Space size="large" wrap>
               <span>

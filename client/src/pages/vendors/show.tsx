@@ -1,3 +1,4 @@
+import { DATE_TIME_FORMAT } from "../../utils/dateFormat";
 import { FileOutlined } from "@ant-design/icons";
 import { DateField, NumberField, Show, TextField } from "@refinedev/antd";
 import { useShow, useTranslate } from "@refinedev/core";
@@ -65,7 +66,7 @@ export const VendorShow = () => {
       <DateField
         value={dayjs.utc(record?.registered).local()}
         title={dayjs.utc(record?.registered).local().format()}
-        format="YYYY-MM-DD HH:mm:ss"
+        format={DATE_TIME_FORMAT}
       />
       <Title level={5}>{t("vendor.fields.name")}</Title>
       <TextField value={record?.name} />

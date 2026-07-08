@@ -1,3 +1,4 @@
+import { DATE_TIME_FORMAT, DATE_TIME_FORMAT_SHORT } from "../utils/dateFormat";
 import { DateField, TextField } from "@refinedev/antd";
 import { UseQueryResult } from "@tanstack/react-query";
 import { Button, Col, DatePicker, Dropdown, Input, InputNumber, Row, Space, Spin, Typography } from "antd";
@@ -147,14 +148,14 @@ function DateTimeRangeFilterDropdown({ setSelectedKeys, selectedKeys, confirm, c
       <div style={{ padding: "8px", display: "flex", flexDirection: "column", gap: 4 }}>
         <DatePicker
           showTime={{ use12Hours: false }}
-          format="YYYY-MM-DD HH:mm:ss"
+          format={DATE_TIME_FORMAT}
           placeholder={i18n.t("table.filter.from")}
           value={fromVal}
           onChange={(date) => updateKeys(date, toVal)}
         />
         <DatePicker
           showTime={{ use12Hours: false }}
-          format="YYYY-MM-DD HH:mm:ss"
+          format={DATE_TIME_FORMAT}
           placeholder={i18n.t("table.filter.to")}
           value={toVal}
           onChange={(date) => updateKeys(fromVal, date)}
@@ -408,7 +409,7 @@ export function DateColumn<Obj extends Entity>(props: BaseColumnProps<Obj> & Fil
           hidden={!value}
           value={dayjs.utc(value).local()}
           title={dayjs.utc(value).local().format()}
-          format="YYYY-MM-DD HH:mm"
+          format={DATE_TIME_FORMAT_SHORT}
         />
       );
     },

@@ -1,3 +1,4 @@
+import { DATE_TIME_FORMAT, DATE_TIME_FORMAT_SHORT } from "../../utils/dateFormat";
 import {
   DeleteOutlined,
   DownOutlined,
@@ -292,21 +293,21 @@ export const SpoolShow = () => {
       <DateField
         value={dayjs.utc(record?.registered).local()}
         title={dayjs.utc(record?.registered).local().format()}
-        format="YYYY-MM-DD HH:mm:ss"
+        format={DATE_TIME_FORMAT}
       />
       <Title level={5}>{t("spool.fields.first_used")}</Title>
       <DateField
         hidden={!record?.first_used}
         value={dayjs.utc(record?.first_used).local()}
         title={dayjs.utc(record?.first_used).local().format()}
-        format="YYYY-MM-DD HH:mm:ss"
+        format={DATE_TIME_FORMAT}
       />
       <Title level={5}>{t("spool.fields.last_used")}</Title>
       <DateField
         hidden={!record?.last_used}
         value={dayjs.utc(record?.last_used).local()}
         title={dayjs.utc(record?.last_used).local().format()}
-        format="YYYY-MM-DD HH:mm:ss"
+        format={DATE_TIME_FORMAT}
       />
       <Title level={5}>{t("spool.fields.remaining_length")}</Title>
       <NumberFieldUnit
@@ -372,7 +373,7 @@ export const SpoolShow = () => {
           {
             title: t("spool.usage_history.time"),
             dataIndex: "time",
-            render: (value: string) => dayjs.utc(value).local().format("YYYY-MM-DD HH:mm"),
+            render: (value: string) => dayjs.utc(value).local().format(DATE_TIME_FORMAT_SHORT),
           },
           { title: t("spool.usage_history.type"), dataIndex: "event_type" },
           {

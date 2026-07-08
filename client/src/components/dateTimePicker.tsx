@@ -1,3 +1,4 @@
+import { DATE_TIME_FORMAT } from "../utils/dateFormat";
 import { DatePicker } from "antd";
 import dayjs from "dayjs";
 import advancedFormat from "dayjs/plugin/advancedFormat";
@@ -9,7 +10,7 @@ dayjs.extend(timezone);
 dayjs.extend(advancedFormat);
 
 // Localized date time format with timezone
-const dateTimeFormat = "YYYY-MM-DD HH:mm:ss";
+const dateTimeFormat = DATE_TIME_FORMAT;
 
 export function DateTimePicker<T extends string | dayjs.Dayjs>(props: { value?: T; onChange?: (value?: T) => void }) {
   return (

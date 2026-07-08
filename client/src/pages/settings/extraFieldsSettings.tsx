@@ -1,3 +1,4 @@
+import { DATE_TIME_FORMAT } from "../../utils/dateFormat";
 import { PlusOutlined } from "@ant-design/icons";
 import { useTranslate } from "@refinedev/core";
 import {
@@ -32,7 +33,7 @@ dayjs.extend(timezone);
 dayjs.extend(advancedFormat);
 
 // Localized date time format with timezone
-const dateTimeFormat = "YYYY-MM-DD HH:mm:ss";
+const dateTimeFormat = DATE_TIME_FORMAT;
 
 interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
   record: FieldHolder;
