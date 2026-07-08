@@ -22,6 +22,7 @@
     "show": "Show",
     "undo": "Undo",
     "import": "Import",
+    "search": "Search",
     "clone": "Clone",
     "archive": "Archive",
     "unArchive": "Unarchive",
@@ -60,6 +61,12 @@
   },
   "yes": "Yes",
   "no": "No",
+  "colorFilter": {
+    "button": "Color",
+    "title": "Filter by similar color",
+    "threshold": "Tolerance",
+    "help": "Show items whose color is within this tolerance of the picked color."
+  },
   "theme": {
     "label": "Theme",
     "system": "System",
@@ -187,6 +194,7 @@
       "filament": "Filament",
       "filament_internal": "Internal",
       "filament_external": "External",
+      "vendor_name": "Vendor",
       "price": "Price",
       "material": "Material",
       "weight_to_use": "Weight",
@@ -344,7 +352,8 @@
       "edit": "Edit Manufacturer",
       "list": "Manufacturers",
       "show": "Show Manufacturer",
-      "show_title": "[Manufacturer #{{id}}] {{name}}"
+      "show_title": "[Manufacturer #{{id}}] {{name}}",
+      "view_spools": "View spools"
     },
     "form": {
       "vendor_updated": "This manufacturer has been updated by someone/something else since you opened this page. Saving will overwrite those changes!"

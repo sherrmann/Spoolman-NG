@@ -20,6 +20,7 @@ from spoolman.database.utils import (
     add_where_clause_int_opt,
     add_where_clause_str,
     add_where_clause_str_opt,
+    order_by_expression,
     parse_nested_field,
     utc_timezone_naive,
 )
@@ -109,9 +110,57 @@ async def get_by_id(db: AsyncSession, spool_id: int) -> models.Spool:
     return spool
 
 
+def _build_search_filters(search: str) -> list:
+    """Build search filter conditions for spool free-text search.
+
+    Mirrors the filament search (comma-separated terms, quoted exact match, fuzzy match,
+    numeric ID) but spans the spool's own text — comment, lot number, location — plus its
+    filament's vendor name, name, material and article number. Issue #51.
+
+    Returns a list of SQLAlchemy conditions to be combined with OR.
+    """
+    search_conditions = []
+    for value_part in search.split(","):
+        if len(value_part) == 0:
+            continue
+
+        if value_part[0] == '"' and value_part[-1] == '"':
+            exact_value = value_part[1:-1]
+            search_conditions.extend(
+                [
+                    models.Vendor.name == exact_value,
+                    models.Filament.name == exact_value,
+                    models.Filament.material == exact_value,
+                    models.Filament.article_number == exact_value,
+                    models.Spool.comment == exact_value,
+                    models.Spool.lot_nr == exact_value,
+                    models.Spool.location == exact_value,
+                ],
+            )
+            if exact_value.lstrip("-").isdigit():
+                search_conditions.append(models.Spool.id == int(exact_value))
+        else:
+            fuzzy_value = f"%{value_part}%"
+            search_conditions.extend(
+                [
+                    models.Vendor.name.ilike(fuzzy_value),
+                    models.Filament.name.ilike(fuzzy_value),
+                    models.Filament.material.ilike(fuzzy_value),
+                    models.Filament.article_number.ilike(fuzzy_value),
+                    models.Spool.comment.ilike(fuzzy_value),
+                    models.Spool.lot_nr.ilike(fuzzy_value),
+                    models.Spool.location.ilike(fuzzy_value),
+                    sqlalchemy.cast(models.Spool.id, sqlalchemy.String).ilike(fuzzy_value),
+                ],
+            )
+
+    return search_conditions
+
+
 async def find(  # noqa: C901, PLR0912
     *,
     db: AsyncSession,
+    search: str | None = None,
     filament_name: str | None = None,
     filament_id: int | Sequence[int] | None = None,
     filament_material: str | None = None,
@@ -146,6 +195,11 @@ async def find(  # noqa: C901, PLR0912
     stmt = add_where_clause_str_opt(stmt, models.Filament.material, filament_material)
     stmt = add_where_clause_str_opt(stmt, models.Spool.location, location)
     stmt = add_where_clause_str_opt(stmt, models.Spool.lot_nr, lot_nr)
+
+    if search is not None:
+        search_conditions = _build_search_filters(search)
+        if search_conditions:
+            stmt = stmt.where(sqlalchemy.or_(*search_conditions))
 
     if not allow_archived:
         # Since the archived field is nullable, and default is false, we need to check for both false or null
@@ -200,10 +254,7 @@ async def find(  # noqa: C901, PLR0912
             else:
                 sorts.append(parse_nested_field(models.Spool, fieldstr))
 
-            if order == SortOrder.ASC:
-                stmt = stmt.order_by(*(f.asc() for f in sorts))
-            elif order == SortOrder.DESC:
-                stmt = stmt.order_by(*(f.desc() for f in sorts))
+            stmt = stmt.order_by(*(order_by_expression(f, order) for f in sorts))
 
     if limit is not None:
         total_count_stmt = stmt.with_only_columns(func.count(), maintain_column_froms=True).order_by(None)

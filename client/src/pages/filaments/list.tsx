@@ -9,7 +9,7 @@ import {
 } from "@ant-design/icons";
 import { List, useTable } from "@refinedev/antd";
 import { useInvalidate, useNavigation, useTranslate } from "@refinedev/core";
-import { Button, Dropdown, Table } from "antd";
+import { Button, Dropdown, Input, Table } from "antd";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { Key, useMemo, useState } from "react";
@@ -24,6 +24,7 @@ import {
   SortedColumn,
   SpoolIconColumn,
 } from "../../components/column";
+import { ColorSimilarityFilter, ColorSimilarityValue } from "../../components/colorSimilarityFilter";
 import { useLiveify } from "../../components/liveify";
 import SwatchDownloadModal from "../../components/swatchDownloadModal";
 import {
@@ -97,8 +98,23 @@ export const FilamentList = () => {
   // To provide the live updates, we use a custom solution (useLiveify) instead of the built-in refine "liveMode" feature.
   // This is because the built-in feature does not call the liveProvider subscriber with a list of IDs, but instead
   // calls it with a list of filters, sorters, etc. This means the server-side has to support this, which is quite hard.
+  // Free-text search sent as the server-side `search` query param. Transient (not persisted)
+  // so a reload shows the full list. Issue #51.
+  const [search, setSearch] = useState("");
+
+  // Colour-similarity filter sent as color_hex + color_similarity_threshold (issue #46).
+  const [colorFilter, setColorFilter] = useState<ColorSimilarityValue | undefined>(undefined);
+
   const { tableProps, sorters, setSorters, filters, setFilters, currentPage, pageSize, setCurrentPage } =
     useTable<IFilamentCollapsed>({
+      meta: {
+        queryParams: {
+          ...(search ? { search } : {}),
+          ...(colorFilter
+            ? { color_hex: colorFilter.colorHex, color_similarity_threshold: colorFilter.threshold }
+            : {}),
+        },
+      },
       syncWithLocation: false,
       pagination: {
         mode: "server",
@@ -190,6 +206,29 @@ export const FilamentList = () => {
     <List
       headerButtons={({ defaultButtons }) => (
         <>
+          <Input.Search
+            placeholder={t("buttons.search")}
+            allowClear
+            defaultValue={search}
+            onSearch={(value) => {
+              setSearch(value);
+              setCurrentPage(1);
+            }}
+            onChange={(e) => {
+              if (e.target.value === "") {
+                setSearch("");
+                setCurrentPage(1);
+              }
+            }}
+            style={{ width: 200 }}
+          />
+          <ColorSimilarityFilter
+            value={colorFilter}
+            onChange={(v) => {
+              setColorFilter(v);
+              setCurrentPage(1);
+            }}
+          />
           <Button
             type="primary"
             icon={<PrinterOutlined />}

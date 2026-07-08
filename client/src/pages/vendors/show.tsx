@@ -1,8 +1,10 @@
+import { FileOutlined } from "@ant-design/icons";
 import { DateField, NumberField, Show, TextField } from "@refinedev/antd";
 import { useShow, useTranslate } from "@refinedev/core";
-import { Typography } from "antd";
+import { Button, Typography } from "antd";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
+import { useNavigate } from "react-router";
 import { ExtraFieldDisplay } from "../../components/extraFields";
 import { enrichText } from "../../utils/parsing";
 import { EntityType, useGetFields } from "../../utils/queryFields";
@@ -12,8 +14,23 @@ dayjs.extend(utc);
 
 const { Title } = Typography;
 
+/**
+ * Build a link to the Spool list pre-filtered to this vendor, encoding the filter into the
+ * URL hash exactly as the list persists it (see utils/saveload.ts). The quoted value is an
+ * exact-match term matching how the vendor filter column stores selections. Issue #86.
+ */
+function viewSpoolsHref(vendorName: string): string {
+  const params = new URLSearchParams();
+  params.set(
+    "filters",
+    JSON.stringify([{ field: "filament.vendor.name", operator: "in", value: [`"${vendorName}"`] }]),
+  );
+  return `/spool#${params.toString()}`;
+}
+
 export const VendorShow = () => {
   const t = useTranslate();
+  const navigate = useNavigate();
   const extraFields = useGetFields(EntityType.vendor);
 
   const { query } = useShow<IVendor>({
@@ -28,7 +45,20 @@ export const VendorShow = () => {
   };
 
   return (
-    <Show isLoading={isLoading} title={record ? formatTitle(record) : ""}>
+    <Show
+      isLoading={isLoading}
+      title={record ? formatTitle(record) : ""}
+      headerButtons={({ defaultButtons }) => (
+        <>
+          {record?.name ? (
+            <Button icon={<FileOutlined />} onClick={() => navigate(viewSpoolsHref(record.name as string))}>
+              {t("vendor.titles.view_spools")}
+            </Button>
+          ) : null}
+          {defaultButtons}
+        </>
+      )}
+    >
       <Title level={5}>{t("vendor.fields.id")}</Title>
       <NumberField value={record?.id ?? ""} />
       <Title level={5}>{t("vendor.fields.registered")}</Title>

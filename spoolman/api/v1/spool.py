@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from spoolman.api.v1.models import Message, Spool, SpoolEvent
-from spoolman.database import spool
+from spoolman.database import filament, spool
 from spoolman.database.database import get_db_session
 from spoolman.database.utils import parse_sort
 from spoolman.exceptions import ItemCreateError, SpoolMeasureError
@@ -129,6 +129,17 @@ async def find(
     *,
     request: Request,
     db: Annotated[AsyncSession, Depends(get_db_session)],
+    search: Annotated[
+        str | None,
+        Query(
+            title="Search",
+            description=(
+                "Partial case-insensitive search term applied across spool ID, comment, lot number, location and "
+                "the linked filament's vendor name, name, material and article number. Separate multiple terms with "
+                "a comma. Surround a term with quotes to search for the exact term."
+            ),
+        ),
+    ] = None,
     filament_name_old: Annotated[
         str | None,
         Query(alias="filament_name", title="Filament Name", description="See filament.name.", deprecated=True),
@@ -252,6 +263,23 @@ async def find(
         bool,
         Query(title="Allow Archived", description="Whether to include archived spools in the search results."),
     ] = False,
+    color_hex: Annotated[
+        str | None,
+        Query(
+            title="Filament Color",
+            description="Match spools whose filament has a similar color. Slow operation!",
+        ),
+    ] = None,
+    color_similarity_threshold: Annotated[
+        float,
+        Query(
+            description=(
+                "The similarity threshold for color matching. "
+                "A value between 0.0-100.0, where 0 means match only exactly the same color."
+            ),
+            examples=[20.0],
+        ),
+    ] = 20.0,
     sort: Annotated[
         str | None,
         Query(
@@ -280,6 +308,23 @@ async def find(
     else:
         filament_vendor_ids = None
 
+    # Color-similarity filter (#46): resolve the filaments whose colour is close to the query,
+    # then narrow the spool search to their IDs. Intersect with any explicit filament filter so
+    # the two combine with AND; an empty intersection correctly yields no spools.
+    if color_hex is not None:
+        color_matched_ids = {
+            f.id
+            for f in await filament.find_by_color(
+                db=db,
+                color_query_hex=color_hex,
+                similarity_threshold=color_similarity_threshold,
+            )
+        }
+        if filament_ids is None:
+            filament_ids = list(color_matched_ids)
+        else:
+            filament_ids = [fid for fid in filament_ids if fid in color_matched_ids]
+
     # Extract custom field filters from query parameters
     extra_field_filters = {}
     query_params = request.query_params
@@ -292,6 +337,7 @@ async def find(
         sort_by = parse_sort(sort)
         db_items, total_count = await spool.find(
             db=db,
+            search=search,
             filament_name=filament_name if filament_name is not None else filament_name_old,
             filament_id=filament_ids,
             filament_material=filament_material if filament_material is not None else filament_material_old,

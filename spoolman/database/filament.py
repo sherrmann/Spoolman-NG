@@ -19,6 +19,7 @@ from spoolman.database.utils import (
     add_where_clause_int_opt,
     add_where_clause_str,
     add_where_clause_str_opt,
+    order_by_expression,
     parse_nested_field,
 )
 from spoolman.exceptions import ItemDeleteError, ItemNotFoundError
@@ -198,10 +199,7 @@ async def find(
                 continue
 
             field = parse_nested_field(models.Filament, fieldstr)
-            if order == SortOrder.ASC:
-                stmt = stmt.order_by(field.asc())
-            elif order == SortOrder.DESC:
-                stmt = stmt.order_by(field.desc())
+            stmt = stmt.order_by(order_by_expression(field, order))
 
     if limit is not None:
         total_count_stmt = stmt.with_only_columns(func.count(), maintain_column_froms=True).order_by(None)
