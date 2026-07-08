@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
-import { useSavedState } from "./saveload";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { useInitialTableState, useSavedState } from "./saveload";
 
 // Oracle: the OBSERVABLE state of localStorage and the value the next mount reads
 // — never which storage method was called. These are regression tests for the
@@ -64,5 +64,69 @@ describe("useSavedState", () => {
     act(() => first.result.current[1](value));
     const second = renderHook(() => useSavedState<unknown>("valid", "def"));
     expect(second.result.current[0]).toEqual(value);
+  });
+});
+
+// Oracle: the returned TableState and the observable persistence — a corrupt saved value
+// (poisoned localStorage or a hand-edited/truncated shared URL hash) must fall back to the
+// defaults and clear the bad source, never throw out of the hook (which would white-screen
+// the list page). Issue #44.
+describe("useInitialTableState corrupt-state healing", () => {
+  const DEFAULT_SORTERS = [{ field: "id", order: "asc" }];
+
+  beforeEach(() => {
+    localStorage.clear();
+    window.location.hash = "";
+  });
+  afterEach(() => {
+    localStorage.clear();
+    window.location.hash = "";
+  });
+
+  const setHash = (key: string, value: string) => {
+    const p = new URLSearchParams();
+    p.set(key, value);
+    window.location.hash = p.toString();
+  };
+
+  it("returns the documented defaults when nothing is stored", () => {
+    const { result } = renderHook(() => useInitialTableState("tbl"));
+    expect(result.current.sorters).toEqual(DEFAULT_SORTERS);
+    expect(result.current.filters).toEqual([]);
+    expect(result.current.showColumns).toBeUndefined();
+  });
+
+  it("reads a valid stored value", () => {
+    localStorage.setItem("tbl-sorters", JSON.stringify([{ field: "name", order: "desc" }]));
+    const { result } = renderHook(() => useInitialTableState("tbl"));
+    expect(result.current.sorters).toEqual([{ field: "name", order: "desc" }]);
+  });
+
+  it("falls back and clears a corrupt localStorage value instead of throwing", () => {
+    localStorage.setItem("tbl-sorters", "{not valid json");
+    let result: ReturnType<typeof useInitialTableState> | undefined;
+    expect(() => {
+      result = renderHook(() => useInitialTableState("tbl")).result.current;
+    }).not.toThrow();
+    expect(result!.sorters).toEqual(DEFAULT_SORTERS);
+    // The poisoned key is cleared so it can't keep breaking the page.
+    expect(localStorage.getItem("tbl-sorters")).toBeNull();
+  });
+
+  it("falls back and clears a corrupt URL-hash value (bad shared link)", () => {
+    setHash("filters", "{not valid json");
+    let result: ReturnType<typeof useInitialTableState> | undefined;
+    expect(() => {
+      result = renderHook(() => useInitialTableState("tbl")).result.current;
+    }).not.toThrow();
+    expect(result!.filters).toEqual([]);
+    expect(new URLSearchParams(window.location.hash.substring(1)).has("filters")).toBe(false);
+  });
+
+  it("heals a corrupt showColumns value to undefined", () => {
+    localStorage.setItem("tbl-showColumns", "not json");
+    const { result } = renderHook(() => useInitialTableState("tbl"));
+    expect(result.current.showColumns).toBeUndefined();
+    expect(localStorage.getItem("tbl-showColumns")).toBeNull();
   });
 });

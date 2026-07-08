@@ -13,29 +13,49 @@ export interface TableState {
   showColumns?: string[];
 }
 
+/**
+ * Read a persisted table-state property, preferring the URL hash (shared links) over
+ * localStorage, and return both the raw string and a cleanup function that clears
+ * whichever source it came from. `showColumns` has no hash form, so it always falls
+ * through to localStorage.
+ */
+function readSaved(tableId: string, key: string): { raw: string | null; clear: () => void } {
+  if (hasHashProperty(key)) {
+    return { raw: getHashProperty(key), clear: () => removeURLHash(key) };
+  }
+  if (isLocalStorageAvailable) {
+    return {
+      raw: localStorage.getItem(`${tableId}-${key}`),
+      clear: () => localStorage.removeItem(`${tableId}-${key}`),
+    };
+  }
+  return { raw: null, clear: () => {} };
+}
+
+/**
+ * JSON.parse the persisted value, falling back to `fallback` (and clearing the poisoned
+ * source) when it is corrupt. A hand-edited/truncated URL hash or localStorage value must
+ * never throw out of here — an unhandled exception white-screens the whole list page. #44.
+ */
+function parseSaved<T>(saved: { raw: string | null; clear: () => void }, fallback: T): T {
+  if (!saved.raw) return fallback;
+  try {
+    return JSON.parse(saved.raw) as T;
+  } catch {
+    saved.clear();
+    return fallback;
+  }
+}
+
 export function useInitialTableState(tableId: string): TableState {
   const [initialState] = useState(() => {
-    const savedSorters = hasHashProperty("sorters")
-      ? getHashProperty("sorters")
-      : isLocalStorageAvailable
-        ? localStorage.getItem(`${tableId}-sorters`)
-        : null;
-    const savedFilters = hasHashProperty("filters")
-      ? getHashProperty("filters")
-      : isLocalStorageAvailable
-        ? localStorage.getItem(`${tableId}-filters`)
-        : null;
-    const savedPagination = hasHashProperty("pagination")
-      ? getHashProperty("pagination")
-      : isLocalStorageAvailable
-        ? localStorage.getItem(`${tableId}-pagination`)
-        : null;
-    const savedShowColumns = isLocalStorageAvailable ? localStorage.getItem(`${tableId}-showColumns`) : null;
-
-    const sorters = savedSorters ? JSON.parse(savedSorters) : [{ field: "id", order: "asc" }];
-    const filters = savedFilters ? JSON.parse(savedFilters) : [];
-    const pagination = savedPagination ? JSON.parse(savedPagination) : { page: 1, pageSize: 20 };
-    const showColumns = savedShowColumns ? JSON.parse(savedShowColumns) : undefined;
+    const sorters = parseSaved<CrudSort[]>(readSaved(tableId, "sorters"), [{ field: "id", order: "asc" }]);
+    const filters = parseSaved<CrudFilter[]>(readSaved(tableId, "filters"), []);
+    // Default matches the Pagination shape the list pages read (`currentPage`); the old
+    // `{ page: 1, … }` default had no currentPage and only worked because the dataProvider
+    // falls back to page 1 when it is undefined.
+    const pagination = parseSaved<Pagination>(readSaved(tableId, "pagination"), { currentPage: 1, pageSize: 20 });
+    const showColumns = parseSaved<string[] | undefined>(readSaved(tableId, "showColumns"), undefined);
     return { sorters, filters, pagination, showColumns };
   });
   return initialState;
