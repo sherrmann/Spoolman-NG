@@ -77,3 +77,8 @@ register_setting("base_url", SettingType.STRING, json.dumps(""))
 
 register_setting("locations", SettingType.ARRAY, json.dumps([]))
 register_setting("locations_spoolorders", SettingType.OBJECT, json.dumps({}))
+
+# When enabled, large weights/lengths are shown auto-scaled (e.g. 1.5 kg / 64.37 m) instead of raw
+# grams/millimeters in the list and detail views (#85). Default off preserves the current display and
+# is purely a client-side presentation choice — stored values and the API stay in grams/millimeters.
+register_setting("unit_scaling", SettingType.BOOLEAN, json.dumps(obj=False))

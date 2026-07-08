@@ -39,7 +39,7 @@ import { removeUndefined } from "../../utils/filtering";
 import { enrichText } from "../../utils/parsing";
 import { EntityType, useGetFields } from "../../utils/queryFields";
 import { TableState, useInitialTableState, useSavedState, useStoreInitialState } from "../../utils/saveload";
-import { getCurrencySymbol, useCurrency, useCurrencyFormatter } from "../../utils/settings";
+import { getCurrencySymbol, useCurrency, useCurrencyFormatter, useUnitScaling } from "../../utils/settings";
 import { useLocations } from "../locations/functions";
 import { setSpoolArchived, useSpoolAdjustModal } from "./functions";
 import { EditableLocationCell, EditableNumberCell, EditableTextCell } from "./inlineEdit";
@@ -123,6 +123,7 @@ export const SpoolList = () => {
   const extraFields = useGetFields(EntityType.spool);
   const currencyFormatter = useCurrencyFormatter();
   const currency = useCurrency();
+  const unitScaling = useUnitScaling();
   const { openSpoolAdjustModal, spoolAdjustModal } = useSpoolAdjustModal();
 
   // Inline cell editing is a pointer-device affordance; gate it to desktop using
@@ -517,6 +518,7 @@ export const SpoolList = () => {
                     <NumberFieldUnit
                       value={obj.used_weight}
                       unit="g"
+                      autoScale={unitScaling}
                       options={{ maximumFractionDigits: 0, minimumFractionDigits: 0 }}
                     />
                   )
@@ -547,6 +549,7 @@ export const SpoolList = () => {
                     <NumberFieldUnit
                       value={obj.remaining_weight}
                       unit="g"
+                      autoScale={unitScaling}
                       options={{ maximumFractionDigits: 0, minimumFractionDigits: 0 }}
                     />
                   )
@@ -562,6 +565,7 @@ export const SpoolList = () => {
             maxDecimals: 0,
             defaultText: t("unknown"),
             width: 110,
+            autoScale: unitScaling,
           }),
           NumberColumn({
             ...commonProps,
@@ -570,6 +574,7 @@ export const SpoolList = () => {
             unit: "mm",
             maxDecimals: 0,
             width: 120,
+            autoScale: unitScaling,
           }),
           NumberColumn({
             ...commonProps,
@@ -579,6 +584,7 @@ export const SpoolList = () => {
             maxDecimals: 0,
             defaultText: t("unknown"),
             width: 120,
+            autoScale: unitScaling,
           }),
           FilteredQueryColumn({
             ...commonProps,

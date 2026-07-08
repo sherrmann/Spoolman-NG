@@ -161,6 +161,24 @@ export function formatLength(lengthInMillimeter: number, precision: number = 2):
 }
 
 /**
+ * When unit scaling is enabled (#85), auto-scale a large gram/millimeter value to kg/m for display,
+ * returning the new value, unit and a decimal cap. Non-base units, values below 1000, or scaling off
+ * pass straight through unchanged. Kept separate from formatWeight/formatLength (which return baked
+ * strings) so callers can still run the number through toLocaleString for locale-aware digit grouping.
+ */
+export function scaleUnitValue(
+  value: number,
+  unit: string,
+  scale: boolean,
+): { value: number; unit: string; maxDecimals?: number } {
+  if (scale && value >= 1000) {
+    if (unit === "g") return { value: value / 1000, unit: "kg", maxDecimals: 2 };
+    if (unit === "mm") return { value: value / 1000, unit: "m", maxDecimals: 2 };
+  }
+  return { value, unit };
+}
+
+/**
  * Removes trailing zeros from a numeric string, including unnecessary decimal points.
  *
  * This function takes a string representation of a number and removes any trailing zeros

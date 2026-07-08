@@ -3,6 +3,7 @@ import {
   formatLength,
   formatNumberWithSpaceSeparator,
   formatWeight,
+  scaleUnitValue,
   numberFormatter,
   numberParser,
   numberParserAllowEmpty,
@@ -147,5 +148,31 @@ describe("formatLength", () => {
 
   it("respects the precision argument", () => {
     expect(formatLength(2500, 3)).toBe("2.5 m");
+  });
+});
+
+describe("scaleUnitValue (#85)", () => {
+  it("passes values through unchanged when scaling is off", () => {
+    expect(scaleUnitValue(1500, "g", false)).toEqual({ value: 1500, unit: "g" });
+    expect(scaleUnitValue(64374, "mm", false)).toEqual({ value: 64374, unit: "mm" });
+  });
+
+  it("scales grams to kilograms at and above 1000 when enabled", () => {
+    expect(scaleUnitValue(1500, "g", true)).toEqual({ value: 1.5, unit: "kg", maxDecimals: 2 });
+    expect(scaleUnitValue(1000, "g", true)).toEqual({ value: 1, unit: "kg", maxDecimals: 2 });
+  });
+
+  it("scales millimeters to meters at and above 1000 when enabled", () => {
+    expect(scaleUnitValue(64374, "mm", true)).toEqual({ value: 64.374, unit: "m", maxDecimals: 2 });
+  });
+
+  it("leaves sub-1000 values in the base unit even when enabled", () => {
+    expect(scaleUnitValue(999, "g", true)).toEqual({ value: 999, unit: "g" });
+    expect(scaleUnitValue(1.75, "mm", true)).toEqual({ value: 1.75, unit: "mm" });
+  });
+
+  it("never scales a non-base unit (e.g. g/cm³, °C)", () => {
+    expect(scaleUnitValue(2000, "g/cm³", true)).toEqual({ value: 2000, unit: "g/cm³" });
+    expect(scaleUnitValue(1200, "°C", true)).toEqual({ value: 1200, unit: "°C" });
   });
 });

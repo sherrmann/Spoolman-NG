@@ -5,6 +5,14 @@ export function useCurrency() {
   return JSON.parse(currency?.value ?? '"EUR"');
 }
 
+/**
+ * Whether large weights/lengths should be shown auto-scaled to kg/m instead of raw g/mm (#85).
+ * Defaults to false (current behavior) when the setting is unset.
+ */
+export function useUnitScaling(): boolean {
+  return JSON.parse(useGetSetting("unit_scaling").data?.value ?? "false");
+}
+
 export function getCurrencySymbol(locale: string | undefined, currency: string) {
   return (0)
     .toLocaleString(locale, {

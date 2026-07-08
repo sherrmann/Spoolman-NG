@@ -14,7 +14,7 @@ import { NumberFieldUnit } from "../../components/numberField";
 import SpoolIcon from "../../components/spoolIcon";
 import { enrichText } from "../../utils/parsing";
 import { EntityType, useGetFields } from "../../utils/queryFields";
-import { useCurrencyFormatter } from "../../utils/settings";
+import { useCurrencyFormatter, useUnitScaling } from "../../utils/settings";
 import { IFilament } from "./model";
 dayjs.extend(utc);
 
@@ -26,6 +26,7 @@ export const FilamentShow = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const extraFields = useGetFields(EntityType.filament);
   const currencyFormatter = useCurrencyFormatter();
+  const unitScaling = useUnitScaling();
   const { query } = useShow<IFilament>({
     liveMode: "auto",
   });
@@ -134,6 +135,7 @@ export const FilamentShow = () => {
       <NumberFieldUnit
         value={record?.weight ?? ""}
         unit="g"
+        autoScale={unitScaling}
         options={{
           maximumFractionDigits: 1,
           minimumFractionDigits: 1,
@@ -145,6 +147,7 @@ export const FilamentShow = () => {
       <NumberFieldUnit
         value={record?.remaining_weight ?? 0}
         unit="g"
+        autoScale={unitScaling}
         options={{
           maximumFractionDigits: 1,
           minimumFractionDigits: 1,
@@ -154,6 +157,7 @@ export const FilamentShow = () => {
       <NumberFieldUnit
         value={record?.spool_weight ?? ""}
         unit="g"
+        autoScale={unitScaling}
         options={{
           maximumFractionDigits: 1,
           minimumFractionDigits: 1,
@@ -166,6 +170,7 @@ export const FilamentShow = () => {
         <NumberFieldUnit
           value={record.low_stock_threshold}
           unit="g"
+          autoScale={unitScaling}
           options={{
             maximumFractionDigits: 1,
             minimumFractionDigits: 1,
