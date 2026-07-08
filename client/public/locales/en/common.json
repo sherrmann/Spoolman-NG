@@ -26,6 +26,7 @@
     "clone": "Clone",
     "archive": "Archive",
     "unArchive": "Unarchive",
+    "resetUsage": "Reset usage",
     "hideArchived": "Hide Archived",
     "showArchived": "Show Archived",
     "notAccessTitle": "You don't have permission to access",
@@ -254,7 +255,16 @@
     },
     "messages": {
       "archive": "Are you sure you want to archive this spool?",
-      "update_error": "Could not save changes. Please try again."
+      "update_error": "Could not save changes. Please try again.",
+      "reset_usage": "Reset this spool's used weight to zero? This clears the first/last-used dates."
+    },
+    "usage_history": {
+      "title": "Usage history",
+      "time": "Time",
+      "type": "Type",
+      "change": "Change",
+      "comment": "Comment",
+      "empty": "No usage recorded yet."
     },
     "formats": {
       "last_used": "Last used {{date}}"

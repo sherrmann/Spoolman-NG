@@ -7,11 +7,13 @@ import {
   TagsOutlined,
   ToTopOutlined,
   ToolOutlined,
+  UndoOutlined,
   WifiOutlined,
 } from "@ant-design/icons";
 import { DateField, NumberField, Show, TextField } from "@refinedev/antd";
-import { useDelete, useInvalidate, useShow, useTranslate } from "@refinedev/core";
-import { Button, Dropdown, Modal, Space, Typography } from "antd";
+import { useDelete, useInvalidate, useShow, useTranslate, useUpdate } from "@refinedev/core";
+import { Button, Dropdown, Modal, Space, Table, Typography } from "antd";
+import { useGetSpoolUsageEvents } from "../../utils/queryUsageEvents";
 import type { MenuProps } from "antd";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
@@ -47,6 +49,34 @@ export const SpoolShow = () => {
   const { data, isLoading } = query;
 
   const record = data?.data;
+
+  const usageEvents = useGetSpoolUsageEvents(record?.id);
+  const { mutate: updateSpool } = useUpdate();
+
+  // "Reset usage" (#77): zero used_weight and clear the usage dates. The used_weight change is
+  // itself logged as an "update" usage event by the backend.
+  const resetUsagePopup = () => {
+    if (!record) return;
+    confirm({
+      title: t("buttons.resetUsage"),
+      content: t("spool.messages.reset_usage"),
+      okText: t("buttons.resetUsage"),
+      okType: "danger",
+      cancelText: t("buttons.cancel"),
+      onOk() {
+        updateSpool(
+          {
+            resource: "spool",
+            id: record.id,
+            values: { used_weight: 0, first_used: null, last_used: null },
+          },
+          {
+            onSuccess: () => invalidate({ resource: "spool", id: record.id, invalidates: ["detail"] }),
+          },
+        );
+      },
+    });
+  };
 
   const spoolPrice = (item?: ISpool) => {
     const price = item?.price ?? item?.filament.price;
@@ -219,6 +249,12 @@ export const SpoolShow = () => {
             menu={{
               items: [
                 {
+                  key: "reset-usage",
+                  icon: <UndoOutlined />,
+                  label: t("buttons.resetUsage"),
+                  onClick: () => resetUsagePopup(),
+                },
+                {
                   key: "delete",
                   icon: <DeleteOutlined />,
                   label: t("buttons.delete"),
@@ -319,6 +355,30 @@ export const SpoolShow = () => {
       {extraFields?.data?.map((field, index) => (
         <ExtraFieldDisplay key={index} field={field} value={record?.extra[field.key]} />
       ))}
+      <Title level={4}>{t("spool.usage_history.title")}</Title>
+      <Table
+        size="small"
+        rowKey="id"
+        loading={usageEvents.isLoading}
+        dataSource={usageEvents.data ?? []}
+        pagination={false}
+        locale={{ emptyText: t("spool.usage_history.empty") }}
+        columns={[
+          {
+            title: t("spool.usage_history.time"),
+            dataIndex: "time",
+            render: (value: string) => dayjs.utc(value).local().format("YYYY-MM-DD HH:mm"),
+          },
+          { title: t("spool.usage_history.type"), dataIndex: "event_type" },
+          {
+            title: t("spool.usage_history.change"),
+            dataIndex: "delta",
+            align: "right",
+            render: (value: number) => `${value > 0 ? "+" : ""}${value.toFixed(1)} g`,
+          },
+          { title: t("spool.usage_history.comment"), dataIndex: "comment" },
+        ]}
+      />
     </Show>
   );
 };
