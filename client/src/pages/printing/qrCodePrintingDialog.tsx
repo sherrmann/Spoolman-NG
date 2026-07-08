@@ -45,6 +45,7 @@ const QRCodePrintingDialog = ({
   const showContent = printSettings?.showContent === undefined ? true : printSettings?.showContent;
   const showQRCodeMode = printSettings?.showQRCodeMode || "withIcon";
   const textSize = printSettings?.textSize || 3;
+  const qrPadding = printSettings?.qrPadding ?? 2;
   const preview = previewValues ?? ({ default: `WEB+SPOOLMAN:S-{id}`, url: `${baseUrlRoot}/spool/show/{id}` } as const);
 
   // Build the printable QR blocks here; the underlying dialog handles page layout and export mechanics.
@@ -160,6 +161,38 @@ const QRCodePrintingDialog = ({
               </Col>
             </Row>
           </Form.Item>
+          <Form.Item label={t("printing.qrcode.qrPadding")}>
+            <Row>
+              <Col span={12}>
+                <Slider
+                  disabled={showQRCodeMode === "no"}
+                  tooltip={{ formatter: (value) => `${value} mm` }}
+                  min={0}
+                  max={5}
+                  value={qrPadding}
+                  step={0.1}
+                  onChange={(value) => {
+                    setPrintSettings({ ...printSettings, qrPadding: value });
+                  }}
+                />
+              </Col>
+              <Col span={12}>
+                <InputNumber
+                  disabled={showQRCodeMode === "no"}
+                  min={0}
+                  step={0.1}
+                  style={{ margin: "0 16px" }}
+                  value={qrPadding}
+                  addonAfter="mm"
+                  formatter={formatNumberOnUserInput}
+                  parser={numberParser}
+                  onChange={(value) => {
+                    setPrintSettings({ ...printSettings, qrPadding: value ?? 2 });
+                  }}
+                />
+              </Col>
+            </Row>
+          </Form.Item>
 
           {extraSettings}
         </>
@@ -173,14 +206,16 @@ const QRCodePrintingDialog = ({
             }
 
             .print-page .print-qrcode-container {
-              max-width: ${showContent ? "50%" : "100%"};
+              /* Definite basis that neither grows nor shrinks, so the QR renders at a consistent
+                 size regardless of the label text length (#59). */
+              flex: 0 0 ${showContent ? "50%" : "100%"};
               display: flex;
             }
 
             .print-page .print-qrcode {
               width: auto !important;
               height: auto !important;
-              padding: 2mm;
+              padding: ${qrPadding}mm;
             }
 
             .print-page .print-qrcode-title {

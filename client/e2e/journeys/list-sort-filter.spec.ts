@@ -25,34 +25,31 @@ test.describe("spool list sort and filter", () => {
     await expect(page.getByRole("heading", { name: "Spools" })).toBeVisible();
     await page.getByRole("button", { name: "Clear Filters" }).click();
 
-    // Material filter: enumerated checkbox dropdown, options fetched lazily on
-    // open. antd renders a hidden measure row that duplicates header cells, so
-    // take the first (visible) match.
-    await page.locator("th", { hasText: "Material" }).locator(".ant-table-filter-trigger").first().click();
-    const dropdown = page.locator(".ant-table-filter-dropdown:visible");
-
-    // The option list refetches while the dropdown opens; a click landing during
-    // that re-render can be swallowed (seen as a CI flake: OK then applied an
-    // empty filter). Click until the item's checkbox is actually checked.
-    const option = dropdown.locator(".ant-dropdown-menu-item").filter({ hasText: material });
+    // Applying the material filter through antd's dropdown is timing-sensitive: its option list
+    // refetches as the dropdown opens (Material is an enumerated checkbox filter), and a checkbox or
+    // OK click landing during that re-render can be dropped — leaving an EMPTY filter. That surfaced
+    // as two different CI flakes: a lingering pre-filter row, or an OK that never fires the filtered
+    // request (waitForResponse then hangs). Retry the whole open→check→OK until the server actually
+    // returns the filtered list — its URL carries the unique per-run material value, so a match here
+    // proves the filter was applied, not merely that some spool GET happened.
     await expect(async () => {
+      await page.locator("th", { hasText: "Material" }).locator(".ant-table-filter-trigger").first().click();
+      // antd renders a hidden measure row that duplicates header cells, so take the first visible one.
+      const dropdown = page.locator(".ant-table-filter-dropdown:visible");
+      const option = dropdown.locator(".ant-dropdown-menu-item").filter({ hasText: material });
+      await expect(option).toBeVisible({ timeout: 5000 });
       if ((await option.locator(".ant-checkbox-checked").count()) === 0) {
         await option.click();
       }
-      await expect(option.locator(".ant-checkbox-checked")).toBeVisible({ timeout: 1000 });
-    }).toPass();
-
-    // Applying the filter refetches the (server-filtered) list; wait for it so the
-    // row-count assertion can't race the request. Match the SPECIFIC filtered request — the URL
-    // carries the unique material value — rather than any spool GET: a bare match could resolve on a
-    // stale/concurrent GET and let the poll below race the real filtered refetch (observed as a CI
-    // flake where an extra, pre-filter row lingered).
-    await Promise.all([
-      page.waitForResponse(
-        (r) => r.url().includes("/api/v1/spool") && r.url().includes(material) && r.request().method() === "GET",
-      ),
-      dropdown.getByRole("button", { name: "OK" }).click(),
-    ]);
+      await expect(option.locator(".ant-checkbox-checked")).toBeVisible({ timeout: 2000 });
+      await Promise.all([
+        page.waitForResponse(
+          (r) => r.url().includes("/api/v1/spool") && r.url().includes(material) && r.request().method() === "GET",
+          { timeout: 8000 },
+        ),
+        dropdown.getByRole("button", { name: "OK" }).click(),
+      ]);
+    }).toPass({ timeout: 30000 });
 
     // Only the three seeded spools remain, in ascending id order (Clear Filters restored id asc).
     // The ID column is the second cell — the first is the row-selection checkbox column. Poll on the

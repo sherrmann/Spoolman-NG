@@ -1,6 +1,10 @@
 import { render } from "@testing-library/react";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
 import { describe, expect, it } from "vitest";
 import { renderLabelContents } from "./printing";
+
+dayjs.extend(utc);
 
 // The label template engine (TESTING_CANDIDATES row 77), generalised from ISpool to
 // any object in PR #4. Oracle: the rendered text/markup for hand-written templates —
@@ -53,5 +57,75 @@ describe("renderLabelContents", () => {
     const { container } = render(renderLabelContents("a\nb", { extra: {} } as never));
     expect(container.querySelector("br")).not.toBeNull();
     expect(container.textContent).toBe("ab");
+  });
+
+  // --- #58: value formatting -------------------------------------------------
+
+  it("leaves a bare numeric {tag} untouched (backward compatible)", () => {
+    expect(textOf("{remaining_weight}", { remaining_weight: 843.2589999999999, extra: {} })).toBe("843.2589999999999");
+  });
+
+  it("rounds a number with a {tag:0.0} decimal pattern", () => {
+    expect(textOf("{remaining_weight:0.0}", { remaining_weight: 843.2589999999999, extra: {} })).toBe("843.3");
+    expect(textOf("{remaining_weight:0}", { remaining_weight: 843.9, extra: {} })).toBe("844");
+    expect(textOf("{remaining_weight:0.00}", { remaining_weight: 5, extra: {} })).toBe("5.00");
+  });
+
+  it("applies the number format inside a conditional block too", () => {
+    expect(textOf("{Weight: {remaining_weight:0.0} g}", { remaining_weight: 843.25, extra: {} })).toBe(
+      "Weight: 843.3 g",
+    );
+  });
+
+  it("leaves a bare datetime {tag} as the raw value (backward compatible)", () => {
+    const iso = "2026-07-08T13:30:00Z";
+    expect(textOf("{registered}", { registered: iso, extra: {} })).toBe(iso);
+  });
+
+  it("formats a datetime {tag:fmt} in local time with dayjs", () => {
+    const iso = "2026-07-08T13:30:00Z";
+    const expected = dayjs.utc(iso).local().format("YYYY-MM-DD HH:mm");
+    expect(textOf("{registered:YYYY-MM-DD HH:mm}", { registered: iso, extra: {} })).toBe(expected);
+  });
+
+  it("formats a nested datetime tag (filament.registered) in local time", () => {
+    const iso = "2026-07-08T13:30:00Z";
+    const expected = dayjs.utc(iso).local().format("YYYY-MM-DD");
+    expect(textOf("{filament.registered:YYYY-MM-DD}", { filament: { registered: iso }, extra: {} })).toBe(expected);
+  });
+
+  // --- #58: per-line font size ----------------------------------------------
+
+  it("scales a line prefixed with {size:N}", () => {
+    const { container } = render(renderLabelContents("{size:2}Big\nsmall", { extra: {} } as never));
+    expect(container.textContent).toBe("Bigsmall");
+    const scaled = Array.from(container.querySelectorAll("span")).find(
+      (s) => (s as HTMLElement).style.fontSize === "2em",
+    );
+    expect(scaled?.textContent).toBe("Big");
+  });
+
+  // --- #64: suppressed conditional block drops its blank line ----------------
+
+  it("removes a line that is empty only because its conditional block was suppressed", () => {
+    const { container } = render(
+      renderLabelContents("ET: 210\n{BT: {settings_bed_temp} °C}\nLot", { extra: {} } as never),
+    );
+    expect(container.textContent).toBe("ET: 210Lot");
+    // Two lines survive -> exactly one <br>; the suppressed middle line took its newline with it.
+    expect(container.querySelectorAll("br")).toHaveLength(1);
+  });
+
+  it("keeps a conditional block's line when its tag resolves", () => {
+    const { container } = render(
+      renderLabelContents("ET: 210\n{BT: {settings_bed_temp} °C}\nLot", { settings_bed_temp: 60, extra: {} } as never),
+    );
+    expect(container.textContent).toBe("ET: 210BT: 60 °CLot");
+    expect(container.querySelectorAll("br")).toHaveLength(2);
+  });
+
+  it("does not drop a blank line the template author wrote on purpose", () => {
+    const { container } = render(renderLabelContents("A\n\nB", { extra: {} } as never));
+    expect(container.querySelectorAll("br")).toHaveLength(2);
   });
 });
