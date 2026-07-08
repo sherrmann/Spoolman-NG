@@ -87,6 +87,30 @@ class Spool(Base):
     )
 
 
+class SpoolUsageEvent(Base):
+    """A timestamped record of a single change to a spool's used_weight (#50).
+
+    Intentionally has no ORM relationship back to Spool: get_by_id loads spools with
+    joinedload("*") on the hot use/measure path, and a to-many relationship here would eager-load
+    every event. Rows are queried directly by spool_id, cascade-deleted explicitly in spool.delete
+    (SQLite doesn't enforce FKs) plus a DB-level ON DELETE CASCADE for the other backends.
+    """
+
+    __tablename__ = "spool_usage_event"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    spool_id: Mapped[int] = mapped_column(ForeignKey("spool.id", ondelete="CASCADE"), index=True)
+    time: Mapped[datetime] = mapped_column(index=True)
+    # One of: use, measure, update, reset, transfer.
+    event_type: Mapped[str] = mapped_column(String(24))
+    delta: Mapped[float] = mapped_column(
+        comment="Applied change to used_weight in grams (sign: consumed positive, refilled negative).",
+    )
+    measured_weight: Mapped[float | None] = mapped_column(comment="Raw gross weight for measure events, in grams.")
+    comment: Mapped[str | None] = mapped_column(String(1024))
+    idempotency_key: Mapped[str | None] = mapped_column(String(64))
+
+
 class CalibrationSession(Base):
     __tablename__ = "calibration_session"
 

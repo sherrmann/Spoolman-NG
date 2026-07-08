@@ -386,6 +386,36 @@ class Spool(BaseModel):
         )
 
 
+class SpoolUsageEvent(BaseModel):
+    id: int = Field(description="Unique internal ID of this usage event.")
+    spool_id: int = Field(description="The spool this event belongs to.")
+    time: SpoolmanDateTime = Field(description="When the event was recorded. UTC Timezone.")
+    event_type: str = Field(description="One of: use, measure, update.", examples=["use"])
+    delta: float = Field(
+        description="Change applied to used_weight in grams (sign: consumed positive, refilled negative).",
+        examples=[5.3],
+    )
+    measured_weight: float | None = Field(
+        None,
+        description="Raw gross weight for measure events, in grams.",
+        examples=[850.0],
+    )
+    comment: str | None = Field(None, description="Optional comment recorded with the event.")
+
+    @staticmethod
+    def from_db(item: models.SpoolUsageEvent) -> "SpoolUsageEvent":
+        """Create a Pydantic usage-event object from a database object."""
+        return SpoolUsageEvent(
+            id=item.id,
+            spool_id=item.spool_id,
+            time=item.time,
+            event_type=item.event_type,
+            delta=item.delta,
+            measured_weight=item.measured_weight,
+            comment=item.comment,
+        )
+
+
 class Info(BaseModel):
     version: str = Field(examples=["0.7.0"])
     debug_mode: bool = Field(examples=[False])

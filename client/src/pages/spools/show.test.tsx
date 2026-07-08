@@ -19,6 +19,7 @@ vi.mock("@refinedev/core", () => ({
   useDelete: vi.fn(),
   useInvalidate: () => vi.fn(),
   useShow: vi.fn(),
+  useUpdate: () => ({ mutate: vi.fn() }),
   useTranslate: () => (key: string) => key,
 }));
 vi.mock("@refinedev/antd", () => ({
@@ -50,6 +51,9 @@ vi.mock("../../utils/settings", () => ({
   useCurrencyFormatter: () => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }),
 }));
 vi.mock("../../utils/parsing", () => ({ enrichText: (value?: string) => value }));
+vi.mock("../../utils/queryUsageEvents", () => ({
+  useGetSpoolUsageEvents: () => ({ data: [], isLoading: false }),
+}));
 vi.mock("../../components/extraFields", () => ({ ExtraFieldDisplay: () => null }));
 vi.mock("../../components/numberField", () => ({
   NumberFieldUnit: ({ value }: { value?: unknown }) => <span>{String(value ?? "")}</span>,

@@ -5,13 +5,15 @@ import logging
 from datetime import datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, Request, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, Header, Query, Request, Response, WebSocket, WebSocketDisconnect
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from spoolman.api.v1.models import Message, Spool, SpoolEvent
+from spoolman.api.v1.models import SpoolUsageEvent as SpoolUsageEventModel
 from spoolman.database import filament, spool
 from spoolman.database.database import get_db_session
 from spoolman.database.utils import parse_sort
@@ -105,10 +107,12 @@ class SpoolUpdateParameters(SpoolParameters):
 class SpoolUseParameters(BaseModel):
     use_length: float | None = Field(None, description="Length of filament to reduce by, in mm.", examples=[2.2])
     use_weight: float | None = Field(None, description="Filament weight to reduce by, in g.", examples=[5.3])
+    comment: str | None = Field(None, description="Optional comment recorded with the usage event.")
 
 
 class SpoolMeasureParameters(BaseModel):
     weight: float = Field(description="Current gross weight of the spool, in g.", examples=[200])
+    comment: str | None = Field(None, description="Optional comment recorded with the usage event.")
 
 
 @router.get(
@@ -561,25 +565,66 @@ async def use(  # noqa: ANN201
     db: Annotated[AsyncSession, Depends(get_db_session)],
     spool_id: int,
     body: SpoolUseParameters,
+    response: Response,
+    idempotency_key: Annotated[
+        str | None,
+        Header(
+            alias="Idempotency-Key",
+            description=(
+                "Optional client-supplied key making this call safe to retry (#60). A repeat with the "
+                "same key returns the current spool without applying the change again."
+            ),
+        ),
+    ] = None,
 ):
     if body.use_weight is not None and body.use_length is not None:
         return JSONResponse(
             status_code=400,
             content={"message": "Only specify either use_weight or use_length."},
         )
+    if body.use_weight is None and body.use_length is None:
+        return JSONResponse(
+            status_code=400,
+            content={"message": "Either use_weight or use_length must be specified."},
+        )
 
-    if body.use_weight is not None:
-        db_item = await spool.use_weight(db, spool_id, body.use_weight)
-        return Spool.from_db(db_item)
+    # Idempotency (#60): a key already recorded for this spool means this request was applied before;
+    # return the current spool unchanged. Absent key ⇒ exact previous behaviour (Moonraker untouched).
+    if idempotency_key is not None and await spool.find_usage_event_by_key(db, spool_id, idempotency_key):
+        response.headers["Idempotency-Replayed"] = "true"
+        return Spool.from_db(await spool.get_by_id(db, spool_id))
 
-    if body.use_length is not None:
-        db_item = await spool.use_length(db, spool_id, body.use_length)
-        return Spool.from_db(db_item)
+    try:
+        if body.use_weight is not None:
+            db_item = await spool.use_weight(
+                db,
+                spool_id,
+                body.use_weight,
+                comment=body.comment,
+                idempotency_key=idempotency_key,
+            )
+        else:
+            db_item = await spool.use_length(
+                db,
+                spool_id,
+                body.use_length,
+                comment=body.comment,
+                idempotency_key=idempotency_key,
+            )
+    except IntegrityError:
+        # A concurrent request applied this key first; treat as a replay rather than double-count.
+        await db.rollback()
+        response.headers["Idempotency-Replayed"] = "true"
+        return Spool.from_db(await spool.get_by_id(db, spool_id))
 
-    return JSONResponse(
-        status_code=400,
-        content={"message": "Either use_weight or use_length must be specified."},
+    logger.info(
+        "Spool #%s use: requested weight=%s length=%s → used_weight=%sg",
+        spool_id,
+        body.use_weight,
+        body.use_length,
+        db_item.used_weight,
     )
+    return Spool.from_db(db_item)
 
 
 @router.put(
@@ -597,13 +642,69 @@ async def measure(  # noqa: ANN201
     db: Annotated[AsyncSession, Depends(get_db_session)],
     spool_id: int,
     body: SpoolMeasureParameters,
+    response: Response,
+    idempotency_key: Annotated[
+        str | None,
+        Header(
+            alias="Idempotency-Key",
+            description=(
+                "Optional client-supplied key making this call safe to retry (#60). A repeat with the "
+                "same key returns the current spool without applying the change again."
+            ),
+        ),
+    ] = None,
 ):
+    if idempotency_key is not None and await spool.find_usage_event_by_key(db, spool_id, idempotency_key):
+        response.headers["Idempotency-Replayed"] = "true"
+        return Spool.from_db(await spool.get_by_id(db, spool_id))
+
     try:
-        db_item = await spool.measure(db, spool_id, body.weight)
-        return Spool.from_db(db_item)
+        db_item = await spool.measure(
+            db,
+            spool_id,
+            body.weight,
+            comment=body.comment,
+            idempotency_key=idempotency_key,
+        )
+    except IntegrityError:
+        await db.rollback()
+        response.headers["Idempotency-Replayed"] = "true"
+        return Spool.from_db(await spool.get_by_id(db, spool_id))
     except SpoolMeasureError as e:
         logger.exception("Failed to update spool measurement.")
         return JSONResponse(
             status_code=400,
             content={"message": e.args[0]},
         )
+    logger.info(
+        "Spool #%s measure: gross=%sg → used_weight=%sg",
+        spool_id,
+        body.weight,
+        db_item.used_weight,
+    )
+    return Spool.from_db(db_item)
+
+
+@router.get(
+    "/{spool_id}/events",
+    name="Get spool usage events",
+    description="Get the timestamped usage/adjustment events recorded for a spool, most recent first.",
+    response_model_exclude_none=True,
+    response_model=list[SpoolUsageEventModel],
+    responses={404: {"model": Message}},
+)
+async def usage_events(  # noqa: ANN201
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+    spool_id: int,
+    limit: Annotated[int | None, Query(description="Maximum number of events in the response.")] = None,
+    offset: Annotated[int, Query(description="Offset in the full result set if a limit is set.")] = 0,
+):
+    await spool.get_by_id(db, spool_id)  # Raises 404 if the spool doesn't exist.
+    events, total_count = await spool.get_usage_events(db, spool_id, limit=limit, offset=offset)
+    return JSONResponse(
+        content=jsonable_encoder(
+            [SpoolUsageEventModel.from_db(event) for event in events],
+            exclude_none=True,
+        ),
+        headers={"x-total-count": str(total_count)},
+    )

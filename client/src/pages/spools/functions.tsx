@@ -6,6 +6,7 @@ import type { InputNumberRef } from "rc-input-number";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { formatLength, formatNumberOnUserInput, formatWeight, numberParser } from "../../utils/parsing";
 import { SpoolType, useGetExternalDBFilaments } from "../../utils/queryExternalDB";
+import { useSavedState } from "../../utils/saveload";
 import { getAPIURL } from "../../utils/url";
 import { IFilament } from "../filaments/model";
 import { ISpool } from "./model";
@@ -201,7 +202,9 @@ export function useSpoolAdjustModal() {
   const [form] = useForm();
 
   const [curSpool, setCurSpool] = useState<ISpool | null>(null);
-  const [measurementType, setMeasurementType] = useState<MeasurementType>("length");
+  // Persist the consumption mode across sessions so a reload doesn't silently reset it to
+  // "length" and risk a wrong-unit entry. Issue #117.
+  const [measurementType, setMeasurementType] = useSavedState<MeasurementType>("spoolAdjust-measurementType", "length");
   const inputNumberRef = useRef<InputNumberRef | null>(null);
 
   const openSpoolAdjustModal = useCallback((spool: ISpool) => {
