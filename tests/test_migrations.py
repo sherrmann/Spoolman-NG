@@ -61,3 +61,29 @@ def test_migration_chain_upgrades_downgrades_and_re_upgrades(tmp_path: Path):
     _run_alembic(tmp_path, "downgrade", "-1")
     _run_alembic(tmp_path, "upgrade", "head")
     _assert_schema_matches_metadata(tmp_path)
+
+
+def test_color_hue_backfill_populates_existing_rows(tmp_path: Path):
+    """The #113 backfill migration computes color_hue for rows that predate it.
+
+    Upgrade to the ADD COLUMN revision, insert a pre-existing coloured filament (color_hue NULL),
+    then upgrade through the backfill and assert the hue was filled in from color_hex.
+    """
+    _run_alembic(tmp_path, "upgrade", "d7b3f0c9e6a2")
+
+    engine = _engine(tmp_path)
+    try:
+        with engine.begin() as conn:
+            conn.execute(
+                sqlalchemy.text(
+                    "INSERT INTO filament (id, registered, density, diameter, color_hex) "
+                    "VALUES (1, '2024-01-01 00:00:00', 1.24, 1.75, 'FF0000')",
+                ),
+            )
+        _run_alembic(tmp_path, "upgrade", "head")
+        with engine.connect() as conn:
+            hue = conn.execute(sqlalchemy.text("SELECT color_hue FROM filament WHERE id = 1")).scalar()
+        # Pure red is hue 0.
+        assert hue == 0.0
+    finally:
+        engine.dispose()

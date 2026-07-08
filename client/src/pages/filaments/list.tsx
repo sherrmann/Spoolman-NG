@@ -26,6 +26,7 @@ import {
 } from "../../components/column";
 import { ColorSimilarityFilter, ColorSimilarityValue } from "../../components/colorSimilarityFilter";
 import { useLiveify } from "../../components/liveify";
+import SpoolIcon from "../../components/spoolIcon";
 import SwatchDownloadModal from "../../components/swatchDownloadModal";
 import {
   useSpoolmanArticleNumbers,
@@ -43,6 +44,9 @@ dayjs.extend(utc);
 
 interface IFilamentCollapsed extends Omit<IFilament, "vendor"> {
   "vendor.name": string | null;
+  // Sort-only virtual column (#113): lets the list sort by colour hue. Never populated on the row
+  // (the swatch renders from color_hex/multi_color_hexes); it only names the server sort key.
+  color_hue?: number | null;
 }
 
 function collapseFilament(element: IFilament): IFilamentCollapsed {
@@ -67,6 +71,7 @@ const allColumns: (keyof IFilamentCollapsed & string)[] = [
   "vendor.name",
   "name",
   "material",
+  "color_hue",
   "price",
   "density",
   "diameter",
@@ -81,10 +86,13 @@ const allColumns: (keyof IFilamentCollapsed & string)[] = [
   "comment",
 ];
 // The stock aggregates (#49/#53) ship hidden by default to keep the list uncluttered; users opt in
-// via the column picker.
+// via the column picker. The colour swatch column (#113) is likewise opt-in — the name column
+// already shows the swatch, so this one exists to sort by hue and ships hidden.
 const defaultColumns = allColumns.filter(
   (column_id) =>
-    ["registered", "density", "diameter", "spool_weight", "spool_count", "remaining_weight"].indexOf(column_id) === -1,
+    ["registered", "density", "diameter", "spool_weight", "spool_count", "remaining_weight", "color_hue"].indexOf(
+      column_id,
+    ) === -1,
 );
 
 export const FilamentList = () => {
@@ -341,6 +349,28 @@ export const FilamentList = () => {
             i18ncat: "filament",
             filterValueQuery: useSpoolmanMaterials(),
             width: 110,
+          }),
+          // Opt-in colour column (#113): a swatch that sorts by hue (color_hue). The name column
+          // already carries the swatch and the colour-similarity filter (#46) lives in the toolbar,
+          // so this column is sort-only.
+          SortedColumn({
+            ...commonProps,
+            id: "color_hue",
+            i18nkey: "filament.fields.color_hue",
+            align: "center",
+            width: 80,
+            render: (_, record: IFilamentCollapsed) => (
+              <SpoolIcon
+                color={
+                  record.multi_color_hexes
+                    ? {
+                        colors: record.multi_color_hexes.split(","),
+                        vertical: record.multi_color_direction === "longitudinal",
+                      }
+                    : record.color_hex
+                }
+              />
+            ),
           }),
           SortedColumn({
             ...commonProps,

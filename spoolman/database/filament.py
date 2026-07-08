@@ -25,7 +25,7 @@ from spoolman.database.utils import (
 )
 from spoolman.exceptions import ItemDeleteError, ItemNotFoundError
 from spoolman.extra_field_registry import EntityType
-from spoolman.math import delta_e, hex_to_rgb, rgb_to_lab
+from spoolman.math import color_hex_to_hue, delta_e, hex_to_rgb, rgb_to_lab
 from spoolman.ws import websocket_manager
 
 
@@ -77,6 +77,7 @@ async def create(
         color_hex=color_hex,
         multi_color_hexes=multi_color_hexes,
         multi_color_direction=multi_color_direction.value if multi_color_direction is not None else None,
+        color_hue=color_hex_to_hue(color_hex, multi_color_hexes),
         external_id=external_id,
         low_stock_threshold=low_stock_threshold,
         reserve_count=reserve_count,
@@ -319,6 +320,10 @@ async def update(
             setattr(filament, k, utc_timezone_naive(v))
         else:
             setattr(filament, k, v)
+    # Keep the sortable hue (#113) in sync when either colour field changes; recomputed from the
+    # post-update values so a change to color_hex or multi_color_hexes is always reflected.
+    if "color_hex" in data or "multi_color_hexes" in data:
+        filament.color_hue = color_hex_to_hue(filament.color_hex, filament.multi_color_hexes)
     await db.commit()
     await filament_changed(filament, EventType.UPDATED)
     return filament

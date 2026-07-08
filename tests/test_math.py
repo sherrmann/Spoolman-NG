@@ -5,9 +5,11 @@ import math
 import pytest
 
 from spoolman.math import (
+    color_hex_to_hue,
     delta_e,
     hex_to_rgb,
     length_from_weight,
+    rgb_to_hue,
     rgb_to_lab,
     weight_from_length,
 )
@@ -81,3 +83,46 @@ def test_delta_e_distinct_colors_is_positive():
     lab_a = rgb_to_lab([0, 0, 0])
     lab_b = rgb_to_lab([255, 255, 255])
     assert delta_e(lab_a, lab_b) > 0
+
+
+def test_rgb_to_hue_primaries():
+    # Red at 0deg, green at 120deg, blue at 240deg -- the classic HSV wheel positions.
+    assert rgb_to_hue([255, 0, 0]) == pytest.approx(0)
+    assert rgb_to_hue([0, 255, 0]) == pytest.approx(120)
+    assert rgb_to_hue([0, 0, 255]) == pytest.approx(240)
+    # Secondaries fall halfway between their neighbouring primaries.
+    assert rgb_to_hue([255, 255, 0]) == pytest.approx(60)  # yellow
+    assert rgb_to_hue([0, 255, 255]) == pytest.approx(180)  # cyan
+    assert rgb_to_hue([255, 0, 255]) == pytest.approx(300)  # magenta
+
+
+def test_rgb_to_hue_greys_are_zero():
+    # Achromatic colours have no meaningful hue; they collapse to 0 so they sort together.
+    assert rgb_to_hue([0, 0, 0]) == pytest.approx(0)
+    assert rgb_to_hue([128, 128, 128]) == pytest.approx(0)
+    assert rgb_to_hue([255, 255, 255]) == pytest.approx(0)
+
+
+def test_rgb_to_hue_in_range():
+    # A slightly-off colour still lands within the [0, 360) range.
+    hue = rgb_to_hue([200, 120, 40])
+    assert 0 <= hue < 360
+
+
+def test_color_hex_to_hue_single_colour():
+    assert color_hex_to_hue("#FF0000") == pytest.approx(0)
+    assert color_hex_to_hue("00FF00") == pytest.approx(120)
+    # An 8-char value with an alpha channel uses the RGB portion (first 6 chars).
+    assert color_hex_to_hue("0000FFAA") == pytest.approx(240)
+
+
+def test_color_hex_to_hue_falls_back_to_multi_colour():
+    # With no single colour, the first entry of the multi-colour list is used.
+    assert color_hex_to_hue(None, "#00FF00,#FF0000") == pytest.approx(120)
+
+
+def test_color_hex_to_hue_none_for_missing_or_invalid():
+    assert color_hex_to_hue(None, None) is None
+    assert color_hex_to_hue("", "") is None
+    assert color_hex_to_hue("#FFF", None) is None  # too short to be RRGGBB
+    assert color_hex_to_hue("#ZZZZZZ", None) is None  # not valid hex

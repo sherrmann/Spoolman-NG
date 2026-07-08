@@ -39,6 +39,7 @@ import {
 import { columnIdOf, computeEffectiveOrder, moveInOrder, orderColumns } from "../../utils/columnOrder";
 import { removeUndefined } from "../../utils/filtering";
 import { ResizableHeaderCell } from "../../components/resizableHeaderCell";
+import SpoolIcon from "../../components/spoolIcon";
 import { enrichText, formatWeight } from "../../utils/parsing";
 import { EntityType, useGetFields } from "../../utils/queryFields";
 import { TableState, useInitialTableState, useSavedState, useStoreInitialState } from "../../utils/saveload";
@@ -58,6 +59,9 @@ interface ISpoolCollapsed extends ISpool {
   "filament.name"?: string | null;
   "filament.material"?: string;
   "filament.vendor.name"?: string | null;
+  // Sort-only virtual column (#113): lets the list sort by the filament's colour hue. Never populated
+  // on the row (the swatch renders from color_hex/multi_color_hexes); it only names the server sort key.
+  "filament.color_hue"?: number | null;
 }
 
 function collapseSpool(element: ISpool): ISpoolCollapsed {
@@ -86,6 +90,7 @@ function collapseSpool(element: ISpool): ISpoolCollapsed {
 function translateColumnI18nKey(columnName: string): string {
   if (columnName === "filament.vendor.name") return "spool.fields.vendor_name";
   if (columnName === "filament.name") return "spool.fields.filament_name_only";
+  if (columnName === "filament.color_hue") return "spool.fields.color";
   columnName = columnName.replace(".", "_");
   if (columnName === "filament_combined_name") columnName = "filament_name";
   else if (columnName === "filament_material") columnName = "material";
@@ -100,6 +105,7 @@ const allColumns: (keyof ISpoolCollapsed & string)[] = [
   "filament.vendor.name",
   "filament.name",
   "filament.material",
+  "filament.color_hue",
   "price",
   "used_weight",
   "remaining_weight",
@@ -117,7 +123,8 @@ const defaultColumns = allColumns.filter(
   // Vendor and the standalone filament name are available as opt-in columns for users who prefer the
   // Filament column split into Vendor + Name (#94), but hidden by default so the list stays
   // uncluttered — the default combined name column already shows both. spool_weight is likewise an
-  // opt-in column (#115).
+  // opt-in column (#115), as is the colour swatch column that sorts by hue (#113) — the combined name
+  // column already shows the swatch, so it ships hidden and users enable it to sort by colour.
   (column_id) =>
     [
       "registered",
@@ -126,6 +133,7 @@ const defaultColumns = allColumns.filter(
       "lot_nr",
       "filament.vendor.name",
       "filament.name",
+      "filament.color_hue",
       "spool_weight",
     ].indexOf(column_id) === -1,
 );
@@ -571,6 +579,28 @@ export const SpoolList = () => {
                 i18nkey: "spool.fields.material",
                 filterValueQuery: useSpoolmanMaterials(),
                 width: 120,
+              }),
+              // Opt-in colour column (#113): a swatch that sorts by the filament's hue. dataId names
+              // the server sort key (filament.color_hue); the colour-similarity filter (#46) lives in
+              // the toolbar, so this column is sort-only.
+              SortedColumn({
+                ...commonProps,
+                id: "filament.color_hue",
+                i18nkey: "spool.fields.color",
+                align: "center",
+                width: 80,
+                render: (_, record: ISpoolCollapsed) => (
+                  <SpoolIcon
+                    color={
+                      record.filament.multi_color_hexes
+                        ? {
+                            colors: record.filament.multi_color_hexes.split(","),
+                            vertical: record.filament.multi_color_direction === "longitudinal",
+                          }
+                        : record.filament.color_hex
+                    }
+                  />
+                ),
               }),
               SortedColumn({
                 ...commonProps,

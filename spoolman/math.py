@@ -94,3 +94,38 @@ def hex_to_rgb(hex_code: str) -> list[int]:
     b = int(hex_code[4:6], 16)
 
     return [r, g, b]
+
+
+def rgb_to_hue(rgb: list[int]) -> float:
+    """Return the HSL/HSV hue of an RGB colour, in degrees [0, 360). Greys return 0."""
+    r, g, b = rgb[0] / 255, rgb[1] / 255, rgb[2] / 255
+    mx = max(r, g, b)
+    mn = min(r, g, b)
+    delta = mx - mn
+    if delta == 0:
+        return 0.0
+    if mx == r:
+        hue = ((g - b) / delta) % 6
+    elif mx == g:
+        hue = (b - r) / delta + 2
+    else:
+        hue = (r - g) / delta + 4
+    return (hue * 60) % 360
+
+
+def color_hex_to_hue(color_hex: str | None, multi_color_hexes: str | None = None) -> float | None:
+    """Compute a sortable hue (degrees) for a filament's colour (#113).
+
+    Uses the single colour when set, otherwise the first of a multi-colour list. Returns None when no
+    colour is defined or the value can't be parsed, so colourless filaments sort together (as NULL).
+    """
+    candidate = color_hex or (multi_color_hexes.split(",")[0] if multi_color_hexes else None)
+    if not candidate:
+        return None
+    cleaned = candidate.strip().lstrip("#")
+    if len(cleaned) < 6:
+        return None
+    try:
+        return rgb_to_hue(hex_to_rgb(cleaned))
+    except ValueError:
+        return None
