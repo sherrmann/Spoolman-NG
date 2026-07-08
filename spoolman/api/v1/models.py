@@ -21,6 +21,32 @@ def datetime_to_str(dt: datetime) -> str:
 SpoolmanDateTime = Annotated[datetime, PlainSerializer(datetime_to_str)]
 
 
+def _normalize_stored_color_hex(value: str | None) -> str | None:
+    """Defensively normalize a stored color_hex when serializing out of the DB.
+
+    The write-side validators keep new values clean, but a row poisoned by an older
+    build (a value stored with a leading '#', e.g. '#FF000000') would otherwise fail
+    the output model's max_length=8 and 500 every read of the list — including the
+    websocket broadcast (see issue #45). Strip '#'/whitespace and uppercase; if the
+    result still is not a valid 6/8-char hex, drop the colour (render colourless)
+    rather than break the whole response.
+    """
+    if not value:
+        return None
+    clr = value.strip().upper().removeprefix("#")
+    if len(clr) not in (6, 8) or any(c not in "0123456789ABCDEF" for c in clr):
+        return None
+    return clr
+
+
+def _normalize_stored_multi_color_hexes(value: str | None) -> str | None:
+    """Defensively normalize a stored multi_color_hexes value (see _normalize_stored_color_hex)."""
+    if not value:
+        return None
+    normalized = [clr for part in value.split(",") if (clr := _normalize_stored_color_hex(part)) is not None]
+    return ",".join(normalized) if normalized else None
+
+
 class Message(BaseModel):
     message: str = Field()
 
@@ -216,8 +242,8 @@ class Filament(BaseModel):
             comment=item.comment,
             settings_extruder_temp=item.settings_extruder_temp,
             settings_bed_temp=item.settings_bed_temp,
-            color_hex=item.color_hex,
-            multi_color_hexes=item.multi_color_hexes,
+            color_hex=_normalize_stored_color_hex(item.color_hex),
+            multi_color_hexes=_normalize_stored_multi_color_hexes(item.multi_color_hexes),
             multi_color_direction=(
                 MultiColorDirection(item.multi_color_direction) if item.multi_color_direction is not None else None
             ),
