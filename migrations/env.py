@@ -63,14 +63,13 @@ def run_migrations_offline() -> None:
 
 
 def do_run_migrations(connection: Connection) -> None:
-    """Run migrations in 'online' mode."""
+    """Run migrations in 'online' mode.
+
+    The schema (if any) is created beforehand in run_async_migrations; here we only qualify the
+    Alembic version table so it lands in the configured schema.
+    """
     schema = _configured_schema()
-    version_table_schema = None
-    if schema and connection.dialect.name in _SCHEMA_DIALECTS:
-        # The engine's search_path already points here (see database.connect), but create the schema
-        # first so a fresh shared database works, and qualify the alembic version table explicitly.
-        connection.execute(text(f'CREATE SCHEMA IF NOT EXISTS "{schema}"'))
-        version_table_schema = schema
+    version_table_schema = schema if schema and connection.dialect.name in _SCHEMA_DIALECTS else None
 
     context.configure(
         connection=connection,
@@ -90,7 +89,16 @@ async def run_async_migrations() -> None:
     if db.engine is None:
         raise RuntimeError("Engine not created.")
 
+    schema = _configured_schema()
+    create_schema = schema is not None and db.engine.dialect.name in _SCHEMA_DIALECTS
+
     async with db.engine.connect() as connection:
+        if create_schema:
+            # Create the schema in its own committed transaction *before* Alembic runs, so this DDL
+            # doesn't share (and conflict with) the migration transaction that context.begin_transaction
+            # opens. The engine's search_path already targets it (see database.connect). Issue #78.
+            await connection.execute(text(f'CREATE SCHEMA IF NOT EXISTS "{schema}"'))
+            await connection.commit()
         await connection.run_sync(do_run_migrations)
 
     await db.engine.dispose()
