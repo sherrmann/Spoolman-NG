@@ -49,16 +49,17 @@ test.describe("spool list sort and filter", () => {
       dropdown.getByRole("button", { name: "OK" }).click(),
     ]);
 
-    // Only the three seeded spools remain. The ID column is the second cell now —
-    // the first is the row-selection checkbox column.
+    // Only the three seeded spools remain, in ascending id order (Clear Filters restored id asc).
+    // The ID column is the second cell — the first is the row-selection checkbox column. Poll on the
+    // exact seeded id set rather than a bare row count: a slow/duplicate filter refetch could leave a
+    // stale row visible for a moment, which a snapshot count raced (observed as a CI flake). Polling
+    // waits for the filtered list to settle to exactly these ids.
     const firstCol = page.locator(".ant-table-tbody tr.ant-table-row td:nth-child(2)");
-    await expect(firstCol).toHaveCount(3);
+    const rowIds = async () => (await firstCol.allInnerTexts()).map((t) => Number(t));
+    await expect.poll(rowIds, { timeout: 15000 }).toEqual([...ids].sort((a, b) => a - b));
 
     // Sort by ID descending (default restored by Clear Filters is id asc).
-    const rowIds = async () => (await firstCol.allInnerTexts()).map((t) => Number(t));
-    expect(await rowIds()).toEqual([...ids].sort((a, b) => a - b));
-
     await page.locator("th", { hasText: /^ID/ }).locator(".ant-table-column-sorters").first().click();
-    await expect.poll(rowIds).toEqual([...ids].sort((a, b) => b - a));
+    await expect.poll(rowIds, { timeout: 15000 }).toEqual([...ids].sort((a, b) => b - a));
   });
 });
