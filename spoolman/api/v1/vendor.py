@@ -141,12 +141,21 @@ async def find(
     except ValueError as e:
         return JSONResponse(status_code=400, content=Message(message=str(e)).dict())
 
+    # Populate the per-vendor filament_count / spool_count aggregates (issue #49) for the returned
+    # page, then attach them to each response object.
+    aggregates = await vendor.get_aggregates(db, [db_item.id for db_item in db_items])
+    vendors_out = [
+        Vendor.from_db(
+            db_item,
+            filament_count=aggregates.get(db_item.id, (None, None))[0],
+            spool_count=aggregates.get(db_item.id, (None, None))[1],
+        )
+        for db_item in db_items
+    ]
+
     # Set x-total-count header for pagination
     return JSONResponse(
-        content=jsonable_encoder(
-            (Vendor.from_db(db_item) for db_item in db_items),
-            exclude_none=True,
-        ),
+        content=jsonable_encoder(vendors_out, exclude_none=True),
         headers={"x-total-count": str(total_count)},
     )
 
@@ -184,7 +193,8 @@ async def get(
     vendor_id: int,
 ) -> Vendor:
     db_item = await vendor.get_by_id(db, vendor_id)
-    return Vendor.from_db(db_item)
+    filament_count, spool_count = (await vendor.get_aggregates(db, [vendor_id])).get(vendor_id, (0, 0))
+    return Vendor.from_db(db_item, filament_count=filament_count, spool_count=spool_count)
 
 
 @router.websocket(
@@ -235,6 +245,8 @@ async def create(  # noqa: ANN201
         extra=body.extra,
     )
 
+    # The stock aggregates are a read-time view; POST returns the stored resource unchanged so the
+    # create response shape stays identical to before this feature (integrations POSTing are unaffected).
     return Vendor.from_db(db_item)
 
 

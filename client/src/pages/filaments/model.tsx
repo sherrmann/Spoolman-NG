@@ -19,6 +19,12 @@ export interface IFilament {
   multi_color_hexes?: string;
   multi_color_direction?: string;
   external_id?: string;
+  // Per-filament reorder settings (#109 / #116).
+  low_stock_threshold?: number;
+  reserve_count?: number;
+  // Server-computed aggregates, only present on the filament list/detail endpoints (#49 / #53).
+  spool_count?: number;
+  remaining_weight?: number;
   extra: { [key: string]: string };
 }
 

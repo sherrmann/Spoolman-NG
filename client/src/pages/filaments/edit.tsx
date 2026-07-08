@@ -370,6 +370,39 @@ export const FilamentEdit = () => {
           />
         </Form.Item>
         <Form.Item
+          label={t("filament.fields.low_stock_threshold")}
+          help={t("filament.fields_help.low_stock_threshold")}
+          name={["low_stock_threshold"]}
+          rules={[
+            {
+              required: false,
+              type: "number",
+              min: 0,
+            },
+          ]}
+        >
+          <InputNumber
+            addonAfter="g"
+            precision={1}
+            formatter={formatNumberOnUserInput}
+            parser={numberParserAllowEmpty}
+          />
+        </Form.Item>
+        <Form.Item
+          label={t("filament.fields.reserve_count")}
+          help={t("filament.fields_help.reserve_count")}
+          name={["reserve_count"]}
+          rules={[
+            {
+              required: false,
+              type: "number",
+              min: 0,
+            },
+          ]}
+        >
+          <InputNumber precision={0} />
+        </Form.Item>
+        <Form.Item
           label={t("filament.fields.settings_extruder_temp")}
           name={["settings_extruder_temp"]}
           rules={[

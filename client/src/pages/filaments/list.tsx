@@ -71,6 +71,8 @@ const allColumns: (keyof IFilamentCollapsed & string)[] = [
   "density",
   "diameter",
   "weight",
+  "spool_count",
+  "remaining_weight",
   "spool_weight",
   "article_number",
   "settings_extruder_temp",
@@ -78,8 +80,11 @@ const allColumns: (keyof IFilamentCollapsed & string)[] = [
   "registered",
   "comment",
 ];
+// The stock aggregates (#49/#53) ship hidden by default to keep the list uncluttered; users opt in
+// via the column picker.
 const defaultColumns = allColumns.filter(
-  (column_id) => ["registered", "density", "diameter", "spool_weight"].indexOf(column_id) === -1,
+  (column_id) =>
+    ["registered", "density", "diameter", "spool_weight", "spool_count", "remaining_weight"].indexOf(column_id) === -1,
 );
 
 export const FilamentList = () => {
@@ -372,6 +377,21 @@ export const FilamentList = () => {
             unit: "g",
             maxDecimals: 0,
             width: 100,
+          }),
+          SortedColumn({
+            ...commonProps,
+            id: "spool_count",
+            i18ncat: "filament",
+            align: "right",
+            width: 90,
+          }),
+          NumberColumn({
+            ...commonProps,
+            id: "remaining_weight",
+            i18ncat: "filament",
+            unit: "g",
+            maxDecimals: 0,
+            width: 110,
           }),
           NumberColumn({
             ...commonProps,

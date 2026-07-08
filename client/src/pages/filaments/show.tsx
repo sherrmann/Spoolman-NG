@@ -139,6 +139,17 @@ export const FilamentShow = () => {
           minimumFractionDigits: 1,
         }}
       />
+      <Title level={5}>{t("filament.fields.spool_count")}</Title>
+      <NumberField value={record?.spool_count ?? 0} />
+      <Title level={5}>{t("filament.fields.remaining_weight")}</Title>
+      <NumberFieldUnit
+        value={record?.remaining_weight ?? 0}
+        unit="g"
+        options={{
+          maximumFractionDigits: 1,
+          minimumFractionDigits: 1,
+        }}
+      />
       <Title level={5}>{t("filament.fields.spool_weight")}</Title>
       <NumberFieldUnit
         value={record?.spool_weight ?? ""}
@@ -148,6 +159,21 @@ export const FilamentShow = () => {
           minimumFractionDigits: 1,
         }}
       />
+      <Title level={5}>{t("filament.fields.low_stock_threshold")}</Title>
+      {record?.low_stock_threshold == null ? (
+        <TextField value="Not Set" />
+      ) : (
+        <NumberFieldUnit
+          value={record.low_stock_threshold}
+          unit="g"
+          options={{
+            maximumFractionDigits: 1,
+            minimumFractionDigits: 1,
+          }}
+        />
+      )}
+      <Title level={5}>{t("filament.fields.reserve_count")}</Title>
+      {record?.reserve_count == null ? <TextField value="Not Set" /> : <NumberField value={record.reserve_count} />}
       <Title level={5}>{t("filament.fields.settings_extruder_temp")}</Title>
       {!record?.settings_extruder_temp ? (
         <TextField value="Not Set" />

@@ -24,7 +24,18 @@ dayjs.extend(utc);
 
 const namespace = "vendorList-v2";
 
-const allColumns: (keyof IVendor & string)[] = ["id", "name", "registered", "comment", "empty_spool_weight"];
+const allColumns: (keyof IVendor & string)[] = [
+  "id",
+  "name",
+  "filament_count",
+  "spool_count",
+  "registered",
+  "comment",
+  "empty_spool_weight",
+];
+// The per-vendor counts (#49) ship hidden by default to keep the list uncluttered; users opt in via
+// the column picker.
+const defaultColumns = allColumns.filter((column_id) => ["filament_count", "spool_count"].indexOf(column_id) === -1);
 
 export const VendorList = () => {
   const t = useTranslate();
@@ -67,7 +78,7 @@ export const VendorList = () => {
     });
 
   // Create state for the columns to show
-  const [showColumns, setShowColumns] = useState<string[]>(initialState.showColumns ?? allColumns);
+  const [showColumns, setShowColumns] = useState<string[]>(initialState.showColumns ?? defaultColumns);
 
   // Store state in local storage
   const tableState: TableState = {
@@ -174,6 +185,23 @@ export const VendorList = () => {
             ...commonProps,
             id: "name",
             i18ncat: "vendor",
+          }),
+          SortedColumn({
+            ...commonProps,
+            id: "filament_count",
+            i18ncat: "vendor",
+            align: "right",
+            width: 120,
+            // Aggregates are computed per response page, so they are not server-sortable.
+            sorter: false,
+          }),
+          SortedColumn({
+            ...commonProps,
+            id: "spool_count",
+            i18ncat: "vendor",
+            align: "right",
+            width: 120,
+            sorter: false,
           }),
           DateColumn({
             ...commonProps,

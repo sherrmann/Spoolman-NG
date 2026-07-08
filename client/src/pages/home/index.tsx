@@ -24,9 +24,11 @@ import { ISpool } from "../spools/model";
 import { IVendor } from "../vendors/model";
 import {
   getColorHex,
+  getFilamentName,
   getSpoolName,
   getWeightPct,
   locationBreakdown,
+  lowStockFilaments as computeLowStockFilaments,
   lowStockSpools as computeLowStockSpools,
   materialBreakdown,
   recentSpools as computeRecentSpools,
@@ -65,12 +67,19 @@ export const Home = () => {
     resource: "filament",
     pagination: { pageSize: 1 },
   });
+  // All filaments (with their server-computed stock aggregates) drive the per-filament shopping
+  // list (#109 / #116). Kept separate from the count-only query above.
+  const filamentsAll = useList<IFilament>({
+    resource: "filament",
+    pagination: { mode: "off" },
+  });
   const vendors = useList<IVendor>({
     resource: "vendor",
     pagination: { pageSize: 1 },
   });
 
   const allSpools = spoolsAll.result?.data ?? [];
+  const allFilaments = filamentsAll.result?.data ?? [];
   const hasSpools = allSpools.length > 0;
   const isLoading = spoolsAll.query.isLoading;
   const isError = spoolsAll.query.isError;
@@ -80,6 +89,8 @@ export const Home = () => {
   const totalValue = computeTotalValue(allSpools);
   const lowStockSpools = computeLowStockSpools(allSpools);
   const hasLowStock = lowStockSpools.length > 0;
+  const lowStockFilamentsData = computeLowStockFilaments(allFilaments);
+  const hasShoppingList = lowStockFilamentsData.length > 0;
   const recentSpools = computeRecentSpools(allSpools);
   const materialBreakdownData = materialBreakdown(allSpools);
   const locationBreakdownData = locationBreakdown(allSpools, t("locations.no_location"));
@@ -395,6 +406,60 @@ export const Home = () => {
                       );
                     })}
                   </div>
+                </div>
+              ),
+            },
+            {
+              key: "shopping",
+              label: (
+                <span>
+                  {hasShoppingList && <ShoppingOutlined style={{ color: "#ff716c" }} />} {t("home.shopping_list")}
+                </span>
+              ),
+              children: (
+                <div className="dash-section" style={{ background: S.low }}>
+                  {lowStockFilamentsData.length === 0 ? (
+                    <div className="dash-empty">{t("home.shopping_list_empty")}</div>
+                  ) : (
+                    <div className="low-stock-list">
+                      {lowStockFilamentsData.map(({ filament, remaining, threshold }) => {
+                        const hex = "#" + (filament.color_hex ?? "555555").replace("#", "");
+                        return (
+                          <div
+                            key={filament.id}
+                            className="low-stock-item"
+                            style={{ background: S.lowest }}
+                            onClick={() => navigate(showUrl("filament", filament.id))}
+                          >
+                            <div className="low-stock-left">
+                              <div
+                                className="low-stock-color-dot"
+                                style={{
+                                  backgroundColor: hex,
+                                  boxShadow: isDark ? `0 0 14px ${hex}50` : `0 1px 3px rgba(0,0,0,0.12)`,
+                                }}
+                              />
+                              <div className="low-stock-info">
+                                <h4>{getFilamentName(filament)}</h4>
+                                <p>
+                                  {t("spool.fields.material")}: {filament.material ?? "?"}
+                                  {filament.reserve_count
+                                    ? ` · ${filament.reserve_count} ${t("filament.fields.reserve_count").toLowerCase()}`
+                                    : ""}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="low-stock-right">
+                              <div className="low-stock-weight" style={{ color: "#d7383b" }}>
+                                {formatWeight(remaining, 0)}{" "}
+                                <span className="total">/ {formatWeight(threshold, 0)}</span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               ),
             },

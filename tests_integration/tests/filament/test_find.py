@@ -96,8 +96,16 @@ def filaments(random_vendor_mod: dict[str, Any], random_empty_vendor_mod: dict[s
     result.raise_for_status()
     filament_5 = result.json()
 
+    # The list endpoint returns per-filament stock aggregates (spool_count / remaining_weight). None of
+    # these fixtures have spools, so both are zero; POST does not echo them back, so add them here to
+    # match what the list assertions below expect.
+    created_filaments = [filament_1, filament_2, filament_3, filament_4, filament_5]
+    for created in created_filaments:
+        created["spool_count"] = 0
+        created["remaining_weight"] = 0.0
+
     yield Fixture(
-        filaments=[filament_1, filament_2, filament_3, filament_4, filament_5],
+        filaments=created_filaments,
     )
 
     httpx.delete(f"{URL}/api/v1/filament/{filament_1['id']}").raise_for_status()

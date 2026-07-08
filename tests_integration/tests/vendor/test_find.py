@@ -39,8 +39,16 @@ def vendors() -> Iterable[Fixture]:
     result.raise_for_status()
     vendor_3 = result.json()
 
+    # The list endpoint returns per-vendor aggregates (filament_count / spool_count). None of these
+    # fixtures have filaments, so both are zero; POST does not echo them back, so add them here to match
+    # what the list assertions below expect.
+    created_vendors = [vendor_1, vendor_2, vendor_3]
+    for created in created_vendors:
+        created["filament_count"] = 0
+        created["spool_count"] = 0
+
     yield Fixture(
-        vendors=[vendor_1, vendor_2, vendor_3],
+        vendors=created_vendors,
     )
 
     httpx.delete(f"{URL}/api/v1/vendor/{vendor_1['id']}").raise_for_status()
