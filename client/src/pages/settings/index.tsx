@@ -1,4 +1,11 @@
-import { FileOutlined, HighlightOutlined, IdcardOutlined, ToolOutlined, UserOutlined } from "@ant-design/icons";
+import {
+  FileOutlined,
+  HighlightOutlined,
+  IdcardOutlined,
+  ImportOutlined,
+  ToolOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
 import { List } from "@refinedev/antd";
 import { useTranslate } from "@refinedev/core";
 import { Menu, theme } from "antd";
@@ -8,6 +15,7 @@ import { useLocation, useNavigate } from "react-router";
 import { ExtraFieldsSettings } from "./extraFieldsSettings";
 import { EntityType } from "../../utils/queryFields";
 import { GeneralSettings } from "./generalSettings";
+import { ImportExportSettings } from "./importExportSettings";
 import { SwatchSettings } from "./swatchSettings";
 import "./settings.css";
 
@@ -18,6 +26,7 @@ const { useToken } = theme;
 const panels: Record<string, React.ReactNode> = {
   general: <GeneralSettings />,
   swatches: <SwatchSettings />,
+  "import-export": <ImportExportSettings />,
   "extra-spool": <ExtraFieldsSettings entityType={EntityType.spool} />,
   "extra-filament": <ExtraFieldsSettings entityType={EntityType.filament} />,
   "extra-vendor": <ExtraFieldsSettings entityType={EntityType.vendor} />,
@@ -27,6 +36,7 @@ const panels: Record<string, React.ReactNode> = {
 const keyToPath: Record<string, string> = {
   general: "/settings",
   swatches: "/settings/swatches",
+  "import-export": "/settings/import-export",
   "extra-spool": "/settings/extra/spool",
   "extra-filament": "/settings/extra/filament",
   "extra-vendor": "/settings/extra/vendor",
@@ -35,6 +45,7 @@ const keyToPath: Record<string, string> = {
 const getActiveKey = (pathname: string): string => {
   const sub = pathname.replace(/^\/settings\/?/, "").replace(/\/$/, "");
   if (sub.startsWith("swatches")) return "swatches";
+  if (sub.startsWith("import-export")) return "import-export";
   if (sub.startsWith("extra/spool")) return "extra-spool";
   if (sub.startsWith("extra/filament")) return "extra-filament";
   if (sub.startsWith("extra/vendor")) return "extra-vendor";
@@ -73,6 +84,11 @@ export const Settings = () => {
                 key: "swatches",
                 icon: <IdcardOutlined />,
                 label: t("settings.swatch.tab"),
+              },
+              {
+                key: "import-export",
+                icon: <ImportOutlined />,
+                label: t("settings.import_export.tab"),
               },
               { type: "divider" },
               {
