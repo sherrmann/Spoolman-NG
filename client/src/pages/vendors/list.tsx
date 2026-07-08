@@ -18,6 +18,7 @@ import { useLiveify } from "../../components/liveify";
 import { removeUndefined } from "../../utils/filtering";
 import { EntityType, useGetFields } from "../../utils/queryFields";
 import { TableState, useInitialTableState, useStoreInitialState } from "../../utils/saveload";
+import { useUnitScaling } from "../../utils/settings";
 import { IVendor } from "./model";
 
 dayjs.extend(utc);
@@ -42,6 +43,7 @@ export const VendorList = () => {
   const invalidate = useInvalidate();
   const navigate = useNavigate();
   const extraFields = useGetFields(EntityType.vendor);
+  const unitScaling = useUnitScaling();
 
   const allColumnsWithExtraFields = [...allColumns, ...(extraFields.data?.map((field) => "extra." + field.key) ?? [])];
 
@@ -216,6 +218,7 @@ export const VendorList = () => {
             unit: "g",
             maxDecimals: 0,
             width: 200,
+            autoScale: unitScaling,
           }),
           ...(extraFields.data?.map((field) => {
             return CustomFieldColumn({

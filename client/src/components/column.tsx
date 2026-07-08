@@ -370,6 +370,8 @@ interface NumberColumnProps<Obj extends Entity> extends BaseColumnProps<Obj>, Fi
   maxDecimals?: number;
   minDecimals?: number;
   defaultText?: string;
+  // #85: auto-scale large g/mm values to kg/m. Threaded from the list page (which reads the setting).
+  autoScale?: boolean;
 }
 
 export function NumberColumn<Obj extends Entity>(props: NumberColumnProps<Obj>) {
@@ -385,6 +387,7 @@ export function NumberColumn<Obj extends Entity>(props: NumberColumnProps<Obj>) 
         <NumberFieldUnit
           value={value}
           unit={props.unit}
+          autoScale={props.autoScale}
           options={{
             maximumFractionDigits: props.maxDecimals ?? 0,
             minimumFractionDigits: props.minDecimals ?? props.maxDecimals ?? 0,
@@ -549,6 +552,7 @@ export function NumberRangeColumn<Obj extends Entity>(props: NumberColumnProps<O
         <NumberFieldUnitRange
           value={value}
           unit={props.unit}
+          autoScale={props.autoScale}
           options={{
             maximumFractionDigits: props.maxDecimals ?? 0,
             minimumFractionDigits: props.minDecimals ?? props.maxDecimals ?? 0,

@@ -24,7 +24,7 @@ import { NumberFieldUnit } from "../../components/numberField";
 import SpoolIcon from "../../components/spoolIcon";
 import { enrichText } from "../../utils/parsing";
 import { EntityType, useGetFields } from "../../utils/queryFields";
-import { useCurrencyFormatter } from "../../utils/settings";
+import { useCurrencyFormatter, useUnitScaling } from "../../utils/settings";
 import NfcBindModal from "../../components/nfcBindModal";
 import NfcWriteModal from "../../components/nfcWriteModal";
 import { IFilament } from "../filaments/model";
@@ -41,6 +41,7 @@ export const SpoolShow = () => {
   const navigate = useNavigate();
   const extraFields = useGetFields(EntityType.spool);
   const currencyFormatter = useCurrencyFormatter();
+  const unitScaling = useUnitScaling();
   const invalidate = useInvalidate();
 
   const { query } = useShow<ISpool>({
@@ -311,6 +312,7 @@ export const SpoolShow = () => {
       <NumberFieldUnit
         value={record?.remaining_length ?? ""}
         unit="mm"
+        autoScale={unitScaling}
         options={{
           maximumFractionDigits: 1,
           minimumFractionDigits: 1,
@@ -320,6 +322,7 @@ export const SpoolShow = () => {
       <NumberFieldUnit
         value={record?.used_length ?? ""}
         unit="mm"
+        autoScale={unitScaling}
         options={{
           maximumFractionDigits: 1,
           minimumFractionDigits: 1,
@@ -329,6 +332,7 @@ export const SpoolShow = () => {
       <NumberFieldUnit
         value={record?.remaining_weight ?? ""}
         unit="g"
+        autoScale={unitScaling}
         options={{
           maximumFractionDigits: 1,
           minimumFractionDigits: 1,
@@ -338,6 +342,7 @@ export const SpoolShow = () => {
       <NumberFieldUnit
         value={record?.used_weight ?? ""}
         unit="g"
+        autoScale={unitScaling}
         options={{
           maximumFractionDigits: 1,
           minimumFractionDigits: 1,

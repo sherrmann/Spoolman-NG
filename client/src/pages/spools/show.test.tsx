@@ -49,8 +49,12 @@ vi.mock("../../utils/queryFields", () => ({
 }));
 vi.mock("../../utils/settings", () => ({
   useCurrencyFormatter: () => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }),
+  useUnitScaling: () => false,
 }));
-vi.mock("../../utils/parsing", () => ({ enrichText: (value?: string) => value }));
+vi.mock("../../utils/parsing", () => ({
+  enrichText: (value?: string) => value,
+  scaleUnitValue: (value: number, unit: string) => ({ value, unit }),
+}));
 vi.mock("../../utils/queryUsageEvents", () => ({
   useGetSpoolUsageEvents: () => ({ data: [], isLoading: false }),
 }));

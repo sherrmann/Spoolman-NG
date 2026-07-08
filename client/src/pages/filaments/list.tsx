@@ -36,7 +36,7 @@ import {
 import { removeUndefined } from "../../utils/filtering";
 import { EntityType, useGetFields } from "../../utils/queryFields";
 import { TableState, useInitialTableState, useStoreInitialState } from "../../utils/saveload";
-import { useCurrencyFormatter } from "../../utils/settings";
+import { useCurrencyFormatter, useUnitScaling } from "../../utils/settings";
 import { IFilament } from "./model";
 
 dayjs.extend(utc);
@@ -93,6 +93,7 @@ export const FilamentList = () => {
   const navigate = useNavigate();
   const extraFields = useGetFields(EntityType.filament);
   const currencyFormatter = useCurrencyFormatter();
+  const unitScaling = useUnitScaling();
 
   const allColumnsWithExtraFields = [...allColumns, ...(extraFields.data?.map((field) => "extra." + field.key) ?? [])];
 
@@ -377,6 +378,7 @@ export const FilamentList = () => {
             unit: "g",
             maxDecimals: 0,
             width: 100,
+            autoScale: unitScaling,
           }),
           SortedColumn({
             ...commonProps,
@@ -392,6 +394,7 @@ export const FilamentList = () => {
             unit: "g",
             maxDecimals: 0,
             width: 110,
+            autoScale: unitScaling,
           }),
           NumberColumn({
             ...commonProps,
@@ -400,6 +403,7 @@ export const FilamentList = () => {
             unit: "g",
             maxDecimals: 0,
             width: 100,
+            autoScale: unitScaling,
           }),
           FilteredQueryColumn({
             ...commonProps,

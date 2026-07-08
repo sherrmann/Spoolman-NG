@@ -485,6 +485,10 @@
       "round_prices": {
         "label": "Round prices",
         "tooltip": "Round prices to the nearest whole number."
+      },
+      "unit_scaling": {
+        "label": "Scale large units",
+        "tooltip": "Display large weights and lengths auto-scaled (e.g. 1.5 kg, 64.37 m) instead of raw grams/millimeters in the list and detail views. Stored values and the API are unaffected."
       }
     },
     "swatch": {
