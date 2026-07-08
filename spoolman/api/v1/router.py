@@ -11,6 +11,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from spoolman import env
+from spoolman.auth import install_auth
 from spoolman.database.database import backup_global_db
 from spoolman.exceptions import ItemNotFoundError
 from spoolman.ws import websocket_manager
@@ -114,3 +115,7 @@ app.include_router(other.router)
 app.include_router(externaldb.router)
 app.include_router(nfc.router)
 app.include_router(export.router)
+
+# Opt-in bearer-token auth (#48): installed only when SPOOLMAN_API_TOKEN is set, so the default
+# deployment is unchanged. Guards this sub-app's HTTP routes and the websocket handshake uniformly.
+install_auth(app)

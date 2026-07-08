@@ -4,10 +4,24 @@ import asyncio
 from logging.config import fileConfig
 
 from alembic import context
+from sqlalchemy import text
 from sqlalchemy.engine import Connection
 
 from spoolman.database.database import Database, get_connection_url
 from spoolman.database.models import Base
+from spoolman.env import DatabaseType, get_database_type, get_db_schema
+
+# Backends that support a schema/search_path (#78). MySQL and SQLite have no schema concept.
+_SCHEMA_DIALECTS = {"postgresql", "cockroachdb"}
+
+
+def _configured_schema() -> str | None:
+    """Return the configured SPOOLMAN_DB_SCHEMA, guarding against SQL-breaking quote chars."""
+    schema = get_db_schema()
+    if schema and '"' in schema:
+        raise ValueError("SPOOLMAN_DB_SCHEMA must not contain double-quote characters.")
+    return schema
+
 
 config = context.config
 
@@ -29,12 +43,19 @@ def run_migrations_offline() -> None:
     script output.
 
     """
+    schema = _configured_schema()
+    # Offline mode only emits SQL, so it cannot CREATE the schema; it just qualifies the version
+    # table when a schema-capable backend is selected.
+    schema_capable = get_database_type() in (DatabaseType.POSTGRES, DatabaseType.COCKROACHDB)
+    version_table_schema = schema if schema and schema_capable else None
+
     context.configure(
         url=get_connection_url(),
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
         render_as_batch=True,
+        version_table_schema=version_table_schema,
     )
 
     with context.begin_transaction():
@@ -42,8 +63,19 @@ def run_migrations_offline() -> None:
 
 
 def do_run_migrations(connection: Connection) -> None:
-    """Run migrations in 'online' mode."""
-    context.configure(connection=connection, target_metadata=target_metadata)
+    """Run migrations in 'online' mode.
+
+    The schema (if any) is created beforehand in run_async_migrations; here we only qualify the
+    Alembic version table so it lands in the configured schema.
+    """
+    schema = _configured_schema()
+    version_table_schema = schema if schema and connection.dialect.name in _SCHEMA_DIALECTS else None
+
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        version_table_schema=version_table_schema,
+    )
 
     with context.begin_transaction():
         context.run_migrations()
@@ -57,7 +89,16 @@ async def run_async_migrations() -> None:
     if db.engine is None:
         raise RuntimeError("Engine not created.")
 
+    schema = _configured_schema()
+    create_schema = schema is not None and db.engine.dialect.name in _SCHEMA_DIALECTS
+
     async with db.engine.connect() as connection:
+        if create_schema:
+            # Create the schema in its own committed transaction *before* Alembic runs, so this DDL
+            # doesn't share (and conflict with) the migration transaction that context.begin_transaction
+            # opens. The engine's search_path already targets it (see database.connect). Issue #78.
+            await connection.execute(text(f'CREATE SCHEMA IF NOT EXISTS "{schema}"'))
+            await connection.commit()
         await connection.run_sync(do_run_migrations)
 
     await db.engine.dispose()

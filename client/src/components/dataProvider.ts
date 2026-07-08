@@ -2,8 +2,25 @@ import { DataProvider } from "@refinedev/core";
 import { axiosInstance } from "@refinedev/simple-rest";
 import { AxiosInstance } from "axios";
 import { stringify } from "query-string";
+import { parseJsonWithBigIntIds } from "../utils/bigintJson";
 import { getCustomFieldFilters, serializeFilterValues } from "../utils/filtering";
 import { isCustomField } from "../utils/queryFields";
+
+// Parse responses with a big-int-aware JSON parser so CockroachDB's oversized primary keys survive
+// instead of being rounded by the default JSON.parse (issue #69). Mirrors axios's lenient default:
+// try to parse any non-empty string body, hand it back untouched if it is not JSON.
+axiosInstance.defaults.transformResponse = [
+  (data: unknown) => {
+    if (typeof data === "string" && data.length > 0) {
+      try {
+        return parseJsonWithBigIntIds(data);
+      } catch {
+        return data;
+      }
+    }
+    return data;
+  },
+];
 
 type MethodTypes = "get" | "delete" | "head" | "options";
 type MethodTypesWithBody = "post" | "put" | "patch";

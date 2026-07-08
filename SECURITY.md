@@ -8,13 +8,15 @@ a current Spoolman NG release to receive fixes.
 
 ## Threat model
 
-Spoolman has no built-in authentication or authorization. It is designed to run
+By default Spoolman has no authentication or authorization. It is designed to run
 on a trusted home/LAN network next to Klipper/Moonraker/OctoPrint, and the
 entire REST API — including endpoints that create data and write physical NFC
-tags — is open to anyone who can reach the port. Exposing an instance directly
-to the internet is not a supported configuration; see the
-[Security & exposure](README.md#security--exposure) section of the README for
-recommended reverse-proxy/VPN setups.
+tags — is open to anyone who can reach the port. An optional shared bearer token
+(`SPOOLMAN_API_TOKEN`) can be enabled to gate the `/api/v1` surface (see
+[Security & exposure](README.md#security--exposure)); it is a single secret, not
+per-user accounts, and `/metrics` and the static web assets remain unauthenticated.
+Exposing an instance directly to the internet is not a supported configuration; see
+the README for recommended reverse-proxy/VPN setups.
 
 Reports that assume an attacker who can already reach the API (e.g. "an
 unauthenticated user can create spools") therefore describe intended behavior,

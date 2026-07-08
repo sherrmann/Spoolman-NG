@@ -14,6 +14,9 @@ services:
       - SPOOLMAN_DB_NAME=postgres
       - SPOOLMAN_DB_USERNAME=postgres
       - SPOOLMAN_DB_PASSWORD=abc
+      # Exercise SPOOLMAN_DB_SCHEMA (#78) in CI: the whole postgres integration run happens against a
+      # non-default schema, which the app must create and migrate into.
+      - SPOOLMAN_DB_SCHEMA=spoolman_test
       - SPOOLMAN_LOGGING_LEVEL=INFO
       - TZ=Europe/Stockholm
     depends_on:

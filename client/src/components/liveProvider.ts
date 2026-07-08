@@ -1,5 +1,7 @@
 import { BaseKey, LiveEvent, LiveProvider } from "@refinedev/core";
+import { withWebsocketToken } from "../utils/apiToken";
 import { reloadIfAuthFailed } from "../utils/authReloadHandler";
+import { parseJsonWithBigIntIds } from "../utils/bigintJson";
 
 /**
  * A spoolman websocket event.
@@ -9,7 +11,8 @@ interface Event {
   resource: "filament" | "spool" | "vendor";
   date: string;
   payload: {
-    id: number;
+    // string when the id exceeds JS's safe integer range (CockroachDB); see bigintJson (#69).
+    id: number | string;
     [key: string]: unknown;
   };
 }
@@ -68,7 +71,9 @@ function subscribeSingle(
     return () => {};
   }
 
-  const websocketURL = id ? toWebsocketURL(`${apiUrl}/${resource}/${id}`) : toWebsocketURL(`${apiUrl}/${resource}`);
+  const baseWebsocketURL = id ? toWebsocketURL(`${apiUrl}/${resource}/${id}`) : toWebsocketURL(`${apiUrl}/${resource}`);
+  // Browsers can't set an Authorization header on a WS handshake, so pass the token as a query param.
+  const websocketURL = withWebsocketToken(baseWebsocketURL);
 
   // Set when we deliberately close the socket (component unmount / unsubscribe) so the
   // close handler can tell an intentional teardown from an unexpected drop.
@@ -76,7 +81,8 @@ function subscribeSingle(
 
   const ws = new WebSocket(websocketURL);
   ws.onmessage = (message) => {
-    const data: Event = JSON.parse(message.data);
+    // Big-int-aware parse so oversized CockroachDB ids aren't rounded (issue #69).
+    const data = parseJsonWithBigIntIds(message.data) as Event;
     const type = data.type === "added" ? "created" : data.type;
     const date = new Date(data.date);
 
