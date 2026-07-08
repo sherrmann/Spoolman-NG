@@ -52,6 +52,12 @@
   "loading": "Loading",
   "version": "Version",
   "unknown": "Unknown",
+  "errorBoundary": {
+    "title": "Something went wrong",
+    "subTitle": "This page failed to render. If it started after changing or sharing view settings, resetting them usually fixes it.",
+    "reset": "Reset view settings & reload",
+    "home": "Go to home page"
+  },
   "yes": "Yes",
   "no": "No",
   "theme": {

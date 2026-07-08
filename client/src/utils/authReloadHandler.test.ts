@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { handleAuthResponseError, reloadOnAuthFailure } from "./authReloadHandler";
+import { apiFetch, handleAuthResponseError, reloadIfAuthFailed, reloadOnAuthFailure } from "./authReloadHandler";
 
 // Regression cover for the 401 auto-reload behavior (TESTING_CANDIDATES row 58c):
 // reload only for idempotent requests, a cooldown to bound reload loops, and SW
@@ -87,5 +87,48 @@ describe("handleAuthResponseError", () => {
   it("defaults a missing method to GET and reloads", async () => {
     await expect(handleAuthResponseError({ response: { status: 401 } })).rejects.toBeDefined();
     expect(reloadSpy).toHaveBeenCalledOnce();
+  });
+});
+
+// The bare-fetch reads (settings/fields/external/info/autocomplete) now route through
+// apiFetch, extending the axios-only 401 recovery to the second transport. Issue #47.
+describe("apiFetch", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("reloads on a 401 GET and returns the response unchanged", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ status: 401 } as Response));
+    const res = await apiFetch("/api/v1/setting/");
+    expect(res.status).toBe(401);
+    expect(reloadSpy).toHaveBeenCalledOnce();
+  });
+
+  it("does NOT reload on a 401 for a mutating request", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ status: 401 } as Response));
+    await apiFetch("/api/v1/setting/x", { method: "POST" });
+    expect(reloadSpy).not.toHaveBeenCalled();
+  });
+
+  it("does NOT reload on a successful read", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ status: 200 } as Response));
+    await apiFetch("/api/v1/setting/");
+    expect(reloadSpy).not.toHaveBeenCalled();
+  });
+});
+
+// The WebSocket provider probes /info on an abnormal drop; a real 401 reloads, a plain
+// outage (network error) must not. Issue #47.
+describe("reloadIfAuthFailed", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("reloads when the probe comes back 401", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ status: 401 } as Response));
+    await reloadIfAuthFailed("/api/v1/info");
+    expect(reloadSpy).toHaveBeenCalledOnce();
+  });
+
+  it("does not reload or throw when the server is unreachable", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network down")));
+    await expect(reloadIfAuthFailed("/api/v1/info")).resolves.toBeUndefined();
+    expect(reloadSpy).not.toHaveBeenCalled();
   });
 });

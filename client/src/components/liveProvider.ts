@@ -1,4 +1,5 @@
 import { BaseKey, LiveEvent, LiveProvider } from "@refinedev/core";
+import { reloadIfAuthFailed } from "../utils/authReloadHandler";
 
 /**
  * A spoolman websocket event.
@@ -69,6 +70,10 @@ function subscribeSingle(
 
   const websocketURL = id ? toWebsocketURL(`${apiUrl}/${resource}/${id}`) : toWebsocketURL(`${apiUrl}/${resource}`);
 
+  // Set when we deliberately close the socket (component unmount / unsubscribe) so the
+  // close handler can tell an intentional teardown from an unexpected drop.
+  let clientClosed = false;
+
   const ws = new WebSocket(websocketURL);
   ws.onmessage = (message) => {
     const data: Event = JSON.parse(message.data);
@@ -88,7 +93,22 @@ function subscribeSingle(
     callback(liveEvent);
   };
 
+  // The error event carries no HTTP status and is always followed by a close, so the
+  // recovery logic lives in onclose; this just keeps the failure out of the console noise.
+  ws.onerror = () => {};
+
+  ws.onclose = (event) => {
+    // An unexpected, non-clean drop can mean a forward-auth proxy expired the session and
+    // rejected the upgrade with 401 (surfaced here as an abnormal close, indistinguishable
+    // from a plain server restart). Probe the API so we reload only on a real auth failure
+    // and don't hang forever on "Loading…"; a server outage yields a network error and is
+    // ignored. Issue #47.
+    if (clientClosed || event.wasClean) return;
+    void reloadIfAuthFailed(`${apiUrl}/info`);
+  };
+
   return () => {
+    clientClosed = true;
     ws.close();
   };
 }

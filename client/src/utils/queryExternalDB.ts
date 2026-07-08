@@ -1,5 +1,6 @@
 import { axiosInstance } from "@refinedev/simple-rest";
 import { useQuery } from "@tanstack/react-query";
+import { apiFetch } from "./authReloadHandler";
 import { getAPIURL } from "./url";
 
 export enum SpoolType {
@@ -88,7 +89,7 @@ export function useGetExternalDBFilaments() {
     queryKey: ["external", "filaments"],
     staleTime: 60,
     queryFn: async () => {
-      const response = await fetch(`${getAPIURL()}/external/filament`);
+      const response = await apiFetch(`${getAPIURL()}/external/filament`);
       return response.json();
     },
   });
@@ -99,7 +100,7 @@ export function useGetExternalDBMaterials() {
     queryKey: ["external", "materials"],
     staleTime: 60,
     queryFn: async () => {
-      const response = await fetch(`${getAPIURL()}/external/material`);
+      const response = await apiFetch(`${getAPIURL()}/external/material`);
       return response.json();
     },
   });

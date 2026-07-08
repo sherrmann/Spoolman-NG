@@ -136,7 +136,11 @@ class FilamentParameters(BaseModel):
         if len(clr) not in (6, 8):
             raise ValueError("Color code must be 6 or 8 characters long.")
 
-        return v
+        # Return the normalized value (uppercased, '#' stripped) rather than the raw input:
+        # a value like '#FF000000' passes the length check above but, returned verbatim, is a
+        # 9-character string that SQLite stores unchecked into the String(8) column and then
+        # 500s every read of the row (its output model caps color_hex at 8). See issue #45.
+        return clr
 
     @field_validator("multi_color_hexes")
     @classmethod
@@ -144,6 +148,7 @@ class FilamentParameters(BaseModel):
         """Validate the multi_color_hexes field."""
         if not v:
             return None
+        normalized: list[str] = []
         for clr_raw in v.split(","):
             clr = clr_raw.upper()
             clr = clr.removeprefix("#")
@@ -155,7 +160,10 @@ class FilamentParameters(BaseModel):
             if len(clr) not in (6, 8):
                 raise ValueError("Color code must be 6 or 8 characters long.")
 
-        return v
+            normalized.append(clr)
+
+        # Return the normalized, '#'-stripped colors (see color_hex_validator above).
+        return ",".join(normalized)
 
     @model_validator(mode="after")  # type: ignore[]
     def validate(self) -> "FilamentParameters":

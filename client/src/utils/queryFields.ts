@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
+import { apiFetch } from "./authReloadHandler";
 import { getAPIURL } from "./url";
 
 export enum FieldType {
@@ -38,7 +39,7 @@ export function useGetFields(entity_type: EntityType) {
   return useQuery<Field[]>({
     queryKey: ["fields", entity_type],
     queryFn: async () => {
-      const response = await fetch(`${getAPIURL()}/field/${entity_type}`);
+      const response = await apiFetch(`${getAPIURL()}/field/${entity_type}`);
       return response.json();
     },
   });
