@@ -11,6 +11,9 @@ export interface TableState {
   filters: CrudFilter[];
   pagination: Pagination;
   showColumns?: string[];
+  // User-defined column order (list of column ids), persisted per table (#94). Columns not present
+  // keep their default relative position. localStorage only, like showColumns.
+  columnOrder?: string[];
 }
 
 /**
@@ -56,7 +59,8 @@ export function useInitialTableState(tableId: string): TableState {
     // falls back to page 1 when it is undefined.
     const pagination = parseSaved<Pagination>(readSaved(tableId, "pagination"), { currentPage: 1, pageSize: 20 });
     const showColumns = parseSaved<string[] | undefined>(readSaved(tableId, "showColumns"), undefined);
-    return { sorters, filters, pagination, showColumns };
+    const columnOrder = parseSaved<string[] | undefined>(readSaved(tableId, "columnOrder"), undefined);
+    return { sorters, filters, pagination, showColumns, columnOrder };
   });
   return initialState;
 }
@@ -108,6 +112,16 @@ export function useStoreInitialState(tableId: string, state: TableState) {
       }
     }
   }, [tableId, state.showColumns]);
+
+  useEffect(() => {
+    if (isLocalStorageAvailable) {
+      if (state.columnOrder === undefined) {
+        localStorage.removeItem(`${tableId}-columnOrder`);
+      } else {
+        localStorage.setItem(`${tableId}-columnOrder`, JSON.stringify(state.columnOrder));
+      }
+    }
+  }, [tableId, state.columnOrder]);
 }
 
 export function useSavedState<T>(id: string, defaultValue: T) {
