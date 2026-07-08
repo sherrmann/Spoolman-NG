@@ -8,6 +8,7 @@ from typing import Any, TypeVar
 import sqlalchemy
 from sqlalchemy import Select
 from sqlalchemy.orm import attributes
+from sqlalchemy.sql import ColumnElement
 
 from spoolman.database import models
 
@@ -61,6 +62,21 @@ def parse_nested_field(base_obj: type[models.Base], field: str) -> attributes.In
         raise ValueError(f"Field '{fields[0]}' does not have any nested fields")
 
     return getattr(base_obj, fields[0])
+
+
+def order_by_expression(expr: ColumnElement[Any], order: "SortOrder") -> ColumnElement[Any]:
+    """Build an ORDER BY clause element, sorting string columns case-insensitively.
+
+    Among the four supported backends only SQLite's default BINARY collation sorts
+    case-sensitively, so a lowercase-initial vendor like "eSUN" would sort after every
+    uppercase name. Wrapping string expressions in lower() gives portable dictionary
+    order; numeric/date/other expressions (e.g. the computed remaining_weight sort) are
+    left untouched. Issue #63.
+    """
+    col_type = getattr(expr, "type", None)
+    if isinstance(col_type, sqlalchemy.String):
+        expr = sqlalchemy.func.lower(expr)
+    return expr.asc() if order == SortOrder.ASC else expr.desc()
 
 
 def add_where_clause_str_opt(

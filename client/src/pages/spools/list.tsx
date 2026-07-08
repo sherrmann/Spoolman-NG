@@ -10,7 +10,7 @@ import {
 } from "@ant-design/icons";
 import { List, TextField, useTable } from "@refinedev/antd";
 import { useInvalidate, useNavigation, useTranslate } from "@refinedev/core";
-import { Button, Dropdown, Grid, message, Modal, Table } from "antd";
+import { Button, Dropdown, Grid, Input, message, Modal, Table } from "antd";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { Key, useCallback, useMemo, useState } from "react";
@@ -25,6 +25,7 @@ import {
   SortedColumn,
   SpoolIconColumn,
 } from "../../components/column";
+import { ColorSimilarityFilter, ColorSimilarityValue } from "../../components/colorSimilarityFilter";
 import { useLiveify } from "../../components/liveify";
 import { NumberFieldUnit } from "../../components/numberField";
 import {
@@ -32,6 +33,7 @@ import {
   useSpoolmanLocations,
   useSpoolmanLotNumbers,
   useSpoolmanMaterials,
+  useSpoolmanVendors,
 } from "../../components/otherModels";
 import { removeUndefined } from "../../utils/filtering";
 import { enrichText } from "../../utils/parsing";
@@ -51,6 +53,7 @@ interface ISpoolCollapsed extends ISpool {
   "filament.combined_name": string; // Eg. "Prusa - PLA Red"
   "filament.id": number;
   "filament.material"?: string;
+  "filament.vendor.name"?: string | null;
 }
 
 function collapseSpool(element: ISpool): ISpoolCollapsed {
@@ -71,10 +74,12 @@ function collapseSpool(element: ISpool): ISpoolCollapsed {
     "filament.combined_name": filament_name,
     "filament.id": element.filament.id,
     "filament.material": element.filament.material,
+    "filament.vendor.name": element.filament.vendor?.name ?? null,
   };
 }
 
 function translateColumnI18nKey(columnName: string): string {
+  if (columnName === "filament.vendor.name") return "spool.fields.vendor_name";
   columnName = columnName.replace(".", "_");
   if (columnName === "filament_combined_name") columnName = "filament_name";
   else if (columnName === "filament_material") columnName = "material";
@@ -86,6 +91,7 @@ const namespace = "spoolList-v2";
 const allColumns: (keyof ISpoolCollapsed & string)[] = [
   "id",
   "filament.combined_name",
+  "filament.vendor.name",
   "filament.material",
   "price",
   "used_weight",
@@ -100,7 +106,10 @@ const allColumns: (keyof ISpoolCollapsed & string)[] = [
   "comment",
 ];
 const defaultColumns = allColumns.filter(
-  (column_id) => ["registered", "used_length", "remaining_length", "lot_nr"].indexOf(column_id) === -1,
+  // Vendor is available as an opt-in column/filter but hidden by default so the list
+  // stays uncluttered (the vendor already shows in the combined filament name). Issue #86.
+  (column_id) =>
+    ["registered", "used_length", "remaining_length", "lot_nr", "filament.vendor.name"].indexOf(column_id) === -1,
 );
 
 export const SpoolList = () => {
@@ -145,11 +154,22 @@ export const SpoolList = () => {
   // To provide the live updates, we use a custom solution (useLiveify) instead of the built-in refine "liveMode" feature.
   // This is because the built-in feature does not call the liveProvider subscriber with a list of IDs, but instead
   // calls it with a list of filters, sorters, etc. This means the server-side has to support this, which is quite hard.
+  // Free-text search across the spool's own fields and its filament's, sent as the server-side
+  // `search` query param. Transient (not persisted) so a reload shows the full list. Issue #51.
+  const [search, setSearch] = useState("");
+
+  // Colour-similarity filter sent as color_hex + color_similarity_threshold (issue #46).
+  const [colorFilter, setColorFilter] = useState<ColorSimilarityValue | undefined>(undefined);
+
   const { tableProps, sorters, setSorters, filters, setFilters, currentPage, pageSize, setCurrentPage } =
     useTable<ISpoolCollapsed>({
       meta: {
         queryParams: {
           ["allow_archived"]: showArchived,
+          ...(search ? { search } : {}),
+          ...(colorFilter
+            ? { color_hex: colorFilter.colorHex, color_similarity_threshold: colorFilter.threshold }
+            : {}),
         },
       },
       syncWithLocation: false,
@@ -292,6 +312,30 @@ export const SpoolList = () => {
     <List
       headerButtons={({ defaultButtons }) => (
         <>
+          <Input.Search
+            placeholder={t("buttons.search")}
+            allowClear
+            defaultValue={search}
+            onSearch={(value) => {
+              setSearch(value);
+              setCurrentPage(1);
+            }}
+            onChange={(e) => {
+              // Clearing the box (X or emptying it) immediately restores the full list.
+              if (e.target.value === "") {
+                setSearch("");
+                setCurrentPage(1);
+              }
+            }}
+            style={{ width: 200 }}
+          />
+          <ColorSimilarityFilter
+            value={colorFilter}
+            onChange={(v) => {
+              setColorFilter(v);
+              setCurrentPage(1);
+            }}
+          />
           <Button
             type="primary"
             icon={<PrinterOutlined />}
@@ -410,6 +454,13 @@ export const SpoolList = () => {
             dataId: "filament.combined_name",
             filterValueQuery: useSpoolmanFilamentFilter(),
             clickAffordance: true,
+          }),
+          FilteredQueryColumn({
+            ...commonProps,
+            id: "filament.vendor.name",
+            i18nkey: "spool.fields.vendor_name",
+            filterValueQuery: useSpoolmanVendors(),
+            width: 120,
           }),
           FilteredQueryColumn({
             ...commonProps,

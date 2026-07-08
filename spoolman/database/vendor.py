@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from spoolman.api.v1.models import EventType, Vendor, VendorEvent
 from spoolman.database import models
 from spoolman.database.extra_field_query import apply_extra_field_filters_and_sort
-from spoolman.database.utils import SortOrder, add_where_clause_str, add_where_clause_str_opt
+from spoolman.database.utils import SortOrder, add_where_clause_str, add_where_clause_str_opt, order_by_expression
 from spoolman.exceptions import ItemNotFoundError
 from spoolman.extra_field_registry import EntityType
 from spoolman.ws import websocket_manager
@@ -87,10 +87,7 @@ async def find(
                 continue
 
             field = getattr(models.Vendor, fieldstr)
-            if order == SortOrder.ASC:
-                stmt = stmt.order_by(field.asc())
-            elif order == SortOrder.DESC:
-                stmt = stmt.order_by(field.desc())
+            stmt = stmt.order_by(order_by_expression(field, order))
 
     if limit is not None:
         total_count_stmt = stmt.with_only_columns(func.count(), maintain_column_froms=True).order_by(None)
