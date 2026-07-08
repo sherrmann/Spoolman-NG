@@ -43,9 +43,14 @@ test.describe("spool list sort and filter", () => {
     }).toPass();
 
     // Applying the filter refetches the (server-filtered) list; wait for it so the
-    // row-count assertion can't race the request.
+    // row-count assertion can't race the request. Match the SPECIFIC filtered request — the URL
+    // carries the unique material value — rather than any spool GET: a bare match could resolve on a
+    // stale/concurrent GET and let the poll below race the real filtered refetch (observed as a CI
+    // flake where an extra, pre-filter row lingered).
     await Promise.all([
-      page.waitForResponse((r) => r.url().includes("/api/v1/spool") && r.request().method() === "GET"),
+      page.waitForResponse(
+        (r) => r.url().includes("/api/v1/spool") && r.url().includes(material) && r.request().method() === "GET",
+      ),
       dropdown.getByRole("button", { name: "OK" }).click(),
     ]);
 

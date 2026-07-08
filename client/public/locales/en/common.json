@@ -450,6 +450,35 @@
       },
       "preview_description": "Preview with two example filaments — the text and QR code are automatically printed in black or white, whichever contrasts best with the filament color:"
     },
+    "import_export": {
+      "tab": "Import / Export",
+      "export_title": "Export data",
+      "export_help": "Download your vendors, filaments or spools as CSV or JSON. Vendor and filament data is included with spools.",
+      "import_title": "Import data",
+      "import_help": "Upload a CSV or JSON file in the same shape as an export. The whole file is applied as one all-or-nothing transaction; use a dry run first to preview the result.",
+      "report_title": "Inventory report",
+      "report_help": "Open a printable summary of your current stock.",
+      "report_heading": "Spoolman Inventory Report",
+      "entities": {
+        "spools": "Spools",
+        "filaments": "Filaments",
+        "vendors": "Manufacturers"
+      },
+      "modes": {
+        "create": "Create new",
+        "upsert": "Update or create",
+        "skip_existing": "Skip existing"
+      },
+      "dry_run": "Dry run",
+      "dry_run_prefix": "Dry run —",
+      "choose_file": "Choose file",
+      "validate": "Validate",
+      "import_button": "Import",
+      "print_report": "Print report",
+      "no_file": "Please choose a file first.",
+      "result": "Created {{created}}, updated {{updated}}, skipped {{skipped}}.",
+      "import_errors": "Import failed"
+    },
     "extra_fields": {
       "tab": "Extra Fields",
       "description": "<p>Here you can add extra custom fields to your entities.</p><p>Once a field is added, you can not change its key or type, and for choice type fields you can not remove choices or change the multi choice state. If you remove a field, the associated data for all entities will be deleted.</p><p>The key is what other programs read/write the data as, so if your custom field is supposed to integrate with a third-party program, make sure to set it correctly. Default value is only applied to new items.</p><p>Extra fields can be shown and sorted in the table views. Choice and boolean fields expose filter options there as well, and all extra field types support filtering for empty values.</p>",
