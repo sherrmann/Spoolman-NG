@@ -364,6 +364,12 @@ export const SpoolShow = () => {
       />
       <Title level={5}>{t("spool.fields.location")}</Title>
       <TextField value={record?.location} />
+      {record?.printer && (
+        <>
+          <Title level={5}>{t("spool.fields.printer")}</Title>
+          <TextField value={record.printer.name} />
+        </>
+      )}
       <Title level={5}>{t("spool.fields.lot_nr")}</Title>
       <TextField value={record?.lot_nr} />
       <Title level={5}>{t("spool.fields.comment")}</Title>
