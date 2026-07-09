@@ -14,6 +14,18 @@ export function getWeightPercentage(spool: ISpool): number {
   return Math.max(0, Math.min(100, (remaining / total) * 100));
 }
 
+/**
+ * Total weight to *display* for a spool's card subtitle (#124): the spool's own initial_weight, else
+ * the filament's nominal weight, else undefined when neither is known. Unlike getWeightPercentage
+ * there is no 1000 g fallback — the subtitle shows nothing rather than a fabricated total. This is
+ * the same initial→filament fallback the progress bar uses, so the label and bar can no longer
+ * disagree (a spool with an initial_weight but no filament.weight showed a filled bar yet a blank
+ * label before this).
+ */
+export function getDisplayTotalWeight(spool: ISpool): number | undefined {
+  return spool.initial_weight ?? spool.filament.weight ?? undefined;
+}
+
 /** Bar colour by remaining percentage: red ≤10%, amber ≤25%, green above. */
 export function getWeightColor(percentage: number): string {
   if (percentage <= 10) return "#ff4d4f";
