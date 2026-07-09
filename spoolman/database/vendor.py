@@ -149,6 +149,11 @@ async def update(
             setattr(vendor, k, v)
     await db.commit()
     await vendor_changed(vendor, EventType.UPDATED)
+    # Spool payloads embed their filament's vendor, so refresh spool subscribers too (#130). Lazy
+    # import to avoid a cycle; a no-op when nothing is subscribed to spool events.
+    from spoolman.database import spool  # noqa: PLC0415
+
+    await spool.notify_spools_of_vendor_change(db, vendor.id)
     return vendor
 
 

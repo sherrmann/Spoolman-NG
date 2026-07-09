@@ -691,6 +691,39 @@ async def spool_changed(spool: models.Spool, typ: EventType, delta: dict | None 
         logger.exception("Failed to send websocket message")
 
 
+async def _notify_spools(db: AsyncSession, stmt: sqlalchemy.Select) -> None:
+    """Emit a synthetic spool 'updated' event for every spool matched by `stmt` (#130).
+
+    The spool websocket payload embeds its filament (and the filament's vendor), so a spool-only
+    subscriber's cached view silently goes stale when that filament or vendor is edited. These
+    synthetic events are refresh plumbing so such subscribers re-read the spool; they are not a
+    durable contract. Gated on there being at least one spool subscriber and batch-loading the
+    affected spools, so an edit costs nothing (one cheap tree check, no query) when nobody listens.
+    """
+    if not websocket_manager.has_subscribers(("spool",)):
+        return
+    result = await db.execute(stmt.options(joinedload("*")))
+    for spool in result.unique().scalars().all():
+        await spool_changed(spool, EventType.UPDATED)
+
+
+async def notify_spools_of_filament_change(db: AsyncSession, filament_id: int) -> None:
+    """Re-emit spool events for every spool of the given filament (#130)."""
+    await _notify_spools(db, sqlalchemy.select(models.Spool).where(models.Spool.filament_id == filament_id))
+
+
+async def notify_spools_of_vendor_change(db: AsyncSession, vendor_id: int) -> None:
+    """Re-emit spool events for every spool whose filament belongs to the given vendor (#130)."""
+    await _notify_spools(
+        db,
+        sqlalchemy.select(models.Spool).where(
+            models.Spool.filament_id.in_(
+                sqlalchemy.select(models.Filament.id).where(models.Filament.vendor_id == vendor_id),
+            ),
+        ),
+    )
+
+
 async def reset_initial_weight(
     db: AsyncSession,
     spool_id: int,

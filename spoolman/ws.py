@@ -43,6 +43,12 @@ class SubscriptionTree:
         elif path[0] in self.children:
             self.children[path[0]].remove(path[1:], websocket)
 
+    def has_any_subscriber(self) -> bool:
+        """Whether this subtree contains at least one subscriber anywhere within it."""
+        if self.subscribers:
+            return True
+        return any(child.has_any_subscriber() for child in self.children.values())
+
     async def send(self, path: tuple[str, ...], evt: Event) -> None:
         """Send a message to all websockets in this branch of the tree."""
         # Broadcast to all subscribers on this level
@@ -101,6 +107,25 @@ class WebsocketManager:
     async def send(self, pool: tuple[str, ...], evt: Event) -> None:
         """Send a message to all websockets in a pool."""
         await self.tree.send(pool, evt)
+
+    def has_subscribers(self, pool: tuple[str, ...]) -> bool:
+        """Whether an event published on `pool` would reach any subscriber.
+
+        True if a subscriber sits on an ancestor of `pool` (including the root, which receives every
+        event), on `pool` itself, or anywhere in the subtree beneath it. Used to skip the #130
+        dependency fan-out entirely when nobody is listening for spool events.
+        """
+        node = self.tree
+        if node.subscribers:  # root subscribers receive everything
+            return True
+        for part in pool:
+            child = node.children.get(part)
+            if child is None:
+                return False
+            node = child
+            if node.subscribers:
+                return True
+        return node.has_any_subscriber()
 
 
 websocket_manager = WebsocketManager()

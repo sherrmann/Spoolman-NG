@@ -347,6 +347,11 @@ async def update(
         filament.color_hue = color_hex_to_hue(filament.color_hex, filament.multi_color_hexes)
     await db.commit()
     await filament_changed(filament, EventType.UPDATED)
+    # Spool payloads embed their filament, so refresh spool subscribers too (#130). Lazy import
+    # because spool.py imports this module. No-op when nothing is subscribed to spool events.
+    from spoolman.database import spool  # noqa: PLC0415
+
+    await spool.notify_spools_of_filament_change(db, filament.id)
     return filament
 
 
