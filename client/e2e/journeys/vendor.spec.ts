@@ -49,6 +49,25 @@ test.describe("vendor (manufacturer) journey", () => {
     await expect(page).toHaveURL(atPath("/vendor"));
   });
 
+  test("warns without blocking on a duplicate manufacturer name (#82)", async ({ page, request }) => {
+    const name = `Dup ${Date.now()}`;
+    // Seed an existing manufacturer via the API.
+    const seed = await request.post(`${APP_BASE_URL}/api/v1/vendor`, { data: { name } });
+    expect(seed.ok()).toBeTruthy();
+
+    await page.goto(`${APP_BASE_URL}/vendor/create`);
+    // Enter a case-variant of the existing name — the check is case/whitespace-insensitive.
+    await page.getByRole("textbox", { name: "Name" }).fill(name.toUpperCase());
+
+    // The soft warning appears once the existing manufacturers have loaded...
+    await expect(page.getByText("A manufacturer with this name already exists.")).toBeVisible();
+
+    // ...but it does NOT block: saving still creates the (duplicate) manufacturer and returns to the list.
+    const id = await saveAndGetId(page, "vendor");
+    expect(id).toBeGreaterThan(0);
+    await expect(page).toHaveURL(atPath("/vendor"));
+  });
+
   test("pressing Enter in a field submits the create form (#127)", async ({ page }) => {
     const name = `Enter ${Date.now()}`;
     await page.goto(`${APP_BASE_URL}/vendor/create`);
