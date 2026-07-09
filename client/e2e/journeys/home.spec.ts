@@ -22,5 +22,12 @@ test.describe("home dashboard journey", () => {
     await expect(page.getByText(/total stock/i).first()).toBeVisible();
     await expect(page.getByRole("heading", { name: "Recently Used" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "By Location" })).toBeVisible();
+
+    // The all-spools swatch grid (#131): the tab shows a clickable swatch that opens the spool.
+    await page.getByRole("tab", { name: "All Spools" }).click();
+    const swatch = page.locator(".swatch-grid .swatch-grid-item").first();
+    await expect(swatch).toBeVisible();
+    await swatch.click();
+    await expect(page).toHaveURL(/\/spool\/show\/\d+/);
   });
 });

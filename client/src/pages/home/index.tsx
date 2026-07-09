@@ -1,4 +1,5 @@
 import {
+  AppstoreOutlined,
   DatabaseOutlined,
   EnvironmentOutlined,
   ExperimentOutlined,
@@ -16,8 +17,10 @@ import utc from "dayjs/plugin/utc";
 import { useContext } from "react";
 import { Trans } from "react-i18next";
 import { Link, useNavigate } from "react-router";
+import SpoolIcon from "../../components/spoolIcon";
 import { ColorModeContext } from "../../contexts/color-mode";
 import { formatWeight } from "../../utils/parsing";
+import { getSpoolEffectiveColor } from "../../utils/spoolColor";
 import { useCurrencyFormatter } from "../../utils/settings";
 import { IFilament } from "../filaments/model";
 import { ISpool } from "../spools/model";
@@ -321,6 +324,31 @@ export const Home = () => {
                           </div>
                         );
                       })}
+                    </div>
+                  )}
+                </div>
+              ),
+            },
+            {
+              key: "swatches",
+              label: (
+                <span>
+                  <AppstoreOutlined /> {t("home.all_spools")}
+                </span>
+              ),
+              children: (
+                <div className="dash-section" style={{ background: S.low }}>
+                  {allSpools.length === 0 ? (
+                    <div className="dash-empty">{t("home.no_spools")}</div>
+                  ) : (
+                    <div className="swatch-grid">
+                      {allSpools.map((spool) => (
+                        <Tooltip key={spool.id} title={getSpoolName(spool)}>
+                          <div className="swatch-grid-item" onClick={() => navigate(showUrl("spool", spool.id))}>
+                            <SpoolIcon color={getSpoolEffectiveColor(spool)} size="large" no_margin />
+                          </div>
+                        </Tooltip>
+                      ))}
                     </div>
                   )}
                 </div>

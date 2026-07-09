@@ -643,3 +643,20 @@ a.kpi-card:focus-visible {
     width: 100px;
   }
 }
+
+/* All-spools color-swatch grid (#131): a dense, at-a-glance view of every non-archived spool. */
+.swatch-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px;
+}
+
+.swatch-grid-item {
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.swatch-grid-item:hover {
+  transform: scale(1.18);
+}
