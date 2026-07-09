@@ -67,6 +67,7 @@ _ENTITY_FIELD_TABLES: dict[EntityType, tuple[type[models.Base], InstrumentedAttr
     EntityType.spool: (models.SpoolField, models.SpoolField.spool_id),
     EntityType.filament: (models.FilamentField, models.FilamentField.filament_id),
     EntityType.vendor: (models.VendorField, models.VendorField.vendor_id),
+    EntityType.location: (models.LocationField, models.LocationField.location_id),
 }
 
 

@@ -87,3 +87,39 @@ def test_color_hue_backfill_populates_existing_rows(tmp_path: Path):
         assert hue == 0.0
     finally:
         engine.dispose()
+
+
+def test_location_backfill_populates_from_spools(tmp_path: Path):
+    """The #103 backfill seeds the location registry from distinct spool locations.
+
+    Upgrade to the location CREATE-TABLE revision, insert spools with locations (a duplicate, a
+    distinct one, and a NULL), then upgrade through the backfill and assert exactly the distinct
+    non-blank names became registry rows — each once, NULL excluded.
+    """
+    _run_alembic(tmp_path, "upgrade", "b3d9e1f2a4c7")
+
+    engine = _engine(tmp_path)
+    try:
+        with engine.begin() as conn:
+            conn.execute(
+                sqlalchemy.text(
+                    "INSERT INTO filament (id, registered, density, diameter) "
+                    "VALUES (1, '2024-01-01 00:00:00', 1.24, 1.75)",
+                ),
+            )
+            conn.execute(
+                sqlalchemy.text(
+                    "INSERT INTO spool (id, registered, filament_id, used_weight, location) VALUES "
+                    "(1, '2024-01-01 00:00:00', 1, 0, 'Shelf A'), "
+                    "(2, '2024-01-01 00:00:00', 1, 0, 'Shelf A'), "
+                    "(3, '2024-01-01 00:00:00', 1, 0, 'Shelf B'), "
+                    "(4, '2024-01-01 00:00:00', 1, 0, NULL)",
+                ),
+            )
+        _run_alembic(tmp_path, "upgrade", "head")
+        with engine.connect() as conn:
+            names = [r[0] for r in conn.execute(sqlalchemy.text("SELECT name FROM location ORDER BY name")).all()]
+        # Distinct, non-null locations only; each registered exactly once.
+        assert names == ["Shelf A", "Shelf B"]
+    finally:
+        engine.dispose()

@@ -23,6 +23,7 @@ from . import (
     field,
     filament,
     import_,
+    location,
     models,
     nfc,
     other,
@@ -122,6 +123,7 @@ app.include_router(calibration.router)
 app.include_router(filament.router)
 app.include_router(spool.router)
 app.include_router(vendor.router)
+app.include_router(location.router)
 app.include_router(setting.router)
 app.include_router(field.router)
 app.include_router(other.router)

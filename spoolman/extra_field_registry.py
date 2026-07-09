@@ -27,6 +27,7 @@ class EntityType(Enum):
     vendor = "vendor"
     filament = "filament"
     spool = "spool"
+    location = "location"
 
 
 class ExtraFieldType(Enum):
