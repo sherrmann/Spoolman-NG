@@ -8,6 +8,7 @@ import { FilteredQueryColumn, SortedColumn, SpoolIconColumn } from "../../compon
 import { useSpoolmanFilamentFilter, useSpoolmanMaterials } from "../../components/otherModels";
 import { removeUndefined } from "../../utils/filtering";
 import { TableState } from "../../utils/saveload";
+import { getSpoolEffectiveColor } from "../../utils/spoolColor";
 import { ISpool } from "../spools/model";
 
 // The spool picker table height tracks the viewport so it fills the print page instead of a fixed
@@ -204,7 +205,7 @@ const SpoolSelectModal = ({ description, onContinue }: Props) => {
                   id: "filament.combined_name",
                   dataId: "filament.combined_name",
                   i18nkey: "spool.fields.filament_name",
-                  color: (record: ISpoolCollapsed) => record.filament.color_hex,
+                  color: (record: ISpoolCollapsed) => getSpoolEffectiveColor(record),
                   filterValueQuery: useSpoolmanFilamentFilter(),
                 }),
                 FilteredQueryColumn({

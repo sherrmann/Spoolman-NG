@@ -12,6 +12,7 @@ import { Link } from "react-router";
 import SpoolIcon from "../../../components/spoolIcon";
 import { formatWeight } from "../../../utils/parsing";
 import { ISpool } from "../../spools/model";
+import { getSpoolEffectiveColor } from "../../../utils/spoolColor";
 import { ItemTypes, SpoolDragItem, useCurrentDraggedSpool } from "../dnd";
 import { getDisplayTotalWeight, getWeightColor, getWeightPercentage } from "./spoolCardHelpers";
 
@@ -121,12 +122,9 @@ export function SpoolCard({
     }
   }, [isDragging]);
 
-  const colorObj = spool.filament.multi_color_hexes
-    ? {
-        colors: spool.filament.multi_color_hexes.split(","),
-        vertical: spool.filament.multi_color_direction === "longitudinal",
-      }
-    : spool.filament.color_hex || "#000000";
+  // #74: the spool's own color override wins, else the filament color (black fallback preserves the
+  // board card's previous look for colorless spools).
+  const colorObj = getSpoolEffectiveColor(spool) ?? "#000000";
 
   let filament_name: string;
   if (spool.filament.vendor && "name" in spool.filament.vendor) {

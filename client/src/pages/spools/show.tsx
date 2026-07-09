@@ -24,6 +24,7 @@ import { ExtraFieldDisplay } from "../../components/extraFields";
 import { NumberFieldUnit } from "../../components/numberField";
 import SpoolIcon from "../../components/spoolIcon";
 import { enrichText } from "../../utils/parsing";
+import { getSpoolEffectiveColor } from "../../utils/spoolColor";
 import { EntityType, useGetFields } from "../../utils/queryFields";
 import { useCurrencyFormatter, useUnitScaling } from "../../utils/settings";
 import NfcBindModal from "../../components/nfcBindModal";
@@ -202,12 +203,8 @@ export const SpoolShow = () => {
     });
   };
 
-  const colorObj = record?.filament.multi_color_hexes
-    ? {
-        colors: record.filament.multi_color_hexes.split(","),
-        vertical: record.filament.multi_color_direction === "longitudinal",
-      }
-    : record?.filament.color_hex;
+  // #74: the spool's own color override wins, else the filament color.
+  const colorObj = record ? getSpoolEffectiveColor(record) : undefined;
 
   // "Labels & Tags" overflow menu — folds the niche label/NFC actions behind a single
   // default-emphasis menu-button, leaving "Adjust Spool Filament" as the only primary.
