@@ -311,6 +311,7 @@
       "update_error": "Could not save changes. Please try again.",
       "reset_usage": "Reset this spool's used weight to zero? This clears the first/last-used dates."
     },
+    "filament_extra_fields": "Filament Fields",
     "usage_history": {
       "title": "Usage history",
       "time": "Time",

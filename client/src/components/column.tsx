@@ -591,18 +591,30 @@ function createCustomFieldFilters(field: Field): ColumnFilterItem[] {
   return filters;
 }
 
-export function CustomFieldColumn<Obj extends Entity>(props: Omit<BaseColumnProps<Obj>, "id"> & { field: Field }) {
+export function CustomFieldColumn<Obj extends Entity>(
+  props: Omit<BaseColumnProps<Obj>, "id"> & { field: Field; entityPrefix?: string[] },
+) {
   const field = props.field;
-  const fieldId = `extra.${field.key}`;
+  // #83: with entityPrefix set (e.g. ["filament"]) the column shows a RELATED entity's field,
+  // namespaced as "<prefix>.extra.<key>" (so a spool field and a filament field can share a key) and
+  // rendered read-only — the list endpoint can't yet join into a related entity's field table to
+  // sort or filter, so those affordances are omitted for related-entity columns.
+  const prefix = props.entityPrefix ?? [];
+  const interactive = prefix.length === 0;
+  const idPath = [...prefix, "extra", field.key];
+  const fieldId = idPath.join(".");
 
   const typedFilters = typeFilters<Obj>(props.tableState.filters);
-  const filteredValue = getFiltersForField(typedFilters, fieldId);
+  const filteredValue = interactive ? getFiltersForField(typedFilters, fieldId) : undefined;
+  // Only the entity's own fields expose filter dropdowns; related-entity columns are display-only.
+  const numFilter = (precision: number) =>
+    interactive ? (p: FilterDropdownProps) => <NumberRangeFilterDropdown {...p} precision={precision} /> : undefined;
 
   const commonProps = {
     ...props,
-    id: ["extra", field.key],
-    title: field.name,
-    sorter: true,
+    id: idPath,
+    title: props.title ?? field.name,
+    sorter: interactive,
     dataId: fieldId,
     transform: (value: unknown) => {
       if (value === null || value === undefined) {
@@ -615,7 +627,7 @@ export function CustomFieldColumn<Obj extends Entity>(props: Omit<BaseColumnProp
   if (field.field_type === FieldType.integer) {
     return NumberColumn({
       ...commonProps,
-      filterDropdown: (p: FilterDropdownProps) => <NumberRangeFilterDropdown {...p} precision={0} />,
+      filterDropdown: numFilter(0),
       filteredValue,
       unit: field.unit ?? "",
       maxDecimals: 0,
@@ -623,7 +635,7 @@ export function CustomFieldColumn<Obj extends Entity>(props: Omit<BaseColumnProp
   } else if (field.field_type === FieldType.float) {
     return NumberColumn({
       ...commonProps,
-      filterDropdown: (p: FilterDropdownProps) => <NumberRangeFilterDropdown {...p} precision={3} />,
+      filterDropdown: numFilter(3),
       filteredValue,
       unit: field.unit ?? "",
       minDecimals: 0,
@@ -632,7 +644,7 @@ export function CustomFieldColumn<Obj extends Entity>(props: Omit<BaseColumnProp
   } else if (field.field_type === FieldType.integer_range) {
     return NumberRangeColumn({
       ...commonProps,
-      filterDropdown: (p: FilterDropdownProps) => <NumberRangeFilterDropdown {...p} precision={0} />,
+      filterDropdown: numFilter(0),
       filteredValue,
       unit: field.unit ?? "",
       maxDecimals: 0,
@@ -640,7 +652,7 @@ export function CustomFieldColumn<Obj extends Entity>(props: Omit<BaseColumnProp
   } else if (field.field_type === FieldType.float_range) {
     return NumberRangeColumn({
       ...commonProps,
-      filterDropdown: (p: FilterDropdownProps) => <NumberRangeFilterDropdown {...p} precision={3} />,
+      filterDropdown: numFilter(3),
       filteredValue,
       unit: field.unit ?? "",
       minDecimals: 0,
@@ -649,19 +661,19 @@ export function CustomFieldColumn<Obj extends Entity>(props: Omit<BaseColumnProp
   } else if (field.field_type === FieldType.text) {
     return RichColumn({
       ...commonProps,
-      filterDropdown: TextFilterDropdown,
+      filterDropdown: interactive ? TextFilterDropdown : undefined,
       filteredValue,
     });
   } else if (field.field_type === FieldType.datetime) {
     return DateColumn({
       ...commonProps,
-      filterDropdown: DateTimeRangeFilterDropdown,
+      filterDropdown: interactive ? DateTimeRangeFilterDropdown : undefined,
       filteredValue,
     });
   } else if (field.field_type === FieldType.boolean) {
     return Column({
       ...commonProps,
-      filters: createCustomFieldFilters(field),
+      filters: interactive ? createCustomFieldFilters(field) : undefined,
       filteredValue,
       render: (rawValue) => {
         const value = commonProps.transform ? commonProps.transform(rawValue) : rawValue;
@@ -679,7 +691,7 @@ export function CustomFieldColumn<Obj extends Entity>(props: Omit<BaseColumnProp
   } else if (field.field_type === FieldType.choice && !field.multi_choice) {
     return Column({
       ...commonProps,
-      filters: createCustomFieldFilters(field),
+      filters: interactive ? createCustomFieldFilters(field) : undefined,
       filteredValue,
       render: (rawValue) => {
         const value = commonProps.transform ? commonProps.transform(rawValue) : rawValue;
@@ -689,7 +701,7 @@ export function CustomFieldColumn<Obj extends Entity>(props: Omit<BaseColumnProp
   } else if (field.field_type === FieldType.choice && field.multi_choice) {
     return Column({
       ...commonProps,
-      filters: createCustomFieldFilters(field),
+      filters: interactive ? createCustomFieldFilters(field) : undefined,
       filteredValue,
       render: (rawValue) => {
         const value = commonProps.transform ? commonProps.transform(rawValue) : rawValue;
