@@ -92,6 +92,10 @@ class Spool(Base):
     diameter: Mapped[float | None] = mapped_column(
         comment="Per-spool filament diameter override (#101). Null means use the filament's diameter.",
     )
+    # Per-spool color override (#74). Null means use the filament's color. Mirrors the filament columns.
+    color_hex: Mapped[str | None] = mapped_column(String(8))
+    multi_color_hexes: Mapped[str | None] = mapped_column(String(128))
+    multi_color_direction: Mapped[str | None] = mapped_column(String(16))
     location: Mapped[str | None] = mapped_column(String(64))
     lot_nr: Mapped[str | None] = mapped_column(String(64))
     comment: Mapped[str | None] = mapped_column(String(1024))

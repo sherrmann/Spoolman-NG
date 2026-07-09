@@ -8,11 +8,11 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Header, Query, Request, Response, WebSocket, WebSocketDisconnect
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from spoolman.api.v1.models import Message, Spool, SpoolEvent
+from spoolman.api.v1.models import Message, MultiColorDirection, Spool, SpoolEvent
 from spoolman.api.v1.models import SpoolUsageEvent as SpoolUsageEventModel
 from spoolman.database import filament, spool
 from spoolman.database.database import get_db_session
@@ -95,10 +95,78 @@ class SpoolParameters(BaseModel):
         ),
         examples=[1.73],
     )
+    color_hex: str | None = Field(
+        None,
+        description=(
+            "Per-spool color override in hexadecimal RGBA (#74), overriding the filament's color. Supports an "
+            "alpha channel at the end. Leave unset to use the filament's color. For a multi-color override use "
+            "multi_color_hexes instead."
+        ),
+        examples=["FF0000"],
+    )
+    multi_color_hexes: str | None = Field(
+        None,
+        description=(
+            "Per-spool multi-color override: hexadecimal RGBA colors separated by commas (#74). Also set "
+            "multi_color_direction. Leave unset to use the filament's color."
+        ),
+        examples=["FF0000,00FF00,0000FF"],
+    )
+    multi_color_direction: MultiColorDirection | None = Field(
+        None,
+        description="Type of multi-color override. Only set if multi_color_hexes contains multiple colors.",
+        examples=["coaxial", "longitudinal"],
+    )
     extra: dict[str, str] | None = Field(
         None,
         description="Extra fields for this spool.",
     )
+
+    @field_validator("color_hex")
+    @classmethod
+    def color_hex_validator(cls, v: str | None) -> str | None:
+        """Normalize and validate the color override (mirrors the filament validator, incl. #45 guard)."""
+        if not v:
+            return None
+        clr = v.upper().removeprefix("#")
+        for c in clr:
+            if c not in "0123456789ABCDEF":
+                raise ValueError("Invalid character in color code.")
+        if len(clr) not in (6, 8):
+            raise ValueError("Color code must be 6 or 8 characters long.")
+        # Return the normalized (uppercased, '#'-stripped) value so a '#FF000000' can't overflow the
+        # String(8) column and 500 every read (see filament color_hex_validator / issue #45).
+        return clr
+
+    @field_validator("multi_color_hexes")
+    @classmethod
+    def multi_color_hexes_validator(cls, v: str | None) -> str | None:
+        """Normalize and validate the multi-color override (mirrors the filament validator)."""
+        if not v:
+            return None
+        normalized: list[str] = []
+        for clr_raw in v.split(","):
+            clr = clr_raw.upper().removeprefix("#")
+            for c in clr:
+                if c not in "0123456789ABCDEF":
+                    raise ValueError("Invalid character in color code.")
+            if len(clr) not in (6, 8):
+                raise ValueError("Color code must be 6 or 8 characters long.")
+            normalized.append(clr)
+        return ",".join(normalized)
+
+    @model_validator(mode="after")
+    def validate_color_override(self) -> "SpoolParameters":
+        """Enforce the same color invariants as the filament (single vs multi, direction)."""
+        if self.color_hex and self.multi_color_hexes:
+            raise ValueError("Cannot specify both color_hex and multi_color_hexes.")
+        if self.multi_color_hexes and len(self.multi_color_hexes.split(",")) < 2:  # noqa: PLR2004
+            raise ValueError("Must specify at least two colors in multi_color_hexes.")
+        if self.multi_color_hexes and not self.multi_color_direction:
+            raise ValueError("Multi-color override must have multi_color_direction set.")
+        if not self.multi_color_hexes and self.multi_color_direction:
+            raise ValueError("Single-color override must not have multi_color_direction set.")
+        return self
 
 
 class SpoolUpdateParameters(SpoolParameters):
@@ -487,6 +555,9 @@ async def create(  # noqa: ANN201
             comment=body.comment,
             archived=body.archived,
             diameter=body.diameter,
+            color_hex=body.color_hex,
+            multi_color_hexes=body.multi_color_hexes,
+            multi_color_direction=body.multi_color_direction,
             extra=body.extra,
         )
         return Spool.from_db(db_item)
