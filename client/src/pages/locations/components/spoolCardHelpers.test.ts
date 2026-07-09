@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { IFilament } from "../../filaments/model";
 import { ISpool } from "../../spools/model";
-import { getWeightColor, getWeightPercentage } from "./spoolCardHelpers";
+import { getDisplayTotalWeight, getWeightColor, getWeightPercentage } from "./spoolCardHelpers";
 
 function filament(over: Partial<IFilament> = {}): IFilament {
   return { id: 1, registered: "2024-01-01", density: 1.24, diameter: 1.75, extra: {}, ...over };
@@ -59,5 +59,19 @@ describe("getWeightColor", () => {
   it("is green above 25%", () => {
     expect(getWeightColor(25.1)).toBe("#52c41a");
     expect(getWeightColor(100)).toBe("#52c41a");
+  });
+});
+
+describe("getDisplayTotalWeight (#124)", () => {
+  it("uses the spool's initial_weight when present", () => {
+    expect(getDisplayTotalWeight(spool({ initial_weight: 750, filament: filament({ weight: 1000 }) }))).toBe(750);
+  });
+
+  it("falls back to the filament's nominal weight when there is no initial_weight", () => {
+    expect(getDisplayTotalWeight(spool({ filament: filament({ weight: 1000 }) }))).toBe(1000);
+  });
+
+  it("is undefined when neither weight is known (subtitle then shows no weight, unlike the bar)", () => {
+    expect(getDisplayTotalWeight(spool({ filament: filament() }))).toBeUndefined();
   });
 });

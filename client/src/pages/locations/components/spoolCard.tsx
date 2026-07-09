@@ -13,7 +13,7 @@ import SpoolIcon from "../../../components/spoolIcon";
 import { formatWeight } from "../../../utils/parsing";
 import { ISpool } from "../../spools/model";
 import { ItemTypes, SpoolDragItem, useCurrentDraggedSpool } from "../dnd";
-import { getWeightColor, getWeightPercentage } from "./spoolCardHelpers";
+import { getDisplayTotalWeight, getWeightColor, getWeightPercentage } from "./spoolCardHelpers";
 
 dayjs.extend(utc);
 dayjs.extend(relativeTime);
@@ -148,9 +148,12 @@ export function SpoolCard({
   function formatSubtitle(spool: ISpool) {
     let str = "";
     if (spool.filament.material) str += spool.filament.material;
-    if (spool.filament.weight) {
-      const remaining_weight = spool.remaining_weight ?? spool.filament.weight;
-      str += ` \u00B7 ${formatWeight(remaining_weight, 0)} / ${formatWeight(spool.filament.weight, 0)}`;
+    // #124: fall back to the spool's initial_weight when the filament has no nominal weight, so the
+    // label matches the progress bar (which already uses that fallback) instead of showing blank.
+    const total = getDisplayTotalWeight(spool);
+    if (total) {
+      const remaining_weight = spool.remaining_weight ?? total;
+      str += ` \u00B7 ${formatWeight(remaining_weight, 0)} / ${formatWeight(total, 0)}`;
     }
     if (spool.last_used) {
       const dt = dayjs(spool.last_used);
