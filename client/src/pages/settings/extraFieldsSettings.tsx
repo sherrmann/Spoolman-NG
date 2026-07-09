@@ -265,6 +265,14 @@ const EditableCell = ({ record, editing, dataIndex, children, form, ...restProps
     } else {
       inputNode = null;
     }
+  } else if (dataIndex === "copy_from_filament") {
+    // Only rendered for spool fields (the column is added only there): inherit from the parent
+    // filament at spool creation (#118).
+    inputNode = <Checkbox>{title}</Checkbox>;
+    formItemProps.valuePropName = "checked";
+    rules.push({
+      type: "boolean",
+    });
   } else {
     inputNode = null;
   }
@@ -408,6 +416,12 @@ export function ExtraFieldsSettings({ entityType }: ExtraFieldsSettingsProps) {
       if (updatedField.unit === "") {
         updatedField.unit = undefined;
       }
+
+      // copy_from_filament is only meaningful for spool fields, and we only send it when enabled so
+      // plain field definitions stay free of the flag (#118).
+      if (entityType !== EntityType.spool || !updatedField.copy_from_filament) {
+        updatedField.copy_from_filament = undefined;
+      }
     } catch (errInfo) {
       if (errInfo instanceof Error) {
         messageApi.error(t("notifications.validationError", { error: errInfo.message }));
@@ -529,6 +543,20 @@ export function ExtraFieldsSettings({ entityType }: ExtraFieldsSettingsProps) {
       },
       width: "10%",
     },
+    // Copy-from-filament only makes sense for spool fields (#118), so the column is spool-only.
+    ...(entityType === EntityType.spool
+      ? [
+          {
+            title: t("settings.extra_fields.params.copy_from_filament"),
+            dataIndex: ["field", "copy_from_filament"],
+            key: "copy_from_filament",
+            render(value: unknown) {
+              return value ? t("settings.extra_fields.boolean_true") : t("settings.extra_fields.boolean_false");
+            },
+            width: "10%",
+          } as ColumnType<FieldHolder>,
+        ]
+      : []),
     {
       title: "",
       dataIndex: "operation",

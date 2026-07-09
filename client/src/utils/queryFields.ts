@@ -29,6 +29,8 @@ export interface FieldParameters {
   default_value?: string | (number | null)[] | boolean | dayjs.Dayjs;
   choices?: string[];
   multi_choice?: boolean;
+  // Spool fields only (#118): inherit this field's value from the parent filament at spool creation.
+  copy_from_filament?: boolean;
 }
 
 export interface Field extends FieldParameters {

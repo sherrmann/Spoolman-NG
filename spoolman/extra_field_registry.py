@@ -53,6 +53,13 @@ class ExtraFieldParameters(BaseModel):
         min_length=1,
     )
     multi_choice: bool | None = Field(None, description="Whether multiple choices can be selected")
+    copy_from_filament: bool | None = Field(
+        None,
+        description=(
+            "Only valid for spool fields (#118). When true, a new spool inherits this field's value "
+            "from its parent filament's same-key field at creation time, unless the spool provides its own."
+        ),
+    )
 
 
 class ExtraField(ExtraFieldParameters):
@@ -174,6 +181,9 @@ async def get_extra_fields(db: AsyncSession, entity_type: EntityType) -> list[Ex
 async def add_or_update_extra_field(db: AsyncSession, entity_type: EntityType, extra_field: ExtraField) -> None:
     """Add or update an extra field for a specific entity type."""
     validate_extra_field(extra_field)
+
+    if extra_field.copy_from_filament and entity_type != EntityType.spool:
+        raise ValueError("copy_from_filament is only valid for spool fields.")
 
     extra_fields = await get_extra_fields(db, entity_type)
     existing_field = next((field for field in extra_fields if field.key == extra_field.key), None)

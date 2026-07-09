@@ -22,4 +22,39 @@ test.describe("extra fields journey", () => {
     await page.goto(`${APP_BASE_URL}/spool/create`);
     await expect(page.getByLabel(name)).toBeVisible();
   });
+
+  test('"Copy from Filament" is a spool-only field option (#118)', async ({ page }) => {
+    // The linking option only makes sense for spools, so the column header is present there and
+    // absent for filament fields. Target the column header specifically (the shared description
+    // paragraph also mentions the phrase).
+    await page.goto(`${APP_BASE_URL}/settings/extra/spool`);
+    await expect(page.getByRole("columnheader", { name: "Copy from Filament" })).toBeVisible();
+    await page.goto(`${APP_BASE_URL}/settings/extra/filament`);
+    await expect(page.getByRole("columnheader", { name: "Copy from Filament" })).toHaveCount(0);
+  });
+
+  test("a new spool inherits a linked filament field at creation (#118)", async ({ page, request }) => {
+    const stamp = Date.now();
+    const key = `e2e_link_${stamp}`;
+    const name = `E2E Link ${stamp}`;
+    // Same-key field on both entities; the spool field is marked copy-from-filament.
+    await request.post(`${APP_BASE_URL}/api/v1/field/filament/${key}`, { data: { name, field_type: "text" } });
+    const linked = await request.post(`${APP_BASE_URL}/api/v1/field/spool/${key}`, {
+      data: { name, field_type: "text", copy_from_filament: true },
+    });
+    expect(linked.ok()).toBeTruthy();
+
+    // The setting surfaces in the UI as a spool-only column.
+    await page.goto(`${APP_BASE_URL}/settings/extra/spool`);
+    await expect(page.getByText(name).first()).toBeVisible();
+
+    // A filament carries the source value; a spool that doesn't set it inherits it at creation.
+    const fil = await (
+      await request.post(`${APP_BASE_URL}/api/v1/filament`, {
+        data: { density: 1.24, diameter: 1.75, extra: { [key]: JSON.stringify("A-123") } },
+      })
+    ).json();
+    const spool = await (await request.post(`${APP_BASE_URL}/api/v1/spool`, { data: { filament_id: fil.id } })).json();
+    expect(JSON.parse(spool.extra[key])).toBe("A-123");
+  });
 });
