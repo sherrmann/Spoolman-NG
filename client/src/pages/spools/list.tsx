@@ -45,6 +45,7 @@ import { EntityType, useGetFields } from "../../utils/queryFields";
 import { TableState, useInitialTableState, useSavedState, useStoreInitialState } from "../../utils/saveload";
 import { getCurrencySymbol, useCurrency, useCurrencyFormatter, useUnitScaling } from "../../utils/settings";
 import { useLocations } from "../locations/functions";
+import { bulkPatchSpools, useSpoolBulkEditModal } from "./bulkEdit";
 import { setSpoolArchived, useSpoolAdjustModal } from "./functions";
 import { EditableLocationCell, EditableNumberCell, EditableTextCell } from "./inlineEdit";
 import { ISpool } from "./model";
@@ -281,9 +282,40 @@ export const SpoolList = () => {
       } as T;
     });
 
-  // Row selection drives the "Print Labels" toolbar action: with rows selected, printing
-  // skips the in-page spool selector and jumps straight to the label dialog for those spools.
+  // Row selection drives the "Print Labels" toolbar action and the bulk-action bar (#73): with rows
+  // selected, printing skips the in-page spool selector, and a contextual bar offers bulk edit/archive.
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
+  const selectedIds = useMemo(() => selectedRowKeys.map(Number), [selectedRowKeys]);
+
+  // After a bulk change, refetch the list so the rows reflect the new values and clear the selection.
+  const onBulkApplied = useCallback(() => {
+    invalidate({ resource: "spool", invalidates: ["list"] });
+    setSelectedRowKeys([]);
+  }, [invalidate]);
+  const { openBulkEdit, bulkEditModal } = useSpoolBulkEditModal(locationOptions, messageApi, onBulkApplied);
+
+  // Bulk archive/unarchive: loop the single-spool PATCH over the selection (no bulk backend endpoint,
+  // so the API surface integrations depend on is unchanged), behind a confirm.
+  const bulkArchive = (archive: boolean) => {
+    const ids = selectedIds;
+    confirm({
+      title: archive
+        ? t("spool.bulk.archive_confirm", { count: ids.length })
+        : t("spool.bulk.unarchive_confirm", { count: ids.length }),
+      okText: archive ? t("buttons.archive") : t("buttons.unArchive"),
+      okType: "primary",
+      cancelText: t("buttons.cancel"),
+      async onOk() {
+        const failed = await bulkPatchSpools(ids, { archived: archive });
+        if (failed === 0) {
+          messageApi.success(t("spool.bulk.applied", { count: ids.length }));
+        } else {
+          messageApi.error(t("spool.bulk.applied_partial", { failed, count: ids.length }));
+        }
+        onBulkApplied();
+      },
+    });
+  };
 
   // Store state in local storage
   const tableState: TableState = {
@@ -487,6 +519,26 @@ export const SpoolList = () => {
     >
       {messageContextHolder}
       {spoolAdjustModal}
+      {bulkEditModal}
+      {/* Contextual bulk-action bar (#73): only shown while rows are selected, so the list stays
+          uncluttered when nothing is selected. */}
+      {selectedRowKeys.length > 0 && (
+        <Space className="spool-bulk-actions" style={{ marginBottom: 16 }} wrap>
+          <span>{t("spool.bulk.selected", { count: selectedRowKeys.length })}</span>
+          <Button icon={<EditOutlined />} onClick={() => openBulkEdit(selectedIds)}>
+            {t("spool.bulk.edit")}
+          </Button>
+          <Button icon={<InboxOutlined />} onClick={() => bulkArchive(true)}>
+            {t("buttons.archive")}
+          </Button>
+          <Button icon={<ToTopOutlined />} onClick={() => bulkArchive(false)}>
+            {t("buttons.unArchive")}
+          </Button>
+          <Button type="text" onClick={() => setSelectedRowKeys([])}>
+            {t("spool.bulk.clear_selection")}
+          </Button>
+        </Space>
+      )}
       <Table
         {...tableProps}
         sticky
