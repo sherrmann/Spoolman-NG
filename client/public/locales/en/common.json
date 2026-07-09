@@ -276,6 +276,10 @@
       "updated": "Updated {{name}}",
       "pick_spool": "Select a spool first."
     },
+    "view": {
+      "grid": "Grid view",
+      "table": "Table view"
+    },
     "fields": {
       "id": "ID",
       "filament_name": "Filament",
