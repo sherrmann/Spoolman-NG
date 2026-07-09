@@ -18,7 +18,13 @@ from spoolman.database import filament, spool
 from spoolman.database.database import get_db_session
 from spoolman.database.utils import parse_sort
 from spoolman.exceptions import ItemCreateError, SpoolMeasureError
-from spoolman.extra_fields import EXTRA_FIELD_PREFIX, EntityType, get_extra_fields, validate_extra_field_dict
+from spoolman.extra_fields import (
+    EXTRA_FIELD_PREFIX,
+    EntityType,
+    get_extra_fields,
+    inherit_filament_extra_fields,
+    validate_extra_field_dict,
+)
 from spoolman.ws import websocket_manager
 
 logger = logging.getLogger(__name__)
@@ -539,6 +545,10 @@ async def create(  # noqa: ANN201
         except ValueError as e:
             return JSONResponse(status_code=400, content=Message(message=str(e)).dict())
 
+    # Inherit any linked filament extra fields the spool didn't supply itself (#118). Each inherited
+    # value is validated against its spool field inside the helper, so the merged dict stays valid.
+    extra = await inherit_filament_extra_fields(db, filament_id=body.filament_id, extra=body.extra)
+
     try:
         db_item = await spool.create(
             db=db,
@@ -558,7 +568,7 @@ async def create(  # noqa: ANN201
             color_hex=body.color_hex,
             multi_color_hexes=body.multi_color_hexes,
             multi_color_direction=body.multi_color_direction,
-            extra=body.extra,
+            extra=extra,
         )
         return Spool.from_db(db_item)
     except ItemCreateError:
