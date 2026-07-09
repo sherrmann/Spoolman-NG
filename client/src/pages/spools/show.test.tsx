@@ -1,6 +1,6 @@
 // Static Modal.confirm needs the same React-19 render patch the app applies in index.tsx.
 import "@ant-design/v5-patch-for-react-19";
-import { useDelete, useShow } from "@refinedev/core";
+import { useDelete, useList, useShow } from "@refinedev/core";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Modal } from "antd";
@@ -21,6 +21,8 @@ vi.mock("@refinedev/core", () => ({
   useShow: vi.fn(),
   useUpdate: () => ({ mutate: vi.fn() }),
   useTranslate: () => (key: string) => key,
+  // #100 sibling-spools query — controllable per-test; defaults to empty in beforeEach.
+  useList: vi.fn(),
 }));
 vi.mock("@refinedev/antd", () => ({
   Show: ({
@@ -68,7 +70,15 @@ vi.mock("../../components/nfcWriteModal", () => ({ default: () => null }));
 
 const mockedUseShow = vi.mocked(useShow);
 const mockedUseDelete = vi.mocked(useDelete);
+const mockedUseList = vi.mocked(useList);
 const mockedSetSpoolArchived = vi.mocked(setSpoolArchived);
+
+function mockSiblings(records: ISpool[]) {
+  mockedUseList.mockReturnValue({
+    result: { data: records },
+    query: { isLoading: false },
+  } as unknown as ReturnType<typeof useList>);
+}
 
 function filament(): IFilament {
   return { id: 1, registered: "2024-01-01", density: 1.24, diameter: 1.75, extra: {} };
@@ -104,6 +114,7 @@ describe("SpoolShow split Archive/Delete button", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockedUseDelete.mockReturnValue({ mutate: deleteMutate } as unknown as ReturnType<typeof useDelete>);
+    mockSiblings([]);
   });
 
   afterEach(() => {
@@ -169,5 +180,36 @@ describe("SpoolShow split Archive/Delete button", () => {
     expect(deleteMutate).toHaveBeenCalledTimes(1);
     expect(deleteMutate).toHaveBeenCalledWith({ resource: "spool", id: 42 }, expect.anything());
     expect(mockedSetSpoolArchived).not.toHaveBeenCalled();
+  });
+});
+
+describe("SpoolShow sibling spools (#100)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockedUseDelete.mockReturnValue({ mutate: vi.fn() } as unknown as ReturnType<typeof useDelete>);
+    mockSiblings([]);
+  });
+
+  afterEach(() => {
+    Modal.destroyAll();
+  });
+
+  it("hides the section when there are no other spools of this filament", () => {
+    renderShow(spool());
+    expect(screen.queryByText("spool.sibling_spools.title")).not.toBeInTheDocument();
+  });
+
+  it("lists sibling spools and links them, excluding the spool being shown", () => {
+    // The query returns the whole filament set including the current spool (42); the page must
+    // filter 42 out and render only the siblings.
+    mockSiblings([spool({ id: 42 }), spool({ id: 7, remaining_weight: 250, location: "Shelf B" })]);
+    renderShow(spool({ id: 42 }));
+
+    expect(screen.getByText("spool.sibling_spools.title")).toBeInTheDocument();
+    const link = screen.getByRole("link", { name: "#7" });
+    expect(link).toHaveAttribute("href", "/spool/show/7");
+    expect(screen.getByText("Shelf B")).toBeInTheDocument();
+    // The current spool must not appear as its own sibling.
+    expect(screen.queryByRole("link", { name: "#42" })).not.toBeInTheDocument();
   });
 });

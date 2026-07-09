@@ -346,6 +346,9 @@
       "reset_usage": "Reset this spool's used weight to zero? This clears the first/last-used dates."
     },
     "filament_extra_fields": "Filament Fields",
+    "sibling_spools": {
+      "title": "Other spools of this filament"
+    },
     "usage_history": {
       "title": "Usage history",
       "time": "Time",
@@ -435,7 +438,10 @@
       "import_3dfp_placeholder": "e.g. 12875",
       "import_3dfp_success": "Successfully fetched filament from 3dfilamentprofiles.com",
       "import_3dfp_error": "Failed to fetch filament data from 3dfilamentprofiles.com",
-      "must_be_positive": "Must be greater than 0."
+      "must_be_positive": "Must be greater than 0.",
+      "new_vendor_prompt": "Add a new manufacturer",
+      "vendor_created": "Manufacturer created",
+      "vendor_create_error": "Failed to create manufacturer"
     },
     "buttons": {
       "add_spool": "Add Spool",

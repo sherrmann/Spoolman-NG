@@ -9,6 +9,7 @@ import utc from "dayjs/plugin/utc";
 import { useEffect, useMemo, useState } from "react";
 import { ExtraFieldFormItem, ParsedExtras, StringifiedExtras } from "../../components/extraFields";
 import { useSpoolmanLocations } from "../../components/otherModels";
+import SpoolIcon from "../../components/spoolIcon";
 import { StickyFooterBar } from "../../components/stickyFooterBar";
 import { searchMatches } from "../../utils/filtering";
 import { useLocations } from "../locations/functions";
@@ -17,7 +18,7 @@ import { formatNumberOnUserInput, numberParser, numberParserAllowEmpty } from ".
 import { EntityType, useGetFields } from "../../utils/queryFields";
 import { getCurrencySymbol, useCurrency } from "../../utils/settings";
 import { createFilamentFromExternal } from "../filaments/functions";
-import { useGetFilamentSelectOptions } from "./functions";
+import { FilamentColor, useGetFilamentSelectOptions } from "./functions";
 import { ISpool, ISpoolParsedExtras, WeightToEnter } from "./model";
 import { displayForMode, usedWeightFromEntered } from "./weightCalc";
 
@@ -332,6 +333,17 @@ export const SpoolCreate = (props: IResourceComponentsProps & CreateOrCloneProps
             options={filamentOptions}
             showSearch
             filterOption={(input, option) => typeof option?.label === "string" && searchMatches(input, option?.label)}
+            // #126: draw a colour swatch beside each option so filaments that differ only by colour
+            // are distinguishable. The label stays a plain string (search/filter above use it); the
+            // swatch is scaled down to fit a dropdown row.
+            optionRender={(oriOption) => (
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ display: "inline-flex", flex: "0 0 auto", fontSize: "0.6em" }}>
+                  <SpoolIcon color={(oriOption.data as { colorObj?: FilamentColor }).colorObj} no_margin />
+                </span>
+                <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{oriOption.label}</span>
+              </div>
+            )}
           />
         </Form.Item>
         {selectedFilament?.is_internal === false && (

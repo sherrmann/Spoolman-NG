@@ -112,6 +112,44 @@ test.describe("spool journey", () => {
     expect((await got.json()).used_weight).toBe(500);
   });
 
+  test("shows sibling spools of the same filament on the show page (#100)", async ({ page, request }) => {
+    const filament = await seedFilament(request);
+    // Two spools of the SAME filament.
+    const a = await request.post(`${APP_BASE_URL}/api/v1/spool`, {
+      data: { filament_id: filament.id, initial_weight: 1000 },
+    });
+    const b = await request.post(`${APP_BASE_URL}/api/v1/spool`, {
+      data: { filament_id: filament.id, initial_weight: 1000, location: "Shelf Z" },
+    });
+    const aId = (await a.json()).id;
+    const bId = (await b.json()).id;
+
+    await page.goto(`${APP_BASE_URL}/spool/show/${aId}`);
+
+    // The sibling section lists spool b (with its location) and links to it, but not spool a itself.
+    await expect(page.getByRole("heading", { name: "Other spools of this filament" })).toBeVisible();
+    await expect(page.getByRole("link", { name: `#${bId}` })).toBeVisible();
+    await expect(page.getByText("Shelf Z")).toBeVisible();
+    await expect(page.getByRole("link", { name: `#${aId}` })).toHaveCount(0);
+  });
+
+  test("filament dropdown shows a colour swatch per option (#126)", async ({ page, request }) => {
+    // Seed a coloured filament so its dropdown option renders a swatch.
+    const name = `Swatch ${Date.now()}`;
+    const res = await request.post(`${APP_BASE_URL}/api/v1/filament`, {
+      data: { name, density: 1.24, diameter: 1.75, weight: 1000, color_hex: "FF0000" },
+    });
+    expect(res.ok()).toBeTruthy();
+
+    await page.goto(`${APP_BASE_URL}/spool/create`);
+    const filamentSelect = page.getByLabel("Filament");
+    await filamentSelect.click();
+    await filamentSelect.pressSequentially(name);
+    // The matching option row renders a SpoolIcon swatch alongside the label (#126).
+    const option = page.locator(".ant-select-item-option").filter({ hasText: name }).first();
+    await expect(option.locator(".spool-icon")).toBeVisible();
+  });
+
   test("adjust filament usage → archive", async ({ page, request }) => {
     const filament = await seedFilament(request);
     const spoolRes = await request.post(`${APP_BASE_URL}/api/v1/spool`, {

@@ -20,6 +20,25 @@ export async function getVendorByExternalID(external_id: string): Promise<IVendo
 }
 
 /**
+ * Create a new vendor with only a name. Used for inline vendor creation from the filament create
+ * form (#125). Unlike getOrCreateVendorFromExternal this sets no external_id — an inline-created
+ * vendor has no external-DB provenance.
+ */
+export async function createVendor(name: string): Promise<IVendor> {
+  const response = await fetch(getAPIURL() + "/vendor", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ name }),
+  });
+  if (!response.ok) {
+    throw new Error("Network response was not ok");
+  }
+  return response.json();
+}
+
+/**
  * Create a new internal filament given an external filament object.
  * Returns the created internal filament.
  */

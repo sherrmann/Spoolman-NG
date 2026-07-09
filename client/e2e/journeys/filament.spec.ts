@@ -63,4 +63,29 @@ test.describe("filament journey", () => {
     const got = await request.get(`${APP_BASE_URL}/api/v1/filament/${id}`);
     expect((await got.json()).external_id).toBe("ext-12875");
   });
+
+  test("create a new manufacturer inline from the vendor picker (#125)", async ({ page, request }) => {
+    const vendorName = `Inline ${Date.now()}`;
+    await page.goto(`${APP_BASE_URL}/filament/create`);
+    await expect(page).toHaveURL(atPath("/filament/create"));
+
+    await page.getByRole("textbox", { name: "Name" }).fill(`F ${Date.now()}`);
+    await page.getByRole("spinbutton", { name: "Density" }).fill("1.24");
+    await page.getByRole("spinbutton", { name: "Diameter" }).fill("1.75");
+
+    // Open the Manufacturer picker and add a brand-new vendor via the dropdown's inline field.
+    await page.getByLabel("Manufacturer").click();
+    await page.getByPlaceholder("Add a new manufacturer").fill(vendorName);
+    const [vendorRes] = await Promise.all([
+      page.waitForResponse((r) => /\/api\/v1\/vendor$/.test(r.url()) && r.request().method() === "POST"),
+      page.locator(".ant-select-dropdown").getByRole("button", { name: "Create" }).click(),
+    ]);
+    expect(vendorRes.ok()).toBeTruthy();
+    const vendorId = (await vendorRes.json()).id;
+
+    // The new vendor is auto-selected, so saving the filament references it — no page left.
+    const id = await saveAndGetId(page, "filament");
+    const got = await request.get(`${APP_BASE_URL}/api/v1/filament/${id}`);
+    expect((await got.json()).vendor.id).toBe(vendorId);
+  });
 });

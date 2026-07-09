@@ -86,6 +86,26 @@ export function useGetSpoolsByIds(ids: number[]) {
   });
 }
 
+/** The colour shape SpoolIcon accepts: a single hex string, or a multi-colour spec. */
+export type FilamentColor = string | { colors: string[]; vertical: boolean };
+
+/**
+ * Build the SpoolIcon colour for a filament from its raw colour fields (#126). Multi-colour wins
+ * when present; otherwise the single hex; `undefined` when the filament has no colour (SpoolIcon
+ * then draws its neutral "?" placeholder). `direction === "longitudinal"` maps to a vertical split,
+ * matching how the spool show page renders the swatch.
+ */
+export function filamentColorObj(
+  colorHex: string | undefined,
+  multiColorHexes: string[] | undefined,
+  direction: string | undefined,
+): FilamentColor | undefined {
+  if (multiColorHexes && multiColorHexes.length > 0) {
+    return { colors: multiColorHexes, vertical: direction === "longitudinal" };
+  }
+  return colorHex || undefined;
+}
+
 /**
  * Formats a filament label with the given parameters.
  */
@@ -122,6 +142,8 @@ interface SelectOption {
   weight?: number;
   spool_weight?: number;
   is_internal: boolean;
+  // Colour swatch data for the dropdown (#126); undefined when the filament has no colour.
+  colorObj?: FilamentColor;
 }
 
 export function useGetFilamentSelectOptions() {
@@ -149,6 +171,11 @@ export function useGetFilamentSelectOptions() {
           weight: item.weight,
           spool_weight: item.spool_weight,
           is_internal: true,
+          colorObj: filamentColorObj(
+            item.color_hex,
+            item.multi_color_hexes ? item.multi_color_hexes.split(",") : undefined,
+            item.multi_color_direction,
+          ),
         };
       }) ?? [];
     data.sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }));
@@ -172,6 +199,7 @@ export function useGetFilamentSelectOptions() {
           weight: item.weight,
           spool_weight: item.spool_weight || undefined,
           is_internal: false,
+          colorObj: filamentColorObj(item.color_hex, item.color_hexes, item.multi_color_direction),
         };
       }) ?? [];
     data.sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }));
