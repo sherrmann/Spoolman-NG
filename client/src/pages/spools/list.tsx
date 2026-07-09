@@ -46,6 +46,7 @@ import { TableState, useInitialTableState, useSavedState, useStoreInitialState }
 import { getCurrencySymbol, useCurrency, useCurrencyFormatter, useUnitScaling } from "../../utils/settings";
 import { useLocations } from "../locations/functions";
 import { bulkPatchSpools, useSpoolBulkEditModal } from "./bulkEdit";
+import { useBulkWeightUpdateModal } from "./bulkWeightUpdate";
 import { setSpoolArchived, useSpoolAdjustModal } from "./functions";
 import { EditableLocationCell, EditableNumberCell, EditableTextCell } from "./inlineEdit";
 import { ISpool } from "./model";
@@ -293,6 +294,8 @@ export const SpoolList = () => {
     setSelectedRowKeys([]);
   }, [invalidate]);
   const { openBulkEdit, bulkEditModal } = useSpoolBulkEditModal(locationOptions, messageApi, onBulkApplied);
+  // Header-level weigh-many workflow (#99), independent of row selection.
+  const { openBulkWeightUpdate, bulkWeightUpdateModal } = useBulkWeightUpdateModal(messageApi);
 
   // Bulk archive/unarchive: loop the single-spool PATCH over the selection (no bulk backend endpoint,
   // so the API surface integrations depend on is unchanged), behind a confirm.
@@ -475,6 +478,9 @@ export const SpoolList = () => {
           >
             {t("printing.qrcode.button")}
           </Button>
+          <Button icon={<ToolOutlined />} onClick={openBulkWeightUpdate}>
+            {t("spool.weigh.button")}
+          </Button>
           <Button
             icon={<InboxOutlined />}
             onClick={() => {
@@ -520,6 +526,7 @@ export const SpoolList = () => {
       {messageContextHolder}
       {spoolAdjustModal}
       {bulkEditModal}
+      {bulkWeightUpdateModal}
       {/* Contextual bulk-action bar (#73): only shown while rows are selected, so the list stays
           uncluttered when nothing is selected. */}
       {selectedRowKeys.length > 0 && (
