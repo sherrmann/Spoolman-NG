@@ -26,6 +26,7 @@ import { getCurrencySymbol, useCurrency } from "../../utils/settings";
 import { IVendor } from "../vendors/model";
 import { getOrCreateVendorFromExternal } from "../vendors/functions";
 import { ExternalFilament, fetchExternalProfile } from "../../utils/queryExternalDB";
+import { FilamentCatalogFields } from "./catalogFields";
 import { IFilament, IFilamentParsedExtras } from "./model";
 
 /*
@@ -120,6 +121,12 @@ export const FilamentEdit = () => {
       settings_extruder_temp_max: filament.extruder_temp_max || undefined,
       settings_bed_temp_min: filament.bed_temp_min || undefined,
       settings_bed_temp_max: filament.bed_temp_max || undefined,
+      spool_type: filament.spool_type,
+      finish: filament.finish,
+      pattern: filament.pattern,
+      // Only carry a positive translucent/glow signal — false is indistinguishable from "unknown".
+      translucent: filament.translucent || undefined,
+      glow: filament.glow || undefined,
     } as Parameters<NonNullable<typeof formProps.form>["setFieldsValue"]>[0]);
   };
 
@@ -472,6 +479,7 @@ export const FilamentEdit = () => {
             </Form.Item>
           </Space.Compact>
         </Form.Item>
+        <FilamentCatalogFields />
         <Form.Item
           label={t("filament.fields.article_number")}
           help={t("filament.fields_help.article_number")}

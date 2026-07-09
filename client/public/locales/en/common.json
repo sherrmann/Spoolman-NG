@@ -410,7 +410,25 @@
       "coaxial": "Coextruded",
       "longitudinal": "Longitudinal",
       "external_id": "External ID",
+      "spool_type": "Spool Type",
+      "finish": "Finish",
+      "pattern": "Pattern",
+      "translucent": "Translucent",
+      "glow": "Glow in the Dark",
       "spools": "Show Spools"
+    },
+    "spool_type_options": {
+      "plastic": "Plastic",
+      "cardboard": "Cardboard",
+      "metal": "Metal"
+    },
+    "finish_options": {
+      "matte": "Matte",
+      "glossy": "Glossy"
+    },
+    "pattern_options": {
+      "marble": "Marble",
+      "sparkle": "Sparkle"
     },
     "fields_help": {
       "name": "Filament name, to distinguish this filament type among others from the same manufacturer. Should contain the color for example.",

@@ -19,6 +19,7 @@ import utc from "dayjs/plugin/utc";
 import { useEffect, useState } from "react";
 import { ExtraFieldFormItem, ParsedExtras, StringifiedExtras } from "../../components/extraFields";
 import { FilamentImportModal } from "../../components/filamentImportModal";
+import { FilamentCatalogFields } from "./catalogFields";
 import { MultiColorPicker } from "../../components/multiColorPicker";
 import { StickyFooterBar } from "../../components/stickyFooterBar";
 import { suggestDensityForMaterial } from "../../utils/materialDensities";
@@ -111,6 +112,13 @@ export const FilamentCreate = (props: IResourceComponentsProps & CreateOrClonePr
       settings_extruder_temp_max: filament.extruder_temp_max || undefined,
       settings_bed_temp_min: filament.bed_temp_min || undefined,
       settings_bed_temp_max: filament.bed_temp_max || undefined,
+      spool_type: filament.spool_type,
+      finish: filament.finish,
+      pattern: filament.pattern,
+      // Only carry a positive translucent/glow signal — false is indistinguishable from "unknown"
+      // in the catalog, so leave it unset rather than asserting the filament is not translucent.
+      translucent: filament.translucent || undefined,
+      glow: filament.glow || undefined,
     });
   };
 
@@ -529,6 +537,7 @@ export const FilamentCreate = (props: IResourceComponentsProps & CreateOrClonePr
             </Form.Item>
           </Space.Compact>
         </Form.Item>
+        <FilamentCatalogFields />
         <Form.Item
           label={t("filament.fields.article_number")}
           help={t("filament.fields_help.article_number")}

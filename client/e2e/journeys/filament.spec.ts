@@ -110,4 +110,24 @@ test.describe("filament journey", () => {
     expect(got.settings_extruder_temp_min).toBe(205);
     expect(got.settings_extruder_temp_max).toBe(225);
   });
+
+  test("catalog descriptors round-trip through the create form (#91)", async ({ page, request }) => {
+    await page.goto(`${APP_BASE_URL}/filament/create`);
+    await expect(page).toHaveURL(atPath("/filament/create"));
+
+    await page.getByRole("textbox", { name: "Name" }).fill(`Cat ${Date.now()}`);
+    await page.getByRole("spinbutton", { name: "Density" }).fill("1.24");
+    await page.getByRole("spinbutton", { name: "Diameter" }).fill("1.75");
+
+    // Pick a spool type and a glow value from the new catalog Selects.
+    await page.getByLabel("Spool Type").click();
+    await page.locator(".ant-select-item-option").filter({ hasText: "Cardboard" }).click();
+    await page.getByLabel("Glow in the Dark").click();
+    await page.locator(".ant-select-item-option").filter({ hasText: "Yes" }).click();
+
+    const id = await saveAndGetId(page, "filament");
+    const got = await (await request.get(`${APP_BASE_URL}/api/v1/filament/${id}`)).json();
+    expect(got.spool_type).toBe("cardboard");
+    expect(got.glow).toBe(true);
+  });
 });

@@ -196,6 +196,28 @@ class MultiColorDirection(Enum):
     LONGITUDINAL = "longitudinal"
 
 
+class SpoolType(Enum):
+    """Type of spool the filament ships on (from the SpoolmanDB catalog, #91)."""
+
+    PLASTIC = "plastic"
+    CARDBOARD = "cardboard"
+    METAL = "metal"
+
+
+class Finish(Enum):
+    """Surface finish of the filament (from the SpoolmanDB catalog, #91)."""
+
+    MATTE = "matte"
+    GLOSSY = "glossy"
+
+
+class Pattern(Enum):
+    """Visual pattern of the filament (from the SpoolmanDB catalog, #91)."""
+
+    MARBLE = "marble"
+    SPARKLE = "sparkle"
+
+
 class Filament(BaseModel):
     id: int = Field(description="Unique internal ID of this filament type.")
     registered: SpoolmanDateTime = Field(description="When the filament was registered in the database. UTC Timezone.")
@@ -277,6 +299,31 @@ class Filament(BaseModel):
         ge=0,
         description="High end of the recommended bed temperature range, in °C. Null if no range recorded.",
         examples=[60],
+    )
+    spool_type: SpoolType | None = Field(
+        None,
+        description="The type of spool this filament ships on. Null if unknown.",
+        examples=["plastic"],
+    )
+    finish: Finish | None = Field(
+        None,
+        description="The surface finish of the filament. Null if unknown.",
+        examples=["matte"],
+    )
+    pattern: Pattern | None = Field(
+        None,
+        description="The visual pattern of the filament. Null if unknown.",
+        examples=["marble"],
+    )
+    translucent: bool | None = Field(
+        None,
+        description="Whether the filament is translucent. Null if unknown.",
+        examples=[False],
+    )
+    glow: bool | None = Field(
+        None,
+        description="Whether the filament glows in the dark. Null if unknown.",
+        examples=[False],
     )
     color_hex: str | None = Field(
         None,
@@ -389,6 +436,11 @@ class Filament(BaseModel):
             settings_extruder_temp_max=item.settings_extruder_temp_max,
             settings_bed_temp_min=item.settings_bed_temp_min,
             settings_bed_temp_max=item.settings_bed_temp_max,
+            spool_type=SpoolType(item.spool_type) if item.spool_type is not None else None,
+            finish=Finish(item.finish) if item.finish is not None else None,
+            pattern=Pattern(item.pattern) if item.pattern is not None else None,
+            translucent=item.translucent,
+            glow=item.glow,
             color_hex=_normalize_stored_color_hex(item.color_hex),
             multi_color_hexes=_normalize_stored_multi_color_hexes(item.multi_color_hexes),
             multi_color_direction=(

@@ -20,6 +20,12 @@ export interface IFilament {
   settings_extruder_temp_max?: number;
   settings_bed_temp_min?: number;
   settings_bed_temp_max?: number;
+  // SpoolmanDB catalog descriptors preserved on local import (#91 / #567). Absent means unknown.
+  spool_type?: "plastic" | "cardboard" | "metal";
+  finish?: "matte" | "glossy";
+  pattern?: "marble" | "sparkle";
+  translucent?: boolean;
+  glow?: boolean;
   color_hex?: string;
   multi_color_hexes?: string;
   multi_color_direction?: string;

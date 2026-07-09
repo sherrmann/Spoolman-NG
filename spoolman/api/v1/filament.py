@@ -11,7 +11,15 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator, model_validator
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from spoolman.api.v1.models import Filament, FilamentEvent, Message, MultiColorDirection
+from spoolman.api.v1.models import (
+    Filament,
+    FilamentEvent,
+    Finish,
+    Message,
+    MultiColorDirection,
+    Pattern,
+    SpoolType,
+)
 from spoolman.database import filament
 from spoolman.database.database import get_db_session
 from spoolman.database.utils import parse_sort
@@ -108,6 +116,31 @@ class FilamentParameters(BaseModel):
         ge=0,
         description="High end of the recommended bed temperature range, in °C.",
         examples=[60],
+    )
+    spool_type: SpoolType | None = Field(
+        None,
+        description="The type of spool this filament ships on.",
+        examples=["plastic"],
+    )
+    finish: Finish | None = Field(
+        None,
+        description="The surface finish of the filament.",
+        examples=["matte"],
+    )
+    pattern: Pattern | None = Field(
+        None,
+        description="The visual pattern of the filament.",
+        examples=["marble"],
+    )
+    translucent: bool | None = Field(
+        None,
+        description="Whether the filament is translucent.",
+        examples=[False],
+    )
+    glow: bool | None = Field(
+        None,
+        description="Whether the filament glows in the dark.",
+        examples=[False],
     )
     color_hex: str | None = Field(
         None,
@@ -547,6 +580,11 @@ async def create(  # noqa: ANN201
         settings_extruder_temp_max=body.settings_extruder_temp_max,
         settings_bed_temp_min=body.settings_bed_temp_min,
         settings_bed_temp_max=body.settings_bed_temp_max,
+        spool_type=body.spool_type,
+        finish=body.finish,
+        pattern=body.pattern,
+        translucent=body.translucent,
+        glow=body.glow,
         color_hex=body.color_hex,
         multi_color_hexes=body.multi_color_hexes,
         multi_color_direction=body.multi_color_direction,

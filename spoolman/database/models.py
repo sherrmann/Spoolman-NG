@@ -60,6 +60,12 @@ class Filament(Base):
     settings_bed_temp_max: Mapped[int | None] = mapped_column(
         comment="High end of the recommended bed temperature range, in °C (#112). Null if no range.",
     )
+    # SpoolmanDB catalog descriptors, preserved on local import (#91 / #567). Null means unknown.
+    spool_type: Mapped[str | None] = mapped_column(String(16), comment="Spool material, e.g. plastic/cardboard/metal.")
+    finish: Mapped[str | None] = mapped_column(String(16), comment="Surface finish, e.g. matte/glossy.")
+    pattern: Mapped[str | None] = mapped_column(String(16), comment="Visual pattern, e.g. marble/sparkle.")
+    translucent: Mapped[bool | None] = mapped_column(comment="Whether the filament is translucent. Null if unknown.")
+    glow: Mapped[bool | None] = mapped_column(comment="Whether the filament glows in the dark. Null if unknown.")
     color_hex: Mapped[str | None] = mapped_column(String(8))
     multi_color_hexes: Mapped[str | None] = mapped_column(String(128))
     multi_color_direction: Mapped[str | None] = mapped_column(String(16))
