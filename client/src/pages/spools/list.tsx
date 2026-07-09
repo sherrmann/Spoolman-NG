@@ -4,6 +4,7 @@ import {
   EyeOutlined,
   FilterOutlined,
   InboxOutlined,
+  LinkOutlined,
   PlusSquareOutlined,
   PrinterOutlined,
   ToolOutlined,
@@ -41,6 +42,7 @@ import {
 import { columnIdOf, computeEffectiveOrder, moveInOrder, orderColumns } from "../../utils/columnOrder";
 import { removeUndefined } from "../../utils/filtering";
 import { getSpoolEffectiveColor } from "../../utils/spoolColor";
+import { buildSpoolActionUrl, useSpoolActionLinks } from "../../utils/spoolActionLinks";
 import { ResizableHeaderCell } from "../../components/resizableHeaderCell";
 import SpoolIcon from "../../components/spoolIcon";
 import { enrichText, formatWeight } from "../../utils/parsing";
@@ -159,6 +161,9 @@ export const SpoolList = () => {
   const currency = useCurrency();
   const unitScaling = useUnitScaling();
   const { openSpoolAdjustModal, spoolAdjustModal } = useSpoolAdjustModal();
+
+  // User-configured per-spool action links (#140), appended to each row's action menu when set.
+  const actionLinks = useSpoolActionLinks();
 
   // Inline cell editing is a pointer-device affordance; gate it to desktop using
   // the same breakpoint mechanism the header uses (Grid.useBreakpoint / !md).
@@ -428,9 +433,17 @@ export const SpoolList = () => {
       } else {
         actions.push({ name: t("buttons.archive"), icon: <InboxOutlined />, onClick: () => archiveSpoolPopup(record) });
       }
+      // User-configured action links (#140) open an external URL templated with the spool's fields.
+      actionLinks.forEach((link) => {
+        actions.push({
+          name: link.name,
+          icon: <LinkOutlined />,
+          onClick: () => window.open(buildSpoolActionUrl(link.url, record), "_blank", "noopener,noreferrer"),
+        });
+      });
       return actions;
     },
-    [t, editUrl, showUrl, cloneUrl, openSpoolAdjustModal, archiveSpool, archiveSpoolPopup],
+    [t, editUrl, showUrl, cloneUrl, openSpoolAdjustModal, archiveSpool, archiveSpoolPopup, actionLinks],
   );
 
   const originalOnChange = tableProps.onChange;

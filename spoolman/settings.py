@@ -77,6 +77,12 @@ register_setting("extra_fields_location", SettingType.ARRAY, json.dumps([]))
 register_setting("extra_fields_printer", SettingType.ARRAY, json.dumps([]))
 register_setting("base_url", SettingType.STRING, json.dumps(""))
 
+# Custom sidebar links (#92): [{label, url}] shown as extra nav entries.
+register_setting("custom_links", SettingType.ARRAY, json.dumps([]))
+# Custom per-spool action links (#140): [{name, url_template}] shown as buttons on the spool
+# show page and list action menu, with {id} (and other spool fields) substituted.
+register_setting("spool_action_links", SettingType.ARRAY, json.dumps([]))
+
 register_setting("locations", SettingType.ARRAY, json.dumps([]))
 register_setting("locations_spoolorders", SettingType.OBJECT, json.dumps({}))
 

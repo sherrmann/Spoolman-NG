@@ -60,6 +60,10 @@ vi.mock("../../utils/parsing", () => ({
 vi.mock("../../utils/queryUsageEvents", () => ({
   useGetSpoolUsageEvents: () => ({ data: [], isLoading: false }),
 }));
+vi.mock("../../utils/spoolActionLinks", () => ({
+  useSpoolActionLinks: () => [],
+  buildSpoolActionUrl: () => "",
+}));
 vi.mock("../../components/extraFields", () => ({ ExtraFieldDisplay: () => null }));
 vi.mock("../../components/numberField", () => ({
   NumberFieldUnit: ({ value }: { value?: unknown }) => <span>{String(value ?? "")}</span>,
