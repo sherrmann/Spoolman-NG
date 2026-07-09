@@ -27,6 +27,7 @@ from . import (
     models,
     nfc,
     other,
+    printer,
     setting,
     spool,
     vendor,
@@ -124,6 +125,7 @@ app.include_router(filament.router)
 app.include_router(spool.router)
 app.include_router(vendor.router)
 app.include_router(location.router)
+app.include_router(printer.router)
 app.include_router(setting.router)
 app.include_router(field.router)
 app.include_router(other.router)

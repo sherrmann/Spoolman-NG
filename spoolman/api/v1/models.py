@@ -189,6 +189,48 @@ class Location(BaseModel):
         )
 
 
+class Printer(BaseModel):
+    id: int = Field(description="Unique internal ID of this printer.")
+    registered: SpoolmanDateTime = Field(description="When the printer was registered in the database. UTC Timezone.")
+    name: str = Field(max_length=64, description="Printer name.", examples=["Voron 2.4"])
+    comment: str | None = Field(
+        None,
+        max_length=1024,
+        description="Free text comment about this printer.",
+        examples=[""],
+    )
+    spool_count: int | None = Field(
+        None,
+        description=(
+            "Aggregate: number of non-archived spools currently assigned to this printer. Only "
+            "populated on the printer list and detail endpoints; null in nested/websocket payloads."
+        ),
+        examples=[1],
+    )
+    extra: dict[str, str] = Field(
+        description=(
+            "Extra fields for this printer. All values are JSON-encoded data. "
+            "Query the /fields endpoint for more details about the fields."
+        ),
+    )
+
+    @staticmethod
+    def from_db(item: models.Printer, *, spool_count: int | None = None) -> "Printer":
+        """Create a Pydantic printer object from a database printer object.
+
+        The optional spool_count aggregate is supplied by the printer list and detail endpoints; it
+        is left null in nested (spool.printer) and websocket payloads.
+        """
+        return Printer(
+            id=item.id,
+            registered=item.registered,
+            name=item.name,
+            comment=item.comment,
+            spool_count=spool_count,
+            extra={field.key: field.value for field in item.extra},
+        )
+
+
 class MultiColorDirection(Enum):
     """Enum for multi-color direction."""
 
@@ -552,6 +594,10 @@ class Spool(BaseModel):
         description="Where this spool can be found.",
         examples=["Shelf A"],
     )
+    printer: Printer | None = Field(
+        None,
+        description="The printer this spool is assigned to (#75). Null if unassigned.",
+    )
     lot_nr: str | None = Field(
         None,
         max_length=64,
@@ -631,6 +677,7 @@ class Spool(BaseModel):
             remaining_weight=remaining_weight,
             remaining_length=remaining_length,
             location=item.location,
+            printer=Printer.from_db(item.printer) if item.printer is not None else None,
             lot_nr=item.lot_nr,
             comment=item.comment,
             archived=item.archived if item.archived is not None else False,
@@ -739,6 +786,13 @@ class LocationEvent(Event):
 
     payload: Location = Field(description="Updated location.")
     resource: Literal["location"] = Field(description="Resource type.")
+
+
+class PrinterEvent(Event):
+    """Event."""
+
+    payload: Printer = Field(description="Updated printer.")
+    resource: Literal["printer"] = Field(description="Resource type.")
 
 
 class SettingEvent(Event):

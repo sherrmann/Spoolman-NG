@@ -79,6 +79,11 @@ class SpoolParameters(BaseModel):
         description="Where this spool can be found.",
         examples=["Shelf A"],
     )
+    printer_id: int | None = Field(
+        None,
+        description="The ID of the printer this spool is assigned to (#75). Null to leave it unassigned.",
+        examples=[1],
+    )
     lot_nr: str | None = Field(
         None,
         max_length=64,
@@ -561,6 +566,7 @@ async def create(  # noqa: ANN201
             first_used=body.first_used,
             last_used=body.last_used,
             location=body.location,
+            printer_id=body.printer_id,
             lot_nr=body.lot_nr,
             comment=body.comment,
             archived=body.archived,
