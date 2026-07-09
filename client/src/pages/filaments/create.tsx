@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { ExtraFieldFormItem, ParsedExtras, StringifiedExtras } from "../../components/extraFields";
 import { FilamentImportModal } from "../../components/filamentImportModal";
 import { MultiColorPicker } from "../../components/multiColorPicker";
+import { StickyFooterBar } from "../../components/stickyFooterBar";
 import { suggestDensityForMaterial } from "../../utils/materialDensities";
 import { formatNumberOnUserInput, numberParser, numberParserAllowEmpty } from "../../utils/parsing";
 import { ExternalFilament, fetchExternalProfile } from "../../utils/queryExternalDB";
@@ -129,14 +130,14 @@ export const FilamentCreate = (props: IResourceComponentsProps & CreateOrClonePr
         </>
       )}
       footerButtons={() => (
-        <>
+        <StickyFooterBar>
           <Button type="primary" onClick={() => handleSubmit("list")}>
             {t("buttons.save")}
           </Button>
           <Button type="primary" onClick={() => handleSubmit("create")}>
             {t("buttons.saveAndAdd")}
           </Button>
-        </>
+        </StickyFooterBar>
       )}
     >
       <FilamentImportModal

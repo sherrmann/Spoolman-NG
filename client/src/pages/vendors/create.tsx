@@ -6,6 +6,7 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { useEffect } from "react";
 import { ExtraFieldFormItem, ParsedExtras, StringifiedExtras } from "../../components/extraFields";
+import { StickyFooterBar } from "../../components/stickyFooterBar";
 import { formatNumberOnUserInput, numberParserAllowEmpty } from "../../utils/parsing";
 import { EntityType, useGetFields } from "../../utils/queryFields";
 import { IVendor, IVendorParsedExtras } from "./model";
@@ -58,14 +59,14 @@ export const VendorCreate = (props: IResourceComponentsProps & CreateOrCloneProp
       title={props.mode === "create" ? t("vendor.titles.create") : t("vendor.titles.clone")}
       isLoading={formLoading}
       footerButtons={() => (
-        <>
+        <StickyFooterBar>
           <Button type="primary" onClick={() => handleSubmit("list")}>
             {t("buttons.save")}
           </Button>
           <Button type="primary" onClick={() => handleSubmit("create")}>
             {t("buttons.saveAndAdd")}
           </Button>
-        </>
+        </StickyFooterBar>
       )}
     >
       {/* onFinish → Save so pressing Enter in a field submits the form (#127). */}

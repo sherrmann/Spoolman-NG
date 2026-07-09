@@ -9,6 +9,7 @@ import utc from "dayjs/plugin/utc";
 import { useEffect, useMemo, useState } from "react";
 import { ExtraFieldFormItem, ParsedExtras, StringifiedExtras } from "../../components/extraFields";
 import { useSpoolmanLocations } from "../../components/otherModels";
+import { StickyFooterBar } from "../../components/stickyFooterBar";
 import { searchMatches } from "../../utils/filtering";
 import { useLocations } from "../locations/functions";
 import "../../utils/overrides.css";
@@ -265,7 +266,7 @@ export const SpoolCreate = (props: IResourceComponentsProps & CreateOrCloneProps
       title={props.mode === "create" ? t("spool.titles.create") : t("spool.titles.clone")}
       isLoading={formLoading}
       footerButtons={() => (
-        <>
+        <StickyFooterBar>
           <div
             style={{ display: "flex", backgroundColor: "#141414", border: "1px solid #424242", borderRadius: "6px" }}
           >
@@ -283,7 +284,7 @@ export const SpoolCreate = (props: IResourceComponentsProps & CreateOrCloneProps
           <Button type="primary" onClick={() => handleSubmit("create")}>
             {t("buttons.saveAndAdd")}
           </Button>
-        </>
+        </StickyFooterBar>
       )}
     >
       {/* onFinish → Save so pressing Enter in a field submits the form (#127). */}
