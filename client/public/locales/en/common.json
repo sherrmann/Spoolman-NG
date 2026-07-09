@@ -246,6 +246,25 @@
       "shown_one": "{{count}} spool shown",
       "shown_other": "{{count}} spools shown"
     },
+    "bulk": {
+      "selected_one": "{{count}} selected",
+      "selected_other": "{{count}} selected",
+      "edit": "Edit",
+      "clear_selection": "Clear selection",
+      "edit_title_one": "Edit {{count}} spool",
+      "edit_title_other": "Edit {{count}} spools",
+      "edit_help": "Tick a field to change it on every selected spool. Unticked fields are left unchanged.",
+      "apply": "Apply",
+      "nothing_selected": "Tick at least one field to change.",
+      "applied_one": "Updated {{count}} spool.",
+      "applied_other": "Updated {{count}} spools.",
+      "applied_partial_one": "Updated {{count}} spool, {{failed}} failed.",
+      "applied_partial_other": "Updated {{count}} spools, {{failed}} failed.",
+      "archive_confirm_one": "Archive {{count}} spool?",
+      "archive_confirm_other": "Archive {{count}} spools?",
+      "unarchive_confirm_one": "Unarchive {{count}} spool?",
+      "unarchive_confirm_other": "Unarchive {{count}} spools?"
+    },
     "fields": {
       "id": "ID",
       "filament_name": "Filament",
