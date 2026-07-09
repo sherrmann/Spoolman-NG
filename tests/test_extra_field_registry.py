@@ -262,6 +262,29 @@ def test_validate_plain_field_accepts_minimal_definition():
     validate_extra_field(field)
 
 
+# --- validate_extra_field: link_template requirements (#129) ---
+
+
+def test_validate_link_requires_template():
+    """Reject a link field definition that omits its link_template."""
+    field = make_field(ExtraFieldType.link)
+    with pytest.raises(ValueError, match="Link template must be set"):
+        validate_extra_field(field)
+
+
+def test_validate_link_accepts_template():
+    """Accept a link field that supplies a link_template."""
+    field = make_field(ExtraFieldType.link, link_template="https://www.amazon.com/dp/{}")
+    validate_extra_field(field)
+
+
+def test_validate_non_link_rejects_link_template():
+    """Reject link_template being set on a non-link field type."""
+    field = make_field(ExtraFieldType.text, link_template="https://x/{}")
+    with pytest.raises(ValueError, match="Link template must not be set"):
+        validate_extra_field(field)
+
+
 # --- validate_extra_field: default_value validation ---
 
 

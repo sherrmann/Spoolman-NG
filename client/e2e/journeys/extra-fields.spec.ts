@@ -23,6 +23,27 @@ test.describe("extra fields journey", () => {
     await expect(page.getByLabel(name)).toBeVisible();
   });
 
+  test("a link field renders its value as a clickable templated link (#129)", async ({ page, request }) => {
+    const stamp = Date.now();
+    const key = `e2e_link_field_${stamp}`;
+    const name = `E2E Link Field ${stamp}`;
+    // A link field: the definition holds the base-URL template, each item stores only the short value.
+    const field = await request.post(`${APP_BASE_URL}/api/v1/field/filament/${key}`, {
+      data: { name, field_type: "link", link_template: "https://www.example.com/dp/{}" },
+    });
+    expect(field.ok()).toBeTruthy();
+    const fil = await (
+      await request.post(`${APP_BASE_URL}/api/v1/filament`, {
+        data: { name: `LF ${stamp}`, density: 1.24, diameter: 1.75, extra: { [key]: JSON.stringify("B0ABCDEF") } },
+      })
+    ).json();
+
+    await page.goto(`${APP_BASE_URL}/filament/show/${fil.id}`);
+    const link = page.getByRole("link", { name: "B0ABCDEF" });
+    await expect(link).toBeVisible();
+    await expect(link).toHaveAttribute("href", "https://www.example.com/dp/B0ABCDEF");
+  });
+
   test('"Copy from Filament" is a spool-only field option (#118)', async ({ page }) => {
     // The linking option only makes sense for spools, so the column header is present there and
     // absent for filament fields. Target the column header specifically (the shared description

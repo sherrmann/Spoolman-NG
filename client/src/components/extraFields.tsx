@@ -4,6 +4,7 @@ import { Checkbox, Form, Input, InputNumber, Select, Typography } from "antd";
 import { FormItemProps, Rule } from "antd/es/form";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
+import { buildLinkUrl } from "../utils/linkField";
 import { enrichText, formatNumberOnUserInput, numberParserAllowEmpty } from "../utils/parsing";
 import { Field, FieldType } from "../utils/queryFields";
 import { DateTimePicker } from "./dateTimePicker";
@@ -64,6 +65,16 @@ export function ExtraFieldDisplay(props: { field: Field; value: string | undefin
       );
     } else if (field.field_type === FieldType.text) {
       item = <TextField value={enrichText(parsedValue)} />;
+    } else if (field.field_type === FieldType.link) {
+      // #129: expand the short stored value into a clickable link via the field's base-URL template.
+      const url = field.link_template ? buildLinkUrl(field.link_template, String(parsedValue)) : "";
+      item = url ? (
+        <a href={url} target="_blank" rel="noreferrer noopener">
+          {parsedValue}
+        </a>
+      ) : (
+        <TextField value={parsedValue} />
+      );
     } else if (field.field_type === FieldType.datetime) {
       item = (
         <DateField
@@ -129,7 +140,8 @@ export function ExtraFieldFormItem(props: { field: Field; setDefaultValue?: bool
     inputNode = <InputNumberRange unit={field.unit} precision={0} />;
   } else if (field.field_type === FieldType.float_range) {
     inputNode = <InputNumberRange unit={field.unit} precision={3} />;
-  } else if (field.field_type === FieldType.text) {
+  } else if (field.field_type === FieldType.text || field.field_type === FieldType.link) {
+    // A link field (#129) edits the short per-item value; the base URL is on the field definition.
     inputNode = <Input />;
     rules.push({
       type: "string",

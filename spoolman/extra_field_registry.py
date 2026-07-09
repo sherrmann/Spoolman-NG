@@ -40,6 +40,7 @@ class ExtraFieldType(Enum):
     datetime = "datetime"
     boolean = "boolean"
     choice = "choice"
+    link = "link"
 
 
 class ExtraFieldParameters(BaseModel):
@@ -54,6 +55,15 @@ class ExtraFieldParameters(BaseModel):
         min_length=1,
     )
     multi_choice: bool | None = Field(None, description="Whether multiple choices can be selected")
+    link_template: str | None = Field(
+        None,
+        description=(
+            "Only for the 'link' field type (#129): a base-URL template. Each item stores a short value "
+            "which the UI expands into a clickable link. Contains '{}' where the value is substituted, "
+            "e.g. 'https://www.amazon.com/dp/{}'; without '{}' the value is appended to the template."
+        ),
+        max_length=512,
+    )
     copy_from_filament: bool | None = Field(
         None,
         description=(
@@ -68,7 +78,7 @@ class ExtraField(ExtraFieldParameters):
     entity_type: EntityType = Field(description="Entity type this field is for")
 
 
-def validate_extra_field_value(field: ExtraFieldParameters, value: str) -> None:  # noqa: C901, PLR0912
+def validate_extra_field_value(field: ExtraFieldParameters, value: str) -> None:  # noqa: C901, PLR0912, PLR0915
     """Validate that the value has the correct type."""
     try:
         data = json.loads(value)
@@ -101,6 +111,10 @@ def validate_extra_field_value(field: ExtraFieldParameters, value: str) -> None:
     elif field.field_type == ExtraFieldType.datetime:
         if not isinstance(data, str):
             raise ValueError("Value is not a string.")
+    elif field.field_type == ExtraFieldType.link:
+        # A link stores the short per-item value; the definition's link_template expands it (#129).
+        if not isinstance(data, str):
+            raise ValueError("Value is not a string.")
     elif field.field_type == ExtraFieldType.boolean:
         if not isinstance(data, bool):
             raise ValueError("Value is not a boolean.")
@@ -121,7 +135,7 @@ def validate_extra_field_value(field: ExtraFieldParameters, value: str) -> None:
         raise ValueError(f"Unknown field type {field.field_type}.")
 
 
-def validate_extra_field(field: ExtraFieldParameters) -> None:
+def validate_extra_field(field: ExtraFieldParameters) -> None:  # noqa: C901
     """Validate an extra field."""
     if field.field_type == ExtraFieldType.choice:
         if field.choices is None:
@@ -133,6 +147,13 @@ def validate_extra_field(field: ExtraFieldParameters) -> None:
             raise ValueError("Choices must not be set for field type other than choice.")
         if field.multi_choice is not None:
             raise ValueError("Multi choice must not be set for field type other than choice.")
+
+    # link_template belongs only to the link type (#129).
+    if field.field_type == ExtraFieldType.link:
+        if not field.link_template:
+            raise ValueError("Link template must be set for field type link.")
+    elif field.link_template is not None:
+        raise ValueError("Link template must not be set for field type other than link.")
 
     if field.default_value is not None:
         try:
