@@ -147,7 +147,9 @@ export const FilamentCreate = (props: IResourceComponentsProps & CreateOrClonePr
         }}
         onClose={() => setIsImportExtOpen(false)}
       />
-      <Form {...formProps} layout="vertical">
+      {/* onFinish → Save so pressing Enter in a field submits the form (#127). The 3dfp import input
+          above calls preventDefault on Enter, so it fetches rather than submitting. */}
+      <Form {...formProps} layout="vertical" onFinish={() => handleSubmit("list")}>
         <Form.Item label={t("filament.form.import_3dfp")} help={t("filament.form.import_3dfp_help")}>
           <Space.Compact style={{ width: "100%" }}>
             <Input
@@ -174,7 +176,8 @@ export const FilamentCreate = (props: IResourceComponentsProps & CreateOrClonePr
             },
           ]}
         >
-          <Input maxLength={64} />
+          {/* Auto-focus the first real field (#127). */}
+          <Input maxLength={64} autoFocus />
         </Form.Item>
         <Form.Item
           label={t("filament.fields.vendor")}
@@ -472,6 +475,14 @@ export const FilamentCreate = (props: IResourceComponentsProps & CreateOrClonePr
         {extraFields.data?.map((field, index) => (
           <ExtraFieldFormItem key={index} field={field} />
         ))}
+        {/* Off-screen submit button so Enter submits the form (#127); the visible Save buttons are in
+            footerButtons, outside the <Form>. */}
+        <button
+          type="submit"
+          aria-hidden
+          tabIndex={-1}
+          style={{ position: "absolute", left: -9999, width: 1, height: 1 }}
+        />
       </Form>
     </Create>
   );

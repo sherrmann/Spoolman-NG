@@ -286,7 +286,8 @@ export const SpoolCreate = (props: IResourceComponentsProps & CreateOrCloneProps
         </>
       )}
     >
-      <Form {...formProps} layout="vertical">
+      {/* onFinish → Save so pressing Enter in a field submits the form (#127). */}
+      <Form {...formProps} layout="vertical" onFinish={() => handleSubmit("list")}>
         <Form.Item
           label={t("spool.fields.first_used")}
           name={["first_used"]}
@@ -324,7 +325,9 @@ export const SpoolCreate = (props: IResourceComponentsProps & CreateOrCloneProps
             },
           ]}
         >
+          {/* Auto-focus the filament picker — the primary field to start a spool (#127). */}
           <Select
+            autoFocus
             options={filamentOptions}
             showSearch
             filterOption={(input, option) => typeof option?.label === "string" && searchMatches(input, option?.label)}
@@ -517,6 +520,14 @@ export const SpoolCreate = (props: IResourceComponentsProps & CreateOrCloneProps
         {extraFields.data?.map((field, index) => (
           <ExtraFieldFormItem key={index} field={field} />
         ))}
+        {/* Off-screen submit button so Enter submits the form (#127); the visible Save buttons are in
+            footerButtons, outside the <Form>. */}
+        <button
+          type="submit"
+          aria-hidden
+          tabIndex={-1}
+          style={{ position: "absolute", left: -9999, width: 1, height: 1 }}
+        />
       </Form>
     </Create>
   );

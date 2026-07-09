@@ -48,4 +48,14 @@ test.describe("vendor (manufacturer) journey", () => {
     expect(cloneId).not.toBe(id);
     await expect(page).toHaveURL(atPath("/vendor"));
   });
+
+  test("pressing Enter in a field submits the create form (#127)", async ({ page }) => {
+    const name = `Enter ${Date.now()}`;
+    await page.goto(`${APP_BASE_URL}/vendor/create`);
+    const nameInput = page.getByRole("textbox", { name: "Name" });
+    await nameInput.fill(name);
+    await nameInput.press("Enter");
+    // Enter saves and returns to the list (same as clicking Save).
+    await expect(page).toHaveURL(atPath("/vendor"));
+  });
 });
