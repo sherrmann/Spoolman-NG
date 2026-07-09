@@ -84,6 +84,11 @@ const allColumns: (keyof IFilamentCollapsed & string)[] = [
   "external_id",
   "settings_extruder_temp",
   "settings_bed_temp",
+  "spool_type",
+  "finish",
+  "pattern",
+  "translucent",
+  "glow",
   "registered",
   "comment",
 ];
@@ -101,6 +106,11 @@ const defaultColumns = allColumns.filter(
       "remaining_weight",
       "color_hue",
       "external_id",
+      "spool_type",
+      "finish",
+      "pattern",
+      "translucent",
+      "glow",
     ].indexOf(column_id) === -1,
 );
 
@@ -495,6 +505,46 @@ export const FilamentList = () => {
             unit: "°C",
             maxDecimals: 0,
             width: 100,
+          }),
+          // SpoolmanDB catalog descriptors (#91): opt-in, hidden-by-default columns.
+          SortedColumn({
+            ...commonProps,
+            id: "spool_type",
+            i18ncat: "filament",
+            width: 110,
+            render: (_, record: IFilamentCollapsed) =>
+              record.spool_type ? t(`filament.spool_type_options.${record.spool_type}`) : "",
+          }),
+          SortedColumn({
+            ...commonProps,
+            id: "finish",
+            i18ncat: "filament",
+            width: 100,
+            render: (_, record: IFilamentCollapsed) =>
+              record.finish ? t(`filament.finish_options.${record.finish}`) : "",
+          }),
+          SortedColumn({
+            ...commonProps,
+            id: "pattern",
+            i18ncat: "filament",
+            width: 100,
+            render: (_, record: IFilamentCollapsed) =>
+              record.pattern ? t(`filament.pattern_options.${record.pattern}`) : "",
+          }),
+          SortedColumn({
+            ...commonProps,
+            id: "translucent",
+            i18ncat: "filament",
+            width: 100,
+            render: (_, record: IFilamentCollapsed) =>
+              record.translucent == null ? "" : record.translucent ? t("yes") : t("no"),
+          }),
+          SortedColumn({
+            ...commonProps,
+            id: "glow",
+            i18ncat: "filament",
+            width: 100,
+            render: (_, record: IFilamentCollapsed) => (record.glow == null ? "" : record.glow ? t("yes") : t("no")),
           }),
           DateColumn({
             ...commonProps,

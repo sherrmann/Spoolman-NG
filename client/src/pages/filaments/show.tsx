@@ -204,6 +204,36 @@ export const FilamentShow = () => {
           <TextField value={`${record.settings_bed_temp_min}–${record.settings_bed_temp_max} °C`} />
         </>
       )}
+      {record?.spool_type && (
+        <>
+          <Title level={5}>{t("filament.fields.spool_type")}</Title>
+          <TextField value={t(`filament.spool_type_options.${record.spool_type}`)} />
+        </>
+      )}
+      {record?.finish && (
+        <>
+          <Title level={5}>{t("filament.fields.finish")}</Title>
+          <TextField value={t(`filament.finish_options.${record.finish}`)} />
+        </>
+      )}
+      {record?.pattern && (
+        <>
+          <Title level={5}>{t("filament.fields.pattern")}</Title>
+          <TextField value={t(`filament.pattern_options.${record.pattern}`)} />
+        </>
+      )}
+      {record?.translucent != null && (
+        <>
+          <Title level={5}>{t("filament.fields.translucent")}</Title>
+          <TextField value={record.translucent ? t("yes") : t("no")} />
+        </>
+      )}
+      {record?.glow != null && (
+        <>
+          <Title level={5}>{t("filament.fields.glow")}</Title>
+          <TextField value={record.glow ? t("yes") : t("no")} />
+        </>
+      )}
       <Title level={5}>{t("filament.fields.article_number")}</Title>
       <TextField value={record?.article_number} />
       <Title level={5}>{t("filament.fields.external_id")}</Title>

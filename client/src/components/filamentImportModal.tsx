@@ -24,6 +24,12 @@ export function FilamentImportModal(props: {
         item.weight,
         item.spool_type,
       );
+      // Extend the searchable text with the catalog descriptors so a user can find e.g. "glow",
+      // "translucent" or "matte" filaments even though the visible label doesn't spell them out (#91).
+      const descriptors = [item.finish, item.pattern, item.translucent && "translucent", item.glow && "glow"].filter(
+        Boolean,
+      );
+      const searchText = descriptors.length > 0 ? `${textLabel} ${descriptors.join(" ")}` : textLabel;
       const sourceTag =
         item.source === "tigertag" ? (
           <Tag color="orange">{t("external.source_tigertag")}</Tag>
@@ -36,12 +42,13 @@ export function FilamentImportModal(props: {
             {sourceTag} {textLabel}
           </span>
         ),
-        searchText: textLabel,
+        searchText,
+        sortText: textLabel,
         value: item.id,
         item: item,
       };
     }) ?? [];
-  filamentOptions.sort((a, b) => a.searchText.localeCompare(b.searchText, undefined, { sensitivity: "base" }));
+  filamentOptions.sort((a, b) => a.sortText.localeCompare(b.sortText, undefined, { sensitivity: "base" }));
 
   return (
     <Modal

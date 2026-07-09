@@ -3,6 +3,7 @@
 import logging
 from collections.abc import Sequence
 from datetime import datetime
+from enum import Enum
 
 import sqlalchemy
 from sqlalchemy import case, func, select
@@ -10,7 +11,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import contains_eager, joinedload
 
-from spoolman.api.v1.models import EventType, Filament, FilamentEvent, MultiColorDirection
+from spoolman.api.v1.models import EventType, Filament, FilamentEvent, Finish, MultiColorDirection, Pattern, SpoolType
 from spoolman.database import models, vendor
 from spoolman.database.extra_field_query import apply_extra_field_filters_and_sort
 from spoolman.database.utils import (
@@ -48,6 +49,11 @@ async def create(
     settings_extruder_temp_max: int | None = None,
     settings_bed_temp_min: int | None = None,
     settings_bed_temp_max: int | None = None,
+    spool_type: SpoolType | None = None,
+    finish: Finish | None = None,
+    pattern: Pattern | None = None,
+    translucent: bool | None = None,
+    glow: bool | None = None,
     color_hex: str | None = None,
     multi_color_hexes: str | None = None,
     multi_color_direction: MultiColorDirection | None = None,
@@ -82,6 +88,11 @@ async def create(
         settings_extruder_temp_max=settings_extruder_temp_max,
         settings_bed_temp_min=settings_bed_temp_min,
         settings_bed_temp_max=settings_bed_temp_max,
+        spool_type=spool_type.value if spool_type is not None else None,
+        finish=finish.value if finish is not None else None,
+        pattern=pattern.value if pattern is not None else None,
+        translucent=translucent,
+        glow=glow,
         color_hex=color_hex,
         multi_color_hexes=multi_color_hexes,
         multi_color_direction=multi_color_direction.value if multi_color_direction is not None else None,
@@ -322,8 +333,10 @@ async def update(
                 filament.vendor = await vendor.get_by_id(db, v)
         elif k == "extra":
             filament.extra = [models.FilamentField(key=k, value=v) for k, v in v.items()]
-        elif k == "multi_color_direction":
-            filament.multi_color_direction = v.value if v is not None else None
+        elif isinstance(v, Enum):
+            # Enum-typed fields (multi_color_direction #74, spool_type/finish/pattern #91) are stored
+            # as their string value. A None (cleared) value falls through to the plain setattr below.
+            setattr(filament, k, v.value)
         elif isinstance(v, datetime):
             setattr(filament, k, utc_timezone_naive(v))
         else:
