@@ -396,6 +396,21 @@
     "tabs": {
       "details": "Details"
     },
+    "bulk": {
+      "selected_one": "{{count}} selected",
+      "selected_other": "{{count}} selected",
+      "edit": "Edit",
+      "clear_selection": "Clear selection",
+      "edit_title_one": "Edit {{count}} filament",
+      "edit_title_other": "Edit {{count}} filaments",
+      "edit_help": "Tick a field to change it on every selected filament. Unticked fields are left unchanged.",
+      "apply": "Apply",
+      "nothing_selected": "Tick at least one field to change.",
+      "applied_one": "Updated {{count}} filament.",
+      "applied_other": "Updated {{count}} filaments.",
+      "applied_partial_one": "Updated {{count}} filament, {{failed}} failed.",
+      "applied_partial_other": "Updated {{count}} filaments, {{failed}} failed."
+    },
     "form": {
       "filament_updated": "This filament has been updated by someone/something else since you opened this page. Saving will overwrite those changes!",
       "import_external": "Import from External",

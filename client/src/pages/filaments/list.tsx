@@ -9,10 +9,10 @@ import {
 } from "@ant-design/icons";
 import { List, useTable } from "@refinedev/antd";
 import { useInvalidate, useNavigation, useTranslate } from "@refinedev/core";
-import { Button, Dropdown, Input, Table } from "antd";
+import { Button, Dropdown, Input, message, Space, Table } from "antd";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
-import { Key, useMemo, useState } from "react";
+import { Key, useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import {
   ActionsColumn,
@@ -28,6 +28,7 @@ import { ColorSimilarityFilter, ColorSimilarityValue } from "../../components/co
 import { useLiveify } from "../../components/liveify";
 import SpoolIcon from "../../components/spoolIcon";
 import SwatchDownloadModal from "../../components/swatchDownloadModal";
+import { useFilamentBulkEditModal } from "./bulkEdit";
 import {
   useSpoolmanArticleNumbers,
   useSpoolmanFilamentNames,
@@ -169,9 +170,17 @@ export const FilamentList = () => {
   // Filament to show the swatch download dialog for
   const [swatchFilament, setSwatchFilament] = useState<IFilamentCollapsed | null>(null);
 
-  // Row selection drives the "Print Labels" toolbar action: with rows selected, printing
-  // skips the in-page filament selector and jumps straight to the label dialog.
+  // Row selection drives the "Print Labels" toolbar action and the bulk-action bar (#73): with rows
+  // selected, printing skips the in-page selector, and a contextual bar offers bulk edit.
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
+  const selectedIds = useMemo(() => selectedRowKeys.map(Number), [selectedRowKeys]);
+
+  const [messageApi, messageContextHolder] = message.useMessage();
+  const onBulkApplied = useCallback(() => {
+    invalidate({ resource: "filament", invalidates: ["list"] });
+    setSelectedRowKeys([]);
+  }, [invalidate]);
+  const { openBulkEdit, bulkEditModal } = useFilamentBulkEditModal(messageApi, onBulkApplied);
 
   // Store state in local storage
   const tableState: TableState = {
@@ -305,6 +314,20 @@ export const FilamentList = () => {
         </>
       )}
     >
+      {messageContextHolder}
+      {bulkEditModal}
+      {/* Contextual bulk-action bar (#73): only shown while rows are selected. */}
+      {selectedRowKeys.length > 0 && (
+        <Space className="filament-bulk-actions" style={{ marginBottom: 16 }} wrap>
+          <span>{t("filament.bulk.selected", { count: selectedRowKeys.length })}</span>
+          <Button icon={<EditOutlined />} onClick={() => openBulkEdit(selectedIds)}>
+            {t("filament.bulk.edit")}
+          </Button>
+          <Button type="text" onClick={() => setSelectedRowKeys([])}>
+            {t("filament.bulk.clear_selection")}
+          </Button>
+        </Space>
+      )}
       <Table<IFilamentCollapsed>
         {...tableProps}
         sticky
