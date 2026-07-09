@@ -78,6 +78,40 @@ test.describe("spool journey", () => {
     await expect.poll(() => posts, { timeout: 10_000 }).toBeGreaterThanOrEqual(3);
   });
 
+  test("measured weight survives an empty-weight correction (#66)", async ({ page, request }) => {
+    // Filament with a known net + spool weight so Measured mode is enabled and gross is predictable.
+    const name = `Meas ${Date.now()}`;
+    const res = await request.post(`${APP_BASE_URL}/api/v1/filament`, {
+      data: { name, density: 1.24, diameter: 1.75, weight: 1000, spool_weight: 200 },
+    });
+    expect(res.ok()).toBeTruthy();
+
+    await page.goto(`${APP_BASE_URL}/spool/create`);
+    const filamentSelect = page.getByLabel("Filament");
+    await filamentSelect.click();
+    await filamentSelect.pressSequentially(name);
+    await page.locator(".ant-select-item-option").filter({ hasText: name }).first().click();
+
+    // Enter a measured (gross) weight of 800 g. With gross 1200 (1000 + 200) that means used = 400.
+    // The weight-mode radios/inputs have no form `name`, so target them structurally.
+    await page.locator(".ant-radio-button-wrapper").filter({ hasText: "Measured Weight" }).click();
+    const measured = page
+      .locator(".ant-form-item")
+      .filter({ has: page.locator(".ant-form-item-label", { hasText: "Measured Weight" }) })
+      .getByRole("spinbutton");
+    await measured.fill("800");
+
+    // Now correct the empty-spool weight to 300. The scale still read 800, so the measured field must
+    // STILL show 800 (previously it drifted to 900 because used_weight was held fixed) — #66.
+    await page.getByRole("spinbutton", { name: "Empty Weight" }).fill("300");
+    await expect(measured).toHaveValue(/800/);
+
+    // used_weight is re-derived: gross 1300 − measured 800 = 500.
+    const id = await saveAndGetId(page, "spool");
+    const got = await request.get(`${APP_BASE_URL}/api/v1/spool/${id}`);
+    expect((await got.json()).used_weight).toBe(500);
+  });
+
   test("adjust filament usage → archive", async ({ page, request }) => {
     const filament = await seedFilament(request);
     const spoolRes = await request.post(`${APP_BASE_URL}/api/v1/spool`, {
