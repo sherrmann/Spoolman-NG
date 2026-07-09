@@ -1,4 +1,4 @@
-import { PlusOutlined } from "@ant-design/icons";
+import { PlusOutlined, PrinterOutlined } from "@ant-design/icons";
 import { List } from "@refinedev/antd";
 import { useTranslate } from "@refinedev/core";
 import { Button } from "antd";
@@ -7,6 +7,7 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
+import { useNavigate } from "react-router";
 
 import { LocationContainer } from "./components/locationContainer";
 import "./locations.css";
@@ -15,14 +16,21 @@ dayjs.extend(utc);
 
 export const Locations = () => {
   const t = useTranslate();
+  const navigate = useNavigate();
   const [modalOpen, setModalOpen] = useState(false);
 
   return (
     <List
       headerButtons={() => (
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalOpen(true)}>
-          {t("locations.new_location")}
-        </Button>
+        <>
+          {/* Print scannable QR labels for storage locations (#84). */}
+          <Button icon={<PrinterOutlined />} onClick={() => navigate("/location/print")}>
+            {t("locations.print.button")}
+          </Button>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalOpen(true)}>
+            {t("locations.new_location")}
+          </Button>
+        </>
       )}
     >
       <DndProvider backend={HTML5Backend}>

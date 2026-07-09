@@ -234,6 +234,8 @@ function App() {
                       path="/location/show/:id"
                       element={<LoadableResourcePage resource="locations" page="show" />}
                     />
+                    {/* Location label printing (#84). */}
+                    <Route path="/location/print" element={<LoadablePage name="locationPrint" />} />
                     <Route path="*" element={<ErrorComponent />} />
                   </Route>
                 </Routes>
