@@ -265,6 +265,17 @@
       "unarchive_confirm_one": "Unarchive {{count}} spool?",
       "unarchive_confirm_other": "Unarchive {{count}} spools?"
     },
+    "weigh": {
+      "button": "Weigh Spools",
+      "title": "Weigh Spools",
+      "help": "Find a spool, enter its measurement, then Save & Next to weigh the next one without closing.",
+      "spool": "Spool",
+      "search_placeholder": "Search by ID, filament, lot number…",
+      "save_next": "Save & Next",
+      "done": "Done",
+      "updated": "Updated {{name}}",
+      "pick_spool": "Select a spool first."
+    },
     "fields": {
       "id": "ID",
       "filament_name": "Filament",
