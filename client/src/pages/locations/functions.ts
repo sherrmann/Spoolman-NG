@@ -4,8 +4,57 @@ import { useMemo } from "react";
 import { useGetSetting } from "../../utils/querySettings";
 import { getAPIURL } from "../../utils/url";
 import { ISpool } from "../spools/model";
+import { ILocation } from "./model";
 
 export const EMPTYLOC = "";
+
+/**
+ * Look up a Location entity (#103) by its exact name. The registry is keyed by name (the board deals
+ * in location strings), so this bridges a board column to its entity row. The backend name filter is
+ * a partial case-insensitive match, so we pick the exact-name row from the results.
+ */
+export async function getLocationByName(name: string): Promise<ILocation | null> {
+  const response = await fetch(`${getAPIURL()}/locations?${new URLSearchParams({ name })}`);
+  if (!response.ok) {
+    return null;
+  }
+  const data: ILocation[] = await response.json();
+  return data.find((loc) => loc.name === name) ?? null;
+}
+
+/**
+ * Get the Location entity for a board column's name, creating an empty registry row on first use so
+ * custom-field values have somewhere to live. Board columns are strings; their entity row is created
+ * lazily the first time someone edits its custom fields.
+ */
+export async function getOrCreateLocationByName(name: string): Promise<ILocation> {
+  const existing = await getLocationByName(name);
+  if (existing) {
+    return existing;
+  }
+  const response = await fetch(`${getAPIURL()}/locations`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name }),
+  });
+  if (!response.ok) {
+    throw new Error("Failed to create location");
+  }
+  return response.json();
+}
+
+/** Replace a location's custom-field values (#103). extra values are JSON-encoded strings. */
+export async function updateLocationExtra(id: number, extra: { [key: string]: string }): Promise<ILocation> {
+  const response = await fetch(`${getAPIURL()}/locations/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ extra }),
+  });
+  if (!response.ok) {
+    throw new Error("Failed to update location");
+  }
+  return response.json();
+}
 
 interface LocationRename {
   old: string;

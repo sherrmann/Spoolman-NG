@@ -663,11 +663,19 @@
   },
   "locations": {
     "locations": "Locations",
+    "location": "Location",
     "new_location": "New Location",
     "no_location": "No Location",
     "no_locations_help": "This page lets you organize your spools in locations, add some spools to get started!",
     "error_empty": "Name cannot be empty",
-    "error_exists": "Location already exists"
+    "error_exists": "Location already exists",
+    "fields": {
+      "button": "Custom fields",
+      "title": "Custom fields — {{name}}",
+      "saved": "Location fields saved",
+      "save_error": "Failed to save location fields",
+      "load_error": "Failed to load location"
+    }
   },
   "calibration": {
     "title": "Calibration",

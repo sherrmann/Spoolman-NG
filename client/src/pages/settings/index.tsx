@@ -1,4 +1,5 @@
 import {
+  EnvironmentOutlined,
   FileOutlined,
   HighlightOutlined,
   IdcardOutlined,
@@ -30,6 +31,7 @@ const panels: Record<string, React.ReactNode> = {
   "extra-spool": <ExtraFieldsSettings entityType={EntityType.spool} />,
   "extra-filament": <ExtraFieldsSettings entityType={EntityType.filament} />,
   "extra-vendor": <ExtraFieldsSettings entityType={EntityType.vendor} />,
+  "extra-location": <ExtraFieldsSettings entityType={EntityType.location} />,
 };
 
 // Map between menu keys and the URL path under /settings.
@@ -40,6 +42,7 @@ const keyToPath: Record<string, string> = {
   "extra-spool": "/settings/extra/spool",
   "extra-filament": "/settings/extra/filament",
   "extra-vendor": "/settings/extra/vendor",
+  "extra-location": "/settings/extra/location",
 };
 
 const getActiveKey = (pathname: string): string => {
@@ -49,6 +52,7 @@ const getActiveKey = (pathname: string): string => {
   if (sub.startsWith("extra/spool")) return "extra-spool";
   if (sub.startsWith("extra/filament")) return "extra-filament";
   if (sub.startsWith("extra/vendor")) return "extra-vendor";
+  if (sub.startsWith("extra/location")) return "extra-location";
   return "general";
 };
 
@@ -105,6 +109,11 @@ export const Settings = () => {
                 key: "extra-vendor",
                 icon: <UserOutlined />,
                 label: `${t("settings.extra_fields.tab")} - ${t("vendor.vendor")}`,
+              },
+              {
+                key: "extra-location",
+                icon: <EnvironmentOutlined />,
+                label: `${t("settings.extra_fields.tab")} - ${t("locations.location")}`,
               },
             ]}
           />

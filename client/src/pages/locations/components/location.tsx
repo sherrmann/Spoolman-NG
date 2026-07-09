@@ -3,11 +3,13 @@ import type { Identifier, XYCoord } from "dnd-core";
 import { useRef, useState } from "react";
 import { DragSourceMonitor, useDrag, useDrop } from "react-dnd";
 
-import { DeleteOutlined, InboxOutlined } from "@ant-design/icons";
+import { DeleteOutlined, InboxOutlined, SettingOutlined } from "@ant-design/icons";
 import { useTranslate, useUpdate } from "@refinedev/core";
+import { EntityType, useGetFields } from "../../../utils/queryFields";
 import { ISpool } from "../../spools/model";
 import { DragItem, ItemTypes, SpoolDragItem } from "../dnd";
 import { EMPTYLOC } from "../functions";
+import { LocationFieldsModal } from "./locationFieldsModal";
 import { SpoolList } from "./spoolList";
 
 const { useToken } = theme;
@@ -37,6 +39,11 @@ export function Location({
   const t = useTranslate();
   const [editTitle, setEditTitle] = useState(false);
   const [newTitle, setNewTitle] = useState(title);
+  const [fieldsModalOpen, setFieldsModalOpen] = useState(false);
+  // #103: only offer the per-location custom-fields editor once location fields are defined, so a
+  // plain board is unchanged. react-query dedupes this across every location column.
+  const locationFields = useGetFields(EntityType.location);
+  const hasLocationFields = (locationFields.data?.length ?? 0) > 0;
   const { mutate: updateSpool } = useUpdate({
     resource: "spool",
     mutationMode: "optimistic",
@@ -185,8 +192,20 @@ export function Location({
             </span>
           </span>
         )}
+        {canEditTitle && hasLocationFields && (
+          <Button
+            icon={<SettingOutlined />}
+            size="small"
+            type="text"
+            title={t("locations.fields.button")}
+            onClick={() => setFieldsModalOpen(true)}
+          />
+        )}
         {showDelete && <Button icon={<DeleteOutlined />} size="small" type="text" danger onClick={onDelete} />}
       </h3>
+      {canEditTitle && hasLocationFields && (
+        <LocationFieldsModal locationName={title} open={fieldsModalOpen} onClose={() => setFieldsModalOpen(false)} />
+      )}
       {spools.length === 0 ? (
         <div className="loc-empty-state">
           <InboxOutlined style={{ marginRight: 8 }} />
