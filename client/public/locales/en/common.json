@@ -224,7 +224,19 @@
     "title": "Scan",
     "qr": "QR Code",
     "nfc": "NFC",
-    "nfc_hint": "NFC scanning is not available in this browser. Use Android Chrome, or connect a server-side NFC reader."
+    "nfc_hint": "NFC scanning is not available in this browser. Use Android Chrome, or connect a server-side NFC reader.",
+    "action": {
+      "open": "Open",
+      "move": "Move spool"
+    },
+    "move": {
+      "scan_spool": "Scan a spool to move.",
+      "scan_location": "Spool #{{id}} selected. Now scan the destination location.",
+      "confirm_title": "Move spool?",
+      "confirm_content": "Move spool #{{spool}} to \"{{location}}\"?",
+      "moved": "Moved spool #{{spool}} to \"{{location}}\".",
+      "load_error": "Failed to load the scanned location."
+    }
   },
   "scanner": {
     "title": "QR Code Scanner",
