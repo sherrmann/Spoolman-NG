@@ -88,4 +88,26 @@ test.describe("filament journey", () => {
     const got = await request.get(`${APP_BASE_URL}/api/v1/filament/${id}`);
     expect((await got.json()).vendor.id).toBe(vendorId);
   });
+
+  test("extruder temperature range round-trips through the create form (#112)", async ({ page, request }) => {
+    await page.goto(`${APP_BASE_URL}/filament/create`);
+    await expect(page).toHaveURL(atPath("/filament/create"));
+
+    await page.getByRole("textbox", { name: "Name" }).fill(`Range ${Date.now()}`);
+    await page.getByRole("spinbutton", { name: "Density" }).fill("1.24");
+    await page.getByRole("spinbutton", { name: "Diameter" }).fill("1.75");
+
+    // The Min/Max pair share one labelled Form.Item; target it structurally (the two spinbuttons
+    // inside it are min then max) rather than by an accessible name they don't individually carry.
+    const range = page
+      .locator(".ant-form-item")
+      .filter({ has: page.locator(".ant-form-item-label", { hasText: "Extruder Temp Range" }) });
+    await range.getByRole("spinbutton").first().fill("205");
+    await range.getByRole("spinbutton").last().fill("225");
+
+    const id = await saveAndGetId(page, "filament");
+    const got = await (await request.get(`${APP_BASE_URL}/api/v1/filament/${id}`)).json();
+    expect(got.settings_extruder_temp_min).toBe(205);
+    expect(got.settings_extruder_temp_max).toBe(225);
+  });
 });

@@ -103,6 +103,26 @@ class ExternalFilament(BaseModel):
     )
     extruder_temp: int | None = Field(default=None, description="Extruder/nozzle temperature in °C.", examples=[210])
     bed_temp: int | None = Field(default=None, description="Bed temperature in °C.", examples=[50])
+    extruder_temp_min: int | None = Field(
+        default=None,
+        description="Low end of the recommended extruder temperature range in °C.",
+        examples=[205],
+    )
+    extruder_temp_max: int | None = Field(
+        default=None,
+        description="High end of the recommended extruder temperature range in °C.",
+        examples=[225],
+    )
+    bed_temp_min: int | None = Field(
+        default=None,
+        description="Low end of the recommended bed temperature range in °C.",
+        examples=[50],
+    )
+    bed_temp_max: int | None = Field(
+        default=None,
+        description="High end of the recommended bed temperature range in °C.",
+        examples=[60],
+    )
     finish: Finish | None = Field(default=None, description="Finish of the filament.", examples=[Finish.MATTE])
     multi_color_direction: MultiColorDirection | None = Field(
         default=None,

@@ -51,6 +51,16 @@ def test_temperatures_are_averaged_and_floored():
     assert data["bed_temp"] == (60 + 50) // 2  # 55
 
 
+def test_temperature_ranges_are_carried_through_not_discarded():
+    # The midpoint stays for backward compatibility, but the manufacturer's min/max
+    # range now survives instead of being collapsed and thrown away (#112).
+    data = parse_3dfp_html(_page())
+    assert data["extruder_temp_min"] == 210
+    assert data["extruder_temp_max"] == 230
+    assert data["bed_temp_min"] == 50
+    assert data["bed_temp_max"] == 60
+
+
 def test_display_name_is_color_type_material():
     assert parse_3dfp_html(_page())["name"] == "Galaxy Black Basic PLA"
 
@@ -87,3 +97,5 @@ def test_partial_profile_only_extracts_present_fields():
     assert "density" not in data
     assert "diameter" not in data
     assert "extruder_temp" not in data
+    assert "extruder_temp_min" not in data
+    assert "bed_temp_max" not in data

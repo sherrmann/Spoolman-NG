@@ -254,6 +254,30 @@ class Filament(BaseModel):
         description="Overridden bed temperature, in °C.",
         examples=[60],
     )
+    settings_extruder_temp_min: int | None = Field(
+        None,
+        ge=0,
+        description="Low end of the recommended extruder temperature range, in °C. Null if no range recorded.",
+        examples=[205],
+    )
+    settings_extruder_temp_max: int | None = Field(
+        None,
+        ge=0,
+        description="High end of the recommended extruder temperature range, in °C. Null if no range recorded.",
+        examples=[225],
+    )
+    settings_bed_temp_min: int | None = Field(
+        None,
+        ge=0,
+        description="Low end of the recommended bed temperature range, in °C. Null if no range recorded.",
+        examples=[50],
+    )
+    settings_bed_temp_max: int | None = Field(
+        None,
+        ge=0,
+        description="High end of the recommended bed temperature range, in °C. Null if no range recorded.",
+        examples=[60],
+    )
     color_hex: str | None = Field(
         None,
         min_length=6,
@@ -361,6 +385,10 @@ class Filament(BaseModel):
             comment=item.comment,
             settings_extruder_temp=item.settings_extruder_temp,
             settings_bed_temp=item.settings_bed_temp,
+            settings_extruder_temp_min=item.settings_extruder_temp_min,
+            settings_extruder_temp_max=item.settings_extruder_temp_max,
+            settings_bed_temp_min=item.settings_bed_temp_min,
+            settings_bed_temp_max=item.settings_bed_temp_max,
             color_hex=_normalize_stored_color_hex(item.color_hex),
             multi_color_hexes=_normalize_stored_multi_color_hexes(item.multi_color_hexes),
             multi_color_direction=(

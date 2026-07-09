@@ -225,15 +225,25 @@ def parse_3dfp_html(html: str) -> dict | None:  # noqa: C901, PLR0912, PLR0915
             if spool_weight_match:
                 data["spool_weight"] = float(spool_weight_match.group(1))
 
+            # Keep the midpoint as the single recommended value (so existing consumers are unchanged)
+            # but also carry the manufacturer's min/max range through instead of discarding it (#112).
             temp_max_match = re.search(r'\\"temp_max\\":([\d\.]+)', line)
             temp_min_match = re.search(r'\\"temp_min\\":([\d\.]+)', line)
             if temp_max_match and temp_min_match:
-                data["extruder_temp"] = (int(temp_max_match.group(1)) + int(temp_min_match.group(1))) // 2
+                temp_min = int(temp_min_match.group(1))
+                temp_max = int(temp_max_match.group(1))
+                data["extruder_temp"] = (temp_max + temp_min) // 2
+                data["extruder_temp_min"] = temp_min
+                data["extruder_temp_max"] = temp_max
 
             bed_temp_max_match = re.search(r'\\"bed_temp_max\\":([\d\.]+)', line)
             bed_temp_min_match = re.search(r'\\"bed_temp_min\\":([\d\.]+)', line)
             if bed_temp_max_match and bed_temp_min_match:
-                data["bed_temp"] = (int(bed_temp_max_match.group(1)) + int(bed_temp_min_match.group(1))) // 2
+                bed_temp_min = int(bed_temp_min_match.group(1))
+                bed_temp_max = int(bed_temp_max_match.group(1))
+                data["bed_temp"] = (bed_temp_max + bed_temp_min) // 2
+                data["bed_temp_min"] = bed_temp_min
+                data["bed_temp_max"] = bed_temp_max
 
             name_parts = []
             if "color" in data:

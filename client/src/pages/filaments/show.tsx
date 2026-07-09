@@ -186,11 +186,23 @@ export const FilamentShow = () => {
       ) : (
         <NumberFieldUnit value={record?.settings_extruder_temp ?? ""} unit="°C" />
       )}
+      {record?.settings_extruder_temp_min != null && record?.settings_extruder_temp_max != null && (
+        <>
+          <Title level={5}>{t("filament.fields.settings_extruder_temp_range")}</Title>
+          <TextField value={`${record.settings_extruder_temp_min}–${record.settings_extruder_temp_max} °C`} />
+        </>
+      )}
       <Title level={5}>{t("filament.fields.settings_bed_temp")}</Title>
       {!record?.settings_bed_temp ? (
         <TextField value="Not Set" />
       ) : (
         <NumberFieldUnit value={record?.settings_bed_temp ?? ""} unit="°C" />
+      )}
+      {record?.settings_bed_temp_min != null && record?.settings_bed_temp_max != null && (
+        <>
+          <Title level={5}>{t("filament.fields.settings_bed_temp_range")}</Title>
+          <TextField value={`${record.settings_bed_temp_min}–${record.settings_bed_temp_max} °C`} />
+        </>
       )}
       <Title level={5}>{t("filament.fields.article_number")}</Title>
       <TextField value={record?.article_number} />

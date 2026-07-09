@@ -15,6 +15,11 @@ export interface IFilament {
   comment?: string;
   settings_extruder_temp?: number;
   settings_bed_temp?: number;
+  // Manufacturer recommended temperature ranges (#112). Absent means no range recorded.
+  settings_extruder_temp_min?: number;
+  settings_extruder_temp_max?: number;
+  settings_bed_temp_min?: number;
+  settings_bed_temp_max?: number;
   color_hex?: string;
   multi_color_hexes?: string;
   multi_color_direction?: string;
