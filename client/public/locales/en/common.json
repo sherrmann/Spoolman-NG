@@ -434,7 +434,8 @@
       "import_3dfp_help": "Automatically fill information by retrieving from 3dfilamentprofiles.com",
       "import_3dfp_placeholder": "e.g. 12875",
       "import_3dfp_success": "Successfully fetched filament from 3dfilamentprofiles.com",
-      "import_3dfp_error": "Failed to fetch filament data from 3dfilamentprofiles.com"
+      "import_3dfp_error": "Failed to fetch filament data from 3dfilamentprofiles.com",
+      "must_be_positive": "Must be greater than 0."
     },
     "buttons": {
       "add_spool": "Add Spool",

@@ -41,4 +41,26 @@ test.describe("filament journey", () => {
     const cloneId = await saveAndGetId(page, "filament");
     expect(cloneId).not.toBe(id);
   });
+
+  test("density of 0 is rejected in the form (#67) and External ID round-trips (#70)", async ({ page, request }) => {
+    const name = `EXT ${Date.now()}`;
+    await page.goto(`${APP_BASE_URL}/filament/create`);
+    await expect(page).toHaveURL(atPath("/filament/create"));
+
+    await page.getByRole("textbox", { name: "Name" }).fill(name);
+    // Density 0 must be caught client-side (backend requires > 0), not sent as a 422.
+    await page.getByRole("spinbutton", { name: "Density" }).fill("0");
+    await page.getByRole("spinbutton", { name: "Diameter" }).fill("1.75");
+    await saveButton(page).click();
+    await expect(page.getByText("Must be greater than 0.")).toBeVisible();
+    await expect(page).toHaveURL(atPath("/filament/create"));
+
+    // Fix the density and set an External ID (new on the create form).
+    await page.getByRole("spinbutton", { name: "Density" }).fill("1.24");
+    await page.getByRole("textbox", { name: "External ID" }).fill("ext-12875");
+    const id = await saveAndGetId(page, "filament");
+
+    const got = await request.get(`${APP_BASE_URL}/api/v1/filament/${id}`);
+    expect((await got.json()).external_id).toBe("ext-12875");
+  });
 });

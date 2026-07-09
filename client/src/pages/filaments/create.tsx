@@ -302,8 +302,15 @@ export const FilamentCreate = (props: IResourceComponentsProps & CreateOrClonePr
             {
               required: true,
               type: "number",
-              min: 0,
               max: 100,
+            },
+            {
+              // Backend requires density > 0; reject 0 (numberParser turns an empty field into 0) with a
+              // clear message instead of an opaque 422 (#67).
+              validator: (_, value) =>
+                value === undefined || value === null || value > 0
+                  ? Promise.resolve()
+                  : Promise.reject(new Error(t("filament.form.must_be_positive"))),
             },
           ]}
         >
@@ -316,8 +323,14 @@ export const FilamentCreate = (props: IResourceComponentsProps & CreateOrClonePr
             {
               required: true,
               type: "number",
-              min: 0,
               max: 10,
+            },
+            {
+              // Backend requires diameter > 0; reject 0 with a clear message instead of a 422 (#67).
+              validator: (_, value) =>
+                value === undefined || value === null || value > 0
+                  ? Promise.resolve()
+                  : Promise.reject(new Error(t("filament.form.must_be_positive"))),
             },
           ]}
         >
@@ -424,6 +437,18 @@ export const FilamentCreate = (props: IResourceComponentsProps & CreateOrClonePr
           label={t("filament.fields.article_number")}
           help={t("filament.fields_help.article_number")}
           name={["article_number"]}
+          rules={[
+            {
+              required: false,
+            },
+          ]}
+        >
+          <Input maxLength={64} />
+        </Form.Item>
+        {/* External ID: editable in Edit and shown in Show, so offer it on Create too (#70). */}
+        <Form.Item
+          label={t("filament.fields.external_id")}
+          name={["external_id"]}
           rules={[
             {
               required: false,
