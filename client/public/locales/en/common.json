@@ -675,6 +675,13 @@
       "saved": "Location fields saved",
       "save_error": "Failed to save location fields",
       "load_error": "Failed to load location"
+    },
+    "show": {
+      "name": "Name",
+      "comment": "Comment",
+      "spool_count": "Spools stored here",
+      "spools_here": "Spools at this location",
+      "no_spools": "No spools are stored at this location."
     }
   },
   "calibration": {
