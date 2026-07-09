@@ -17,6 +17,7 @@ import { createFilamentFromExternal } from "../filaments/functions";
 import { useLocations } from "../locations/functions";
 import { useGetFilamentSelectOptions } from "./functions";
 import { ISpool, ISpoolParsedExtras, WeightToEnter } from "./model";
+import { displayForMode, usedWeightFromEntered } from "./weightCalc";
 
 /*
 The API returns the extra fields as JSON values, but we need to parse them into their real types
@@ -129,7 +130,9 @@ export const SpoolEdit = () => {
   };
 
   const [weightToEnter, setWeightToEnter] = useState(1);
-  const [usedWeight, setUsedWeight] = useState(0);
+  // #66: the value the user typed in the active weight mode is the source of truth; used_weight is
+  // derived from it (below) so editing initial/spool weight recomputes it rather than drifting it.
+  const [enteredValue, setEnteredValue] = useState(0);
 
   useEffect(() => {
     const newFilamentWeight = getFilamentWeight();
@@ -141,13 +144,6 @@ export const SpoolEdit = () => {
       form.setFieldValue("spool_weight", newSpoolWeight);
     }
   }, [selectedFilament]);
-
-  const weightChange = (weight: number) => {
-    setUsedWeight(weight);
-    form.setFieldsValue({
-      used_weight: weight,
-    });
-  };
 
   const locations = useSpoolmanLocations(true);
   const settingsLocation = useLocations();
@@ -176,6 +172,21 @@ export const SpoolEdit = () => {
     const spool_weight = getSpoolWeight();
     return net_weight + spool_weight;
   };
+
+  // #66: derive net used_weight from the entered value + current weights, preserving the entered value
+  // when initial/spool weight changes.
+  const usedWeight = usedWeightFromEntered(weightToEnter, enteredValue, getFilamentWeight(), getSpoolWeight());
+
+  // Switch weight mode, converting the entered value so the shown number stays consistent.
+  const switchWeightMode = (newMode: number) => {
+    setEnteredValue(displayForMode(newMode, usedWeight, getFilamentWeight(), getSpoolWeight()));
+    setWeightToEnter(newMode);
+  };
+
+  // Keep the hidden used_weight form field in sync with the derived value.
+  useEffect(() => {
+    form.setFieldValue("used_weight", usedWeight);
+  }, [form, usedWeight]);
 
   const getMeasuredWeight = (): number => {
     const grossWeight = getGrossWeight();
@@ -210,24 +221,23 @@ export const SpoolEdit = () => {
   };
 
   useEffect(() => {
-    if (weightToEnter >= WeightToEnter.measured_weight) {
-      if (!isMeasuredWeightEnabled()) {
-        setWeightToEnter(WeightToEnter.remaining_weight);
-        return;
-      }
+    // If the active mode is no longer valid, fall back a mode — converting the entered value so
+    // used_weight is preserved (#66).
+    if (weightToEnter >= WeightToEnter.measured_weight && !isMeasuredWeightEnabled()) {
+      switchWeightMode(WeightToEnter.remaining_weight);
+      return;
     }
-    if (weightToEnter >= WeightToEnter.remaining_weight) {
-      if (!isRemainingWeightEnabled()) {
-        setWeightToEnter(WeightToEnter.used_weight);
-        return;
-      }
+    if (weightToEnter >= WeightToEnter.remaining_weight && !isRemainingWeightEnabled()) {
+      switchWeightMode(WeightToEnter.used_weight);
     }
   }, [selectedFilament]);
 
   const initialUsedWeight = formProps.initialValues?.used_weight || 0;
   useEffect(() => {
+    // Seed the entered value from the loaded spool. The mode defaults to "used", so the entered value
+    // is the used_weight; if the mode later switches, switchWeightMode converts it (#66).
     if (initialUsedWeight) {
-      setUsedWeight(initialUsedWeight);
+      setEnteredValue(initialUsedWeight);
     }
   }, [initialUsedWeight]);
 
@@ -372,7 +382,7 @@ export const SpoolEdit = () => {
         <Form.Item label={t("spool.fields.weight_to_use")} help={t("spool.fields_help.weight_to_use")}>
           <Radio.Group
             onChange={(value) => {
-              setWeightToEnter(value.target.value);
+              switchWeightMode(value.target.value);
             }}
             defaultValue={WeightToEnter.used_weight}
             value={weightToEnter}
@@ -396,7 +406,7 @@ export const SpoolEdit = () => {
             disabled={weightToEnter != WeightToEnter.used_weight}
             value={usedWeight}
             onChange={(value) => {
-              weightChange(value ?? 0);
+              setEnteredValue(value ?? 0);
             }}
           />
         </Form.Item>
@@ -410,7 +420,7 @@ export const SpoolEdit = () => {
             disabled={weightToEnter != WeightToEnter.remaining_weight}
             value={getRemainingWeight()}
             onChange={(value) => {
-              weightChange(getFilamentWeight() - (value ?? 0));
+              setEnteredValue(value ?? 0);
             }}
           />
         </Form.Item>
@@ -424,8 +434,7 @@ export const SpoolEdit = () => {
             disabled={weightToEnter != WeightToEnter.measured_weight}
             value={getMeasuredWeight()}
             onChange={(value) => {
-              const totalWeight = getGrossWeight();
-              weightChange(totalWeight - (value ?? 0));
+              setEnteredValue(value ?? 0);
             }}
           />
         </Form.Item>

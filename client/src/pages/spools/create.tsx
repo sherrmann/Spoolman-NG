@@ -18,6 +18,7 @@ import { getCurrencySymbol, useCurrency } from "../../utils/settings";
 import { createFilamentFromExternal } from "../filaments/functions";
 import { useGetFilamentSelectOptions } from "./functions";
 import { ISpool, ISpoolParsedExtras, WeightToEnter } from "./model";
+import { displayForMode, usedWeightFromEntered } from "./weightCalc";
 
 dayjs.extend(utc);
 
@@ -146,7 +147,10 @@ export const SpoolCreate = (props: IResourceComponentsProps & CreateOrCloneProps
   //
 
   const [weightToEnter, setWeightToEnter] = useState(1);
-  const [usedWeight, setUsedWeight] = useState(0);
+  // #66: the value the user typed in the active weight mode is the source of truth. used_weight is
+  // derived from it (below), so editing initial/spool weight later recomputes used_weight instead of
+  // silently drifting what the user entered.
+  const [enteredValue, setEnteredValue] = useState(0);
 
   useEffect(() => {
     const newFilamentWeight = selectedFilament?.weight || 0;
@@ -158,13 +162,6 @@ export const SpoolCreate = (props: IResourceComponentsProps & CreateOrCloneProps
       form.setFieldValue("spool_weight", newSpoolWeight);
     }
   }, [selectedFilament]);
-
-  const weightChange = (weight: number) => {
-    setUsedWeight(weight);
-    form.setFieldsValue({
-      used_weight: weight,
-    });
-  };
 
   const locations = useSpoolmanLocations(true);
   const settingsLocation = useLocations();
@@ -203,6 +200,22 @@ export const SpoolCreate = (props: IResourceComponentsProps & CreateOrCloneProps
     return net_weight + spool_weight;
   };
 
+  // #66: derive the net used_weight from the entered value + current weights, so a later change to
+  // initial/spool weight recomputes used_weight while preserving the entered value.
+  const usedWeight = usedWeightFromEntered(weightToEnter, enteredValue, getFilamentWeight(), getSpoolWeight());
+
+  // Switch weight mode, converting the entered value into the new mode so the shown number stays
+  // consistent (e.g. switching from Used 400 to Remaining shows the equivalent remaining weight).
+  const switchWeightMode = (newMode: number) => {
+    setEnteredValue(displayForMode(newMode, usedWeight, getFilamentWeight(), getSpoolWeight()));
+    setWeightToEnter(newMode);
+  };
+
+  // Keep the hidden used_weight form field in sync with the derived value.
+  useEffect(() => {
+    form.setFieldValue("used_weight", usedWeight);
+  }, [form, usedWeight]);
+
   const getMeasuredWeight = (): number => {
     const grossWeight = getGrossWeight();
 
@@ -236,17 +249,14 @@ export const SpoolCreate = (props: IResourceComponentsProps & CreateOrCloneProps
   };
 
   useEffect(() => {
-    if (weightToEnter >= WeightToEnter.measured_weight) {
-      if (!isMeasuredWeightEnabled()) {
-        setWeightToEnter(WeightToEnter.remaining_weight);
-        return;
-      }
+    // If the active mode is no longer valid (e.g. the new filament has no spool weight), fall back a
+    // mode — converting the entered value so used_weight is preserved (#66).
+    if (weightToEnter >= WeightToEnter.measured_weight && !isMeasuredWeightEnabled()) {
+      switchWeightMode(WeightToEnter.remaining_weight);
+      return;
     }
-    if (weightToEnter >= WeightToEnter.remaining_weight) {
-      if (!isRemainingWeightEnabled()) {
-        setWeightToEnter(WeightToEnter.used_weight);
-        return;
-      }
+    if (weightToEnter >= WeightToEnter.remaining_weight && !isRemainingWeightEnabled()) {
+      switchWeightMode(WeightToEnter.used_weight);
     }
   }, [selectedFilament]);
 
@@ -389,7 +399,7 @@ export const SpoolCreate = (props: IResourceComponentsProps & CreateOrCloneProps
         <Form.Item label={t("spool.fields.weight_to_use")} help={t("spool.fields_help.weight_to_use")}>
           <Radio.Group
             onChange={(value) => {
-              setWeightToEnter(value.target.value);
+              switchWeightMode(value.target.value);
             }}
             defaultValue={WeightToEnter.used_weight}
             value={weightToEnter}
@@ -414,7 +424,7 @@ export const SpoolCreate = (props: IResourceComponentsProps & CreateOrCloneProps
             disabled={weightToEnter != WeightToEnter.used_weight}
             value={usedWeight}
             onChange={(value) => {
-              weightChange(value ?? 0);
+              setEnteredValue(value ?? 0);
             }}
           />
         </Form.Item>
@@ -432,7 +442,7 @@ export const SpoolCreate = (props: IResourceComponentsProps & CreateOrCloneProps
             disabled={weightToEnter != WeightToEnter.remaining_weight}
             value={getRemainingWeight()}
             onChange={(value) => {
-              weightChange(getFilamentWeight() - (value ?? 0));
+              setEnteredValue(value ?? 0);
             }}
           />
         </Form.Item>
@@ -450,8 +460,7 @@ export const SpoolCreate = (props: IResourceComponentsProps & CreateOrCloneProps
             disabled={weightToEnter != WeightToEnter.measured_weight}
             value={getMeasuredWeight()}
             onChange={(value) => {
-              const totalWeight = getGrossWeight();
-              weightChange(totalWeight - (value ?? 0));
+              setEnteredValue(value ?? 0);
             }}
           />
         </Form.Item>
