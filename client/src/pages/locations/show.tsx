@@ -1,4 +1,4 @@
-import { EnvironmentOutlined } from "@ant-design/icons";
+import { EnvironmentOutlined, PrinterOutlined } from "@ant-design/icons";
 import { NumberField, Show, TextField } from "@refinedev/antd";
 import { useList, useShow, useTranslate } from "@refinedev/core";
 import { Button, Table, Typography } from "antd";
@@ -58,11 +58,22 @@ export const LocationShow = () => {
       canDelete={false}
       title={record?.name ?? ""}
       // The board (/locations) is the manager; there are no edit/delete routes for a location, so
-      // offer a single link back to it rather than Refine's default resource buttons.
+      // offer a link back to it plus a label-print action rather than Refine's default buttons.
       headerButtons={() => (
-        <Button icon={<EnvironmentOutlined />} onClick={() => navigate("/locations")}>
-          {t("locations.locations")}
-        </Button>
+        <>
+          <Button
+            icon={<PrinterOutlined />}
+            disabled={!id}
+            onClick={() =>
+              navigate(`/location/print?locations=${id}&return=${encodeURIComponent(window.location.pathname)}`)
+            }
+          >
+            {t("locations.print.button")}
+          </Button>
+          <Button icon={<EnvironmentOutlined />} onClick={() => navigate("/locations")}>
+            {t("locations.locations")}
+          </Button>
+        </>
       )}
     >
       <Title level={5}>{t("locations.show.name")}</Title>

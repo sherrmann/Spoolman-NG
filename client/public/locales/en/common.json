@@ -682,6 +682,13 @@
       "spool_count": "Spools stored here",
       "spools_here": "Spools at this location",
       "no_spools": "No spools are stored at this location."
+    },
+    "print": {
+      "title": "Print Location Labels",
+      "button": "Print labels",
+      "description": "Select the locations to print scannable QR labels for.",
+      "select_placeholder": "Select locations",
+      "none_selected": "No locations selected"
     }
   },
   "calibration": {

@@ -1,5 +1,5 @@
 import { GetListResponse } from "@refinedev/core";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueries, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useGetSetting } from "../../utils/querySettings";
 import { getAPIURL } from "../../utils/url";
@@ -7,6 +7,19 @@ import { ISpool } from "../spools/model";
 import { ILocation } from "./model";
 
 export const EMPTYLOC = "";
+
+/** Fetch a set of locations by id (for the label print flow), mirroring useGetSpoolsByIds. */
+export function useGetLocationsByIds(ids: number[]) {
+  return useQueries({
+    queries: ids.map((id) => ({
+      queryKey: ["location", id],
+      queryFn: async () => {
+        const res = await fetch(`${getAPIURL()}/locations/${id}`);
+        return (await res.json()) as ILocation;
+      },
+    })),
+  });
+}
 
 /**
  * Look up a Location entity (#103) by its exact name. The registry is keyed by name (the board deals
