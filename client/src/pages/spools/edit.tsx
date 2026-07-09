@@ -12,6 +12,7 @@ import { useSpoolmanLocations } from "../../components/otherModels";
 import { searchMatches } from "../../utils/filtering";
 import { formatNumberOnUserInput, numberParser, numberParserAllowEmpty } from "../../utils/parsing";
 import { EntityType, useGetFields } from "../../utils/queryFields";
+import { useGetPrinters } from "../../utils/queryPrinters";
 import { getCurrencySymbol, useCurrency } from "../../utils/settings";
 import { createFilamentFromExternal } from "../filaments/functions";
 import { useLocations } from "../locations/functions";
@@ -28,6 +29,7 @@ the form's onFinish method. Form.Item's normalize should do this, but it doesn't
 
 type ISpoolRequest = ISpoolParsedExtras & {
   filament_id: number | string;
+  printer_id?: number | null;
 };
 
 export const SpoolEdit = () => {
@@ -65,6 +67,8 @@ export const SpoolEdit = () => {
   // Add the filament_id field to the form
   if (formProps.initialValues) {
     formProps.initialValues["filament_id"] = formProps.initialValues["filament"].id;
+    // #75: map the nested printer object to the printer_id the form/select edits.
+    formProps.initialValues["printer_id"] = formProps.initialValues["printer"]?.id;
 
     // Parse the extra fields from string values into real types
     formProps.initialValues = ParsedExtras(formProps.initialValues);
@@ -146,6 +150,7 @@ export const SpoolEdit = () => {
   }, [selectedFilament]);
 
   const locations = useSpoolmanLocations(true);
+  const printers = useGetPrinters();
   const settingsLocation = useLocations();
   const [newLocation, setNewLocation] = useState("");
 
@@ -464,6 +469,16 @@ export const SpoolEdit = () => {
             options={allLocations.map((item) => ({ label: item, value: item }))}
           />
         </Form.Item>
+        {/* Printer assignment (#75): only shown once at least one printer exists. */}
+        {printers.data && printers.data.length > 0 && (
+          <Form.Item label={t("spool.fields.printer")} help={t("spool.fields_help.printer")} name={["printer_id"]}>
+            <Select
+              allowClear
+              loading={printers.isLoading}
+              options={printers.data.map((p) => ({ label: p.name, value: p.id }))}
+            />
+          </Form.Item>
+        )}
         <Form.Item
           label={t("spool.fields.lot_nr")}
           help={t("spool.fields_help.lot_nr")}

@@ -312,6 +312,7 @@
       "initial_weight": "Initial Weight",
       "spool_weight": "Empty Weight",
       "location": "Location",
+      "printer": "Printer",
       "lot_nr": "Lot Nr",
       "diameter": "Diameter",
       "color_hex": "Color",
@@ -330,6 +331,7 @@
       "initial_weight": "The initial weight of filament on the spool (net weight). Will use the weight from the filament object if not set.",
       "spool_weight": "The weight of the spool when it is empty. Leave empty to use the value from the filament or the manufacturer.",
       "location": "Where the spool is located if you have multiple locations where you store your spools.",
+      "printer": "The printer this spool is currently loaded on. Manage your printers in Settings.",
       "lot_nr": "Manufacturer's lot number. Can be used to ensure a print has consistent color if multiple spools are used.",
       "diameter": "Measured filament diameter for this specific spool, used in length calculations. Leave empty to use the filament's diameter.",
       "color_hex": "Optional color for this specific spool, overriding the filament's color. Clear to use the filament's color.",
@@ -577,6 +579,14 @@
       "to": "To..."
     }
   },
+  "printer": {
+    "printer": "Printer",
+    "fields": {
+      "name": "Name",
+      "comment": "Comment",
+      "spool_count": "Spools"
+    }
+  },
   "settings": {
     "settings": "Settings",
     "header": "Settings",
@@ -634,6 +644,13 @@
       "no_file": "Please choose a file first.",
       "result": "Created {{created}}, updated {{updated}}, skipped {{skipped}}.",
       "import_errors": "Import failed"
+    },
+    "printers": {
+      "tab": "Printers",
+      "description": "<p>Manage your printers here. Once you have at least one, you can assign a spool to a printer from the spool's create or edit form.</p>",
+      "add_title": "Add printer",
+      "edit_title": "Edit printer",
+      "delete_confirm": "Delete printer \"{{name}}\"? Spools assigned to it will be unassigned, not deleted."
     },
     "extra_fields": {
       "tab": "Extra Fields",

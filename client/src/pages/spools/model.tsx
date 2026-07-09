@@ -1,4 +1,5 @@
 import { IFilament } from "../filaments/model";
+import { IPrinter } from "../../utils/queryPrinters";
 
 export enum WeightToEnter {
   used_weight = 1,
@@ -26,6 +27,9 @@ export interface ISpool {
   multi_color_hexes?: string;
   multi_color_direction?: string;
   location?: string;
+  // Assigned printer (#75). Nested object present only when assigned; printer_id is the write field.
+  printer?: IPrinter;
+  printer_id?: number;
   lot_nr?: string;
   comment?: string;
   archived: boolean;

@@ -4,6 +4,7 @@ import {
   HighlightOutlined,
   IdcardOutlined,
   ImportOutlined,
+  PrinterOutlined,
   ToolOutlined,
   UserOutlined,
 } from "@ant-design/icons";
@@ -17,6 +18,7 @@ import { ExtraFieldsSettings } from "./extraFieldsSettings";
 import { EntityType } from "../../utils/queryFields";
 import { GeneralSettings } from "./generalSettings";
 import { ImportExportSettings } from "./importExportSettings";
+import { PrinterSettings } from "./printerSettings";
 import { SwatchSettings } from "./swatchSettings";
 import "./settings.css";
 
@@ -28,10 +30,12 @@ const panels: Record<string, React.ReactNode> = {
   general: <GeneralSettings />,
   swatches: <SwatchSettings />,
   "import-export": <ImportExportSettings />,
+  printers: <PrinterSettings />,
   "extra-spool": <ExtraFieldsSettings entityType={EntityType.spool} />,
   "extra-filament": <ExtraFieldsSettings entityType={EntityType.filament} />,
   "extra-vendor": <ExtraFieldsSettings entityType={EntityType.vendor} />,
   "extra-location": <ExtraFieldsSettings entityType={EntityType.location} />,
+  "extra-printer": <ExtraFieldsSettings entityType={EntityType.printer} />,
 };
 
 // Map between menu keys and the URL path under /settings.
@@ -39,10 +43,12 @@ const keyToPath: Record<string, string> = {
   general: "/settings",
   swatches: "/settings/swatches",
   "import-export": "/settings/import-export",
+  printers: "/settings/printers",
   "extra-spool": "/settings/extra/spool",
   "extra-filament": "/settings/extra/filament",
   "extra-vendor": "/settings/extra/vendor",
   "extra-location": "/settings/extra/location",
+  "extra-printer": "/settings/extra/printer",
 };
 
 const getActiveKey = (pathname: string): string => {
@@ -53,6 +59,8 @@ const getActiveKey = (pathname: string): string => {
   if (sub.startsWith("extra/filament")) return "extra-filament";
   if (sub.startsWith("extra/vendor")) return "extra-vendor";
   if (sub.startsWith("extra/location")) return "extra-location";
+  if (sub.startsWith("extra/printer")) return "extra-printer";
+  if (sub.startsWith("printers")) return "printers";
   return "general";
 };
 
@@ -94,6 +102,11 @@ export const Settings = () => {
                 icon: <ImportOutlined />,
                 label: t("settings.import_export.tab"),
               },
+              {
+                key: "printers",
+                icon: <PrinterOutlined />,
+                label: t("settings.printers.tab"),
+              },
               { type: "divider" },
               {
                 key: "extra-spool",
@@ -114,6 +127,11 @@ export const Settings = () => {
                 key: "extra-location",
                 icon: <EnvironmentOutlined />,
                 label: `${t("settings.extra_fields.tab")} - ${t("locations.location")}`,
+              },
+              {
+                key: "extra-printer",
+                icon: <PrinterOutlined />,
+                label: `${t("settings.extra_fields.tab")} - ${t("printer.printer")}`,
               },
             ]}
           />

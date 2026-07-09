@@ -28,6 +28,7 @@ import { useLocations } from "../locations/functions";
 import "../../utils/overrides.css";
 import { formatNumberOnUserInput, numberParser, numberParserAllowEmpty } from "../../utils/parsing";
 import { EntityType, useGetFields } from "../../utils/queryFields";
+import { useGetPrinters } from "../../utils/queryPrinters";
 import { getCurrencySymbol, useCurrency } from "../../utils/settings";
 import { createFilamentFromExternal } from "../filaments/functions";
 import { FilamentColor, useGetFilamentSelectOptions } from "./functions";
@@ -178,6 +179,7 @@ export const SpoolCreate = (props: IResourceComponentsProps & CreateOrCloneProps
   }, [selectedFilament]);
 
   const locations = useSpoolmanLocations(true);
+  const printers = useGetPrinters();
   const settingsLocation = useLocations();
   const [newLocation, setNewLocation] = useState("");
 
@@ -518,6 +520,17 @@ export const SpoolCreate = (props: IResourceComponentsProps & CreateOrCloneProps
             options={allLocations.map((item) => ({ label: item, value: item }))}
           />
         </Form.Item>
+        {/* Printer assignment (#75): only shown once at least one printer exists, keeping the form
+            uncluttered for users who don't track printers. Managed from Settings → Printers. */}
+        {printers.data && printers.data.length > 0 && (
+          <Form.Item label={t("spool.fields.printer")} help={t("spool.fields_help.printer")} name={["printer_id"]}>
+            <Select
+              allowClear
+              loading={printers.isLoading}
+              options={printers.data.map((p) => ({ label: p.name, value: p.id }))}
+            />
+          </Form.Item>
+        )}
         <Form.Item
           label={t("spool.fields.lot_nr")}
           help={t("spool.fields_help.lot_nr")}
