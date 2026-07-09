@@ -8,6 +8,7 @@ import utc from "dayjs/plugin/utc";
 import { AlignType } from "rc-table/lib/interface";
 import { Link } from "react-router";
 import { getFiltersForField, typeFilters } from "../utils/filtering";
+import { buildLinkUrl } from "../utils/linkField";
 import { enrichText } from "../utils/parsing";
 import i18n from "../i18n";
 import { Field, FieldType } from "../utils/queryFields";
@@ -706,6 +707,26 @@ export function CustomFieldColumn<Obj extends Entity>(
       render: (rawValue) => {
         const value = commonProps.transform ? commonProps.transform(rawValue) : rawValue;
         return <TextField value={(value as string[] | undefined)?.join(", ")} />;
+      },
+    });
+  } else if (field.field_type === FieldType.link) {
+    // #129: render the short value as a clickable link via the field's base-URL template. Stop the
+    // click from bubbling to the row (which would navigate to the entity's show page).
+    return Column({
+      ...commonProps,
+      filterDropdown: interactive ? TextFilterDropdown : undefined,
+      filteredValue,
+      render: (rawValue) => {
+        const value = commonProps.transform ? commonProps.transform(rawValue) : rawValue;
+        if (value === undefined || value === null || value === "") return null;
+        const url = field.link_template ? buildLinkUrl(field.link_template, String(value)) : "";
+        return url ? (
+          <a href={url} target="_blank" rel="noreferrer noopener" onClick={(e) => e.stopPropagation()}>
+            {String(value)}
+          </a>
+        ) : (
+          <TextField value={String(value)} />
+        );
       },
     });
   } else {

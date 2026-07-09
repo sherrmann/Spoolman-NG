@@ -654,7 +654,7 @@
     },
     "extra_fields": {
       "tab": "Extra Fields",
-      "description": "<p>Here you can add extra custom fields to your entities.</p><p>Once a field is added, you can not change its key or type, and for choice type fields you can not remove choices or change the multi choice state. If you remove a field, the associated data for all entities will be deleted.</p><p>The key is what other programs read/write the data as, so if your custom field is supposed to integrate with a third-party program, make sure to set it correctly. Default value is only applied to new items.</p><p>Extra fields can be shown and sorted in the table views. Choice and boolean fields expose filter options there as well, and all extra field types support filtering for empty values.</p><p>For spool fields, enable \"Copy from Filament\" to have a new spool inherit the value from a filament field with the same key at creation time (unless the spool sets its own).</p>",
+      "description": "<p>Here you can add extra custom fields to your entities.</p><p>Once a field is added, you can not change its key or type, and for choice type fields you can not remove choices or change the multi choice state. If you remove a field, the associated data for all entities will be deleted.</p><p>The key is what other programs read/write the data as, so if your custom field is supposed to integrate with a third-party program, make sure to set it correctly. Default value is only applied to new items.</p><p>Extra fields can be shown and sorted in the table views. Choice and boolean fields expose filter options there as well, and all extra field types support filtering for empty values.</p><p>For spool fields, enable \"Copy from Filament\" to have a new spool inherit the value from a filament field with the same key at creation time (unless the spool sets its own).</p><p>A \"Link\" field stores a short value per item (e.g. an article number) and turns it into a clickable link using the Link URL template — put {} where the value goes, e.g. https://www.amazon.com/dp/{}.</p>",
       "params": {
         "key": "Key",
         "name": "Name",
@@ -664,7 +664,8 @@
         "default_value": "Default Value",
         "choices": "Choices",
         "multi_choice": "Multi Choice",
-        "copy_from_filament": "Copy from Filament"
+        "copy_from_filament": "Copy from Filament",
+        "link_template": "Link URL"
       },
       "field_type": {
         "text": "Text",
@@ -674,7 +675,8 @@
         "float_range": "Float Range",
         "datetime": "Datetime",
         "boolean": "Boolean",
-        "choice": "Choice"
+        "choice": "Choice",
+        "link": "Link"
       },
       "boolean_true": "Yes",
       "boolean_false": "No",

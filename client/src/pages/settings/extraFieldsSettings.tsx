@@ -132,6 +132,10 @@ const EditableCell = ({ record, editing, dataIndex, children, form, ...restProps
             label: t(`settings.extra_fields.field_type.${FieldType.choice}`),
             value: FieldType.choice,
           },
+          {
+            label: t(`settings.extra_fields.field_type.${FieldType.link}`),
+            value: FieldType.link,
+          },
         ]}
         onChange={() => {
           // Reset default_value when changing field_type
@@ -180,7 +184,7 @@ const EditableCell = ({ record, editing, dataIndex, children, form, ...restProps
       rules.push({
         type: "boolean",
       });
-    } else if (fieldType === FieldType.text) {
+    } else if (fieldType === FieldType.text || fieldType === FieldType.link) {
       inputNode = <Input />;
       rules.push({
         type: "string",
@@ -273,6 +277,14 @@ const EditableCell = ({ record, editing, dataIndex, children, form, ...restProps
     rules.push({
       type: "boolean",
     });
+  } else if (dataIndex === "link_template") {
+    // Base-URL template for a link field (#129); '{}' is replaced by each item's value.
+    if (fieldType === FieldType.link) {
+      inputNode = <Input placeholder="https://www.amazon.com/dp/{}" />;
+      rules.push({ required: true, max: 512 });
+    } else {
+      inputNode = null;
+    }
   } else {
     inputNode = null;
   }
@@ -412,6 +424,11 @@ export function ExtraFieldsSettings({ entityType }: ExtraFieldsSettingsProps) {
         updatedField.multi_choice = undefined;
       }
 
+      // link_template only belongs to the link field type (#129).
+      if (updatedField.field_type !== FieldType.link) {
+        updatedField.link_template = undefined;
+      }
+
       // If unit is an empty string, set it to null instead
       if (updatedField.unit === "") {
         updatedField.unit = undefined;
@@ -542,6 +559,15 @@ export function ExtraFieldsSettings({ entityType }: ExtraFieldsSettingsProps) {
         }
       },
       width: "10%",
+    },
+    {
+      title: t("settings.extra_fields.params.link_template"),
+      dataIndex: ["field", "link_template"],
+      key: "link_template",
+      render(value, record) {
+        return record.field.field_type === FieldType.link ? value : null;
+      },
+      width: "15%",
     },
     // Copy-from-filament only makes sense for spool fields (#118), so the column is spool-only.
     ...(entityType === EntityType.spool

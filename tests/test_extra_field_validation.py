@@ -128,6 +128,20 @@ def test_multi_choice_rejects_invalid_member():
         validate_extra_field_value(field, json.dumps(["a", "z"]))
 
 
+# --- link (#129) ---
+
+
+def test_link_accepts_string():
+    field = make_field(ExtraFieldType.link, link_template="https://www.amazon.com/dp/{}")
+    validate_extra_field_value(field, json.dumps("B0ABCDEF"))
+
+
+def test_link_rejects_non_string():
+    field = make_field(ExtraFieldType.link, link_template="https://x/{}")
+    with pytest.raises(ValueError):
+        validate_extra_field_value(field, json.dumps(123))
+
+
 # --- invalid JSON ---
 
 

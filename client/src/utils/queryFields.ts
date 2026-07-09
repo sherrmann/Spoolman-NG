@@ -12,6 +12,7 @@ export enum FieldType {
   datetime = "datetime",
   boolean = "boolean",
   choice = "choice",
+  link = "link",
 }
 
 export enum EntityType {
@@ -32,6 +33,8 @@ export interface FieldParameters {
   multi_choice?: boolean;
   // Spool fields only (#118): inherit this field's value from the parent filament at spool creation.
   copy_from_filament?: boolean;
+  // Link fields only (#129): base-URL template expanded with the per-item value into a clickable link.
+  link_template?: string;
 }
 
 export interface Field extends FieldParameters {
