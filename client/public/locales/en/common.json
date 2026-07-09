@@ -252,6 +252,7 @@
   },
   "spool": {
     "spool": "Spools",
+    "custom_actions": "Actions",
     "totals": {
       "show": "Show Totals",
       "hide": "Hide Totals",
@@ -651,6 +652,19 @@
       "add_title": "Add printer",
       "edit_title": "Edit printer",
       "delete_confirm": "Delete printer \"{{name}}\"? Spools assigned to it will be unassigned, not deleted."
+    },
+    "custom_links": {
+      "sidebar_tab": "Sidebar Links",
+      "spool_tab": "Spool Actions",
+      "sidebar_description": "<p>Add your own links to the left sidebar, e.g. to your printer's Mainsail or Fluidd page. They open in a new tab.</p>",
+      "spool_description": "<p>Add custom action buttons to each spool. The URL can include the spool's fields in curly braces — {id}, {filament_id}, {location}, {lot_nr}, {comment} — which are filled in per spool, so tools like nfc2klipper or Moonraker's active-spool endpoint are one click away.</p>",
+      "name": "Name",
+      "url": "URL",
+      "url_template": "URL Template",
+      "url_template_help": "Use {id} where the spool ID should go, e.g. http://moonraker.local/...?id={id}",
+      "add_title": "Add link",
+      "edit_title": "Edit link",
+      "delete_confirm": "Delete this link?"
     },
     "extra_fields": {
       "tab": "Extra Fields",

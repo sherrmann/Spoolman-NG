@@ -25,6 +25,7 @@ import { NumberFieldUnit } from "../../components/numberField";
 import SpoolIcon from "../../components/spoolIcon";
 import { enrichText } from "../../utils/parsing";
 import { getSpoolEffectiveColor } from "../../utils/spoolColor";
+import { buildSpoolActionUrl, useSpoolActionLinks } from "../../utils/spoolActionLinks";
 import { EntityType, useGetFields } from "../../utils/queryFields";
 import { useCurrencyFormatter, useUnitScaling } from "../../utils/settings";
 import NfcBindModal from "../../components/nfcBindModal";
@@ -114,6 +115,9 @@ export const SpoolShow = () => {
 
   // Provides the function to open the spool adjustment modal and the modal component itself
   const { openSpoolAdjustModal, spoolAdjustModal } = useSpoolAdjustModal();
+
+  // User-configured per-spool action links (#140), rendered as a dropdown only when configured.
+  const actionLinks = useSpoolActionLinks();
 
   // Function for opening an ant design modal that asks for confirmation for archiving a spool
   const archiveSpool = async (spool: ISpool, archive: boolean) => {
@@ -255,6 +259,28 @@ export const SpoolShow = () => {
               </Space>
             </Button>
           </Dropdown>
+          {actionLinks.length > 0 && (
+            <Dropdown
+              trigger={["click"]}
+              disabled={!record}
+              menu={{
+                items: actionLinks.map((link, index) => ({
+                  key: `action-link-${index}`,
+                  icon: <LinkOutlined />,
+                  label: link.name,
+                  onClick: () =>
+                    record && window.open(buildSpoolActionUrl(link.url, record), "_blank", "noopener,noreferrer"),
+                })),
+              }}
+            >
+              <Button icon={<LinkOutlined />}>
+                <Space>
+                  {t("spool.custom_actions")}
+                  <DownOutlined />
+                </Space>
+              </Button>
+            </Dropdown>
+          )}
           {/* Archive is the safe, primary retirement path; Delete rides in its overflow. */}
           <Dropdown.Button
             danger={!record?.archived}

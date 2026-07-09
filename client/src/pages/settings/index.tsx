@@ -4,7 +4,9 @@ import {
   HighlightOutlined,
   IdcardOutlined,
   ImportOutlined,
+  LinkOutlined,
   PrinterOutlined,
+  ThunderboltOutlined,
   ToolOutlined,
   UserOutlined,
 } from "@ant-design/icons";
@@ -17,6 +19,7 @@ import { useLocation, useNavigate } from "react-router";
 import { ExtraFieldsSettings } from "./extraFieldsSettings";
 import { EntityType } from "../../utils/queryFields";
 import { GeneralSettings } from "./generalSettings";
+import { CustomLinksSettings } from "./customLinksSettings";
 import { ImportExportSettings } from "./importExportSettings";
 import { PrinterSettings } from "./printerSettings";
 import { SwatchSettings } from "./swatchSettings";
@@ -31,6 +34,23 @@ const panels: Record<string, React.ReactNode> = {
   swatches: <SwatchSettings />,
   "import-export": <ImportExportSettings />,
   printers: <PrinterSettings />,
+  "custom-links": (
+    <CustomLinksSettings
+      settingKey="custom_links"
+      descriptionKey="settings.custom_links.sidebar_description"
+      urlLabelKey="settings.custom_links.url"
+      urlPlaceholder="http://mainsail.local"
+    />
+  ),
+  "spool-links": (
+    <CustomLinksSettings
+      settingKey="spool_action_links"
+      descriptionKey="settings.custom_links.spool_description"
+      urlLabelKey="settings.custom_links.url_template"
+      urlHelpKey="settings.custom_links.url_template_help"
+      urlPlaceholder="http://moonraker.local/server/spoolman/spool_id?id={id}"
+    />
+  ),
   "extra-spool": <ExtraFieldsSettings entityType={EntityType.spool} />,
   "extra-filament": <ExtraFieldsSettings entityType={EntityType.filament} />,
   "extra-vendor": <ExtraFieldsSettings entityType={EntityType.vendor} />,
@@ -44,6 +64,8 @@ const keyToPath: Record<string, string> = {
   swatches: "/settings/swatches",
   "import-export": "/settings/import-export",
   printers: "/settings/printers",
+  "custom-links": "/settings/custom-links",
+  "spool-links": "/settings/spool-links",
   "extra-spool": "/settings/extra/spool",
   "extra-filament": "/settings/extra/filament",
   "extra-vendor": "/settings/extra/vendor",
@@ -55,6 +77,8 @@ const getActiveKey = (pathname: string): string => {
   const sub = pathname.replace(/^\/settings\/?/, "").replace(/\/$/, "");
   if (sub.startsWith("swatches")) return "swatches";
   if (sub.startsWith("import-export")) return "import-export";
+  if (sub.startsWith("custom-links")) return "custom-links";
+  if (sub.startsWith("spool-links")) return "spool-links";
   if (sub.startsWith("extra/spool")) return "extra-spool";
   if (sub.startsWith("extra/filament")) return "extra-filament";
   if (sub.startsWith("extra/vendor")) return "extra-vendor";
@@ -106,6 +130,16 @@ export const Settings = () => {
                 key: "printers",
                 icon: <PrinterOutlined />,
                 label: t("settings.printers.tab"),
+              },
+              {
+                key: "custom-links",
+                icon: <LinkOutlined />,
+                label: t("settings.custom_links.sidebar_tab"),
+              },
+              {
+                key: "spool-links",
+                icon: <ThunderboltOutlined />,
+                label: t("settings.custom_links.spool_tab"),
               },
               { type: "divider" },
               {
