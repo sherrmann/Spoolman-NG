@@ -519,6 +519,26 @@ export const SpoolCreate = (props: IResourceComponentsProps & CreateOrCloneProps
           <Input maxLength={64} />
         </Form.Item>
         <Form.Item
+          label={t("spool.fields.diameter")}
+          help={t("spool.fields_help.diameter")}
+          name={["diameter"]}
+          rules={[
+            {
+              required: false,
+              type: "number",
+              min: 0,
+            },
+          ]}
+        >
+          {/* #101: optional measured diameter; empty falls back to the filament's diameter. */}
+          <InputNumber
+            addonAfter="mm"
+            precision={2}
+            formatter={formatNumberOnUserInput}
+            parser={numberParserAllowEmpty}
+          />
+        </Form.Item>
+        <Form.Item
           label={t("spool.fields.comment")}
           name={["comment"]}
           rules={[

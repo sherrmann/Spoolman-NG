@@ -86,6 +86,15 @@ class SpoolParameters(BaseModel):
         examples=[""],
     )
     archived: bool = Field(default=False, description="Whether this spool is archived and should not be used anymore.")
+    diameter: float | None = Field(
+        None,
+        gt=0,
+        description=(
+            "Measured per-spool filament diameter in mm, overriding the filament's nominal diameter in "
+            "length calculations (#101). Leave unset to use the filament's diameter."
+        ),
+        examples=[1.73],
+    )
     extra: dict[str, str] | None = Field(
         None,
         description="Extra fields for this spool.",
@@ -477,6 +486,7 @@ async def create(  # noqa: ANN201
             lot_nr=body.lot_nr,
             comment=body.comment,
             archived=body.archived,
+            diameter=body.diameter,
             extra=body.extra,
         )
         return Spool.from_db(db_item)

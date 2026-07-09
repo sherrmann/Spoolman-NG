@@ -89,6 +89,9 @@ class Spool(Base):
     initial_weight: Mapped[float | None] = mapped_column()
     spool_weight: Mapped[float | None] = mapped_column()
     used_weight: Mapped[float] = mapped_column()
+    diameter: Mapped[float | None] = mapped_column(
+        comment="Per-spool filament diameter override (#101). Null means use the filament's diameter.",
+    )
     location: Mapped[str | None] = mapped_column(String(64))
     lot_nr: Mapped[str | None] = mapped_column(String(64))
     comment: Mapped[str | None] = mapped_column(String(1024))

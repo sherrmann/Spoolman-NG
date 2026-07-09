@@ -133,6 +133,23 @@ test.describe("spool journey", () => {
     await expect(page.getByRole("link", { name: `#${aId}` })).toHaveCount(0);
   });
 
+  test("per-spool diameter override round-trips through the create form (#101)", async ({ page, request }) => {
+    const filament = await seedFilament(request);
+
+    await page.goto(`${APP_BASE_URL}/spool/create`);
+    const filamentSelect = page.getByLabel("Filament");
+    await filamentSelect.click();
+    await filamentSelect.pressSequentially(filament.name);
+    await page.locator(".ant-select-item-option").filter({ hasText: filament.name }).first().click();
+
+    // Enter a measured diameter that differs from the filament's nominal 1.75 mm.
+    await page.getByRole("spinbutton", { name: "Diameter" }).fill("1.73");
+
+    const id = await saveAndGetId(page, "spool");
+    const got = await request.get(`${APP_BASE_URL}/api/v1/spool/${id}`);
+    expect((await got.json()).diameter).toBe(1.73);
+  });
+
   test("filament dropdown shows a colour swatch per option (#126)", async ({ page, request }) => {
     // Seed a coloured filament so its dropdown option renders a swatch.
     const name = `Swatch ${Date.now()}`;
