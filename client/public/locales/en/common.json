@@ -491,7 +491,8 @@
       "view_spools": "View spools"
     },
     "form": {
-      "vendor_updated": "This manufacturer has been updated by someone/something else since you opened this page. Saving will overwrite those changes!"
+      "vendor_updated": "This manufacturer has been updated by someone/something else since you opened this page. Saving will overwrite those changes!",
+      "duplicate_name_warning": "A manufacturer with this name already exists."
     }
   },
   "home": {

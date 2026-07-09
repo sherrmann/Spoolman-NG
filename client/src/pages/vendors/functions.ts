@@ -2,6 +2,24 @@ import { getAPIURL } from "../../utils/url";
 import { IVendor } from "./model";
 
 /**
+ * Normalize a vendor name for duplicate detection (#82): trim, collapse runs of inner whitespace to
+ * a single space, and lowercase. So "Acme", "  acme ", "ACME" and "Ac  me" / "Ac me" compare equal.
+ */
+export function normalizeVendorName(name: string): string {
+  return name.trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+/**
+ * True when `name` matches any of `existingNames` case/whitespace-insensitively (#82). An empty (or
+ * whitespace-only) name never counts as a duplicate — the required-field rule handles that case.
+ */
+export function isDuplicateVendorName(name: string, existingNames: string[]): boolean {
+  const normalized = normalizeVendorName(name);
+  if (!normalized) return false;
+  return existingNames.some((existing) => normalizeVendorName(existing) === normalized);
+}
+
+/**
  * Get a vendor given its external ID.
  */
 export async function getVendorByExternalID(external_id: string): Promise<IVendor | null> {

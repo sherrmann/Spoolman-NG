@@ -1,5 +1,5 @@
 import { Create, useForm } from "@refinedev/antd";
-import { HttpError, IResourceComponentsProps, useTranslate } from "@refinedev/core";
+import { HttpError, IResourceComponentsProps, useList, useTranslate } from "@refinedev/core";
 import { Button, Form, Input, InputNumber, Typography } from "antd";
 import TextArea from "antd/es/input/TextArea";
 import dayjs from "dayjs";
@@ -9,6 +9,7 @@ import { ExtraFieldFormItem, ParsedExtras, StringifiedExtras } from "../../compo
 import { StickyFooterBar } from "../../components/stickyFooterBar";
 import { formatNumberOnUserInput, numberParserAllowEmpty } from "../../utils/parsing";
 import { EntityType, useGetFields } from "../../utils/queryFields";
+import { isDuplicateVendorName } from "./functions";
 import { IVendor, IVendorParsedExtras } from "./model";
 
 dayjs.extend(utc);
@@ -42,6 +43,20 @@ export const VendorCreate = (props: IResourceComponentsProps & CreateOrCloneProp
     await onFinish(values);
     redirect(redirectTo, (values as IVendor).id);
   };
+
+  // #82: soft-warn (never block) when the entered name collides case/whitespace-insensitively with
+  // an existing manufacturer, so an accidental double-entry is caught at creation time. A hard
+  // block would break integrations that legitimately POST vendors (external-DB import, auto-create),
+  // so this stays purely advisory and client-side.
+  const { result: existingVendors } = useList<IVendor>({
+    resource: "vendor",
+    pagination: { mode: "off" },
+  });
+  const nameValue = Form.useWatch<string | undefined>(["name"], form);
+  const duplicateName = isDuplicateVendorName(
+    nameValue ?? "",
+    (existingVendors?.data ?? []).map((v) => v.name),
+  );
 
   // Use useEffect to update the form's initialValues when the extra fields are loaded
   // This is necessary because the form is rendered before the extra fields are loaded
@@ -79,6 +94,9 @@ export const VendorCreate = (props: IResourceComponentsProps & CreateOrCloneProp
               required: true,
             },
           ]}
+          // Advisory warning only — does not add a rule, so submission is never blocked (#82).
+          validateStatus={duplicateName ? "warning" : undefined}
+          help={duplicateName ? t("vendor.form.duplicate_name_warning") : undefined}
         >
           {/* Auto-focus the first field so the form is ready to type into (#127). */}
           <Input maxLength={64} autoFocus />
