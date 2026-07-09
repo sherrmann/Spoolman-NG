@@ -1,6 +1,18 @@
 import { Create, useForm, useSelect } from "@refinedev/antd";
 import { HttpError, IResourceComponentsProps, useInvalidate, useTranslate } from "@refinedev/core";
-import { Button, ColorPicker, Form, Input, InputNumber, Radio, Select, Typography, message, Space } from "antd";
+import {
+  Button,
+  ColorPicker,
+  Divider,
+  Form,
+  Input,
+  InputNumber,
+  Radio,
+  Select,
+  Typography,
+  message,
+  Space,
+} from "antd";
 import TextArea from "antd/es/input/TextArea";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
@@ -14,7 +26,7 @@ import { formatNumberOnUserInput, numberParser, numberParserAllowEmpty } from ".
 import { ExternalFilament, fetchExternalProfile } from "../../utils/queryExternalDB";
 import { EntityType, useGetFields } from "../../utils/queryFields";
 import { getCurrencySymbol, useCurrency } from "../../utils/settings";
-import { getOrCreateVendorFromExternal } from "../vendors/functions";
+import { createVendor, getOrCreateVendorFromExternal } from "../vendors/functions";
 import { IVendor } from "../vendors/model";
 import { IFilament, IFilamentParsedExtras } from "./model";
 
@@ -36,6 +48,9 @@ export const FilamentCreate = (props: IResourceComponentsProps & CreateOrClonePr
   const invalidate = useInvalidate();
   const [colorType, setColorType] = useState<"single" | "multi">("single");
   const [profileId, setProfileId] = useState("");
+  // #125: inline vendor creation from the vendor picker's dropdown.
+  const [newVendorName, setNewVendorName] = useState("");
+  const [addingVendor, setAddingVendor] = useState(false);
 
   const { form, formProps, formLoading, onFinish, redirect } = useForm<
     IFilament,
@@ -93,6 +108,27 @@ export const FilamentCreate = (props: IResourceComponentsProps & CreateOrClonePr
       settings_extruder_temp: filament.extruder_temp || undefined,
       settings_bed_temp: filament.bed_temp || undefined,
     });
+  };
+
+  // #125: create a vendor inline from the picker without leaving the filament form. After the POST
+  // we invalidate the vendor list so the useSelect refetches (the same get-or-create + invalidate
+  // pattern importFilament already uses), then select the new vendor.
+  const addVendor = async () => {
+    const name = newVendorName.trim();
+    if (!name) return;
+    setAddingVendor(true);
+    try {
+      const vendor = await createVendor(name);
+      await invalidate({ resource: "vendor", invalidates: ["list", "detail"] });
+      form.setFieldValue("vendor_id", vendor.id);
+      setNewVendorName("");
+      message.success(t("filament.form.vendor_created"));
+    } catch (err) {
+      console.error(err);
+      message.error(t("filament.form.vendor_create_error"));
+    } finally {
+      setAddingVendor(false);
+    }
   };
 
   const fetchProfile = async () => {
@@ -200,6 +236,32 @@ export const FilamentCreate = (props: IResourceComponentsProps & CreateOrClonePr
             filterOption={(input, option) =>
               typeof option?.label === "string" && option?.label.toLowerCase().includes(input.toLowerCase())
             }
+            // #125: let the user add a new manufacturer inline instead of leaving the form. Mirrors
+            // the free-text location picker on the spool form, but a vendor must be POSTed to get an
+            // id before the filament can reference it, so this has an explicit Create action.
+            dropdownRender={(menu) => (
+              <>
+                {menu}
+                <Divider style={{ margin: "8px 0" }} />
+                <Space.Compact style={{ width: "100%", padding: "0 8px 4px" }}>
+                  <Input
+                    placeholder={t("filament.form.new_vendor_prompt")}
+                    value={newVendorName}
+                    onChange={(e) => setNewVendorName(e.target.value)}
+                    onPressEnter={(e) => {
+                      // Create the vendor, and stop Enter from bubbling to the form's implicit-submit
+                      // button (#127) or the Select's own option handling.
+                      e.preventDefault();
+                      e.stopPropagation();
+                      addVendor();
+                    }}
+                  />
+                  <Button type="primary" loading={addingVendor} onClick={addVendor}>
+                    {t("buttons.create")}
+                  </Button>
+                </Space.Compact>
+              </>
+            )}
           />
         </Form.Item>
         <Form.Item label={t("filament.fields.color_hex")}>

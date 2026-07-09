@@ -12,7 +12,7 @@ import {
   WifiOutlined,
 } from "@ant-design/icons";
 import { DateField, NumberField, Show, TextField } from "@refinedev/antd";
-import { useDelete, useInvalidate, useShow, useTranslate, useUpdate } from "@refinedev/core";
+import { useDelete, useInvalidate, useList, useShow, useTranslate, useUpdate } from "@refinedev/core";
 import { Button, Dropdown, Modal, Space, Table, Typography } from "antd";
 import { useGetSpoolUsageEvents } from "../../utils/queryUsageEvents";
 import type { MenuProps } from "antd";
@@ -57,6 +57,19 @@ export const SpoolShow = () => {
 
   const usageEvents = useGetSpoolUsageEvents(record?.id);
   const { mutate: updateSpool } = useUpdate();
+
+  // #100: after a QR/NFC scan lands here, show the other (non-archived) spools of the SAME filament
+  // so the user can tell at a glance how much of that filament remains across all spools. Reuses the
+  // existing `filament.id` spool filter (same one the Filament show page's "Spools" button uses); the
+  // section only renders when siblings exist, so single-spool filaments gain no clutter.
+  const filamentId = record?.filament.id;
+  const { result: siblingSpoolsResult, query: siblingSpoolsQuery } = useList<ISpool>({
+    resource: "spool",
+    filters: [{ field: "filament.id", operator: "in", value: filamentId !== undefined ? [filamentId] : [] }],
+    pagination: { mode: "off" },
+    queryOptions: { enabled: filamentId !== undefined },
+  });
+  const siblingSpools = (siblingSpoolsResult?.data ?? []).filter((s) => s.id !== record?.id);
 
   // "Reset usage" (#77): zero used_weight and clear the usage dates. The used_weight change is
   // itself logged as an "update" usage event by the backend.
@@ -370,6 +383,39 @@ export const SpoolShow = () => {
           {filamentExtraFields.data.map((field, index) => (
             <ExtraFieldDisplay key={index} field={field} value={record?.filament.extra?.[field.key]} />
           ))}
+        </>
+      )}
+      {siblingSpools.length > 0 && (
+        <>
+          <Title level={4}>{t("spool.sibling_spools.title")}</Title>
+          <Table
+            size="small"
+            rowKey="id"
+            loading={siblingSpoolsQuery.isLoading}
+            dataSource={siblingSpools}
+            pagination={false}
+            columns={[
+              {
+                title: t("spool.fields.id"),
+                dataIndex: "id",
+                render: (id: number) => <a href={`/spool/show/${id}`}>#{id}</a>,
+              },
+              {
+                title: t("spool.fields.remaining_weight"),
+                dataIndex: "remaining_weight",
+                align: "right",
+                render: (value?: number) => (
+                  <NumberFieldUnit
+                    value={value ?? ""}
+                    unit="g"
+                    autoScale={unitScaling}
+                    options={{ maximumFractionDigits: 1, minimumFractionDigits: 1 }}
+                  />
+                ),
+              },
+              { title: t("spool.fields.location"), dataIndex: "location" },
+            ]}
+          />
         </>
       )}
       <Title level={4}>{t("spool.usage_history.title")}</Title>
