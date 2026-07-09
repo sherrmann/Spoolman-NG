@@ -546,6 +546,8 @@
     "total_value": "Value",
     "low_stock": "Low Stock",
     "all_stocked": "All spools are well stocked",
+    "all_spools": "All Spools",
+    "no_spools": "No spools yet",
     "recently_used": "Recently Used",
     "no_recent": "No recently used spools",
     "by_material": "By Material",
