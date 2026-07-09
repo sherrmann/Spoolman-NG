@@ -1,4 +1,5 @@
 import {
+  AppstoreOutlined,
   EditOutlined,
   EyeOutlined,
   FilterOutlined,
@@ -7,10 +8,11 @@ import {
   PrinterOutlined,
   ToolOutlined,
   ToTopOutlined,
+  UnorderedListOutlined,
 } from "@ant-design/icons";
 import { List, TextField, useTable } from "@refinedev/antd";
 import { useInvalidate, useNavigation, useTranslate } from "@refinedev/core";
-import { Button, Grid, Input, message, Modal, Space, Table } from "antd";
+import { Button, Grid, Input, message, Modal, Pagination, Space, Table } from "antd";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { HTMLAttributes, Key, useCallback, useMemo, useState } from "react";
@@ -50,12 +52,13 @@ import { useBulkWeightUpdateModal } from "./bulkWeightUpdate";
 import { setSpoolArchived, useSpoolAdjustModal } from "./functions";
 import { EditableLocationCell, EditableNumberCell, EditableTextCell } from "./inlineEdit";
 import { ISpool } from "./model";
+import { SpoolGalleryCard } from "./spoolGalleryCard";
 
 dayjs.extend(utc);
 
 const { confirm } = Modal;
 
-interface ISpoolCollapsed extends ISpool {
+export interface ISpoolCollapsed extends ISpool {
   "filament.combined_name": string; // Eg. "Prusa - PLA Red"
   "filament.id": number;
   "filament.name"?: string | null;
@@ -176,6 +179,16 @@ export const SpoolList = () => {
     });
     return merged;
   }, [settingsLocations, usedLocations.data]);
+
+  // Filter-value query hooks for the table columns' filter dropdowns. Call them unconditionally here
+  // rather than inline in the columns array (which is only built when the table renders), so switching
+  // to grid view — where the table isn't rendered — doesn't change the hook count and violate the
+  // Rules of Hooks (#139).
+  const filamentFilterQuery = useSpoolmanFilamentFilter();
+  const vendorFilterQuery = useSpoolmanVendors();
+  const materialFilterQuery = useSpoolmanMaterials();
+  const locationFilterQuery = useSpoolmanLocations();
+  const lotNrFilterQuery = useSpoolmanLotNumbers();
 
   const allColumnsWithExtraFields = [
     ...allColumns,
@@ -338,9 +351,20 @@ export const SpoolList = () => {
   );
   const dataSource = useLiveify("spool", queryDataSource, collapseSpool);
 
+  // Total matching rows, for the grid view's own pagination control (the Table reads it from
+  // tableProps directly). Falls back to the shown count if the server total isn't present.
+  const gridTotal =
+    tableProps.pagination && typeof tableProps.pagination === "object"
+      ? (tableProps.pagination.total ?? dataSource.length)
+      : dataSource.length;
+
   // Opt-in totals row (#134). The list is server-paginated, so this sums the currently-shown rows
   // (labeled as such) rather than the whole filtered set. Off by default to keep the list uncluttered.
   const [showTotals, setShowTotals] = useSavedState("spoolList-showTotals", false);
+
+  // Optional grid/gallery view (#139): large colour tiles for picking a spool by colour. Off by
+  // default (table), persisted, so it never changes the default look.
+  const [viewMode, setViewMode] = useSavedState<"table" | "grid">("spoolList-viewMode", "table");
   const totals = useMemo(() => {
     let remaining = 0;
     let used = 0;
@@ -499,26 +523,38 @@ export const SpoolList = () => {
           >
             {t("buttons.clearFilters")}
           </Button>
-          <ColumnManager
-            buttonLabel={t("buttons.hideColumns")}
-            visible={showColumns}
-            onVisibleChange={setShowColumns}
-            onReorder={moveColumn}
-            columns={effectiveOrder.map((column_id) => {
-              if (column_id.indexOf("filament.extra.") === 0) {
-                const field = filamentExtraFields.data?.find((f) => "filament.extra." + f.key === column_id);
-                return { id: column_id, label: field ? filamentColumnLabel(field.name) : column_id };
-              }
-              if (column_id.indexOf("extra.") === 0) {
-                const extraField = extraFields.data?.find((field) => "extra." + field.key === column_id);
-                return { id: column_id, label: extraField?.name ?? column_id };
-              }
-              return { id: column_id, label: t(translateColumnI18nKey(column_id)) };
-            })}
-          />
-          <Button onClick={() => setShowTotals(!showTotals)}>
-            {showTotals ? t("spool.totals.hide") : t("spool.totals.show")}
+          {/* Grid/table view toggle (#139). */}
+          <Button
+            icon={viewMode === "grid" ? <UnorderedListOutlined /> : <AppstoreOutlined />}
+            onClick={() => setViewMode(viewMode === "grid" ? "table" : "grid")}
+          >
+            {viewMode === "grid" ? t("spool.view.table") : t("spool.view.grid")}
           </Button>
+          {/* Column manager and totals only apply to the table, so hide them in grid view. */}
+          {viewMode === "table" && (
+            <>
+              <ColumnManager
+                buttonLabel={t("buttons.hideColumns")}
+                visible={showColumns}
+                onVisibleChange={setShowColumns}
+                onReorder={moveColumn}
+                columns={effectiveOrder.map((column_id) => {
+                  if (column_id.indexOf("filament.extra.") === 0) {
+                    const field = filamentExtraFields.data?.find((f) => "filament.extra." + f.key === column_id);
+                    return { id: column_id, label: field ? filamentColumnLabel(field.name) : column_id };
+                  }
+                  if (column_id.indexOf("extra.") === 0) {
+                    const extraField = extraFields.data?.find((field) => "extra." + field.key === column_id);
+                    return { id: column_id, label: extraField?.name ?? column_id };
+                  }
+                  return { id: column_id, label: t(translateColumnI18nKey(column_id)) };
+                })}
+              />
+              <Button onClick={() => setShowTotals(!showTotals)}>
+                {showTotals ? t("spool.totals.hide") : t("spool.totals.show")}
+              </Button>
+            </>
+          )}
           {defaultButtons}
         </>
       )}
@@ -546,330 +582,351 @@ export const SpoolList = () => {
           </Button>
         </Space>
       )}
-      <Table
-        {...tableProps}
-        sticky
-        tableLayout="auto"
-        scroll={{ x: "max-content" }}
-        components={{ header: { cell: ResizableHeaderCell } }}
-        summary={
-          showTotals
-            ? () => (
-                <Table.Summary>
-                  <Table.Summary.Row>
-                    {/* Server-paginated, so this totals the shown rows (labeled as such). One spanning
+      {viewMode === "grid" ? (
+        <>
+          {/* Gallery view (#139): the same filtered/paginated data as large colour tiles. Read-only —
+              switch back to the table for sorting, per-column filters, inline edit and selection. */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12 }}>
+            {dataSource.map((record) => (
+              <SpoolGalleryCard key={record.id} record={record} onClick={() => navigate(showUrl("spool", record.id))} />
+            ))}
+          </div>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16 }}>
+            <Pagination
+              current={currentPage}
+              pageSize={pageSize}
+              total={gridTotal}
+              showSizeChanger={false}
+              onChange={(page) => setCurrentPage(page)}
+            />
+          </div>
+        </>
+      ) : (
+        <Table
+          {...tableProps}
+          sticky
+          tableLayout="auto"
+          scroll={{ x: "max-content" }}
+          components={{ header: { cell: ResizableHeaderCell } }}
+          summary={
+            showTotals
+              ? () => (
+                  <Table.Summary>
+                    <Table.Summary.Row>
+                      {/* Server-paginated, so this totals the shown rows (labeled as such). One spanning
                         cell keeps the row robust against column reorder/resize/visibility. #134 */}
-                    <Table.Summary.Cell index={0} colSpan={showColumns.length + 2}>
-                      <Space split="·" wrap>
-                        <span>{t("spool.totals.shown", { count: totals.count })}</span>
-                        <span>
-                          {t("spool.fields.remaining_weight")}: {formatWeight(totals.remaining)}
-                        </span>
-                        <span>
-                          {t("spool.fields.used_weight")}: {formatWeight(totals.used)}
-                        </span>
-                        <span>
-                          {t("spool.fields.price")}: {currencyFormatter.format(totals.price)}
-                        </span>
-                      </Space>
-                    </Table.Summary.Cell>
-                  </Table.Summary.Row>
-                </Table.Summary>
-              )
-            : undefined
-        }
-        dataSource={dataSource}
-        rowKey="id"
-        rowSelection={{
-          selectedRowKeys,
-          onChange: setSelectedRowKeys,
-          preserveSelectedRowKeys: true,
-        }}
-        // Make archived rows greyed out
-        onRow={(record) => {
-          if (record.archived) {
-            return {
-              style: {
-                fontStyle: "italic",
-                color: "#999",
-              },
-            };
-          } else {
-            return {};
+                      <Table.Summary.Cell index={0} colSpan={showColumns.length + 2}>
+                        <Space split="·" wrap>
+                          <span>{t("spool.totals.shown", { count: totals.count })}</span>
+                          <span>
+                            {t("spool.fields.remaining_weight")}: {formatWeight(totals.remaining)}
+                          </span>
+                          <span>
+                            {t("spool.fields.used_weight")}: {formatWeight(totals.used)}
+                          </span>
+                          <span>
+                            {t("spool.fields.price")}: {currencyFormatter.format(totals.price)}
+                          </span>
+                        </Space>
+                      </Table.Summary.Cell>
+                    </Table.Summary.Row>
+                  </Table.Summary>
+                )
+              : undefined
           }
-        }}
-        columns={applyColumnWidths(
-          orderColumns(
-            removeUndefined([
-              SortedColumn({
-                ...commonProps,
-                id: "id",
-                i18ncat: "spool",
-                width: 70,
-              }),
-              SpoolIconColumn({
-                ...commonProps,
-                id: "filament.combined_name",
-                i18nkey: "spool.fields.filament_name",
-                color: (record: ISpoolCollapsed) =>
-                  record.filament.multi_color_hexes
-                    ? {
-                        colors: record.filament.multi_color_hexes.split(","),
-                        vertical: record.filament.multi_color_direction === "longitudinal",
-                      }
-                    : record.filament.color_hex,
-                dataId: "filament.combined_name",
-                filterValueQuery: useSpoolmanFilamentFilter(),
-                clickAffordance: true,
-              }),
-              FilteredQueryColumn({
-                ...commonProps,
-                id: "filament.vendor.name",
-                i18nkey: "spool.fields.vendor_name",
-                filterValueQuery: useSpoolmanVendors(),
-                width: 120,
-              }),
-              // Standalone filament name (#94): the Name half of the split, with the color icon. Opt-in;
-              // pair with the Vendor column above and hide the combined name column for a two-column split.
-              SpoolIconColumn({
-                ...commonProps,
-                id: "filament.name",
-                i18nkey: "spool.fields.filament_name_only",
-                color: (record: ISpoolCollapsed) =>
-                  record.filament.multi_color_hexes
-                    ? {
-                        colors: record.filament.multi_color_hexes.split(","),
-                        vertical: record.filament.multi_color_direction === "longitudinal",
-                      }
-                    : record.filament.color_hex,
-                dataId: "filament.name",
-                filterValueQuery: useSpoolmanFilamentFilter(),
-                clickAffordance: true,
-              }),
-              FilteredQueryColumn({
-                ...commonProps,
-                id: "filament.material",
-                i18nkey: "spool.fields.material",
-                filterValueQuery: useSpoolmanMaterials(),
-                width: 120,
-              }),
-              // Opt-in colour column (#113): a swatch that sorts by the filament's hue. dataId names
-              // the server sort key (filament.color_hue); the colour-similarity filter (#46) lives in
-              // the toolbar, so this column is sort-only.
-              SortedColumn({
-                ...commonProps,
-                id: "filament.color_hue",
-                i18nkey: "spool.fields.color",
-                align: "center",
-                width: 80,
-                render: (_, record: ISpoolCollapsed) => (
-                  <SpoolIcon
-                    color={
-                      record.filament.multi_color_hexes
-                        ? {
-                            colors: record.filament.multi_color_hexes.split(","),
-                            vertical: record.filament.multi_color_direction === "longitudinal",
-                          }
-                        : record.filament.color_hex
-                    }
-                  />
-                ),
-              }),
-              SortedColumn({
-                ...commonProps,
-                id: "price",
-                i18ncat: "spool",
-                align: "right",
-                width: 80,
-                render: (_, obj: ISpoolCollapsed) => (
-                  <EditableNumberCell
-                    spoolId={obj.id}
-                    field="price"
-                    editable={inlineEditEnabled}
-                    messageApi={messageApi}
-                    t={t}
-                    value={obj.price ?? undefined}
-                    precision={2}
-                    align="right"
-                    addonAfter={getCurrencySymbol(undefined, currency)}
-                    display={obj.price === undefined || obj.price === null ? "" : currencyFormatter.format(obj.price)}
-                  />
-                ),
-              }),
-              SortedColumn({
-                ...commonProps,
-                id: "used_weight",
-                i18ncat: "spool",
-                align: "right",
-                width: 110,
-                render: (_, obj: ISpoolCollapsed) => (
-                  <EditableNumberCell
-                    spoolId={obj.id}
-                    field="used_weight"
-                    editable={inlineEditEnabled}
-                    messageApi={messageApi}
-                    t={t}
-                    value={obj.used_weight}
-                    unit="g"
-                    align="right"
-                    display={
-                      obj.used_weight === null || obj.used_weight === undefined ? (
-                        <TextField value="" />
-                      ) : (
-                        <NumberFieldUnit
-                          value={obj.used_weight}
-                          unit="g"
-                          autoScale={unitScaling}
-                          options={{ maximumFractionDigits: 0, minimumFractionDigits: 0 }}
-                        />
-                      )
-                    }
-                  />
-                ),
-              }),
-              SortedColumn({
-                ...commonProps,
-                id: "remaining_weight",
-                i18ncat: "spool",
-                align: "right",
-                width: 110,
-                render: (_, obj: ISpoolCollapsed) => (
-                  <EditableNumberCell
-                    spoolId={obj.id}
-                    field="remaining_weight"
-                    editable={inlineEditEnabled}
-                    messageApi={messageApi}
-                    t={t}
-                    value={obj.remaining_weight}
-                    unit="g"
-                    align="right"
-                    display={
-                      obj.remaining_weight === null || obj.remaining_weight === undefined ? (
-                        <TextField value={t("unknown")} />
-                      ) : (
-                        <NumberFieldUnit
-                          value={obj.remaining_weight}
-                          unit="g"
-                          autoScale={unitScaling}
-                          options={{ maximumFractionDigits: 0, minimumFractionDigits: 0 }}
-                        />
-                      )
-                    }
-                  />
-                ),
-              }),
-              NumberColumn({
-                ...commonProps,
-                id: "spool_weight",
-                i18ncat: "spool",
-                unit: "g",
-                maxDecimals: 0,
-                defaultText: t("unknown"),
-                width: 110,
-                autoScale: unitScaling,
-              }),
-              NumberColumn({
-                ...commonProps,
-                id: "used_length",
-                i18ncat: "spool",
-                unit: "mm",
-                maxDecimals: 0,
-                width: 120,
-                autoScale: unitScaling,
-              }),
-              NumberColumn({
-                ...commonProps,
-                id: "remaining_length",
-                i18ncat: "spool",
-                unit: "mm",
-                maxDecimals: 0,
-                defaultText: t("unknown"),
-                width: 120,
-                autoScale: unitScaling,
-              }),
-              FilteredQueryColumn({
-                ...commonProps,
-                id: "location",
-                i18ncat: "spool",
-                filterValueQuery: useSpoolmanLocations(),
-                width: 120,
-                render: (_, obj: ISpoolCollapsed) => (
-                  <EditableLocationCell
-                    spoolId={obj.id}
-                    field="location"
-                    editable={inlineEditEnabled}
-                    messageApi={messageApi}
-                    t={t}
-                    value={obj.location}
-                    options={locationOptions}
-                    display={obj.location ?? ""}
-                  />
-                ),
-              }),
-              FilteredQueryColumn({
-                ...commonProps,
-                id: "lot_nr",
-                i18ncat: "spool",
-                filterValueQuery: useSpoolmanLotNumbers(),
-                width: 120,
-              }),
-              DateColumn({
-                ...commonProps,
-                id: "first_used",
-                i18ncat: "spool",
-                width: 130,
-              }),
-              DateColumn({
-                ...commonProps,
-                id: "last_used",
-                i18ncat: "spool",
-                width: 130,
-              }),
-              DateColumn({
-                ...commonProps,
-                id: "registered",
-                i18ncat: "spool",
-                width: 130,
-              }),
-              ...(extraFields.data?.map((field) => {
-                return CustomFieldColumn({
+          dataSource={dataSource}
+          rowKey="id"
+          rowSelection={{
+            selectedRowKeys,
+            onChange: setSelectedRowKeys,
+            preserveSelectedRowKeys: true,
+          }}
+          // Make archived rows greyed out
+          onRow={(record) => {
+            if (record.archived) {
+              return {
+                style: {
+                  fontStyle: "italic",
+                  color: "#999",
+                },
+              };
+            } else {
+              return {};
+            }
+          }}
+          columns={applyColumnWidths(
+            orderColumns(
+              removeUndefined([
+                SortedColumn({
                   ...commonProps,
-                  field,
-                });
-              }) ?? []),
-              // #83: the filament's own custom fields, read-only and namespaced under "filament".
-              ...(filamentExtraFields.data?.map((field) => {
-                return CustomFieldColumn({
+                  id: "id",
+                  i18ncat: "spool",
+                  width: 70,
+                }),
+                SpoolIconColumn({
                   ...commonProps,
-                  field,
-                  entityPrefix: ["filament"],
-                  title: filamentColumnLabel(field.name),
-                });
-              }) ?? []),
-              SortedColumn({
-                ...commonProps,
-                id: "comment",
-                i18ncat: "spool",
-                width: 150,
-                render: (_, obj: ISpoolCollapsed) => (
-                  <EditableTextCell
-                    spoolId={obj.id}
-                    field="comment"
-                    editable={inlineEditEnabled}
-                    messageApi={messageApi}
-                    t={t}
-                    value={obj.comment}
-                    maxLength={1024}
-                    display={enrichText(obj.comment)}
-                  />
-                ),
-              }),
-              ActionsColumn(t("table.actions"), actions),
-            ]),
-            effectiveOrder,
-          ),
-        )}
-      />
+                  id: "filament.combined_name",
+                  i18nkey: "spool.fields.filament_name",
+                  color: (record: ISpoolCollapsed) =>
+                    record.filament.multi_color_hexes
+                      ? {
+                          colors: record.filament.multi_color_hexes.split(","),
+                          vertical: record.filament.multi_color_direction === "longitudinal",
+                        }
+                      : record.filament.color_hex,
+                  dataId: "filament.combined_name",
+                  filterValueQuery: filamentFilterQuery,
+                  clickAffordance: true,
+                }),
+                FilteredQueryColumn({
+                  ...commonProps,
+                  id: "filament.vendor.name",
+                  i18nkey: "spool.fields.vendor_name",
+                  filterValueQuery: vendorFilterQuery,
+                  width: 120,
+                }),
+                // Standalone filament name (#94): the Name half of the split, with the color icon. Opt-in;
+                // pair with the Vendor column above and hide the combined name column for a two-column split.
+                SpoolIconColumn({
+                  ...commonProps,
+                  id: "filament.name",
+                  i18nkey: "spool.fields.filament_name_only",
+                  color: (record: ISpoolCollapsed) =>
+                    record.filament.multi_color_hexes
+                      ? {
+                          colors: record.filament.multi_color_hexes.split(","),
+                          vertical: record.filament.multi_color_direction === "longitudinal",
+                        }
+                      : record.filament.color_hex,
+                  dataId: "filament.name",
+                  filterValueQuery: filamentFilterQuery,
+                  clickAffordance: true,
+                }),
+                FilteredQueryColumn({
+                  ...commonProps,
+                  id: "filament.material",
+                  i18nkey: "spool.fields.material",
+                  filterValueQuery: materialFilterQuery,
+                  width: 120,
+                }),
+                // Opt-in colour column (#113): a swatch that sorts by the filament's hue. dataId names
+                // the server sort key (filament.color_hue); the colour-similarity filter (#46) lives in
+                // the toolbar, so this column is sort-only.
+                SortedColumn({
+                  ...commonProps,
+                  id: "filament.color_hue",
+                  i18nkey: "spool.fields.color",
+                  align: "center",
+                  width: 80,
+                  render: (_, record: ISpoolCollapsed) => (
+                    <SpoolIcon
+                      color={
+                        record.filament.multi_color_hexes
+                          ? {
+                              colors: record.filament.multi_color_hexes.split(","),
+                              vertical: record.filament.multi_color_direction === "longitudinal",
+                            }
+                          : record.filament.color_hex
+                      }
+                    />
+                  ),
+                }),
+                SortedColumn({
+                  ...commonProps,
+                  id: "price",
+                  i18ncat: "spool",
+                  align: "right",
+                  width: 80,
+                  render: (_, obj: ISpoolCollapsed) => (
+                    <EditableNumberCell
+                      spoolId={obj.id}
+                      field="price"
+                      editable={inlineEditEnabled}
+                      messageApi={messageApi}
+                      t={t}
+                      value={obj.price ?? undefined}
+                      precision={2}
+                      align="right"
+                      addonAfter={getCurrencySymbol(undefined, currency)}
+                      display={obj.price === undefined || obj.price === null ? "" : currencyFormatter.format(obj.price)}
+                    />
+                  ),
+                }),
+                SortedColumn({
+                  ...commonProps,
+                  id: "used_weight",
+                  i18ncat: "spool",
+                  align: "right",
+                  width: 110,
+                  render: (_, obj: ISpoolCollapsed) => (
+                    <EditableNumberCell
+                      spoolId={obj.id}
+                      field="used_weight"
+                      editable={inlineEditEnabled}
+                      messageApi={messageApi}
+                      t={t}
+                      value={obj.used_weight}
+                      unit="g"
+                      align="right"
+                      display={
+                        obj.used_weight === null || obj.used_weight === undefined ? (
+                          <TextField value="" />
+                        ) : (
+                          <NumberFieldUnit
+                            value={obj.used_weight}
+                            unit="g"
+                            autoScale={unitScaling}
+                            options={{ maximumFractionDigits: 0, minimumFractionDigits: 0 }}
+                          />
+                        )
+                      }
+                    />
+                  ),
+                }),
+                SortedColumn({
+                  ...commonProps,
+                  id: "remaining_weight",
+                  i18ncat: "spool",
+                  align: "right",
+                  width: 110,
+                  render: (_, obj: ISpoolCollapsed) => (
+                    <EditableNumberCell
+                      spoolId={obj.id}
+                      field="remaining_weight"
+                      editable={inlineEditEnabled}
+                      messageApi={messageApi}
+                      t={t}
+                      value={obj.remaining_weight}
+                      unit="g"
+                      align="right"
+                      display={
+                        obj.remaining_weight === null || obj.remaining_weight === undefined ? (
+                          <TextField value={t("unknown")} />
+                        ) : (
+                          <NumberFieldUnit
+                            value={obj.remaining_weight}
+                            unit="g"
+                            autoScale={unitScaling}
+                            options={{ maximumFractionDigits: 0, minimumFractionDigits: 0 }}
+                          />
+                        )
+                      }
+                    />
+                  ),
+                }),
+                NumberColumn({
+                  ...commonProps,
+                  id: "spool_weight",
+                  i18ncat: "spool",
+                  unit: "g",
+                  maxDecimals: 0,
+                  defaultText: t("unknown"),
+                  width: 110,
+                  autoScale: unitScaling,
+                }),
+                NumberColumn({
+                  ...commonProps,
+                  id: "used_length",
+                  i18ncat: "spool",
+                  unit: "mm",
+                  maxDecimals: 0,
+                  width: 120,
+                  autoScale: unitScaling,
+                }),
+                NumberColumn({
+                  ...commonProps,
+                  id: "remaining_length",
+                  i18ncat: "spool",
+                  unit: "mm",
+                  maxDecimals: 0,
+                  defaultText: t("unknown"),
+                  width: 120,
+                  autoScale: unitScaling,
+                }),
+                FilteredQueryColumn({
+                  ...commonProps,
+                  id: "location",
+                  i18ncat: "spool",
+                  filterValueQuery: locationFilterQuery,
+                  width: 120,
+                  render: (_, obj: ISpoolCollapsed) => (
+                    <EditableLocationCell
+                      spoolId={obj.id}
+                      field="location"
+                      editable={inlineEditEnabled}
+                      messageApi={messageApi}
+                      t={t}
+                      value={obj.location}
+                      options={locationOptions}
+                      display={obj.location ?? ""}
+                    />
+                  ),
+                }),
+                FilteredQueryColumn({
+                  ...commonProps,
+                  id: "lot_nr",
+                  i18ncat: "spool",
+                  filterValueQuery: lotNrFilterQuery,
+                  width: 120,
+                }),
+                DateColumn({
+                  ...commonProps,
+                  id: "first_used",
+                  i18ncat: "spool",
+                  width: 130,
+                }),
+                DateColumn({
+                  ...commonProps,
+                  id: "last_used",
+                  i18ncat: "spool",
+                  width: 130,
+                }),
+                DateColumn({
+                  ...commonProps,
+                  id: "registered",
+                  i18ncat: "spool",
+                  width: 130,
+                }),
+                ...(extraFields.data?.map((field) => {
+                  return CustomFieldColumn({
+                    ...commonProps,
+                    field,
+                  });
+                }) ?? []),
+                // #83: the filament's own custom fields, read-only and namespaced under "filament".
+                ...(filamentExtraFields.data?.map((field) => {
+                  return CustomFieldColumn({
+                    ...commonProps,
+                    field,
+                    entityPrefix: ["filament"],
+                    title: filamentColumnLabel(field.name),
+                  });
+                }) ?? []),
+                SortedColumn({
+                  ...commonProps,
+                  id: "comment",
+                  i18ncat: "spool",
+                  width: 150,
+                  render: (_, obj: ISpoolCollapsed) => (
+                    <EditableTextCell
+                      spoolId={obj.id}
+                      field="comment"
+                      editable={inlineEditEnabled}
+                      messageApi={messageApi}
+                      t={t}
+                      value={obj.comment}
+                      maxLength={1024}
+                      display={enrichText(obj.comment)}
+                    />
+                  ),
+                }),
+                ActionsColumn(t("table.actions"), actions),
+              ]),
+              effectiveOrder,
+            ),
+          )}
+        />
+      )}
     </List>
   );
 };
