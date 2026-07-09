@@ -47,6 +47,7 @@ async def create(
     lot_nr: str | None = None,
     comment: str | None = None,
     archived: bool = False,
+    diameter: float | None = None,
     extra: dict[str, str] | None = None,
 ) -> models.Spool:
     """Add a new spool to the database. Leave weight empty to assume full spool."""
@@ -90,6 +91,7 @@ async def create(
         lot_nr=lot_nr,
         comment=comment,
         archived=archived,
+        diameter=diameter,
         extra=[models.SpoolField(key=k, value=v) for k, v in (extra or {}).items()],
     )
     db.add(spool)
@@ -234,17 +236,18 @@ async def find(  # noqa: C901, PLR0912
                 )
             elif fieldstr == "remaining_length":
                 # Simplified weight -> length formula. Absolute value is not correct but the proportionality
-                # is still kept, which means the sort order is correct.
+                # is still kept, which means the sort order is correct. #101: prefer the per-spool diameter
+                # override when set (coalesce), matching the from_db length math.
+                spool_diameter = coalesce(models.Spool.diameter, models.Filament.diameter)
                 sorts.append(
                     (coalesce(models.Spool.initial_weight, models.Filament.weight) - models.Spool.used_weight)
                     / models.Filament.density
-                    / (models.Filament.diameter * models.Filament.diameter),
+                    / (spool_diameter * spool_diameter),
                 )
             elif fieldstr == "used_length":
+                spool_diameter = coalesce(models.Spool.diameter, models.Filament.diameter)
                 sorts.append(
-                    models.Spool.used_weight
-                    / models.Filament.density
-                    / (models.Filament.diameter * models.Filament.diameter),
+                    models.Spool.used_weight / models.Filament.density / (spool_diameter * spool_diameter),
                 )
             elif fieldstr == "filament.combined_name":
                 sorts.append(models.Vendor.name)
@@ -517,9 +520,12 @@ async def use_length(
         models.Spool: Updated spool object
 
     """
-    # Get filament diameter and density
+    # Get the effective diameter (per-spool override when set, else the filament's — #101) and density.
     result = await db.execute(
-        sqlalchemy.select(models.Filament.diameter, models.Filament.density)
+        sqlalchemy.select(
+            coalesce(models.Spool.diameter, models.Filament.diameter),
+            models.Filament.density,
+        )
         .join(models.Spool, models.Spool.filament_id == models.Filament.id)
         .where(models.Spool.id == spool_id),
     )

@@ -19,6 +19,8 @@ export interface ISpool {
   used_weight: number;
   remaining_length?: number;
   used_length: number;
+  // Per-spool measured diameter override (#101). Undefined ⇒ the filament's diameter is used.
+  diameter?: number;
   location?: string;
   lot_nr?: string;
   comment?: string;

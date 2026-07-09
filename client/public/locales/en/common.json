@@ -313,6 +313,7 @@
       "spool_weight": "Empty Weight",
       "location": "Location",
       "lot_nr": "Lot Nr",
+      "diameter": "Diameter",
       "first_used": "First Used",
       "last_used": "Last Used",
       "registered": "Registered",
@@ -329,6 +330,7 @@
       "spool_weight": "The weight of the spool when it is empty. Leave empty to use the value from the filament or the manufacturer.",
       "location": "Where the spool is located if you have multiple locations where you store your spools.",
       "lot_nr": "Manufacturer's lot number. Can be used to ensure a print has consistent color if multiple spools are used.",
+      "diameter": "Measured filament diameter for this specific spool, used in length calculations. Leave empty to use the filament's diameter.",
       "external_filament": "You have selected a filament from the external database. A filament object (and possibly a manufacturer object) will be created automatically when you create this spool. This can create duplicate filament objects if you have already created a filament object for this filament."
     },
     "titles": {

@@ -434,6 +434,16 @@ class Spool(BaseModel):
         description="Consumed length of filament from the spool in millimeters.",
         examples=[50.7],
     )
+    diameter: float | None = Field(
+        None,
+        gt=0,
+        description=(
+            "Measured per-spool filament diameter in mm, overriding the filament's nominal diameter in "
+            "length calculations (#101). Null means the filament's diameter is used. This is the raw "
+            "override value, not the effective diameter."
+        ),
+        examples=[1.73],
+    )
     location: str | None = Field(
         None,
         max_length=64,
@@ -469,6 +479,10 @@ class Spool(BaseModel):
         """Create a new Pydantic spool object from a database spool object."""
         filament = Filament.from_db(item.filament)
 
+        # #101: length math uses the per-spool diameter override when set, else the filament's. The
+        # raw override (item.diameter, possibly null) is emitted separately so the value round-trips.
+        effective_diameter = item.diameter if item.diameter is not None else filament.diameter
+
         remaining_weight: float | None = None
         remaining_length: float | None = None
 
@@ -477,20 +491,20 @@ class Spool(BaseModel):
             remaining_length = length_from_weight(
                 weight=remaining_weight,
                 density=filament.density,
-                diameter=filament.diameter,
+                diameter=effective_diameter,
             )
         elif filament.weight is not None:
             remaining_weight = max(filament.weight - item.used_weight, 0)
             remaining_length = length_from_weight(
                 weight=remaining_weight,
                 density=filament.density,
-                diameter=filament.diameter,
+                diameter=effective_diameter,
             )
 
         used_length = length_from_weight(
             weight=item.used_weight,
             density=filament.density,
-            diameter=filament.diameter,
+            diameter=effective_diameter,
         )
 
         return Spool(
@@ -504,6 +518,7 @@ class Spool(BaseModel):
             spool_weight=item.spool_weight,
             used_weight=item.used_weight,
             used_length=used_length,
+            diameter=item.diameter,
             remaining_weight=remaining_weight,
             remaining_length=remaining_length,
             location=item.location,
