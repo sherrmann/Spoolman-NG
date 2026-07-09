@@ -3,7 +3,7 @@ import { DateField, NumberField, Show, TextField } from "@refinedev/antd";
 import { useShow, useTranslate } from "@refinedev/core";
 import { DownOutlined, ExportOutlined, IdcardOutlined, PrinterOutlined } from "@ant-design/icons";
 import { CalibrationSection } from "../calibration/CalibrationSection";
-import { Button, Dropdown, Space, Tabs, Typography } from "antd";
+import { Button, Descriptions, Dropdown, Space, Tabs, Typography } from "antd";
 import type { MenuProps } from "antd";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
@@ -92,155 +92,155 @@ export const FilamentShow = () => {
     <>
       <Title level={5}>{t("filament.fields.id")}</Title>
       <NumberField value={record?.id ?? ""} />
-      <Title level={5}>{t("filament.fields.vendor")}</Title>
-      <button
-        onClick={gotoVendor}
-        style={{ background: "none", border: "none", color: "blue", cursor: "pointer", paddingLeft: 0 }}
-      >
-        {record ? record.vendor?.name : ""}
-      </button>
-      <Title level={5}>{t("filament.fields.registered")}</Title>
-      <DateField
-        value={dayjs.utc(record?.registered).local()}
-        title={dayjs.utc(record?.registered).local().format()}
-        format={DATE_TIME_FORMAT}
-      />
-      <Title level={5}>{t("filament.fields.name")}</Title>
-      <TextField value={record?.name} />
-      <Title level={5}>{t("filament.fields.color_hex")}</Title>
-      {colorObj && <SpoolIcon color={colorObj} size="large" no_margin />}
-      {record?.color_hex && <TextField value={`#${record?.color_hex}`} />}
-      <Title level={5}>{t("filament.fields.material")}</Title>
-      <TextField value={record?.material} />
-      <Title level={5}>{t("filament.fields.price")}</Title>
-      <TextField value={record?.price ? currencyFormatter.format(record.price) : ""} />
-      <Title level={5}>{t("filament.fields.density")}</Title>
-      <NumberFieldUnit
-        value={record?.density ?? ""}
-        unit="g/cm³"
-        options={{
-          maximumFractionDigits: 2,
-          minimumFractionDigits: 2,
-        }}
-      />
-      <Title level={5}>{t("filament.fields.diameter")}</Title>
-      <NumberFieldUnit
-        value={record?.diameter ?? ""}
-        unit="mm"
-        options={{
-          maximumFractionDigits: 2,
-          minimumFractionDigits: 2,
-        }}
-      />
-      <Title level={5}>{t("filament.fields.weight")}</Title>
-      <NumberFieldUnit
-        value={record?.weight ?? ""}
-        unit="g"
-        autoScale={unitScaling}
-        options={{
-          maximumFractionDigits: 1,
-          minimumFractionDigits: 1,
-        }}
-      />
-      <Title level={5}>{t("filament.fields.spool_count")}</Title>
-      <NumberField value={record?.spool_count ?? 0} />
-      <Title level={5}>{t("filament.fields.remaining_weight")}</Title>
-      <NumberFieldUnit
-        value={record?.remaining_weight ?? 0}
-        unit="g"
-        autoScale={unitScaling}
-        options={{
-          maximumFractionDigits: 1,
-          minimumFractionDigits: 1,
-        }}
-      />
-      <Title level={5}>{t("filament.fields.spool_weight")}</Title>
-      <NumberFieldUnit
-        value={record?.spool_weight ?? ""}
-        unit="g"
-        autoScale={unitScaling}
-        options={{
-          maximumFractionDigits: 1,
-          minimumFractionDigits: 1,
-        }}
-      />
-      <Title level={5}>{t("filament.fields.low_stock_threshold")}</Title>
-      {record?.low_stock_threshold == null ? (
-        <TextField value="Not Set" />
-      ) : (
-        <NumberFieldUnit
-          value={record.low_stock_threshold}
-          unit="g"
-          autoScale={unitScaling}
-          options={{
-            maximumFractionDigits: 1,
-            minimumFractionDigits: 1,
-          }}
-        />
-      )}
-      <Title level={5}>{t("filament.fields.reserve_count")}</Title>
-      {record?.reserve_count == null ? <TextField value="Not Set" /> : <NumberField value={record.reserve_count} />}
-      <Title level={5}>{t("filament.fields.settings_extruder_temp")}</Title>
-      {!record?.settings_extruder_temp ? (
-        <TextField value="Not Set" />
-      ) : (
-        <NumberFieldUnit value={record?.settings_extruder_temp ?? ""} unit="°C" />
-      )}
-      {record?.settings_extruder_temp_min != null && record?.settings_extruder_temp_max != null && (
-        <>
-          <Title level={5}>{t("filament.fields.settings_extruder_temp_range")}</Title>
-          <TextField value={`${record.settings_extruder_temp_min}–${record.settings_extruder_temp_max} °C`} />
-        </>
-      )}
-      <Title level={5}>{t("filament.fields.settings_bed_temp")}</Title>
-      {!record?.settings_bed_temp ? (
-        <TextField value="Not Set" />
-      ) : (
-        <NumberFieldUnit value={record?.settings_bed_temp ?? ""} unit="°C" />
-      )}
-      {record?.settings_bed_temp_min != null && record?.settings_bed_temp_max != null && (
-        <>
-          <Title level={5}>{t("filament.fields.settings_bed_temp_range")}</Title>
-          <TextField value={`${record.settings_bed_temp_min}–${record.settings_bed_temp_max} °C`} />
-        </>
-      )}
-      {record?.spool_type && (
-        <>
-          <Title level={5}>{t("filament.fields.spool_type")}</Title>
-          <TextField value={t(`filament.spool_type_options.${record.spool_type}`)} />
-        </>
-      )}
-      {record?.finish && (
-        <>
-          <Title level={5}>{t("filament.fields.finish")}</Title>
-          <TextField value={t(`filament.finish_options.${record.finish}`)} />
-        </>
-      )}
-      {record?.pattern && (
-        <>
-          <Title level={5}>{t("filament.fields.pattern")}</Title>
-          <TextField value={t(`filament.pattern_options.${record.pattern}`)} />
-        </>
-      )}
-      {record?.translucent != null && (
-        <>
-          <Title level={5}>{t("filament.fields.translucent")}</Title>
-          <TextField value={record.translucent ? t("yes") : t("no")} />
-        </>
-      )}
-      {record?.glow != null && (
-        <>
-          <Title level={5}>{t("filament.fields.glow")}</Title>
-          <TextField value={record.glow ? t("yes") : t("no")} />
-        </>
-      )}
-      <Title level={5}>{t("filament.fields.article_number")}</Title>
-      <TextField value={record?.article_number} />
-      <Title level={5}>{t("filament.fields.external_id")}</Title>
-      <TextField value={record?.external_id} />
-      <Title level={5}>{t("filament.fields.comment")}</Title>
-      <TextField value={enrichText(record?.comment)} />
-      <Title level={4}>{t("settings.extra_fields.tab")}</Title>
+      <Descriptions column={1} bordered size="small">
+        <Descriptions.Item label={t("filament.fields.vendor")}>
+          <button
+            onClick={gotoVendor}
+            style={{ background: "none", border: "none", color: "blue", cursor: "pointer", paddingLeft: 0 }}
+          >
+            {record ? record.vendor?.name : ""}
+          </button>
+        </Descriptions.Item>
+        <Descriptions.Item label={t("filament.fields.registered")}>
+          <DateField
+            value={dayjs.utc(record?.registered).local()}
+            title={dayjs.utc(record?.registered).local().format()}
+            format={DATE_TIME_FORMAT}
+          />
+        </Descriptions.Item>
+        <Descriptions.Item label={t("filament.fields.name")}>
+          <TextField value={record?.name} />
+        </Descriptions.Item>
+        <Descriptions.Item label={t("filament.fields.color_hex")}>
+          <Space>
+            {colorObj && <SpoolIcon color={colorObj} size="large" no_margin />}
+            {record?.color_hex && <TextField value={`#${record?.color_hex}`} />}
+          </Space>
+        </Descriptions.Item>
+        <Descriptions.Item label={t("filament.fields.material")}>
+          <TextField value={record?.material} />
+        </Descriptions.Item>
+        <Descriptions.Item label={t("filament.fields.price")}>
+          <TextField value={record?.price ? currencyFormatter.format(record.price) : ""} />
+        </Descriptions.Item>
+        <Descriptions.Item label={t("filament.fields.density")}>
+          <NumberFieldUnit
+            value={record?.density ?? ""}
+            unit="g/cm³"
+            options={{ maximumFractionDigits: 2, minimumFractionDigits: 2 }}
+          />
+        </Descriptions.Item>
+        <Descriptions.Item label={t("filament.fields.diameter")}>
+          <NumberFieldUnit
+            value={record?.diameter ?? ""}
+            unit="mm"
+            options={{ maximumFractionDigits: 2, minimumFractionDigits: 2 }}
+          />
+        </Descriptions.Item>
+        <Descriptions.Item label={t("filament.fields.weight")}>
+          <NumberFieldUnit
+            value={record?.weight ?? ""}
+            unit="g"
+            autoScale={unitScaling}
+            options={{ maximumFractionDigits: 1, minimumFractionDigits: 1 }}
+          />
+        </Descriptions.Item>
+        <Descriptions.Item label={t("filament.fields.spool_count")}>
+          <NumberField value={record?.spool_count ?? 0} />
+        </Descriptions.Item>
+        <Descriptions.Item label={t("filament.fields.remaining_weight")}>
+          <NumberFieldUnit
+            value={record?.remaining_weight ?? 0}
+            unit="g"
+            autoScale={unitScaling}
+            options={{ maximumFractionDigits: 1, minimumFractionDigits: 1 }}
+          />
+        </Descriptions.Item>
+        <Descriptions.Item label={t("filament.fields.spool_weight")}>
+          <NumberFieldUnit
+            value={record?.spool_weight ?? ""}
+            unit="g"
+            autoScale={unitScaling}
+            options={{ maximumFractionDigits: 1, minimumFractionDigits: 1 }}
+          />
+        </Descriptions.Item>
+        <Descriptions.Item label={t("filament.fields.low_stock_threshold")}>
+          {record?.low_stock_threshold == null ? (
+            <TextField value="Not Set" />
+          ) : (
+            <NumberFieldUnit
+              value={record.low_stock_threshold}
+              unit="g"
+              autoScale={unitScaling}
+              options={{ maximumFractionDigits: 1, minimumFractionDigits: 1 }}
+            />
+          )}
+        </Descriptions.Item>
+        <Descriptions.Item label={t("filament.fields.reserve_count")}>
+          {record?.reserve_count == null ? <TextField value="Not Set" /> : <NumberField value={record.reserve_count} />}
+        </Descriptions.Item>
+        <Descriptions.Item label={t("filament.fields.settings_extruder_temp")}>
+          {!record?.settings_extruder_temp ? (
+            <TextField value="Not Set" />
+          ) : (
+            <NumberFieldUnit value={record?.settings_extruder_temp ?? ""} unit="°C" />
+          )}
+        </Descriptions.Item>
+        {record?.settings_extruder_temp_min != null && record?.settings_extruder_temp_max != null && (
+          <Descriptions.Item label={t("filament.fields.settings_extruder_temp_range")}>
+            <TextField value={`${record.settings_extruder_temp_min}–${record.settings_extruder_temp_max} °C`} />
+          </Descriptions.Item>
+        )}
+        <Descriptions.Item label={t("filament.fields.settings_bed_temp")}>
+          {!record?.settings_bed_temp ? (
+            <TextField value="Not Set" />
+          ) : (
+            <NumberFieldUnit value={record?.settings_bed_temp ?? ""} unit="°C" />
+          )}
+        </Descriptions.Item>
+        {record?.settings_bed_temp_min != null && record?.settings_bed_temp_max != null && (
+          <Descriptions.Item label={t("filament.fields.settings_bed_temp_range")}>
+            <TextField value={`${record.settings_bed_temp_min}–${record.settings_bed_temp_max} °C`} />
+          </Descriptions.Item>
+        )}
+        {record?.spool_type && (
+          <Descriptions.Item label={t("filament.fields.spool_type")}>
+            <TextField value={t(`filament.spool_type_options.${record.spool_type}`)} />
+          </Descriptions.Item>
+        )}
+        {record?.finish && (
+          <Descriptions.Item label={t("filament.fields.finish")}>
+            <TextField value={t(`filament.finish_options.${record.finish}`)} />
+          </Descriptions.Item>
+        )}
+        {record?.pattern && (
+          <Descriptions.Item label={t("filament.fields.pattern")}>
+            <TextField value={t(`filament.pattern_options.${record.pattern}`)} />
+          </Descriptions.Item>
+        )}
+        {record?.translucent != null && (
+          <Descriptions.Item label={t("filament.fields.translucent")}>
+            <TextField value={record.translucent ? t("yes") : t("no")} />
+          </Descriptions.Item>
+        )}
+        {record?.glow != null && (
+          <Descriptions.Item label={t("filament.fields.glow")}>
+            <TextField value={record.glow ? t("yes") : t("no")} />
+          </Descriptions.Item>
+        )}
+        <Descriptions.Item label={t("filament.fields.article_number")}>
+          <TextField value={record?.article_number} />
+        </Descriptions.Item>
+        <Descriptions.Item label={t("filament.fields.external_id")}>
+          <TextField value={record?.external_id} />
+        </Descriptions.Item>
+        <Descriptions.Item label={t("filament.fields.comment")}>
+          <TextField value={enrichText(record?.comment)} />
+        </Descriptions.Item>
+      </Descriptions>
+      <Title level={4} style={{ marginTop: 16 }}>
+        {t("settings.extra_fields.tab")}
+      </Title>
       {extraFields?.data?.map((field, index) => (
         <ExtraFieldDisplay key={index} field={field} value={record?.extra[field.key]} />
       ))}
