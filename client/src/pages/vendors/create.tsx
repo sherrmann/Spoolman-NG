@@ -68,7 +68,8 @@ export const VendorCreate = (props: IResourceComponentsProps & CreateOrCloneProp
         </>
       )}
     >
-      <Form {...formProps} layout="vertical">
+      {/* onFinish → Save so pressing Enter in a field submits the form (#127). */}
+      <Form {...formProps} layout="vertical" onFinish={() => handleSubmit("list")}>
         <Form.Item
           label={t("vendor.fields.name")}
           name={["name"]}
@@ -78,7 +79,8 @@ export const VendorCreate = (props: IResourceComponentsProps & CreateOrCloneProp
             },
           ]}
         >
-          <Input maxLength={64} />
+          {/* Auto-focus the first field so the form is ready to type into (#127). */}
+          <Input maxLength={64} autoFocus />
         </Form.Item>
         <Form.Item
           label={t("vendor.fields.comment")}
@@ -114,6 +116,15 @@ export const VendorCreate = (props: IResourceComponentsProps & CreateOrCloneProp
         {extraFields.data?.map((field, index) => (
           <ExtraFieldFormItem key={index} field={field} />
         ))}
+        {/* Off-screen submit button so pressing Enter in a field submits the form (#127). The visible
+            Save buttons live in Refine's footerButtons, outside the <Form>, so without this there is no
+            default button for implicit submission. */}
+        <button
+          type="submit"
+          aria-hidden
+          tabIndex={-1}
+          style={{ position: "absolute", left: -9999, width: 1, height: 1 }}
+        />
       </Form>
     </Create>
   );
