@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 import { EntityType, useGetFields } from "../../utils/queryFields";
 import { parseStringSettingValue, useGetSetting } from "../../utils/querySettings";
 import { useSavedState } from "../../utils/saveload";
+import { getSpoolEffectiveColor } from "../../utils/spoolColor";
 import { useGetSpoolsByIds } from "../spools/functions";
 import { ISpool } from "../spools/model";
 import {
@@ -18,17 +19,10 @@ import {
 } from "./printing";
 import QRCodePrintingDialog, { SwatchColor } from "./qrCodePrintingDialog";
 
-// The filament colour of a spool as the swatch shape (#114): a multi-colour object when the filament
-// has multiple hexes, otherwise the single hex string (or undefined when the filament has no colour).
+// The colour of a spool as the swatch shape (#114): the spool's own colour override when set, else
+// the filament colour (#74). Undefined when neither has a colour.
 function spoolSwatchColor(spool: ISpool): SwatchColor | undefined {
-  const filament = spool.filament;
-  if (filament?.multi_color_hexes) {
-    return {
-      colors: filament.multi_color_hexes.split(","),
-      vertical: filament.multi_color_direction === "longitudinal",
-    };
-  }
-  return filament?.color_hex;
+  return getSpoolEffectiveColor(spool);
 }
 
 const { Text } = Typography;

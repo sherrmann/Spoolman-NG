@@ -40,6 +40,7 @@ import {
 } from "../../components/otherModels";
 import { columnIdOf, computeEffectiveOrder, moveInOrder, orderColumns } from "../../utils/columnOrder";
 import { removeUndefined } from "../../utils/filtering";
+import { getSpoolEffectiveColor } from "../../utils/spoolColor";
 import { ResizableHeaderCell } from "../../components/resizableHeaderCell";
 import SpoolIcon from "../../components/spoolIcon";
 import { enrichText, formatWeight } from "../../utils/parsing";
@@ -667,13 +668,7 @@ export const SpoolList = () => {
                   ...commonProps,
                   id: "filament.combined_name",
                   i18nkey: "spool.fields.filament_name",
-                  color: (record: ISpoolCollapsed) =>
-                    record.filament.multi_color_hexes
-                      ? {
-                          colors: record.filament.multi_color_hexes.split(","),
-                          vertical: record.filament.multi_color_direction === "longitudinal",
-                        }
-                      : record.filament.color_hex,
+                  color: (record: ISpoolCollapsed) => getSpoolEffectiveColor(record),
                   dataId: "filament.combined_name",
                   filterValueQuery: filamentFilterQuery,
                   clickAffordance: true,
@@ -691,13 +686,7 @@ export const SpoolList = () => {
                   ...commonProps,
                   id: "filament.name",
                   i18nkey: "spool.fields.filament_name_only",
-                  color: (record: ISpoolCollapsed) =>
-                    record.filament.multi_color_hexes
-                      ? {
-                          colors: record.filament.multi_color_hexes.split(","),
-                          vertical: record.filament.multi_color_direction === "longitudinal",
-                        }
-                      : record.filament.color_hex,
+                  color: (record: ISpoolCollapsed) => getSpoolEffectiveColor(record),
                   dataId: "filament.name",
                   filterValueQuery: filamentFilterQuery,
                   clickAffordance: true,
@@ -718,18 +707,7 @@ export const SpoolList = () => {
                   i18nkey: "spool.fields.color",
                   align: "center",
                   width: 80,
-                  render: (_, record: ISpoolCollapsed) => (
-                    <SpoolIcon
-                      color={
-                        record.filament.multi_color_hexes
-                          ? {
-                              colors: record.filament.multi_color_hexes.split(","),
-                              vertical: record.filament.multi_color_direction === "longitudinal",
-                            }
-                          : record.filament.color_hex
-                      }
-                    />
-                  ),
+                  render: (_, record: ISpoolCollapsed) => <SpoolIcon color={getSpoolEffectiveColor(record)} />,
                 }),
                 SortedColumn({
                   ...commonProps,

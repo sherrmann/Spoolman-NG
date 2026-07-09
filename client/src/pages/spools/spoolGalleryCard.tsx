@@ -1,6 +1,7 @@
 import { Card, Typography } from "antd";
 import SpoolIcon from "../../components/spoolIcon";
 import { formatWeight } from "../../utils/parsing";
+import { getSpoolEffectiveColor } from "../../utils/spoolColor";
 import type { ISpoolCollapsed } from "./list";
 
 const { Text } = Typography;
@@ -11,12 +12,7 @@ const { Text } = Typography;
  * grid is a browse view; edits still happen in the table/detail.
  */
 export function SpoolGalleryCard({ record, onClick }: { record: ISpoolCollapsed; onClick: () => void }) {
-  const color = record.filament.multi_color_hexes
-    ? {
-        colors: record.filament.multi_color_hexes.split(","),
-        vertical: record.filament.multi_color_direction === "longitudinal",
-      }
-    : record.filament.color_hex;
+  const color = getSpoolEffectiveColor(record);
 
   return (
     <Card

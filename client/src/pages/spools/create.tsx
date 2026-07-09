@@ -2,7 +2,19 @@ import { DATE_TIME_FORMAT } from "../../utils/dateFormat";
 import { MinusOutlined, PlusOutlined } from "@ant-design/icons";
 import { Create, useForm } from "@refinedev/antd";
 import { HttpError, IResourceComponentsProps, useTranslate } from "@refinedev/core";
-import { Alert, Button, DatePicker, Divider, Form, Input, InputNumber, Radio, Select, Typography } from "antd";
+import {
+  Alert,
+  Button,
+  ColorPicker,
+  DatePicker,
+  Divider,
+  Form,
+  Input,
+  InputNumber,
+  Radio,
+  Select,
+  Typography,
+} from "antd";
 import TextArea from "antd/es/input/TextArea";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
@@ -537,6 +549,16 @@ export const SpoolCreate = (props: IResourceComponentsProps & CreateOrCloneProps
             formatter={formatNumberOnUserInput}
             parser={numberParserAllowEmpty}
           />
+        </Form.Item>
+        <Form.Item
+          label={t("spool.fields.color_hex")}
+          help={t("spool.fields_help.color_hex")}
+          name={"color_hex"}
+          rules={[{ required: false }]}
+          getValueFromEvent={(e) => e?.toHex()}
+        >
+          {/* #74: optional single-color override; clear to fall back to the filament color. */}
+          <ColorPicker format="hex" allowClear />
         </Form.Item>
         <Form.Item
           label={t("spool.fields.comment")}
