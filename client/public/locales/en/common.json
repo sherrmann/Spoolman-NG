@@ -400,6 +400,10 @@
       "comment": "Comment",
       "settings_extruder_temp": "Extruder Temp",
       "settings_bed_temp": "Bed Temp",
+      "settings_extruder_temp_range": "Extruder Temp Range",
+      "settings_bed_temp_range": "Bed Temp Range",
+      "temp_range_min": "Min",
+      "temp_range_max": "Max",
       "color_hex": "Color",
       "single_color": "Single",
       "multi_color": "Multi",
@@ -417,7 +421,9 @@
       "low_stock_threshold": "Flag this filament for reorder when the total remaining weight across its spools drops below this many grams.",
       "reserve_count": "Number of unopened spare spools you keep on hand, tracked without creating a spool for each one.",
       "article_number": "E.g. EAN, UPC, etc.",
-      "multi_color_direction": "Filaments can have multiple colors in two ways: either through coextrusion, like dual-color filaments with consistent multi-colors, or through longitudinal color changes, like gradient filaments that shift colors along the spool."
+      "multi_color_direction": "Filaments can have multiple colors in two ways: either through coextrusion, like dual-color filaments with consistent multi-colors, or through longitudinal color changes, like gradient filaments that shift colors along the spool.",
+      "settings_extruder_temp_range": "Manufacturer's recommended extruder temperature range (min–max). Optional, leave blank if you only have a single value.",
+      "settings_bed_temp_range": "Manufacturer's recommended bed temperature range (min–max). Optional, leave blank if you only have a single value."
     },
     "titles": {
       "create": "Create Filament",

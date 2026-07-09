@@ -38,6 +38,10 @@ export interface ExternalFilament {
   color_hexes?: string[];
   extruder_temp?: number;
   bed_temp?: number;
+  extruder_temp_min?: number;
+  extruder_temp_max?: number;
+  bed_temp_min?: number;
+  bed_temp_max?: number;
   finish?: Finish;
   multi_color_direction?: MultiColorDirection;
   pattern?: Pattern;
@@ -79,6 +83,10 @@ export async function fetchExternalProfile(profileId: string): Promise<ExternalF
     multi_color_direction: data.multi_color_direction,
     extruder_temp: data.extruder_temp,
     bed_temp: data.bed_temp,
+    extruder_temp_min: data.extruder_temp_min,
+    extruder_temp_max: data.extruder_temp_max,
+    bed_temp_min: data.bed_temp_min,
+    bed_temp_max: data.bed_temp_max,
     translucent: false,
     glow: false,
   };

@@ -85,6 +85,30 @@ class FilamentParameters(BaseModel):
         description="Overridden bed temperature, in °C.",
         examples=[60],
     )
+    settings_extruder_temp_min: int | None = Field(
+        None,
+        ge=0,
+        description="Low end of the recommended extruder temperature range, in °C.",
+        examples=[205],
+    )
+    settings_extruder_temp_max: int | None = Field(
+        None,
+        ge=0,
+        description="High end of the recommended extruder temperature range, in °C.",
+        examples=[225],
+    )
+    settings_bed_temp_min: int | None = Field(
+        None,
+        ge=0,
+        description="Low end of the recommended bed temperature range, in °C.",
+        examples=[50],
+    )
+    settings_bed_temp_max: int | None = Field(
+        None,
+        ge=0,
+        description="High end of the recommended bed temperature range, in °C.",
+        examples=[60],
+    )
     color_hex: str | None = Field(
         None,
         description=(
@@ -519,6 +543,10 @@ async def create(  # noqa: ANN201
         comment=body.comment,
         settings_extruder_temp=body.settings_extruder_temp,
         settings_bed_temp=body.settings_bed_temp,
+        settings_extruder_temp_min=body.settings_extruder_temp_min,
+        settings_extruder_temp_max=body.settings_extruder_temp_max,
+        settings_bed_temp_min=body.settings_bed_temp_min,
+        settings_bed_temp_max=body.settings_bed_temp_max,
         color_hex=body.color_hex,
         multi_color_hexes=body.multi_color_hexes,
         multi_color_direction=body.multi_color_direction,

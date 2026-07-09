@@ -116,6 +116,10 @@ export const FilamentEdit = () => {
       multi_color_direction: filament.multi_color_direction,
       settings_extruder_temp: filament.extruder_temp || undefined,
       settings_bed_temp: filament.bed_temp || undefined,
+      settings_extruder_temp_min: filament.extruder_temp_min || undefined,
+      settings_extruder_temp_max: filament.extruder_temp_max || undefined,
+      settings_bed_temp_min: filament.bed_temp_min || undefined,
+      settings_bed_temp_max: filament.bed_temp_max || undefined,
     } as Parameters<NonNullable<typeof formProps.form>["setFieldsValue"]>[0]);
   };
 
@@ -441,6 +445,32 @@ export const FilamentEdit = () => {
           ]}
         >
           <InputNumber addonAfter="°C" precision={0} />
+        </Form.Item>
+        <Form.Item
+          label={t("filament.fields.settings_extruder_temp_range")}
+          help={t("filament.fields_help.settings_extruder_temp_range")}
+        >
+          <Space.Compact>
+            <Form.Item name={["settings_extruder_temp_min"]} noStyle rules={[{ type: "number", min: 0 }]}>
+              <InputNumber precision={0} placeholder={t("filament.fields.temp_range_min")} />
+            </Form.Item>
+            <Form.Item name={["settings_extruder_temp_max"]} noStyle rules={[{ type: "number", min: 0 }]}>
+              <InputNumber addonAfter="°C" precision={0} placeholder={t("filament.fields.temp_range_max")} />
+            </Form.Item>
+          </Space.Compact>
+        </Form.Item>
+        <Form.Item
+          label={t("filament.fields.settings_bed_temp_range")}
+          help={t("filament.fields_help.settings_bed_temp_range")}
+        >
+          <Space.Compact>
+            <Form.Item name={["settings_bed_temp_min"]} noStyle rules={[{ type: "number", min: 0 }]}>
+              <InputNumber precision={0} placeholder={t("filament.fields.temp_range_min")} />
+            </Form.Item>
+            <Form.Item name={["settings_bed_temp_max"]} noStyle rules={[{ type: "number", min: 0 }]}>
+              <InputNumber addonAfter="°C" precision={0} placeholder={t("filament.fields.temp_range_max")} />
+            </Form.Item>
+          </Space.Compact>
         </Form.Item>
         <Form.Item
           label={t("filament.fields.article_number")}

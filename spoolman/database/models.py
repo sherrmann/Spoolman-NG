@@ -48,6 +48,18 @@ class Filament(Base):
     comment: Mapped[str | None] = mapped_column(String(1024))
     settings_extruder_temp: Mapped[int | None] = mapped_column(comment="Overridden extruder temperature.")
     settings_bed_temp: Mapped[int | None] = mapped_column(comment="Overridden bed temperature.")
+    settings_extruder_temp_min: Mapped[int | None] = mapped_column(
+        comment="Low end of the recommended extruder temperature range, in °C (#112). Null if no range.",
+    )
+    settings_extruder_temp_max: Mapped[int | None] = mapped_column(
+        comment="High end of the recommended extruder temperature range, in °C (#112). Null if no range.",
+    )
+    settings_bed_temp_min: Mapped[int | None] = mapped_column(
+        comment="Low end of the recommended bed temperature range, in °C (#112). Null if no range.",
+    )
+    settings_bed_temp_max: Mapped[int | None] = mapped_column(
+        comment="High end of the recommended bed temperature range, in °C (#112). Null if no range.",
+    )
     color_hex: Mapped[str | None] = mapped_column(String(8))
     multi_color_hexes: Mapped[str | None] = mapped_column(String(128))
     multi_color_direction: Mapped[str | None] = mapped_column(String(16))
