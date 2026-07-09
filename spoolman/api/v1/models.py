@@ -146,6 +146,49 @@ class Vendor(BaseModel):
         )
 
 
+class Location(BaseModel):
+    id: int = Field(description="Unique internal ID of this location.")
+    registered: SpoolmanDateTime = Field(description="When the location was registered in the database. UTC Timezone.")
+    name: str = Field(max_length=64, description="Location name.", examples=["Dry Box 1"])
+    comment: str | None = Field(
+        None,
+        max_length=1024,
+        description="Free text comment about this location.",
+        examples=[""],
+    )
+    spool_count: int | None = Field(
+        None,
+        description=(
+            "Aggregate: number of non-archived spools currently stored at this location (matched by "
+            "name against Spool.location). Only populated on the location list and detail endpoints; "
+            "null in websocket payloads."
+        ),
+        examples=[3],
+    )
+    extra: dict[str, str] = Field(
+        description=(
+            "Extra fields for this location. All values are JSON-encoded data. "
+            "Query the /fields endpoint for more details about the fields."
+        ),
+    )
+
+    @staticmethod
+    def from_db(item: models.Location, *, spool_count: int | None = None) -> "Location":
+        """Create a Pydantic location object from a database location object.
+
+        The optional spool_count aggregate is supplied by the location list and detail endpoints; it
+        is left null in websocket payloads.
+        """
+        return Location(
+            id=item.id,
+            registered=item.registered,
+            name=item.name,
+            comment=item.comment,
+            spool_count=spool_count,
+            extra={field.key: field.value for field in item.extra},
+        )
+
+
 class MultiColorDirection(Enum):
     """Enum for multi-color direction."""
 
@@ -565,6 +608,13 @@ class VendorEvent(Event):
 
     payload: Vendor = Field(description="Updated vendor.")
     resource: Literal["vendor"] = Field(description="Resource type.")
+
+
+class LocationEvent(Event):
+    """Event."""
+
+    payload: Location = Field(description="Updated location.")
+    resource: Literal["location"] = Field(description="Resource type.")
 
 
 class SettingEvent(Event):

@@ -197,3 +197,36 @@ class SpoolField(Base):
     spool: Mapped["Spool"] = relationship(back_populates="extra")
     key: Mapped[str] = mapped_column(String(64), primary_key=True, index=True)
     value: Mapped[str] = mapped_column(Text())
+
+
+class Location(Base):
+    """A named storage location, promoted to a first-class entity (issue #103).
+
+    Locations become entities so custom fields can be attached to them — e.g. a synced
+    temperature/humidity reading on a dry box. This is a parallel name registry: ``Spool.location``
+    remains a plain string column and the existing ``/location`` string endpoints are unchanged, so
+    integrations are unaffected. The registry is keyed by name.
+    """
+
+    __tablename__ = "location"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    registered: Mapped[datetime] = mapped_column()
+    name: Mapped[str] = mapped_column(String(64))
+    comment: Mapped[str | None] = mapped_column(String(1024))
+    extra: Mapped[list["LocationField"]] = relationship(
+        back_populates="location",
+        cascade="save-update, merge, delete, delete-orphan",
+        lazy="joined",
+    )
+
+
+class LocationField(Base):
+    __tablename__ = "location_field"
+
+    location_id: Mapped[int] = mapped_column(
+        ForeignKey("location.id", ondelete="CASCADE"), primary_key=True, index=True
+    )
+    location: Mapped["Location"] = relationship(back_populates="extra")
+    key: Mapped[str] = mapped_column(String(64), primary_key=True, index=True)
+    value: Mapped[str] = mapped_column(Text())

@@ -7,6 +7,7 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from spoolman.database import filament as db_filament
+from spoolman.database import location as db_location
 from spoolman.database import setting as db_setting
 from spoolman.database import spool as db_spool
 from spoolman.database import vendor as db_vendor
@@ -69,6 +70,8 @@ async def delete_extra_field(db: AsyncSession, entity_type: EntityType, key: str
         await db_filament.clear_extra_field(db, key)
     elif entity_type == EntityType.spool:
         await db_spool.clear_extra_field(db, key)
+    elif entity_type == EntityType.location:
+        await db_location.clear_extra_field(db, key)
     else:
         raise ValueError(f"Unknown entity type {entity_type.name}.")
 
