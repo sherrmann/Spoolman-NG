@@ -247,9 +247,7 @@ async def find(  # noqa: C901, PLR0912
             elif fieldstr == "used_length":
                 spool_diameter = coalesce(models.Spool.diameter, models.Filament.diameter)
                 sorts.append(
-                    models.Spool.used_weight
-                    / models.Filament.density
-                    / (spool_diameter * spool_diameter),
+                    models.Spool.used_weight / models.Filament.density / (spool_diameter * spool_diameter),
                 )
             elif fieldstr == "filament.combined_name":
                 sorts.append(models.Vendor.name)
