@@ -3,31 +3,16 @@ import { AutoComplete, Checkbox, Form, Input, InputNumber, Modal } from "antd";
 import { useForm } from "antd/es/form/Form";
 import type { MessageInstance } from "antd/es/message/interface";
 import { type CSSProperties, useCallback, useMemo, useState } from "react";
+import { bulkPatch } from "../../utils/bulkPatch";
 import { formatNumberOnUserInput, numberParser } from "../../utils/parsing";
 import { getCurrencySymbol, useCurrency } from "../../utils/settings";
-import { getAPIURL } from "../../utils/url";
 
 const ROW_STYLE: CSSProperties = { display: "flex", alignItems: "center", gap: 8 };
 const LABEL_STYLE: CSSProperties = { width: 96, flexShrink: 0 };
 
-// Apply a partial change to one spool. Bulk edit loops this over each selected id rather than adding
-// a bulk backend endpoint, so the /api/v1 surface (and Moonraker/OctoPrint/HA compatibility) is
-// unchanged — see issue #73.
-async function patchSpool(id: number, body: Record<string, unknown>): Promise<void> {
-  const res = await fetch(`${getAPIURL()}/spool/${id}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) {
-    throw new Error(`Spool ${id}: HTTP ${res.status}`);
-  }
-}
-
-/** PATCH `body` onto every id, tolerating partial failure. Returns the count that failed. */
-export async function bulkPatchSpools(ids: number[], body: Record<string, unknown>): Promise<number> {
-  const results = await Promise.allSettled(ids.map((id) => patchSpool(id, body)));
-  return results.filter((r) => r.status === "rejected").length;
+/** PATCH `body` onto every selected spool, tolerating partial failure. Returns the count that failed. */
+export function bulkPatchSpools(ids: number[], body: Record<string, unknown>): Promise<number> {
+  return bulkPatch("spool", ids, body);
 }
 
 // The bulk-editable spool fields. Each is opt-in via a checkbox so an unchecked field is never
