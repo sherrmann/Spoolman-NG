@@ -7,12 +7,13 @@ import { buildScanPayload, parseScanResult, type ScanResource } from "./scan";
 // either implementation. Regression coverage for the filament-scan formats and the
 // base-path-tolerant URL regex added in PR #4.
 
-const RESOURCES: ScanResource[] = ["spool", "filament"];
+const RESOURCES: ScanResource[] = ["spool", "filament", "location"];
+const LETTER: Record<ScanResource, string> = { spool: "S", filament: "F", location: "L" };
 
 describe("buildScanPayload ↔ parseScanResult round-trip", () => {
   it.each(RESOURCES)("round-trips the custom scheme for a %s", (resource) => {
     const payload = buildScanPayload(resource, 42);
-    expect(payload).toBe(resource === "spool" ? "WEB+SPOOLMAN:S-42" : "WEB+SPOOLMAN:F-42");
+    expect(payload).toBe(`WEB+SPOOLMAN:${LETTER[resource]}-42`);
     const parsed = parseScanResult(payload);
     expect(parsed).toEqual({ resource, id: "42", path: `/${resource}/show/42` });
   });
@@ -38,17 +39,19 @@ describe("parseScanResult", () => {
   });
 
   it.each(RESOURCES)("rejects characters before the custom scheme for a %s (leading anchor)", (resource) => {
-    const prefix = resource === "spool" ? "S" : "F";
+    const prefix = LETTER[resource];
     // The ^ anchor must reject anything preceding "web+spoolman:".
     expect(parseScanResult(`x web+spoolman:${prefix}-1`)).toBeNull();
     expect(parseScanResult(`javascript:web+spoolman:${prefix}-1`)).toBeNull();
   });
 
-  it("keeps spool and filament targets distinct", () => {
+  it("keeps spool, filament and location targets distinct", () => {
     expect(parseScanResult("web+spoolman:s-1")?.resource).toBe("spool");
     expect(parseScanResult("web+spoolman:f-1")?.resource).toBe("filament");
+    expect(parseScanResult("web+spoolman:l-1")?.resource).toBe("location");
     expect(parseScanResult("https://h/spool/show/1")?.resource).toBe("spool");
     expect(parseScanResult("https://h/filament/show/1")?.resource).toBe("filament");
+    expect(parseScanResult("https://h/location/show/1")?.resource).toBe("location");
   });
 
   it.each([

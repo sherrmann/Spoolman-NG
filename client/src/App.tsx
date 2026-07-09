@@ -33,7 +33,7 @@ import { languages } from "./i18n";
 import { getAPIURL, getBasePath } from "./utils/url";
 
 interface ResourcePageProps {
-  resource: "spools" | "filaments" | "vendors";
+  resource: "spools" | "filaments" | "vendors" | "locations";
   page: "list" | "create" | "edit" | "show";
   mode?: "create" | "clone";
 }
@@ -229,6 +229,11 @@ function App() {
                     <Route path="/settings/*" element={<LoadablePage name="settings" />} />
                     <Route path="/help" element={<LoadablePage name="help" />} />
                     <Route path="/locations" element={<LoadablePage name="locations" />} />
+                    {/* Location detail (#90): the target a scanned location QR resolves to. */}
+                    <Route
+                      path="/location/show/:id"
+                      element={<LoadableResourcePage resource="locations" page="show" />}
+                    />
                     <Route path="*" element={<ErrorComponent />} />
                   </Route>
                 </Routes>
