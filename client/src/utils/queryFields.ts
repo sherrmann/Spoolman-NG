@@ -40,9 +40,18 @@ export function useGetFields(entity_type: EntityType) {
     queryKey: ["fields", entity_type],
     queryFn: async () => {
       const response = await apiFetch(`${getAPIURL()}/field/${entity_type}`);
-      return response.json();
+      const fields = (await response.json()) as Field[];
+      // Honour the configured display order everywhere fields are rendered (#65): forms, list columns
+      // and the show page all read this array, so sorting once here keeps them consistent with the
+      // Settings ordering (the API returns them in stored/insertion order).
+      return sortFieldsByOrder(fields);
     },
   });
+}
+
+/** Sort custom fields by their configured numeric `order` (stable, undefined-safe). See #65. */
+export function sortFieldsByOrder(fields: Field[]): Field[] {
+  return [...fields].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 }
 
 export function useSetField(entity_type: EntityType) {

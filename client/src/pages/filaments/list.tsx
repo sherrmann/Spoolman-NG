@@ -81,6 +81,7 @@ const allColumns: (keyof IFilamentCollapsed & string)[] = [
   "remaining_weight",
   "spool_weight",
   "article_number",
+  "external_id",
   "settings_extruder_temp",
   "settings_bed_temp",
   "registered",
@@ -91,9 +92,16 @@ const allColumns: (keyof IFilamentCollapsed & string)[] = [
 // already shows the swatch, so this one exists to sort by hue and ships hidden.
 const defaultColumns = allColumns.filter(
   (column_id) =>
-    ["registered", "density", "diameter", "spool_weight", "spool_count", "remaining_weight", "color_hue"].indexOf(
-      column_id,
-    ) === -1,
+    [
+      "registered",
+      "density",
+      "diameter",
+      "spool_weight",
+      "spool_count",
+      "remaining_weight",
+      "color_hue",
+      "external_id",
+    ].indexOf(column_id) === -1,
 );
 
 export const FilamentList = () => {
@@ -463,6 +471,13 @@ export const FilamentList = () => {
             id: "article_number",
             i18ncat: "filament",
             filterValueQuery: useSpoolmanArticleNumbers(),
+            width: 130,
+          }),
+          // External ID (#70): opt-in column, hidden by default.
+          SortedColumn({
+            ...commonProps,
+            id: "external_id",
+            i18ncat: "filament",
             width: 130,
           }),
           NumberColumn({
