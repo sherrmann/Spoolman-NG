@@ -12,7 +12,7 @@ from sqlalchemy.orm import contains_eager, joinedload
 from sqlalchemy.sql.functions import coalesce
 
 from spoolman.api.v1.models import EventType, MultiColorDirection, Spool, SpoolEvent
-from spoolman.database import filament, models
+from spoolman.database import filament, models, printer
 from spoolman.database.extra_field_query import apply_extra_field_filters_and_sort
 from spoolman.database.utils import (
     SortOrder,
@@ -44,6 +44,7 @@ async def create(
     last_used: datetime | None = None,
     price: float | None = None,
     location: str | None = None,
+    printer_id: int | None = None,
     lot_nr: str | None = None,
     comment: str | None = None,
     archived: bool = False,
@@ -55,6 +56,11 @@ async def create(
 ) -> models.Spool:
     """Add a new spool to the database. Leave weight empty to assume full spool."""
     filament_item = await filament.get_by_id(db, filament_id)
+
+    # #75: validate the optional printer assignment (no DB-level FK), so a bad id is a clean 404.
+    # Assign the loaded object (not the raw id) so the printer relationship is populated for the
+    # post-commit spool_changed payload without an async lazy-load.
+    printer_item = await printer.get_by_id(db, printer_id) if printer_id is not None else None
 
     # Set spool_weight to spool_weight if spool_weight is not null and spool_weight not provided
     if spool_weight is None and filament_item.spool_weight is not None:
@@ -95,6 +101,7 @@ async def create(
         comment=comment,
         archived=archived,
         diameter=diameter,
+        printer=printer_item,
         color_hex=color_hex,
         multi_color_hexes=multi_color_hexes,
         multi_color_direction=multi_color_direction.value if multi_color_direction is not None else None,
@@ -193,7 +200,11 @@ async def find(  # noqa: C901, PLR0912
         sqlalchemy.select(models.Spool)
         .join(models.Spool.filament, isouter=True)
         .join(models.Filament.vendor, isouter=True)
-        .options(contains_eager(models.Spool.filament).contains_eager(models.Filament.vendor))
+        .options(
+            contains_eager(models.Spool.filament).contains_eager(models.Filament.vendor),
+            # Eager-load the optional printer (#75) so the list's Spool.from_db doesn't lazy-load it.
+            joinedload(models.Spool.printer),
+        )
     )
 
     stmt = add_where_clause_int(stmt, models.Spool.filament_id, filament_id)
@@ -281,7 +292,7 @@ async def find(  # noqa: C901, PLR0912
     return result, total_count
 
 
-async def update(
+async def update(  # noqa: C901
     *,
     db: AsyncSession,
     spool_id: int,
@@ -309,6 +320,10 @@ async def update(
         elif k == "extra":
             spool.extra = [f for f in spool.extra if f.key not in v]
             spool.extra.extend([models.SpoolField(key=k, value=v) for k, v in v.items()])
+        elif k == "printer_id":
+            # #75: validate the reassignment (no DB-level FK) and set the relationship object so the
+            # post-commit spool_changed payload has it loaded; a null clears the assignment.
+            spool.printer = await printer.get_by_id(db, v) if v is not None else None
         else:
             setattr(spool, k, v)
     # Record a usage event when a manual edit changed used_weight (e.g. the "reset usage" action,

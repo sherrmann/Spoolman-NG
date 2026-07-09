@@ -28,6 +28,7 @@ class EntityType(Enum):
     filament = "filament"
     spool = "spool"
     location = "location"
+    printer = "printer"
 
 
 class ExtraFieldType(Enum):

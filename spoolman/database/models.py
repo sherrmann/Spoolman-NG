@@ -115,6 +115,12 @@ class Spool(Base):
     multi_color_hexes: Mapped[str | None] = mapped_column(String(128))
     multi_color_direction: Mapped[str | None] = mapped_column(String(16))
     location: Mapped[str | None] = mapped_column(String(64))
+    printer_id: Mapped[int | None] = mapped_column(
+        ForeignKey("printer.id"),
+        comment="Optional printer this spool is assigned to (#75). Null means unassigned. Not a "
+        "DB-level constraint; integrity is enforced in the application layer.",
+    )
+    printer: Mapped[Optional["Printer"]] = relationship(back_populates="spools")
     lot_nr: Mapped[str | None] = mapped_column(String(64))
     comment: Mapped[str | None] = mapped_column(String(1024))
     archived: Mapped[bool | None] = mapped_column()
@@ -253,5 +259,37 @@ class LocationField(Base):
         ForeignKey("location.id", ondelete="CASCADE"), primary_key=True, index=True
     )
     location: Mapped["Location"] = relationship(back_populates="extra")
+    key: Mapped[str] = mapped_column(String(64), primary_key=True, index=True)
+    value: Mapped[str] = mapped_column(Text())
+
+
+class Printer(Base):
+    """A first-class printer entity for per-printer spool assignment (issue #75 / #26).
+
+    A minimal name registry so a spool can be assigned to a printer (via the nullable
+    ``Spool.printer_id``) for multi-printer inventory tracking and usage attribution. Custom fields
+    can be attached (e.g. an IP address or model) via the ``printer_field`` side-table. Assignment is
+    optional and additive: an unassigned spool behaves exactly as before.
+    """
+
+    __tablename__ = "printer"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    registered: Mapped[datetime] = mapped_column()
+    name: Mapped[str] = mapped_column(String(64))
+    comment: Mapped[str | None] = mapped_column(String(1024))
+    spools: Mapped[list["Spool"]] = relationship(back_populates="printer")
+    extra: Mapped[list["PrinterField"]] = relationship(
+        back_populates="printer",
+        cascade="save-update, merge, delete, delete-orphan",
+        lazy="joined",
+    )
+
+
+class PrinterField(Base):
+    __tablename__ = "printer_field"
+
+    printer_id: Mapped[int] = mapped_column(ForeignKey("printer.id", ondelete="CASCADE"), primary_key=True, index=True)
+    printer: Mapped["Printer"] = relationship(back_populates="extra")
     key: Mapped[str] = mapped_column(String(64), primary_key=True, index=True)
     value: Mapped[str] = mapped_column(Text())
