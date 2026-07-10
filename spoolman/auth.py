@@ -167,30 +167,32 @@ class AuthMiddleware:
         await send({"type": "http.response.body", "body": b'{"message":"' + message + b'"}'})
 
 
-def _load_or_create_secret() -> bytes:
-    """Load the token-signing secret from the data directory, creating it on first use.
+def _resolve_signing_secret() -> bytes:
+    """Derive the login-token signing key without persisting any secret to disk.
 
-    Kept in a 0600 file (not the settings table) so it never leaks through the settings API, and so
-    login tokens survive restarts.
+    Preference order: an operator-provided ``SPOOLMAN_AUTH_SECRET``, else the static machine token
+    (``SPOOLMAN_API_TOKEN``) if that is set — both give login sessions that survive restarts and let
+    the operator manage the secret in their own secret store. With neither configured a fresh random
+    key is generated per process, so zero-config deployments never write a secret to disk; login
+    tokens then remain valid until the next restart, after which users log in again.
     """
+    import hashlib  # noqa: PLC0415
+
     from spoolman import env  # noqa: PLC0415 — avoid a circular import at module load
 
-    path = env.get_data_dir() / "auth_secret"
-    if path.exists():
-        return path.read_bytes()
-    secret = secrets.token_bytes(32)
-    path.write_bytes(secret)
-    try:
-        path.chmod(0o600)
-    except OSError:
-        logger.debug("Could not chmod the auth secret file; continuing.")
-    return secret
+    explicit = env.get_auth_secret()
+    if explicit:
+        return hashlib.sha256(explicit.encode()).digest()
+    token = env.get_api_token()
+    if token:
+        return hashlib.sha256(b"spoolman-auth-token:" + token.encode()).digest()
+    return secrets.token_bytes(32)
 
 
 def get_signing_secret() -> bytes:
-    """Return the token-signing secret, loading it on first use (for token mint/verify at runtime)."""
+    """Return the token-signing secret, resolving it on first use (for token mint/verify at runtime)."""
     if auth_state.signing_secret is None:
-        auth_state.signing_secret = _load_or_create_secret()
+        auth_state.signing_secret = _resolve_signing_secret()
     return auth_state.signing_secret
 
 
@@ -200,7 +202,7 @@ async def initialize_auth_state(db: AsyncSession) -> None:
     from spoolman.database import user  # noqa: PLC0415
 
     auth_state.static_token = env.get_api_token()
-    auth_state.signing_secret = _load_or_create_secret()
+    auth_state.signing_secret = _resolve_signing_secret()
     auth_state.accounts_enabled = (await user.count(db)) > 0
     if auth_state.auth_required():
         logger.info(

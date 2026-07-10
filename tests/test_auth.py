@@ -11,7 +11,7 @@ from fastapi import FastAPI, Request, WebSocket
 from starlette.testclient import TestClient
 from starlette.websockets import WebSocketDisconnect
 
-from spoolman.auth import AuthMiddleware, AuthState
+from spoolman.auth import AuthMiddleware, AuthState, _resolve_signing_secret
 from spoolman.users import ROLE_ADMIN, ROLE_READONLY, mint_token
 
 TOKEN = "s3cr3t-token"  # noqa: S105 — test fixture token, not a real secret
@@ -145,3 +145,20 @@ def test_invalid_user_token_is_rejected(accounts_client: TestClient):
 def test_static_token_still_works_alongside_accounts():
     client = _make_client(AuthState(static_token=TOKEN, signing_secret=SECRET, accounts_enabled=True))
     assert client.post("/spool", headers=_auth(TOKEN)).status_code == 200
+
+
+# --- signing secret resolution (no secret is ever written to disk) ----------
+
+
+def test_signing_secret_from_env_is_deterministic(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("SPOOLMAN_AUTH_SECRET", "operator-provided")
+    first = _resolve_signing_secret()
+    assert first == _resolve_signing_secret()
+    assert len(first) == 32
+
+
+def test_signing_secret_is_ephemeral_and_random_without_config(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.delenv("SPOOLMAN_AUTH_SECRET", raising=False)
+    monkeypatch.delenv("SPOOLMAN_API_TOKEN", raising=False)
+    # A fresh random key each call — nothing persisted to disk.
+    assert _resolve_signing_secret() != _resolve_signing_secret()
