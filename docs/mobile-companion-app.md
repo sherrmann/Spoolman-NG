@@ -241,10 +241,13 @@ the `spoolmanApiToken` localStorage key as public API.
   the `spoolmanApiToken` contract must move in lockstep with `client/`; a
   separate repo would orphan them.
 - **Code sharing without a workspace conversion:** `scan.ts`, `scanMove.ts`
-  and `tigertagCodec.ts` are dependency-free pure TS — `mobile/` consumes them
-  via a tsconfig path alias + Metro `watchFolders`, with a lint guard keeping
-  those files import-clean. Promote to a real shared package only if a third
-  consumer ever appears.
+  and `tigertagCodec.ts` are dependency-free pure TS. Direct imports across
+  the package boundary do **not** survive release builds — Metro only bundles
+  files inside the project root, and Expo CLI (SDK 57) recomputes
+  `watchFolders` itself, ignoring `metro.config.js` — so `mobile/` vendors the
+  files via `scripts/sync-shared.mjs` (regenerated on `npm install`) with a
+  drift test asserting the copies stay byte-identical to their sources.
+  Promote to a real shared package only if a third consumer ever appears.
 - **CI:** Android release APKs via `expo prebuild` + Gradle on the existing
   GitHub Actions setup, attached to GitHub Releases; PR CI runs typecheck +
   unit tests only (native builds are slow, run on release tags). iOS builds on

@@ -17,8 +17,9 @@ things a browser cannot deliver on the default plain-HTTP LAN deployment —
   open in the system browser).
 - **QR/barcode scan button**: decodes the printed label payloads
   (`WEB+SPOOLMAN:S-<id>` and deep-link URLs, spool/filament/location) with the
-  web client's own grammar — `client/src/utils/scan.ts` is imported directly —
-  and jumps to the matching page.
+  web client's own grammar — `client/src/utils/scan.ts`, vendored
+  byte-identically into `src/shared/` (see below) — and jumps to the matching
+  page.
 - **NFC scan button**: reads NDEF records (TigerTag external records,
   `web+spoolman:` text/URIs, deep links) locally, and dumps raw NTAG213 user
   memory (pages 4–39) for everything else, then asks the server via
@@ -94,4 +95,4 @@ MIFARE Classic (Qidi) on iPhone, ever, and NFC reads are foreground-only.
 | Server detection | `GET /api/v1/info`, `GET /api/v1/auth/status` (public even with auth on) |
 | Auth | Bearer token seeded into `localStorage["spoolmanApiToken"]` (the web client attaches it to axios/fetch/WS itself) |
 | NFC lookup | `POST /api/v1/nfc/lookup` with `raw_data_b64` + `nfc_tag_uid`, `auto_create` on request |
-| Scan payloads | `client/src/utils/scan.ts`, imported via Metro `watchFolders` (see `metro.config.js`) |
+| Scan payloads | `client/src/utils/scan.ts`, vendored into `src/shared/scan.ts` by `scripts/sync-shared.mjs` (regenerated on `npm install`; `src/shared/drift.test.ts` fails when the copy is stale). Metro cannot bundle files outside the project root — Expo CLI recomputes `watchFolders` and ignores `metro.config.js` — hence the sync instead of a direct import. |
