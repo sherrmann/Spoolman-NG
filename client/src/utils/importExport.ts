@@ -7,6 +7,13 @@ export type ExportEntity = "vendors" | "filaments" | "spools";
 export type ImportEntity = "vendor" | "filament" | "spool";
 export type DataFormat = "csv" | "json";
 export type ImportMode = "create" | "upsert" | "skip_existing";
+export type SlicerFormat = "prusa" | "orca" | "cura";
+
+const SLICER_EXTENSIONS: Record<SlicerFormat, string> = {
+  prusa: "ini",
+  orca: "json",
+  cura: "xml.fdm_material",
+};
 
 export interface ImportResult {
   created: number;
@@ -42,6 +49,35 @@ export async function downloadExport(entity: ExportEntity, fmt: DataFormat): Pro
   const anchor = document.createElement("a");
   anchor.href = url;
   anchor.download = exportFilename(entity, fmt);
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
+
+/** Extract the filename from a Content-Disposition header, or undefined if absent. Pure/testable. */
+export function filenameFromContentDisposition(header: string | null): string | undefined {
+  if (!header) {
+    return undefined;
+  }
+  const match = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(header);
+  return match ? decodeURIComponent(match[1]) : undefined;
+}
+
+/** Trigger a browser download of a single filament's native slicer profile (#76). */
+export async function downloadSlicerProfile(filamentId: number, slicer: SlicerFormat): Promise<void> {
+  const response = await apiFetch(`${getAPIURL()}/export/filament/${filamentId}/slicer?slicer=${slicer}`);
+  if (!response.ok) {
+    throw new Error(`Slicer export failed (${response.status})`);
+  }
+  const blob = await response.blob();
+  const filename =
+    filenameFromContentDisposition(response.headers.get("content-disposition")) ??
+    `filament-${filamentId}.${SLICER_EXTENSIONS[slicer]}`;
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();

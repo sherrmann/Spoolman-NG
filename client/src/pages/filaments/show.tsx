@@ -1,9 +1,9 @@
 import { DATE_TIME_FORMAT } from "../../utils/dateFormat";
 import { DateField, NumberField, Show, TextField } from "@refinedev/antd";
 import { useShow, useTranslate } from "@refinedev/core";
-import { DownOutlined, ExportOutlined, IdcardOutlined, PrinterOutlined } from "@ant-design/icons";
+import { DownOutlined, ExportOutlined, IdcardOutlined, PrinterOutlined, ToolOutlined } from "@ant-design/icons";
 import { CalibrationSection } from "../calibration/CalibrationSection";
-import { Button, Descriptions, Dropdown, Space, Tabs, Typography } from "antd";
+import { Button, Descriptions, Dropdown, Space, Tabs, Typography, message } from "antd";
 import type { MenuProps } from "antd";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
@@ -13,6 +13,7 @@ import { ExtraFieldDisplay } from "../../components/extraFields";
 import SwatchDownloadModal from "../../components/swatchDownloadModal";
 import { NumberFieldUnit } from "../../components/numberField";
 import SpoolIcon from "../../components/spoolIcon";
+import { downloadSlicerProfile, type SlicerFormat } from "../../utils/importExport";
 import { enrichText } from "../../utils/parsing";
 import { EntityType, useGetFields } from "../../utils/queryFields";
 import { useCurrencyFormatter, useUnitScaling } from "../../utils/settings";
@@ -36,6 +37,16 @@ export const FilamentShow = () => {
   const record = data?.data;
 
   const [swatchOpen, setSwatchOpen] = useState(false);
+  const [messageApi, contextHolder] = message.useMessage();
+
+  const downloadSlicer = async (slicer: SlicerFormat) => {
+    if (!record?.id) return;
+    try {
+      await downloadSlicerProfile(record.id, slicer);
+    } catch (e) {
+      messageApi.error(e instanceof Error ? e.message : String(e));
+    }
+  };
 
   const formatTitle = (item: IFilament) => {
     let vendorPrefix = "";
@@ -83,6 +94,17 @@ export const FilamentShow = () => {
       icon: <IdcardOutlined />,
       label: t("filament.buttons.download_swatch"),
       onClick: () => setSwatchOpen(true),
+    },
+    {
+      key: "slicer-profile",
+      icon: <ToolOutlined />,
+      label: t("filament.buttons.download_slicer"),
+      // #76: generate a native slicer filament profile from this filament's fields.
+      children: [
+        { key: "slicer-prusa", label: "PrusaSlicer / SuperSlicer", onClick: () => downloadSlicer("prusa") },
+        { key: "slicer-orca", label: "OrcaSlicer / Bambu Studio", onClick: () => downloadSlicer("orca") },
+        { key: "slicer-cura", label: "Cura", onClick: () => downloadSlicer("cura") },
+      ],
     },
   ];
 
@@ -295,6 +317,7 @@ export const FilamentShow = () => {
           },
         ]}
       />
+      {contextHolder}
       <SwatchDownloadModal filament={swatchOpen ? (record ?? null) : null} onClose={() => setSwatchOpen(false)} />
     </Show>
   );

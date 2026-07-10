@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { exportFilename, importEntityOf, importSucceeded, type ImportResult } from "./importExport";
+import {
+  exportFilename,
+  filenameFromContentDisposition,
+  importEntityOf,
+  importSucceeded,
+  type ImportResult,
+} from "./importExport";
 
 describe("importExport helpers", () => {
   it("maps a plural export entity to its singular import entity", () => {
@@ -17,5 +23,13 @@ describe("importExport helpers", () => {
     const base: ImportResult = { created: 1, updated: 0, skipped: 0, dry_run: false, errors: [] };
     expect(importSucceeded(base)).toBe(true);
     expect(importSucceeded({ ...base, errors: ["Row 0: bad"] })).toBe(false);
+  });
+
+  it("parses a filename out of a Content-Disposition header", () => {
+    expect(filenameFromContentDisposition('attachment; filename="Prusament_Galaxy_Black.ini"')).toBe(
+      "Prusament_Galaxy_Black.ini",
+    );
+    expect(filenameFromContentDisposition("attachment; filename=plain.json")).toBe("plain.json");
+    expect(filenameFromContentDisposition(null)).toBeUndefined();
   });
 });
