@@ -1,0 +1,29 @@
+# Home Assistant Supervisor add-on manifest for Spoolman NG (#89).
+# EXPERIMENTAL: not yet exercised against a live Supervisor.
+name: Spoolman NG
+version: "2026.7.5"
+slug: spoolman_ng
+description: Track your 3D-printer filament spool inventory (community-maintained Spoolman).
+url: https://github.com/sherrmann/Spoolman-NG
+# Matches the architectures the published image is built for (aarch64 = arm64, armv7 = arm/v7).
+arch:
+  - amd64
+  - aarch64
+  - armv7
+init: false
+ports:
+  8000/tcp: 8000
+ports_description:
+  8000/tcp: Spoolman web UI and REST API
+# Defaults to the bundled SQLite database (stored in the add-on's persistent /data volume). Set a
+# db_type plus connection details to use an external PostgreSQL/MariaDB/CockroachDB instead.
+options:
+  db_type: sqlite
+schema:
+  db_type: "list(sqlite|postgres|mysql|cockroachdb)"
+  db_host: "str?"
+  db_port: "port?"
+  db_name: "str?"
+  db_username: "str?"
+  db_password: "password?"
+  api_token: "password?"
