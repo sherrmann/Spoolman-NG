@@ -154,7 +154,7 @@ def test_signing_secret_from_env_is_deterministic(monkeypatch: pytest.MonkeyPatc
     monkeypatch.setenv("SPOOLMAN_AUTH_SECRET", "operator-provided")
     first = _resolve_signing_secret()
     assert first == _resolve_signing_secret()
-    assert len(first) == 32
+    assert first  # non-empty; used directly as an HMAC key
 
 
 def test_signing_secret_is_ephemeral_and_random_without_config(monkeypatch: pytest.MonkeyPatch):

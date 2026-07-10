@@ -175,17 +175,20 @@ def _resolve_signing_secret() -> bytes:
     the operator manage the secret in their own secret store. With neither configured a fresh random
     key is generated per process, so zero-config deployments never write a secret to disk; login
     tokens then remain valid until the next restart, after which users log in again.
-    """
-    import hashlib  # noqa: PLC0415
 
+    The value is used directly as an HMAC-SHA256 key (see spoolman.users), which accepts a key of any
+    length, so there is no separate key-derivation hash — the machine-token holder is already fully
+    privileged, so deriving the signing key from a configured secret needs no extra hardening.
+    """
     from spoolman import env  # noqa: PLC0415 — avoid a circular import at module load
 
     explicit = env.get_auth_secret()
     if explicit:
-        return hashlib.sha256(explicit.encode()).digest()
+        return explicit.encode()
     token = env.get_api_token()
     if token:
-        return hashlib.sha256(b"spoolman-auth-token:" + token.encode()).digest()
+        # Domain-separate so the signing key isn't byte-for-byte the machine token.
+        return b"spoolman-auth-token:" + token.encode()
     return secrets.token_bytes(32)
 
 
