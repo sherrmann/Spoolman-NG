@@ -362,6 +362,16 @@ async def find(
         bool,
         Query(title="Allow Archived", description="Whether to include archived spools in the search results."),
     ] = False,
+    archived: Annotated[
+        bool | None,
+        Query(
+            title="Archived",
+            description=(
+                "Filter by archived state: true returns only archived spools, false only active ones. "
+                "Takes precedence over allow_archived. Omit to keep the allow_archived behavior."
+            ),
+        ),
+    ] = None,
     color_hex: Annotated[
         str | None,
         Query(
@@ -445,6 +455,7 @@ async def find(
             location=location,
             lot_nr=lot_nr,
             allow_archived=allow_archived,
+            archived=archived,
             extra_field_filters=extra_field_filters if extra_field_filters else None,
             sort_by=sort_by,
             limit=limit,

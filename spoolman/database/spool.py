@@ -184,6 +184,7 @@ async def find(  # noqa: C901, PLR0912
     location: str | None = None,
     lot_nr: str | None = None,
     allow_archived: bool = False,
+    archived: bool | None = None,
     extra_field_filters: dict[str, str] | None = None,
     sort_by: dict[str, SortOrder] | None = None,
     limit: int | None = None,
@@ -220,7 +221,19 @@ async def find(  # noqa: C901, PLR0912
         if search_conditions:
             stmt = stmt.where(sqlalchemy.or_(*search_conditions))
 
-    if not allow_archived:
+    if archived is not None:
+        # Explicit archived-state filter: true → only archived, false → only active.
+        # Overrides allow_archived, which merely widens the default active-only view.
+        if archived:
+            stmt = stmt.where(models.Spool.archived.is_(True))
+        else:
+            stmt = stmt.where(
+                sqlalchemy.or_(
+                    models.Spool.archived.is_(False),
+                    models.Spool.archived.is_(None),
+                ),
+            )
+    elif not allow_archived:
         # Since the archived field is nullable, and default is false, we need to check for both false or null
         stmt = stmt.where(
             sqlalchemy.or_(
