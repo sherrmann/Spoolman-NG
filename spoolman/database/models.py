@@ -201,6 +201,24 @@ class Setting(Base):
     last_updated: Mapped[datetime] = mapped_column()
 
 
+class User(Base):
+    """An optional login account (#52).
+
+    Named user_account because "user" is a reserved word in PostgreSQL/MySQL. Passwords are stored as
+    a self-describing scrypt hash (see spoolman.users), never in plaintext.
+    """
+
+    __tablename__ = "user_account"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    username: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    password_hash: Mapped[str] = mapped_column(String(255))
+    # One of: admin (full access) or readonly (GET only). See spoolman.users.ROLES.
+    role: Mapped[str] = mapped_column(String(16))
+    registered: Mapped[datetime] = mapped_column()
+    last_login: Mapped[datetime | None] = mapped_column()
+
+
 class VendorField(Base):
     __tablename__ = "vendor_field"
 
