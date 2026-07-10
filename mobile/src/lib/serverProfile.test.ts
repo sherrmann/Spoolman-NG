@@ -23,6 +23,14 @@ describe("normalizeBaseUrl", () => {
     expect(normalizeBaseUrl("http://")).toBeNull();
     expect(normalizeBaseUrl("http://ho st")).toBeNull();
   });
+
+  it("handles slash-heavy adversarial input in linear time (js/redos)", () => {
+    // With an ambiguous repeated path group this input backtracked
+    // exponentially; it must simply be rejected (the "#" is not allowed).
+    expect(normalizeBaseUrl(`http://a${"/".repeat(80)}#`)).toBeNull();
+    // Repeated internal slashes are odd but harmless — still accepted.
+    expect(normalizeBaseUrl("http://pi:7912//spoolman///x")).toBe("http://pi:7912//spoolman///x");
+  });
 });
 
 describe("URL builders", () => {

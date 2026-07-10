@@ -23,8 +23,11 @@ export function normalizeBaseUrl(input: string): string | null {
     value = `http://${value}`;
   }
   value = value.replace(/\/+$/, "");
-  // scheme://host[:port][/path...] with a non-empty host
-  if (!/^https?:\/\/[^/\s?#]+(\/[^\s?#]*)*$/i.test(value)) {
+  // scheme://host[:port][/path...] with a non-empty host. The path is one
+  // optional group (its class may itself match "/"), not a repeated
+  // segment group — repetition would be ambiguous and open to exponential
+  // backtracking (CodeQL js/redos).
+  if (!/^https?:\/\/[^/\s?#]+(\/[^\s?#]*)?$/i.test(value)) {
     return null;
   }
   return value;
