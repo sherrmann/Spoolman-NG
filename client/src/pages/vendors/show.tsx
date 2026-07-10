@@ -2,7 +2,7 @@ import { DATE_TIME_FORMAT } from "../../utils/dateFormat";
 import { FileOutlined } from "@ant-design/icons";
 import { DateField, NumberField, Show, TextField } from "@refinedev/antd";
 import { useShow, useTranslate } from "@refinedev/core";
-import { Button, Typography } from "antd";
+import { Button, Descriptions, Typography } from "antd";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { useNavigate } from "react-router";
@@ -60,23 +60,33 @@ export const VendorShow = () => {
         </>
       )}
     >
-      <Title level={5}>{t("vendor.fields.id")}</Title>
-      <NumberField value={record?.id ?? ""} />
-      <Title level={5}>{t("vendor.fields.registered")}</Title>
-      <DateField
-        value={dayjs.utc(record?.registered).local()}
-        title={dayjs.utc(record?.registered).local().format()}
-        format={DATE_TIME_FORMAT}
-      />
-      <Title level={5}>{t("vendor.fields.name")}</Title>
-      <TextField value={record?.name} />
-      <Title level={5}>{t("vendor.fields.comment")}</Title>
-      <TextField value={enrichText(record?.comment)} />
-      <Title level={5}>{t("vendor.fields.empty_spool_weight")}</Title>
-      <TextField value={record?.empty_spool_weight} />
-      <Title level={5}>{t("vendor.fields.external_id")}</Title>
-      <TextField value={record?.external_id} />
-      <Title level={4}>{t("settings.extra_fields.tab")}</Title>
+      <Descriptions column={1} bordered size="small">
+        <Descriptions.Item label={t("vendor.fields.id")}>
+          <NumberField value={record?.id ?? ""} />
+        </Descriptions.Item>
+        <Descriptions.Item label={t("vendor.fields.registered")}>
+          <DateField
+            value={dayjs.utc(record?.registered).local()}
+            title={dayjs.utc(record?.registered).local().format()}
+            format={DATE_TIME_FORMAT}
+          />
+        </Descriptions.Item>
+        <Descriptions.Item label={t("vendor.fields.name")}>
+          <TextField value={record?.name} />
+        </Descriptions.Item>
+        <Descriptions.Item label={t("vendor.fields.comment")}>
+          <TextField value={enrichText(record?.comment)} />
+        </Descriptions.Item>
+        <Descriptions.Item label={t("vendor.fields.empty_spool_weight")}>
+          <TextField value={record?.empty_spool_weight} />
+        </Descriptions.Item>
+        <Descriptions.Item label={t("vendor.fields.external_id")}>
+          <TextField value={record?.external_id} />
+        </Descriptions.Item>
+      </Descriptions>
+      <Title level={4} style={{ marginTop: 16 }}>
+        {t("settings.extra_fields.tab")}
+      </Title>
       {extraFields?.data?.map((field, index) => (
         <ExtraFieldDisplay key={index} field={field} value={record?.extra[field.key]} />
       ))}

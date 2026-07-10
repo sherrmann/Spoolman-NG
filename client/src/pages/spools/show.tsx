@@ -13,7 +13,7 @@ import {
 } from "@ant-design/icons";
 import { DateField, NumberField, Show, TextField } from "@refinedev/antd";
 import { useDelete, useInvalidate, useList, useShow, useTranslate, useUpdate } from "@refinedev/core";
-import { Button, Dropdown, Modal, Space, Table, Typography } from "antd";
+import { Button, Descriptions, Dropdown, Modal, Space, Table, Typography } from "antd";
 import { useGetSpoolUsageEvents } from "../../utils/queryUsageEvents";
 import type { MenuProps } from "antd";
 import dayjs from "dayjs";
@@ -321,88 +321,95 @@ export const SpoolShow = () => {
         </>
       )}
     >
-      <Title level={5}>{t("spool.fields.id")}</Title>
-      <NumberField value={record?.id ?? ""} />
-      <Title level={5}>{t("spool.fields.filament")}</Title>
-      {colorObj && <SpoolIcon color={colorObj} size="large" no_margin />}
-      <TextField value={record ? filamentURL(record?.filament) : ""} />
-      <Title level={5}>{t("spool.fields.price")}</Title>
-      <TextField value={spoolPrice(record)} />
-      <Title level={5}>{t("spool.fields.registered")}</Title>
-      <DateField
-        value={dayjs.utc(record?.registered).local()}
-        title={dayjs.utc(record?.registered).local().format()}
-        format={DATE_TIME_FORMAT}
-      />
-      <Title level={5}>{t("spool.fields.first_used")}</Title>
-      <DateField
-        hidden={!record?.first_used}
-        value={dayjs.utc(record?.first_used).local()}
-        title={dayjs.utc(record?.first_used).local().format()}
-        format={DATE_TIME_FORMAT}
-      />
-      <Title level={5}>{t("spool.fields.last_used")}</Title>
-      <DateField
-        hidden={!record?.last_used}
-        value={dayjs.utc(record?.last_used).local()}
-        title={dayjs.utc(record?.last_used).local().format()}
-        format={DATE_TIME_FORMAT}
-      />
-      <Title level={5}>{t("spool.fields.remaining_length")}</Title>
-      <NumberFieldUnit
-        value={record?.remaining_length ?? ""}
-        unit="mm"
-        autoScale={unitScaling}
-        options={{
-          maximumFractionDigits: 1,
-          minimumFractionDigits: 1,
-        }}
-      />
-      <Title level={5}>{t("spool.fields.used_length")}</Title>
-      <NumberFieldUnit
-        value={record?.used_length ?? ""}
-        unit="mm"
-        autoScale={unitScaling}
-        options={{
-          maximumFractionDigits: 1,
-          minimumFractionDigits: 1,
-        }}
-      />
-      <Title level={5}>{t("spool.fields.remaining_weight")}</Title>
-      <NumberFieldUnit
-        value={record?.remaining_weight ?? ""}
-        unit="g"
-        autoScale={unitScaling}
-        options={{
-          maximumFractionDigits: 1,
-          minimumFractionDigits: 1,
-        }}
-      />
-      <Title level={5}>{t("spool.fields.used_weight")}</Title>
-      <NumberFieldUnit
-        value={record?.used_weight ?? ""}
-        unit="g"
-        autoScale={unitScaling}
-        options={{
-          maximumFractionDigits: 1,
-          minimumFractionDigits: 1,
-        }}
-      />
-      <Title level={5}>{t("spool.fields.location")}</Title>
-      <TextField value={record?.location} />
-      {record?.printer && (
-        <>
-          <Title level={5}>{t("spool.fields.printer")}</Title>
-          <TextField value={record.printer.name} />
-        </>
-      )}
-      <Title level={5}>{t("spool.fields.lot_nr")}</Title>
-      <TextField value={record?.lot_nr} />
-      <Title level={5}>{t("spool.fields.comment")}</Title>
-      <TextField value={enrichText(record?.comment)} />
-      <Title level={5}>{t("spool.fields.archived")}</Title>
-      <TextField value={record?.archived ? t("yes") : t("no")} />
-      <Title level={4}>{t("settings.extra_fields.tab")}</Title>
+      <Descriptions column={1} bordered size="small">
+        <Descriptions.Item label={t("spool.fields.id")}>
+          <NumberField value={record?.id ?? ""} />
+        </Descriptions.Item>
+        <Descriptions.Item label={t("spool.fields.filament")}>
+          <Space>
+            {colorObj && <SpoolIcon color={colorObj} size="large" no_margin />}
+            <TextField value={record ? filamentURL(record?.filament) : ""} />
+          </Space>
+        </Descriptions.Item>
+        <Descriptions.Item label={t("spool.fields.price")}>
+          <TextField value={spoolPrice(record)} />
+        </Descriptions.Item>
+        <Descriptions.Item label={t("spool.fields.registered")}>
+          <DateField
+            value={dayjs.utc(record?.registered).local()}
+            title={dayjs.utc(record?.registered).local().format()}
+            format={DATE_TIME_FORMAT}
+          />
+        </Descriptions.Item>
+        <Descriptions.Item label={t("spool.fields.first_used")}>
+          <DateField
+            hidden={!record?.first_used}
+            value={dayjs.utc(record?.first_used).local()}
+            title={dayjs.utc(record?.first_used).local().format()}
+            format={DATE_TIME_FORMAT}
+          />
+        </Descriptions.Item>
+        <Descriptions.Item label={t("spool.fields.last_used")}>
+          <DateField
+            hidden={!record?.last_used}
+            value={dayjs.utc(record?.last_used).local()}
+            title={dayjs.utc(record?.last_used).local().format()}
+            format={DATE_TIME_FORMAT}
+          />
+        </Descriptions.Item>
+        <Descriptions.Item label={t("spool.fields.remaining_length")}>
+          <NumberFieldUnit
+            value={record?.remaining_length ?? ""}
+            unit="mm"
+            autoScale={unitScaling}
+            options={{ maximumFractionDigits: 1, minimumFractionDigits: 1 }}
+          />
+        </Descriptions.Item>
+        <Descriptions.Item label={t("spool.fields.used_length")}>
+          <NumberFieldUnit
+            value={record?.used_length ?? ""}
+            unit="mm"
+            autoScale={unitScaling}
+            options={{ maximumFractionDigits: 1, minimumFractionDigits: 1 }}
+          />
+        </Descriptions.Item>
+        <Descriptions.Item label={t("spool.fields.remaining_weight")}>
+          <NumberFieldUnit
+            value={record?.remaining_weight ?? ""}
+            unit="g"
+            autoScale={unitScaling}
+            options={{ maximumFractionDigits: 1, minimumFractionDigits: 1 }}
+          />
+        </Descriptions.Item>
+        <Descriptions.Item label={t("spool.fields.used_weight")}>
+          <NumberFieldUnit
+            value={record?.used_weight ?? ""}
+            unit="g"
+            autoScale={unitScaling}
+            options={{ maximumFractionDigits: 1, minimumFractionDigits: 1 }}
+          />
+        </Descriptions.Item>
+        <Descriptions.Item label={t("spool.fields.location")}>
+          <TextField value={record?.location} />
+        </Descriptions.Item>
+        {record?.printer && (
+          <Descriptions.Item label={t("spool.fields.printer")}>
+            <TextField value={record.printer.name} />
+          </Descriptions.Item>
+        )}
+        <Descriptions.Item label={t("spool.fields.lot_nr")}>
+          <TextField value={record?.lot_nr} />
+        </Descriptions.Item>
+        <Descriptions.Item label={t("spool.fields.comment")}>
+          <TextField value={enrichText(record?.comment)} />
+        </Descriptions.Item>
+        <Descriptions.Item label={t("spool.fields.archived")}>
+          <TextField value={record?.archived ? t("yes") : t("no")} />
+        </Descriptions.Item>
+      </Descriptions>
+      <Title level={4} style={{ marginTop: 16 }}>
+        {t("settings.extra_fields.tab")}
+      </Title>
       {extraFields?.data?.map((field, index) => (
         <ExtraFieldDisplay key={index} field={field} value={record?.extra[field.key]} />
       ))}
