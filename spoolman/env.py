@@ -119,6 +119,19 @@ def get_api_token() -> str | None:
     return token
 
 
+def get_auth_secret() -> str | None:
+    """Get the optional login-token signing secret from environment variables (#52).
+
+    When set, login tokens (for user accounts) are signed with a key derived from this value, so they
+    stay valid across restarts and no secret is written to disk — supply it via your secret manager.
+    Unset — the default — means an ephemeral per-process key is used instead (see spoolman/auth.py).
+    """
+    secret = os.getenv("SPOOLMAN_AUTH_SECRET")
+    if secret is not None and secret.strip() == "":
+        return None
+    return secret
+
+
 def get_db_schema() -> str | None:
     """Get the DB schema (search_path) from environment variables.
 

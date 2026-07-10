@@ -1,8 +1,9 @@
-"""Tests for the opt-in bearer-token auth middleware (issue #48).
+"""Tests for the auth middleware: the #48 static token and the #52 user-token / role policy.
 
-Drives a minimal app wrapped in AuthMiddleware to assert the on/off matrix, the open routes
-(health + OpenAPI docs), the websocket handshake, and that request.state.principal is set. The
-unset-token path (default = no auth) is covered by test_env-style get_api_token checks below.
+Drives a minimal app wrapped in AuthMiddleware with an explicit AuthState, asserting the
+on/off matrix, open routes, websocket handshake, principal population, and — for #52 — that a
+readonly user token is allowed safe methods but rejected (403) on writes, while an admin token and
+the static machine token are unrestricted.
 """
 
 import pytest
@@ -10,13 +11,14 @@ from fastapi import FastAPI, Request, WebSocket
 from starlette.testclient import TestClient
 from starlette.websockets import WebSocketDisconnect
 
-from spoolman.auth import AuthMiddleware
+from spoolman.auth import AuthMiddleware, AuthState, _resolve_signing_secret
+from spoolman.users import ROLE_ADMIN, ROLE_READONLY, mint_token
 
 TOKEN = "s3cr3t-token"  # noqa: S105 — test fixture token, not a real secret
+SECRET = b"a-test-signing-secret-0123456789"
 
 
-@pytest.fixture
-def client() -> TestClient:
+def _make_client(state: AuthState) -> TestClient:
     app = FastAPI()
 
     @app.get("/health")
@@ -24,10 +26,17 @@ def client() -> TestClient:
         return {"status": "healthy"}
 
     @app.get("/spool")
-    def spool(request: Request) -> dict:
-        # Echo the principal so we can assert the middleware populated it.
+    def get_spool(request: Request) -> dict:
         principal = request.state.principal
         return {"principal": principal.name, "role": principal.role}
+
+    @app.post("/spool")
+    def post_spool() -> dict:
+        return {"created": True}
+
+    @app.post("/auth/login")
+    def login() -> dict:
+        return {"ok": True}
 
     @app.websocket("/")
     async def ws(websocket: WebSocket) -> None:
@@ -35,7 +44,7 @@ def client() -> TestClient:
         await websocket.send_json({"ok": True})
         await websocket.close()
 
-    app.add_middleware(AuthMiddleware, token=TOKEN)
+    app.add_middleware(AuthMiddleware, state=state)
     return TestClient(app)
 
 
@@ -43,39 +52,113 @@ def _auth(token: str) -> dict:
     return {"Authorization": f"Bearer {token}"}
 
 
-def test_health_is_open_without_a_token(client: TestClient):
-    assert client.get("/health").status_code == 200
+# --- #48 static token -------------------------------------------------------
 
 
-def test_openapi_docs_are_open_without_a_token(client: TestClient):
-    assert client.get("/openapi.json").status_code == 200
-    assert client.get("/docs").status_code == 200
+@pytest.fixture
+def token_client() -> TestClient:
+    return _make_client(AuthState(static_token=TOKEN))
 
 
-def test_protected_route_401s_without_a_token(client: TestClient):
-    assert client.get("/spool").status_code == 401
+def test_health_is_open_without_a_token(token_client: TestClient):
+    assert token_client.get("/health").status_code == 200
 
 
-def test_protected_route_401s_with_a_wrong_token(client: TestClient):
-    assert client.get("/spool", headers=_auth("nope")).status_code == 401
+def test_openapi_docs_are_open_without_a_token(token_client: TestClient):
+    assert token_client.get("/openapi.json").status_code == 200
+    assert token_client.get("/docs").status_code == 200
 
 
-def test_protected_route_200s_with_the_correct_token_and_sets_principal(client: TestClient):
-    resp = client.get("/spool", headers=_auth(TOKEN))
+def test_protected_route_401s_without_a_token(token_client: TestClient):
+    assert token_client.get("/spool").status_code == 401
+
+
+def test_protected_route_401s_with_a_wrong_token(token_client: TestClient):
+    assert token_client.get("/spool", headers=_auth("nope")).status_code == 401
+
+
+def test_protected_route_200s_with_the_correct_token_and_sets_principal(token_client: TestClient):
+    resp = token_client.get("/spool", headers=_auth(TOKEN))
     assert resp.status_code == 200
     assert resp.json() == {"principal": "api-token", "role": "admin"}
 
 
-def test_options_is_never_401ed(client: TestClient):
-    # Preflight carries no credentials; it must not be rejected by auth (405 is fine — no handler).
-    assert client.options("/spool").status_code != 401
+def test_options_is_never_401ed(token_client: TestClient):
+    assert token_client.options("/spool").status_code != 401
 
 
-def test_websocket_accepts_a_valid_query_token(client: TestClient):
-    with client.websocket_connect(f"/?token={TOKEN}") as ws:
+def test_websocket_accepts_a_valid_query_token(token_client: TestClient):
+    with token_client.websocket_connect(f"/?token={TOKEN}") as ws:
         assert ws.receive_json() == {"ok": True}
 
 
-def test_websocket_rejects_a_missing_token(client: TestClient):
-    with pytest.raises(WebSocketDisconnect), client.websocket_connect("/") as ws:
+def test_websocket_rejects_a_missing_token(token_client: TestClient):
+    with pytest.raises(WebSocketDisconnect), token_client.websocket_connect("/") as ws:
         ws.receive_json()
+
+
+# --- default (no auth configured) -------------------------------------------
+
+
+def test_no_auth_configured_passes_through_as_anonymous_admin():
+    client = _make_client(AuthState())
+    resp = client.get("/spool")
+    assert resp.status_code == 200
+    assert resp.json() == {"principal": "anonymous", "role": "admin"}
+    # Writes are allowed too, exactly as before auth existed.
+    assert client.post("/spool").status_code == 200
+
+
+# --- #52 user tokens + roles ------------------------------------------------
+
+
+@pytest.fixture
+def accounts_client() -> TestClient:
+    return _make_client(AuthState(signing_secret=SECRET, accounts_enabled=True))
+
+
+def test_accounts_enabled_requires_a_token(accounts_client: TestClient):
+    assert accounts_client.get("/spool").status_code == 401
+
+
+def test_login_is_open_even_when_accounts_enabled(accounts_client: TestClient):
+    assert accounts_client.post("/auth/login").status_code == 200
+
+
+def test_admin_user_token_can_read_and_write(accounts_client: TestClient):
+    token = mint_token("alice", ROLE_ADMIN, SECRET, ttl_seconds=3600)
+    assert accounts_client.get("/spool", headers=_auth(token)).json()["role"] == "admin"
+    assert accounts_client.post("/spool", headers=_auth(token)).status_code == 200
+
+
+def test_readonly_user_token_can_read_but_not_write(accounts_client: TestClient):
+    token = mint_token("bob", ROLE_READONLY, SECRET, ttl_seconds=3600)
+    assert accounts_client.get("/spool", headers=_auth(token)).status_code == 200
+    resp = accounts_client.post("/spool", headers=_auth(token))
+    assert resp.status_code == 403
+
+
+def test_invalid_user_token_is_rejected(accounts_client: TestClient):
+    assert accounts_client.get("/spool", headers=_auth("not.a.valid.token")).status_code == 401
+
+
+def test_static_token_still_works_alongside_accounts():
+    client = _make_client(AuthState(static_token=TOKEN, signing_secret=SECRET, accounts_enabled=True))
+    assert client.post("/spool", headers=_auth(TOKEN)).status_code == 200
+
+
+# --- signing secret resolution (no secret is ever written to disk) ----------
+
+
+def test_signing_secret_from_env_is_deterministic(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("SPOOLMAN_AUTH_SECRET", "operator-provided")
+    first = _resolve_signing_secret()
+    assert first == _resolve_signing_secret()
+    assert first  # non-empty; used directly as an HMAC key
+
+
+def test_signing_secret_is_ephemeral_and_random_without_config(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.delenv("SPOOLMAN_AUTH_SECRET", raising=False)
+    monkeypatch.delenv("SPOOLMAN_API_TOKEN", raising=False)
+    # A fresh random key each call — nothing persisted to disk.
+    assert _resolve_signing_secret() != _resolve_signing_secret()

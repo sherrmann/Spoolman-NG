@@ -15,6 +15,7 @@ from scheduler.asyncio.scheduler import Scheduler
 
 from spoolman import env, externaldb, tigertagdb
 from spoolman.api.v1.router import app as v1_app
+from spoolman.auth import initialize_auth_state
 from spoolman.client import SinglePageApplication
 from spoolman.database import database
 from spoolman.prometheus.metrics import BUILD_INFO, registry
@@ -188,6 +189,15 @@ async def startup() -> None:
     # See: https://github.com/sqlalchemy/alembic/discussions/1155
     project_root = Path(__file__).parent.parent
     subprocess.run(["alembic", "upgrade", "head"], check=True, cwd=project_root)  # noqa: ASYNC221, S607
+
+    # Initialize auth state now that the schema exists (#48/#52): static token, signing secret and
+    # whether any accounts exist. Kept in sync afterwards by the account endpoints.
+    session_gen = database.get_db_session()
+    session = await session_gen.__anext__()
+    try:
+        await initialize_auth_state(session)
+    finally:
+        await session_gen.aclose()
 
     # Setup scheduler
     schedule = Scheduler()
