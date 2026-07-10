@@ -56,12 +56,17 @@ test.describe("print dialog journeys", () => {
   });
 
   test("out-of-bounds label content raises the clipped-content warning", async ({ page, request }) => {
-    const spoolId = await seedSpool(request, `PrintClip ${Date.now()}`);
+    // Deliberately short name: a long unbreakable token (like the timestamped names other
+    // specs seed) genuinely clips in the default label's text box and would trip the
+    // warning before we even change anything — the baseline below needs a label that fits.
+    const spoolId = await seedSpool(request, `Clip${Date.now() % 100000}`);
 
     await page.goto(`${APP_BASE_URL}/spool/print?spools=${spoolId}`);
     await expect(page.getByRole("button", { name: /Print/ }).first()).toBeVisible();
 
-    // A sane default layout should not warn.
+    // A fitting label must not warn. Poll one measurement cycle in (the detector runs
+    // rAF + delayed re-checks), so this doesn't pass merely by asserting too early.
+    await page.waitForTimeout(1200);
     await expect(page.getByText("Some label content is cut off")).toHaveCount(0);
 
     // Stuff far more text into the label than a default-size cell can hold.
@@ -71,5 +76,9 @@ test.describe("print dialog journeys", () => {
 
     // The live preview re-measures and surfaces the clipping warning.
     await expect(page.getByText("Some label content is cut off")).toBeVisible();
+
+    // Restoring a fitting template clears the warning again.
+    await template.fill("{id}");
+    await expect(page.getByText("Some label content is cut off")).toHaveCount(0);
   });
 });
