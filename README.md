@@ -175,10 +175,11 @@ download as 3MF files you print on your own machine.
 
 By default Spoolman has **no authentication** — it targets trusted home/LAN networks alongside Klipper, Moonraker, and OctoPrint. Anyone who can reach the port can read and modify your inventory, including endpoints that create spools automatically from scanned tags (`POST /api/v1/nfc/lookup`) and write physical NFC tags through a connected reader (`POST /api/v1/nfc/write`).
 
-If you expose Spoolman beyond your LAN:
+Authentication is **opt-in** (choose either or both):
 
-* **Set `SPOOLMAN_API_TOKEN`** to require a shared bearer token. When set, every `/api/v1` request must send `Authorization: Bearer <token>` (websockets pass it as a `?token=` query parameter), except `GET /api/v1/health` and the OpenAPI docs. The web UI prompts for the token and stores it in the browser; integrations that support a custom header (Moonraker, OctoPrint) can send it. `/metrics` and the static web assets are not behind this token. This is a single shared secret, not per-user accounts — for stronger control, combine it with, or replace it by, a reverse proxy.
-* Put it behind an authenticating reverse proxy (e.g. [Authelia](https://www.authelia.com/), [OAuth2 Proxy](https://oauth2-proxy.github.io/oauth2-proxy/), Caddy/nginx basic auth) or access it over a VPN such as WireGuard or Tailscale.
+* **Set `SPOOLMAN_API_TOKEN`** to require a shared bearer token. When set, every `/api/v1` request must send `Authorization: Bearer <token>` (websockets pass it as a `?token=` query parameter), except `GET /api/v1/health` and the OpenAPI docs. The web UI prompts for the token and stores it in the browser; integrations that support a custom header (Moonraker, OctoPrint) can send it. `/metrics` and the static web assets are not behind this token. This is a single shared machine secret; the token keeps working as a never-expiring key even alongside accounts.
+* **Create user accounts** under **Settings → Users** for per-user password login with **administrator** and **read-only** roles. Once any account exists, the web UI requires login; passwords are stored only as salted `scrypt` hashes. See [Authentication & user accounts](docs/installation.md#authentication--user-accounts).
+* For federated auth (SSO/OIDC) or another layer, put it behind an authenticating reverse proxy (e.g. [Authelia](https://www.authelia.com/), [OAuth2 Proxy](https://oauth2-proxy.github.io/oauth2-proxy/), Caddy/nginx basic auth) or access it over a VPN such as WireGuard or Tailscale.
 * Don't run with `SPOOLMAN_DEBUG_MODE=TRUE` in production — it relaxes CORS to allow all origins.
 
 To report a security vulnerability, see [SECURITY.md](SECURITY.md).
