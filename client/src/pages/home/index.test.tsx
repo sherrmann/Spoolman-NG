@@ -23,6 +23,12 @@ vi.mock("react-i18next", () => ({
 vi.mock("../../utils/settings", () => ({
   useCurrencyFormatter: () => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }),
 }));
+// The Usage tab's chart (#81) queries /stats/usage via react-query; stub it so the dashboard
+// renders without a QueryClient in these boundary tests.
+vi.mock("../../utils/queryStats", () => ({
+  useUsageStats: () => ({ data: [], isLoading: false }),
+  formatBucketLabel: (period: string) => period,
+}));
 
 const mockedUseList = vi.mocked(useList);
 

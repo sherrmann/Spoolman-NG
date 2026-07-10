@@ -376,6 +376,11 @@
       "comment": "Comment",
       "empty": "No usage recorded yet."
     },
+    "weight_history": {
+      "title": "Weight history",
+      "chart_label": "Measured weight over time",
+      "idle_gain": "Measured weight rose by {{grams}} g between measurements — the spool may have absorbed moisture. (Experimental)"
+    },
     "formats": {
       "last_used": "Last used {{date}}"
     }
@@ -555,6 +560,17 @@
     "by_vendor": "By Manufacturer",
     "shopping_list": "Shopping List",
     "shopping_list_empty": "No filaments below their low-stock threshold.",
+    "usage": {
+      "tab": "Usage",
+      "empty": "No filament usage recorded yet.",
+      "loading": "Loading...",
+      "bucket": {
+        "day": "Day",
+        "week": "Week",
+        "month": "Month",
+        "year": "Year"
+      }
+    },
     "telemetry_subtitle": "Real-time status of your filament inventory.",
     "create": {
       "spool": "New spool",

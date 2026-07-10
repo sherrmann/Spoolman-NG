@@ -660,3 +660,63 @@ a.kpi-card:focus-visible {
 .swatch-grid-item:hover {
   transform: scale(1.18);
 }
+
+/* Usage-over-time bar chart (#81): a dependency-free column chart, styled to match the
+   dashboard's other CSS bars. Columns grow from a shared baseline; each has an x-axis label. */
+.usage-chart-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.usage-chart-summary {
+  font-size: 13px;
+  opacity: 0.65;
+}
+
+.usage-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 180px;
+  padding-top: 8px;
+}
+
+.usage-chart-col {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+  height: 100%;
+  cursor: default;
+}
+
+.usage-chart-track {
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: 40px;
+  display: flex;
+  align-items: flex-end;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.usage-chart-bar {
+  width: 100%;
+  border-radius: 4px 4px 0 0;
+  transition: height 0.2s ease;
+}
+
+.usage-chart-xlabel {
+  margin-top: 6px;
+  font-size: 11px;
+  opacity: 0.55;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
