@@ -494,7 +494,8 @@
     "buttons": {
       "add_spool": "Add Spool",
       "fetch": "Fetch",
-      "download_swatch": "Swatch"
+      "download_swatch": "Swatch",
+      "download_slicer": "Slicer profile"
     },
     "swatch": {
       "title": "3D-printable swatch",

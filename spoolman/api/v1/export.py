@@ -12,6 +12,7 @@ from spoolman.database import filament, spool, vendor
 from spoolman.database.database import get_db_session
 from spoolman.database.models import Base
 from spoolman.export import dump_as_csv, dump_as_json
+from spoolman.slicer_profiles import SlicerFormat, generate_slicer_profile
 
 # ruff: noqa: D103
 router = APIRouter(
@@ -69,6 +70,30 @@ async def export_vendors(
 ) -> Response:
     all_vendors, _ = await vendor.find(db=db)
     return await _export(all_vendors, fmt)
+
+
+@router.get(
+    "/filament/{filament_id}/slicer",
+    name="Export a filament as a slicer profile",
+    description=(
+        "Generate a native slicer filament profile for a single filament (#76): a PrusaSlicer / "
+        "SuperSlicer config (prusa), an OrcaSlicer / Bambu Studio preset (orca), or a Cura material "
+        "(cura). Only the fields Spoolman tracks are emitted; the rest use the slicer's defaults."
+    ),
+)
+async def export_filament_slicer(
+    *,
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+    filament_id: int,
+    slicer: Annotated[SlicerFormat, Query(description="Target slicer format.")],
+) -> Response:
+    fil = await filament.get_by_id(db, filament_id)
+    filename, content, media_type = generate_slicer_profile(fil, slicer)
+    return Response(
+        content=content,
+        media_type=media_type,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 async def _export(objects: Iterable[Base], fmt: ExportFormat) -> Response:
