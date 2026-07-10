@@ -1,7 +1,7 @@
 # Home Assistant Supervisor add-on manifest for Spoolman NG (#89).
 # EXPERIMENTAL: not yet exercised against a live Supervisor.
 name: Spoolman NG
-version: "2026.7.5"
+version: "2026.7.6"
 slug: spoolman_ng
 description: Track your 3D-printer filament spool inventory (community-maintained Spoolman).
 url: https://github.com/sherrmann/Spoolman-NG
