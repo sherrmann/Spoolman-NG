@@ -19,6 +19,7 @@ import {
 } from "../../utils/importExport";
 import { materialBreakdown, totalRemainingWeight, totalValue } from "../home/analytics";
 import { ISpool } from "../spools/model";
+import { ThreeMfImportSection } from "./threeMfImport";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -167,6 +168,11 @@ export function ImportExportSettings() {
           {dryRun ? t("settings.import_export.validate") : t("settings.import_export.import_button")}
         </Button>
       </Space>
+
+      <Divider />
+
+      <Title level={4}>{t("settings.import_export.threemf.title")}</Title>
+      <ThreeMfImportSection />
 
       <Divider />
 

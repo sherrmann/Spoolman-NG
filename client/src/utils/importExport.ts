@@ -84,6 +84,18 @@ export async function downloadSlicerProfile(filamentId: number, slicer: SlicerFo
   URL.revokeObjectURL(url);
 }
 
+/** Record filament consumed on a spool via PUT /spool/{id}/use (the 3MF import apply step, #105). */
+export async function applySpoolUsage(spoolId: number, useWeight: number): Promise<void> {
+  const response = await apiFetch(`${getAPIURL()}/spool/${spoolId}/use`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ use_weight: useWeight }),
+  });
+  if (!response.ok) {
+    throw new Error(`Use failed for spool ${spoolId} (${response.status})`);
+  }
+}
+
 /** POST a raw CSV/JSON body to the import endpoint and return the result summary. */
 export async function importData(
   entity: ImportEntity,

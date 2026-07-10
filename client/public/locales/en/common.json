@@ -663,7 +663,20 @@
       "print_report": "Print report",
       "no_file": "Please choose a file first.",
       "result": "Created {{created}}, updated {{updated}}, skipped {{skipped}}.",
-      "import_errors": "Import failed"
+      "import_errors": "Import failed",
+      "threemf": {
+        "title": "Import a sliced 3MF project",
+        "help": "Upload a sliced .3mf from Bambu Studio or OrcaSlicer to read how much of each filament the print used, match it to your spools, and subtract the usage in one step.",
+        "choose_file": "Choose .3mf file",
+        "no_filaments": "No filament usage was found in this 3MF.",
+        "no_match": "No matching spool — pick one",
+        "col_filament": "Print filament",
+        "col_used": "Used",
+        "col_spool": "Spool to adjust",
+        "apply": "Apply usage",
+        "applied": "Recorded usage on {{count}} spool(s).",
+        "applied_partial": "Recorded usage on {{ok}} spool(s); {{fail}} failed."
+      }
     },
     "printers": {
       "tab": "Printers",
