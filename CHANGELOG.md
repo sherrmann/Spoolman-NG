@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+- **Home Assistant add-on moved to a dedicated repository**: [`sherrmann/spoolman-ng-addons`](https://github.com/sherrmann/spoolman-ng-addons) — Supervisor requires the repository manifest at the git root, so the in-tree `ha-addon/` packaging could only ever be installed by manual copy. The add-on is now installable by URL from the HA add-on store, and every release pushes a matching version bump there so updates appear in the HA UI automatically.
+
+## [2026.7.6] — 2026-07-10
+
 - **Translations completed for every language**: the ~300 keys per locale that accumulated untranslated over the 2026.7.x feature wave (auth, printers, locations, statistics, weigh workflow, bulk edit, …) are now translated in all locales, with correct language-specific plural forms. CI now enforces **placeholder integrity** — a translation that drops a `{{variable}}` or `<tag>` fails the build (this immediately caught 34 stale/broken values, now fixed).
 - **UK English added and made the default**: `en-GB` (British spellings, UK date formats) is used unless the browser or the user picks another language; the previous `en` remains available as *English (US)* — and its date pickers now consistently use US formats instead of the old US-strings/UK-formats mix.
 - **Home dashboard**: the redundant page title/subtitle is gone; the "Value" KPI is now an honest **estimated stock value** (spool price falling back to filament price, scaled by remaining weight — previously it summed only explicit spool prices); the filament KPI footer shows the distinct material count instead of the meaningless "all synced".
@@ -38,6 +42,7 @@ First release of the Spoolman NG fork, built on upstream Spoolman 0.23.1.
 - Merged upstream community PRs: extra-field filter/sort, 3D Filament Profiles import, weight-delta events, and calibration.
 - **Fork infrastructure**: multi-arch images published to GHCR (`ghcr.io/sherrmann/spoolman`) and Docker Hub (`cookiemonster95/spoolman`); CalVer releases with `:latest`, `:edge`, and `:sha-*` tags; and one-click updates via Moonraker's `update_manager`.
 
+[2026.7.6]: https://github.com/sherrmann/Spoolman-NG/releases/tag/v2026.7.6
 [2026.7.0]: https://github.com/sherrmann/Spoolman-NG/releases/tag/v2026.7.0
 [2026.7.5]: https://github.com/sherrmann/Spoolman-NG/releases/tag/v2026.7.5
 [2026.6.0]: https://github.com/sherrmann/Spoolman-NG/releases/tag/v2026.6.0
