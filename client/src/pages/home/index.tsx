@@ -1,5 +1,6 @@
 import {
   AppstoreOutlined,
+  AreaChartOutlined,
   DatabaseOutlined,
   EnvironmentOutlined,
   ExperimentOutlined,
@@ -40,6 +41,7 @@ import {
   totalValue as computeTotalValue,
   vendorBreakdown,
 } from "./analytics";
+import { UsageChart } from "./usageChart";
 import "./home.css";
 
 dayjs.extend(utc);
@@ -434,6 +436,19 @@ export const Home = () => {
                       );
                     })}
                   </div>
+                </div>
+              ),
+            },
+            {
+              key: "usage",
+              label: (
+                <span>
+                  <AreaChartOutlined /> {t("home.usage.tab")}
+                </span>
+              ),
+              children: (
+                <div className="dash-section" style={{ background: S.low }}>
+                  <UsageChart barColor={token.colorPrimary} trackColor={S.highest} />
                 </div>
               ),
             },

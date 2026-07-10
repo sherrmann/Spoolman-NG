@@ -555,6 +555,17 @@
     "by_vendor": "By Manufacturer",
     "shopping_list": "Shopping List",
     "shopping_list_empty": "No filaments below their low-stock threshold.",
+    "usage": {
+      "tab": "Usage",
+      "empty": "No filament usage recorded yet.",
+      "loading": "Loading...",
+      "bucket": {
+        "day": "Day",
+        "week": "Week",
+        "month": "Month",
+        "year": "Year"
+      }
+    },
     "telemetry_subtitle": "Real-time status of your filament inventory.",
     "create": {
       "spool": "New spool",
