@@ -54,4 +54,22 @@ test.describe("print dialog journeys", () => {
     await page.getByRole("button", { name: /^Show$/ }).click();
     await expect(page.locator(".ant-modal-content").last()).toBeVisible();
   });
+
+  test("out-of-bounds label content raises the clipped-content warning", async ({ page, request }) => {
+    const spoolId = await seedSpool(request, `PrintClip ${Date.now()}`);
+
+    await page.goto(`${APP_BASE_URL}/spool/print?spools=${spoolId}`);
+    await expect(page.getByRole("button", { name: /Print/ }).first()).toBeVisible();
+
+    // A sane default layout should not warn.
+    await expect(page.getByText("Some label content is cut off")).toHaveCount(0);
+
+    // Stuff far more text into the label than a default-size cell can hold.
+    await page.getByText("Content Settings", { exact: true }).click();
+    const template = page.locator("textarea").first();
+    await template.fill(Array(30).fill("CLIP-MARKER LINE {id}").join("\n"));
+
+    // The live preview re-measures and surfaces the clipping warning.
+    await expect(page.getByText("Some label content is cut off")).toBeVisible();
+  });
 });

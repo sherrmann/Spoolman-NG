@@ -211,7 +211,6 @@
     "edit": "Editer",
     "showArchived": "Afficher les archives",
     "archive": "Archiver",
-    "hideColumns": "Masquer les colonnes",
     "confirm": "Êtes-vous sur ?",
     "delete": "Supprimer",
     "undo": "Annuler",
@@ -406,7 +405,6 @@
     "no_recent": "Aucune bobine utilisée récemment",
     "by_material": "Par matériau",
     "by_location": "Par emplacement",
-    "telemetry_subtitle": "État en temps réel de votre inventaire de filament.",
     "by_vendor": "Par fabricant"
   },
   "settings": {

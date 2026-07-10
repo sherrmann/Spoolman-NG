@@ -26,7 +26,6 @@
     "hideArchived": "Dölj arkiverade",
     "showArchived": "Visa arkiverade",
     "notAccessTitle": "Du har inte tillgång till denna sida",
-    "hideColumns": "Dölj kolumner",
     "clearFilters": "Rensa filter",
     "saveAndAdd": "Spara och Lägg till",
     "continue": "Fortsätt"
@@ -349,7 +348,6 @@
     "no_recent": "Inga nyligen använda spolar",
     "by_material": "Per material",
     "by_location": "Per plats",
-    "telemetry_subtitle": "Realtidsstatus för ditt filamentlager.",
     "by_vendor": "Per tillverkare"
   },
   "table": {

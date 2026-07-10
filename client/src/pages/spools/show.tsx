@@ -2,6 +2,7 @@ import { DATE_TIME_FORMAT, DATE_TIME_FORMAT_SHORT } from "../../utils/dateFormat
 import {
   DeleteOutlined,
   DownOutlined,
+  EnvironmentOutlined,
   InboxOutlined,
   LinkOutlined,
   PrinterOutlined,
@@ -9,11 +10,27 @@ import {
   ToTopOutlined,
   ToolOutlined,
   UndoOutlined,
+  UnorderedListOutlined,
   WifiOutlined,
 } from "@ant-design/icons";
-import { DateField, NumberField, Show, TextField } from "@refinedev/antd";
+import { DateField, EditButton, NumberField, RefreshButton, Show, TextField } from "@refinedev/antd";
 import { useDelete, useInvalidate, useList, useShow, useTranslate, useUpdate } from "@refinedev/core";
-import { Button, Descriptions, Dropdown, Modal, Space, Table, Typography } from "antd";
+import {
+  Button,
+  Card,
+  Col,
+  Descriptions,
+  Dropdown,
+  Modal,
+  Progress,
+  Row,
+  Space,
+  Statistic,
+  Table,
+  Tag,
+  Tooltip,
+  Typography,
+} from "antd";
 import { useGetSpoolUsageEvents } from "../../utils/queryUsageEvents";
 import type { MenuProps } from "antd";
 import dayjs from "dayjs";
@@ -23,7 +40,7 @@ import { useNavigate } from "react-router";
 import { ExtraFieldDisplay } from "../../components/extraFields";
 import { NumberFieldUnit } from "../../components/numberField";
 import SpoolIcon from "../../components/spoolIcon";
-import { enrichText } from "../../utils/parsing";
+import { enrichText, formatWeight } from "../../utils/parsing";
 import { getSpoolEffectiveColor } from "../../utils/spoolColor";
 import { buildSpoolActionUrl, useSpoolActionLinks } from "../../utils/spoolActionLinks";
 import { EntityType, useGetFields } from "../../utils/queryFields";
@@ -215,6 +232,24 @@ export const SpoolShow = () => {
   // #74: the spool's own color override wins, else the filament color.
   const colorObj = record ? getSpoolEffectiveColor(record) : undefined;
 
+  // Remaining-stock share for the hero card's progress bar; undefined (bar hidden) when the
+  // spool carries no usable total. Mirrors the dashboard's remaining→initial→filament chain.
+  const heroTotal = record?.initial_weight ?? record?.filament.weight;
+  const heroRemaining = record?.remaining_weight;
+  const remainingPct =
+    heroTotal && heroRemaining != null ? Math.max(0, Math.min(100, (heroRemaining / heroTotal) * 100)) : undefined;
+  // Progress accepts one colour; for multi-colour filament use the first as the accent.
+  const progressColor = typeof colorObj === "string" ? "#" + colorObj.replace("#", "") : colorObj?.colors?.[0];
+
+  // "All spools of this filament": jump to the spool list pre-filtered to this filament, via
+  // the same URL-hash mechanism shared table links use (read by useInitialTableState).
+  const goToSiblingSpools = () => {
+    if (filamentId === undefined) return;
+    const params = new URLSearchParams();
+    params.set("filters", JSON.stringify([{ field: "filament.id", operator: "in", value: [filamentId] }]));
+    navigate(`/spool#${params.toString()}`);
+  };
+
   // "Labels & Tags" overflow menu — folds the niche label/NFC actions behind a single
   // default-emphasis menu-button, leaving "Adjust Spool Filament" as the only primary.
   const labelsMenuItems: MenuProps["items"] = [
@@ -251,7 +286,7 @@ export const SpoolShow = () => {
       isLoading={isLoading}
       canDelete={false}
       title={record ? formatTitle(record) : ""}
-      headerButtons={({ defaultButtons }) => (
+      headerButtons={({ editButtonProps, refreshButtonProps }) => (
         <>
           <Button type="primary" icon={<ToolOutlined />} onClick={() => record && openSpoolAdjustModal(record)}>
             {t("spool.titles.adjust")}
@@ -314,7 +349,15 @@ export const SpoolShow = () => {
             {record?.archived ? t("buttons.unArchive") : t("buttons.archive")}
           </Dropdown.Button>
 
-          {defaultButtons}
+          {/* Replaces the stock "Spools" list button: jumping to the *sibling* spools of this
+              filament is the navigation people actually want from here. */}
+          <Tooltip title={t("spool.sibling_spools.tooltip")}>
+            <Button icon={<UnorderedListOutlined />} disabled={!record} onClick={goToSiblingSpools}>
+              {t("spool.sibling_spools.button")}
+            </Button>
+          </Tooltip>
+          {editButtonProps && <EditButton {...editButtonProps} />}
+          {refreshButtonProps && <RefreshButton {...refreshButtonProps} />}
           {spoolAdjustModal}
           <NfcBindModal
             spool={record}
@@ -326,6 +369,56 @@ export const SpoolShow = () => {
         </>
       )}
     >
+      {/* Hero summary: swatch, identity tags, stock bar and the key numbers at a glance;
+          the full field-by-field record stays in the table below. */}
+      {record && (
+        <Card style={{ marginBottom: 16 }}>
+          <Row gutter={[24, 16]} align="middle" wrap>
+            <Col flex="none">
+              <SpoolIcon color={colorObj} size="large" no_margin />
+            </Col>
+            <Col flex="auto" style={{ minWidth: 220 }}>
+              <Typography.Title level={4} style={{ marginTop: 0, marginBottom: 8 }}>
+                {filamentURL(record.filament)}
+              </Typography.Title>
+              <Space size={[4, 4]} wrap>
+                {record.filament.material && <Tag color="blue">{record.filament.material}</Tag>}
+                {record.location && <Tag icon={<EnvironmentOutlined />}>{record.location}</Tag>}
+                {record.lot_nr && (
+                  <Tag>
+                    {t("spool.fields.lot_nr")}: {record.lot_nr}
+                  </Tag>
+                )}
+                {record.printer && <Tag icon={<PrinterOutlined />}>{record.printer.name}</Tag>}
+                {record.archived && <Tag color="red">{t("spool.fields.archived")}</Tag>}
+              </Space>
+              {remainingPct !== undefined && (
+                <div style={{ maxWidth: 420, marginTop: 12 }}>
+                  <Progress
+                    percent={remainingPct}
+                    strokeColor={progressColor}
+                    format={(pct) => `${Math.round(pct ?? 0)}%`}
+                    status="normal"
+                  />
+                </div>
+              )}
+            </Col>
+            <Col flex="none">
+              <Space size="large" wrap>
+                <Statistic
+                  title={t("spool.fields.remaining_weight")}
+                  value={record.remaining_weight != null ? formatWeight(record.remaining_weight) : "-"}
+                />
+                <Statistic
+                  title={t("spool.fields.used_weight")}
+                  value={record.used_weight != null ? formatWeight(record.used_weight) : "-"}
+                />
+                <Statistic title={t("spool.fields.price")} value={spoolPrice(record) || "-"} />
+              </Space>
+            </Col>
+          </Row>
+        </Card>
+      )}
       <Descriptions column={1} bordered size="small">
         <Descriptions.Item label={t("spool.fields.id")}>
           <NumberField value={record?.id ?? ""} />

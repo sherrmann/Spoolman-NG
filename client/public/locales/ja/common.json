@@ -36,7 +36,6 @@
     "hideArchived": "アーカイブを隠す",
     "showArchived": "アーカイブを表示",
     "unArchive": "非アーカイブ",
-    "hideColumns": "コラムを隠す",
     "notAccessTitle": "アクセス権限がありません",
     "save": "保存",
     "logout": "ログアウト",
@@ -455,7 +454,6 @@
     "no_recent": "最近使用したスプールはありません",
     "by_material": "素材別",
     "by_location": "場所別",
-    "telemetry_subtitle": "フィラメント在庫のリアルタイムステータス。",
     "by_vendor": "製造者別"
   },
   "calibration": {

@@ -209,7 +209,6 @@
     "edit": "Redigér",
     "showArchived": "Vis arkiverede",
     "archive": "Arkivér",
-    "hideColumns": "Skjul kolonner",
     "confirm": "Er du sikker?",
     "delete": "Slet",
     "undo": "Fortryd",
@@ -404,7 +403,6 @@
     "no_recent": "Ingen nyligt brugte spoler",
     "by_material": "Efter materiale",
     "by_location": "Efter placering",
-    "telemetry_subtitle": "Realtidsstatus for dit filamentlager.",
     "by_vendor": "Efter producent"
   },
   "settings": {

@@ -45,6 +45,9 @@ export interface Field extends FieldParameters {
 export function useGetFields(entity_type: EntityType) {
   return useQuery<Field[]>({
     queryKey: ["fields", entity_type],
+    // Field definitions change only through the Settings page, whose mutations invalidate
+    // this key — so skip the refetch every list/show/edit page mount otherwise triggers.
+    staleTime: 60_000,
     queryFn: async () => {
       const response = await apiFetch(`${getAPIURL()}/field/${entity_type}`);
       const fields = (await response.json()) as Field[];

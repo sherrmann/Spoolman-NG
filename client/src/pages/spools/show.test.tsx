@@ -56,6 +56,7 @@ vi.mock("../../utils/settings", () => ({
 vi.mock("../../utils/parsing", () => ({
   enrichText: (value?: string) => value,
   scaleUnitValue: (value: number, unit: string) => ({ value, unit }),
+  formatWeight: (value: number) => `${value} g`,
 }));
 vi.mock("../../utils/queryUsageEvents", () => ({
   useGetSpoolUsageEvents: () => ({ data: [], isLoading: false }),

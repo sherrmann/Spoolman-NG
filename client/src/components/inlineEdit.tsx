@@ -3,13 +3,18 @@ import { useInvalidate, useUpdate } from "@refinedev/core";
 import { Input, InputNumber, Select } from "antd";
 import type { MessageInstance } from "antd/es/message/interface";
 import React, { useCallback, useRef, useState } from "react";
-import { formatNumberOnUserInput, numberParserAllowEmpty } from "../../utils/parsing";
+import { formatNumberOnUserInput, numberParserAllowEmpty } from "../utils/parsing";
 
-type SpoolField = "price" | "used_weight" | "remaining_weight" | "comment" | "location";
+// Generalised inline cell editing, shared by the spool and filament lists. Each cell
+// patches ONLY its own field on its own resource; anything cross-field (weight
+// reconciliation) is the server's job and arrives via the list invalidation.
+
+type EditableResource = "spool" | "filament";
 
 interface CommonProps {
-  spoolId: number;
-  field: SpoolField;
+  resource: EditableResource;
+  recordId: number;
+  field: string;
   // Desktop-only affordance. When false, cells render read-only exactly as
   // before (the show/edit pages remain the editing path on touch devices).
   editable: boolean;
@@ -18,22 +23,27 @@ interface CommonProps {
 }
 
 /**
- * Shared mutation helper. Patches ONLY the edited field via Refine's useUpdate
- * on the "spool" resource, then invalidates the list so both interdependent
- * weight columns (used/remaining) refresh with the server-reconciled values.
+ * Shared mutation helper. Patches ONLY the edited field via Refine's useUpdate,
+ * then invalidates the list so interdependent columns (e.g. used/remaining
+ * weight) refresh with the server-reconciled values.
  */
-function useInlineUpdate(spoolId: number, messageApi: MessageInstance, t: (key: string) => string) {
+function useInlineUpdate(
+  resource: EditableResource,
+  recordId: number,
+  messageApi: MessageInstance,
+  t: (key: string) => string,
+) {
   const invalidate = useInvalidate();
   const { mutate } = useUpdate();
   const [saving, setSaving] = useState(false);
 
   const save = useCallback(
-    (field: SpoolField, value: number | string | null, onDone: (ok: boolean) => void) => {
+    (field: string, value: number | string | null, onDone: (ok: boolean) => void) => {
       setSaving(true);
       mutate(
         {
-          resource: "spool",
-          id: spoolId,
+          resource,
+          id: recordId,
           values: { [field]: value },
           mutationMode: "pessimistic",
           successNotification: false,
@@ -41,19 +51,19 @@ function useInlineUpdate(spoolId: number, messageApi: MessageInstance, t: (key: 
         },
         {
           onSuccess: () => {
-            invalidate({ resource: "spool", invalidates: ["list"] });
+            invalidate({ resource, invalidates: ["list"] });
             setSaving(false);
             onDone(true);
           },
           onError: () => {
-            messageApi.error(t("spool.messages.update_error"));
+            messageApi.error(t(`${resource}.messages.update_error`));
             setSaving(false);
             onDone(false);
           },
         },
       );
     },
-    [mutate, invalidate, spoolId, messageApi, t],
+    [mutate, invalidate, resource, recordId, messageApi, t],
   );
 
   return { saving, save };
@@ -109,12 +119,14 @@ export function EditableNumberCell(
     unit?: string;
     addonAfter?: React.ReactNode;
     align?: "right";
+    /** Fields that may be cleared: an emptied input commits null instead of cancelling. */
+    allowClear?: boolean;
   },
 ) {
-  const { spoolId, field, editable, messageApi, t } = props;
+  const { resource, recordId, field, editable, messageApi, t } = props;
   const [editing, setEditing] = useState(false);
   const [val, setVal] = useState<number | null>(props.value ?? null);
-  const { saving, save } = useInlineUpdate(spoolId, messageApi, t);
+  const { saving, save } = useInlineUpdate(resource, recordId, messageApi, t);
   const escaped = useRef(false);
 
   if (!editable) {
@@ -143,10 +155,10 @@ export function EditableNumberCell(
       return;
     }
     const original = props.value ?? null;
-    // The weight fields cannot be unset; treat an emptied input as cancel.
-    // An emptied price is a real change: it clears the spool's price override
-    // so it falls back to the filament price again.
-    if (val === null && field !== "price") {
+    // Non-clearable fields (the weights) cannot be unset; treat an emptied input as
+    // cancel. A clearable one (price) commits the clear — e.g. a spool price override
+    // falls back to the filament price again.
+    if (val === null && !props.allowClear) {
       setEditing(false);
       return;
     }
@@ -194,10 +206,10 @@ export function EditableTextCell(
     maxLength?: number;
   },
 ) {
-  const { spoolId, field, editable, messageApi, t } = props;
+  const { resource, recordId, field, editable, messageApi, t } = props;
   const [editing, setEditing] = useState(false);
   const [val, setVal] = useState<string>(props.value ?? "");
-  const { saving, save } = useInlineUpdate(spoolId, messageApi, t);
+  const { saving, save } = useInlineUpdate(resource, recordId, messageApi, t);
   const escaped = useRef(false);
 
   if (!editable) {
@@ -258,17 +270,19 @@ export function EditableTextCell(
   );
 }
 
-export function EditableLocationCell(
+export function EditableSelectCell(
   props: CommonProps & {
     value: string | undefined;
     display: React.ReactNode;
     options: string[];
+    /** Allow committing a typed value that is not in the options (free-text select). */
+    allowFreeText?: boolean;
   },
 ) {
-  const { spoolId, editable, messageApi, t } = props;
+  const { resource, recordId, field, editable, messageApi, t } = props;
   const [editing, setEditing] = useState(false);
   const [search, setSearch] = useState("");
-  const { saving, save } = useInlineUpdate(spoolId, messageApi, t);
+  const { saving, save } = useInlineUpdate(resource, recordId, messageApi, t);
 
   if (!editable) {
     return <>{props.display}</>;
@@ -282,13 +296,13 @@ export function EditableLocationCell(
     );
   }
 
-  // Mirror the create/edit form: options come from existing locations, and a
-  // typed-but-unknown value is offered so new locations can be entered freely.
+  // Mirror the create/edit form: options come from existing values, and a
+  // typed-but-unknown value is offered so new ones can be entered freely.
   // The typed value goes FIRST so that plain Enter commits exactly what was
-  // typed instead of a similarly-named existing location.
+  // typed instead of a similarly-named existing option.
   const options = [...props.options];
   const trimmed = search.trim();
-  if (trimmed && !options.includes(trimmed)) {
+  if (props.allowFreeText !== false && trimmed && !options.includes(trimmed)) {
     options.unshift(trimmed);
   }
 
@@ -300,7 +314,7 @@ export function EditableLocationCell(
       setEditing(false);
       return;
     }
-    save("location", normalized, () => setEditing(false));
+    save(field, normalized, () => setEditing(false));
   };
 
   return (

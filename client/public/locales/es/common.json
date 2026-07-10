@@ -26,7 +26,6 @@
     "hideArchived": "Ocultar Archivados",
     "showArchived": "Mostrar Archivados",
     "notAccessTitle": "No tienes permiso de acceso",
-    "hideColumns": "Ocultar Columnas",
     "clearFilters": "Borrar filtros",
     "saveAndAdd": "Guardar y añadir",
     "continue": "Continuar"
@@ -406,7 +405,6 @@
     "no_recent": "No hay bobinas usadas recientemente",
     "by_material": "Por material",
     "by_location": "Por ubicación",
-    "telemetry_subtitle": "Estado en tiempo real de tu inventario de filamento.",
     "by_vendor": "Por fabricante"
   },
   "settings": {

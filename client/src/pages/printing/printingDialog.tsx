@@ -1,6 +1,7 @@
 import { FileImageOutlined, PrinterOutlined, TagOutlined } from "@ant-design/icons";
 import { useTranslate } from "@refinedev/core";
 import {
+  Alert,
   Button,
   Col,
   Collapse,
@@ -16,7 +17,7 @@ import {
 } from "antd";
 import { zipSync } from "fflate";
 import * as htmlToImage from "html-to-image";
-import { ReactElement, useRef } from "react";
+import { ReactElement, useEffect, useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
 import { formatNumberOnUserInput, numberParser } from "../../utils/parsing";
 import { useSavedState } from "../../utils/saveload";
@@ -153,6 +154,35 @@ const PrintingDialog = ({
 
   const itemWidth = (paperWidth - margin.left - margin.right - spacing.horizontal) / paperColumns - spacing.horizontal;
   const itemHeight = (paperHeight - margin.top - margin.bottom - spacing.vertical) / paperRows - spacing.vertical;
+
+  // Impossible geometry: margins + spacing leave no room for a label cell at all. Detected from
+  // pure state so the error shows even before anything renders.
+  const invalidGeometry = itemWidth <= 0 || itemHeight <= 0;
+
+  // Clipped content: some label's content is taller/wider than its cell and gets cut off by the
+  // overflow:hidden boxes (silently, until now). Measured on the real preview DOM — the preview IS
+  // the print source, and CSS transforms don't affect scroll/client sizes, so the zoomed preview
+  // measures exactly like the print. Runs after every render (the settings object is mutated in
+  // place by the form handlers, so there is no stable dependency to watch); setting the same
+  // boolean back is a no-op, so this converges. Delayed re-checks cover async work (fonts, QR
+  // canvases) that changes intrinsic sizes without a re-render.
+  const [contentClipped, setContentClipped] = useState(false);
+  useEffect(() => {
+    const root = contentRef.current;
+    if (!root || invalidGeometry) return;
+    const measure = () => {
+      const clipped = Array.from(
+        root.querySelectorAll<HTMLElement>(".print-qrcode-item, .print-qrcode-title, .print-qrcode-text"),
+      ).some((el) => el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1);
+      setContentClipped(clipped);
+    };
+    const frame = requestAnimationFrame(measure);
+    const timers = [window.setTimeout(measure, 300), window.setTimeout(measure, 1000)];
+    return () => {
+      cancelAnimationFrame(frame);
+      timers.forEach((timer) => window.clearTimeout(timer));
+    };
+  });
 
   const itemsPerRow = paperColumns;
   const itemsPerPage = itemsPerRow * paperRows;
@@ -335,6 +365,25 @@ const PrintingDialog = ({
             flexDirection: "column",
           }}
         >
+          {/* Out-of-bounds guard rails for the live preview (which is also the print source). */}
+          {invalidGeometry && (
+            <Alert
+              type="error"
+              showIcon
+              style={{ marginBottom: 8 }}
+              message={t("printing.generic.invalidGeometry")}
+              description={t("printing.generic.invalidGeometryHelp")}
+            />
+          )}
+          {!invalidGeometry && contentClipped && (
+            <Alert
+              type="warning"
+              showIcon
+              style={{ marginBottom: 8 }}
+              message={t("printing.generic.contentClipped")}
+              description={t("printing.generic.contentClippedHelp")}
+            />
+          )}
           <div
             style={{
               transform: "translateZ(0)",

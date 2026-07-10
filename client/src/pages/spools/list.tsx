@@ -13,7 +13,7 @@ import {
 } from "@ant-design/icons";
 import { List, TextField, useTable } from "@refinedev/antd";
 import { useInvalidate, useNavigation, useTranslate } from "@refinedev/core";
-import { Button, Grid, Input, message, Modal, Pagination, Space, Table } from "antd";
+import { Button, Grid, Input, message, Modal, Pagination, Space, Table, Tooltip } from "antd";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { HTMLAttributes, Key, useCallback, useMemo, useState } from "react";
@@ -53,7 +53,7 @@ import { useLocations } from "../locations/functions";
 import { bulkPatchSpools, useSpoolBulkEditModal } from "./bulkEdit";
 import { useBulkWeightUpdateModal } from "./bulkWeightUpdate";
 import { setSpoolArchived, useSpoolAdjustModal } from "./functions";
-import { EditableLocationCell, EditableNumberCell, EditableTextCell } from "./inlineEdit";
+import { EditableNumberCell, EditableSelectCell, EditableTextCell } from "../../components/inlineEdit";
 import { ISpool } from "./model";
 import { SpoolGalleryCard } from "./spoolGalleryCard";
 
@@ -205,7 +205,9 @@ export const SpoolList = () => {
   // Load initial state
   const initialState = useInitialTableState(namespace);
 
-  // State for the switch to show archived spools
+  // State for the switch to the archived-spools view. On, the list shows ONLY archived
+  // spools (server-side `archived=true` filter) — mixing archived rows into the active
+  // list made it impossible to review just the archive.
   const [showArchived, setShowArchived] = useSavedState("spoolList-showArchived", false);
 
   // Fetch data from the API
@@ -224,6 +226,7 @@ export const SpoolList = () => {
       meta: {
         queryParams: {
           ["allow_archived"]: showArchived,
+          ...(showArchived ? { archived: true } : {}),
           ...(search ? { search } : {}),
           ...(colorFilter
             ? { color_hex: colorFilter.colorHex, color_similarity_threshold: colorFilter.threshold }
@@ -307,6 +310,23 @@ export const SpoolList = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
   const selectedIds = useMemo(() => selectedRowKeys.map(Number), [selectedRowKeys]);
 
+  // Records of the selected rows, captured at selection time so the totals row can sum a
+  // selection that spans pages (the table only holds the current page's rows).
+  const [selectedRecords, setSelectedRecords] = useState<Map<number, ISpoolCollapsed>>(new Map());
+  const onSelectionChange = useCallback((keys: Key[], rows: ISpoolCollapsed[]) => {
+    setSelectedRowKeys(keys);
+    setSelectedRecords((prev) => {
+      const next = new Map(prev);
+      // antd hands `undefined` for preserved keys whose rows are on other pages.
+      rows.forEach((r) => r && next.set(r.id, r));
+      const selected = new Set(keys.map(Number));
+      for (const id of next.keys()) {
+        if (!selected.has(id)) next.delete(id);
+      }
+      return next;
+    });
+  }, []);
+
   // After a bulk change, refetch the list so the rows reflect the new values and clear the selection.
   const onBulkApplied = useCallback(() => {
     invalidate({ resource: "spool", invalidates: ["list"] });
@@ -364,24 +384,31 @@ export const SpoolList = () => {
       ? (tableProps.pagination.total ?? dataSource.length)
       : dataSource.length;
 
-  // Opt-in totals row (#134). The list is server-paginated, so this sums the currently-shown rows
-  // (labeled as such) rather than the whole filtered set. Off by default to keep the list uncluttered.
-  const [showTotals, setShowTotals] = useSavedState("spoolList-showTotals", false);
-
   // Optional grid/gallery view (#139): large colour tiles for picking a spool by colour. Off by
   // default (table), persisted, so it never changes the default look.
   const [viewMode, setViewMode] = useSavedState<"table" | "grid">("spoolList-viewMode", "table");
+
+  // Always-on totals row (#134): sums the selected spools when a selection exists, otherwise the
+  // currently-shown page (the list is server-paginated, so "everything" isn't loaded client-side).
   const totals = useMemo(() => {
+    const selectionActive = selectedIds.length > 0;
+    // Prefer the live table row over the snapshot taken at selection time, so inline edits
+    // and websocket updates are reflected; the snapshot covers rows on other pages.
+    const rows = selectionActive
+      ? selectedIds
+          .map((id) => dataSource.find((r) => r.id === id) ?? selectedRecords.get(id))
+          .filter((r): r is ISpoolCollapsed => r !== undefined)
+      : dataSource;
     let remaining = 0;
     let used = 0;
     let price = 0;
-    for (const s of dataSource) {
+    for (const s of rows) {
       remaining += s.remaining_weight ?? 0;
       used += s.used_weight ?? 0;
       price += s.price ?? 0;
     }
-    return { count: dataSource.length, remaining, used, price };
-  }, [dataSource]);
+    return { selectionActive, count: rows.length, remaining, used, price };
+  }, [dataSource, selectedIds, selectedRecords]);
 
   // Function for opening an ant design modal that asks for confirmation for archiving a spool
   const archiveSpool = async (spool: ISpoolCollapsed, archive: boolean) => {
@@ -498,76 +525,88 @@ export const SpoolList = () => {
               setCurrentPage(1);
             }}
           />
-          <Button
-            type="primary"
-            icon={<PrinterOutlined />}
-            onClick={() => {
-              if (selectedRowKeys.length > 0) {
-                const params = new URLSearchParams();
-                selectedRowKeys.forEach((key) => params.append("spools", String(key)));
-                // The selection's job is done once it's in the URL; clear it so it
-                // doesn't linger when the user returns from printing.
+          <Tooltip title={t("printing.qrcode.tooltip")}>
+            <Button
+              type="primary"
+              icon={<PrinterOutlined />}
+              onClick={() => {
+                if (selectedRowKeys.length > 0) {
+                  const params = new URLSearchParams();
+                  selectedRowKeys.forEach((key) => params.append("spools", String(key)));
+                  // The selection's job is done once it's in the URL; clear it so it
+                  // doesn't linger when the user returns from printing.
+                  setSelectedRowKeys([]);
+                  navigate(`print?${params.toString()}`);
+                } else {
+                  navigate("print");
+                }
+              }}
+            >
+              {t("printing.qrcode.button")}
+            </Button>
+          </Tooltip>
+          <Tooltip title={t("spool.weigh.tooltip")}>
+            <Button icon={<ToolOutlined />} onClick={openBulkWeightUpdate}>
+              {t("spool.weigh.button")}
+            </Button>
+          </Tooltip>
+          <Tooltip title={showArchived ? t("buttons.hideArchivedTooltip") : t("buttons.showArchivedTooltip")}>
+            <Button
+              icon={<InboxOutlined />}
+              type={showArchived ? "primary" : "default"}
+              ghost={showArchived}
+              onClick={() => {
+                // The two views are disjoint sets, so a carried-over selection or page
+                // number would be meaningless (or point past the end) in the other view.
+                setShowArchived(!showArchived);
                 setSelectedRowKeys([]);
-                navigate(`print?${params.toString()}`);
-              } else {
-                navigate("print");
-              }
-            }}
-          >
-            {t("printing.qrcode.button")}
-          </Button>
-          <Button icon={<ToolOutlined />} onClick={openBulkWeightUpdate}>
-            {t("spool.weigh.button")}
-          </Button>
-          <Button
-            icon={<InboxOutlined />}
-            onClick={() => {
-              setShowArchived(!showArchived);
-            }}
-          >
-            {showArchived ? t("buttons.hideArchived") : t("buttons.showArchived")}
-          </Button>
-          <Button
-            icon={<FilterOutlined />}
-            onClick={() => {
-              setFilters([], "replace");
-              setSorters([{ field: "id", order: "asc" }]);
-              setCurrentPage(1);
-            }}
-          >
-            {t("buttons.clearFilters")}
-          </Button>
+                setCurrentPage(1);
+              }}
+            >
+              {showArchived ? t("buttons.hideArchived") : t("buttons.showArchived")}
+            </Button>
+          </Tooltip>
+          <Tooltip title={t("buttons.clearFiltersTooltip")}>
+            <Button
+              icon={<FilterOutlined />}
+              onClick={() => {
+                setFilters([], "replace");
+                setSorters([{ field: "id", order: "asc" }]);
+                setCurrentPage(1);
+              }}
+            >
+              {t("buttons.clearFilters")}
+            </Button>
+          </Tooltip>
           {/* Grid/table view toggle (#139). */}
-          <Button
-            icon={viewMode === "grid" ? <UnorderedListOutlined /> : <AppstoreOutlined />}
-            onClick={() => setViewMode(viewMode === "grid" ? "table" : "grid")}
-          >
-            {viewMode === "grid" ? t("spool.view.table") : t("spool.view.grid")}
-          </Button>
-          {/* Column manager and totals only apply to the table, so hide them in grid view. */}
+          <Tooltip title={viewMode === "grid" ? t("spool.view.table_tooltip") : t("spool.view.grid_tooltip")}>
+            <Button
+              icon={viewMode === "grid" ? <UnorderedListOutlined /> : <AppstoreOutlined />}
+              onClick={() => setViewMode(viewMode === "grid" ? "table" : "grid")}
+            >
+              {viewMode === "grid" ? t("spool.view.table") : t("spool.view.grid")}
+            </Button>
+          </Tooltip>
+          {/* The column manager only applies to the table, so hide it in grid view. */}
           {viewMode === "table" && (
-            <>
-              <ColumnManager
-                buttonLabel={t("buttons.hideColumns")}
-                visible={showColumns}
-                onVisibleChange={setShowColumns}
-                onReorder={moveColumn}
-                columns={effectiveOrder.map((column_id) => {
-                  if (column_id.indexOf("filament.extra.") === 0) {
-                    const field = filamentExtraFields.data?.find((f) => "filament.extra." + f.key === column_id);
-                    return { id: column_id, label: field ? filamentColumnLabel(field.name) : column_id };
-                  }
-                  if (column_id.indexOf("extra.") === 0) {
-                    const extraField = extraFields.data?.find((field) => "extra." + field.key === column_id);
-                    return { id: column_id, label: extraField?.name ?? column_id };
-                  }
-                  return { id: column_id, label: t(translateColumnI18nKey(column_id)) };
-                })}
-              />
-              <Button onClick={() => setShowTotals(!showTotals)}>
-                {showTotals ? t("spool.totals.hide") : t("spool.totals.show")}
-              </Button>
-            </>
+            <ColumnManager
+              buttonLabel={t("buttons.columns")}
+              buttonTooltip={t("buttons.columnsTooltip")}
+              visible={showColumns}
+              onVisibleChange={setShowColumns}
+              onReorder={moveColumn}
+              columns={effectiveOrder.map((column_id) => {
+                if (column_id.indexOf("filament.extra.") === 0) {
+                  const field = filamentExtraFields.data?.find((f) => "filament.extra." + f.key === column_id);
+                  return { id: column_id, label: field ? filamentColumnLabel(field.name) : column_id };
+                }
+                if (column_id.indexOf("extra.") === 0) {
+                  const extraField = extraFields.data?.find((field) => "extra." + field.key === column_id);
+                  return { id: column_id, label: extraField?.name ?? column_id };
+                }
+                return { id: column_id, label: t(translateColumnI18nKey(column_id)) };
+              })}
+            />
           )}
           {defaultButtons}
         </>
@@ -585,12 +624,17 @@ export const SpoolList = () => {
           <Button icon={<EditOutlined />} onClick={() => openBulkEdit(selectedIds)}>
             {t("spool.bulk.edit")}
           </Button>
-          <Button icon={<InboxOutlined />} onClick={() => bulkArchive(true)}>
-            {t("buttons.archive")}
-          </Button>
-          <Button icon={<ToTopOutlined />} onClick={() => bulkArchive(false)}>
-            {t("buttons.unArchive")}
-          </Button>
+          {/* The archived view lists only archived spools and the active view only active ones,
+              so exactly one of the two transitions is meaningful at a time. */}
+          {showArchived ? (
+            <Button icon={<ToTopOutlined />} onClick={() => bulkArchive(false)}>
+              {t("buttons.unArchive")}
+            </Button>
+          ) : (
+            <Button icon={<InboxOutlined />} onClick={() => bulkArchive(true)}>
+              {t("buttons.archive")}
+            </Button>
+          )}
           <Button type="text" onClick={() => setSelectedRowKeys([])}>
             {t("spool.bulk.clear_selection")}
           </Button>
@@ -622,37 +666,38 @@ export const SpoolList = () => {
           tableLayout="auto"
           scroll={{ x: "max-content" }}
           components={{ header: { cell: ResizableHeaderCell } }}
-          summary={
-            showTotals
-              ? () => (
-                  <Table.Summary>
-                    <Table.Summary.Row>
-                      {/* Server-paginated, so this totals the shown rows (labeled as such). One spanning
-                        cell keeps the row robust against column reorder/resize/visibility. #134 */}
-                      <Table.Summary.Cell index={0} colSpan={showColumns.length + 2}>
-                        <Space split="·" wrap>
-                          <span>{t("spool.totals.shown", { count: totals.count })}</span>
-                          <span>
-                            {t("spool.fields.remaining_weight")}: {formatWeight(totals.remaining)}
-                          </span>
-                          <span>
-                            {t("spool.fields.used_weight")}: {formatWeight(totals.used)}
-                          </span>
-                          <span>
-                            {t("spool.fields.price")}: {currencyFormatter.format(totals.price)}
-                          </span>
-                        </Space>
-                      </Table.Summary.Cell>
-                    </Table.Summary.Row>
-                  </Table.Summary>
-                )
-              : undefined
-          }
+          summary={() => (
+            <Table.Summary>
+              <Table.Summary.Row>
+                {/* Totals for the selection when one exists, else the shown page (server-paginated,
+                    so the whole filtered set isn't client-side). One spanning cell keeps the row
+                    robust against column reorder/resize/visibility. #134 */}
+                <Table.Summary.Cell index={0} colSpan={showColumns.length + 2}>
+                  <Space split="·" wrap>
+                    <span>
+                      {totals.selectionActive
+                        ? t("spool.totals.selected", { count: totals.count })
+                        : t("spool.totals.shown", { count: totals.count })}
+                    </span>
+                    <span>
+                      {t("spool.fields.remaining_weight")}: {formatWeight(totals.remaining)}
+                    </span>
+                    <span>
+                      {t("spool.fields.used_weight")}: {formatWeight(totals.used)}
+                    </span>
+                    <span>
+                      {t("spool.fields.price")}: {currencyFormatter.format(totals.price)}
+                    </span>
+                  </Space>
+                </Table.Summary.Cell>
+              </Table.Summary.Row>
+            </Table.Summary>
+          )}
           dataSource={dataSource}
           rowKey="id"
           rowSelection={{
             selectedRowKeys,
-            onChange: setSelectedRowKeys,
+            onChange: onSelectionChange,
             preserveSelectedRowKeys: true,
           }}
           // Make archived rows greyed out
@@ -730,7 +775,8 @@ export const SpoolList = () => {
                   width: 80,
                   render: (_, obj: ISpoolCollapsed) => (
                     <EditableNumberCell
-                      spoolId={obj.id}
+                      resource="spool"
+                      recordId={obj.id}
                       field="price"
                       editable={inlineEditEnabled}
                       messageApi={messageApi}
@@ -751,7 +797,8 @@ export const SpoolList = () => {
                   width: 110,
                   render: (_, obj: ISpoolCollapsed) => (
                     <EditableNumberCell
-                      spoolId={obj.id}
+                      resource="spool"
+                      recordId={obj.id}
                       field="used_weight"
                       editable={inlineEditEnabled}
                       messageApi={messageApi}
@@ -782,7 +829,8 @@ export const SpoolList = () => {
                   width: 110,
                   render: (_, obj: ISpoolCollapsed) => (
                     <EditableNumberCell
-                      spoolId={obj.id}
+                      resource="spool"
+                      recordId={obj.id}
                       field="remaining_weight"
                       editable={inlineEditEnabled}
                       messageApi={messageApi}
@@ -841,8 +889,9 @@ export const SpoolList = () => {
                   filterValueQuery: locationFilterQuery,
                   width: 120,
                   render: (_, obj: ISpoolCollapsed) => (
-                    <EditableLocationCell
-                      spoolId={obj.id}
+                    <EditableSelectCell
+                      resource="spool"
+                      recordId={obj.id}
                       field="location"
                       editable={inlineEditEnabled}
                       messageApi={messageApi}
@@ -900,7 +949,8 @@ export const SpoolList = () => {
                   width: 150,
                   render: (_, obj: ISpoolCollapsed) => (
                     <EditableTextCell
-                      spoolId={obj.id}
+                      resource="spool"
+                      recordId={obj.id}
                       field="comment"
                       editable={inlineEditEnabled}
                       messageApi={messageApi}

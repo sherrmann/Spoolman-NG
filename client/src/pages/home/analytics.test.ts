@@ -5,6 +5,7 @@ import { ISpool } from "../spools/model";
 import { IVendor } from "../vendors/model";
 import {
   DEFAULT_TOTAL_WEIGHT,
+  distinctMaterialCount,
   getColorHex,
   getFilamentName,
   getSpoolName,
@@ -80,12 +81,81 @@ describe("totalRemainingWeight", () => {
 });
 
 describe("totalValue", () => {
-  it("sums prices and ignores spools without a price", () => {
-    expect(totalValue([spool({ price: 10 }), spool({}), spool({ price: 5.5 })])).toBe(15.5);
+  it("scales each spool's price by its remaining fraction (hand-computed)", () => {
+    // 10 € spool, half used → worth 5 €.
+    expect(totalValue([spool({ price: 10, initial_weight: 1000, remaining_weight: 500 })])).toBe(5);
+    // 20 € spool, three quarters used → worth 5 €.
+    expect(totalValue([spool({ price: 20, initial_weight: 1000, remaining_weight: 250 })])).toBe(5);
+  });
+
+  it("falls back to the filament price when the spool has none (spool price wins otherwise)", () => {
+    // No spool price → the filament's 20 € applies: 20 × 250/1000 = 5 €.
+    expect(
+      totalValue([spool({ initial_weight: 1000, remaining_weight: 250, filament: filament({ price: 20 }) })]),
+    ).toBe(5);
+    // Both set → the spool's own 10 € wins over the filament's 99 €: 10 × 500/1000 = 5 €.
+    expect(
+      totalValue([
+        spool({ price: 10, initial_weight: 1000, remaining_weight: 500, filament: filament({ price: 99 }) }),
+      ]),
+    ).toBe(5);
+  });
+
+  it("uses filament.weight as the denominator when initial_weight is absent", () => {
+    // 16 € spool of an 800 g filament with 200 g left → 16 × 200/800 = 4 €.
+    expect(totalValue([spool({ price: 16, remaining_weight: 200, filament: filament({ weight: 800 }) })])).toBe(4);
+  });
+
+  it("counts a spool with no weight information as full", () => {
+    expect(totalValue([spool({ price: 12 })])).toBe(12);
+  });
+
+  it("clamps the remaining fraction to 0..1", () => {
+    // Over-full (bad data) still counts at most the full price…
+    expect(totalValue([spool({ price: 10, initial_weight: 1000, remaining_weight: 2000 })])).toBe(10);
+    // …and over-used never goes negative.
+    expect(totalValue([spool({ price: 10, initial_weight: 1000, remaining_weight: -50 })])).toBe(0);
+  });
+
+  it("ignores spools without a price anywhere and sums the rest", () => {
+    const spools = [
+      spool({ price: 10, initial_weight: 1000, remaining_weight: 500 }), // 5
+      spool({ initial_weight: 1000, remaining_weight: 1000 }), // no price → 0
+      spool({ price: 5.5 }), // full → 5.5
+    ];
+    expect(totalValue(spools)).toBe(10.5);
   });
 
   it("is 0 for an empty inventory", () => {
     expect(totalValue([])).toBe(0);
+  });
+
+  it("never exceeds the inventory's full purchase value (invariant)", () => {
+    const spools = [
+      spool({ price: 10, initial_weight: 1000, remaining_weight: 700 }),
+      spool({ price: 30, initial_weight: 1000, remaining_weight: 100 }),
+      spool({ initial_weight: 500, remaining_weight: 400, filament: filament({ price: 25 }) }),
+    ];
+    const fullPurchase = 10 + 30 + 25;
+    expect(totalValue(spools)).toBeLessThanOrEqual(fullPurchase);
+    expect(totalValue(spools)).toBe(10 * 0.7 + 30 * 0.1 + 25 * 0.8);
+  });
+});
+
+describe("distinctMaterialCount", () => {
+  it("counts each material once, ignoring filaments without one", () => {
+    const filaments = [
+      filament({ material: "PLA" }),
+      filament({ material: "PLA" }),
+      filament({ material: "PETG" }),
+      filament({}), // no material → not counted
+      filament({ material: "" }), // empty string → not counted
+    ];
+    expect(distinctMaterialCount(filaments)).toBe(2);
+  });
+
+  it("is 0 for an empty catalog", () => {
+    expect(distinctMaterialCount([])).toBe(0);
   });
 });
 

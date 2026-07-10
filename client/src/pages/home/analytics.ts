@@ -27,9 +27,28 @@ export function totalRemainingWeight(spools: ISpool[]): number {
   return spools.reduce((sum, s) => sum + spoolStockWeight(s), 0);
 }
 
-/** Total monetary value across all spools; spools without a price contribute nothing. */
+/** Effective full-spool price of one spool: its own price, falling back to its filament's. */
+function effectiveSpoolPrice(s: ISpool): number | undefined {
+  return s.price ?? s.filament.price;
+}
+
+/**
+ * Estimated value of the filament currently in stock. Each spool contributes its effective
+ * price (spool price, else filament price — the same fallback the backend applies when sorting
+ * and costing) scaled by its remaining fraction, so a half-used spool counts half its price.
+ * Spools with no weight information count as full; spools with no price anywhere contribute 0.
+ */
 export function totalValue(spools: ISpool[]): number {
-  return spools.reduce((sum, s) => sum + (s.price ?? 0), 0);
+  return spools.reduce((sum, s) => {
+    const price = effectiveSpoolPrice(s);
+    if (price == null) return sum;
+    return sum + price * Math.min(1, Math.max(0, remainingFraction(s)));
+  }, 0);
+}
+
+/** Number of distinct materials across the filament catalog; filaments without one don't count. */
+export function distinctMaterialCount(filaments: IFilament[]): number {
+  return new Set(filaments.map((f) => f.material).filter((m): m is string => !!m)).size;
 }
 
 /** Remaining stock fraction of one spool; a missing remaining weight counts as a full spool. */

@@ -1,4 +1,5 @@
 import { useInvalidate, useTranslate } from "@refinedev/core";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button, Form, InputNumber, Modal, Radio, Select, Typography } from "antd";
 import { useForm } from "antd/es/form/Form";
 import type { MessageInstance } from "antd/es/message/interface";
@@ -34,6 +35,7 @@ function spoolLabel(s: ISpool): string {
 export function useBulkWeightUpdateModal(messageApi: MessageInstance) {
   const t = useTranslate();
   const invalidate = useInvalidate();
+  const queryClient = useQueryClient();
   const [form] = useForm();
   const [open, setOpen] = useState(false);
   // Share the persisted measurement mode with the per-row Adjust dialog so the user's choice is
@@ -87,7 +89,9 @@ export function useBulkWeightUpdateModal(messageApi: MessageInstance) {
         await useSpoolFilamentMeasure(selected, value);
       }
       messageApi.success(t("spool.weigh.updated", { name: spoolLabel(selected) }));
-      invalidate({ resource: "spool", invalidates: ["list"] });
+      invalidate({ resource: "spool", id: selected.id, invalidates: ["list", "detail"] });
+      // Keep the spool's usage log fresh too, so its show page reflects this weigh-in.
+      void queryClient.invalidateQueries({ queryKey: ["spool", selected.id, "events"] });
       // Save & next: clear the spool and value, keep the dialog open, and refocus for the next one.
       setSelected(null);
       form.setFieldsValue({ spool: undefined, value: undefined });
@@ -96,7 +100,7 @@ export function useBulkWeightUpdateModal(messageApi: MessageInstance) {
     } finally {
       setSubmitting(false);
     }
-  }, [selected, measurementType, form, messageApi, invalidate, fetchSpools, t]);
+  }, [selected, measurementType, form, messageApi, invalidate, queryClient, fetchSpools, t]);
 
   const bulkWeightUpdateModal = useMemo(() => {
     if (!open) {

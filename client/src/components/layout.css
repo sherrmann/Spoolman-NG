@@ -69,3 +69,15 @@
     padding-inline: 8px !important;
   }
 }
+
+/* Clickable row-name affordance: pointer + hover underline, but the surrounding text
+   colour — a blue link amid plain cells read as the odd column out. */
+.cell-clickable-name.ant-typography {
+  color: inherit;
+}
+
+.cell-clickable-name.ant-typography:hover,
+.cell-clickable-name.ant-typography:focus-visible {
+  color: inherit;
+  text-decoration: underline;
+}

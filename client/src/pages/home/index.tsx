@@ -27,6 +27,7 @@ import { IFilament } from "../filaments/model";
 import { ISpool } from "../spools/model";
 import { IVendor } from "../vendors/model";
 import {
+  distinctMaterialCount,
   getColorHex,
   getFilamentName,
   getSpoolName,
@@ -178,24 +179,19 @@ export const Home = () => {
 
   return (
     <div className="dashboard">
-      {/* Header */}
+      {/* Header: just the create-action cluster — the nav already says where we are, so the
+          page skips a redundant "Home" title and goes straight to the KPIs. */}
       <div className="dashboard-header">
-        <div>
-          <h2>{t("home.home")}</h2>
-          <p className="dash-subtitle">
-            {t("home.telemetry_subtitle") || "Real-time status of your filament inventory."}
-          </p>
-        </div>
         <div className="dash-create-group">
           <span className="dash-create-label">{t("buttons.create")}</span>
           <Space.Compact>
-            <Tooltip title={t("home.create.spool", "New spool")}>
+            <Tooltip title={t("home.create.spool")}>
               <Button type="primary" icon={<DatabaseOutlined />} onClick={() => navigate("/spool/create")} />
             </Tooltip>
-            <Tooltip title={t("home.create.filament", "New filament")}>
+            <Tooltip title={t("home.create.filament")}>
               <Button type="primary" icon={<HighlightOutlined />} onClick={() => navigate("/filament/create")} />
             </Tooltip>
-            <Tooltip title={t("home.create.vendor", "New manufacturer")}>
+            <Tooltip title={t("home.create.vendor")}>
               <Button type="primary" icon={<ShopOutlined />} onClick={() => navigate("/vendor/create")} />
             </Tooltip>
           </Space.Compact>
@@ -210,7 +206,7 @@ export const Home = () => {
           <div className="kpi-value">{allSpools.length}</div>
           <div className="kpi-footer" style={{ color: isDark ? "#6ded00" : "#16a34a" }}>
             <span>
-              +{registeredWithinDays(allSpools, 30)} {t("home.kpi.this_month", "this month")}
+              +{registeredWithinDays(allSpools, 30)} {t("home.kpi.this_month")}
             </span>
           </div>
         </Link>
@@ -220,7 +216,7 @@ export const Home = () => {
           <div className="kpi-label">{t("filament.filament")}</div>
           <div className="kpi-value">{filaments.result?.total ?? 0}</div>
           <div className="kpi-footer" style={{ color: isDark ? "#00e3fd" : "#0891b2" }}>
-            <span>{t("home.kpi.all_synced", "all synced")}</span>
+            <span>{t("home.kpi.materials", { count: distinctMaterialCount(allFilaments) })}</span>
           </div>
         </Link>
 
@@ -229,7 +225,7 @@ export const Home = () => {
           <div className="kpi-label">{t("vendor.vendor")}</div>
           <div className="kpi-value">{vendors.result?.total ?? 0}</div>
           <div className="kpi-footer" style={{ opacity: 0.4 }}>
-            {t("home.kpi.top", "top")}: {topVendor}
+            {t("home.kpi.top")}: {topVendor}
           </div>
         </Link>
 

@@ -8,7 +8,6 @@
     "edit": "Bewerken",
     "showArchived": "Gearchiveerd tonen",
     "archive": "Archiveren",
-    "hideColumns": "Kolommen verbergen",
     "confirm": "Weet u het zeker?",
     "delete": "Verwijderen",
     "undo": "Ongedaan maken",
@@ -404,7 +403,6 @@
     "no_recent": "Geen recent gebruikte spoelen",
     "by_material": "Per materiaal",
     "by_location": "Per locatie",
-    "telemetry_subtitle": "Realtime status van je filamentvoorraad.",
     "by_vendor": "Per fabrikant"
   },
   "settings": {

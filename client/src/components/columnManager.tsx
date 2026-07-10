@@ -1,5 +1,5 @@
-import { EditOutlined, HolderOutlined } from "@ant-design/icons";
-import { Button, Checkbox, Popover } from "antd";
+import { ControlOutlined, HolderOutlined } from "@ant-design/icons";
+import { Button, Checkbox, Popover, Tooltip } from "antd";
 import { useRef } from "react";
 import { DndProvider, useDrag, useDrop, XYCoord } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -19,6 +19,8 @@ interface Props {
   /** Move the column at `fromIndex` to `toIndex` within the effective order (#94). */
   onReorder: (fromIndex: number, toIndex: number) => void;
   buttonLabel: string;
+  /** Optional hover hint on the trigger button. */
+  buttonTooltip?: string;
 }
 
 const DND_TYPE = "column-manager-item";
@@ -99,7 +101,7 @@ function DraggableRow({
  * to reorder; toggle the checkbox to show/hide. Kept self-contained (its own DndProvider) so it needs
  * no changes to the table's own header rendering.
  */
-export function ColumnManager({ columns, visible, onVisibleChange, onReorder, buttonLabel }: Props) {
+export function ColumnManager({ columns, visible, onVisibleChange, onReorder, buttonLabel, buttonTooltip }: Props) {
   const toggle = (id: string, checked: boolean) => {
     onVisibleChange(checked ? [...visible, id] : visible.filter((c) => c !== id));
   };
@@ -123,7 +125,9 @@ export function ColumnManager({ columns, visible, onVisibleChange, onReorder, bu
 
   return (
     <Popover content={content} trigger="click" placement="bottomRight">
-      <Button icon={<EditOutlined />}>{buttonLabel}</Button>
+      <Tooltip title={buttonTooltip}>
+        <Button icon={<ControlOutlined />}>{buttonLabel}</Button>
+      </Tooltip>
     </Popover>
   );
 }
