@@ -15,6 +15,33 @@ export interface ScanTarget {
 const PREFIX: Record<ScanResource, string> = { spool: "S", filament: "F", location: "L" };
 
 /**
+ * The reserved "clear the active spool" sentinel (#132). Spoolman itself has no notion of an active
+ * spool — that state is owned by external consumers such as Moonraker — so this is purely a documented
+ * convention so different integrations (barcode scanners feeding a printer, ESPHome bridges, …) agree
+ * on one value instead of each inventing their own. The in-app scanner recognises it so it is
+ * acknowledged rather than silently ignored.
+ */
+export const CLEAR_PAYLOAD = "WEB+SPOOLMAN:CLEAR";
+
+/** Whether a scanned value is the reserved clear-spool sentinel (#132), case-insensitively. */
+export function isClearScan(raw: string): boolean {
+  return raw.trim().toLowerCase() === CLEAR_PAYLOAD.toLowerCase();
+}
+
+// Retail UPC/EAN/GTIN barcodes are all-digit strings of these fixed lengths (EAN-8, UPC-A/UPC-E→12,
+// EAN-13, GTIN-14).
+const RETAIL_BARCODE_LENGTHS = new Set([8, 12, 13, 14]);
+
+/**
+ * Whether an (unrecognised-as-Spoolman) scan looks like a manufacturer retail barcode (#97b), so it
+ * can trigger an article-number lookup-or-create instead of being ignored. Pure and testable.
+ */
+export function looksLikeRetailBarcode(raw: string): boolean {
+  const value = raw.trim();
+  return /^[0-9]+$/.test(value) && RETAIL_BARCODE_LENGTHS.has(value.length);
+}
+
+/**
  * Build the QR payload for a spool/filament, matching what the print dialogs emit.
  *
  * With no baseUrl this yields the custom scheme `WEB+SPOOLMAN:S-<id>` / `...:F-<id>`.

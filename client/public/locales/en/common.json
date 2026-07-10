@@ -236,11 +236,22 @@
       "confirm_content": "Move spool #{{spool}} to \"{{location}}\"?",
       "moved": "Moved spool #{{spool}} to \"{{location}}\".",
       "load_error": "Failed to load the scanned location."
+    },
+    "clear": {
+      "recognized": "Clear-spool code recognized. Spoolman has no active spool; your printer or Moonraker integration handles clearing it."
+    },
+    "barcode": {
+      "unknown_title": "Unknown barcode",
+      "unknown_content": "No filament has the barcode {{code}}. Create a filament and remember this barcode?",
+      "create_filament": "Create filament",
+      "lookup_error": "Could not look up that barcode."
     }
   },
   "scanner": {
     "title": "QR Code Scanner",
     "description": "Scan a Spoolman QR code to view details about the spool.",
+    "camera_auto": "Automatic camera",
+    "camera_n": "Camera {{n}}",
     "error": {
       "notAllowed": "You have not allowed access to the camera.",
       "insecureContext": "The page is not served over HTTPS.",
