@@ -808,6 +808,15 @@ jobs:
           ver="${GITHUB_REF_NAME#v}"
           sed -i "s/^version: \".*\"$/version: \"${ver}\"/" spoolman_ng/config.yaml
           sed -i -E "s|(ghcr\.io/sherrmann/spoolman-ng:)[^[:space:]]+|\1${ver}|g" spoolman_ng/build.yaml
+          # Keep the add-on's Changelog tab current: insert this release's section before the
+          # first existing one (idempotent — skipped when the section already exists).
+          if [ -f spoolman_ng/CHANGELOG.md ] && ! grep -q "^## ${ver}\$" spoolman_ng/CHANGELOG.md; then
+            awk -v ver="${ver}" '
+              /^## / && !done { printf "## %s\n\n- Server changes: <https://github.com/sherrmann/Spoolman-NG/releases/tag/v%s>\n\n", ver, ver; done=1 }
+              { print }
+            ' spoolman_ng/CHANGELOG.md > /tmp/addon-changelog.md
+            mv /tmp/addon-changelog.md spoolman_ng/CHANGELOG.md
+          fi
           if git diff --quiet; then
             echo "Add-on already at ${ver}; nothing to push."
             exit 0
