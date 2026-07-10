@@ -4,6 +4,7 @@
 
 ## Unreleased
 
+- **Fixed: auth blocked every intended-open endpoint on real deployments.** With an API token or user accounts configured, `/api/v1/health`, `/docs`, `/redoc`, `/auth/status` and even `/auth/login` returned 401 — making password login impossible and breaking health monitoring. The middleware compared its sub-app-relative open-path list against the full request path (Starlette keeps the mount prefix in `root_path`); the unit harness drove the app unmounted, which is why tests stayed green. Found by the Home Assistant add-on live-testing round; now covered by mounted-app regression tests including `SPOOLMAN_BASE_PATH` prefixes.
 - **Home Assistant add-on moved to a dedicated repository**: [`sherrmann/spoolman-ng-addons`](https://github.com/sherrmann/spoolman-ng-addons) — Supervisor requires the repository manifest at the git root, so the in-tree `ha-addon/` packaging could only ever be installed by manual copy. The add-on is now installable by URL from the HA add-on store, and every release pushes a matching version bump there so updates appear in the HA UI automatically.
 
 ## [2026.7.6] — 2026-07-10

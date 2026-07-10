@@ -18,7 +18,7 @@ TOKEN = "s3cr3t-token"  # noqa: S105 — test fixture token, not a real secret
 SECRET = b"a-test-signing-secret-0123456789"
 
 
-def _make_client(state: AuthState) -> TestClient:
+def _make_app(state: AuthState) -> FastAPI:
     app = FastAPI()
 
     @app.get("/health")
@@ -45,7 +45,25 @@ def _make_client(state: AuthState) -> TestClient:
         await websocket.close()
 
     app.add_middleware(AuthMiddleware, state=state)
-    return TestClient(app)
+    return app
+
+
+def _make_client(state: AuthState) -> TestClient:
+    return TestClient(_make_app(state))
+
+
+def _make_mounted_client(state: AuthState, prefix: str = "/api/v1") -> TestClient:
+    """Client for the auth-wrapped app MOUNTED under a prefix, as main.py deploys it.
+
+    Starlette keeps the FULL request path in scope["path"] for mounted apps (the mount
+    prefix moves to root_path), so only this harness catches the bug class where the
+    middleware compared its sub-app-relative open-path lists against full paths —
+    passing every unmounted test above while 401-ing health/docs/auth/login in the
+    real server whenever a token or account was configured.
+    """
+    root = FastAPI()
+    root.mount(prefix, _make_app(state))
+    return TestClient(root)
 
 
 def _auth(token: str) -> dict:
@@ -95,6 +113,46 @@ def test_websocket_accepts_a_valid_query_token(token_client: TestClient):
 def test_websocket_rejects_a_missing_token(token_client: TestClient):
     with pytest.raises(WebSocketDisconnect), token_client.websocket_connect("/") as ws:
         ws.receive_json()
+
+
+# --- mounted under /api/v1, as in production (regression for the open-path 401s) ---
+
+
+@pytest.fixture
+def mounted_token_client() -> TestClient:
+    return _make_mounted_client(AuthState(static_token=TOKEN))
+
+
+def test_mounted_health_is_open_without_a_token(mounted_token_client: TestClient):
+    resp = mounted_token_client.get("/api/v1/health")
+    assert resp.status_code == 200
+    assert resp.json() == {"status": "healthy"}
+
+
+def test_mounted_docs_are_open_without_a_token(mounted_token_client: TestClient):
+    assert mounted_token_client.get("/api/v1/openapi.json").status_code == 200
+    assert mounted_token_client.get("/api/v1/docs").status_code == 200
+
+
+def test_mounted_login_is_open_when_accounts_enabled():
+    client = _make_mounted_client(AuthState(signing_secret=SECRET, accounts_enabled=True))
+    assert client.post("/api/v1/auth/login").status_code == 200
+
+
+def test_mounted_protected_route_still_401s_without_a_token(mounted_token_client: TestClient):
+    assert mounted_token_client.get("/api/v1/spool").status_code == 401
+
+
+def test_mounted_protected_route_200s_with_the_token(mounted_token_client: TestClient):
+    assert mounted_token_client.get("/api/v1/spool", headers=_auth(TOKEN)).status_code == 200
+
+
+def test_mounted_open_paths_respect_a_base_path_prefix():
+    # SPOOLMAN_BASE_PATH deployments mount the v1 app at "<base>/api/v1" (main.py); the
+    # open-path matching must strip that whole prefix, whatever it is.
+    client = _make_mounted_client(AuthState(static_token=TOKEN), prefix="/spoolman/api/v1")
+    assert client.get("/spoolman/api/v1/health").status_code == 200
+    assert client.get("/spoolman/api/v1/spool").status_code == 401
 
 
 # --- default (no auth configured) -------------------------------------------
