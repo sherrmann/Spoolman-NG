@@ -23,7 +23,12 @@ tests_integration
 # Home Assistant add-on packaging (#89) — packaged separately, not part of the server image
 ha-addon
 
-# Environment files (keep the example for reference)
+# Environment files (keep the example for reference). dockerignore patterns are anchored to
+# the context root, so the client's env files need their own entries — without them a local
+# developer client/.env (any VITE_* vars) silently bakes into locally built images. The
+# image's own .env.production is generated inside the client-builder stage after the COPY.
 .env
 .env.*
 !.env.example
+client/.env
+client/.env.*

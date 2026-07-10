@@ -1,6 +1,13 @@
 name: Generate and deploy API documentation
 
 on:
+  # Deploy on release-tag pushes. A `release: published` trigger alone never fires here:
+  # the release is created by ci.yml with the default GITHUB_TOKEN, and GitHub suppresses
+  # workflow runs for events created with that token — so the docs silently went stale on
+  # every release until someone remembered workflow_dispatch.
+  push:
+    tags:
+      - "v*"
   release:
     types: [published]
   workflow_dispatch:

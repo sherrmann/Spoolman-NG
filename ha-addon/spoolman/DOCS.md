@@ -9,10 +9,15 @@ Assistant OS.
 
 ## Installation
 
-1. Add this repository to the add-on store (**Settings → Add-ons → Add-on Store → ⋮ → Repositories**):
-   `https://github.com/sherrmann/Spoolman-NG`
-2. Install **Spoolman NG** and start it.
-3. Open the web UI on port `8000` of your Home Assistant host.
+Supervisor only accepts add-on repositories whose manifest sits at the root of the git repository,
+so install this packaging as a **local add-on**:
+
+1. Enable the Samba or SSH add-on and copy the `ha-addon/spoolman` directory from the
+   Spoolman-NG repository into `/addons/spoolman_ng` on the Home Assistant host.
+2. In **Settings → Add-ons → Add-on Store**, open the ⋮ menu and pick **Check for updates**;
+   **Spoolman NG** appears under *Local add-ons*.
+3. Install and start it.
+4. Open the web UI on port `8000` of your Home Assistant host.
 
 ## Data
 
