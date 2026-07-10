@@ -36,6 +36,10 @@ export function useGetSettings() {
 export function useGetSetting(key: string) {
   return useQuery<SettingResponseValue>({
     queryKey: ["settings", key],
+    // Settings change only through useSetSetting, which invalidates this exact key — so a
+    // fresh-for-a-minute cache saves the refetch burst every page mount otherwise triggers
+    // (currency, units, locations, …) without ever serving a stale value after an edit.
+    staleTime: 60_000,
     queryFn: async () => {
       const response = await apiFetch(`${getAPIURL()}/setting/${key}`);
       return response.json();

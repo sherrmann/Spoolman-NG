@@ -26,7 +26,6 @@
     "hideArchived": "隐藏存档",
     "showArchived": "显示存档",
     "notAccessTitle": "您没有访问权限",
-    "hideColumns": "隐藏列",
     "clearFilters": "清除筛选器",
     "saveAndAdd": "保存并添加",
     "continue": "继续"
@@ -393,7 +392,6 @@
     "no_recent": "没有最近使用的线轴",
     "by_material": "按材料",
     "by_location": "按位置",
-    "telemetry_subtitle": "耗材库存实时状态。",
     "by_vendor": "按制造商"
   },
   "help": {

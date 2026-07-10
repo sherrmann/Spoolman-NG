@@ -219,4 +219,30 @@ test.describe("spool journey", () => {
     // The header now offers to unarchive.
     await expect(page.locator("button").filter({ hasText: /^Unarchive$/ })).toBeVisible();
   });
+
+  test("sibling-spools button opens the list filtered to the same filament", async ({ page, request }) => {
+    // Two spools of one filament, one of another: the button must land on a list that
+    // shows exactly the siblings, proving the URL-hash filter handoff works end-to-end.
+    const filament = await seedFilament(request);
+    const other = await seedFilament(request);
+    const mkSpool = async (filamentId: number) => {
+      const res = await request.post(`${APP_BASE_URL}/api/v1/spool`, {
+        data: { filament_id: filamentId, initial_weight: 1000 },
+      });
+      expect(res.ok()).toBeTruthy();
+      return (await res.json()).id as number;
+    };
+    const spoolA = await mkSpool(filament.id);
+    await mkSpool(filament.id);
+    await mkSpool(other.id);
+
+    await page.goto(`${APP_BASE_URL}/spool/show/${spoolA}`);
+    await page.getByRole("button", { name: "Sibling spools" }).click();
+    await expect(page).toHaveURL(/\/spool#filters=/);
+
+    // Exactly the two spools of the shown spool's filament, and none of the other's.
+    await expect(page.locator("tbody tr.ant-table-row")).toHaveCount(2);
+    await expect(page.locator("tbody tr.ant-table-row").filter({ hasText: filament.name })).toHaveCount(2);
+    await expect(page.locator("tbody tr.ant-table-row").filter({ hasText: other.name })).toHaveCount(0);
+  });
 });

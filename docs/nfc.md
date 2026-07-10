@@ -157,7 +157,7 @@ file:
 ```yaml
 services:
   spoolman:
-    image: ghcr.io/sherrmann/spoolman:latest
+    image: ghcr.io/sherrmann/spoolman-ng:latest
     # ...
     environment:
       - SPOOLMAN_NFC_ENABLED=TRUE

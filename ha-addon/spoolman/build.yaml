@@ -2,6 +2,6 @@
 # be kept in step with config.yaml's version on each release. The published image is a multi-arch
 # manifest, so the same tag resolves to the correct architecture during each per-arch build.
 build_from:
-  amd64: ghcr.io/sherrmann/spoolman:2026.7.5
-  aarch64: ghcr.io/sherrmann/spoolman:2026.7.5
-  armv7: ghcr.io/sherrmann/spoolman:2026.7.5
+  amd64: ghcr.io/sherrmann/spoolman-ng:2026.7.5
+  aarch64: ghcr.io/sherrmann/spoolman-ng:2026.7.5
+  armv7: ghcr.io/sherrmann/spoolman-ng:2026.7.5

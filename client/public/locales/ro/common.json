@@ -20,7 +20,6 @@
     "hideArchived": "ascundeArhivate",
     "showArchived": "Arata arhivate",
     "notAccessTitle": "nu ai permisiune de acces",
-    "hideColumns": "ascunde coloane",
     "clearFilters": "reseteaza filtre",
     "continue": "Continua"
   },
@@ -383,7 +382,6 @@
     "no_recent": "Nicio bobină utilizată recent",
     "by_material": "După material",
     "by_location": "După locație",
-    "telemetry_subtitle": "Starea în timp real a inventarului de filament.",
     "by_vendor": "După producător"
   },
   "scanner": {

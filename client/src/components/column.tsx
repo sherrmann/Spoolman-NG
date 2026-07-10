@@ -507,11 +507,13 @@ export function SpoolIconColumn<Obj extends Entity>(props: SpoolIconColumnProps<
       // Always render the icon (colored or the neutral "?" fallback) so the name
       // text is aligned across rows regardless of whether a color is defined.
       const nameNode = props.clickAffordance ? (
-        // Anchor without href: link styling and pointer cursor, but the click
-        // bubbles to the cell and opens the actions menu as always. It triggers
-        // a menu, not navigation, so expose it as a keyboard-operable button:
+        // Anchor without href: pointer cursor + hover underline (via .cell-clickable-name),
+        // but the surrounding text colour — a blue name amid plain cells read as the odd one
+        // out. The click bubbles to the cell and opens the actions menu as always. It
+        // triggers a menu, not navigation, so expose it as a keyboard-operable button:
         // Enter/Space synthesize the same bubbling click.
         <Typography.Link
+          className="cell-clickable-name"
           role="button"
           tabIndex={0}
           onKeyDown={(e) => {

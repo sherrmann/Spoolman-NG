@@ -10,51 +10,13 @@
   overflow: hidden;
 }
 
-/* Header */
+/* Header — only the create-action cluster, kept on the right where it always sat. */
 .dashboard-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: flex-end;
   margin-bottom: 16px;
   flex-shrink: 0;
-}
-
-.dashboard-header h2 {
-  font-size: 26px;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  margin: 0;
-}
-
-.dashboard-header .dash-subtitle {
-  font-size: 13px;
-  opacity: 0.4;
-  margin: 4px 0 0 0;
-}
-
-.dashboard-header .dash-new-btn {
-  border: none;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  padding: 10px 24px;
-  border-radius: 6px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition:
-    opacity 0.2s,
-    transform 0.1s;
-}
-
-.dashboard-header .dash-new-btn:hover {
-  opacity: 0.9;
-}
-
-.dashboard-header .dash-new-btn:active {
-  transform: scale(0.97);
 }
 
 /* Create button group — a bordered cluster with an explicit "CREATE" label so

@@ -163,7 +163,7 @@ export const VendorList = () => {
               },
             }}
           >
-            <Button icon={<EditOutlined />}>{t("buttons.hideColumns")}</Button>
+            <Button icon={<EditOutlined />}>{t("buttons.columns")}</Button>
           </Dropdown>
           {defaultButtons}
         </>

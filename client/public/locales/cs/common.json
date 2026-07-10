@@ -26,7 +26,6 @@
     "hideArchived": "Skrýt archivované",
     "showArchived": "Zobrazit archivované",
     "notAccessTitle": "Nemáte oprávnění k přístupu",
-    "hideColumns": "Skrýt sloupce",
     "clearFilters": "Vypnout filtry",
     "saveAndAdd": "Uložit a přidat",
     "continue": "Pokračovat"
@@ -406,7 +405,6 @@
     "no_recent": "Žádné nedávno použité cívky",
     "by_material": "Podle materiálu",
     "by_location": "Podle umístění",
-    "telemetry_subtitle": "Stav vašeho inventáře filamentů v reálném čase.",
     "by_vendor": "Podle výrobce"
   },
   "settings": {

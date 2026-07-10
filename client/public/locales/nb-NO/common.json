@@ -7,7 +7,6 @@
     "edit": "Rediger",
     "showArchived": "Vis arkiverte",
     "archive": "Arkiver",
-    "hideColumns": "Skjul kolonner",
     "confirm": "Er du sikker?",
     "delete": "Slett",
     "undo": "Angre",
@@ -395,7 +394,6 @@
     "no_recent": "Ingen nylig brukte spoler",
     "by_material": "Etter materiale",
     "by_location": "Etter plassering",
-    "telemetry_subtitle": "Sanntidsstatus for filamentlageret ditt.",
     "by_vendor": "Etter produsent"
   },
   "help": {

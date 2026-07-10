@@ -13,13 +13,21 @@ without a separate Docker host.
 
 ## Installing
 
-1. In Home Assistant, go to **Settings → Add-ons → Add-on Store**.
-2. From the ⋮ menu, choose **Repositories**, and add:
-   `https://github.com/sherrmann/Spoolman-NG`
-3. The **Spoolman NG** add-on appears under this repository — install it, then start it.
-4. Open the web UI on port `8000` of your Home Assistant host.
+Supervisor only accepts add-on repositories whose manifest sits at the **root** of the git
+repository, so the main Spoolman-NG repo URL cannot be added directly while this packaging lives
+under `ha-addon/`. Install it as a **local add-on** instead:
 
-The add-on builds from the published `ghcr.io/sherrmann/spoolman` image and stores its data
+1. Enable the Samba or SSH add-on so you can reach your Home Assistant `/addons` share.
+2. Copy the `ha-addon/spoolman` directory from this repository into `/addons/spoolman_ng` on the
+   Home Assistant host.
+3. In Home Assistant, go to **Settings → Add-ons → Add-on Store**, open the ⋮ menu and pick
+   **Check for updates** — the **Spoolman NG** add-on appears under *Local add-ons*.
+4. Install and start it, then open the web UI on port `8000` of your Home Assistant host.
+
+(If demand justifies it, a dedicated add-on repository with the manifest at its root can be split
+out so the usual add-a-repository-URL flow works; see issue #89.)
+
+The add-on builds from the published `ghcr.io/sherrmann/spoolman-ng` image and stores its data
 (including the default SQLite database) in the add-on's persistent `/data` volume, so it survives
 restarts and updates. See the add-on's **Documentation** tab (`spoolman/DOCS.md`) for configuration
 options, including pointing it at an external PostgreSQL/MariaDB/CockroachDB.

@@ -1,5 +1,5 @@
-import { useSelect, useTranslate } from "@refinedev/core";
-import { useQueries } from "@tanstack/react-query";
+import { useInvalidate, useSelect, useTranslate } from "@refinedev/core";
+import { useQueries, useQueryClient } from "@tanstack/react-query";
 import { Form, InputNumber, Modal, Radio } from "antd";
 import { useForm } from "antd/es/form/Form";
 import type { InputNumberRef } from "rc-input-number";
@@ -228,6 +228,8 @@ type MeasurementType = "length" | "weight" | "measured_weight";
 export function useSpoolAdjustModal() {
   const t = useTranslate();
   const [form] = useForm();
+  const queryClient = useQueryClient();
+  const invalidate = useInvalidate();
 
   const [curSpool, setCurSpool] = useState<ISpool | null>(null);
   // Persist the consumption mode across sessions so a reload doesn't silently reset it to
@@ -265,6 +267,12 @@ export function useSpoolAdjustModal() {
         await useSpoolFilamentMeasure(curSpool, value);
       }
 
+      // The adjustment changed the spool's counters AND appended to its usage log —
+      // refresh both immediately so the show page's Usage history doesn't lag until
+      // the next full reload.
+      await queryClient.invalidateQueries({ queryKey: ["spool", curSpool.id, "events"] });
+      invalidate({ resource: "spool", id: curSpool.id, invalidates: ["detail", "list"] });
+
       setCurSpool(null);
     };
 
@@ -294,7 +302,7 @@ export function useSpoolAdjustModal() {
         </Form>
       </Modal>
     );
-  }, [curSpool, measurementType, t]);
+  }, [curSpool, measurementType, t, queryClient, invalidate, form]);
 
   return {
     openSpoolAdjustModal,

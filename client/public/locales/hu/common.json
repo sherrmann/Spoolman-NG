@@ -209,7 +209,6 @@
     "edit": "Szerkeszt",
     "showArchived": "Arhiváltak megjelítése",
     "archive": "Arhiválás",
-    "hideColumns": "Oszlopok elrejtése",
     "confirm": "Biztos vagy benne?",
     "delete": "Töröl",
     "undo": "Visszavonás",
@@ -395,7 +394,6 @@
     "no_recent": "Nincsenek nemrég használt orsók",
     "by_material": "Anyag szerint",
     "by_location": "Hely szerint",
-    "telemetry_subtitle": "A filament készleted valós idejű állapota.",
     "by_vendor": "Gyártó szerint"
   },
   "help": {

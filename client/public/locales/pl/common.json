@@ -26,7 +26,6 @@
     "hideArchived": "Ukryj zarchiwizowane",
     "showArchived": "Pokaż zarchiwizowane",
     "notAccessTitle": "Nie masz zezwolenia na dostęp",
-    "hideColumns": "Edytuj kolumny",
     "clearFilters": "Wyczyść filtry",
     "saveAndAdd": "Zapisz i dodaj",
     "continue": "Kontynuuj"
@@ -406,7 +405,6 @@
     "no_recent": "Brak ostatnio używanych szpul",
     "by_material": "Wg materiału",
     "by_location": "Wg lokalizacji",
-    "telemetry_subtitle": "Stan zapasów filamentu w czasie rzeczywistym.",
     "by_vendor": "Wg producenta"
   },
   "settings": {

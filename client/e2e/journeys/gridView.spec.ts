@@ -39,3 +39,33 @@ test.describe("spool grid view", () => {
     await expect(page).toHaveURL(atPath(`/spool/show/${spoolId}`));
   });
 });
+
+test.describe("filament grid view", () => {
+  test("toggle grid view and open a filament tile", async ({ page, request }) => {
+    const marker = `FGRID${Date.now()}`;
+    const filRes = await request.post(`${APP_BASE_URL}/api/v1/filament`, {
+      data: { name: marker, material: "PLA", density: 1.24, diameter: 1.75, weight: 1000, color_hex: "FF6600" },
+    });
+    expect(filRes.ok()).toBeTruthy();
+    const filamentId = (await filRes.json()).id;
+
+    await page.goto(`${APP_BASE_URL}/filament`);
+    await expect(page.getByRole("heading", { name: "Filaments" })).toBeVisible();
+
+    // Filter to just our filament so the grid holds exactly one tile.
+    const search = page.getByPlaceholder(/search/i);
+    await search.fill(marker);
+    await search.press("Enter");
+    await expect(page.locator("tbody tr.ant-table-row")).toHaveCount(1);
+
+    // Switch to grid view — the table is replaced by colour-tile cards.
+    await page.getByRole("button", { name: "Grid view" }).click();
+    const card = page.locator(".ant-card").filter({ hasText: marker });
+    await expect(card).toHaveCount(1);
+    await expect(page.getByRole("button", { name: "Table view" })).toBeVisible();
+
+    // Clicking the tile opens the filament.
+    await card.click();
+    await expect(page).toHaveURL(atPath(`/filament/show/${filamentId}`));
+  });
+});

@@ -22,7 +22,6 @@
     "import": "Importieren",
     "clone": "Duplizieren",
     "notAccessTitle": "Du hast keine Zugriffsberechtigung",
-    "hideColumns": "Spalten ausblenden",
     "clearFilters": "Filter bereinigen",
     "showArchived": "Archivierte anzeigen",
     "archive": "Archiv",
@@ -404,7 +403,6 @@
     "no_recent": "Keine kürzlich verwendeten Spulen",
     "by_material": "Nach Material",
     "by_location": "Nach Standort",
-    "telemetry_subtitle": "Echtzeitstatus deines Filament-Inventars.",
     "by_vendor": "Nach Hersteller"
   },
   "settings": {

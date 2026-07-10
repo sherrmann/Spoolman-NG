@@ -14,7 +14,9 @@ import { Home } from "./index";
 // error state is distinct from the empty-onboarding state (the bug fixed in PR #3).
 vi.mock("@refinedev/core", () => ({
   useList: vi.fn(),
-  useTranslate: () => (key: string, fallback?: string) => fallback ?? key,
+  // Mirrors i18next's dual second argument: a string is a default value, an object is
+  // interpolation params (in which case the key itself is the best stand-in).
+  useTranslate: () => (key: string, fallback?: unknown) => (typeof fallback === "string" ? fallback : key),
   useNavigation: () => ({ showUrl: (resource: string, id: number) => `/${resource}/show/${id}` }),
 }));
 vi.mock("react-i18next", () => ({
@@ -116,8 +118,10 @@ describe("Home render states", () => {
   it("renders the dashboard when spools exist", () => {
     setSpoolQuery({ data: [spool(), spool()] });
     renderHome();
-    // The dashboard header is only present in the populated branch.
-    expect(screen.getByText("home.home")).toBeInTheDocument();
+    // The create-action cluster is only present in the populated branch (the page has
+    // no redundant "Home" title anymore).
+    expect(screen.getByText("buttons.create")).toBeInTheDocument();
+    expect(screen.queryByText("home.home")).not.toBeInTheDocument();
     expect(screen.queryByText("home.welcome")).not.toBeInTheDocument();
     expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
   });

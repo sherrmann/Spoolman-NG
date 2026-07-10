@@ -232,8 +232,9 @@ jobs:
         with:
           dockerfile: ./Dockerfile
   #
-  # Build the Spoolman client for baking into the docker images
-  # This is done on native hardware to speed things up, vite is very slow on emulated hardware
+  # Build the Spoolman client for the release artifacts (the zip consumed by native installs
+  # and Moonraker updates). The docker images build their own client inside the Dockerfile
+  # (#111); this job also acts as an early, cheap gate for the image builds that need it.
   #
   build-client:
     needs: [meta]
@@ -312,11 +313,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Download client
-        uses: actions/download-artifact@v8.0.1
-        with:
-          name: client
-          path: client/dist
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4.1.0
@@ -446,11 +442,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Download client
-        uses: actions/download-artifact@v8.0.1
-        with:
-          name: client
-          path: client/dist
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4.1.0
@@ -526,11 +517,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Download client
-        uses: actions/download-artifact@v8.0.1
-        with:
-          name: client
-          path: client/dist
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4.1.0
@@ -597,7 +583,11 @@ jobs:
   #
   publish-images:
     if: ${{ github.event_name != 'pull_request' }}
-    needs: [test, build-amd64, build-arm64, build-armv7, style, build-client]
+    # Every test suite gates the release: without unit-tests/client-tests/e2e here, a tag
+    # push minted :latest images (and the GitHub release + deploy downstream) even when
+    # those suites were red — they ran as siblings, and a failing sibling doesn't stop
+    # independent jobs.
+    needs: [test, unit-tests, client-tests, e2e, build-amd64, build-arm64, build-armv7, style, build-client]
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -605,11 +595,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Download client
-        uses: actions/download-artifact@v8.0.1
-        with:
-          name: client
-          path: client/dist
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4.1.0

@@ -128,8 +128,8 @@ Raspberry Pi 3/4-class SBC. Dashboard analytics stay snappy even at 10k spools
 your database needs (the default SQLite file is tiny).
 
 **Architectures & support policy.** Images are built and published for all three
-arches to both [`ghcr.io/sherrmann/spoolman`](https://github.com/sherrmann/Spoolman/pkgs/container/spoolman)
-and Docker Hub `cookiemonster95/spoolman`:
+arches to both [`ghcr.io/sherrmann/spoolman-ng`](https://github.com/sherrmann/Spoolman-NG/pkgs/container/spoolman-ng)
+and Docker Hub `cookiemonster95/spoolman-ng`:
 
 | Arch | CI coverage | Notes |
 |---|---|---|

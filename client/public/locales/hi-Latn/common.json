@@ -28,7 +28,6 @@
     "hideArchived": "Archived chhupayen",
     "showArchived": "Archived dikhayen",
     "notAccessTitle": "Aapko access karne ki anumati nahi hai",
-    "hideColumns": "Columns chhupayen",
     "clearFilters": "Filters saaf karein"
   },
   "home": {
@@ -40,7 +39,6 @@
     "no_recent": "Koi haal hi mein istemal ki gayi spool nahi",
     "by_material": "Material ke anusaar",
     "by_location": "Jagah ke anusaar",
-    "telemetry_subtitle": "Aapke filament inventory ki real-time sthiti.",
     "home": "Home",
     "welcome": "Aapke Spoolman instance mein swagat hai!",
     "description": "Lagta hai aapne abhi tak koi spool nahi jodi hai. Shuruaat karne mein madad ke liye <helpPageLink>Help page</helpPageLink> dekhein.",

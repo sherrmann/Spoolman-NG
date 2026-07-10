@@ -121,6 +121,29 @@ def test_find_all_spools_including_archived(spools: Fixture):
     )
 
 
+def test_find_only_archived_spools(spools: Fixture):
+    """archived=true narrows the result to archived spools only."""
+    # Execute
+    result = httpx.get(f"{URL}/api/v1/spool?archived=true")
+    result.raise_for_status()
+
+    # Verify
+    assert_lists_compatible(result.json(), (spools.spools[2],))
+
+
+def test_find_only_active_spools_via_archived_false(spools: Fixture):
+    """archived=false returns only active spools and overrides allow_archived."""
+    # Execute
+    result = httpx.get(f"{URL}/api/v1/spool?archived=false&allow_archived=true")
+    result.raise_for_status()
+
+    # Verify
+    assert_lists_compatible(
+        result.json(),
+        (spools.spools[0], spools.spools[1], spools.spools[3], spools.spools[4]),
+    )
+
+
 def test_find_all_spools_sort_asc(spools: Fixture):
     # Execute
     result = httpx.get(f"{URL}/api/v1/spool?sort=id:asc&allow_archived=true")

@@ -28,7 +28,6 @@
     "hideArchived": "Paslėpti archyvuotus",
     "showArchived": "Rodyti archyvuotus",
     "notAccessTitle": "Nepakanka teisių",
-    "hideColumns": "Slėpti stulpelius",
     "clearFilters": "Valyti filtrus"
   },
   "warnWhenUnsavedChanges": "Ar tikrai norite išeiti? Yra neišsaugotų pakeitimų.",
@@ -340,7 +339,6 @@
     "no_recent": "Nėra neseniai naudotų ričių",
     "by_material": "Pagal medžiagą",
     "by_location": "Pagal vietą",
-    "telemetry_subtitle": "Jūsų filamento atsargų būsena realiu laiku.",
     "by_vendor": "Pagal gamintoją"
   },
   "help": {
