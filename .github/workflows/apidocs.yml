@@ -1,15 +1,20 @@
 name: Generate and deploy API documentation
 
 on:
-  # Deploy on release-tag pushes. A `release: published` trigger alone never fires here:
-  # the release is created by ci.yml with the default GITHUB_TOKEN, and GitHub suppresses
-  # workflow runs for events created with that token — so the docs silently went stale on
-  # every release until someone remembered workflow_dispatch.
+  # Deploy on master pushes that can change the rendered API docs. Two dead ends inform
+  # this trigger: `release: published` never fires because ci.yml creates the release with
+  # the default GITHUB_TOKEN (whose events don't trigger workflows), and a `push: tags`
+  # trigger is rejected by the github-pages environment's protection rules, which only
+  # allow deployments from master (the v2026.7.6 run failed in 2s with no logs). The
+  # release bump always touches pyproject.toml on master, so every release still redeploys
+  # the docs — from a ref the environment accepts.
   push:
-    tags:
-      - "v*"
-  release:
-    types: [published]
+    branches:
+      - master
+    paths:
+      - "spoolman/api/**"
+      - "pyproject.toml"
+      - ".github/workflows/apidocs.yml"
   workflow_dispatch:
 
 permissions:
