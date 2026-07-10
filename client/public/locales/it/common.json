@@ -37,7 +37,38 @@
       "exportButton": "Esporta etichette",
       "printFilamentTitle": "Stampa etichette filamento",
       "printSpoolTitle": "Stampa etichette bobina",
-      "templateHelpFilament": "Utilizza {} per inserire i valori dell'oggetto filamento nel testo. Ad esempio, {id} verrà sostituito con l'id del filamento, oppure {vendor.name} verrà sostituito con il nome del produttore. Se un valore è mancante, verrà sostituito con \"?\". Un secondo set di {} può essere utilizzato per rimuoverlo. Inoltre, qualsiasi testo tra i set di {} verrà rimosso se il valore è mancante. Ad esempio, {Article: {article_number}} mostrerà l'etichetta solo se il filamento ha un numero articolo. Racchiudi il testo con un doppio asterisco ** per renderlo in grassetto. Fai clic sul pulsante per visualizzare un elenco di tutte le etichette disponibili."
+      "templateHelpFilament": "Utilizza {} per inserire i valori dell'oggetto filamento nel testo. Ad esempio, {id} verrà sostituito con l'id del filamento, oppure {vendor.name} verrà sostituito con il nome del produttore. Se un valore è mancante, verrà sostituito con \"?\". Un secondo set di {} può essere utilizzato per rimuoverlo. Inoltre, qualsiasi testo tra i set di {} verrà rimosso se il valore è mancante. Ad esempio, {Article: {article_number}} mostrerà l'etichetta solo se il filamento ha un numero articolo. Racchiudi il testo con un doppio asterisco ** per renderlo in grassetto. Fai clic sul pulsante per visualizzare un elenco di tutte le etichette disponibili.",
+      "textColumns": {
+        "label": "Colonne di testo",
+        "tooltip": "Distribuisce il testo dell'etichetta su questo numero di colonne. Utile per etichette strette con diverse righe corte."
+      },
+      "qrPadding": "Margine interno QR",
+      "customPayload": {
+        "label": "Contenuto QR personalizzato",
+        "tooltip": "Sostituisce il contenuto del QR scansionato con un modello (stessi tag dell'etichetta). Lascia vuoto per usare il contenuto Spoolman predefinito. Un valore personalizzato viene riconosciuto alla scansione in Spoolman solo se corrisponde ancora a un formato riconosciuto (WEB+SPOOLMAN:S-{id} / F-{id} o un URL /spool/show/{id})."
+      },
+      "qrErrorLevel": {
+        "label": "Correzione errori QR",
+        "tooltip": "Livelli più alti tollerano più danni/sporco sull'etichetta ma rendono il codice QR più denso (più difficile da scansionare se piccolo). H (il più alto) è il predefinito."
+      },
+      "qrPlacement": {
+        "label": "Posizione QR",
+        "tooltip": "Dove si trova il codice QR rispetto al testo dell'etichetta. Metterlo sopra o sotto è adatto a etichette alte e strette.",
+        "left": "Sinistra",
+        "top": "In alto",
+        "bottom": "In basso"
+      },
+      "showColorSwatch": {
+        "label": "Stampa campione colore",
+        "tooltip": "Stampa sull'etichetta un piccolo riquadro colorato con il colore del filamento."
+      },
+      "barcode1d": {
+        "label": "Codice a barre 1D",
+        "tooltip": "Stampa facoltativamente un codice a barre 1D del contenuto del QR accanto al codice QR, per gli scanner che leggono solo codici a barre lineari.",
+        "none": "Nessuno",
+        "code128": "Code 128"
+      },
+      "tooltip": "Stampa le etichette per le righe selezionate, oppure scegli gli elementi nella pagina successiva"
     },
     "generic": {
       "printerMarginBottom": "Safe-Zone Inferiore",
@@ -80,7 +111,18 @@
       "itemCopies": "Copie dell'elemento",
       "saveAsImage": "Salva come immagine",
       "duplicateSettings": "Duplica",
-      "saveSetting": "Salva impostazione"
+      "saveSetting": "Salva impostazione",
+      "pageSizeMode": {
+        "label": "Dimensione pagina",
+        "tooltip": "\"Automatico\" lascia che la stampante/il browser scelga la geometria della pagina (predefinito). \"Adatta alla dimensione dell'etichetta\" genera una dimensione @page esplicita dalle dimensioni della carta qui sopra — usalo per le stampanti a rotolo/per etichette (es. Brother QL) così le etichette vengono stampate con la dimensione e l'orientamento corretti. Supportato al meglio in Chrome.",
+        "auto": "Automatico (predefinito della stampante)",
+        "matchLabel": "Adatta alla dimensione dell'etichetta"
+      },
+      "saveAsZpl": "Scarica ZPL",
+      "invalidGeometry": "La griglia di etichette non entra nella carta",
+      "invalidGeometryHelp": "Margini e spaziatura non lasciano spazio alle etichette. Riduci i margini, la spaziatura, le colonne o le righe — oppure scegli una dimensione carta più grande.",
+      "contentClipped": "Parte del contenuto delle etichette è tagliata",
+      "contentClippedHelp": "Il contenuto di almeno un'etichetta non entra nella sua etichetta e verrà tagliato in stampa. Riduci la dimensione del testo, accorcia il modello oppure usa meno colonne/righe così ogni etichetta è più grande."
     },
     "spoolSelect": {
       "selectedTotal_one": "{{count}} bobina selezionata",
@@ -90,7 +132,12 @@
       "showArchived": "Mostra Archiviati",
       "title": "Seleziona Bobina",
       "selectAll": "Seleziona/Deseleziona Tutti",
-      "noSpoolsSelected": "Non hai selezionato alcuna bobina."
+      "noSpoolsSelected": "Non hai selezionato alcuna bobina.",
+      "hidePrinted": "Nascondi già stampate",
+      "reprintConfirmTitle": "Ristampare le etichette?",
+      "reprintConfirmContent_one": "{{count}} bobina selezionata ha già un'etichetta stampata. Stamparla di nuovo?",
+      "reprintConfirmContent_many": "{{count}} bobine selezionate hanno già etichette stampate. Stamparle di nuovo?",
+      "reprintConfirmContent_other": "{{count}} bobine selezionate hanno già etichette stampate. Stamparle di nuovo?"
     },
     "filamentSelect": {
       "title": "Seleziona filamenti",
@@ -99,7 +146,12 @@
       "selectAll": "Seleziona/Deseleziona tutti",
       "selectedTotal_one": "{{count}} filamento selezionato",
       "selectedTotal_many": "{{count}} filamenti selezionati",
-      "selectedTotal_other": "{{count}} filamenti selezionati"
+      "selectedTotal_other": "{{count}} filamenti selezionati",
+      "hidePrinted": "Nascondi già stampati",
+      "reprintConfirmTitle": "Ristampare le etichette?",
+      "reprintConfirmContent_one": "{{count}} filamento selezionato ha già un'etichetta stampata. Stamparla di nuovo?",
+      "reprintConfirmContent_many": "{{count}} filamenti selezionati hanno già etichette stampate. Stamparle di nuovo?",
+      "reprintConfirmContent_other": "{{count}} filamenti selezionati hanno già etichette stampate. Stamparle di nuovo?"
     }
   },
   "documentTitle": {
@@ -159,7 +211,13 @@
       "filament_external": "Esterno",
       "filament_internal": "Interno",
       "spool_weight": "Peso a vuoto/tara",
-      "initial_weight": "Peso iniziale"
+      "initial_weight": "Peso iniziale",
+      "filament_name_only": "Nome",
+      "vendor_name": "Produttore",
+      "color": "Colore",
+      "printer": "Stampante",
+      "diameter": "Diametro",
+      "color_hex": "Colore"
     },
     "titles": {
       "archive": "Archivia Bobina",
@@ -181,7 +239,10 @@
       "price": "Prezzo di una bobina completa. Se non viene impostato, verrà utilizzato il prezzo del filamento.",
       "spool_weight": "Il peso della bobina vuota (tara). Lasciare vuoto per usare il valore dal profilo filamento o dal profilo produttore.",
       "external_filament": "Hai selezionato un filamento da un database esterno. Un profilo filamento (e possibilmente anche un profilo produttore) verrà creato automaticamente quando crei questa bobina. Ciò potrebbe creare un profilo filamento duplicato se hai già creato un profilo per questo filamento.",
-      "initial_weight": "Peso iniziale del filamento sulla bobina (peso netto). Se non impostato, viene utilizzato il peso dal profilo del filamento."
+      "initial_weight": "Peso iniziale del filamento sulla bobina (peso netto). Se non impostato, viene utilizzato il peso dal profilo del filamento.",
+      "printer": "La stampante su cui questa bobina è attualmente caricata. Gestisci le tue stampanti nella Configurazione.",
+      "diameter": "Diametro del filamento misurato per questa specifica bobina, usato nei calcoli della lunghezza. Lascia vuoto per usare il diametro del filamento.",
+      "color_hex": "Colore opzionale per questa specifica bobina, che sostituisce il colore del filamento. Cancella per usare il colore del filamento."
     },
     "form": {
       "new_location_prompt": "Inserisci nuova posizione",
@@ -196,10 +257,83 @@
     },
     "spool": "Bobine",
     "messages": {
-      "archive": "Sei sicuro di voler archiviare questa bobina?"
+      "archive": "Sei sicuro di voler archiviare questa bobina?",
+      "update_error": "Impossibile salvare le modifiche. Riprova.",
+      "reset_usage": "Azzerare il peso utilizzato di questa bobina? Verranno cancellate le date di primo/ultimo utilizzo."
     },
     "formats": {
       "last_used": "Ultimo utilizzo {{date}}"
+    },
+    "custom_actions": "Azioni",
+    "bulk": {
+      "edit": "Modifica",
+      "clear_selection": "Annulla selezione",
+      "edit_help": "Spunta un campo per modificarlo su tutte le bobine selezionate. I campi non spuntati restano invariati.",
+      "apply": "Applica",
+      "nothing_selected": "Spunta almeno un campo da modificare.",
+      "selected_one": "{{count}} selezionata",
+      "selected_many": "{{count}} selezionate",
+      "selected_other": "{{count}} selezionate",
+      "edit_title_one": "Modifica {{count}} bobina",
+      "edit_title_many": "Modifica {{count}} bobine",
+      "edit_title_other": "Modifica {{count}} bobine",
+      "applied_one": "{{count}} bobina aggiornata.",
+      "applied_many": "{{count}} bobine aggiornate.",
+      "applied_other": "{{count}} bobine aggiornate.",
+      "applied_partial_one": "{{count}} bobina aggiornata, {{failed}} non riuscite.",
+      "applied_partial_many": "{{count}} bobine aggiornate, {{failed}} non riuscite.",
+      "applied_partial_other": "{{count}} bobine aggiornate, {{failed}} non riuscite.",
+      "archive_confirm_one": "Archiviare {{count}} bobina?",
+      "archive_confirm_many": "Archiviare {{count}} bobine?",
+      "archive_confirm_other": "Archiviare {{count}} bobine?",
+      "unarchive_confirm_one": "Ripristinare {{count}} bobina?",
+      "unarchive_confirm_many": "Ripristinare {{count}} bobine?",
+      "unarchive_confirm_other": "Ripristinare {{count}} bobine?"
+    },
+    "weigh": {
+      "button": "Pesa bobine",
+      "title": "Pesa bobine",
+      "help": "Trova una bobina, inserisci la sua misurazione, poi \"Salva e successiva\" per pesare la prossima senza chiudere.",
+      "spool": "Bobina",
+      "search_placeholder": "Cerca per ID, filamento, numero di lotto…",
+      "save_next": "Salva e successiva",
+      "done": "Fatto",
+      "updated": "Aggiornato: {{name}}",
+      "pick_spool": "Seleziona prima una bobina.",
+      "tooltip": "Ripesa più bobine di seguito"
+    },
+    "view": {
+      "grid": "Vista griglia",
+      "table": "Vista tabella",
+      "grid_tooltip": "Sfoglia le bobine come riquadri colorati",
+      "table_tooltip": "Torna alla tabella completa"
+    },
+    "filament_extra_fields": "Campi del filamento",
+    "sibling_spools": {
+      "title": "Altre bobine di questo filamento",
+      "button": "Bobine sorelle",
+      "tooltip": "Elenca tutte le bobine di questo filamento"
+    },
+    "usage_history": {
+      "title": "Cronologia di utilizzo",
+      "time": "Data",
+      "type": "Tipo",
+      "change": "Variazione",
+      "comment": "Note",
+      "empty": "Nessun utilizzo registrato finora."
+    },
+    "weight_history": {
+      "title": "Cronologia del peso",
+      "chart_label": "Peso misurato nel tempo",
+      "idle_gain": "Il peso misurato è aumentato di {{grams}} g tra una misurazione e l'altra — la bobina potrebbe aver assorbito umidità. (Sperimentale)"
+    },
+    "totals": {
+      "shown_one": "{{count}} bobina mostrata",
+      "shown_many": "{{count}} bobine mostrate",
+      "shown_other": "{{count}} bobine mostrate",
+      "selected_one": "{{count}} bobina selezionata",
+      "selected_many": "{{count}} bobine selezionate",
+      "selected_other": "{{count}} bobine selezionate"
     }
   },
   "buttons": {
@@ -224,7 +358,16 @@
     "clone": "Clona",
     "clear": "Pulisci",
     "saveAndAdd": "Salva e aggiungi",
-    "continue": "Continua"
+    "continue": "Continua",
+    "search": "Cerca",
+    "resetUsage": "Azzera utilizzo",
+    "hideArchivedTooltip": "Torna alle bobine attive",
+    "showArchivedTooltip": "Passa alle bobine archiviate",
+    "columns": "Colonne",
+    "clearFiltersTooltip": "Reimposta tutti i filtri e l'ordinamento",
+    "labelsAndTags": "Etichette e tag",
+    "export": "Esporta",
+    "columnsTooltip": "Scegli, riordina e nascondi le colonne della tabella"
   },
   "filament": {
     "fields_help": {
@@ -234,7 +377,11 @@
       "price": "Prezzo di una bobina piena.",
       "weight": "Il peso del filamento di una bobina piena (peso netto). Questo non dovrebbe includere il peso della bobina stessa, ma solo del filamento. È quello che solitamente c'è scritto sulla confezione.",
       "material": "Es.: PLA, ABS, PETG, etc.",
-      "multi_color_direction": "I filamenti possono avere più colori in due modi: attraverso la coestrusione, come i filamenti a due colori con più colori omogenei, o attraverso cambiamenti di colore longitudinali, come i filamenti a gradiente che cambiano colore lungo la bobina."
+      "multi_color_direction": "I filamenti possono avere più colori in due modi: attraverso la coestrusione, come i filamenti a due colori con più colori omogenei, o attraverso cambiamenti di colore longitudinali, come i filamenti a gradiente che cambiano colore lungo la bobina.",
+      "low_stock_threshold": "Segnala questo filamento da riordinare quando il peso rimanente totale delle sue bobine scende sotto questo numero di grammi.",
+      "reserve_count": "Numero di bobine di scorta non aperte che tieni a disposizione, conteggiate senza creare una bobina per ciascuna.",
+      "settings_extruder_temp_range": "Intervallo di temperatura dell'estrusore consigliato dal produttore (min–max). Opzionale, lascia vuoto se hai un solo valore.",
+      "settings_bed_temp_range": "Intervallo di temperatura del piatto consigliato dal produttore (min–max). Opzionale, lascia vuoto se hai un solo valore."
     },
     "fields": {
       "material": "Materiale",
@@ -258,7 +405,21 @@
       "single_color": "Unico",
       "multi_color": "Multiplo",
       "coaxial": "Coestruso",
-      "longitudinal": "Longitudinale"
+      "longitudinal": "Longitudinale",
+      "color_hue": "Colore",
+      "spool_count": "Bobine",
+      "remaining_weight": "Scorta",
+      "low_stock_threshold": "Soglia scorta bassa",
+      "reserve_count": "Bobine di riserva",
+      "settings_extruder_temp_range": "Intervallo temp. estrusore",
+      "settings_bed_temp_range": "Intervallo temp. piatto",
+      "temp_range_min": "Min",
+      "temp_range_max": "Max",
+      "spool_type": "Tipo di bobina",
+      "finish": "Finitura",
+      "pattern": "Motivo",
+      "translucent": "Traslucido",
+      "glow": "Fosforescente"
     },
     "titles": {
       "clone": "Clona Filamento",
@@ -272,17 +433,22 @@
     "form": {
       "filament_updated": "Ci sono stati degli aggiornamenti per questo filamento da quando è stata aperta questa pagina. Il salvataggio sovrascriverà le modifiche!",
       "import_external": "Importa da Esterno",
-      "import_external_description": "Seleziona un filamento dalla lista per compilare automaticamente i dettagli del modulo creazione filamento. Ciò sovrascriverà qualsiasi informazione hai precedentemente inserito nel modulo. <rb><br> Se necessario, verrà creato automaticamente un profilo Produttore quando clicchi Ok.",
+      "import_external_description": "Seleziona un filamento nella lista per compilare automaticamente i suoi dettagli nel modulo di creazione del filamento. Questo sovrascriverà qualsiasi dato tu abbia inserito nel modulo.<br><br>Se necessario, quando clicchi Ok verrà creato automaticamente un profilo Produttore.",
       "import_3dfp": "ID 3D Filament Profiles",
       "import_3dfp_help": "Compila automaticamente le informazioni recuperandole da 3dfilamentprofiles.com",
       "import_3dfp_placeholder": "es. 12875",
       "import_3dfp_success": "Filamento recuperato con successo da 3dfilamentprofiles.com",
-      "import_3dfp_error": "Impossibile recuperare i dati del filamento da 3dfilamentprofiles.com"
+      "import_3dfp_error": "Impossibile recuperare i dati del filamento da 3dfilamentprofiles.com",
+      "must_be_positive": "Deve essere maggiore di 0.",
+      "new_vendor_prompt": "Aggiungi un nuovo produttore",
+      "vendor_created": "Produttore creato",
+      "vendor_create_error": "Impossibile creare il produttore"
     },
     "buttons": {
       "add_spool": "Aggiungi Bobina",
       "fetch": "Recupera",
-      "download_swatch": "Campione"
+      "download_swatch": "Campione",
+      "download_slicer": "Profilo slicer"
     },
     "swatch": {
       "title": "Campione stampabile in 3D",
@@ -300,6 +466,50 @@
         "card": "Scheda"
       },
       "download": "Scarica .3mf"
+    },
+    "spool_type_options": {
+      "plastic": "Plastica",
+      "cardboard": "Cartone",
+      "metal": "Metallo"
+    },
+    "finish_options": {
+      "matte": "Opaco",
+      "glossy": "Lucido"
+    },
+    "pattern_options": {
+      "marble": "Marmorizzato",
+      "sparkle": "Glitter"
+    },
+    "tabs": {
+      "details": "Dettagli"
+    },
+    "bulk": {
+      "edit": "Modifica",
+      "clear_selection": "Annulla selezione",
+      "edit_help": "Spunta un campo per modificarlo su tutti i filamenti selezionati. I campi non spuntati restano invariati.",
+      "apply": "Applica",
+      "nothing_selected": "Spunta almeno un campo da modificare.",
+      "selected_one": "{{count}} selezionato",
+      "selected_many": "{{count}} selezionati",
+      "selected_other": "{{count}} selezionati",
+      "edit_title_one": "Modifica {{count}} filamento",
+      "edit_title_many": "Modifica {{count}} filamenti",
+      "edit_title_other": "Modifica {{count}} filamenti",
+      "applied_one": "{{count}} filamento aggiornato.",
+      "applied_many": "{{count}} filamenti aggiornati.",
+      "applied_other": "{{count}} filamenti aggiornati.",
+      "applied_partial_one": "{{count}} filamento aggiornato, {{failed}} non riusciti.",
+      "applied_partial_many": "{{count}} filamenti aggiornati, {{failed}} non riusciti.",
+      "applied_partial_other": "{{count}} filamenti aggiornati, {{failed}} non riusciti."
+    },
+    "view": {
+      "grid": "Vista griglia",
+      "table": "Vista tabella",
+      "grid_tooltip": "Sfoglia i filamenti come riquadri colorati",
+      "table_tooltip": "Torna alla tabella completa"
+    },
+    "messages": {
+      "update_error": "Impossibile salvare le modifiche. Riprova."
     }
   },
   "actions": {
@@ -316,7 +526,8 @@
       "edit": "Modifica Produttore",
       "clone": "Duplica Produttore",
       "create": "Crea Produttore",
-      "list": "Produttori"
+      "list": "Produttori",
+      "view_spools": "Mostra bobine"
     },
     "fields": {
       "registered": "Registrato",
@@ -324,11 +535,14 @@
       "name": "Nome",
       "id": "ID",
       "external_id": "ID Esterno",
-      "empty_spool_weight": "Peso a vuoto della bobina/tara"
+      "empty_spool_weight": "Peso a vuoto della bobina/tara",
+      "filament_count": "Filamenti",
+      "spool_count": "Bobine"
     },
     "vendor": "Produttori",
     "form": {
-      "vendor_updated": "Ci sono stati degli aggiornamenti per questo produttore da quando hai aperto questa pagina. Il salvataggio sovrascriverà le modifiche!"
+      "vendor_updated": "Ci sono stati degli aggiornamenti per questo produttore da quando hai aperto questa pagina. Il salvataggio sovrascriverà le modifiche!",
+      "duplicate_name_warning": "Esiste già un produttore con questo nome."
     },
     "fields_help": {
       "empty_spool_weight": "Il peso di una bobina vuota di questo produttore."
@@ -344,7 +558,9 @@
       "notFound": "Nessuna fotocamera rilevata.",
       "streamApiNotSupported": "il browser non supporta le API MediaStream."
     },
-    "description": "Scansiona uno Spoolman QR-Code per visualizzare i dettagli della bobina."
+    "description": "Scansiona uno Spoolman QR-Code per visualizzare i dettagli della bobina.",
+    "camera_auto": "Fotocamera automatica",
+    "camera_n": "Fotocamera {{n}}"
   },
   "notifications": {
     "deleteSuccess": "{{resource}} cancellato con successo",
@@ -405,7 +621,34 @@
     "no_recent": "Nessuna bobina usata di recente",
     "by_material": "Per materiale",
     "by_location": "Per posizione",
-    "by_vendor": "Per produttore"
+    "by_vendor": "Per produttore",
+    "all_spools": "Tutte le bobine",
+    "no_spools": "Ancora nessuna bobina",
+    "shopping_list": "Lista della spesa",
+    "shopping_list_empty": "Nessun filamento sotto la soglia di scorta bassa.",
+    "usage": {
+      "tab": "Utilizzo",
+      "empty": "Nessun utilizzo di filamento registrato finora.",
+      "loading": "Caricamento...",
+      "bucket": {
+        "day": "Giorno",
+        "week": "Settimana",
+        "month": "Mese",
+        "year": "Anno"
+      }
+    },
+    "create": {
+      "spool": "Nuova bobina",
+      "filament": "Nuovo filamento",
+      "vendor": "Nuovo produttore"
+    },
+    "kpi": {
+      "this_month": "questo mese",
+      "top": "top",
+      "materials_one": "{{count}} materiale",
+      "materials_many": "{{count}} materiali",
+      "materials_other": "{{count}} materiali"
+    }
   },
   "settings": {
     "settings": "Configurazione",
@@ -418,7 +661,9 @@
         "field_type": "Tipo",
         "choices": "Scelte",
         "multi_choice": "Scelta multipla",
-        "unit": "Unità"
+        "unit": "Unità",
+        "copy_from_filament": "Copia dal filamento",
+        "link_template": "URL del link"
       },
       "field_type": {
         "text": "\"Testo\" per tipo campo extra",
@@ -428,7 +673,8 @@
         "integer_range": "Intervallo di numeri interi",
         "float_range": "Intervallo decimali",
         "boolean": "Booleano",
-        "integer": "\"Intero\" per tipo campo extra, numero intero senza decimali"
+        "integer": "\"Intero\" per tipo campo extra, numero intero senza decimali",
+        "link": "Link"
       },
       "choices_missing_error": "Non è possibile rimuovere le scelte. Mancano i seguenti elementi: {{choices}}",
       "non_unique_key_error": "La chiave deve essere univoca.",
@@ -438,7 +684,7 @@
       "delete_confirm": "Cancellare il campo {{name}}?",
       "delete_confirm_description": "Questo eliminerà il campo e tutti i dati associati di tutte le selezioni.",
       "tab": "Campi extra",
-      "description": "<p>Qui è possibile aggiungere campi personalizzati.</p><p>Una volta aggiunto un campo, non è possibile modificarne la chiave o il tipo, e per i campi di tipo scelta non è possibile rimuovere le scelte o modificare lo stato di scelta multipla. Se si rimuove un campo, tutti i dati associati saranno cancellati.</p><p>La chiave è il modo in cui gli altri programmi leggono/scrivono i dati, quindi se il campo personalizzato deve integrarsi con un programma di terze parti, assicurarsi di impostarla correttamente. Il valore predefinito viene applicato solo ai nuovi elementi.</p><p>I campi extra non possono essere ordinati o filtrati nelle viste tabella.</p>"
+      "description": "<p>Qui puoi aggiungere campi personalizzati extra alle tue entità.</p><p>Una volta aggiunto un campo, non puoi più modificarne la chiave o il tipo, e per i campi di tipo scelta non puoi rimuovere le scelte né modificare lo stato di scelta multipla. Se rimuovi un campo, i dati associati di tutte le entità verranno eliminati.</p><p>La chiave è il modo in cui gli altri programmi leggono/scrivono i dati, quindi se il campo personalizzato deve integrarsi con un programma di terze parti, assicurati di impostarla correttamente. Il valore predefinito viene applicato solo ai nuovi elementi.</p><p>I campi extra possono essere mostrati e ordinati nelle viste tabella. I campi di tipo scelta e booleano vi offrono anche opzioni di filtro, e tutti i tipi di campi extra supportano il filtro per valori vuoti.</p><p>Per i campi delle bobine, attiva \"Copia dal filamento\" per far ereditare a una nuova bobina, al momento della creazione, il valore di un campo del filamento con la stessa chiave (a meno che la bobina non ne imposti uno proprio).</p><p>Un campo \"Link\" memorizza un valore breve per elemento (ad es. un numero articolo) e lo trasforma in un link cliccabile usando il modello URL del link — metti {} dove va il valore, ad es. https://www.amazon.com/dp/{}.</p>"
     },
     "header": "Configurazione",
     "general": {
@@ -453,6 +699,10 @@
       "round_prices": {
         "label": "Prezzi arrotondati",
         "tooltip": "Prezzi arrotondati al numero intero più vicino."
+      },
+      "unit_scaling": {
+        "label": "Scala le unità grandi",
+        "tooltip": "Mostra pesi e lunghezze grandi scalati automaticamente (es. 1,5 kg, 64,37 m) invece di grammi/millimetri grezzi nelle viste elenco e dettaglio. I valori memorizzati e l'API non vengono toccati."
       }
     },
     "swatch": {
@@ -462,6 +712,68 @@
         "tooltip": "Lo stile preselezionato quando si scarica un campione di filamento stampabile in 3D. Nuovi stili possono essere aggiunti a Spoolman in client/src/utils/swatch/styles.ts."
       },
       "preview_description": "Anteprima con due filamenti di esempio — il testo e il codice QR vengono stampati automaticamente in nero o bianco, a seconda di cosa contrasta meglio con il colore del filamento:"
+    },
+    "import_export": {
+      "tab": "Importa / Esporta",
+      "export_title": "Esporta dati",
+      "export_help": "Scarica i tuoi produttori, filamenti o bobine in CSV o JSON. I dati di produttore e filamento sono inclusi con le bobine.",
+      "import_title": "Importa dati",
+      "import_help": "Carica un file CSV o JSON con la stessa struttura di un'esportazione. L'intero file viene applicato come un'unica transazione tutto-o-niente; usa prima una simulazione per vedere in anteprima il risultato.",
+      "report_title": "Report di inventario",
+      "report_help": "Apri un riepilogo stampabile delle tue scorte attuali.",
+      "report_heading": "Report di inventario Spoolman",
+      "entities": {
+        "spools": "Bobine",
+        "filaments": "Filamenti",
+        "vendors": "Produttori"
+      },
+      "modes": {
+        "create": "Crea nuovi elementi",
+        "upsert": "Aggiorna o crea",
+        "skip_existing": "Salta esistenti"
+      },
+      "dry_run": "Simulazione",
+      "dry_run_prefix": "Simulazione —",
+      "choose_file": "Scegli file",
+      "validate": "Convalida",
+      "import_button": "Importa",
+      "print_report": "Stampa report",
+      "no_file": "Scegli prima un file.",
+      "result": "Creati {{created}}, aggiornati {{updated}}, saltati {{skipped}}.",
+      "import_errors": "Importazione non riuscita",
+      "threemf": {
+        "title": "Importa un progetto 3MF processato",
+        "help": "Carica un .3mf processato da Bambu Studio o OrcaSlicer per leggere quanto è stato usato di ogni filamento nella stampa, abbinarlo alle tue bobine e sottrarre l'utilizzo in un solo passaggio.",
+        "choose_file": "Scegli file .3mf",
+        "no_filaments": "Nessun utilizzo di filamento trovato in questo 3MF.",
+        "no_match": "Nessuna bobina corrispondente — scegline una",
+        "col_filament": "Filamento della stampa",
+        "col_used": "Utilizzato",
+        "col_spool": "Bobina da regolare",
+        "apply": "Applica utilizzo",
+        "applied": "Utilizzo registrato su {{count}} bobina/e.",
+        "applied_partial": "Utilizzo registrato su {{ok}} bobina/e; {{fail}} non riuscite."
+      }
+    },
+    "printers": {
+      "tab": "Stampanti",
+      "description": "<p>Gestisci qui le tue stampanti. Quando ne hai almeno una, puoi assegnare una bobina a una stampante dal modulo di creazione o modifica della bobina.</p>",
+      "add_title": "Aggiungi stampante",
+      "edit_title": "Modifica stampante",
+      "delete_confirm": "Eliminare la stampante \"{{name}}\"? Le bobine assegnate verranno scollegate, non eliminate."
+    },
+    "custom_links": {
+      "sidebar_tab": "Link barra laterale",
+      "spool_tab": "Azioni bobina",
+      "sidebar_description": "<p>Aggiungi i tuoi link alla barra laterale sinistra, ad es. alla pagina Mainsail o Fluidd della tua stampante. Si aprono in una nuova scheda.</p>",
+      "spool_description": "<p>Aggiungi pulsanti di azione personalizzati a ogni bobina. L'URL può includere i campi della bobina tra parentesi graffe — {id}, {filament_id}, {location}, {lot_nr}, {comment} — compilati per ogni bobina, così strumenti come nfc2klipper o l'endpoint della bobina attiva di Moonraker sono a portata di clic.</p>",
+      "name": "Nome",
+      "url": "URL",
+      "url_template": "Modello URL",
+      "url_template_help": "Usa {id} dove deve andare l'ID della bobina, ad es. http://moonraker.local/...?id={id}",
+      "add_title": "Aggiungi link",
+      "edit_title": "Modifica link",
+      "delete_confirm": "Eliminare questo link?"
     }
   },
   "locations": {
@@ -470,7 +782,29 @@
     "no_location": "Nessuna Posizione",
     "no_locations_help": "Questa pagina ti consente di organizzare le bobine in base alla posizione. Aggiungi alcune bobine per iniziare!",
     "error_empty": "Il nome non può essere vuoto",
-    "error_exists": "La posizione esiste già"
+    "error_exists": "La posizione esiste già",
+    "location": "Posizione",
+    "fields": {
+      "button": "Campi personalizzati",
+      "title": "Campi personalizzati — {{name}}",
+      "saved": "Campi della posizione salvati",
+      "save_error": "Impossibile salvare i campi della posizione",
+      "load_error": "Impossibile caricare la posizione"
+    },
+    "show": {
+      "name": "Nome",
+      "comment": "Note",
+      "spool_count": "Bobine conservate qui",
+      "spools_here": "Bobine in questa posizione",
+      "no_spools": "Nessuna bobina è conservata in questa posizione."
+    },
+    "print": {
+      "title": "Stampa etichette posizione",
+      "button": "Stampa etichette",
+      "description": "Seleziona le posizioni per cui stampare etichette QR scansionabili.",
+      "select_placeholder": "Seleziona posizioni",
+      "none_selected": "Nessuna posizione selezionata"
+    }
   },
   "calibration": {
     "title": "Calibrazione",
@@ -615,5 +949,92 @@
     "tag_material": "Materiale",
     "tag_material_type": "Tipo di materiale",
     "qidi_write_info": "I tag Qidi memorizzano solo materiale e colore. Il tag verrà scritto con i codici di materiale e colore Qidi più simili."
+  },
+  "errorBoundary": {
+    "title": "Qualcosa è andato storto",
+    "subTitle": "Impossibile visualizzare questa pagina. Se il problema è comparso dopo aver modificato o condiviso le impostazioni di visualizzazione, reimpostarle di solito lo risolve.",
+    "reset": "Reimposta visualizzazione e ricarica",
+    "home": "Vai alla pagina iniziale"
+  },
+  "apiToken": {
+    "title": "Token API richiesto",
+    "help": "Questa istanza di Spoolman richiede un token API. Inseriscilo per continuare; verrà memorizzato in questo browser.",
+    "placeholder": "Token API",
+    "submit": "Salva token"
+  },
+  "auth": {
+    "logout": "Disconnettiti",
+    "login": {
+      "title": "Accedi",
+      "submit": "Accedi",
+      "username": "Nome utente",
+      "password": "Password"
+    },
+    "roles": {
+      "admin": "Amministratore",
+      "readonly": "Sola lettura"
+    },
+    "users": {
+      "tab": "Utenti",
+      "title": "Account utente",
+      "help": "Crea degli account per richiedere l'accesso. Gli utenti in sola lettura possono vedere tutto ma non apportare modifiche. Il primo account è sempre un amministratore.",
+      "role": "Ruolo",
+      "add": "Aggiungi utente",
+      "need_fields": "Inserisci nome utente e password.",
+      "created": "Utente {{username}} creato.",
+      "reset_password": "Reimposta password",
+      "reset_password_for": "Reimposta la password di {{username}}",
+      "reset_password_help": "Inserisci una nuova password per questo utente.",
+      "password_reset": "Password aggiornata.",
+      "delete_confirm": "Eliminare questo utente?"
+    }
+  },
+  "colorFilter": {
+    "button": "Colore",
+    "title": "Filtra per colore simile",
+    "threshold": "Tolleranza",
+    "help": "Mostra gli elementi il cui colore rientra in questa tolleranza rispetto al colore scelto.",
+    "advanced": "Altri colori"
+  },
+  "theme": {
+    "label": "Tema",
+    "system": "Sistema",
+    "light": "Chiaro",
+    "dark": "Scuro"
+  },
+  "scan": {
+    "title": "Scansiona",
+    "qr": "Codice QR",
+    "nfc": "NFC",
+    "nfc_hint": "La scansione NFC non è disponibile in questo browser. Usa Chrome su Android oppure collega un lettore NFC lato server.",
+    "action": {
+      "open": "Apri",
+      "move": "Sposta bobina"
+    },
+    "move": {
+      "scan_spool": "Scansiona una bobina da spostare.",
+      "scan_location": "Bobina #{{id}} selezionata. Ora scansiona la posizione di destinazione.",
+      "confirm_title": "Spostare la bobina?",
+      "confirm_content": "Spostare la bobina #{{spool}} in \"{{location}}\"?",
+      "moved": "Bobina #{{spool}} spostata in \"{{location}}\".",
+      "load_error": "Impossibile caricare la posizione scansionata."
+    },
+    "clear": {
+      "recognized": "Codice \"rimuovi bobina\" riconosciuto. Spoolman non gestisce una bobina attiva; se ne occupa la tua stampante o l'integrazione Moonraker."
+    },
+    "barcode": {
+      "unknown_title": "Codice a barre sconosciuto",
+      "unknown_content": "Nessun filamento ha il codice a barre {{code}}. Creare un filamento e memorizzare questo codice a barre?",
+      "create_filament": "Crea filamento",
+      "lookup_error": "Impossibile cercare quel codice a barre."
+    }
+  },
+  "printer": {
+    "printer": "Stampante",
+    "fields": {
+      "name": "Nome",
+      "comment": "Note",
+      "spool_count": "Bobine"
+    }
   }
 }

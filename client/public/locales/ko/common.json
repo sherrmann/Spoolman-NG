@@ -28,7 +28,16 @@
     "showArchived": "보관 보이기",
     "notAccessTitle": "접속 권한이 없습니다",
     "clearFilters": "필터 초기화",
-    "clear": "지우기"
+    "clear": "지우기",
+    "search": "검색",
+    "resetUsage": "사용량 초기화",
+    "hideArchivedTooltip": "활성 스풀로 돌아가기",
+    "showArchivedTooltip": "보관된 스풀 보기로 전환",
+    "columns": "열",
+    "clearFiltersTooltip": "모든 필터와 정렬을 초기화",
+    "labelsAndTags": "라벨 및 태그",
+    "export": "내보내기",
+    "columnsTooltip": "테이블 열을 선택, 재정렬 및 숨기기"
   },
   "warnWhenUnsavedChanges": "정말 나갑니까? 변경 사항이 저장되지 않습니다.",
   "notifications": {
@@ -99,7 +108,18 @@
       "printerMarginLeft": "안전구역 왼쪽",
       "printerMarginRight": "안전구역 오른쪽",
       "printerMarginTop": "안전구역 위쪽",
-      "printerMarginBottom": "안전구역 아래쪽"
+      "printerMarginBottom": "안전구역 아래쪽",
+      "pageSizeMode": {
+        "label": "페이지 크기",
+        "tooltip": "\"자동\"은 프린터/브라우저가 페이지 형태를 결정하도록 합니다(기본값). \"라벨 크기에 맞춤\"은 위의 용지 치수를 사용해 명시적인 @page 크기를 지정합니다 — 롤/라벨 프린터(예: Brother QL)에서 라벨이 올바른 크기와 방향으로 인쇄되도록 하려면 이 옵션을 사용하세요. Chrome에서 가장 잘 지원됩니다.",
+        "auto": "자동 (프린터 기본값)",
+        "matchLabel": "라벨 크기에 맞춤"
+      },
+      "saveAsZpl": "ZPL 다운로드",
+      "invalidGeometry": "라벨 격자가 용지에 맞지 않습니다",
+      "invalidGeometryHelp": "여백과 간격 때문에 라벨을 배치할 공간이 없습니다. 여백, 간격, 열 또는 행 수를 줄이거나 더 큰 용지 크기를 선택하세요.",
+      "contentClipped": "일부 라벨 내용이 잘립니다",
+      "contentClippedHelp": "최소 한 개 라벨의 내용이 라벨 안에 들어가지 않아 인쇄 시 잘리게 됩니다. 글씨 크기를 줄이거나 템플릿을 짧게 만들거나, 열/행 수를 줄여 각 라벨을 더 크게 만드세요."
     },
     "qrcode": {
       "button": "프린트 라벨",
@@ -122,7 +142,42 @@
         "no": "아니오",
         "simple": "단순",
         "withIcon": "아이콘 표시"
-      }
+      },
+      "textColumns": {
+        "label": "텍스트 열",
+        "tooltip": "라벨 텍스트를 지정한 수의 열로 배치합니다. 짧은 줄이 여러 개 있는 좁은 라벨에 유용합니다."
+      },
+      "qrPadding": "QR 여백",
+      "customPayload": {
+        "label": "사용자 정의 QR 내용",
+        "tooltip": "스캔되는 QR 내용을 템플릿으로 재정의합니다(라벨과 동일한 태그 사용). 비워 두면 기본 Spoolman 내용을 사용합니다. 사용자 정의 값은 인식 가능한 형식(WEB+SPOOLMAN:S-{id} / F-{id} 또는 /spool/show/{id} URL)과 일치할 때만 Spoolman 안에서 스캔됩니다."
+      },
+      "qrErrorLevel": {
+        "label": "QR 오류 정정",
+        "tooltip": "수준이 높을수록 라벨의 손상이나 오염에 잘 견디지만 QR 코드가 더 조밀해집니다(작으면 스캔이 어려워짐). 기본값은 가장 높은 H입니다."
+      },
+      "qrPlacement": {
+        "label": "QR 위치",
+        "tooltip": "라벨 텍스트를 기준으로 QR 코드가 놓이는 위치입니다. 세로로 길고 좁은 라벨에는 위나 아래에 배치하는 것이 좋습니다.",
+        "left": "왼쪽",
+        "top": "위",
+        "bottom": "아래"
+      },
+      "showColorSwatch": {
+        "label": "색상 견본 인쇄",
+        "tooltip": "라벨에 필라멘트 색상의 작은 색상 상자를 인쇄합니다."
+      },
+      "barcode1d": {
+        "label": "1D 바코드",
+        "tooltip": "선형 바코드만 읽을 수 있는 스캐너를 위해 QR 내용의 1D 바코드를 QR 코드 옆에 함께 인쇄할 수 있습니다.",
+        "none": "없음",
+        "code128": "Code 128"
+      },
+      "exportButton": "라벨 내보내기",
+      "printFilamentTitle": "필라멘트 라벨 인쇄",
+      "printSpoolTitle": "스풀 라벨 인쇄",
+      "templateHelpFilament": "{}를 사용하여 필라멘트 객체의 값을 텍스트로 삽입합니다. 예를 들어, {id}는 필라멘트 id로 대체되고, {vendor.name}은 제조사 이름으로 대체됩니다. 값이 누락된 경우 \"?\"로 대체됩니다. 두 번째 {} 세트를 사용하여 이를 제거할 수 있습니다. 또한, {} 쌍 사이에 있는 텍스트는 값이 누락된 경우 제거됩니다. 예를 들어, {Article: {article_number}}는 필라멘트에 제품 번호가 있을 때만 라벨에 표시됩니다. 텍스트를 두 개의 별표 **로 감싸면 굵게 표시됩니다. 사용 가능한 모든 태그 목록을 보려면 버튼을 클릭하세요.",
+      "tooltip": "선택한 행의 라벨을 인쇄하거나 다음 페이지에서 항목을 선택하세요"
     },
     "spoolSelect": {
       "title": "스풀 선택",
@@ -130,7 +185,20 @@
       "showArchived": "보관 보기",
       "noSpoolsSelected": "스풀을 선택하지 않았습니다.",
       "selectAll": "선택/모두 해제",
-      "selectedTotal_other": "{{count}} 스풀 선택됨"
+      "selectedTotal_other": "{{count}} 스풀 선택됨",
+      "hidePrinted": "이미 인쇄된 항목 숨기기",
+      "reprintConfirmTitle": "라벨을 다시 인쇄하시겠습니까?",
+      "reprintConfirmContent_other": "선택한 스풀 {{count}}개는 이미 라벨이 인쇄되어 있습니다. 다시 인쇄하시겠습니까?"
+    },
+    "filamentSelect": {
+      "title": "필라멘트 선택",
+      "description": "라벨을 인쇄할 필라멘트를 선택합니다.",
+      "hidePrinted": "이미 인쇄된 항목 숨기기",
+      "reprintConfirmTitle": "라벨을 다시 인쇄하시겠습니까?",
+      "noFilamentsSelected": "필라멘트를 선택하지 않았습니다.",
+      "selectAll": "선택/모두 해제",
+      "reprintConfirmContent_other": "선택한 필라멘트 {{count}}개는 이미 라벨이 인쇄되어 있습니다. 다시 인쇄하시겠습니까?",
+      "selectedTotal_other": "{{count}} 필라멘트 선택됨"
     }
   },
   "scanner": {
@@ -143,7 +211,9 @@
       "notReadable": "카메라를 읽을 수 없습니다.",
       "notFound": "카메라를 찾을 수 없습니다.",
       "unknown": "알수 없는 오류 발생. {{error}}"
-    }
+    },
+    "camera_auto": "자동 카메라",
+    "camera_n": "카메라 {{n}}"
   },
   "spool": {
     "spool": "스풀",
@@ -169,7 +239,13 @@
       "last_used": "최종 사용",
       "registered": "등록됨",
       "archived": "보관됨",
-      "comment": "주석"
+      "comment": "주석",
+      "filament_name_only": "이름",
+      "vendor_name": "제조사",
+      "color": "색상",
+      "printer": "프린터",
+      "diameter": "외경",
+      "color_hex": "색상"
     },
     "fields_help": {
       "price": "전체 스풀 가격. 설정되지 않은 경우 필라멘트 가격이 대신 적용됩니다.",
@@ -181,7 +257,10 @@
       "spool_weight": "스풀이 비어 있을 때의 무게. 필라멘트 또는 제조업체의 값을 사용하려면 비워 두십시오.",
       "location": "여러 위치에 스풀을 보관하는 경우 스풀이 위치한 곳.",
       "lot_nr": "제조업체 lot 번호. 여러 개의 스풀을 사용할 경우 인쇄물의 색상이 일관되도록 보장하는 데 사용할 수 있습니다.",
-      "external_filament": "외부 데이터베이스에서 필라멘트를 선택하였습니다. 이 스풀을 생성할 때 필라멘트 객체(및 제조업체 객체)가 자동으로 생성됩니다. 해당 필라멘트에 대해 이미 필라멘트 객체가 생성된 경우 중복 객체가 생성될 수 있습니다."
+      "external_filament": "외부 데이터베이스에서 필라멘트를 선택하였습니다. 이 스풀을 생성할 때 필라멘트 객체(및 제조업체 객체)가 자동으로 생성됩니다. 해당 필라멘트에 대해 이미 필라멘트 객체가 생성된 경우 중복 객체가 생성될 수 있습니다.",
+      "printer": "이 스풀이 현재 장착된 프린터입니다. 프린터는 설정에서 관리할 수 있습니다.",
+      "diameter": "이 스풀에 대해 측정한 필라멘트 직경으로, 길이 계산에 사용됩니다. 비워 두면 필라멘트의 직경을 사용합니다.",
+      "color_hex": "이 스풀만의 색상(선택 사항)으로, 필라멘트의 색상보다 우선합니다. 지우면 필라멘트의 색상을 사용합니다."
     },
     "titles": {
       "create": "스풀 생성",
@@ -205,10 +284,67 @@
       "spool_updated": "이 페이지를 열었을 때 이후로 다른 사람/무언가에 의해 이 스풀이 업데이트 되었습니다. 저장하면 해당 변경 사항이 덮어쓰게 됩니다!"
     },
     "messages": {
-      "archive": "이 스풀을 보관하시겠습니까?"
+      "archive": "이 스풀을 보관하시겠습니까?",
+      "update_error": "변경 사항을 저장하지 못했습니다. 다시 시도해 주세요.",
+      "reset_usage": "이 스풀의 사용 중량을 0으로 초기화하시겠습니까? 첫 사용/최종 사용 날짜도 지워집니다."
     },
     "formats": {
       "last_used": "최종 사용 {{date}}"
+    },
+    "custom_actions": "동작",
+    "bulk": {
+      "edit": "수정",
+      "clear_selection": "선택 해제",
+      "edit_help": "변경할 필드에 체크하면 선택한 모든 스풀에 적용됩니다. 체크하지 않은 필드는 그대로 유지됩니다.",
+      "apply": "적용",
+      "nothing_selected": "변경할 필드를 하나 이상 체크하세요.",
+      "selected_other": "{{count}}개 선택됨",
+      "edit_title_other": "스풀 {{count}}개 편집",
+      "applied_other": "스풀 {{count}}개를 업데이트했습니다.",
+      "applied_partial_other": "스풀 {{count}}개 업데이트, {{failed}}개 실패.",
+      "archive_confirm_other": "스풀 {{count}}개를 보관하시겠습니까?",
+      "unarchive_confirm_other": "스풀 {{count}}개의 보관을 취소하시겠습니까?"
+    },
+    "weigh": {
+      "button": "스풀 무게 측정",
+      "title": "스풀 무게 측정",
+      "help": "스풀을 찾아 측정값을 입력한 뒤 '저장 후 다음'을 누르면 창을 닫지 않고 다음 스풀을 이어서 측정할 수 있습니다.",
+      "spool": "스풀",
+      "search_placeholder": "ID, 필라멘트, 로트 번호로 검색…",
+      "save_next": "저장 후 다음",
+      "done": "완료",
+      "updated": "{{name}} 업데이트됨",
+      "pick_spool": "먼저 스풀을 선택하세요.",
+      "tooltip": "여러 스풀의 무게를 연속으로 다시 측정"
+    },
+    "view": {
+      "grid": "그리드 보기",
+      "table": "테이블 보기",
+      "grid_tooltip": "스풀을 색상 타일로 둘러보기",
+      "table_tooltip": "전체 테이블로 돌아가기"
+    },
+    "filament_extra_fields": "필라멘트 필드",
+    "sibling_spools": {
+      "title": "이 필라멘트의 다른 스풀",
+      "button": "동일 필라멘트 스풀",
+      "tooltip": "이 필라멘트의 모든 스풀 나열"
+    },
+    "usage_history": {
+      "title": "사용 이력",
+      "time": "시간",
+      "type": "유형",
+      "change": "변경량",
+      "comment": "주석",
+      "empty": "아직 기록된 사용량이 없습니다."
+    },
+    "weight_history": {
+      "title": "중량 이력",
+      "chart_label": "시간에 따른 측정 중량",
+      "idle_gain": "측정 사이에 측정 중량이 {{grams}} g 증가했습니다 — 스풀이 습기를 흡수했을 수 있습니다. (실험적 기능)"
+    },
+    "totals": {
+      "shown_other": "스풀 {{count}}개 표시됨",
+      "selected_other": "스풀 {{count}}개 선택됨"
     }
   },
   "filament": {
@@ -235,7 +371,21 @@
       "coaxial": "공압출",
       "external_id": "외부 ID",
       "spools": "스풀 보기",
-      "longitudinal": "세로"
+      "longitudinal": "세로",
+      "color_hue": "색상",
+      "spool_count": "스풀 수",
+      "remaining_weight": "재고",
+      "low_stock_threshold": "재고 부족 기준",
+      "reserve_count": "예비 스풀",
+      "settings_extruder_temp_range": "압출기 온도 범위",
+      "settings_bed_temp_range": "배드 온도 범위",
+      "temp_range_min": "최소",
+      "temp_range_max": "최대",
+      "spool_type": "스풀 유형",
+      "finish": "마감",
+      "pattern": "패턴",
+      "translucent": "반투명",
+      "glow": "야광"
     },
     "fields_help": {
       "name": "필라멘트 이름, 동일한 제조사의 다른 필라멘트 유형과 구별하기 위한 명칭. 예를 들어 색상을 포함해야 합니다.",
@@ -244,7 +394,11 @@
       "weight": "전체 스풀의 필라멘트 중량(순중량). 여기에는 스풀 자체의 무게는 포함되지 않으며 필라멘트만 포함됩니다. 일반적으로 포장지에 표기되는 내용입니다.",
       "spool_weight": "빈 스풀의 무게. 스풀의 측정 무게를 결정하는 데 사용됩니다.",
       "article_number": "예. EAN, UPC, 등.",
-      "multi_color_direction": "필라멘트는 두 가지 방식으로 다중 색상을 가질 수 있습니다: 일관된 다중 색상을 가진 이중 색상 필라멘트처럼 공압출을 통해서이거나, 스풀을 따라 색상이 변하는 그라데이션 필라멘트처럼 종방향 색상 변화를 통해서입니다."
+      "multi_color_direction": "필라멘트는 두 가지 방식으로 다중 색상을 가질 수 있습니다: 일관된 다중 색상을 가진 이중 색상 필라멘트처럼 공압출을 통해서이거나, 스풀을 따라 색상이 변하는 그라데이션 필라멘트처럼 종방향 색상 변화를 통해서입니다.",
+      "low_stock_threshold": "이 필라멘트의 모든 스풀에 남은 총 중량이 이 그램 수 아래로 떨어지면 재주문 대상으로 표시합니다.",
+      "reserve_count": "보유 중인 미개봉 여분 스풀의 수입니다. 스풀 객체를 하나하나 만들지 않고도 수량을 추적할 수 있습니다.",
+      "settings_extruder_temp_range": "제조사가 권장하는 압출기 온도 범위(최소–최대)입니다. 선택 사항이며, 단일 값만 있는 경우 비워 두세요.",
+      "settings_bed_temp_range": "제조사가 권장하는 배드 온도 범위(최소–최대)입니다. 선택 사항이며, 단일 값만 있는 경우 비워 두세요."
     },
     "titles": {
       "create": "필라멘트 생성",
@@ -257,10 +411,75 @@
     "form": {
       "filament_updated": "이 필라멘트는 귀하가 이 페이지를 열었을 때 이후로 다른 사람/무언가에 의해 업데이트 되었습니다. 저장하면 해당 변경 사항이 덮어쓰게 됩니다!",
       "import_external": "외부에서 가져오기",
-      "import_external_description": "목록에서 필라멘트를 선택하면 필라멘트 생성 양식에 해당 세부 정보가 자동으로 채워집니다. 이 경우 양식에 입력한 기존 데이터는 모두 덮어쓰게 됩니다.<br><br>필요한 경우 확인을 클릭하면 제조업체 객체가 자동으로 생성됩니다."
+      "import_external_description": "목록에서 필라멘트를 선택하면 필라멘트 생성 양식에 해당 세부 정보가 자동으로 채워집니다. 이 경우 양식에 입력한 기존 데이터는 모두 덮어쓰게 됩니다.<br><br>필요한 경우 확인을 클릭하면 제조업체 객체가 자동으로 생성됩니다.",
+      "import_3dfp": "3D Filament Profiles ID",
+      "import_3dfp_help": "3dfilamentprofiles.com에서 정보를 가져와 자동으로 입력합니다",
+      "import_3dfp_placeholder": "예: 12875",
+      "import_3dfp_success": "3dfilamentprofiles.com에서 필라멘트를 가져왔습니다",
+      "import_3dfp_error": "3dfilamentprofiles.com에서 필라멘트 데이터를 가져오지 못했습니다",
+      "must_be_positive": "0보다 커야 합니다.",
+      "new_vendor_prompt": "새 제조사 추가",
+      "vendor_created": "제조사가 생성되었습니다",
+      "vendor_create_error": "제조사 생성에 실패했습니다"
     },
     "buttons": {
-      "add_spool": "스풀 추가"
+      "add_spool": "스풀 추가",
+      "fetch": "가져오기",
+      "download_swatch": "스와치",
+      "download_slicer": "슬라이서 프로파일"
+    },
+    "spool_type_options": {
+      "plastic": "플라스틱",
+      "cardboard": "카드보드",
+      "metal": "금속"
+    },
+    "finish_options": {
+      "matte": "무광",
+      "glossy": "유광"
+    },
+    "pattern_options": {
+      "marble": "마블",
+      "sparkle": "스파클"
+    },
+    "tabs": {
+      "details": "상세 정보"
+    },
+    "bulk": {
+      "edit": "수정",
+      "clear_selection": "선택 해제",
+      "edit_help": "변경할 필드에 체크하면 선택한 모든 필라멘트에 적용됩니다. 체크하지 않은 필드는 그대로 유지됩니다.",
+      "apply": "적용",
+      "nothing_selected": "변경할 필드를 하나 이상 체크하세요.",
+      "selected_other": "{{count}}개 선택됨",
+      "edit_title_other": "필라멘트 {{count}}개 편집",
+      "applied_other": "필라멘트 {{count}}개를 업데이트했습니다.",
+      "applied_partial_other": "필라멘트 {{count}}개 업데이트, {{failed}}개 실패."
+    },
+    "swatch": {
+      "title": "3D 프린팅용 스와치",
+      "description": "이 필라멘트의 라벨 정보가 담긴 {{width}} × {{height}} mm 크기의 인쇄용 샘플 카드를 다운로드하세요. 카드 본체는 이 필라멘트로 출력되며, 텍스트와 QR 코드는 필라멘트 색상과의 대비를 위해 선택된 {{color}}의 한 레이어 돌출 마킹으로 표현됩니다.",
+      "print_hint": "마지막 레이어에서 {{color}}으로 필라멘트를 교체하여 카드 전체를 이 필라멘트로 출력하거나, 다색 슬라이서(예: Bambu Studio)에서 내장된 색상 정보를 가져오세요. 어느 방법이든 QR 코드는 스캔할 수 있습니다.",
+      "marking_black": "검은색",
+      "marking_white": "흰색",
+      "truncated_warning": "일부 텍스트가 카드에 맞도록 줄여졌습니다.",
+      "style": "스타일",
+      "styles": {
+        "classic": "클래식",
+        "keychain": "키링",
+        "hanger": "행거",
+        "compact": "컴팩트",
+        "card": "카드"
+      },
+      "download": ".3mf 다운로드"
+    },
+    "view": {
+      "grid": "그리드 보기",
+      "table": "테이블 보기",
+      "grid_tooltip": "필라멘트를 색상 타일로 둘러보기",
+      "table_tooltip": "전체 테이블로 돌아가기"
+    },
+    "messages": {
+      "update_error": "변경 사항을 저장하지 못했습니다. 다시 시도해 주세요."
     }
   },
   "vendor": {
@@ -271,7 +490,9 @@
       "empty_spool_weight": "빈 스풀 중량",
       "external_id": "외부 ID",
       "registered": "등록됨",
-      "comment": "주석"
+      "comment": "주석",
+      "filament_count": "필라멘트 수",
+      "spool_count": "스풀 수"
     },
     "fields_help": {
       "empty_spool_weight": "이 제조사의 빈 스풀 중량."
@@ -282,16 +503,52 @@
       "edit": "제조사 편집",
       "list": "제조사",
       "show": "제조사 보기",
-      "show_title": "[제조사 #{{id}}] {{name}}"
+      "show_title": "[제조사 #{{id}}] {{name}}",
+      "view_spools": "스풀 보기"
     },
     "form": {
-      "vendor_updated": "이 제조업체 정보는 귀하가 이 페이지를 열었을 때 이후로 다른 사람/무언가에 의해 업데이트 되었습니다. 저장하면 해당 변경 사항이 덮어쓰게 됩니다!"
+      "vendor_updated": "이 제조업체 정보는 귀하가 이 페이지를 열었을 때 이후로 다른 사람/무언가에 의해 업데이트 되었습니다. 저장하면 해당 변경 사항이 덮어쓰게 됩니다!",
+      "duplicate_name_warning": "같은 이름의 제조사가 이미 존재합니다."
     }
   },
   "home": {
     "home": "홈",
     "welcome": "스풀맨 인스턴스에 오신 것을 환영합니다!",
-    "description": "아직 스풀을 추가하지 않은 것 같습니다. 시작하는 방법에 대한 도움말은 <helpPageLink>도움말 페이지</helpPageLink>를 참조하세요."
+    "description": "아직 스풀을 추가하지 않은 것 같습니다. 시작하는 방법에 대한 도움말은 <helpPageLink>도움말 페이지</helpPageLink>를 참조하세요.",
+    "total_weight": "총 재고",
+    "total_value": "예상 재고 가치",
+    "low_stock": "재고 부족",
+    "all_stocked": "모든 스풀의 재고가 충분합니다",
+    "all_spools": "전체 스풀",
+    "no_spools": "아직 스풀이 없습니다",
+    "recently_used": "최근 사용",
+    "no_recent": "최근 사용한 스풀이 없습니다",
+    "by_material": "재료별",
+    "by_location": "위치별",
+    "by_vendor": "제조사별",
+    "shopping_list": "쇼핑 목록",
+    "shopping_list_empty": "재고 부족 기준 아래로 떨어진 필라멘트가 없습니다.",
+    "usage": {
+      "tab": "사용량",
+      "empty": "아직 기록된 필라멘트 사용량이 없습니다.",
+      "loading": "로딩 중...",
+      "bucket": {
+        "day": "일",
+        "week": "주",
+        "month": "월",
+        "year": "년"
+      }
+    },
+    "create": {
+      "spool": "새 스풀",
+      "filament": "새 필라멘트",
+      "vendor": "새 제조사"
+    },
+    "kpi": {
+      "this_month": "이번 달",
+      "top": "최다",
+      "materials_other": "재료 {{count}}종"
+    }
   },
   "help": {
     "help": "도움말",
@@ -303,7 +560,15 @@
     "description": "<title>도움말</title><p>시작하는 데 도움이 될 몇 가지 팁을 소개합니다.</p><p>Spoolman은 3가지 유형의 데이터를 보유합니다:</p><itemsHelp/><p>데이터베이스에 새 스풀을 추가하려면 먼저 <filamentCreateLink>필라멘트</filamentCreateLink> 객체를 생성하세요. 그런 다음 해당 스풀에 대한 <spoolCreateLink>스풀</spoolCreateLink> 객체를 생성합니다. 나중에 동일한 필라멘트의 추가 스풀을 구입한 경우, 동일한 필라멘트 객체를 재사용하고 추가 스풀 객체만 생성하면 됩니다.</p><p>필요에 따라 필라멘트 제조사를 추적하려면 해당 회사에 대한 <vendorCreateLink>제조사</vendorCreateLink> 객체를 생성할 수도 있습니다. </p><p>필라멘트 사용량을 자동으로 모니터링하고 스풀 객체를 업데이트해주는 Moonraker 같은 다른 3D 프린터 서비스를 Spoolman에 연결할 수도 있습니다. 설정 방법은 <readmeLink>Spoolman README</readmeLink>를 참고하세요.</p>"
   },
   "table": {
-    "actions": "행동"
+    "actions": "행동",
+    "filter": {
+      "ok": "확인",
+      "search": "검색...",
+      "min": "최소...",
+      "max": "최대...",
+      "from": "시작...",
+      "to": "종료..."
+    }
   },
   "settings": {
     "settings": "설정",
@@ -320,11 +585,15 @@
       "round_prices": {
         "label": "반올림 가격",
         "tooltip": "가격을 가장 가까운 정수로 반올림 합니다."
+      },
+      "unit_scaling": {
+        "label": "큰 단위 자동 변환",
+        "tooltip": "목록과 상세 보기에서 큰 중량과 길이를 원래의 그램/밀리미터 대신 자동 변환된 단위(예: 1.5 kg, 64.37 m)로 표시합니다. 저장된 값과 API에는 영향이 없습니다."
       }
     },
     "extra_fields": {
       "tab": "추가 필드",
-      "description": "<p>여기에서 엔터티에 추가 사용자 정의 필드를 추가할 수 있습니다.</p><p>필드를 추가한 후에는 키나 유형을 변경할 수 없으며, 선택형 필드의 경우 선택 항목을 제거하거나 다중 선택 상태를 변경할 수 없습니다. 필드를 삭제하면 모든 엔티티의 관련 데이터가 삭제됩니다.</p><p>키 값은 다른 프로그램이 데이터를 읽고 쓰는 방식이므로, 사용자 정의 필드가 타사 프로그램과 연동될 예정이라면 반드시 올바르게 설정해야 합니다. 기본값은 새 항목에만 적용됩니다.</p><p>추가 필드는 테이블 보기에서 정렬하거나 필터링할 수 없습니다.</p>",
+      "description": "<p>여기에서 엔티티에 추가 사용자 정의 필드를 추가할 수 있습니다.</p><p>필드를 추가한 후에는 키나 유형을 변경할 수 없으며, 선택형 필드의 경우 선택 항목을 제거하거나 다중 선택 상태를 변경할 수 없습니다. 필드를 삭제하면 모든 엔티티의 관련 데이터가 삭제됩니다.</p><p>키 값은 다른 프로그램이 데이터를 읽고 쓰는 방식이므로, 사용자 정의 필드가 타사 프로그램과 연동될 예정이라면 반드시 올바르게 설정해야 합니다. 기본값은 새 항목에만 적용됩니다.</p><p>추가 필드는 테이블 보기에서 표시하고 정렬할 수 있습니다. 선택형 및 Boolean 필드는 테이블에서 필터 옵션도 제공하며, 모든 추가 필드 유형은 빈 값 필터링을 지원합니다.</p><p>스풀 필드의 경우 \"필라멘트에서 복사\"를 활성화하면 새 스풀이 생성될 때 같은 키를 가진 필라멘트 필드의 값을 물려받습니다(스풀이 자체 값을 설정한 경우는 제외).</p><p>\"링크\" 필드는 항목마다 짧은 값(예: 제품 번호)을 저장하고 링크 URL 템플릿을 사용해 클릭 가능한 링크로 만듭니다 — 값이 들어갈 자리에 {}를 넣으세요. 예: https://www.amazon.com/dp/{}.</p>",
       "params": {
         "key": "키",
         "name": "이름",
@@ -333,7 +602,9 @@
         "order": "순번",
         "default_value": "기본값",
         "choices": "선택",
-        "multi_choice": "다중 선택"
+        "multi_choice": "다중 선택",
+        "copy_from_filament": "필라멘트에서 복사",
+        "link_template": "링크 URL"
       },
       "field_type": {
         "text": "텍스트",
@@ -343,7 +614,8 @@
         "float_range": "Float 범위",
         "datetime": "날짜 및 시간",
         "boolean": "Boolean",
-        "choice": "선택"
+        "choice": "선택",
+        "link": "링크"
       },
       "boolean_true": "네",
       "boolean_false": "아니오",
@@ -352,6 +624,76 @@
       "key_not_changed": "키 값을 다른 것으로 바꿔 주세요.",
       "delete_confirm": "{{name}} 필드 삭제?",
       "delete_confirm_description": "이 작업은 모든 엔티티에 대해 해당 필드와 관련된 모든 데이터를 삭제합니다."
+    },
+    "swatch": {
+      "tab": "스와치",
+      "default_style": {
+        "label": "기본 스와치 스타일",
+        "tooltip": "3D 프린팅용 필라멘트 스와치를 다운로드할 때 기본으로 선택되는 스타일입니다. 새 스타일은 client/src/utils/swatch/styles.ts를 통해 Spoolman에 기여할 수 있습니다."
+      },
+      "preview_description": "두 가지 예시 필라멘트로 미리보기 — 텍스트와 QR 코드는 필라멘트 색상과 대비가 가장 좋은 검은색 또는 흰색으로 자동 인쇄됩니다:"
+    },
+    "import_export": {
+      "tab": "가져오기 / 내보내기",
+      "export_title": "데이터 내보내기",
+      "export_help": "제조사, 필라멘트 또는 스풀을 CSV나 JSON으로 다운로드합니다. 스풀에는 제조사와 필라멘트 데이터가 포함됩니다.",
+      "import_title": "데이터 가져오기",
+      "import_help": "내보내기와 같은 형식의 CSV 또는 JSON 파일을 업로드하세요. 파일 전체가 전부 적용되거나 전부 취소되는 하나의 트랜잭션으로 처리됩니다. 먼저 시험 실행으로 결과를 미리 확인하세요.",
+      "report_title": "재고 보고서",
+      "report_help": "현재 재고에 대한 인쇄용 요약을 엽니다.",
+      "report_heading": "Spoolman 재고 보고서",
+      "entities": {
+        "spools": "스풀",
+        "filaments": "필라멘트",
+        "vendors": "제조사"
+      },
+      "modes": {
+        "create": "새로 생성",
+        "upsert": "업데이트 또는 생성",
+        "skip_existing": "기존 항목 건너뛰기"
+      },
+      "dry_run": "시험 실행",
+      "dry_run_prefix": "시험 실행 —",
+      "choose_file": "파일 선택",
+      "validate": "검증",
+      "import_button": "가져오기",
+      "print_report": "보고서 인쇄",
+      "no_file": "먼저 파일을 선택해 주세요.",
+      "result": "{{created}}개 생성, {{updated}}개 업데이트, {{skipped}}개 건너뜀.",
+      "import_errors": "가져오기 실패",
+      "threemf": {
+        "title": "슬라이싱된 3MF 프로젝트 가져오기",
+        "help": "Bambu Studio 또는 OrcaSlicer에서 슬라이싱한 .3mf 파일을 업로드하면 출력에 사용된 각 필라멘트의 양을 읽어 스풀과 매칭하고, 한 번에 사용량을 차감합니다.",
+        "choose_file": ".3mf 파일 선택",
+        "no_filaments": "이 3MF에서 필라멘트 사용량을 찾지 못했습니다.",
+        "no_match": "일치하는 스풀 없음 — 직접 선택하세요",
+        "col_filament": "출력 필라멘트",
+        "col_used": "사용량",
+        "col_spool": "차감할 스풀",
+        "apply": "사용량 적용",
+        "applied": "스풀 {{count}}개에 사용량을 기록했습니다.",
+        "applied_partial": "스풀 {{ok}}개에 사용량 기록, {{fail}}개 실패."
+      }
+    },
+    "printers": {
+      "tab": "프린터",
+      "description": "<p>여기에서 프린터를 관리하세요. 프린터가 하나 이상 있으면 스풀 생성 또는 수정 양식에서 스풀을 프린터에 할당할 수 있습니다.</p>",
+      "add_title": "프린터 추가",
+      "edit_title": "프린터 수정",
+      "delete_confirm": "프린터 \"{{name}}\"을(를) 삭제하시겠습니까? 이 프린터에 할당된 스풀은 삭제되지 않고 할당만 해제됩니다."
+    },
+    "custom_links": {
+      "sidebar_tab": "사이드바 링크",
+      "spool_tab": "스풀 동작",
+      "sidebar_description": "<p>왼쪽 사이드바에 나만의 링크를 추가하세요. 예를 들어 프린터의 Mainsail 또는 Fluidd 페이지 등입니다. 링크는 새 탭에서 열립니다.</p>",
+      "spool_description": "<p>각 스풀에 사용자 정의 동작 버튼을 추가하세요. URL에는 스풀의 필드를 중괄호로 넣을 수 있으며 — {id}, {filament_id}, {location}, {lot_nr}, {comment} — 스풀마다 값이 채워지므로 nfc2klipper나 Moonraker의 활성 스풀 엔드포인트 같은 도구를 클릭 한 번으로 사용할 수 있습니다.</p>",
+      "name": "이름",
+      "url": "URL",
+      "url_template": "URL 템플릿",
+      "url_template_help": "스풀 ID가 들어갈 자리에 {id}를 사용하세요. 예: http://moonraker.local/...?id={id}",
+      "add_title": "링크 추가",
+      "edit_title": "링크 수정",
+      "delete_confirm": "이 링크를 삭제하시겠습니까?"
     }
   },
   "documentTitle": {
@@ -392,6 +734,261 @@
     "locations": "위치",
     "new_location": "새로운 위치",
     "no_location": "위치 없음",
-    "no_locations_help": "이 페이지에서는 스풀을 위치별로 정리할 수 있습니다. 시작하려면 스풀을 추가하세요!"
+    "no_locations_help": "이 페이지에서는 스풀을 위치별로 정리할 수 있습니다. 시작하려면 스풀을 추가하세요!",
+    "location": "위치",
+    "error_empty": "이름은 비워 둘 수 없습니다",
+    "error_exists": "위치가 이미 존재합니다",
+    "fields": {
+      "button": "사용자 정의 필드",
+      "title": "사용자 정의 필드 — {{name}}",
+      "saved": "위치 필드가 저장되었습니다",
+      "save_error": "위치 필드를 저장하지 못했습니다",
+      "load_error": "위치를 불러오지 못했습니다"
+    },
+    "show": {
+      "name": "이름",
+      "comment": "주석",
+      "spool_count": "보관 중인 스풀",
+      "spools_here": "이 위치의 스풀",
+      "no_spools": "이 위치에 보관된 스풀이 없습니다."
+    },
+    "print": {
+      "title": "위치 라벨 인쇄",
+      "button": "라벨 인쇄",
+      "description": "스캔 가능한 QR 라벨을 인쇄할 위치를 선택하세요.",
+      "select_placeholder": "위치 선택",
+      "none_selected": "선택된 위치가 없습니다"
+    }
+  },
+  "errorBoundary": {
+    "title": "문제가 발생했습니다",
+    "subTitle": "이 페이지를 표시하지 못했습니다. 보기 설정을 변경하거나 공유한 뒤부터 발생했다면, 설정을 초기화하면 대부분 해결됩니다.",
+    "reset": "보기 설정 초기화 후 새로고침",
+    "home": "홈 페이지로 이동"
+  },
+  "apiToken": {
+    "title": "API 토큰 필요",
+    "help": "이 Spoolman 인스턴스는 API 토큰이 필요합니다. 계속하려면 토큰을 입력하세요. 토큰은 이 브라우저에 저장됩니다.",
+    "placeholder": "API 토큰",
+    "submit": "토큰 저장"
+  },
+  "auth": {
+    "logout": "로그아웃",
+    "login": {
+      "title": "로그인",
+      "submit": "로그인",
+      "username": "사용자 이름",
+      "password": "비밀번호"
+    },
+    "roles": {
+      "admin": "관리자",
+      "readonly": "읽기 전용"
+    },
+    "users": {
+      "tab": "사용자",
+      "title": "사용자 계정",
+      "help": "로그인을 요구하려면 계정을 생성하세요. 읽기 전용 사용자는 모든 내용을 볼 수 있지만 변경할 수는 없습니다. 첫 번째 계정은 항상 관리자입니다.",
+      "role": "역할",
+      "add": "사용자 추가",
+      "need_fields": "사용자 이름과 비밀번호를 입력하세요.",
+      "created": "사용자 {{username}}을(를) 생성했습니다.",
+      "reset_password": "비밀번호 재설정",
+      "reset_password_for": "{{username}}의 비밀번호 재설정",
+      "reset_password_help": "이 사용자의 새 비밀번호를 입력하세요.",
+      "password_reset": "비밀번호가 변경되었습니다.",
+      "delete_confirm": "이 사용자를 삭제하시겠습니까?"
+    }
+  },
+  "colorFilter": {
+    "button": "색상",
+    "title": "유사 색상으로 필터",
+    "threshold": "허용 오차",
+    "help": "선택한 색상과의 차이가 이 허용 오차 이내인 항목을 표시합니다.",
+    "advanced": "더 많은 색상"
+  },
+  "theme": {
+    "label": "테마",
+    "system": "시스템",
+    "light": "라이트",
+    "dark": "다크"
+  },
+  "scan": {
+    "title": "스캔",
+    "qr": "QR 코드",
+    "nfc": "NFC",
+    "nfc_hint": "이 브라우저에서는 NFC 스캔을 사용할 수 없습니다. Android Chrome을 사용하거나 서버 측 NFC 리더를 연결하세요.",
+    "action": {
+      "open": "열기",
+      "move": "스풀 이동"
+    },
+    "move": {
+      "scan_spool": "이동할 스풀을 스캔하세요.",
+      "scan_location": "스풀 #{{id}} 선택됨. 이제 대상 위치를 스캔하세요.",
+      "confirm_title": "스풀을 이동하시겠습니까?",
+      "confirm_content": "스풀 #{{spool}}을(를) \"{{location}}\"(으)로 이동하시겠습니까?",
+      "moved": "스풀 #{{spool}}을(를) \"{{location}}\"(으)로 이동했습니다.",
+      "load_error": "스캔한 위치를 불러오지 못했습니다."
+    },
+    "clear": {
+      "recognized": "스풀 해제 코드가 인식되었습니다. Spoolman에는 활성 스풀이 없으며, 해제는 프린터나 Moonraker 연동에서 처리합니다."
+    },
+    "barcode": {
+      "unknown_title": "알 수 없는 바코드",
+      "unknown_content": "바코드 {{code}}를 가진 필라멘트가 없습니다. 필라멘트를 생성하고 이 바코드를 기억하시겠습니까?",
+      "create_filament": "필라멘트 생성",
+      "lookup_error": "해당 바코드를 조회할 수 없습니다."
+    }
+  },
+  "printer": {
+    "printer": "프린터",
+    "fields": {
+      "name": "이름",
+      "comment": "주석",
+      "spool_count": "스풀 수"
+    }
+  },
+  "calibration": {
+    "title": "캘리브레이션",
+    "no_data": "아직 캘리브레이션 데이터가 없습니다.",
+    "recommended_title": "보정된 설정",
+    "no_recommended": "아직 설정된 권장 값이 없습니다.",
+    "buttons": {
+      "start": "캘리브레이션 시작",
+      "edit_session": "수정",
+      "delete_session": "삭제",
+      "add_step": "결과 추가",
+      "edit_step": "수정",
+      "delete_step": "삭제",
+      "save": "저장"
+    },
+    "fields": {
+      "last_session": "마지막 세션",
+      "history": "캘리브레이션 이력",
+      "steps_count": "{{count}}개 단계 기록됨",
+      "no_steps": "아직 기록된 단계 결과가 없습니다.",
+      "printer_name": "프린터 이름",
+      "nozzle_diameter": "노즐 직경 (mm)",
+      "notes": "메모",
+      "status": "상태",
+      "step_type": "캘리브레이션 단계",
+      "confidence": "신뢰도",
+      "inputs": "입력값",
+      "outputs_and_recommended": "출력값 및 권장 값"
+    },
+    "session_form": {
+      "create_title": "캘리브레이션 세션 시작",
+      "edit_title": "캘리브레이션 세션 수정"
+    },
+    "step_form": {
+      "add_title": "단계 결과 추가",
+      "edit_title": "단계 결과 수정",
+      "recommended_hint": "여기에 입력한 값은 스풀 페이지에 권장 설정으로 표시됩니다."
+    },
+    "status": {
+      "planned": "계획됨",
+      "in_progress": "진행 중",
+      "complete": "완료",
+      "archived": "보관됨"
+    },
+    "confidence": {
+      "high": "높음",
+      "medium": "중간",
+      "low": "낮음"
+    },
+    "step_types": {
+      "temperature": "온도",
+      "volumetric_speed": "체적 속도",
+      "pressure_advance": "프레셔 어드밴스",
+      "flow_rate": "유량",
+      "retraction": "리트랙션",
+      "tolerance": "공차",
+      "cornering": "코너링",
+      "input_shaping": "인풋 셰이핑",
+      "vfa": "VFA"
+    },
+    "delete_session_confirm": "이 캘리브레이션 세션과 모든 단계 결과를 삭제하시겠습니까?",
+    "delete_step_confirm": "이 단계 결과를 삭제하시겠습니까?",
+    "wizard": {
+      "title": "캘리브레이션 마법사",
+      "subtitle": "OrcaSlicer 캘리브레이션 가이드를 단계별로 따라 합니다. 어느 단계든 건너뛰고 나중에 이어서 할 수 있습니다.",
+      "start": "마법사 시작",
+      "resume": "마법사 이어하기",
+      "step_of": "{{total}}단계 중 {{current}}단계",
+      "already_done": "이미 기록됨",
+      "buttons": {
+        "back": "이전",
+        "skip": "건너뛰기",
+        "save_continue": "저장 후 계속",
+        "save_finish": "저장 후 완료",
+        "skip_finish": "건너뛰고 완료",
+        "finish": "완료",
+        "cancel": "취소"
+      },
+      "skip_finish_confirm": "이 단계를 저장하지 않고 세션을 완료로 표시하시겠습니까?",
+      "session_complete": "캘리브레이션 세션이 완료로 표시되었습니다."
+    }
+  },
+  "external": {
+    "source_spoolmandb": "SpoolmanDB",
+    "source_tigertag": "TigerTag"
+  },
+  "nfc": {
+    "scan_title": "NFC 태그 스캐너",
+    "scan_description": "NFC 태그를 스캔하여 스풀의 세부 정보를 확인하세요.",
+    "encode_button": "NFC에 기록",
+    "encode_title": "스풀을 NFC 태그에 기록",
+    "write_success": "태그 기록 완료!",
+    "write_error": "태그 기록에 실패했습니다.",
+    "no_match": "이 태그와 일치하는 스풀이 없습니다.",
+    "create_from_tag": "태그로 스풀 생성",
+    "create_from_tag_description": "일치하는 스풀이 없습니다. 아래 태그 데이터로 새 스풀을 생성할 수 있습니다.",
+    "creating_spool": "스풀 생성 중...",
+    "create_success": "스풀 생성 완료!",
+    "create_error": "태그 데이터로 스풀을 생성하지 못했습니다.",
+    "tag_color": "색상",
+    "tag_diameter": "외경",
+    "tag_weight": "중량",
+    "tag_nozzle_temp": "노즐 온도",
+    "tag_bed_temp": "배드 온도",
+    "mode_browser": "브라우저",
+    "mode_server": "서버",
+    "unsupported": "이 브라우저에서는 NFC가 지원되지 않습니다.",
+    "place_tag": "태그를 리더에 올려놓으세요...",
+    "reading": "태그 읽는 중...",
+    "writing": "태그 기록 중...",
+    "user_message": "사용자 메시지",
+    "user_message_help": "선택적 메시지 (최대 28자)",
+    "preview_title": "데이터 미리보기",
+    "status": {
+      "connected": "연결됨",
+      "disconnected": "연결 끊김",
+      "disabled": "비활성화됨"
+    },
+    "browser_ndef_warning": "경고: 브라우저 NFC 기록은 NDEF 형식을 사용합니다. 이렇게 기록된 태그는 4–39 페이지의 원시 바이너리를 기대하는 TigerTag 앱에서 인식되지 않습니다. TigerTag 호환 기록에는 서버 모드를 사용하거나, 외부 NFC 도구에서 사용할 수 있도록 원시 바이너리 다운로드를 이용하세요.",
+    "download_raw_binary": "원시 바이너리 다운로드",
+    "download_success": "바이너리 파일이 다운로드되었습니다.",
+    "browser_write_success": "NDEF를 통해 TigerTag 데이터를 NFC 태그에 기록했습니다.",
+    "error": {
+      "no_reader": "감지된 NFC 리더가 없습니다.",
+      "read_failed": "태그를 읽지 못했습니다.",
+      "write_failed": "태그를 기록하지 못했습니다.",
+      "not_supported": "이 브라우저에서는 Web NFC가 지원되지 않습니다. 리더가 연결된 서버 모드를 사용하세요.",
+      "permission_denied": "NFC 권한이 거부되었습니다.",
+      "encode_failed": "TigerTag 데이터 인코딩에 실패했습니다."
+    },
+    "bind_title": "NFC 태그를 스풀에 연결",
+    "bind_button": "NFC 태그 연결",
+    "bind_description": "기존 NFC 태그를 스캔하여 이 스풀에 연결하세요. 이후 이 태그를 스캔하면 자동으로 이 스풀이 선택됩니다.",
+    "bind_confirm_description": "태그를 스캔했습니다. 아래 태그 데이터를 검토한 뒤 확인하면 이 스풀에 연결됩니다.",
+    "bind_binding": "연결 중...",
+    "bind_success": "태그가 스풀에 연결되었습니다!",
+    "bind_error": "태그를 스풀에 연결하지 못했습니다.",
+    "bind_scan_again": "다시 스캔",
+    "bind_no_tigertag": "이 태그에서 TigerTag 데이터를 찾지 못했습니다. 연결에는 TigerTag 형식만 지원됩니다.",
+    "tag_format": "태그 형식",
+    "tag_format_label": "태그 형식",
+    "tag_material": "재료",
+    "tag_material_type": "재료 유형",
+    "qidi_write_info": "Qidi 태그는 재료와 색상만 저장합니다. 태그에는 가장 근접한 Qidi 재료 및 색상 코드가 기록됩니다."
   }
 }

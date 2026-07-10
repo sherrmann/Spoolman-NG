@@ -28,7 +28,16 @@
     "hideArchived": "Skrij arhiv",
     "showArchived": "Prikaži arhiv",
     "notAccessTitle": "Nimate dovoljenja za dostop",
-    "clearFilters": "Počisti filtre"
+    "clearFilters": "Počisti filtre",
+    "search": "Iskanje",
+    "resetUsage": "Ponastavi porabo",
+    "hideArchivedTooltip": "Nazaj na aktivne kolute",
+    "showArchivedTooltip": "Preklopi na arhivirane kolute",
+    "columns": "Stolpci",
+    "clearFiltersTooltip": "Ponastavi vse filtre in razvrščanje",
+    "labelsAndTags": "Nalepke in oznake",
+    "export": "Izvozi",
+    "columnsTooltip": "Izberite, prerazporedite in skrijte stolpce tabele"
   },
   "notifications": {
     "saveSuccessful": "Uspešno shranjeno!",
@@ -97,7 +106,18 @@
       "deleteSettingsConfirm": "Ali ste prepričani, da želite izbrisati to prednastavitev?",
       "settingsName": "Ime prednastavitve",
       "saveSetting": "Shrani prednastavitve",
-      "saveAsImage": "Shrani kot sliko"
+      "saveAsImage": "Shrani kot sliko",
+      "pageSizeMode": {
+        "label": "Velikost strani",
+        "tooltip": "»Samodejno« prepusti izbiro geometrije strani tiskalniku/brskalniku (privzeto). »Ujemanje z velikostjo nalepke« iz zgornjih mer papirja izpiše izrecno velikost @page — uporabite to za tiskalnike nalepk na zvitku (npr. Brother QL), da se nalepke natisnejo v pravi velikosti in usmerjenosti. Najbolje podprto v Chromu.",
+        "auto": "Samodejno (privzeto za tiskalnik)",
+        "matchLabel": "Ujemanje z velikostjo nalepke"
+      },
+      "saveAsZpl": "Prenesi ZPL",
+      "invalidGeometry": "Mreža nalepk se ne prilega papirju",
+      "invalidGeometryHelp": "Robovi in razmiki ne puščajo prostora za nalepke. Zmanjšajte robove, razmike, število stolpcev ali vrst — ali izberite večjo velikost papirja.",
+      "contentClipped": "Del vsebine nalepk je odrezan",
+      "contentClippedHelp": "Vsebina vsaj ene nalepke ne gre v celoti na nalepko in bo pri tiskanju odrezana. Zmanjšajte velikost besedila, skrajšajte predlogo ali uporabite manj stolpcev/vrst, da bo vsaka nalepka večja."
     },
     "qrcode": {
       "button": "Natisni nalepke",
@@ -120,7 +140,42 @@
         "no": "Ne",
         "simple": "Preprosto",
         "withIcon": "Z ikono"
-      }
+      },
+      "textColumns": {
+        "label": "Stolpci besedila",
+        "tooltip": "Besedilo nalepke razporedi v toliko stolpcev. Priročno za ozke nalepke z več kratkimi vrsticami."
+      },
+      "qrPadding": "Odmik QR kode",
+      "customPayload": {
+        "label": "Vsebina QR kode po meri",
+        "tooltip": "Preglasi vsebino skenirane QR kode s predlogo (iste oznake kot pri nalepki). Pustite prazno za privzeto Spoolmanovo vsebino. Vrednost po meri se znotraj Spoolmana skenira le, če še vedno ustreza prepoznanemu formatu (WEB+SPOOLMAN:S-{id} / F-{id} ali URL /spool/show/{id})."
+      },
+      "qrErrorLevel": {
+        "label": "Popravljanje napak QR kode",
+        "tooltip": "Višje stopnje prenesejo več poškodb/umazanije na nalepki, a naredijo QR kodo gostejšo (majhno jo je težje skenirati). Privzeta je H (najvišja)."
+      },
+      "qrPlacement": {
+        "label": "Položaj QR kode",
+        "tooltip": "Kje stoji QR koda glede na besedilo nalepke. Postavitev nad ali pod besedilo je primerna za visoke, ozke nalepke.",
+        "left": "Levo",
+        "top": "Zgoraj",
+        "bottom": "Spodaj"
+      },
+      "showColorSwatch": {
+        "label": "Natisni barvni vzorec",
+        "tooltip": "Na nalepko natisne majhen kvadratek v barvi filamenta."
+      },
+      "barcode1d": {
+        "label": "1D črtna koda",
+        "tooltip": "Poleg QR kode po želji natisne še 1D črtno kodo z vsebino QR kode — za čitalnike, ki berejo samo linearne črtne kode.",
+        "none": "Brez",
+        "code128": "Code 128"
+      },
+      "exportButton": "Izvozi nalepke",
+      "printFilamentTitle": "Natisni nalepke filamentov",
+      "printSpoolTitle": "Natisni nalepke kolutov",
+      "templateHelpFilament": "Uporabite {}, da vstavite vrednosti objekta filament kot besedilo. Na primer, {id} bo nadomeščen z identifikacijsko številko filamenta, {vendor.name} pa z imenom proizvajalca. Če vrednost manjka, bo nadomeščena z znakom »?«. To lahko odstranite z dodatnim nizom {}. Poleg tega bo vsak tekst med sklopi {} odstranjen, če vrednost manjka. Na primer, {Article: {article_number}} bo prikazal napis le, če ima filament številko izdelka. Tekst obdajte z dvojno zvezdico **, da bo poudarjen. Kliknite gumb, da si ogledate seznam vseh razpoložljivih oznak.",
+      "tooltip": "Natisnite nalepke za izbrane vrstice ali izberite elemente na naslednji strani"
     },
     "spoolSelect": {
       "description": "Izberite kolute, za katere želite natisniti nalepke.",
@@ -131,7 +186,29 @@
       "selectedTotal_two": "Izbrana {{count}} koluta",
       "selectedTotal_few": "Izbrani {{count}} koluti",
       "selectedTotal_other": "Izbranih {{count}} kolutov",
-      "selectAll": "Izberi/Odstrani izbiro vseh"
+      "selectAll": "Izberi/Odstrani izbiro vseh",
+      "hidePrinted": "Skrij že natisnjene",
+      "reprintConfirmTitle": "Znova natisnem nalepke?",
+      "reprintConfirmContent_one": "{{count}} izbrani kolut že ima natisnjeno nalepko. Jo natisnem znova?",
+      "reprintConfirmContent_two": "{{count}} izbrana koluta že imata natisnjeni nalepki. Ju natisnem znova?",
+      "reprintConfirmContent_few": "{{count}} izbrani koluti že imajo natisnjene nalepke. Jih natisnem znova?",
+      "reprintConfirmContent_other": "{{count}} izbranih kolutov že ima natisnjene nalepke. Jih natisnem znova?"
+    },
+    "filamentSelect": {
+      "title": "Izberite filamente",
+      "description": "Izberite filamente, za katere želite natisniti nalepke.",
+      "hidePrinted": "Skrij že natisnjene",
+      "reprintConfirmTitle": "Znova natisnem nalepke?",
+      "noFilamentsSelected": "Niste izbrali filamentov.",
+      "selectAll": "Izberi/Odstrani izbiro vseh",
+      "reprintConfirmContent_one": "{{count}} izbrani filament že ima natisnjeno nalepko. Jo natisnem znova?",
+      "reprintConfirmContent_two": "{{count}} izbrana filamenta že imata natisnjeni nalepki. Ju natisnem znova?",
+      "reprintConfirmContent_few": "{{count}} izbrani filamenti že imajo natisnjene nalepke. Jih natisnem znova?",
+      "reprintConfirmContent_other": "{{count}} izbranih filamentov že ima natisnjene nalepke. Jih natisnem znova?",
+      "selectedTotal_one": "Izbran {{count}} filament",
+      "selectedTotal_two": "Izbrana {{count}} filamenta",
+      "selectedTotal_few": "Izbrani {{count}} filamenti",
+      "selectedTotal_other": "Izbranih {{count}} filamentov"
     }
   },
   "warnWhenUnsavedChanges": "Ali ste prepričani, da želite zapustiti stran? Imate ne shranjene spremembe.",
@@ -171,7 +248,13 @@
       "last_used": "Zadnjič uporabljeno",
       "registered": "Registrirano",
       "comment": "Komentar",
-      "archived": "Arhivirano"
+      "archived": "Arhivirano",
+      "filament_name_only": "Ime",
+      "vendor_name": "Proizvajalec",
+      "color": "Barva",
+      "printer": "Tiskalnik",
+      "diameter": "Premer",
+      "color_hex": "Barva"
     },
     "fields_help": {
       "price": "Cena polnega koluta. Če ta vrednost ni nastavljena, se namesto nje upošteva cena filamenta.",
@@ -183,7 +266,10 @@
       "spool_weight": "Masa praznega koluta. Pustite prazno, če želite uporabiti vrednost, navedeno pri filamentu ali pri proizvajalcu.",
       "location": "Kje se nahaja kolut, če imate več mest za shranjevanje.",
       "lot_nr": "Številka serije proizvajalca. Uporablja se za zagotavljanje barvne doslednosti tiska, če se uporablja več kolutov.",
-      "external_filament": "Izbrali ste filament iz zunanje zbirke podatkov. Ob ustvarjanju koluta se bo samodejno ustvaril objekt filamenta (in morebiti tudi objekt proizvajalca). Če ste za ta filament že ustvarili objekt filamenta, lahko to povzroči nastanek podvojenih objektov filamenta."
+      "external_filament": "Izbrali ste filament iz zunanje zbirke podatkov. Ob ustvarjanju koluta se bo samodejno ustvaril objekt filamenta (in morebiti tudi objekt proizvajalca). Če ste za ta filament že ustvarili objekt filamenta, lahko to povzroči nastanek podvojenih objektov filamenta.",
+      "printer": "Tiskalnik, na katerem je ta kolut trenutno naložen. Tiskalnike upravljate v nastavitvah.",
+      "diameter": "Izmerjeni premer filamenta za ta konkretni kolut, uporabljen pri izračunih dolžine. Pustite prazno, da se uporabi premer filamenta.",
+      "color_hex": "Neobvezna barva za ta konkretni kolut, ki preglasi barvo filamenta. Počistite, da se uporabi barva filamenta."
     },
     "titles": {
       "create": "Ustvari kolut",
@@ -196,10 +282,91 @@
       "adjust": "Prilagodi filament koluta"
     },
     "messages": {
-      "archive": "Ali res želite arhivirati ta kolut?"
+      "archive": "Ali res želite arhivirati ta kolut?",
+      "update_error": "Sprememb ni bilo mogoče shraniti. Poskusite znova.",
+      "reset_usage": "Ponastavim porabljeno maso tega koluta na nič? S tem se počistita datuma prve in zadnje uporabe."
     },
     "formats": {
       "last_used": "Nazadnje uporabljeno: {{date}}"
+    },
+    "custom_actions": "Dejanja",
+    "bulk": {
+      "edit": "Uredi",
+      "clear_selection": "Počisti izbiro",
+      "edit_help": "Označite polje, da ga spremenite na vseh izbranih kolutih. Neoznačena polja ostanejo nespremenjena.",
+      "apply": "Uporabi",
+      "nothing_selected": "Označite vsaj eno polje, ki ga želite spremeniti.",
+      "selected_one": "{{count}} izbran",
+      "selected_two": "{{count}} izbrana",
+      "selected_few": "{{count}} izbrani",
+      "selected_other": "{{count}} izbranih",
+      "edit_title_one": "Uredi {{count}} kolut",
+      "edit_title_two": "Uredi {{count}} koluta",
+      "edit_title_few": "Uredi {{count}} kolute",
+      "edit_title_other": "Uredi {{count}} kolutov",
+      "applied_one": "Posodobljen {{count}} kolut.",
+      "applied_two": "Posodobljena {{count}} koluta.",
+      "applied_few": "Posodobljeni {{count}} koluti.",
+      "applied_other": "Posodobljenih {{count}} kolutov.",
+      "applied_partial_one": "Posodobljen {{count}} kolut, neuspešno: {{failed}}.",
+      "applied_partial_two": "Posodobljena {{count}} koluta, neuspešno: {{failed}}.",
+      "applied_partial_few": "Posodobljeni {{count}} koluti, neuspešno: {{failed}}.",
+      "applied_partial_other": "Posodobljenih {{count}} kolutov, neuspešno: {{failed}}.",
+      "archive_confirm_one": "Arhiviram {{count}} kolut?",
+      "archive_confirm_two": "Arhiviram {{count}} koluta?",
+      "archive_confirm_few": "Arhiviram {{count}} kolute?",
+      "archive_confirm_other": "Arhiviram {{count}} kolutov?",
+      "unarchive_confirm_one": "Odstranim {{count}} kolut iz arhiva?",
+      "unarchive_confirm_two": "Odstranim {{count}} koluta iz arhiva?",
+      "unarchive_confirm_few": "Odstranim {{count}} kolute iz arhiva?",
+      "unarchive_confirm_other": "Odstranim {{count}} kolutov iz arhiva?"
+    },
+    "weigh": {
+      "button": "Stehtaj kolute",
+      "title": "Tehtanje kolutov",
+      "help": "Poiščite kolut, vnesite izmerjeno vrednost in nato s »Shrani in naslednji« stehtajte naslednjega, ne da bi zaprli okno.",
+      "spool": "Kolut",
+      "search_placeholder": "Išči po ID-ju, filamentu, št. serije …",
+      "save_next": "Shrani in naslednji",
+      "done": "Končano",
+      "updated": "Posodobljeno: {{name}}",
+      "pick_spool": "Najprej izberite kolut.",
+      "tooltip": "Zaporedoma znova stehtajte več kolutov"
+    },
+    "view": {
+      "grid": "Mrežni pogled",
+      "table": "Tabelarični pogled",
+      "grid_tooltip": "Prikaži kolute kot barvne ploščice",
+      "table_tooltip": "Nazaj na celotno tabelo"
+    },
+    "filament_extra_fields": "Polja filamenta",
+    "sibling_spools": {
+      "title": "Drugi koluti tega filamenta",
+      "button": "Sorodni koluti",
+      "tooltip": "Prikaži vse kolute tega filamenta"
+    },
+    "usage_history": {
+      "title": "Zgodovina porabe",
+      "time": "Čas",
+      "type": "Vrsta",
+      "change": "Sprememba",
+      "comment": "Komentar",
+      "empty": "Poraba še ni zabeležena."
+    },
+    "weight_history": {
+      "title": "Zgodovina mase",
+      "chart_label": "Izmerjena masa skozi čas",
+      "idle_gain": "Izmerjena masa se je med meritvama povečala za {{grams}} g — kolut je morda vsrkal vlago. (Poskusno)"
+    },
+    "totals": {
+      "shown_one": "Prikazan {{count}} kolut",
+      "shown_two": "Prikazana {{count}} koluta",
+      "shown_few": "Prikazani {{count}} koluti",
+      "shown_other": "Prikazanih {{count}} kolutov",
+      "selected_one": "Izbran {{count}} kolut",
+      "selected_two": "Izbrana {{count}} koluta",
+      "selected_few": "Izbrani {{count}} koluti",
+      "selected_other": "Izbranih {{count}} kolutov"
     }
   },
   "settings": {
@@ -215,7 +382,11 @@
         "label": "Zaokrožene cene",
         "tooltip": "Zaokroži cene na najbližje celo število."
       },
-      "tab": "Splošno"
+      "tab": "Splošno",
+      "unit_scaling": {
+        "label": "Pretvarjanje velikih enot",
+        "tooltip": "Velike mase in dolžine v seznamu in podrobnostih prikaže samodejno pretvorjene (npr. 1,5 kg ali 64,37 m) namesto v golih gramih/milimetrih. Shranjene vrednosti in API ostanejo nespremenjeni."
+      }
     },
     "settings": "Nastavitve",
     "header": "Nastavitve",
@@ -229,7 +400,9 @@
         "order": "Zaporedje",
         "default_value": "Privzeta vrednost",
         "choices": "Izbire",
-        "multi_choice": "Več izbir"
+        "multi_choice": "Več izbir",
+        "copy_from_filament": "Kopiraj iz filamenta",
+        "link_template": "URL povezave"
       },
       "field_type": {
         "text": "Besedilo",
@@ -239,7 +412,8 @@
         "float_range": "Območje decimalnih števil",
         "datetime": "Datum in čas",
         "boolean": "Logična vrednost",
-        "choice": "Izbira"
+        "choice": "Izbira",
+        "link": "Povezava"
       },
       "boolean_true": "Da",
       "boolean_false": "Ne",
@@ -247,8 +421,78 @@
       "key_not_changed": "Spremenite geslo v nekaj drugega.",
       "delete_confirm": "Zbrišem polje {{name}}?",
       "delete_confirm_description": "S tem boste izbrisali polje in vse povezane podatke za vse vnose.",
-      "description": "<p>Tukaj lahko svojim entitetam dodate dodatna polja po meri.</p><p>Ko je polje dodano, njegovega ključa ali tipa ni mogoče spremeniti, pri poljih tipa »izbira« pa ni mogoče odstraniti možnosti ali spremeniti nastavitve za večkratno izbiro. Če polje odstranite, bodo povezani podatki za vse entitete izbrisani.</p><p>Ključ je tisto, kar drugi programi uporabljajo za branje/pisanje podatkov, zato če naj bi se vaše polje po meri integriralo s programom tretje osebe, poskrbite, da ga nastavite pravilno. Privzeta vrednost se uporablja le za nove elemente.</p><p>Dodatna polja ni mogoče razvrstiti ali filtrirati v pogledih tabel.</p>",
+      "description": "<p>Tukaj lahko svojim entitetam dodate dodatna polja po meri.</p><p>Ko je polje dodano, njegovega ključa ali tipa ni mogoče spremeniti, pri poljih tipa »izbira« pa ni mogoče odstraniti možnosti ali spremeniti nastavitve za večkratno izbiro. Če polje odstranite, bodo povezani podatki za vse entitete izbrisani.</p><p>Ključ je tisto, kar drugi programi uporabljajo za branje/pisanje podatkov, zato če naj bi se vaše polje po meri integriralo s programom tretje osebe, poskrbite, da ga nastavite pravilno. Privzeta vrednost se uporablja le za nove elemente.</p><p>Dodatna polja je mogoče prikazati in razvrščati v pogledih tabel. Polja tipa izbira in logična polja tam ponujajo tudi možnosti filtriranja, vsi tipi dodatnih polj pa podpirajo filtriranje po praznih vrednostih.</p><p>Pri poljih koluta omogočite »Kopiraj iz filamenta«, da nov kolut ob ustvarjanju podeduje vrednost iz polja filamenta z istim ključem (razen če kolut nastavi svojo).</p><p>Polje »Povezava« hrani kratko vrednost za vsak element (npr. številko izdelka) in jo z uporabo predloge URL povezave spremeni v klikljivo povezavo — postavite {} tja, kamor sodi vrednost, npr. https://www.amazon.com/dp/{}.</p>",
       "choices_missing_error": "Možnosti ni mogoče odstraniti. Manjkajo naslednje možnosti: {{choices}}"
+    },
+    "swatch": {
+      "tab": "Vzorčne kartice",
+      "default_style": {
+        "label": "Privzeti slog vzorčne kartice",
+        "tooltip": "Slog, ki je vnaprej izbran pri prenosu vzorčne kartice filamenta za 3D-tisk. Nove sloge lahko Spoolmanu prispevate v client/src/utils/swatch/styles.ts."
+      },
+      "preview_description": "Predogled z dvema primeroma filamentov — besedilo in QR koda se samodejno natisneta v črni ali beli barvi, glede na to, katera se bolje loči od barve filamenta:"
+    },
+    "import_export": {
+      "tab": "Uvoz / izvoz",
+      "export_title": "Izvoz podatkov",
+      "export_help": "Prenesite svoje proizvajalce, filamente ali kolute v obliki CSV ali JSON. Podatki o proizvajalcih in filamentih so vključeni pri kolutih.",
+      "import_title": "Uvoz podatkov",
+      "import_help": "Naložite datoteko CSV ali JSON v enaki obliki, kot jo ustvari izvoz. Celotna datoteka se uveljavi kot ena sama transakcija po načelu »vse ali nič«; za predogled rezultata najprej uporabite poskusni zagon.",
+      "report_title": "Poročilo o zalogi",
+      "report_help": "Odprite natisljiv povzetek trenutne zaloge.",
+      "report_heading": "Spoolman — poročilo o zalogi",
+      "entities": {
+        "spools": "Koluti",
+        "filaments": "Filamenti",
+        "vendors": "Proizvajalci"
+      },
+      "modes": {
+        "create": "Ustvari nove",
+        "upsert": "Posodobi ali ustvari",
+        "skip_existing": "Preskoči obstoječe"
+      },
+      "dry_run": "Poskusni zagon",
+      "dry_run_prefix": "Poskusni zagon —",
+      "choose_file": "Izberi datoteko",
+      "validate": "Preveri",
+      "import_button": "Uvozi",
+      "print_report": "Natisni poročilo",
+      "no_file": "Najprej izberite datoteko.",
+      "result": "Ustvarjenih: {{created}}, posodobljenih: {{updated}}, preskočenih: {{skipped}}.",
+      "import_errors": "Uvoz ni uspel",
+      "threemf": {
+        "title": "Uvoz razrezanega projekta 3MF",
+        "help": "Naložite razrezan .3mf iz Bambu Studia ali OrcaSlicerja, da preberete, koliko posameznega filamenta je porabil tisk, porabo povežete s svojimi koluti in jo odštejete v enem koraku.",
+        "choose_file": "Izberi datoteko .3mf",
+        "no_filaments": "V tej datoteki 3MF ni podatkov o porabi filamenta.",
+        "no_match": "Ni ujemajočega koluta — izberite ga",
+        "col_filament": "Filament tiska",
+        "col_used": "Porabljeno",
+        "col_spool": "Kolut za prilagoditev",
+        "apply": "Uveljavi porabo",
+        "applied": "Poraba je zabeležena na {{count}} kolutu(-ih).",
+        "applied_partial": "Poraba je zabeležena na {{ok}} kolutu(-ih); neuspešno: {{fail}}."
+      }
+    },
+    "printers": {
+      "tab": "Tiskalniki",
+      "description": "<p>Tukaj upravljate svoje tiskalnike. Ko imate vsaj enega, lahko kolut dodelite tiskalniku v obrazcu za ustvarjanje ali urejanje koluta.</p>",
+      "add_title": "Dodaj tiskalnik",
+      "edit_title": "Uredi tiskalnik",
+      "delete_confirm": "Izbrišem tiskalnik »{{name}}«? Koluti, ki so mu dodeljeni, ne bodo izbrisani — odstranjena bo le dodelitev."
+    },
+    "custom_links": {
+      "sidebar_tab": "Povezave v stranski vrstici",
+      "spool_tab": "Dejanja kolutov",
+      "sidebar_description": "<p>V levo stransko vrstico dodajte svoje povezave, npr. do strani Mainsail ali Fluidd vašega tiskalnika. Odprejo se v novem zavihku.</p>",
+      "spool_description": "<p>Vsakemu kolutu dodajte gumbe za dejanja po meri. URL lahko vsebuje polja koluta v zavitih oklepajih — {id}, {filament_id}, {location}, {lot_nr}, {comment} — ki se izpolnijo za vsak kolut posebej, tako da so orodja, kot sta nfc2klipper ali Moonrakerjeva končna točka za aktivni kolut, oddaljena le en klik.</p>",
+      "name": "Ime",
+      "url": "URL",
+      "url_template": "Predloga URL",
+      "url_template_help": "Uporabite {id} tam, kjer naj stoji ID koluta, npr. http://moonraker.local/...?id={id}",
+      "add_title": "Dodaj povezavo",
+      "edit_title": "Uredi povezavo",
+      "delete_confirm": "Izbrišem to povezavo?"
     }
   },
   "scanner": {
@@ -261,7 +505,9 @@
       "notReadable": "Kamere ni mogoče prebrati.",
       "notFound": "Kamere ni bilo mogoče najti.",
       "unknown": "Prišlo je do neznane napake. ({{error}})"
-    }
+    },
+    "camera_auto": "Samodejna izbira kamere",
+    "camera_n": "Kamera {{n}}"
   },
   "filament": {
     "filament": "Filamenti",
@@ -287,7 +533,21 @@
       "external_id": "Zunanji ID",
       "spools": "Prikaži kolute",
       "longitudinal": "Vzdolžno",
-      "coaxial": "Soosno"
+      "coaxial": "Soosno",
+      "color_hue": "Barva",
+      "spool_count": "Koluti",
+      "remaining_weight": "Na zalogi",
+      "low_stock_threshold": "Prag nizke zaloge",
+      "reserve_count": "Rezervni koluti",
+      "settings_extruder_temp_range": "Temperaturno območje ekstruderja",
+      "settings_bed_temp_range": "Temperaturno območje mize",
+      "temp_range_min": "Min.",
+      "temp_range_max": "Maks.",
+      "spool_type": "Vrsta koluta",
+      "finish": "Površina",
+      "pattern": "Vzorec",
+      "translucent": "Prosojno",
+      "glow": "Sveti v temi"
     },
     "fields_help": {
       "material": "Npr. PLA, ABS, PETG itd.",
@@ -296,7 +556,11 @@
       "name": "Ime filamenta, ki omogoča razlikovanje tega tipa filamenta od drugih izdelkov istega proizvajalca. Vsebovati mora, na primer, barvo.",
       "weight": "Masa filamenta na polnem kolutu (neto masa). V to se ne sme vključiti mase samega koluta, temveč le masa filamenta. To je običajno navedeno na embalaži.",
       "spool_weight": "Masa praznega koluta. Uporablja se za določitev izmerjene mase koluta.",
-      "multi_color_direction": "Filamenti imajo lahko več barv na dva načina: bodisi s sočasnim iztiskom, kot na primer dvobarvni filamenti z enakomerno porazdeljenimi večbarvnimi odtenki, bodisi z vzdolžnimi barvnimi prehodi, kot na primer filamenti z barvnim prehodom, pri katerih se barva spreminja po dolžini koluta."
+      "multi_color_direction": "Filamenti imajo lahko več barv na dva načina: bodisi s sočasnim iztiskom, kot na primer dvobarvni filamenti z enakomerno porazdeljenimi večbarvnimi odtenki, bodisi z vzdolžnimi barvnimi prehodi, kot na primer filamenti z barvnim prehodom, pri katerih se barva spreminja po dolžini koluta.",
+      "low_stock_threshold": "Filament označi za ponovno naročilo, ko skupna preostala masa vseh njegovih kolutov pade pod toliko gramov.",
+      "reserve_count": "Število neodprtih rezervnih kolutov, ki jih hranite na zalogi — vodeno brez ustvarjanja koluta za vsakega posebej.",
+      "settings_extruder_temp_range": "Proizvajalčevo priporočeno temperaturno območje ekstruderja (min.–maks.). Neobvezno; pustite prazno, če imate samo eno vrednost.",
+      "settings_bed_temp_range": "Proizvajalčevo priporočeno temperaturno območje mize (min.–maks.). Neobvezno; pustite prazno, če imate samo eno vrednost."
     },
     "titles": {
       "create": "Ustvari filament",
@@ -309,10 +573,87 @@
     "form": {
       "import_external": "Uvozi iz zunanjih",
       "filament_updated": "Ta filament je spremenil nekdo drug, odkar ste odprli stran. Shranjevanje bo te spremembe prepisalo!",
-      "import_external_description": "Izberite filament s seznama, da se njegovi podatki samodejno vpišejo v obrazec za ustvarjanje filamenta. S tem se bodo nadomestili vsi podatki, ki ste jih vnesli v obrazec.<br><br>Ob kliku na »V redu« se bo po potrebi samodejno ustvaril objekt »Proizvajalec«."
+      "import_external_description": "Izberite filament s seznama, da se njegovi podatki samodejno vpišejo v obrazec za ustvarjanje filamenta. S tem se bodo nadomestili vsi podatki, ki ste jih vnesli v obrazec.<br><br>Ob kliku na »V redu« se bo po potrebi samodejno ustvaril objekt »Proizvajalec«.",
+      "import_3dfp": "ID 3D Filament Profiles",
+      "import_3dfp_help": "Samodejno izpolni podatke, pridobljene s spletnega mesta 3dfilamentprofiles.com",
+      "import_3dfp_placeholder": "npr. 12875",
+      "import_3dfp_success": "Filament je bil uspešno pridobljen s 3dfilamentprofiles.com",
+      "import_3dfp_error": "Podatkov o filamentu ni bilo mogoče pridobiti s 3dfilamentprofiles.com",
+      "must_be_positive": "Vrednost mora biti večja od 0.",
+      "new_vendor_prompt": "Dodaj novega proizvajalca",
+      "vendor_created": "Proizvajalec je ustvarjen",
+      "vendor_create_error": "Proizvajalca ni bilo mogoče ustvariti"
     },
     "buttons": {
-      "add_spool": "Dodaj kolut"
+      "add_spool": "Dodaj kolut",
+      "fetch": "Pridobi",
+      "download_swatch": "Vzorčna kartica",
+      "download_slicer": "Profil za rezalnik"
+    },
+    "spool_type_options": {
+      "plastic": "Plastika",
+      "cardboard": "Karton",
+      "metal": "Kovina"
+    },
+    "finish_options": {
+      "matte": "Mat",
+      "glossy": "Sijaj"
+    },
+    "pattern_options": {
+      "marble": "Marmor",
+      "sparkle": "Bleščice"
+    },
+    "tabs": {
+      "details": "Podrobnosti"
+    },
+    "bulk": {
+      "edit": "Uredi",
+      "clear_selection": "Počisti izbiro",
+      "edit_help": "Označite polje, da ga spremenite na vseh izbranih filamentih. Neoznačena polja ostanejo nespremenjena.",
+      "apply": "Uporabi",
+      "nothing_selected": "Označite vsaj eno polje, ki ga želite spremeniti.",
+      "selected_one": "{{count}} izbran",
+      "selected_two": "{{count}} izbrana",
+      "selected_few": "{{count}} izbrani",
+      "selected_other": "{{count}} izbranih",
+      "edit_title_one": "Uredi {{count}} filament",
+      "edit_title_two": "Uredi {{count}} filamenta",
+      "edit_title_few": "Uredi {{count}} filamente",
+      "edit_title_other": "Uredi {{count}} filamentov",
+      "applied_one": "Posodobljen {{count}} filament.",
+      "applied_two": "Posodobljena {{count}} filamenta.",
+      "applied_few": "Posodobljeni {{count}} filamenti.",
+      "applied_other": "Posodobljenih {{count}} filamentov.",
+      "applied_partial_one": "Posodobljen {{count}} filament, neuspešno: {{failed}}.",
+      "applied_partial_two": "Posodobljena {{count}} filamenta, neuspešno: {{failed}}.",
+      "applied_partial_few": "Posodobljeni {{count}} filamenti, neuspešno: {{failed}}.",
+      "applied_partial_other": "Posodobljenih {{count}} filamentov, neuspešno: {{failed}}."
+    },
+    "swatch": {
+      "title": "Vzorčna kartica za 3D-tisk",
+      "description": "Prenesite natisljivo vzorčno kartico velikosti {{width}} × {{height}} mm s podatki z nalepke tega filamenta. Telo kartice se natisne iz samega filamenta; besedilo in QR koda tvorita dvignjen enoslojni napis v kontrastni barvi ({{color}}), izbrani glede na barvo filamenta.",
+      "print_hint": "Celotno kartico natisnite iz tega filamenta z menjavo filamenta pri zadnjem sloju ({{color}}) ali pa vdelane barve uvozite v večbarvni rezalnik (npr. Bambu Studio). QR koda v obeh primerih ostane berljiva.",
+      "marking_black": "črna",
+      "marking_white": "bela",
+      "truncated_warning": "Del besedila je bil skrajšan, da se prilega kartici.",
+      "style": "Slog",
+      "styles": {
+        "classic": "Klasičen",
+        "keychain": "Obesek za ključe",
+        "hanger": "Za obešanje",
+        "compact": "Kompakten",
+        "card": "Kartica"
+      },
+      "download": "Prenesi .3mf"
+    },
+    "view": {
+      "grid": "Mrežni pogled",
+      "table": "Tabelarični pogled",
+      "grid_tooltip": "Prikaži filamente kot barvne ploščice",
+      "table_tooltip": "Nazaj na celotno tabelo"
+    },
+    "messages": {
+      "update_error": "Sprememb ni bilo mogoče shraniti. Poskusite znova."
     }
   },
   "vendor": {
@@ -323,7 +664,9 @@
       "empty_spool_weight": "Masa praznega koluta",
       "external_id": "Zunanji ID",
       "registered": "Registrirano",
-      "comment": "Komentar"
+      "comment": "Komentar",
+      "filament_count": "Filamenti",
+      "spool_count": "Koluti"
     },
     "titles": {
       "create": "Ustvari proizvajalca",
@@ -331,10 +674,12 @@
       "edit": "Uredi proizvajalca",
       "list": "Proizvajalci",
       "show": "Prikaži proizvajalca",
-      "show_title": "[Proizvajalec #{{id}}] {{name}}"
+      "show_title": "[Proizvajalec #{{id}}] {{name}}",
+      "view_spools": "Prikaži kolute"
     },
     "form": {
-      "vendor_updated": "Ta proizvajalec je spremenil nekdo drug, odkar ste odprli stran. Shranjevanje bo te spremembe prepisalo!"
+      "vendor_updated": "Ta proizvajalec je spremenil nekdo drug, odkar ste odprli stran. Shranjevanje bo te spremembe prepisalo!",
+      "duplicate_name_warning": "Proizvajalec s tem imenom že obstaja."
     },
     "fields_help": {
       "empty_spool_weight": "Masa praznega koluta tega proizvajalca."
@@ -343,7 +688,44 @@
   "home": {
     "home": "Dom",
     "welcome": "Dobrodošli v Kolutarju!",
-    "description": "Izgleda, da še niste dodali nobenih kolutov. Za pomoč pri začetku si oglejte <helpPageLink>pomoč</helpPageLink>."
+    "description": "Izgleda, da še niste dodali nobenih kolutov. Za pomoč pri začetku si oglejte <helpPageLink>pomoč</helpPageLink>.",
+    "total_weight": "Skupna zaloga",
+    "total_value": "Ocenjena vrednost zaloge",
+    "low_stock": "Nizka zaloga",
+    "all_stocked": "Vse zaloge so zadostne",
+    "all_spools": "Vsi koluti",
+    "no_spools": "Še ni kolutov",
+    "recently_used": "Nedavno uporabljeno",
+    "no_recent": "Ni nedavno uporabljenih kolutov",
+    "by_material": "Po materialu",
+    "by_location": "Po lokaciji",
+    "by_vendor": "Po proizvajalcu",
+    "shopping_list": "Nakupovalni seznam",
+    "shopping_list_empty": "Noben filament ni pod pragom nizke zaloge.",
+    "usage": {
+      "tab": "Poraba",
+      "empty": "Poraba filamenta še ni zabeležena.",
+      "loading": "Nalaganje …",
+      "bucket": {
+        "day": "Dan",
+        "week": "Teden",
+        "month": "Mesec",
+        "year": "Leto"
+      }
+    },
+    "create": {
+      "spool": "Nov kolut",
+      "filament": "Nov filament",
+      "vendor": "Nov proizvajalec"
+    },
+    "kpi": {
+      "this_month": "ta mesec",
+      "top": "naj",
+      "materials_one": "{{count}} material",
+      "materials_two": "{{count}} materiala",
+      "materials_few": "{{count}} materiali",
+      "materials_other": "{{count}} materialov"
+    }
   },
   "help": {
     "help": "Pomoč",
@@ -355,7 +737,15 @@
     "description": "<title>Pomoč</title><p>Tukaj je nekaj nasvetov za začetek.</p><p>Kolutar hrani 3 različne vrste podatkov:</p><itemsHelp/><p>Če želite v bazo podatkov dodati nov kolut, najprej ustvarite objekt <filamentCreateLink>Filament</filamentCreateLink>. Ko to storite, nadaljujte z ustvarjanjem objekta <spoolCreateLink>Kolut</spoolCreateLink> za ta določen kolut. Če kasneje pridobite dodatne kolute istega filamenta, preprosto ustvarite dodatne kolutne objekte in ponovno uporabite isti filamentni objekt.</p><p>Po želji lahko ustvarite tudi objekt <vendorCreateLink>Proizvajalec</vendorCreateLink> za podjetje, ki proizvaja filament, če želite slediti tem informacijam. </p><p>Imate možnost povezati druge storitve za 3D-tiskalnike s Kolutarjem, na primer Moonraker, ki lahko samodejno spremlja porabo filamenta in posodablja objekte koluta za vas. Navodila za nastavitev najdete v Kolutarjevi <readmeLink>README</readmeLink> datoteki.</p>"
   },
   "table": {
-    "actions": "Dejanja"
+    "actions": "Dejanja",
+    "filter": {
+      "ok": "V redu",
+      "search": "Išči …",
+      "min": "Min. …",
+      "max": "Maks. …",
+      "from": "Od …",
+      "to": "Do …"
+    }
   },
   "documentTitle": {
     "default": "Kolutar",
@@ -395,6 +785,261 @@
     "locations": "Lokacije",
     "new_location": "Nova lokacija",
     "no_location": "Brez lokacije",
-    "no_locations_help": "Na tej strani lahko kolute razvrstite po lokacijah. Za začetek dodajte nekaj kolutov."
+    "no_locations_help": "Na tej strani lahko kolute razvrstite po lokacijah. Za začetek dodajte nekaj kolutov.",
+    "location": "Lokacija",
+    "error_empty": "Ime ne sme biti prazno",
+    "error_exists": "Lokacija že obstaja",
+    "fields": {
+      "button": "Polja po meri",
+      "title": "Polja po meri — {{name}}",
+      "saved": "Polja lokacije so shranjena",
+      "save_error": "Polj lokacije ni bilo mogoče shraniti",
+      "load_error": "Lokacije ni bilo mogoče naložiti"
+    },
+    "show": {
+      "name": "Ime",
+      "comment": "Komentar",
+      "spool_count": "Koluti, shranjeni tukaj",
+      "spools_here": "Koluti na tej lokaciji",
+      "no_spools": "Na tej lokaciji ni shranjenih kolutov."
+    },
+    "print": {
+      "title": "Natisni nalepke lokacij",
+      "button": "Natisni nalepke",
+      "description": "Izberite lokacije, za katere želite natisniti nalepke s QR kodo za skeniranje.",
+      "select_placeholder": "Izberite lokacije",
+      "none_selected": "Ni izbranih lokacij"
+    }
+  },
+  "errorBoundary": {
+    "title": "Nekaj je šlo narobe",
+    "subTitle": "Te strani ni bilo mogoče izrisati. Če se je težava pojavila po spremembi ali deljenju nastavitev pogleda, jo običajno odpravi njihova ponastavitev.",
+    "reset": "Ponastavi nastavitve pogleda in znova naloži",
+    "home": "Pojdi na domačo stran"
+  },
+  "apiToken": {
+    "title": "Potreben je žeton API",
+    "help": "Ta instanca Spoolmana zahteva žeton API. Vnesite ga za nadaljevanje; shranjen bo v tem brskalniku.",
+    "placeholder": "Žeton API",
+    "submit": "Shrani žeton"
+  },
+  "auth": {
+    "logout": "Odjava",
+    "login": {
+      "title": "Prijava",
+      "submit": "Prijava",
+      "username": "Uporabniško ime",
+      "password": "Geslo"
+    },
+    "roles": {
+      "admin": "Skrbnik",
+      "readonly": "Samo za branje"
+    },
+    "users": {
+      "tab": "Uporabniki",
+      "title": "Uporabniški računi",
+      "help": "Ustvarite račune, da bo zahtevana prijava. Uporabniki samo za branje lahko vse vidijo, ne morejo pa ničesar spreminjati. Prvi račun je vedno skrbniški.",
+      "role": "Vloga",
+      "add": "Dodaj uporabnika",
+      "need_fields": "Vnesite uporabniško ime in geslo.",
+      "created": "Ustvarjen uporabnik {{username}}.",
+      "reset_password": "Ponastavi geslo",
+      "reset_password_for": "Ponastavitev gesla za uporabnika {{username}}",
+      "reset_password_help": "Vnesite novo geslo za tega uporabnika.",
+      "password_reset": "Geslo je posodobljeno.",
+      "delete_confirm": "Izbrišem tega uporabnika?"
+    }
+  },
+  "colorFilter": {
+    "button": "Barva",
+    "title": "Filtriranje po podobni barvi",
+    "threshold": "Toleranca",
+    "help": "Prikaži elemente, katerih barva je znotraj te tolerance glede na izbrano barvo.",
+    "advanced": "Več barv"
+  },
+  "theme": {
+    "label": "Tema",
+    "system": "Sistemska",
+    "light": "Svetla",
+    "dark": "Temna"
+  },
+  "scan": {
+    "title": "Skeniranje",
+    "qr": "QR koda",
+    "nfc": "NFC",
+    "nfc_hint": "Skeniranje NFC v tem brskalniku ni na voljo. Uporabite Chrome za Android ali priključite strežniški čitalnik NFC.",
+    "action": {
+      "open": "Odpri",
+      "move": "Premakni kolut"
+    },
+    "move": {
+      "scan_spool": "Skenirajte kolut, ki ga želite premakniti.",
+      "scan_location": "Kolut #{{id}} je izbran. Zdaj skenirajte ciljno lokacijo.",
+      "confirm_title": "Premaknem kolut?",
+      "confirm_content": "Premaknem kolut #{{spool}} na »{{location}}«?",
+      "moved": "Kolut #{{spool}} je premaknjen na »{{location}}«.",
+      "load_error": "Skenirane lokacije ni bilo mogoče naložiti."
+    },
+    "clear": {
+      "recognized": "Prepoznana je koda za sprostitev koluta. Spoolman ne vodi aktivnega koluta; sprostitev opravi vaš tiskalnik ali integracija Moonraker."
+    },
+    "barcode": {
+      "unknown_title": "Neznana črtna koda",
+      "unknown_content": "Noben filament nima črtne kode {{code}}. Ustvarim filament in si zapomnim to črtno kodo?",
+      "create_filament": "Ustvari filament",
+      "lookup_error": "Te črtne kode ni bilo mogoče poiskati."
+    }
+  },
+  "printer": {
+    "printer": "Tiskalnik",
+    "fields": {
+      "name": "Ime",
+      "comment": "Komentar",
+      "spool_count": "Koluti"
+    }
+  },
+  "calibration": {
+    "title": "Kalibracija",
+    "no_data": "Podatkov o kalibraciji še ni.",
+    "recommended_title": "Kalibrirane nastavitve",
+    "no_recommended": "Priporočene vrednosti še niso nastavljene.",
+    "buttons": {
+      "start": "Začni kalibracijo",
+      "edit_session": "Uredi",
+      "delete_session": "Izbriši",
+      "add_step": "Dodaj rezultat",
+      "edit_step": "Uredi",
+      "delete_step": "Izbriši",
+      "save": "Shrani"
+    },
+    "fields": {
+      "last_session": "Zadnja seja",
+      "history": "Zgodovina kalibracij",
+      "steps_count": "Zabeleženih korakov: {{count}}",
+      "no_steps": "Rezultati korakov še niso zabeleženi.",
+      "printer_name": "Ime tiskalnika",
+      "nozzle_diameter": "Premer šobe (mm)",
+      "notes": "Opombe",
+      "status": "Stanje",
+      "step_type": "Korak kalibracije",
+      "confidence": "Zanesljivost",
+      "inputs": "Vhodni podatki",
+      "outputs_and_recommended": "Rezultati in priporočene vrednosti"
+    },
+    "session_form": {
+      "create_title": "Začni kalibracijsko sejo",
+      "edit_title": "Uredi kalibracijsko sejo"
+    },
+    "step_form": {
+      "add_title": "Dodaj rezultat koraka",
+      "edit_title": "Uredi rezultat koraka",
+      "recommended_hint": "Tukajšnje vrednosti se prikažejo kot priporočene nastavitve na strani koluta."
+    },
+    "status": {
+      "planned": "Načrtovano",
+      "in_progress": "V teku",
+      "complete": "Zaključeno",
+      "archived": "Arhivirano"
+    },
+    "confidence": {
+      "high": "Visoka",
+      "medium": "Srednja",
+      "low": "Nizka"
+    },
+    "step_types": {
+      "temperature": "Temperatura",
+      "volumetric_speed": "Volumetrična hitrost",
+      "pressure_advance": "Pressure Advance",
+      "flow_rate": "Pretok",
+      "retraction": "Retrakcija",
+      "tolerance": "Toleranca",
+      "cornering": "Vogali",
+      "input_shaping": "Input Shaping",
+      "vfa": "VFA"
+    },
+    "delete_session_confirm": "Izbrišem to kalibracijsko sejo in vse rezultate njenih korakov?",
+    "delete_step_confirm": "Izbrišem ta rezultat koraka?",
+    "wizard": {
+      "title": "Čarovnik za kalibracijo",
+      "subtitle": "Korak za korakom sledite vodniku za kalibracijo OrcaSlicer. Vsak korak lahko preskočite in nadaljujete pozneje.",
+      "start": "Zaženi čarovnika",
+      "resume": "Nadaljuj čarovnika",
+      "step_of": "Korak {{current}} od {{total}}",
+      "already_done": "Že zabeleženo",
+      "buttons": {
+        "back": "Nazaj",
+        "skip": "Preskoči",
+        "save_continue": "Shrani in nadaljuj",
+        "save_finish": "Shrani in zaključi",
+        "skip_finish": "Preskoči in zaključi",
+        "finish": "Zaključi",
+        "cancel": "Prekliči"
+      },
+      "skip_finish_confirm": "Označim to sejo kot zaključeno brez shranjevanja tega koraka?",
+      "session_complete": "Kalibracijska seja je označena kot zaključena."
+    }
+  },
+  "external": {
+    "source_spoolmandb": "SpoolmanDB",
+    "source_tigertag": "TigerTag"
+  },
+  "nfc": {
+    "scan_title": "Čitalnik značk NFC",
+    "scan_description": "Skenirajte značko NFC za ogled podrobnosti o kolutu.",
+    "encode_button": "Zapiši na NFC",
+    "encode_title": "Zapiši kolut na značko NFC",
+    "write_success": "Značka je uspešno zapisana!",
+    "write_error": "Značke ni bilo mogoče zapisati.",
+    "no_match": "Za to značko ni ujemajočega koluta.",
+    "create_from_tag": "Ustvari kolut iz značke",
+    "create_from_tag_description": "Ujemajočega koluta ni bilo mogoče najti. Iz spodnjih podatkov značke lahko ustvarite nov kolut.",
+    "creating_spool": "Ustvarjanje koluta …",
+    "create_success": "Kolut je uspešno ustvarjen!",
+    "create_error": "Koluta iz podatkov značke ni bilo mogoče ustvariti.",
+    "tag_color": "Barva",
+    "tag_diameter": "Premer",
+    "tag_weight": "Masa",
+    "tag_nozzle_temp": "Temp. šobe",
+    "tag_bed_temp": "Temp. mize",
+    "mode_browser": "Brskalnik",
+    "mode_server": "Strežnik",
+    "unsupported": "NFC v tem brskalniku ni podprt.",
+    "place_tag": "Položite značko na čitalnik …",
+    "reading": "Branje značke …",
+    "writing": "Zapisovanje značke …",
+    "user_message": "Uporabniško sporočilo",
+    "user_message_help": "Neobvezno sporočilo (največ 28 znakov)",
+    "preview_title": "Predogled podatkov",
+    "status": {
+      "connected": "Povezano",
+      "disconnected": "Ni povezave",
+      "disabled": "Onemogočeno"
+    },
+    "browser_ndef_warning": "Opozorilo: zapisovanje NFC v brskalniku uporablja format NDEF. Tako zapisanih značk aplikacija TigerTag NE bo prepoznala, saj pričakuje surove binarne podatke na straneh 4–39. Za zapise, združljive s TigerTagom, uporabite način Strežnik ali pa izberite »Prenesi surove binarne podatke« za uporabo z zunanjim orodjem NFC.",
+    "download_raw_binary": "Prenesi surove binarne podatke",
+    "download_success": "Binarna datoteka je uspešno prenesena.",
+    "browser_write_success": "Podatki TigerTag so prek NDEF zapisani na značko NFC.",
+    "error": {
+      "no_reader": "Čitalnik NFC ni zaznan.",
+      "read_failed": "Značke ni bilo mogoče prebrati.",
+      "write_failed": "Značke ni bilo mogoče zapisati.",
+      "not_supported": "Web NFC v tem brskalniku ni podprt. Uporabite način Strežnik s priključenim čitalnikom.",
+      "permission_denied": "Dovoljenje za NFC je bilo zavrnjeno.",
+      "encode_failed": "Podatkov TigerTag ni bilo mogoče kodirati."
+    },
+    "bind_title": "Poveži značko NFC s kolutom",
+    "bind_button": "Poveži značko NFC",
+    "bind_description": "Skenirajte obstoječo značko NFC, da jo povežete s tem kolutom. Prihodnja skeniranja te značke bodo samodejno izbrala ta kolut.",
+    "bind_confirm_description": "Značka je skenirana. Preglejte spodnje podatke značke in potrdite, da jo povežete s tem kolutom.",
+    "bind_binding": "Povezovanje …",
+    "bind_success": "Značka je uspešno povezana s kolutom!",
+    "bind_error": "Značke ni bilo mogoče povezati s kolutom.",
+    "bind_scan_again": "Skeniraj znova",
+    "bind_no_tigertag": "Na tej znački ni podatkov TigerTag. Za povezovanje je podprt samo format TigerTag.",
+    "tag_format": "Format značke",
+    "tag_format_label": "Format značke",
+    "tag_material": "Material",
+    "tag_material_type": "Vrsta materiala",
+    "qidi_write_info": "Značke Qidi hranijo samo material in barvo. Na značko bodo zapisane kode materiala in barve Qidi, ki se najbolj ujemajo."
   }
 }

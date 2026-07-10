@@ -32,7 +32,7 @@ Spoolman NG is a self-hosted web service designed to help you efficiently manage
   * View, create, edit, and delete filament data.
   * Add custom fields to tailor information to your specific needs.
   * Print labels with QR codes for easy spool identification and tracking.
-  * Translated into 28 languages, inherited from upstream. The upstream [Weblate project](https://hosted.weblate.org/projects/spoolman/) feeds the original repository, not this fork — until a Spoolman NG translation project is set up, contribute translations by editing `client/public/locales/<lang>/common.json` in a pull request.
+  * Available in 30 languages (UK English is the default; US English and 28 others selectable). The upstream [Weblate project](https://hosted.weblate.org/projects/spoolman/) feeds the original repository, not this fork — contribute translations by editing `client/public/locales/<lang>/common.json` in a pull request; CI validates that every translation keeps its placeholders.
 * **NFC Spool Identification**: Scan NFC tags to instantly identify and select spools. Supports three tag standards:
   * [TigerTag](https://tigertag.io/) (ISO 14443A / NTAG213) — binary format with external product database lookup.
   * [OpenPrintTag](https://openprinttag.org/) (ISO 15693 / NFC-V) — Prusa's NDEF/CBOR standard with per-spool UUIDs.

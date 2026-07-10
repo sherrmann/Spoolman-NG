@@ -19,10 +19,17 @@ interface Language {
  * djs: Function to load the dayjs locale, see https://github.com/iamkun/dayjs/tree/dev/src/locale for list of locales
  */
 export const languages: { [key: string]: Language } = {
+  // en is the American-English source catalog; en-GB carries the British spellings and
+  // date formats and is the default when nothing else is configured (see fallbackLng).
   ["en"]: {
-    name: "English",
-    fullCode: "en-GB",
+    name: "English (US)",
+    fullCode: "en-US",
     djs: () => import("dayjs/locale/en"),
+  },
+  ["en-GB"]: {
+    name: "English (UK)",
+    fullCode: "en-GB",
+    djs: () => import("dayjs/locale/en-gb"),
   },
   ["sv"]: {
     name: "Svenska",
@@ -178,16 +185,31 @@ i18n
   .use(initReactI18next)
   .init({
     supportedLngs: Object.keys(languages),
+    detection: {
+      // An American browser (navigator "en-US") should get English (US): "en-US" itself
+      // isn't a supported code and would otherwise fall through to the htmlTag default
+      // (en-GB). Mapped 1:1 so a stored explicit choice ("en") is never rewritten; every
+      // other English variant (en-AU, en-IN, …) intentionally resolves to British English.
+      convertDetectedLanguage: (lng: string) => (lng === "en-US" ? "en" : lng),
+    },
     backend: {
       loadPath: getBasePath() + "/locales/{{lng}}/{{ns}}.json",
     },
     ns: "common",
     defaultNS: "common",
-    fallbackLng: "en",
+    // UK English is the default when neither the browser nor the user has picked a
+    // supported language ("unless configured otherwise"): a browser asking for en-US
+    // still resolves to en via supportedLngs, and any explicit picker choice is cached
+    // by the detector. en backs the chain so a key missing from en-GB can never render
+    // as a raw key.
+    fallbackLng: ["en-GB", "en"],
   });
 
 i18n.on("languageChanged", function (lng) {
   languages[lng].djs().then((djs) => dayjs.locale(djs.name));
+  // Keep the document language honest for assistive tech (and the detector's htmlTag
+  // source) once the user or detector picks something else than the static default.
+  document.documentElement.lang = languages[lng].fullCode;
 });
 
 export default i18n;

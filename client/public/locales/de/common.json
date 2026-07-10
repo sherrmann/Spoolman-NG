@@ -28,7 +28,16 @@
     "hideArchived": "Archivierte verstecken",
     "unArchive": "Archivieren rückgängig machen",
     "saveAndAdd": "Speichern und hinzufügen",
-    "continue": "Weiter"
+    "continue": "Weiter",
+    "search": "Suchen",
+    "resetUsage": "Verbrauch zurücksetzen",
+    "hideArchivedTooltip": "Zurück zu den aktiven Spulen",
+    "showArchivedTooltip": "Zu den archivierten Spulen wechseln",
+    "columns": "Spalten",
+    "clearFiltersTooltip": "Alle Filter und Sortierungen zurücksetzen",
+    "labelsAndTags": "Labels & Tags",
+    "export": "Exportieren",
+    "columnsTooltip": "Tabellenspalten auswählen, neu anordnen und ausblenden"
   },
   "warnWhenUnsavedChanges": "Sicher? Es sind nicht gespeicherte Änderungen vorhanden.",
   "notifications": {
@@ -98,7 +107,18 @@
       "settingsName": "Vorlagenname",
       "itemCopies": "Anzahl der Kopien",
       "duplicateSettings": "Kopie erstellen",
-      "saveSetting": "Vorlage speichern"
+      "saveSetting": "Vorlage speichern",
+      "pageSizeMode": {
+        "label": "Seitengröße",
+        "tooltip": "\"Automatisch\" überlässt Drucker/Browser die Seitengeometrie (Standard). \"An Labelgröße anpassen\" erzeugt aus den oben angegebenen Papiermaßen eine explizite @page-Größe — verwende das für Rollen-/Labeldrucker (z. B. Brother QL), damit Labels in der richtigen Größe und Ausrichtung gedruckt werden. Am besten in Chrome unterstützt.",
+        "auto": "Automatisch (Druckerstandard)",
+        "matchLabel": "An Labelgröße anpassen"
+      },
+      "saveAsZpl": "ZPL herunterladen",
+      "invalidGeometry": "Das Labelgitter passt nicht auf das Papier",
+      "invalidGeometryHelp": "Ränder und Abstände lassen keinen Platz für die Labels. Verringere Ränder, Abstände, Spalten oder Zeilen — oder wähle eine größere Papiergröße.",
+      "contentClipped": "Ein Teil des Labelinhalts wird abgeschnitten",
+      "contentClippedHelp": "Der Inhalt mindestens eines Labels passt nicht auf sein Label und wird beim Drucken abgeschnitten. Verringere die Textgröße, kürze die Vorlage oder verwende weniger Spalten/Zeilen, damit jedes Label größer wird."
     },
     "qrcode": {
       "button": "Beschriftung drucken",
@@ -137,7 +157,38 @@
       "exportButton": "Labels exportieren",
       "printFilamentTitle": "Filament-Labels drucken",
       "printSpoolTitle": "Spulen-Labels drucken",
-      "templateHelpFilament": "Benutze {} um Werte des Filamentobjekts als Text einzufügen. Zum Beispiel wird {id} durch die ID des Filaments ersetzt, oder {vendor.name} durch den Herstellernamen. Wenn ein Wert fehlt, wird er durch \"?\" ersetzt. Ein zweiter Satz von {} kann genutzt werden, um dies zu vermeiden. Zusätzlich wird jeglicher Text zwischen den Sätzen von {} entfernt, wenn der Wert fehlt. Beispielsweise zeigt {Article: {article_number}} das Label nur an, wenn ein Filament eine Artikelnummer hat. Texte zwischen zwei Sternchen ** werden fett dargestellt. Drücke auf den Knopf, um eine Liste aller verfügbaren Variablen zu sehen."
+      "templateHelpFilament": "Benutze {} um Werte des Filamentobjekts als Text einzufügen. Zum Beispiel wird {id} durch die ID des Filaments ersetzt, oder {vendor.name} durch den Herstellernamen. Wenn ein Wert fehlt, wird er durch \"?\" ersetzt. Ein zweiter Satz von {} kann genutzt werden, um dies zu vermeiden. Zusätzlich wird jeglicher Text zwischen den Sätzen von {} entfernt, wenn der Wert fehlt. Beispielsweise zeigt {Article: {article_number}} das Label nur an, wenn ein Filament eine Artikelnummer hat. Texte zwischen zwei Sternchen ** werden fett dargestellt. Drücke auf den Knopf, um eine Liste aller verfügbaren Variablen zu sehen.",
+      "textColumns": {
+        "label": "Textspalten",
+        "tooltip": "Verteilt den Labeltext auf diese Anzahl Spalten. Praktisch für schmale Labels mit mehreren kurzen Zeilen."
+      },
+      "qrPadding": "QR-Innenabstand",
+      "customPayload": {
+        "label": "Eigener QR-Inhalt",
+        "tooltip": "Überschreibt den gescannten QR-Inhalt mit einer Vorlage (gleiche Tags wie beim Label). Leer lassen, um den Standard-Spoolman-Inhalt zu verwenden. Ein eigener Wert wird in Spoolman nur erkannt, wenn er weiterhin einem bekannten Format entspricht (WEB+SPOOLMAN:S-{id} / F-{id} oder eine /spool/show/{id}-URL)."
+      },
+      "qrErrorLevel": {
+        "label": "QR-Fehlerkorrektur",
+        "tooltip": "Höhere Stufen tolerieren mehr Beschädigung/Schmutz auf dem Label, machen den QR-Code aber dichter (bei kleiner Größe schwerer zu scannen). H (höchste) ist der Standard."
+      },
+      "qrPlacement": {
+        "label": "QR-Position",
+        "tooltip": "Wo der QR-Code relativ zum Labeltext sitzt. Oben oder unten platziert eignet er sich für hohe, schmale Labels.",
+        "left": "Links",
+        "top": "Oben",
+        "bottom": "Unten"
+      },
+      "showColorSwatch": {
+        "label": "Farbfeld drucken",
+        "tooltip": "Druckt ein kleines farbiges Feld mit der Filamentfarbe auf das Label."
+      },
+      "barcode1d": {
+        "label": "1D-Barcode",
+        "tooltip": "Druckt optional neben dem QR-Code einen 1D-Barcode mit dem QR-Inhalt, für Scanner, die nur lineare Barcodes lesen.",
+        "none": "Keiner",
+        "code128": "Code 128"
+      },
+      "tooltip": "Labels für die ausgewählten Zeilen drucken oder Einträge auf der nächsten Seite auswählen"
     },
     "spoolSelect": {
       "title": "Spulenauswahl",
@@ -146,7 +197,11 @@
       "noSpoolsSelected": "Du hast keine Spulen ausgewählt.",
       "selectAll": "Alle aus-/abwählen",
       "selectedTotal_one": "{{count}} Spule ausgewählt",
-      "selectedTotal_other": "{{count}} Spulen ausgewählt"
+      "selectedTotal_other": "{{count}} Spulen ausgewählt",
+      "hidePrinted": "Bereits Gedruckte ausblenden",
+      "reprintConfirmTitle": "Labels erneut drucken?",
+      "reprintConfirmContent_one": "{{count}} ausgewählte Spule hat bereits ein gedrucktes Label. Erneut drucken?",
+      "reprintConfirmContent_other": "{{count}} ausgewählte Spulen haben bereits gedruckte Labels. Erneut drucken?"
     },
     "filamentSelect": {
       "title": "Filamentauswahl",
@@ -154,7 +209,11 @@
       "noFilamentsSelected": "Du hast keine Filamente ausgewählt.",
       "selectAll": "Alle aus-/abwählen",
       "selectedTotal_one": "{{count}} Filament ausgewählt",
-      "selectedTotal_other": "{{count}} Filamente ausgewählt"
+      "selectedTotal_other": "{{count}} Filamente ausgewählt",
+      "hidePrinted": "Bereits Gedruckte ausblenden",
+      "reprintConfirmTitle": "Labels erneut drucken?",
+      "reprintConfirmContent_one": "{{count}} ausgewähltes Filament hat bereits ein gedrucktes Label. Erneut drucken?",
+      "reprintConfirmContent_other": "{{count}} ausgewählte Filamente haben bereits gedruckte Labels. Erneut drucken?"
     }
   },
   "scanner": {
@@ -167,7 +226,9 @@
       "notReadable": "Zugriff auf Kamera nicht möglich.",
       "notFound": "Keine Kamera gefunden.",
       "unknown": "Ein unbekannter Fehler ist aufgetreten. ({{error}})"
-    }
+    },
+    "camera_auto": "Automatische Kamera",
+    "camera_n": "Kamera {{n}}"
   },
   "spool": {
     "spool": "Spulen",
@@ -193,7 +254,13 @@
       "initial_weight": "Anfangsgewicht",
       "spool_weight": "Leergewicht",
       "filament_internal": "Intern",
-      "filament_external": "Extern"
+      "filament_external": "Extern",
+      "filament_name_only": "Name",
+      "vendor_name": "Hersteller",
+      "color": "Farbe",
+      "printer": "Drucker",
+      "diameter": "Durchmesser",
+      "color_hex": "Farbe"
     },
     "fields_help": {
       "weight_to_use": "Auswählen, welches Gewicht verwendet werden soll. Das gemessene Gewicht ist nur verfügbar, wenn das Gewicht der Spule für das Filament hinterlegt ist.",
@@ -205,7 +272,10 @@
       "price": "Preis einer vollen Spule. Falls nicht ausgewählt, wird der Preis des Filaments geschätzt.",
       "initial_weight": "Das Anfangsgewicht des Filaments (Nettogewicht) auf der Spule. Wenn nicht gesetzt, dann wird der Wert aus dem Filament Objekt genutzt.",
       "spool_weight": "Das Gewicht der leeren Spule. Leer lassen um das Gewicht vom Hersteller zu nutzen.",
-      "external_filament": "Sie haben ein Filament aus der externen Datenbank ausgewählt. Ein Filamentobjekt (und möglicherweise ein Herstellerobjekt) wird automatisch erstellt, wenn Sie diese Spule erstellen. Dadurch können doppelte Filamentobjekte entstehen, wenn Sie bereits ein Filamentobjekt für dieses Filament erstellt haben."
+      "external_filament": "Sie haben ein Filament aus der externen Datenbank ausgewählt. Ein Filamentobjekt (und möglicherweise ein Herstellerobjekt) wird automatisch erstellt, wenn Sie diese Spule erstellen. Dadurch können doppelte Filamentobjekte entstehen, wenn Sie bereits ein Filamentobjekt für dieses Filament erstellt haben.",
+      "printer": "Der Drucker, auf dem diese Spule aktuell geladen ist. Verwalte deine Drucker in den Einstellungen.",
+      "diameter": "Gemessener Filamentdurchmesser dieser konkreten Spule, wird für Längenberechnungen verwendet. Leer lassen, um den Durchmesser des Filaments zu verwenden.",
+      "color_hex": "Optionale Farbe für diese konkrete Spule, die die Farbe des Filaments überschreibt. Leeren, um die Farbe des Filaments zu verwenden."
     },
     "titles": {
       "create": "Spule erstellen",
@@ -218,7 +288,9 @@
       "adjust": "Filamentspulen Anpassung"
     },
     "messages": {
-      "archive": "Sicher das die Spule archiviert werden soll?"
+      "archive": "Sicher das die Spule archiviert werden soll?",
+      "update_error": "Änderungen konnten nicht gespeichert werden. Bitte versuche es erneut.",
+      "reset_usage": "Verbrauchtes Gewicht dieser Spule auf null zurücksetzen? Dadurch werden die Daten der ersten/letzten Verwendung gelöscht."
     },
     "form": {
       "spool_updated": "Diese Spule wurde, seit dem die Seite geöffnet wurde, von jemand anderem/etwas anderem bearbeitet. Speichern wird diese Änderungen überschreiben!",
@@ -233,6 +305,69 @@
     },
     "formats": {
       "last_used": "Zuletzt genutzt {{date}}"
+    },
+    "custom_actions": "Aktionen",
+    "bulk": {
+      "edit": "Bearbeiten",
+      "clear_selection": "Auswahl aufheben",
+      "edit_help": "Hake ein Feld an, um es bei allen ausgewählten Spulen zu ändern. Nicht angehakte Felder bleiben unverändert.",
+      "apply": "Anwenden",
+      "nothing_selected": "Hake mindestens ein Feld an, das geändert werden soll.",
+      "selected_one": "{{count}} ausgewählt",
+      "selected_other": "{{count}} ausgewählt",
+      "edit_title_one": "{{count}} Spule bearbeiten",
+      "edit_title_other": "{{count}} Spulen bearbeiten",
+      "applied_one": "{{count}} Spule aktualisiert.",
+      "applied_other": "{{count}} Spulen aktualisiert.",
+      "applied_partial_one": "{{count}} Spule aktualisiert, {{failed}} fehlgeschlagen.",
+      "applied_partial_other": "{{count}} Spulen aktualisiert, {{failed}} fehlgeschlagen.",
+      "archive_confirm_one": "{{count}} Spule archivieren?",
+      "archive_confirm_other": "{{count}} Spulen archivieren?",
+      "unarchive_confirm_one": "Archivierung von {{count}} Spule aufheben?",
+      "unarchive_confirm_other": "Archivierung von {{count}} Spulen aufheben?"
+    },
+    "weigh": {
+      "button": "Spulen wiegen",
+      "title": "Spulen wiegen",
+      "help": "Suche eine Spule, gib den Messwert ein und klicke auf \"Speichern & Weiter\", um die nächste zu wiegen, ohne zu schließen.",
+      "spool": "Spule",
+      "search_placeholder": "Nach ID, Filament, Chargennummer suchen…",
+      "save_next": "Speichern & Weiter",
+      "done": "Fertig",
+      "updated": "{{name}} aktualisiert",
+      "pick_spool": "Wähle zuerst eine Spule aus.",
+      "tooltip": "Mehrere Spulen nacheinander neu wiegen"
+    },
+    "view": {
+      "grid": "Kachelansicht",
+      "table": "Tabellenansicht",
+      "grid_tooltip": "Spulen als Farbkacheln durchstöbern",
+      "table_tooltip": "Zurück zur vollständigen Tabelle"
+    },
+    "filament_extra_fields": "Filamentfelder",
+    "sibling_spools": {
+      "title": "Weitere Spulen dieses Filaments",
+      "button": "Weitere Spulen",
+      "tooltip": "Alle Spulen dieses Filaments auflisten"
+    },
+    "usage_history": {
+      "title": "Verbrauchsverlauf",
+      "time": "Zeitpunkt",
+      "type": "Typ",
+      "change": "Änderung",
+      "comment": "Kommentar",
+      "empty": "Noch kein Verbrauch erfasst."
+    },
+    "weight_history": {
+      "title": "Gewichtsverlauf",
+      "chart_label": "Gemessenes Gewicht im Zeitverlauf",
+      "idle_gain": "Das gemessene Gewicht ist zwischen den Messungen um {{grams}} g gestiegen — die Spule könnte Feuchtigkeit aufgenommen haben. (Experimentell)"
+    },
+    "totals": {
+      "shown_one": "{{count}} Spule angezeigt",
+      "shown_other": "{{count}} Spulen angezeigt",
+      "selected_one": "{{count}} Spule ausgewählt",
+      "selected_other": "{{count}} Spulen ausgewählt"
     }
   },
   "filament": {
@@ -259,7 +394,21 @@
       "single_color": "Einfarbig",
       "multi_color": "Mehrfarbig",
       "coaxial": "Coextrudiert",
-      "longitudinal": "Längs"
+      "longitudinal": "Längs",
+      "color_hue": "Farbe",
+      "spool_count": "Spulen",
+      "remaining_weight": "Auf Lager",
+      "low_stock_threshold": "Mindestbestand",
+      "reserve_count": "Reservespulen",
+      "settings_extruder_temp_range": "Düsentemperaturbereich",
+      "settings_bed_temp_range": "Betttemperaturbereich",
+      "temp_range_min": "Min",
+      "temp_range_max": "Max",
+      "spool_type": "Spulentyp",
+      "finish": "Oberfläche",
+      "pattern": "Muster",
+      "translucent": "Transluzent",
+      "glow": "Leuchtet im Dunkeln"
     },
     "fields_help": {
       "name": "Name des Filaments um es von anderen Typen des gleichen Herstellers zu unterscheiden. Sollte z.B. die Farbe enthalten.",
@@ -268,7 +417,11 @@
       "weight": "Das Gewicht einer vollen Spule (Nettogewicht). Sollte nicht das Gewicht der Spule, sondern nur dass des Filaments auf der Spule enthalten. Entspricht normalerweise dem Gewicht, das auf der Spule aufgedruckt ist.",
       "spool_weight": "Das Gewicht der leeren Spule. Wird verwendet, um das gemessene Gewicht der Spule zu berechnen.",
       "article_number": "z.B. EAN, UPC o.Ä.",
-      "multi_color_direction": "Filamente können auf zwei Arten mehrere Farben haben: entweder durch Koextrusion, wie bei zweifarbigen Filamenten mit konsistenten Mehrfarben, oder durch Farbveränderungen in Längsrichtung, wie bei Gradient-Filamenten, die die Farben entlang der Spule verschieben."
+      "multi_color_direction": "Filamente können auf zwei Arten mehrere Farben haben: entweder durch Koextrusion, wie bei zweifarbigen Filamenten mit konsistenten Mehrfarben, oder durch Farbveränderungen in Längsrichtung, wie bei Gradient-Filamenten, die die Farben entlang der Spule verschieben.",
+      "low_stock_threshold": "Markiert dieses Filament zum Nachbestellen, wenn das gesamte Restgewicht über alle seine Spulen unter diese Grammzahl fällt.",
+      "reserve_count": "Anzahl ungeöffneter Ersatzspulen, die du vorrätig hast — erfasst, ohne für jede eine eigene Spule anzulegen.",
+      "settings_extruder_temp_range": "Vom Hersteller empfohlener Düsentemperaturbereich (Min–Max). Optional, leer lassen, wenn du nur einen einzelnen Wert hast.",
+      "settings_bed_temp_range": "Vom Hersteller empfohlener Betttemperaturbereich (Min–Max). Optional, leer lassen, wenn du nur einen einzelnen Wert hast."
     },
     "titles": {
       "create": "Filament erstellen",
@@ -286,12 +439,17 @@
       "import_3dfp_help": "Informationen automatisch von 3dfilamentprofiles.com abrufen und ausfüllen",
       "import_3dfp_placeholder": "z.B. 12875",
       "import_3dfp_success": "Filament erfolgreich von 3dfilamentprofiles.com abgerufen",
-      "import_3dfp_error": "Filamentdaten konnten nicht von 3dfilamentprofiles.com abgerufen werden"
+      "import_3dfp_error": "Filamentdaten konnten nicht von 3dfilamentprofiles.com abgerufen werden",
+      "must_be_positive": "Muss größer als 0 sein.",
+      "new_vendor_prompt": "Neuen Hersteller hinzufügen",
+      "vendor_created": "Hersteller erstellt",
+      "vendor_create_error": "Hersteller konnte nicht erstellt werden"
     },
     "buttons": {
       "add_spool": "Spule hinzufügen",
       "fetch": "Abrufen",
-      "download_swatch": "Musterkarte"
+      "download_swatch": "Musterkarte",
+      "download_slicer": "Slicer-Profil"
     },
     "swatch": {
       "title": "3D-druckbare Musterkarte",
@@ -309,6 +467,46 @@
         "card": "Karte"
       },
       "download": ".3mf herunterladen"
+    },
+    "spool_type_options": {
+      "plastic": "Kunststoff",
+      "cardboard": "Pappe",
+      "metal": "Metall"
+    },
+    "finish_options": {
+      "matte": "Matt",
+      "glossy": "Glänzend"
+    },
+    "pattern_options": {
+      "marble": "Marmor",
+      "sparkle": "Glitzer"
+    },
+    "tabs": {
+      "details": "Details"
+    },
+    "bulk": {
+      "edit": "Bearbeiten",
+      "clear_selection": "Auswahl aufheben",
+      "edit_help": "Hake ein Feld an, um es bei allen ausgewählten Filamenten zu ändern. Nicht angehakte Felder bleiben unverändert.",
+      "apply": "Anwenden",
+      "nothing_selected": "Hake mindestens ein Feld an, das geändert werden soll.",
+      "selected_one": "{{count}} ausgewählt",
+      "selected_other": "{{count}} ausgewählt",
+      "edit_title_one": "{{count}} Filament bearbeiten",
+      "edit_title_other": "{{count}} Filamente bearbeiten",
+      "applied_one": "{{count}} Filament aktualisiert.",
+      "applied_other": "{{count}} Filamente aktualisiert.",
+      "applied_partial_one": "{{count}} Filament aktualisiert, {{failed}} fehlgeschlagen.",
+      "applied_partial_other": "{{count}} Filamente aktualisiert, {{failed}} fehlgeschlagen."
+    },
+    "view": {
+      "grid": "Kachelansicht",
+      "table": "Tabellenansicht",
+      "grid_tooltip": "Filamente als Farbkacheln durchstöbern",
+      "table_tooltip": "Zurück zur vollständigen Tabelle"
+    },
+    "messages": {
+      "update_error": "Änderungen konnten nicht gespeichert werden. Bitte versuche es erneut."
     }
   },
   "vendor": {
@@ -319,7 +517,9 @@
       "registered": "Registriert",
       "comment": "Kommentar",
       "empty_spool_weight": "Gewicht der leeren Spule",
-      "external_id": "Externe ID"
+      "external_id": "Externe ID",
+      "filament_count": "Filamente",
+      "spool_count": "Spulen"
     },
     "titles": {
       "create": "Hersteller erstellen",
@@ -327,10 +527,12 @@
       "edit": "Hersteller bearbeiten",
       "list": "Herstellerliste",
       "show": "Hersteller anzeigen",
-      "show_title": "[Hersteller #{{id}}] {{name}}"
+      "show_title": "[Hersteller #{{id}}] {{name}}",
+      "view_spools": "Spulen anzeigen"
     },
     "form": {
-      "vendor_updated": "Dieser Hersteller wurde, seit dem die Seite geöffnet wurde, von jemand anderem/etwas anderem bearbeitet. Speichern wird diese Änderungen überschreiben!"
+      "vendor_updated": "Dieser Hersteller wurde, seit dem die Seite geöffnet wurde, von jemand anderem/etwas anderem bearbeitet. Speichern wird diese Änderungen überschreiben!",
+      "duplicate_name_warning": "Ein Hersteller mit diesem Namen existiert bereits."
     },
     "fields_help": {
       "empty_spool_weight": "Das Gewicht einer leeren Spule von diesem Hersteller."
@@ -403,7 +605,33 @@
     "no_recent": "Keine kürzlich verwendeten Spulen",
     "by_material": "Nach Material",
     "by_location": "Nach Standort",
-    "by_vendor": "Nach Hersteller"
+    "by_vendor": "Nach Hersteller",
+    "all_spools": "Alle Spulen",
+    "no_spools": "Noch keine Spulen",
+    "shopping_list": "Einkaufsliste",
+    "shopping_list_empty": "Keine Filamente unter ihrem Mindestbestand.",
+    "usage": {
+      "tab": "Verbrauch",
+      "empty": "Noch kein Filamentverbrauch erfasst.",
+      "loading": "Wird geladen...",
+      "bucket": {
+        "day": "Tag",
+        "week": "Woche",
+        "month": "Monat",
+        "year": "Jahr"
+      }
+    },
+    "create": {
+      "spool": "Neue Spule",
+      "filament": "Neues Filament",
+      "vendor": "Neuer Hersteller"
+    },
+    "kpi": {
+      "this_month": "diesen Monat",
+      "top": "Top",
+      "materials_one": "{{count}} Material",
+      "materials_other": "{{count}} Materialien"
+    }
   },
   "settings": {
     "header": "Einstellungen",
@@ -419,6 +647,10 @@
       "round_prices": {
         "label": "Gerundeter Preis",
         "tooltip": "Rundet die Preise auf die nächsthöhere ganze Zahl."
+      },
+      "unit_scaling": {
+        "label": "Große Einheiten skalieren",
+        "tooltip": "Zeigt große Gewichte und Längen in Listen- und Detailansichten automatisch skaliert an (z. B. 1,5 kg, 64,37 m) statt in reinen Gramm/Millimetern. Gespeicherte Werte und die API bleiben unverändert."
       }
     },
     "extra_fields": {
@@ -431,7 +663,9 @@
         "order": "Reihenfolge",
         "multi_choice": "Mehrfachauswahl",
         "key": "Schlüssel",
-        "choices": "Auswahlmöglichkeiten"
+        "choices": "Auswahlmöglichkeiten",
+        "copy_from_filament": "Vom Filament kopieren",
+        "link_template": "Link-URL"
       },
       "field_type": {
         "text": "Text",
@@ -441,12 +675,13 @@
         "integer_range": "Ganzzahlbereich",
         "boolean": "Wahr/Falsch",
         "float_range": "Float-Bereich",
-        "datetime": "Datum und Uhrzeit"
+        "datetime": "Datum und Uhrzeit",
+        "link": "Link"
       },
       "boolean_true": "Ja",
       "boolean_false": "Nein",
       "delete_confirm": "Feld {{name}} entfernen?",
-      "description": "<p>Hier können Sie zusätzliche benutzerdefinierte Felder zu Ihren Elementen hinzufügen.</p><p>Nach dem Hinzufügen eines Feldes können Sie dessen Schlüssel oder Typ nicht mehr ändern, und bei Auswahlfeldern können Sie keine Auswahlmöglichkeiten entfernen oder den Mehrfachauswahlstatus ändern. Wenn Sie ein Feld entfernen, werden die zugehörigen Daten für alle Elemente gelöscht.</p><p>Der Schlüssel ist derjenige, unter dem andere Programme die Daten lesen/schreiben, wenn Ihr benutzerdefiniertes Feld also mit einem Programm eines Drittanbieters integriert werden soll, stellen Sie sicher, dass Sie ihn richtig einstellen. Der Standardwert wird nur auf neue Elemente angewendet.</p><p>Zusätzliche Felder können in den Tabellenansichten nicht sortiert oder gefiltert werden.</p>",
+      "description": "<p>Hier können Sie zusätzliche benutzerdefinierte Felder zu Ihren Elementen hinzufügen.</p><p>Nach dem Hinzufügen eines Feldes können Sie dessen Schlüssel oder Typ nicht mehr ändern, und bei Auswahlfeldern können Sie keine Auswahlmöglichkeiten entfernen oder den Mehrfachauswahlstatus ändern. Wenn Sie ein Feld entfernen, werden die zugehörigen Daten für alle Elemente gelöscht.</p><p>Der Schlüssel ist derjenige, unter dem andere Programme die Daten lesen/schreiben. Wenn Ihr benutzerdefiniertes Feld also mit einem Drittanbieter-Programm integriert werden soll, stellen Sie sicher, dass Sie ihn richtig setzen. Der Standardwert wird nur auf neue Elemente angewendet.</p><p>Zusätzliche Felder können in den Tabellenansichten angezeigt und sortiert werden. Auswahl- und Wahr/Falsch-Felder bieten dort auch Filteroptionen, und alle zusätzlichen Feldtypen unterstützen das Filtern nach leeren Werten.</p><p>Aktivieren Sie bei Spulenfeldern \"Vom Filament kopieren\", damit eine neue Spule beim Erstellen den Wert eines Filamentfelds mit demselben Schlüssel übernimmt (sofern die Spule keinen eigenen setzt).</p><p>Ein \"Link\"-Feld speichert einen kurzen Wert pro Element (z. B. eine Artikelnummer) und macht daraus über die Link-URL-Vorlage einen anklickbaren Link — setzen Sie {} an die Stelle, an der der Wert stehen soll, z. B. https://www.amazon.com/dp/{}.</p>",
       "choices_missing_error": "Du kannst die Auswahl nicht entfernen. Folgende Auswahlmöglichkeiten fehlen: {{choices}}",
       "key_not_changed": "Bitte ändere den Schlüssel auf einen anderen Wert.",
       "delete_confirm_description": "Dieses Feld und alle damit verbundenen Einträge werden gelöscht.",
@@ -460,6 +695,68 @@
         "tooltip": "Der beim Herunterladen einer 3D-druckbaren Filament-Musterkarte vorausgewählte Stil. Neue Stile können in client/src/utils/swatch/styles.ts zu Spoolman beigetragen werden."
       },
       "preview_description": "Vorschau mit zwei Beispiel-Filamenten — Text und QR-Code werden automatisch in Schwarz oder Weiß gedruckt, je nachdem, was besser mit der Filamentfarbe kontrastiert:"
+    },
+    "import_export": {
+      "tab": "Import / Export",
+      "export_title": "Daten exportieren",
+      "export_help": "Lade deine Hersteller, Filamente oder Spulen als CSV oder JSON herunter. Hersteller- und Filamentdaten sind bei Spulen enthalten.",
+      "import_title": "Daten importieren",
+      "import_help": "Lade eine CSV- oder JSON-Datei im gleichen Format wie ein Export hoch. Die gesamte Datei wird als eine Alles-oder-nichts-Transaktion angewendet; nutze zuerst einen Probelauf, um das Ergebnis vorab zu prüfen.",
+      "report_title": "Bestandsbericht",
+      "report_help": "Öffnet eine druckbare Übersicht deines aktuellen Bestands.",
+      "report_heading": "Spoolman-Bestandsbericht",
+      "entities": {
+        "spools": "Spulen",
+        "filaments": "Filamente",
+        "vendors": "Hersteller"
+      },
+      "modes": {
+        "create": "Neu erstellen",
+        "upsert": "Aktualisieren oder erstellen",
+        "skip_existing": "Vorhandene überspringen"
+      },
+      "dry_run": "Probelauf",
+      "dry_run_prefix": "Probelauf —",
+      "choose_file": "Datei auswählen",
+      "validate": "Validieren",
+      "import_button": "Importieren",
+      "print_report": "Bericht drucken",
+      "no_file": "Bitte wähle zuerst eine Datei aus.",
+      "result": "{{created}} erstellt, {{updated}} aktualisiert, {{skipped}} übersprungen.",
+      "import_errors": "Import fehlgeschlagen",
+      "threemf": {
+        "title": "3MF-Projekt aus dem Slicer importieren",
+        "help": "Lade eine mit Bambu Studio oder OrcaSlicer geslicete .3mf-Datei hoch, um auszulesen, wie viel von jedem Filament der Druck verbraucht hat, den Verbrauch deinen Spulen zuzuordnen und ihn in einem Schritt abzuziehen.",
+        "choose_file": ".3mf-Datei auswählen",
+        "no_filaments": "In dieser 3MF wurde kein Filamentverbrauch gefunden.",
+        "no_match": "Keine passende Spule — wähle eine aus",
+        "col_filament": "Druck-Filament",
+        "col_used": "Verbraucht",
+        "col_spool": "Anzupassende Spule",
+        "apply": "Verbrauch anwenden",
+        "applied": "Verbrauch auf {{count}} Spule(n) erfasst.",
+        "applied_partial": "Verbrauch auf {{ok}} Spule(n) erfasst; {{fail}} fehlgeschlagen."
+      }
+    },
+    "printers": {
+      "tab": "Drucker",
+      "description": "<p>Verwalte hier deine Drucker. Sobald mindestens einer vorhanden ist, kannst du einer Spule im Erstellen- oder Bearbeiten-Formular einen Drucker zuweisen.</p>",
+      "add_title": "Drucker hinzufügen",
+      "edit_title": "Drucker bearbeiten",
+      "delete_confirm": "Drucker \"{{name}}\" löschen? Ihm zugewiesene Spulen verlieren nur die Zuweisung und werden nicht gelöscht."
+    },
+    "custom_links": {
+      "sidebar_tab": "Seitenleisten-Links",
+      "spool_tab": "Spulen-Aktionen",
+      "sidebar_description": "<p>Füge eigene Links zur linken Seitenleiste hinzu, z. B. zur Mainsail- oder Fluidd-Seite deines Druckers. Sie öffnen sich in einem neuen Tab.</p>",
+      "spool_description": "<p>Füge jeder Spule eigene Aktions-Buttons hinzu. Die URL kann die Felder der Spule in geschweiften Klammern enthalten — {id}, {filament_id}, {location}, {lot_nr}, {comment} — die pro Spule ausgefüllt werden. So sind Tools wie nfc2klipper oder Moonrakers Active-Spool-Endpunkt nur einen Klick entfernt.</p>",
+      "name": "Name",
+      "url": "URL",
+      "url_template": "URL-Vorlage",
+      "url_template_help": "Verwende {id} an der Stelle, an der die Spulen-ID stehen soll, z. B. http://moonraker.local/...?id={id}",
+      "add_title": "Link hinzufügen",
+      "edit_title": "Link bearbeiten",
+      "delete_confirm": "Diesen Link löschen?"
     }
   },
   "locations": {
@@ -468,7 +765,29 @@
     "locations": "Orte",
     "new_location": "Neuer Ort",
     "error_empty": "Name darf nicht leer sein",
-    "error_exists": "Ort existiert bereits"
+    "error_exists": "Ort existiert bereits",
+    "location": "Ort",
+    "fields": {
+      "button": "Benutzerdefinierte Felder",
+      "title": "Benutzerdefinierte Felder — {{name}}",
+      "saved": "Ortsfelder gespeichert",
+      "save_error": "Ortsfelder konnten nicht gespeichert werden",
+      "load_error": "Ort konnte nicht geladen werden"
+    },
+    "show": {
+      "name": "Name",
+      "comment": "Kommentar",
+      "spool_count": "Hier gelagerte Spulen",
+      "spools_here": "Spulen an diesem Ort",
+      "no_spools": "An diesem Ort sind keine Spulen gelagert."
+    },
+    "print": {
+      "title": "Orts-Labels drucken",
+      "button": "Labels drucken",
+      "description": "Wähle die Orte aus, für die scannbare QR-Labels gedruckt werden sollen.",
+      "select_placeholder": "Orte auswählen",
+      "none_selected": "Keine Orte ausgewählt"
+    }
   },
   "calibration": {
     "title": "Kalibrierung",
@@ -613,5 +932,92 @@
     "tag_material": "Material",
     "tag_material_type": "Materialtyp",
     "qidi_write_info": "QIDI-Tags speichern nur Material und Farbe. Das Tag wird mit den am besten passenden QIDI-Material- und Farbcodes beschrieben."
+  },
+  "errorBoundary": {
+    "title": "Etwas ist schiefgelaufen",
+    "subTitle": "Diese Seite konnte nicht dargestellt werden. Falls das Problem nach dem Ändern oder Teilen von Ansichtseinstellungen aufgetreten ist, behebt ein Zurücksetzen es meistens.",
+    "reset": "Ansichtseinstellungen zurücksetzen & neu laden",
+    "home": "Zur Startseite"
+  },
+  "apiToken": {
+    "title": "API-Token erforderlich",
+    "help": "Diese Spoolman-Instanz erfordert einen API-Token. Gib ihn ein, um fortzufahren; er wird in diesem Browser gespeichert.",
+    "placeholder": "API-Token",
+    "submit": "Token speichern"
+  },
+  "auth": {
+    "logout": "Abmelden",
+    "login": {
+      "title": "Anmelden",
+      "submit": "Anmelden",
+      "username": "Benutzername",
+      "password": "Passwort"
+    },
+    "roles": {
+      "admin": "Administrator",
+      "readonly": "Nur Lesen"
+    },
+    "users": {
+      "tab": "Benutzer",
+      "title": "Benutzerkonten",
+      "help": "Erstelle Konten, um eine Anmeldung zu erfordern. Nur-Lese-Benutzer können alles einsehen, aber nichts ändern. Das erste Konto ist immer ein Administrator.",
+      "role": "Rolle",
+      "add": "Benutzer hinzufügen",
+      "need_fields": "Gib einen Benutzernamen und ein Passwort ein.",
+      "created": "Benutzer {{username}} erstellt.",
+      "reset_password": "Passwort zurücksetzen",
+      "reset_password_for": "Passwort für {{username}} zurücksetzen",
+      "reset_password_help": "Gib ein neues Passwort für diesen Benutzer ein.",
+      "password_reset": "Passwort aktualisiert.",
+      "delete_confirm": "Diesen Benutzer löschen?"
+    }
+  },
+  "colorFilter": {
+    "button": "Farbe",
+    "title": "Nach ähnlicher Farbe filtern",
+    "threshold": "Toleranz",
+    "help": "Zeigt Einträge, deren Farbe innerhalb dieser Toleranz zur gewählten Farbe liegt.",
+    "advanced": "Weitere Farben"
+  },
+  "theme": {
+    "label": "Design",
+    "system": "System",
+    "light": "Hell",
+    "dark": "Dunkel"
+  },
+  "scan": {
+    "title": "Scannen",
+    "qr": "QR-Code",
+    "nfc": "NFC",
+    "nfc_hint": "NFC-Scannen ist in diesem Browser nicht verfügbar. Verwende Chrome unter Android oder schließe einen serverseitigen NFC-Leser an.",
+    "action": {
+      "open": "Öffnen",
+      "move": "Spule verschieben"
+    },
+    "move": {
+      "scan_spool": "Scanne eine Spule, die verschoben werden soll.",
+      "scan_location": "Spule #{{id}} ausgewählt. Scanne jetzt den Zielort.",
+      "confirm_title": "Spule verschieben?",
+      "confirm_content": "Spule #{{spool}} nach \"{{location}}\" verschieben?",
+      "moved": "Spule #{{spool}} nach \"{{location}}\" verschoben.",
+      "load_error": "Der gescannte Ort konnte nicht geladen werden."
+    },
+    "clear": {
+      "recognized": "Code zum Zurücksetzen der aktiven Spule erkannt. Spoolman selbst hat keine aktive Spule; dein Drucker oder deine Moonraker-Integration übernimmt das."
+    },
+    "barcode": {
+      "unknown_title": "Unbekannter Barcode",
+      "unknown_content": "Kein Filament hat den Barcode {{code}}. Ein Filament erstellen und sich diesen Barcode merken?",
+      "create_filament": "Filament erstellen",
+      "lookup_error": "Dieser Barcode konnte nicht nachgeschlagen werden."
+    }
+  },
+  "printer": {
+    "printer": "Drucker",
+    "fields": {
+      "name": "Name",
+      "comment": "Kommentar",
+      "spool_count": "Spulen"
+    }
   }
 }

@@ -28,7 +28,16 @@
     "unArchive": "Võta arhiivist tagasi",
     "hideArchived": "Peida arhiveeritud",
     "showArchived": "Näita arhiveeritud",
-    "continue": "Jätka"
+    "continue": "Jätka",
+    "search": "Otsi",
+    "resetUsage": "Nulli kasutus",
+    "hideArchivedTooltip": "Tagasi aktiivsete poolide juurde",
+    "showArchivedTooltip": "Lülitu arhiveeritud poolidele",
+    "columns": "Veerud",
+    "clearFiltersTooltip": "Lähtesta kõik filtrid ja sortimine",
+    "labelsAndTags": "Sildid ja kiibid",
+    "export": "Ekspordi",
+    "columnsTooltip": "Vali, järjesta ümber ja peida tabeli veerud"
   },
   "notifications": {
     "error": "Viga (kood: {{statusCode}})",
@@ -99,7 +108,18 @@
       "deleteSettingsConfirm": "Kas oled kindel, et soovid selle eelseadistuse kustutada?",
       "settingsName": "Eelseadistuse nimi",
       "saveSetting": "Salvesta eelseadistused",
-      "saveAsImage": "Salvesta pildina"
+      "saveAsImage": "Salvesta pildina",
+      "pageSizeMode": {
+        "label": "Lehe suurus",
+        "tooltip": "\"Automaatne\" laseb printeril/brauseril lehe geomeetria ise valida (vaikimisi). \"Sildi suuruse järgi\" väljastab ülal antud paberimõõtude põhjal selgesõnalise @page suuruse — kasuta seda rulli-/sildiprinterite puhul (nt Brother QL), et sildid prinditaks õiges suuruses ja suunas. Parim tugi on Chrome'is.",
+        "auto": "Automaatne (printeri vaikeväärtus)",
+        "matchLabel": "Sildi suuruse järgi"
+      },
+      "saveAsZpl": "Laadi alla ZPL",
+      "invalidGeometry": "Sildiruudustik ei mahu paberile",
+      "invalidGeometryHelp": "Veerised ja vahed ei jäta siltidele ruumi. Vähenda veeriseid, vahesid, veerge või ridu — või vali suurem paberi suurus.",
+      "contentClipped": "Osa siltide sisust lõigatakse ära",
+      "contentClippedHelp": "Vähemalt ühe sildi sisu ei mahu sildi piiresse ja lõigatakse printimisel ära. Vähenda teksti suurust, lühenda malli või kasuta vähem veerge/ridu, et iga silt oleks suurem."
     },
     "qrcode": {
       "button": "Prindi sildid",
@@ -126,7 +146,38 @@
       "exportButton": "Ekspordi sildid",
       "printFilamentTitle": "Prindi filamendi sildid",
       "printSpoolTitle": "Prindi pooli sildid",
-      "templateHelpFilament": "Kasuta {}, et lisada filamendi objekti väärtusi tekstina. Näiteks {id} asendatakse filamendi ID-ga või {vendor.name} tootja nimega. Kui väärtus puudub, asendatakse see märgiga \"?\". Selle eemaldamiseks saab kasutada teist {}-paari. Lisaks eemaldatakse kogu {}-paaride vaheline tekst, kui väärtus puudub. Näiteks {Article: {article_number}} kuvatakse sildil ainult siis, kui filamendil on artiklinumber. Teksti paksuks kirjaks muutmiseks ümbritse see topelttärnidega **. Klõpsa nuppu, et näha kõigi saadaolevate väljade loendit."
+      "templateHelpFilament": "Kasuta {}, et lisada filamendi objekti väärtusi tekstina. Näiteks {id} asendatakse filamendi ID-ga või {vendor.name} tootja nimega. Kui väärtus puudub, asendatakse see märgiga \"?\". Selle eemaldamiseks saab kasutada teist {}-paari. Lisaks eemaldatakse kogu {}-paaride vaheline tekst, kui väärtus puudub. Näiteks {Article: {article_number}} kuvatakse sildil ainult siis, kui filamendil on artiklinumber. Teksti paksuks kirjaks muutmiseks ümbritse see topelttärnidega **. Klõpsa nuppu, et näha kõigi saadaolevate väljade loendit.",
+      "textColumns": {
+        "label": "Tekstiveerud",
+        "tooltip": "Paiguta sildi tekst nii mitmesse veergu. Mugav kitsaste siltide puhul, millel on mitu lühikest rida."
+      },
+      "qrPadding": "QR-koodi veeris",
+      "customPayload": {
+        "label": "Kohandatud QR-sisu",
+        "tooltip": "Asenda skannitav QR-sisu malliga (samad väljad nagu sildil). Jäta tühjaks, et kasutada Spoolmani vaikesisu. Kohandatud väärtus on Spoolmanis skannitav ainult siis, kui see vastab endiselt tuntud vormingule (WEB+SPOOLMAN:S-{id} / F-{id} või /spool/show/{id} URL)."
+      },
+      "qrErrorLevel": {
+        "label": "QR-koodi veaparandus",
+        "tooltip": "Kõrgemad tasemed taluvad sildil rohkem kahjustusi/mustust, kuid muudavad QR-koodi tihedamaks (väiksena raskemini skannitav). Vaikimisi on H (kõrgeim)."
+      },
+      "qrPlacement": {
+        "label": "QR-koodi paigutus",
+        "tooltip": "Kus QR-kood paikneb sildi teksti suhtes. Üles või alla paigutamine sobib kõrgetele ja kitsastele siltidele.",
+        "left": "Vasakul",
+        "top": "Üleval",
+        "bottom": "All"
+      },
+      "showColorSwatch": {
+        "label": "Prindi värvinäidis",
+        "tooltip": "Prindi sildile väike värviline kast filamendi värviga."
+      },
+      "barcode1d": {
+        "label": "1D-vöötkood",
+        "tooltip": "Soovi korral prindi QR-koodi kõrvale QR-sisu 1D-vöötkood skanneritele, mis loevad ainult lineaarseid vöötkoode.",
+        "none": "Puudub",
+        "code128": "Code 128"
+      },
+      "tooltip": "Prindi valitud ridadele sildid või vali üksused järgmisel lehel"
     },
     "spoolSelect": {
       "title": "Vali poolid",
@@ -135,7 +186,11 @@
       "noSpoolsSelected": "Sa pole ühtegi pooli valinud.",
       "selectAll": "Vali kõik / tühista valik",
       "selectedTotal_one": "{{count}} pool valitud",
-      "selectedTotal_other": "{{count}} pooli valitud"
+      "selectedTotal_other": "{{count}} pooli valitud",
+      "hidePrinted": "Peida juba prinditud",
+      "reprintConfirmTitle": "Kas printida sildid uuesti?",
+      "reprintConfirmContent_one": "{{count}} valitud poolil on juba prinditud silt. Kas printida see uuesti?",
+      "reprintConfirmContent_other": "{{count}} valitud poolil on juba prinditud sildid. Kas printida need uuesti?"
     },
     "filamentSelect": {
       "title": "Vali filamendid",
@@ -143,7 +198,11 @@
       "noFilamentsSelected": "Sa pole ühtegi filamenti valinud.",
       "selectAll": "Vali kõik / tühista valik",
       "selectedTotal_one": "{{count}} filament valitud",
-      "selectedTotal_other": "{{count}} filamenti valitud"
+      "selectedTotal_other": "{{count}} filamenti valitud",
+      "hidePrinted": "Peida juba prinditud",
+      "reprintConfirmTitle": "Kas printida sildid uuesti?",
+      "reprintConfirmContent_one": "{{count}} valitud filamendil on juba prinditud silt. Kas printida see uuesti?",
+      "reprintConfirmContent_other": "{{count}} valitud filamendil on juba prinditud sildid. Kas printida need uuesti?"
     }
   },
   "home": {
@@ -158,7 +217,33 @@
     "home": "Avaleht",
     "welcome": "Tere tulemast oma Spoolmani instantsi!",
     "description": "Paistab, et sa pole veel ühtegi pooli lisanud. Alustamiseks vaata <helpPageLink>abilehte</helpPageLink>.",
-    "by_vendor": "Tootja järgi"
+    "by_vendor": "Tootja järgi",
+    "all_spools": "Kõik poolid",
+    "no_spools": "Poole pole veel",
+    "shopping_list": "Ostunimekiri",
+    "shopping_list_empty": "Ühtegi filamenti pole alla madala varu läve.",
+    "usage": {
+      "tab": "Kasutus",
+      "empty": "Filamendi kasutust pole veel salvestatud.",
+      "loading": "Laadimine...",
+      "bucket": {
+        "day": "Päev",
+        "week": "Nädal",
+        "month": "Kuu",
+        "year": "Aasta"
+      }
+    },
+    "create": {
+      "spool": "Uus pool",
+      "filament": "Uus filament",
+      "vendor": "Uus tootja"
+    },
+    "kpi": {
+      "this_month": "sel kuul",
+      "top": "enim",
+      "materials_one": "{{count}} materjal",
+      "materials_other": "{{count}} materjali"
+    }
   },
   "locations": {
     "error_empty": "Nimi ei tohi olla tühi",
@@ -166,7 +251,29 @@
     "locations": "Asukohad",
     "new_location": "Uus asukoht",
     "no_location": "Asukoht puudub",
-    "no_locations_help": "Sellel lehel saad oma poole asukohtade kaupa korraldada. Alustamiseks lisa mõned poolid!"
+    "no_locations_help": "Sellel lehel saad oma poole asukohtade kaupa korraldada. Alustamiseks lisa mõned poolid!",
+    "location": "Asukoht",
+    "fields": {
+      "button": "Kohandatud väljad",
+      "title": "Kohandatud väljad — {{name}}",
+      "saved": "Asukoha väljad salvestatud",
+      "save_error": "Asukoha väljade salvestamine ebaõnnestus",
+      "load_error": "Asukoha laadimine ebaõnnestus"
+    },
+    "show": {
+      "name": "Nimi",
+      "comment": "Kommentaar",
+      "spool_count": "Siin hoitavad poolid",
+      "spools_here": "Poolid selles asukohas",
+      "no_spools": "Selles asukohas ei hoita ühtegi pooli."
+    },
+    "print": {
+      "title": "Prindi asukohasildid",
+      "button": "Prindi sildid",
+      "description": "Vali asukohad, millele skannitavaid QR-silte printida.",
+      "select_placeholder": "Vali asukohad",
+      "none_selected": "Ühtegi asukohta pole valitud"
+    }
   },
   "scanner": {
     "title": "QR-koodi skanner",
@@ -178,7 +285,9 @@
       "notReadable": "Kaamerat ei saa lugeda.",
       "notFound": "Kaamerat ei leitud.",
       "unknown": "Tekkis tundmatu viga. ({{error}})"
-    }
+    },
+    "camera_auto": "Automaatne kaamera",
+    "camera_n": "Kaamera {{n}}"
   },
   "spool": {
     "spool": "Poolid",
@@ -204,7 +313,13 @@
       "last_used": "Viimati kasutatud",
       "registered": "Registreeritud",
       "comment": "Kommentaar",
-      "archived": "Arhiveeritud"
+      "archived": "Arhiveeritud",
+      "filament_name_only": "Nimi",
+      "vendor_name": "Tootja",
+      "color": "Värv",
+      "printer": "Printer",
+      "diameter": "Läbimõõt",
+      "color_hex": "Värv"
     },
     "fields_help": {
       "price": "Täispooli hind. Kui see pole määratud, kasutatakse selle asemel filamendi hinda.",
@@ -216,7 +331,10 @@
       "spool_weight": "Pooli kaal tühjana. Jäta tühjaks, et kasutada filamendi või tootja väärtust.",
       "location": "Kus pool asub, kui sul on poolide hoiustamiseks mitu asukohta.",
       "lot_nr": "Tootja partiinumber. Saab kasutada, et tagada prindi ühtlane värv, kui kasutatakse mitut pooli.",
-      "external_filament": "Oled valinud filamendi välisest andmebaasist. Selle pooli loomisel luuakse filamendi objekt (ja võimalik, et ka tootja objekt) automaatselt. See võib tekitada dubleerivaid filamendi objekte, kui oled sellele filamendile juba filamendi objekti loonud."
+      "external_filament": "Oled valinud filamendi välisest andmebaasist. Selle pooli loomisel luuakse filamendi objekt (ja võimalik, et ka tootja objekt) automaatselt. See võib tekitada dubleerivaid filamendi objekte, kui oled sellele filamendile juba filamendi objekti loonud.",
+      "printer": "Printer, millesse see pool on praegu laaditud. Halda oma printereid seadetes.",
+      "diameter": "Selle konkreetse pooli mõõdetud filamendi läbimõõt, mida kasutatakse pikkuse arvutustes. Jäta tühjaks, et kasutada filamendi läbimõõtu.",
+      "color_hex": "Valikuline värv sellele konkreetsele poolile, mis asendab filamendi värvi. Tühjenda, et kasutada filamendi värvi."
     },
     "titles": {
       "create": "Loo pool",
@@ -240,10 +358,75 @@
       "spool_updated": "Keegi või miski on seda pooli pärast selle lehe avamist muutnud. Salvestamine kirjutab need muudatused üle!"
     },
     "messages": {
-      "archive": "Kas oled kindel, et soovid selle pooli arhiveerida?"
+      "archive": "Kas oled kindel, et soovid selle pooli arhiveerida?",
+      "update_error": "Muudatuste salvestamine ebaõnnestus. Palun proovi uuesti.",
+      "reset_usage": "Kas nullida selle pooli kasutatud kaal? See kustutab esmakordse/viimase kasutamise kuupäevad."
     },
     "formats": {
       "last_used": "Viimati kasutatud {{date}}"
+    },
+    "custom_actions": "Toimingud",
+    "bulk": {
+      "edit": "Muuda",
+      "clear_selection": "Tühista valik",
+      "edit_help": "Märgi väli, et muuta seda igal valitud poolil. Märkimata väljad jäävad muutmata.",
+      "apply": "Rakenda",
+      "nothing_selected": "Märgi vähemalt üks väli, mida muuta.",
+      "selected_one": "{{count}} valitud",
+      "selected_other": "{{count}} valitud",
+      "edit_title_one": "Muuda {{count}} pooli",
+      "edit_title_other": "Muuda {{count}} pooli",
+      "applied_one": "Uuendati {{count}} pool.",
+      "applied_other": "Uuendati {{count}} pooli.",
+      "applied_partial_one": "Uuendati {{count}} pool, {{failed}} ebaõnnestus.",
+      "applied_partial_other": "Uuendati {{count}} pooli, {{failed}} ebaõnnestus.",
+      "archive_confirm_one": "Kas arhiveerida {{count}} pool?",
+      "archive_confirm_other": "Kas arhiveerida {{count}} pooli?",
+      "unarchive_confirm_one": "Kas võtta {{count}} pool arhiivist tagasi?",
+      "unarchive_confirm_other": "Kas võtta {{count}} pooli arhiivist tagasi?"
+    },
+    "weigh": {
+      "button": "Kaalu poole",
+      "title": "Poolide kaalumine",
+      "help": "Leia pool, sisesta mõõtmistulemus ja vajuta Salvesta ja järgmine, et kaaluda järgmist ilma akent sulgemata.",
+      "spool": "Pool",
+      "search_placeholder": "Otsi ID, filamendi või partiinumbri järgi…",
+      "save_next": "Salvesta ja järgmine",
+      "done": "Valmis",
+      "updated": "{{name}} uuendatud",
+      "pick_spool": "Vali kõigepealt pool.",
+      "tooltip": "Kaalu mitu pooli järjest uuesti"
+    },
+    "view": {
+      "grid": "Ruudustikvaade",
+      "table": "Tabelivaade",
+      "grid_tooltip": "Sirvi poole värvipaanidena",
+      "table_tooltip": "Tagasi täistabelisse"
+    },
+    "filament_extra_fields": "Filamendi väljad",
+    "sibling_spools": {
+      "title": "Selle filamendi teised poolid",
+      "button": "Sõsarpoolid",
+      "tooltip": "Kuva kõik selle filamendi poolid"
+    },
+    "usage_history": {
+      "title": "Kasutusajalugu",
+      "time": "Aeg",
+      "type": "Tüüp",
+      "change": "Muutus",
+      "comment": "Kommentaar",
+      "empty": "Kasutust pole veel salvestatud."
+    },
+    "weight_history": {
+      "title": "Kaalu ajalugu",
+      "chart_label": "Mõõdetud kaal ajas",
+      "idle_gain": "Mõõdetud kaal tõusis mõõtmiste vahel {{grams}} g võrra — pool võib olla niiskust imanud. (Eksperimentaalne)"
+    },
+    "totals": {
+      "shown_one": "{{count}} pool kuvatud",
+      "shown_other": "{{count}} pooli kuvatud",
+      "selected_one": "{{count}} pool valitud",
+      "selected_other": "{{count}} pooli valitud"
     }
   },
   "filament": {
@@ -270,7 +453,21 @@
       "coaxial": "Koekstrudeeritud",
       "longitudinal": "Pikisuunaline",
       "external_id": "Väline ID",
-      "spools": "Näita poole"
+      "spools": "Näita poole",
+      "color_hue": "Värv",
+      "spool_count": "Poolid",
+      "remaining_weight": "Laos",
+      "low_stock_threshold": "Madala varu lävi",
+      "reserve_count": "Varupoolid",
+      "settings_extruder_temp_range": "Ekstruuderi temperatuurivahemik",
+      "settings_bed_temp_range": "Aluse temperatuurivahemik",
+      "temp_range_min": "Min",
+      "temp_range_max": "Maks",
+      "spool_type": "Pooli tüüp",
+      "finish": "Viimistlus",
+      "pattern": "Muster",
+      "translucent": "Poolläbipaistev",
+      "glow": "Pimedas helendav"
     },
     "fields_help": {
       "name": "Filamendi nimi, et eristada seda filamendi tüüpi teistest sama tootja omadest. Peaks sisaldama näiteks värvi.",
@@ -279,7 +476,11 @@
       "weight": "Täispooli filamendi kaal (netokaal). See ei tohiks sisaldada pooli enda kaalu, ainult filamenti. Tavaliselt on see kirjas pakendil.",
       "spool_weight": "Tühja pooli kaal. Kasutatakse pooli mõõdetud kaalu määramiseks.",
       "article_number": "Nt EAN, UPC jne.",
-      "multi_color_direction": "Filamendid võivad olla mitmevärvilised kahel viisil: kas koekstrusiooni teel, nagu ühtlaste värvidega kahevärvilised filamendid, või pikisuunaliste värvimuutuste kaudu, nagu gradientfilamendid, mille värv muutub piki pooli."
+      "multi_color_direction": "Filamendid võivad olla mitmevärvilised kahel viisil: kas koekstrusiooni teel, nagu ühtlaste värvidega kahevärvilised filamendid, või pikisuunaliste värvimuutuste kaudu, nagu gradientfilamendid, mille värv muutub piki pooli.",
+      "low_stock_threshold": "Märgi see filament tellimist vajavaks, kui selle poolide järelejäänud kogukaal langeb alla nii mitme grammi.",
+      "reserve_count": "Avamata varupoolide arv, mis sul on olemas; neid jälgitakse ilma igaühe jaoks pooli loomata.",
+      "settings_extruder_temp_range": "Tootja soovitatud ekstruuderi temperatuurivahemik (min–maks). Valikuline; jäta tühjaks, kui sul on ainult üks väärtus.",
+      "settings_bed_temp_range": "Tootja soovitatud aluse temperatuurivahemik (min–maks). Valikuline; jäta tühjaks, kui sul on ainult üks väärtus."
     },
     "titles": {
       "create": "Loo filament",
@@ -297,12 +498,17 @@
       "import_3dfp_help": "Täida andmed automaatselt, laadides need saidilt 3dfilamentprofiles.com",
       "import_3dfp_placeholder": "nt 12875",
       "import_3dfp_success": "Filament laaditi saidilt 3dfilamentprofiles.com edukalt",
-      "import_3dfp_error": "Filamendi andmete laadimine saidilt 3dfilamentprofiles.com ebaõnnestus"
+      "import_3dfp_error": "Filamendi andmete laadimine saidilt 3dfilamentprofiles.com ebaõnnestus",
+      "must_be_positive": "Peab olema suurem kui 0.",
+      "new_vendor_prompt": "Lisa uus tootja",
+      "vendor_created": "Tootja loodud",
+      "vendor_create_error": "Tootja loomine ebaõnnestus"
     },
     "buttons": {
       "add_spool": "Lisa pool",
       "fetch": "Laadi",
-      "download_swatch": "Näidis"
+      "download_swatch": "Näidis",
+      "download_slicer": "Sliceri profiil"
     },
     "swatch": {
       "title": "3D-prinditav näidis",
@@ -320,6 +526,46 @@
         "card": "Kaart"
       },
       "download": "Laadi alla .3mf"
+    },
+    "spool_type_options": {
+      "plastic": "Plast",
+      "cardboard": "Papp",
+      "metal": "Metall"
+    },
+    "finish_options": {
+      "matte": "Matt",
+      "glossy": "Läikiv"
+    },
+    "pattern_options": {
+      "marble": "Marmor",
+      "sparkle": "Sädelev"
+    },
+    "tabs": {
+      "details": "Üksikasjad"
+    },
+    "bulk": {
+      "edit": "Muuda",
+      "clear_selection": "Tühista valik",
+      "edit_help": "Märgi väli, et muuta seda igal valitud filamendil. Märkimata väljad jäävad muutmata.",
+      "apply": "Rakenda",
+      "nothing_selected": "Märgi vähemalt üks väli, mida muuta.",
+      "selected_one": "{{count}} valitud",
+      "selected_other": "{{count}} valitud",
+      "edit_title_one": "Muuda {{count}} filamenti",
+      "edit_title_other": "Muuda {{count}} filamenti",
+      "applied_one": "Uuendati {{count}} filament.",
+      "applied_other": "Uuendati {{count}} filamenti.",
+      "applied_partial_one": "Uuendati {{count}} filament, {{failed}} ebaõnnestus.",
+      "applied_partial_other": "Uuendati {{count}} filamenti, {{failed}} ebaõnnestus."
+    },
+    "view": {
+      "grid": "Ruudustikvaade",
+      "table": "Tabelivaade",
+      "grid_tooltip": "Sirvi filamente värvipaanidena",
+      "table_tooltip": "Tagasi täistabelisse"
+    },
+    "messages": {
+      "update_error": "Muudatuste salvestamine ebaõnnestus. Palun proovi uuesti."
     }
   },
   "vendor": {
@@ -330,7 +576,9 @@
       "empty_spool_weight": "Tühja pooli kaal",
       "external_id": "Väline ID",
       "registered": "Registreeritud",
-      "comment": "Kommentaar"
+      "comment": "Kommentaar",
+      "filament_count": "Filamendid",
+      "spool_count": "Poolid"
     },
     "fields_help": {
       "empty_spool_weight": "Selle tootja tühja pooli kaal."
@@ -341,10 +589,12 @@
       "edit": "Muuda tootjat",
       "list": "Tootjad",
       "show": "Näita tootjat",
-      "show_title": "[Tootja #{{id}}] {{name}}"
+      "show_title": "[Tootja #{{id}}] {{name}}",
+      "view_spools": "Näita poole"
     },
     "form": {
-      "vendor_updated": "Keegi või miski on seda tootjat pärast selle lehe avamist muutnud. Salvestamine kirjutab need muudatused üle!"
+      "vendor_updated": "Keegi või miski on seda tootjat pärast selle lehe avamist muutnud. Salvestamine kirjutab need muudatused üle!",
+      "duplicate_name_warning": "Sellenimeline tootja on juba olemas."
     }
   },
   "help": {
@@ -382,11 +632,15 @@
       "round_prices": {
         "label": "Ümarda hinnad",
         "tooltip": "Ümarda hinnad lähima täisarvuni."
+      },
+      "unit_scaling": {
+        "label": "Skaleeri suured ühikud",
+        "tooltip": "Kuva suured kaalud ja pikkused loendi- ja detailvaadetes automaatselt skaleerituna (nt 1,5 kg, 64,37 m), mitte toorete grammide/millimeetritena. Salvestatud väärtusi ja API-t see ei mõjuta."
       }
     },
     "extra_fields": {
       "tab": "Lisaväljad",
-      "description": "<p>Siin saad oma üksustele lisada kohandatud lisavälju.</p><p>Kui väli on lisatud, ei saa selle võtit ega tüüpi enam muuta, ning valikutüüpi väljadel ei saa valikuid eemaldada ega mitmikvaliku olekut muuta. Kui eemaldad välja, kustutatakse kõigi üksuste seotud andmed.</p><p>Võti on see, mille kaudu teised programmid andmeid loevad ja kirjutavad, seega kui sinu kohandatud väli peab lõimuma kolmanda osapoole programmiga, veendu, et see oleks õigesti määratud. Vaikeväärtust rakendatakse ainult uutele üksustele.</p><p>Lisavälju saab tabelivaadetes kuvada ja sortida. Valiku- ja tõeväärtusväljad pakuvad seal ka filtreerimisvõimalusi ning kõigi lisaväljatüüpide puhul saab filtreerida tühje väärtusi.</p>",
+      "description": "<p>Siin saad oma üksustele lisada kohandatud lisavälju.</p><p>Kui väli on lisatud, ei saa selle võtit ega tüüpi enam muuta, ning valikutüüpi väljadel ei saa valikuid eemaldada ega mitmikvaliku olekut muuta. Kui eemaldad välja, kustutatakse kõigi üksuste seotud andmed.</p><p>Võti on see, mille kaudu teised programmid andmeid loevad ja kirjutavad, seega kui sinu kohandatud väli peab lõimuma kolmanda osapoole programmiga, veendu, et see oleks õigesti määratud. Vaikeväärtust rakendatakse ainult uutele üksustele.</p><p>Lisavälju saab tabelivaadetes kuvada ja sortida. Valiku- ja tõeväärtusväljad pakuvad seal ka filtreerimisvõimalusi ning kõigi lisaväljatüüpide puhul saab filtreerida tühje väärtusi.</p><p>Pooli väljade puhul lülita sisse \"Kopeeri filamendist\", et uus pool päriks loomisel väärtuse sama võtmega filamendi väljalt (kui pool ise väärtust ei määra).</p><p>\"Link\"-tüüpi väli salvestab iga üksuse kohta lühikese väärtuse (nt artiklinumbri) ja muudab selle klõpsatavaks lingiks Lingi URL-i malli abil — pane {} sinna, kuhu väärtus minema peab, nt https://www.amazon.com/dp/{}.</p>",
       "params": {
         "key": "Võti",
         "name": "Nimi",
@@ -395,7 +649,9 @@
         "order": "Järjekord",
         "default_value": "Vaikeväärtus",
         "choices": "Valikud",
-        "multi_choice": "Mitmikvalik"
+        "multi_choice": "Mitmikvalik",
+        "copy_from_filament": "Kopeeri filamendist",
+        "link_template": "Lingi URL"
       },
       "field_type": {
         "text": "Tekst",
@@ -405,7 +661,8 @@
         "float_range": "Ujukomaarvu vahemik",
         "datetime": "Kuupäev ja kellaaeg",
         "boolean": "Tõeväärtus",
-        "choice": "Valik"
+        "choice": "Valik",
+        "link": "Link"
       },
       "boolean_true": "Jah",
       "boolean_false": "Ei",
@@ -422,6 +679,68 @@
         "tooltip": "Stiil, mis on 3D-prinditava filamendinäidise allalaadimisel eelvalitud. Uusi stiile saab Spoolmani lisada failis client/src/utils/swatch/styles.ts."
       },
       "preview_description": "Eelvaade kahe näidisfilamendiga — tekst ja QR-kood prinditakse automaatselt mustas või valges, olenevalt sellest, kumb filamendi värviga paremini kontrasteerub:"
+    },
+    "import_export": {
+      "tab": "Import / eksport",
+      "export_title": "Ekspordi andmed",
+      "export_help": "Laadi oma tootjad, filamendid või poolid alla CSV- või JSON-failina. Tootja- ja filamendiandmed sisalduvad poolides.",
+      "import_title": "Impordi andmed",
+      "import_help": "Laadi üles CSV- või JSON-fail, mis on samasuguse ülesehitusega nagu eksport. Kogu fail rakendatakse ühe kõik-või-mitte-midagi tehinguna; kasuta kõigepealt proovikäivitust, et tulemust eelvaadata.",
+      "report_title": "Laoseisu aruanne",
+      "report_help": "Ava prinditav kokkuvõte praegusest laoseisust.",
+      "report_heading": "Spoolmani laoseisu aruanne",
+      "entities": {
+        "spools": "Poolid",
+        "filaments": "Filamendid",
+        "vendors": "Tootjad"
+      },
+      "modes": {
+        "create": "Loo uued",
+        "upsert": "Uuenda või loo",
+        "skip_existing": "Jäta olemasolevad vahele"
+      },
+      "dry_run": "Proovikäivitus",
+      "dry_run_prefix": "Proovikäivitus —",
+      "choose_file": "Vali fail",
+      "validate": "Valideeri",
+      "import_button": "Impordi",
+      "print_report": "Prindi aruanne",
+      "no_file": "Palun vali kõigepealt fail.",
+      "result": "Loodud {{created}}, uuendatud {{updated}}, vahele jäetud {{skipped}}.",
+      "import_errors": "Import ebaõnnestus",
+      "threemf": {
+        "title": "Impordi slice'itud 3MF-projekt",
+        "help": "Laadi üles Bambu Studiost või OrcaSlicerist pärit slice'itud .3mf, et lugeda, kui palju iga filamenti print kasutas, sobitada see sinu poolidega ja lahutada kasutus ühe sammuga.",
+        "choose_file": "Vali .3mf-fail",
+        "no_filaments": "Sellest 3MF-ist ei leitud filamendi kasutust.",
+        "no_match": "Sobivat pooli pole — vali üks",
+        "col_filament": "Prindifilament",
+        "col_used": "Kasutatud",
+        "col_spool": "Kohandatav pool",
+        "apply": "Rakenda kasutus",
+        "applied": "Kasutus salvestati {{count}} poolile.",
+        "applied_partial": "Kasutus salvestati {{ok}} poolile; {{fail}} ebaõnnestus."
+      }
+    },
+    "printers": {
+      "tab": "Printerid",
+      "description": "<p>Halda siin oma printereid. Kui sul on vähemalt üks, saad pooli printerile määrata pooli loomise või muutmise vormist.</p>",
+      "add_title": "Lisa printer",
+      "edit_title": "Muuda printerit",
+      "delete_confirm": "Kas kustutada printer \"{{name}}\"? Sellele määratud poolidelt eemaldatakse määrang, poole endid ei kustutata."
+    },
+    "custom_links": {
+      "sidebar_tab": "Külgriba lingid",
+      "spool_tab": "Pooli toimingud",
+      "sidebar_description": "<p>Lisa vasakusse külgribasse oma lingid, nt printeri Mainsaili või Fluiddi lehele. Need avanevad uuel vahekaardil.</p>",
+      "spool_description": "<p>Lisa igale poolile kohandatud toimingunupud. URL võib sisaldada pooli välju loogelistes sulgudes — {id}, {filament_id}, {location}, {lot_nr}, {comment} — mis täidetakse iga pooli kohta, nii et tööriistad nagu nfc2klipper või Moonrakeri aktiivse pooli lõpp-punkt on vaid kliki kaugusel.</p>",
+      "name": "Nimi",
+      "url": "URL",
+      "url_template": "URL-i mall",
+      "url_template_help": "Kasuta {id} seal, kuhu peaks minema pooli ID, nt http://moonraker.local/...?id={id}",
+      "add_title": "Lisa link",
+      "edit_title": "Muuda linki",
+      "delete_confirm": "Kas kustutada see link?"
     }
   },
   "documentTitle": {
@@ -601,5 +920,92 @@
     "tag_material": "Materjal",
     "tag_material_type": "Materjali tüüp",
     "qidi_write_info": "Qidi kiibid salvestavad ainult materjali ja värvi. Kiibile kirjutatakse lähima vastega Qidi materjali- ja värvikoodid."
+  },
+  "errorBoundary": {
+    "title": "Midagi läks valesti",
+    "subTitle": "Selle lehe kuvamine ebaõnnestus. Kui see algas pärast vaateseadete muutmist või jagamist, aitab nende lähtestamine tavaliselt.",
+    "reset": "Lähtesta vaateseaded ja laadi uuesti",
+    "home": "Mine avalehele"
+  },
+  "apiToken": {
+    "title": "API-token on nõutav",
+    "help": "See Spoolmani instants nõuab API-tokenit. Jätkamiseks sisesta see; token salvestatakse selles brauseris.",
+    "placeholder": "API-token",
+    "submit": "Salvesta token"
+  },
+  "auth": {
+    "logout": "Logi välja",
+    "login": {
+      "title": "Logi sisse",
+      "submit": "Logi sisse",
+      "username": "Kasutajanimi",
+      "password": "Parool"
+    },
+    "roles": {
+      "admin": "Administraator",
+      "readonly": "Kirjutuskaitstud"
+    },
+    "users": {
+      "tab": "Kasutajad",
+      "title": "Kasutajakontod",
+      "help": "Loo kontod, et nõuda sisselogimist. Kirjutuskaitstud kasutajad näevad kõike, kuid ei saa muudatusi teha. Esimene konto on alati administraator.",
+      "role": "Roll",
+      "add": "Lisa kasutaja",
+      "need_fields": "Sisesta kasutajanimi ja parool.",
+      "created": "Loodi kasutaja {{username}}.",
+      "reset_password": "Lähtesta parool",
+      "reset_password_for": "Lähtesta kasutaja {{username}} parool",
+      "reset_password_help": "Sisesta sellele kasutajale uus parool.",
+      "password_reset": "Parool on uuendatud.",
+      "delete_confirm": "Kas kustutada see kasutaja?"
+    }
+  },
+  "colorFilter": {
+    "button": "Värv",
+    "title": "Filtreeri sarnase värvi järgi",
+    "threshold": "Tolerants",
+    "help": "Näita üksusi, mille värv jääb valitud värvist selle tolerantsi piiresse.",
+    "advanced": "Rohkem värve"
+  },
+  "theme": {
+    "label": "Teema",
+    "system": "Süsteem",
+    "light": "Hele",
+    "dark": "Tume"
+  },
+  "scan": {
+    "title": "Skannimine",
+    "qr": "QR-kood",
+    "nfc": "NFC",
+    "nfc_hint": "NFC-skannimine pole selles brauseris saadaval. Kasuta Androidi Chrome'i või ühenda serveripoolne NFC-lugeja.",
+    "action": {
+      "open": "Ava",
+      "move": "Teisalda pool"
+    },
+    "move": {
+      "scan_spool": "Skanni pooli, mida teisaldada.",
+      "scan_location": "Pool #{{id}} valitud. Nüüd skanni sihtasukohta.",
+      "confirm_title": "Kas teisaldada pool?",
+      "confirm_content": "Kas teisaldada pool #{{spool}} asukohta \"{{location}}\"?",
+      "moved": "Pool #{{spool}} teisaldati asukohta \"{{location}}\".",
+      "load_error": "Skannitud asukoha laadimine ebaõnnestus."
+    },
+    "clear": {
+      "recognized": "Tuvastati aktiivse pooli tühistamise kood. Spoolmanil endal aktiivset pooli pole; selle tühistamisega tegeleb sinu printer või Moonrakeri integratsioon."
+    },
+    "barcode": {
+      "unknown_title": "Tundmatu vöötkood",
+      "unknown_content": "Ühelgi filamendil pole vöötkoodi {{code}}. Kas luua filament ja jätta see vöötkood meelde?",
+      "create_filament": "Loo filament",
+      "lookup_error": "Selle vöötkoodi otsimine ebaõnnestus."
+    }
+  },
+  "printer": {
+    "printer": "Printer",
+    "fields": {
+      "name": "Nimi",
+      "comment": "Kommentaar",
+      "spool_count": "Poolid"
+    }
   }
 }
