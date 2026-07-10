@@ -1,4 +1,7 @@
 client/node_modules
+# The image builds the client itself in the client-builder stage (#111), so exclude any prebuilt
+# bundle from the context — this keeps the in-Dockerfile build cache-stable across runs.
+client/dist
 
 *.egg-info
 *.egg/
