@@ -1,3 +1,20 @@
+# Build the web client here so `docker build .` works from a clean checkout with no prior
+# `npm run build` (#111). Pinned to the native BUILDPLATFORM so that, during a multi-arch buildx
+# build, vite runs on the build host instead of under slow QEMU emulation — the emitted bundle is
+# static and architecture-independent, so it is safe to reuse across every target platform.
+FROM --platform=$BUILDPLATFORM node:22-slim AS client-builder
+
+WORKDIR /client
+
+# Install dependencies first so this layer is cached unless the manifests change. .npmrc is copied
+# too: it sets legacy-peer-deps, without which npm ci fails on a peer-dependency conflict.
+COPY client/package.json client/package-lock.json client/.npmrc ./
+RUN npm ci
+
+# Then the source, and build. VITE_APIURL matches the CI build so the API is served under /api/v1.
+COPY client/ ./
+RUN echo "VITE_APIURL=/api/v1" > .env.production && npm run build
+
 FROM python:3.14-slim-trixie AS python-builder
 
 ENV UV_COMPILE_BYTECODE=1
@@ -72,8 +89,8 @@ RUN useradd -u 1000 -U app \
     && mkdir -p /home/app/.local/share/spoolman \
     && chown -R app:app /home/app/.local/share/spoolman
 
-# Copy built client
-COPY --chown=app:app ./client/dist /home/app/spoolman/client/dist
+# Copy the client bundle built in the client-builder stage above (#111).
+COPY --chown=app:app --from=client-builder /client/dist /home/app/spoolman/client/dist
 
 # Copy built app
 COPY --chown=app:app --from=python-builder /home/app/spoolman /home/app/spoolman
