@@ -20,8 +20,6 @@ __pycache__
 tests
 tests_integration
 
-# Home Assistant add-on packaging (#89) — packaged separately, not part of the server image
-ha-addon
 
 # Environment files (keep the example for reference). dockerignore patterns are anchored to
 # the context root, so the client's env files need their own entries — without them a local

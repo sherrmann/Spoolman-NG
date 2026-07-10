@@ -101,6 +101,24 @@ def _principal_for_token(state: AuthState, token: str | None) -> Principal | Non
     return None
 
 
+def _mount_relative_path(scope: Scope) -> str:
+    """Return the request path relative to the app this middleware wraps.
+
+    Starlette keeps the FULL request path in ``scope["path"]`` and carries the mount
+    prefix — ``/api/v1``, plus any ``SPOOLMAN_BASE_PATH`` — in ``scope["root_path"]``,
+    so matching the sub-app-relative open-path lists requires stripping that prefix.
+    Unmounted (as in the unit harness, where root_path is empty) this is a no-op,
+    which is exactly how a full-path comparison could pass the test suite while
+    401-ing every open route (health, docs, auth/status, even auth/login) on the
+    real mounted app whenever a token or account was configured.
+    """
+    path = scope.get("path") or ""
+    root_path = scope.get("root_path") or ""
+    if root_path and path.startswith(root_path):
+        return path[len(root_path) :] or "/"
+    return path
+
+
 class AuthMiddleware:
     """Pure-ASGI middleware enforcing the token/role policy described in the module docstring."""
 
@@ -121,7 +139,7 @@ class AuthMiddleware:
     def _is_open(self, scope: Scope) -> bool:
         """Return True for routes reachable without credentials."""
         method = scope.get("method", "GET")
-        path = scope.get("path")
+        path = _mount_relative_path(scope)
         if method == "OPTIONS":
             return True
         if method == "GET" and path in _OPEN_GET_PATHS:

@@ -92,6 +92,15 @@ Then open `http://localhost:7912`. Image tags:
 
 > **Windows & macOS:** use Docker. The native install below is Linux-only (it relies on `bash` + `systemd`).
 
+### Home Assistant add-on (experimental)
+
+Home Assistant OS / Supervisor users can run the server as an add-on — no separate Docker host
+needed. Add the dedicated add-on repository
+[`sherrmann/spoolman-ng-addons`](https://github.com/sherrmann/spoolman-ng-addons) under
+**Settings → Add-ons → Add-on Store → ⋮ → Repositories**, install **Spoolman NG**, and open port
+`8000`. The add-on tracks releases automatically — updates appear in the HA UI like any other
+add-on.
+
 ### Native install (Linux, no Docker)
 
 Best for running Spoolman directly on a host — e.g. on a Raspberry Pi next to Klipper/Moonraker. One line fetches the latest release and runs the installer (it sets up `uv`, the Python dependencies, and an optional `systemd` service):

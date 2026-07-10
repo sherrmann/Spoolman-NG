@@ -786,6 +786,46 @@ jobs:
 
             ---
   #
+  # Keep the Home Assistant add-on repository (sherrmann/spoolman-ng-addons) in step
+  # with each release: HA only offers add-on updates when the add-on's config.yaml
+  # version changes, and its build.yaml must point at the matching image tag. Runs
+  # after the images exist so an HA instance never gets offered a version whose image
+  # isn't pullable yet. Requires secrets.PAT to have write access to the add-on repo.
+  #
+  sync-ha-addon:
+    if: ${{ (github.event_name != 'pull_request') && startsWith(github.event.ref, 'refs/tags/v') }}
+    needs: [publish-images]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout add-on repository
+        uses: actions/checkout@v7
+        with:
+          repository: sherrmann/spoolman-ng-addons
+          token: ${{ secrets.PAT }}
+
+      - name: Bump add-on to this release
+        run: |
+          ver="${GITHUB_REF_NAME#v}"
+          sed -i "s/^version: \".*\"$/version: \"${ver}\"/" spoolman_ng/config.yaml
+          sed -i -E "s|(ghcr\.io/sherrmann/spoolman-ng:)[^[:space:]]+|\1${ver}|g" spoolman_ng/build.yaml
+          # Keep the add-on's Changelog tab current: insert this release's section before the
+          # first existing one (idempotent — skipped when the section already exists).
+          if [ -f spoolman_ng/CHANGELOG.md ] && ! grep -q "^## ${ver}\$" spoolman_ng/CHANGELOG.md; then
+            awk -v ver="${ver}" '
+              /^## / && !done { printf "## %s\n\n- Server changes: <https://github.com/sherrmann/Spoolman-NG/releases/tag/v%s>\n\n", ver, ver; done=1 }
+              { print }
+            ' spoolman_ng/CHANGELOG.md > /tmp/addon-changelog.md
+            mv /tmp/addon-changelog.md spoolman_ng/CHANGELOG.md
+          fi
+          if git diff --quiet; then
+            echo "Add-on already at ${ver}; nothing to push."
+            exit 0
+          fi
+          git config user.name "${GITHUB_ACTOR}"
+          git config user.email "${GITHUB_ACTOR_ID}+${GITHUB_ACTOR}@users.noreply.github.com"
+          git commit -am "Bump Spoolman NG add-on to ${ver}"
+          git push
+  #
   # Deploy the freshly published :edge image to the spoolman-ng test instance
   # on the VPS. The SSH key is forced-command — the server runs
   # /opt/spoolman-ng/deploy.sh no matter what script is sent. PR runs never

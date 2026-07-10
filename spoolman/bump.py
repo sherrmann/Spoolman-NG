@@ -28,10 +28,6 @@ def bump() -> None:
     # Update the version number in the node project
     _update_node_pkg_version(project_root, new_version)
 
-    # Keep the Home Assistant add-on in step (#89): HA only offers add-on updates when
-    # config.yaml's version changes, and build.yaml must point at the matching image tag.
-    _update_ha_addon_version(project_root, new_version)
-
     # Run uv lock to update the lock file
     subprocess.run(["uv", "lock"], check=True)
 
@@ -44,8 +40,6 @@ def bump() -> None:
             "uv.lock",
             "client/package.json",
             "client/package-lock.json",
-            "ha-addon/spoolman/config.yaml",
-            "ha-addon/spoolman/build.yaml",
         ],
         cwd=project_root,
         check=True,
@@ -75,19 +69,6 @@ def _update_node_pkg_version(project_root: Path, new_version: str) -> None:
         subprocess.run(["npm", "install"], cwd=project_root.joinpath("client"), check=True, shell=True)  # noqa: S602
     else:
         subprocess.run(["npm", "install"], cwd=project_root.joinpath("client"), check=True)
-
-
-def _update_ha_addon_version(project_root: Path, new_version: str) -> None:
-    """Sync the HA add-on manifest version and its base-image tags with the release."""
-    config_path = project_root.joinpath("ha-addon", "spoolman", "config.yaml")
-    config_text = config_path.read_text()
-    config_text = re.sub(r'^version: ".*"$', f'version: "{new_version}"', config_text, count=1, flags=re.MULTILINE)
-    config_path.write_text(config_text)
-
-    build_path = project_root.joinpath("ha-addon", "spoolman", "build.yaml")
-    build_text = build_path.read_text()
-    build_text = re.sub(r"(ghcr\.io/sherrmann/spoolman-ng:)\S+", rf"\g<1>{new_version}", build_text)
-    build_path.write_text(build_text)
 
 
 def calver(now: datetime, current_version: str | None) -> str:
