@@ -376,6 +376,11 @@
       "comment": "Comment",
       "empty": "No usage recorded yet."
     },
+    "weight_history": {
+      "title": "Weight history",
+      "chart_label": "Measured weight over time",
+      "idle_gain": "Measured weight rose by {{grams}} g between measurements — the spool may have absorbed moisture. (Experimental)"
+    },
     "formats": {
       "last_used": "Last used {{date}}"
     }

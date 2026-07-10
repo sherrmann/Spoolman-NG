@@ -33,6 +33,8 @@ import NfcWriteModal from "../../components/nfcWriteModal";
 import { IFilament } from "../filaments/model";
 import { setSpoolArchived, useSpoolAdjustModal } from "./functions";
 import { ISpool } from "./model";
+import { measureSeries } from "./weightHistory";
+import { WeightHistoryChart } from "./weightHistoryChart";
 
 dayjs.extend(utc);
 
@@ -58,6 +60,9 @@ export const SpoolShow = () => {
   const record = data?.data;
 
   const usageEvents = useGetSpoolUsageEvents(record?.id);
+  // #104: a weight-history trend from measure events (their gross measured_weight). Empty unless the
+  // spool has been weighed at least twice.
+  const weightSeries = measureSeries(usageEvents.data ?? []);
   const { mutate: updateSpool } = useUpdate();
 
   // #100: after a QR/NFC scan lands here, show the other (non-archived) spools of the SAME filament
@@ -452,6 +457,12 @@ export const SpoolShow = () => {
               { title: t("spool.fields.location"), dataIndex: "location" },
             ]}
           />
+        </>
+      )}
+      {weightSeries.length >= 2 && (
+        <>
+          <Title level={4}>{t("spool.weight_history.title")}</Title>
+          <WeightHistoryChart series={weightSeries} />
         </>
       )}
       <Title level={4}>{t("spool.usage_history.title")}</Title>
