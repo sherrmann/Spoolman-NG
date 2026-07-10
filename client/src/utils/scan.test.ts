@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { buildScanPayload, parseScanResult, type ScanResource } from "./scan";
+import {
+  CLEAR_PAYLOAD,
+  buildScanPayload,
+  isClearScan,
+  looksLikeRetailBarcode,
+  parseScanResult,
+  type ScanResource,
+} from "./scan";
 
 // The star test (TESTING_STRATEGY.md §2): the QR print dialogs (encoder) and the
 // scanner modal (decoder) are independent code paths that must agree. A
@@ -95,5 +102,39 @@ describe("parseScanResult", () => {
     // The $ anchor must reject anything following the id.
     expect(parseScanResult(`https://host/${resource}/show/1x`)).toBeNull();
     expect(parseScanResult(`https://host/${resource}/show/1/extra`)).toBeNull();
+  });
+});
+
+describe("isClearScan (#132)", () => {
+  it("recognises the reserved clear sentinel, case-insensitively and trimmed", () => {
+    expect(isClearScan(CLEAR_PAYLOAD)).toBe(true);
+    expect(isClearScan("web+spoolman:clear")).toBe(true);
+    expect(isClearScan("  WEB+SPOOLMAN:CLEAR  ")).toBe(true);
+  });
+
+  it("does not treat a spool/filament code or junk as clear", () => {
+    expect(isClearScan("web+spoolman:s-1")).toBe(false);
+    expect(isClearScan("clear")).toBe(false);
+    expect(isClearScan("")).toBe(false);
+  });
+
+  it("is not mistaken for a navigation target", () => {
+    expect(parseScanResult(CLEAR_PAYLOAD)).toBeNull();
+  });
+});
+
+describe("looksLikeRetailBarcode (#97b)", () => {
+  it.each(["12345678", "012345678905", "4006381333931", "00012345678905"])("accepts %s", (code) => {
+    expect(looksLikeRetailBarcode(code)).toBe(true);
+  });
+
+  it.each([
+    ["too short", "1234567"],
+    ["odd length (9)", "123456789"],
+    ["non-numeric", "400638133393X"],
+    ["a spoolman code", "web+spoolman:s-1"],
+    ["empty", ""],
+  ])("rejects %s", (_label, code) => {
+    expect(looksLikeRetailBarcode(code)).toBe(false);
   });
 });

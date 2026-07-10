@@ -17,6 +17,7 @@ import TextArea from "antd/es/input/TextArea";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router";
 import { ExtraFieldFormItem, ParsedExtras, StringifiedExtras } from "../../components/extraFields";
 import { FilamentImportModal } from "../../components/filamentImportModal";
 import { FilamentCatalogFields } from "./catalogFields";
@@ -52,6 +53,9 @@ export const FilamentCreate = (props: IResourceComponentsProps & CreateOrClonePr
   // #125: inline vendor creation from the vendor picker's dropdown.
   const [newVendorName, setNewVendorName] = useState("");
   const [addingVendor, setAddingVendor] = useState(false);
+  // #97b: when a scanned retail barcode matched no filament, the scanner routes here with the code
+  // as ?article_number= so the new filament remembers it and the next scan resolves.
+  const [searchParams] = useSearchParams();
 
   const { form, formProps, formLoading, onFinish, redirect } = useForm<
     IFilament,
@@ -62,6 +66,11 @@ export const FilamentCreate = (props: IResourceComponentsProps & CreateOrClonePr
 
   if (!formProps.initialValues) {
     formProps.initialValues = {};
+  }
+
+  const prefillArticleNumber = searchParams.get("article_number");
+  if (prefillArticleNumber && formProps.initialValues.article_number === undefined) {
+    formProps.initialValues.article_number = prefillArticleNumber;
   }
 
   if (props.mode === "clone") {

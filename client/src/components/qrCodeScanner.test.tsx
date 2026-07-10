@@ -60,6 +60,36 @@ describe("QRScannerPanel move flow (#84)", () => {
     expect(updateMutate).not.toHaveBeenCalled();
   });
 
+  it("acknowledges the clear sentinel without navigating and closes (#132)", async () => {
+    const onClose = vi.fn();
+    render(<QRScannerPanel onClose={onClose} />);
+    await scan("WEB+SPOOLMAN:CLEAR");
+    expect(navigate).not.toHaveBeenCalled();
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it("routes a matched retail barcode to a prefilled spool-create (#97b)", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({ ok: true, json: async () => [{ id: 7 }] }) as unknown as Response),
+    );
+    render(<QRScannerPanel />);
+    await scan("4006381333931");
+    expect(navigate).toHaveBeenCalledWith("/spool/create?filament_id=7");
+  });
+
+  it("offers to create a filament for an unknown retail barcode (#97b)", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({ ok: true, json: async () => [] }) as unknown as Response),
+    );
+    render(<QRScannerPanel />);
+    await scan("4006381333931");
+    // The confirm dialog offers to create; accepting routes to filament-create with the code.
+    await userEvent.click(await screen.findByRole("button", { name: "scan.barcode.create_filament" }));
+    expect(navigate).toHaveBeenCalledWith("/filament/create?article_number=4006381333931");
+  });
+
   it("moves the spool: scan spool → scan location → confirm → PATCH location", async () => {
     render(<QRScannerPanel />);
 
