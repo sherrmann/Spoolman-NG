@@ -40,6 +40,7 @@ Spoolman NG is a self-hosted web service designed to help you efficiently manage
   * Two read paths: an **in-browser scanner** (Web NFC — Chrome on Android over **HTTPS** only) and an optional **server-side USB reader**. They don't cover the same tags: the USB reader reads TigerTag (NTAG213) and Qidi (MIFARE Classic) only, while **OpenPrintTag (ISO 15693 / NFC-V) is browser-only** — there is no USB path for it. See [docs/nfc.md](docs/nfc.md) for the full matrix, hardware, and setup.
   * Automatic spool creation from tag data when scanning unrecognized tags.
   * External integration endpoint (`POST /api/v1/nfc/lookup`) for Klipper NFC daemons and other clients.
+* **Mobile Companion App** (proof of concept): a thin Android/iOS shell around the web UI in [`mobile/`](mobile/README.md) that adds **native camera scanning and native NFC** — no HTTPS setup needed, works against plain-HTTP LAN servers, and brings NFC to iPhones (which have no Web NFC). Design and roadmap in [docs/mobile-companion-app.md](docs/mobile-companion-app.md).
 * **Database Support**: SQLite, PostgreSQL, MySQL, and CockroachDB.
 * **Multi-Printer Management**: Handles spool updates from several printers simultaneously.
 * **Advanced Monitoring**: Integrate with [Prometheus](https://prometheus.io/) for detailed historical analysis of filament usage, helping you track and optimize your printing processes. See [docs/monitoring.md](docs/monitoring.md) for setup and example queries.
