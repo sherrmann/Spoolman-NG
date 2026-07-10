@@ -34,6 +34,24 @@ Image tags: `:latest` (newest release), `:YYYY.M.PATCH` (pinned release,
 e.g. `:2026.6.1`), `:edge` (latest master build), `:sha-<commit>`. Architectures:
 `amd64`, `arm64`, `armv7` — all with NFC support included.
 
+### Rootless Podman (Fedora / SELinux)
+
+Under **rootless Podman**, the bind-mounted data directory is remapped through
+Podman's user namespace, so it is not owned by the container's UID 1000 — and on
+SELinux systems (Fedora, RHEL) the container is additionally denied access unless
+the volume is relabelled. Spoolman then crash-loops with *"Data directory is not
+writable"* / *"cannot read directory … Permission denied"*. This is fixed
+host-side, not in the image:
+
+- **SELinux relabel** — add `:Z` (private) to the bind mount so Podman relabels
+  it for the container: `- ./data:/home/app/.local/share/spoolman:Z`.
+- **User-namespace mapping** — run with `--userns=keep-id` (maps the container's
+  UID 1000 to your host user), **or** set `PUID`/`PGID` to the host owner of
+  `./data`, **or** `chown` the directory to the namespaced UID.
+
+With `podman-compose`, keep the `:Z` suffix on the `volumes:` entry and add
+`userns_mode: keep-id` to the service.
+
 ## Native install (Linux)
 
 One line fetches the latest release and runs the installer (sets up
@@ -69,6 +87,26 @@ path: ~/Spoolman
 
 Spoolman NG then appears in Mainsail/Fluidd's update list and tracks new
 releases automatically.
+
+## Connecting your printers (Moonraker clients)
+
+Install the Spoolman **server once**. Each printer is a **client** — it does
+**not** need its own Spoolman install, only a few lines in its `moonraker.conf`
+pointing at the shared server:
+
+```ini
+[spoolman]
+server: http://<spoolman-host>:7912
+# sync_rate: 5
+```
+
+Restart Moonraker and the printer reports filament usage to that one Spoolman
+instance; repeat the stanza on every printer. Note this is **not** the same as
+the `[update_manager spoolman]` block above — that one only auto-updates the
+Spoolman software from Mainsail/Fluidd, whereas `[spoolman]` is what actually
+wires a printer into filament tracking. See the
+[Moonraker `[spoolman]` documentation](https://moonraker.readthedocs.io/en/latest/configuration/#spoolman)
+for all options.
 
 ## Environment variable reference
 
@@ -119,11 +157,27 @@ database types.
 
 | Variable | Default | Description |
 |---|---|---|
-| `SPOOLMAN_API_TOKEN` | — | When set, all `/api/v1` requests require `Authorization: Bearer <token>` (websockets use a `?token=` query parameter), except `GET /api/v1/health` and the OpenAPI docs. `/metrics` and the web assets are not gated. A single shared secret, not per-user accounts. See [Security & exposure](../README.md#security--exposure). |
+| `SPOOLMAN_API_TOKEN` | — | When set, all `/api/v1` requests require `Authorization: Bearer <token>` (websockets use a `?token=` query parameter), except `GET /api/v1/health` and the OpenAPI docs. `/metrics` and the web assets are not gated. A single shared machine secret; for per-user logins use accounts (below). See [Security & exposure](../README.md#security--exposure). |
+| `SPOOLMAN_AUTH_SECRET` | — | Optional signing key for user-account login tokens (below). When set (or when `SPOOLMAN_API_TOKEN` is set), logins survive restarts; otherwise a fresh key is generated per process and users log in again after a restart. Never written to disk. |
 | `SPOOLMAN_DEBUG_MODE` | `FALSE` | Relaxes CORS to all origins. Never enable in production. |
 | `SPOOLMAN_CORS_ORIGIN` | — | Comma-separated allowed CORS origins (or `*`). |
 
-Spoolman has **no built-in authentication** — see the
+### Authentication & user accounts
+
+Authentication is **opt-in**; by default there is none, exactly as before. Two
+mechanisms are available and can be combined:
+
+- **Shared machine token** — set `SPOOLMAN_API_TOKEN` (above). Best for
+  integrations (Moonraker, OctoPrint) that send a fixed bearer header.
+- **User accounts** — create accounts under **Settings → Users**. The first
+  account is always an administrator; further users can be **administrators**
+  (full access) or **read-only** (may view everything but not make changes).
+  Once any account exists, the web UI requires login. Accounts are optional and
+  independent of the machine token, which keeps working as a never-expiring
+  key for machine clients.
+
+Passwords are stored only as salted `scrypt` hashes. For stronger or federated
+control (SSO/OIDC), place Spoolman behind a reverse proxy — see the
 [Security & exposure](../README.md#security--exposure) section of the README
 before exposing it beyond a trusted network.
 
@@ -135,3 +189,62 @@ before exposing it beyond a trusted network.
   before upgrading so you can roll back.
 - To restore a SQLite backup, stop Spoolman, replace `spoolman.db` in the data
   directory with the backup file, and start again.
+
+### Migrating between native and Docker
+
+Your data lives in one place regardless of install method, so switching is just
+a matter of moving the data directory:
+
+- **Native → Docker**: copy the contents of the native data directory
+  (`SPOOLMAN_DIR_DATA`, default `~/.local/share/spoolman`, including
+  `spoolman.db`) into the host folder you bind-mount in Docker (the `./data` in
+  the compose example).
+- **Docker → native**: copy the bind-mounted `./data` folder's contents into the
+  native `SPOOLMAN_DIR_DATA`.
+
+Stop Spoolman on both sides first, and copy the whole directory (database plus
+`backups/`). Migrations run automatically on the next start if the schema
+differs.
+
+## Uninstalling
+
+**Docker:** `docker compose down` (add `-v` only if the database lives in a named
+volume you also want removed), then delete the bind-mounted `./data` directory
+and the compose file.
+
+**Native / systemd:** the installer can register an enabled, auto-restarting
+systemd service, so removing it takes a few steps:
+
+```bash
+# Stop and disable the service, then remove its unit file
+sudo systemctl disable --now Spoolman.service
+sudo rm /etc/systemd/system/Spoolman.service
+sudo systemctl daemon-reload
+
+# Remove the install directory (virtual environment + code) and the data
+rm -rf ~/Spoolman
+rm -rf ~/.local/share/spoolman   # or your SPOOLMAN_DIR_DATA — this is your database, back it up first
+```
+
+If you used a custom `SPOOLMAN_DIR_DATA` or `SPOOLMAN_DIR_BACKUPS`, remove those
+paths instead. Back up the database first if you might want it later.
+
+## QR codes & scanning
+
+Spoolman's label printer and in-app scanner use a small `WEB+SPOOLMAN:` URI
+scheme (the scanner also reads the equivalent deep-link URLs and, since they are
+just text, common 2D symbologies — QR, Data Matrix, Aztec, PDF417):
+
+| Payload | Meaning |
+|---|---|
+| `WEB+SPOOLMAN:S-<id>` | A spool, by id. |
+| `WEB+SPOOLMAN:F-<id>` | A filament, by id. |
+| `WEB+SPOOLMAN:L-<id>` | A location, by id. |
+| `WEB+SPOOLMAN:CLEAR` | **Reserved** "clear the active spool" sentinel. |
+
+`WEB+SPOOLMAN:CLEAR` is a documented convention for third-party integrations
+(e.g. a barcode scanner feeding Moonraker) to agree on one value for "unload the
+active spool". Spoolman itself has no notion of an active spool — that state
+belongs to consumers like Moonraker — so scanning it in the app is simply
+acknowledged rather than acted on. The scanner can also read a manufacturer's
+retail UPC/EAN barcode and look it up by article number.

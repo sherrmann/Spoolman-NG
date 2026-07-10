@@ -205,6 +205,65 @@ above). Find your reader's VID/PID with `lsusb`.
   NFC-V support in the USB reader path. Read OpenPrintTag tags in the browser (Web
   NFC), which does support NFC-V.
 
+## Reference client: SPI/GPIO RFID readers (RC-522 / MFRC522)
+
+The server-side reader uses `nfcpy`, which drives USB/UART readers only — it does
+**not** talk to a bare **MFRC522 / RC-522** breakout wired to a Pi's SPI/GPIO
+pins. You don't need it to: the same lookup endpoint the Klipper/Moonraker
+integrations use accepts externally-read tag data over the network, so a small
+reader-side daemon on each printer's Pi can bridge an RC-522 to a central
+Spoolman instance.
+
+`POST /api/v1/nfc/lookup` takes the tag data and returns the bound spool:
+
+| Field | Description |
+|---|---|
+| `raw_data_b64` | Base64 of the raw tag memory. Required unless `id_product` is given; the tag format is auto-detected. |
+| `nfc_tag_uid` | Hex-encoded tag UID, used to match a spool bound by UID. |
+| `id_product` | A TigerTag product id, as an alternative to sending raw data. |
+| `tag_type` | `tigertag` / `openprinttag` / `qidi`, or omit to auto-detect. |
+| `auto_create` | Create a spool if none matches (default `false`). |
+
+MIFARE Classic cards — what RC-522 starter kits ship with — are matched by their
+UID, so **bind a blank card to a spool once** (from the spool's page), then any
+scan of that card resolves to the spool. A minimal reader client
+(`pip install mfrc522 requests` on a Raspberry Pi):
+
+```python
+import base64
+import requests
+from mfrc522 import MFRC522
+
+SPOOLMAN = "http://<spoolman-host>:7912"
+reader = MFRC522()
+
+def poll_once():
+    status, _ = reader.MFRC522_Request(reader.PICC_REQIDL)
+    if status != reader.MI_OK:
+        return
+    status, uid = reader.MFRC522_Anticoll()
+    if status != reader.MI_OK:
+        return
+    uid_bytes = bytes(uid)
+    resp = requests.post(
+        f"{SPOOLMAN}/api/v1/nfc/lookup",
+        json={
+            "nfc_tag_uid": uid_bytes.hex(),
+            "raw_data_b64": base64.b64encode(uid_bytes).decode(),  # or the full block data you read
+        },
+        # headers={"Authorization": f"Bearer <token>"},  # if a token or accounts are enabled
+    )
+    data = resp.json()
+    if data.get("success") and data.get("spool"):
+        print(f"card {uid_bytes.hex()} -> spool #{data['spool']['id']}")
+    else:
+        print(f"card {uid_bytes.hex()} is not bound to a spool yet")
+```
+
+This is a **reference sketch**, not a shipped daemon — adapt it to how you bound
+your cards and wire the matched spool into your printer/Moonraker workflow. The
+roadmap tracks shipping or linking a ready-made Moonraker component for this.
+
 ## See also
 
 - [Installation & Configuration](installation.md) — full environment-variable reference.
