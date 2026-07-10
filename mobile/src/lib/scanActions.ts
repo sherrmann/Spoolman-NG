@@ -1,5 +1,6 @@
 // Decision logic for a scanned value (camera or NFC). The payload grammar is
-// the web client's own — imported, not reimplemented, so app and server labels
+// the web client's own — vendored byte-identically from client/src/utils/scan.ts
+// (see scripts/sync-shared.mjs), not reimplemented, so app and printed labels
 // can never drift apart.
 
 import {
@@ -7,7 +8,7 @@ import {
   looksLikeRetailBarcode,
   parseScanResult,
   type ScanTarget,
-} from "../../../client/src/utils/scan";
+} from "../shared/scan";
 
 export type { ScanTarget };
 

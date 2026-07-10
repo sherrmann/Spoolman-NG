@@ -25,7 +25,9 @@
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "sync-shared": "node scripts/sync-shared.mjs",
+    "prepare": "npm run sync-shared"
   },
   "private": true
 }
