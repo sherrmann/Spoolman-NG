@@ -61,6 +61,24 @@ cd android && ./gradlew assembleRelease
 # → android/app/build/outputs/apk/release/app-release.apk
 ```
 
+## Prebuilt APKs
+
+CI builds the APK too (`.github/workflows/mobile-apk.yml`):
+
+- **Every release**: `spoolman-companion-<tag>.apk` is attached to the GitHub
+  release (built by the `build-apk` job in `ci.yml`; a failed app build never
+  blocks a server release). Trackable with
+  [Obtainium](https://github.com/ImranR98/Obtainium).
+- **On demand**: run the "Mobile APK" workflow from the Actions tab and grab
+  the `companion-apk` artifact from the run.
+
+Signing: by default the APK carries the standard debug signature — stable
+across builds (updates install cleanly) but publicly known, which is fine only
+for a sideloaded proof of concept. Set the `ANDROID_DEBUG_KEYSTORE_B64`
+repository secret to switch to a private key; the keytool recipe is in the
+workflow header. Installed copies must be uninstalled once after the
+signature changes.
+
 ## iOS status
 
 The Expo config already carries the iOS pieces (ATS exception for plain-HTTP
