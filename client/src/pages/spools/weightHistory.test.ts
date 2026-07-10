@@ -31,7 +31,13 @@ describe("measureSeries", () => {
 
 describe("maxIdleGain", () => {
   it("is 0 for a monotonically decreasing (normal consumption) series", () => {
-    expect(maxIdleGain([{ time: "a", weight: 900 }, { time: "b", weight: 800 }, { time: "c", weight: 750 }])).toBe(0);
+    expect(
+      maxIdleGain([
+        { time: "a", weight: 900 },
+        { time: "b", weight: 800 },
+        { time: "c", weight: 750 },
+      ]),
+    ).toBe(0);
   });
 
   it("reports the largest upward jump between consecutive measurements", () => {
