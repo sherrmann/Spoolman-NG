@@ -6,8 +6,9 @@ FROM --platform=$BUILDPLATFORM node:22-slim AS client-builder
 
 WORKDIR /client
 
-# Install dependencies first so this layer is cached unless the manifests change.
-COPY client/package.json client/package-lock.json ./
+# Install dependencies first so this layer is cached unless the manifests change. .npmrc is copied
+# too: it sets legacy-peer-deps, without which npm ci fails on a peer-dependency conflict.
+COPY client/package.json client/package-lock.json client/.npmrc ./
 RUN npm ci
 
 # Then the source, and build. VITE_APIURL matches the CI build so the API is served under /api/v1.
