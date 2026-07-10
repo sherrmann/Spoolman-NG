@@ -2,7 +2,7 @@
 
 import logging
 from collections.abc import Sequence
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
 import sqlalchemy
@@ -72,7 +72,7 @@ async def create(
 
     filament = models.Filament(
         name=name,
-        registered=datetime.utcnow().replace(microsecond=0),
+        registered=datetime.now(timezone.utc).replace(microsecond=0),
         vendor=vendor_item,
         material=material,
         price=price,
@@ -440,7 +440,7 @@ async def filament_changed(filament: models.Filament, typ: EventType) -> None:
             FilamentEvent(
                 type=typ,
                 resource="filament",
-                date=datetime.utcnow(),
+                date=datetime.now(timezone.utc),
                 payload=Filament.from_db(filament),
             ),
         )

@@ -1,7 +1,7 @@
 """Helper functions for interacting with printer database objects (issue #75)."""
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 import sqlalchemy
 from sqlalchemy import func, select
@@ -28,7 +28,7 @@ async def create(
     """Add a new printer to the database."""
     printer = models.Printer(
         name=name,
-        registered=datetime.utcnow().replace(microsecond=0),
+        registered=datetime.now(timezone.utc).replace(microsecond=0),
         comment=comment,
         extra=[models.PrinterField(key=k, value=v) for k, v in (extra or {}).items()],
     )
@@ -169,7 +169,7 @@ async def printer_changed(printer: models.Printer, typ: EventType) -> None:
             PrinterEvent(
                 type=typ,
                 resource="printer",
-                date=datetime.utcnow(),
+                date=datetime.now(timezone.utc),
                 payload=Printer.from_db(printer),
             ),
         )

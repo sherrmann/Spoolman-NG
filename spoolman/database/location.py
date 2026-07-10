@@ -1,7 +1,7 @@
 """Helper functions for interacting with location database objects."""
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 import sqlalchemy
 from sqlalchemy import func, select
@@ -28,7 +28,7 @@ async def create(
     """Add a new location to the database."""
     location = models.Location(
         name=name,
-        registered=datetime.utcnow().replace(microsecond=0),
+        registered=datetime.now(timezone.utc).replace(microsecond=0),
         comment=comment,
         extra=[models.LocationField(key=k, value=v) for k, v in (extra or {}).items()],
     )
@@ -169,7 +169,7 @@ async def location_changed(location: models.Location, typ: EventType) -> None:
             LocationEvent(
                 type=typ,
                 resource="location",
-                date=datetime.utcnow(),
+                date=datetime.now(timezone.utc),
                 payload=Location.from_db(location),
             ),
         )
