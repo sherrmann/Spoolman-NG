@@ -66,6 +66,33 @@
     "placeholder": "API token",
     "submit": "Save token"
   },
+  "auth": {
+    "logout": "Log out",
+    "login": {
+      "title": "Log in",
+      "submit": "Log in",
+      "username": "Username",
+      "password": "Password"
+    },
+    "roles": {
+      "admin": "Administrator",
+      "readonly": "Read-only"
+    },
+    "users": {
+      "tab": "Users",
+      "title": "User accounts",
+      "help": "Create accounts to require login. Read-only users can view everything but not make changes. The first account is always an administrator.",
+      "role": "Role",
+      "add": "Add user",
+      "need_fields": "Enter a username and password.",
+      "created": "Created user {{username}}.",
+      "reset_password": "Reset password",
+      "reset_password_for": "Reset password for {{username}}",
+      "reset_password_help": "Enter a new password for this user.",
+      "password_reset": "Password updated.",
+      "delete_confirm": "Delete this user?"
+    }
+  },
   "yes": "Yes",
   "no": "No",
   "colorFilter": {

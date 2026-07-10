@@ -6,6 +6,7 @@ import {
   ImportOutlined,
   LinkOutlined,
   PrinterOutlined,
+  TeamOutlined,
   ThunderboltOutlined,
   ToolOutlined,
   UserOutlined,
@@ -16,6 +17,7 @@ import { Menu, theme } from "antd";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { useLocation, useNavigate } from "react-router";
+import { useCurrentUser } from "../../utils/auth";
 import { ExtraFieldsSettings } from "./extraFieldsSettings";
 import { EntityType } from "../../utils/queryFields";
 import { GeneralSettings } from "./generalSettings";
@@ -23,6 +25,7 @@ import { CustomLinksSettings } from "./customLinksSettings";
 import { ImportExportSettings } from "./importExportSettings";
 import { PrinterSettings } from "./printerSettings";
 import { SwatchSettings } from "./swatchSettings";
+import { UsersSettings } from "./usersSettings";
 import "./settings.css";
 
 dayjs.extend(utc);
@@ -31,6 +34,7 @@ const { useToken } = theme;
 
 const panels: Record<string, React.ReactNode> = {
   general: <GeneralSettings />,
+  users: <UsersSettings />,
   swatches: <SwatchSettings />,
   "import-export": <ImportExportSettings />,
   printers: <PrinterSettings />,
@@ -61,6 +65,7 @@ const panels: Record<string, React.ReactNode> = {
 // Map between menu keys and the URL path under /settings.
 const keyToPath: Record<string, string> = {
   general: "/settings",
+  users: "/settings/users",
   swatches: "/settings/swatches",
   "import-export": "/settings/import-export",
   printers: "/settings/printers",
@@ -75,6 +80,7 @@ const keyToPath: Record<string, string> = {
 
 const getActiveKey = (pathname: string): string => {
   const sub = pathname.replace(/^\/settings\/?/, "").replace(/\/$/, "");
+  if (sub.startsWith("users")) return "users";
   if (sub.startsWith("swatches")) return "swatches";
   if (sub.startsWith("import-export")) return "import-export";
   if (sub.startsWith("custom-links")) return "custom-links";
@@ -94,6 +100,10 @@ export const Settings = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const activeKey = getActiveKey(location.pathname);
+  // Account management is admin-only. Anonymous/machine-token callers are admins by default, so the
+  // tab is shown until a readonly user is actually signed in (#52).
+  const currentUser = useCurrentUser();
+  const isAdmin = currentUser.data?.role !== "readonly";
 
   return (
     <List headerButtons={() => null}>
@@ -116,6 +126,15 @@ export const Settings = () => {
                 icon: <ToolOutlined />,
                 label: t("settings.general.tab"),
               },
+              ...(isAdmin
+                ? [
+                    {
+                      key: "users",
+                      icon: <TeamOutlined />,
+                      label: t("auth.users.tab"),
+                    },
+                  ]
+                : []),
               {
                 key: "swatches",
                 icon: <IdcardOutlined />,
