@@ -4,6 +4,8 @@
 
 ## Unreleased
 
+- **Translations completed for every language**: the ~300 keys per locale that accumulated untranslated over the 2026.7.x feature wave (auth, printers, locations, statistics, weigh workflow, bulk edit, …) are now translated in all locales, with correct language-specific plural forms. CI now enforces **placeholder integrity** — a translation that drops a `{{variable}}` or `<tag>` fails the build (this immediately caught 34 stale/broken values, now fixed).
+- **UK English added and made the default**: `en-GB` (British spellings, UK date formats) is used unless the browser or the user picks another language; the previous `en` remains available as *English (US)* — and its date pickers now consistently use US formats instead of the old US-strings/UK-formats mix.
 - **Home dashboard**: the redundant page title/subtitle is gone; the "Value" KPI is now an honest **estimated stock value** (spool price falling back to filament price, scaled by remaining weight — previously it summed only explicit spool prices); the filament KPI footer shows the distinct material count instead of the meaningless "all synced".
 - **Spool list**: the totals row is always visible and sums the **selected** spools when a selection exists (otherwise the shown page); *Show Archived* now shows **only** archived spools (new `archived` query filter on `GET /api/v1/spool`); the bulk bar offers Archive or Unarchive to match the active view; the filament-name link uses the normal text colour; toolbar buttons have tooltips; *Hide Columns* is now *Columns*.
 - **Colour filter**: leads with a one-click palette of common filament colours (full picker behind *More colors*), and the toolbar button shows the active colour.

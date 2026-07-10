@@ -37,7 +37,38 @@
       "exportButton": "Eksportér labels",
       "printFilamentTitle": "Print filament labels",
       "printSpoolTitle": "Print spole labels",
-      "templateHelpFilament": "Brug {} til at indsætte værdier for filamentet som tekst. For eksempel vil {id} blive erstattet med filamentets id, eller {vendor.name} vil blive erstattet med producentens navn. Hvis en værdi mangler, erstattes den med \"?\". Et ekstra sæt {} kan bruges til at fjerne dette. Derudover vil al tekst mellem sættene af {} blive fjernet, hvis værdien mangler. For eksempel vil {Article: {article_number}} kun blive vist på labelen, hvis filamentet har et produkt nummer. Omgiv teksten med dobbelte asterisk ** for at gøre teksten fed. Klik på knappen for at vise en liste med mulige tags."
+      "templateHelpFilament": "Brug {} til at indsætte værdier for filamentet som tekst. For eksempel vil {id} blive erstattet med filamentets id, eller {vendor.name} vil blive erstattet med producentens navn. Hvis en værdi mangler, erstattes den med \"?\". Et ekstra sæt {} kan bruges til at fjerne dette. Derudover vil al tekst mellem sættene af {} blive fjernet, hvis værdien mangler. For eksempel vil {Article: {article_number}} kun blive vist på labelen, hvis filamentet har et produkt nummer. Omgiv teksten med dobbelte asterisk ** for at gøre teksten fed. Klik på knappen for at vise en liste med mulige tags.",
+      "textColumns": {
+        "label": "Tekstkolonner",
+        "tooltip": "Fordel etiketteksten over dette antal kolonner. Praktisk til smalle etiketter med flere korte linjer."
+      },
+      "qrPadding": "QR-margen",
+      "customPayload": {
+        "label": "Brugerdefineret QR-indhold",
+        "tooltip": "Tilsidesæt det skannede QR-indhold med en skabelon (samme tags som etiketten). Lad feltet stå tomt for at bruge Spoolmans standardindhold. En brugerdefineret værdi kan kun skannes i Spoolman, hvis den stadig matcher et genkendt format (WEB+SPOOLMAN:S-{id} / F-{id} eller en /spool/show/{id}-URL)."
+      },
+      "qrErrorLevel": {
+        "label": "QR-fejlkorrektion",
+        "tooltip": "Højere niveauer tåler mere skade/snavs på etiketten, men gør QR-koden tættere (sværere at skanne, når den er lille). H (højest) er standard."
+      },
+      "qrPlacement": {
+        "label": "QR-placering",
+        "tooltip": "Hvor QR-koden sidder i forhold til etiketteksten. At placere den øverst eller nederst passer til høje, smalle etiketter.",
+        "left": "Venstre",
+        "top": "Øverst",
+        "bottom": "Nederst"
+      },
+      "showColorSwatch": {
+        "label": "Print farveprøve",
+        "tooltip": "Print en lille farvet boks med filamentets farve på etiketten."
+      },
+      "barcode1d": {
+        "label": "1D-stregkode",
+        "tooltip": "Print eventuelt en 1D-stregkode med QR-indholdet ved siden af QR-koden, til skannere der kun læser lineære stregkoder.",
+        "none": "Ingen",
+        "code128": "Code 128"
+      },
+      "tooltip": "Print etiketter til de valgte rækker, eller vælg elementer på næste side"
     },
     "generic": {
       "printerMarginBottom": "Safe-Zone bund",
@@ -80,7 +111,18 @@
       "itemCopies": "Kopier",
       "duplicateSettings": "Duplikér",
       "saveSetting": "Gem forudindstillinger",
-      "saveAsImage": "Gem som Billede"
+      "saveAsImage": "Gem som Billede",
+      "pageSizeMode": {
+        "label": "Sidestørrelse",
+        "tooltip": "\"Automatisk\" lader printeren/browseren vælge sidegeometrien (standard). \"Match etiketstørrelse\" udsender en eksplicit @page-størrelse ud fra papirdimensionerne ovenfor — brug den til rulle-/etiketprintere (f.eks. Brother QL), så etiketterne printes i den rigtige størrelse og retning. Bedst understøttet i Chrome.",
+        "auto": "Automatisk (printerstandard)",
+        "matchLabel": "Match etiketstørrelse"
+      },
+      "saveAsZpl": "Download ZPL",
+      "invalidGeometry": "Etiketgitteret passer ikke på papiret",
+      "invalidGeometryHelp": "Margener og afstand efterlader ingen plads til etiketterne. Reducér margener, afstand, kolonner eller rækker — eller vælg en større papirstørrelse.",
+      "contentClipped": "Noget etiketindhold bliver skåret af",
+      "contentClippedHelp": "Mindst én etikets indhold passer ikke inden for etiketten og bliver skåret af ved print. Reducér tekststørrelsen, gør skabelonen kortere, eller brug færre kolonner/rækker, så hver etiket bliver større."
     },
     "spoolSelect": {
       "selectedTotal_one": "{{count}} spole valgt",
@@ -89,7 +131,11 @@
       "showArchived": "Vis arkiverede",
       "title": "Vælg spoler",
       "selectAll": "Vælg alle/ingen",
-      "noSpoolsSelected": "Du har ikke valgt nogen spoler."
+      "noSpoolsSelected": "Du har ikke valgt nogen spoler.",
+      "hidePrinted": "Skjul allerede printede",
+      "reprintConfirmTitle": "Print etiketter igen?",
+      "reprintConfirmContent_one": "{{count}} valgt spole har allerede en printet etiket. Print den igen?",
+      "reprintConfirmContent_other": "{{count}} valgte spoler har allerede printede etiketter. Print dem igen?"
     },
     "filamentSelect": {
       "title": "Vælg filamenter",
@@ -97,7 +143,11 @@
       "noFilamentsSelected": "Du har ikke valgt nogle filamenter.",
       "selectAll": "Vælg alle/ingen",
       "selectedTotal_one": "{{count}} filament valgt",
-      "selectedTotal_other": "{{count}} filamenter valgt"
+      "selectedTotal_other": "{{count}} filamenter valgt",
+      "hidePrinted": "Skjul allerede printede",
+      "reprintConfirmTitle": "Print etiketter igen?",
+      "reprintConfirmContent_one": "{{count}} valgt filament har allerede en printet etiket. Print den igen?",
+      "reprintConfirmContent_other": "{{count}} valgte filamenter har allerede printede etiketter. Print dem igen?"
     }
   },
   "documentTitle": {
@@ -157,7 +207,13 @@
       "initial_weight": "Startvægt",
       "spool_weight": "Tom vægt",
       "filament_internal": "Intern",
-      "filament_external": "Ekstern"
+      "filament_external": "Ekstern",
+      "filament_name_only": "Navn",
+      "vendor_name": "Producent",
+      "color": "Farve",
+      "printer": "Printer",
+      "diameter": "Diameter",
+      "color_hex": "Farve"
     },
     "titles": {
       "archive": "Arkivér spole",
@@ -190,14 +246,82 @@
       "price": "Pris for en fuld spole. Hvis ikke indstillet, vil prisen i stedet blive antaget.",
       "external_filament": "Du har valgt et filament fra den eksterne database. Et filament (og muligvis en producent) vil blive oprettet automatisk, når du gemmer denne spole. Dette kan skabe duplikerede objekter, hvis du allerede har oprettet dette filament.",
       "initial_weight": "Startvægten af filament på spolen (nettovægt). Bruger filamentets standardvægt, hvis ikke angivet.",
-      "spool_weight": "Vægten af spolen når den er tom. Et tomt felt vil bruge værdien fra filament eller producent."
+      "spool_weight": "Vægten af spolen når den er tom. Et tomt felt vil bruge værdien fra filament eller producent.",
+      "printer": "Den printer, som denne spole aktuelt er sat i. Administrér dine printere under Indstillinger.",
+      "diameter": "Målt filamentdiameter for denne specifikke spole, bruges i længdeberegninger. Lad feltet stå tomt for at bruge filamentets diameter.",
+      "color_hex": "Valgfri farve for denne specifikke spole, som tilsidesætter filamentets farve. Ryd for at bruge filamentets farve."
     },
     "spool": "Spoler",
     "messages": {
-      "archive": "Er du sikker på du vil arkivere denne spole?"
+      "archive": "Er du sikker på du vil arkivere denne spole?",
+      "update_error": "Kunne ikke gemme ændringerne. Prøv igen.",
+      "reset_usage": "Nulstil denne spoles brugte vægt? Dette rydder datoerne for først/sidst anvendt."
     },
     "formats": {
       "last_used": "Sidst anvendt {{date}}"
+    },
+    "custom_actions": "Handlinger",
+    "bulk": {
+      "edit": "Redigér",
+      "clear_selection": "Ryd markering",
+      "edit_help": "Sæt flueben ved et felt for at ændre det på alle valgte spoler. Felter uden flueben ændres ikke.",
+      "apply": "Anvend",
+      "nothing_selected": "Sæt flueben ved mindst ét felt, der skal ændres.",
+      "selected_one": "{{count}} valgt",
+      "selected_other": "{{count}} valgt",
+      "edit_title_one": "Redigér {{count}} spole",
+      "edit_title_other": "Redigér {{count}} spoler",
+      "applied_one": "{{count}} spole opdateret.",
+      "applied_other": "{{count}} spoler opdateret.",
+      "applied_partial_one": "{{count}} spole opdateret, {{failed}} mislykkedes.",
+      "applied_partial_other": "{{count}} spoler opdateret, {{failed}} mislykkedes.",
+      "archive_confirm_one": "Arkivér {{count}} spole?",
+      "archive_confirm_other": "Arkivér {{count}} spoler?",
+      "unarchive_confirm_one": "Gendan {{count}} spole fra arkivet?",
+      "unarchive_confirm_other": "Gendan {{count}} spoler fra arkivet?"
+    },
+    "weigh": {
+      "button": "Vej spoler",
+      "title": "Vej spoler",
+      "help": "Find en spole, indtast dens måling, og tryk på Gem & næste for at veje den næste uden at lukke.",
+      "spool": "Spole",
+      "search_placeholder": "Søg efter ID, filament, partinummer…",
+      "save_next": "Gem & næste",
+      "done": "Færdig",
+      "updated": "{{name}} opdateret",
+      "pick_spool": "Vælg først en spole.",
+      "tooltip": "Vej flere spoler efter hinanden"
+    },
+    "view": {
+      "grid": "Gittervisning",
+      "table": "Tabelvisning",
+      "grid_tooltip": "Gennemse spoler som farvefliser",
+      "table_tooltip": "Tilbage til den fulde tabel"
+    },
+    "filament_extra_fields": "Filamentfelter",
+    "sibling_spools": {
+      "title": "Andre spoler med dette filament",
+      "button": "Søsterspoler",
+      "tooltip": "Vis alle spoler med dette filament"
+    },
+    "usage_history": {
+      "title": "Forbrugshistorik",
+      "time": "Tidspunkt",
+      "type": "Type",
+      "change": "Ændring",
+      "comment": "Kommentar",
+      "empty": "Intet forbrug registreret endnu."
+    },
+    "weight_history": {
+      "title": "Vægthistorik",
+      "chart_label": "Målt vægt over tid",
+      "idle_gain": "Den målte vægt steg med {{grams}} g mellem målingerne — spolen kan have optaget fugt. (Eksperimentelt)"
+    },
+    "totals": {
+      "shown_one": "{{count}} spole vist",
+      "shown_other": "{{count}} spoler vist",
+      "selected_one": "{{count}} spole valgt",
+      "selected_other": "{{count}} spoler valgt"
     }
   },
   "buttons": {
@@ -222,7 +346,16 @@
     "clone": "Klon",
     "clear": "Ryd",
     "saveAndAdd": "Gem og Tilføj",
-    "continue": "Fortsæt"
+    "continue": "Fortsæt",
+    "search": "Søg",
+    "resetUsage": "Nulstil forbrug",
+    "hideArchivedTooltip": "Tilbage til de aktive spoler",
+    "showArchivedTooltip": "Skift til de arkiverede spoler",
+    "columns": "Kolonner",
+    "clearFiltersTooltip": "Nulstil alle filtre og sortering",
+    "labelsAndTags": "Etiketter & tags",
+    "export": "Eksportér",
+    "columnsTooltip": "Vælg, omarrangér og skjul tabelkolonner"
   },
   "filament": {
     "fields_help": {
@@ -232,7 +365,11 @@
       "price": "Pris for en ny spole.",
       "weight": "Filamentets vægt på en ny spole (nettovægt). Dette bør ikke inkludere vægten af selve spolen, kun filamentet. Det er som regel den angivne vægt på pakken.",
       "material": "F.eks. PLA, ABS, PETG, m.m.",
-      "multi_color_direction": "Filamenter kan have flere farver på to måder: Enten koaksialt, som 2- & 3-farvede filamenter med vedvarende flerfarvethed, eller gennem langsgående ændringer, som regnbuefilamenter, hvor farven skifter undervejs på spolen."
+      "multi_color_direction": "Filamenter kan have flere farver på to måder: Enten koaksialt, som 2- & 3-farvede filamenter med vedvarende flerfarvethed, eller gennem langsgående ændringer, som regnbuefilamenter, hvor farven skifter undervejs på spolen.",
+      "low_stock_threshold": "Markér dette filament til genbestilling, når den samlede resterende vægt på tværs af dets spoler falder under dette antal gram.",
+      "reserve_count": "Antal uåbnede ekstra spoler, du har på lager, og som spores uden at oprette en spole for hver enkelt.",
+      "settings_extruder_temp_range": "Producentens anbefalede ekstrudertemperaturområde (min–maks). Valgfrit, lad det stå tomt, hvis du kun har én enkelt værdi.",
+      "settings_bed_temp_range": "Producentens anbefalede printpladetemperaturområde (min–maks). Valgfrit, lad det stå tomt, hvis du kun har én enkelt værdi."
     },
     "fields": {
       "material": "Materiale",
@@ -256,7 +393,21 @@
       "longitudinal": "Langsgående",
       "multi_color": "Flerfarvet",
       "coaxial": "Koaksialt",
-      "single_color": "Enkeltfarvet"
+      "single_color": "Enkeltfarvet",
+      "color_hue": "Farve",
+      "spool_count": "Spoler",
+      "remaining_weight": "På lager",
+      "low_stock_threshold": "Grænse for lav beholdning",
+      "reserve_count": "Reservespoler",
+      "settings_extruder_temp_range": "Ekstrudertemperaturområde",
+      "settings_bed_temp_range": "Printpladetemperaturområde",
+      "temp_range_min": "Min",
+      "temp_range_max": "Maks",
+      "spool_type": "Spoletype",
+      "finish": "Finish",
+      "pattern": "Mønster",
+      "translucent": "Gennemskinnelig",
+      "glow": "Selvlysende"
     },
     "titles": {
       "clone": "Klon filament",
@@ -274,13 +425,18 @@
       "import_3dfp_help": "Udfyld automatisk information ved at hente fra 3dfilamentprofiles.com",
       "import_3dfp_placeholder": "f.eks. 12875",
       "import_3dfp_success": "Filament hentet fra 3dfilamentprofiles.com",
-      "import_3dfp_error": "Kunne ikke hente filamentdata fra 3dfilamentprofiles.com"
+      "import_3dfp_error": "Kunne ikke hente filamentdata fra 3dfilamentprofiles.com",
+      "must_be_positive": "Skal være større end 0.",
+      "new_vendor_prompt": "Tilføj en ny producent",
+      "vendor_created": "Producent oprettet",
+      "vendor_create_error": "Kunne ikke oprette producent"
     },
     "filament": "Filamenter",
     "buttons": {
       "add_spool": "Tilføj spole",
       "fetch": "Hent",
-      "download_swatch": "Prøvekort"
+      "download_swatch": "Prøvekort",
+      "download_slicer": "Slicerprofil"
     },
     "swatch": {
       "title": "3D-printbart prøvekort",
@@ -298,6 +454,46 @@
         "card": "Kort"
       },
       "download": "Download .3mf"
+    },
+    "spool_type_options": {
+      "plastic": "Plast",
+      "cardboard": "Pap",
+      "metal": "Metal"
+    },
+    "finish_options": {
+      "matte": "Mat",
+      "glossy": "Blank"
+    },
+    "pattern_options": {
+      "marble": "Marmor",
+      "sparkle": "Glimmer"
+    },
+    "tabs": {
+      "details": "Detaljer"
+    },
+    "bulk": {
+      "edit": "Redigér",
+      "clear_selection": "Ryd markering",
+      "edit_help": "Sæt flueben ved et felt for at ændre det på alle valgte filamenter. Felter uden flueben ændres ikke.",
+      "apply": "Anvend",
+      "nothing_selected": "Sæt flueben ved mindst ét felt, der skal ændres.",
+      "selected_one": "{{count}} valgt",
+      "selected_other": "{{count}} valgt",
+      "edit_title_one": "Redigér {{count}} filament",
+      "edit_title_other": "Redigér {{count}} filamenter",
+      "applied_one": "{{count}} filament opdateret.",
+      "applied_other": "{{count}} filamenter opdateret.",
+      "applied_partial_one": "{{count}} filament opdateret, {{failed}} mislykkedes.",
+      "applied_partial_other": "{{count}} filamenter opdateret, {{failed}} mislykkedes."
+    },
+    "view": {
+      "grid": "Gittervisning",
+      "table": "Tabelvisning",
+      "grid_tooltip": "Gennemse filamenter som farvefliser",
+      "table_tooltip": "Tilbage til den fulde tabel"
+    },
+    "messages": {
+      "update_error": "Kunne ikke gemme ændringerne. Prøv igen."
     }
   },
   "actions": {
@@ -314,10 +510,12 @@
       "edit": "Redigér producent",
       "clone": "Klon producent",
       "create": "Opret producent",
-      "list": "Producenter"
+      "list": "Producenter",
+      "view_spools": "Vis spoler"
     },
     "form": {
-      "vendor_updated": "Denne producent er blevet redigeret af nogen/noget andet siden du åbnede denne side. Hvis du gemmer overskrives disse ændringer!"
+      "vendor_updated": "Denne producent er blevet redigeret af nogen/noget andet siden du åbnede denne side. Hvis du gemmer overskrives disse ændringer!",
+      "duplicate_name_warning": "Der findes allerede en producent med dette navn."
     },
     "fields": {
       "registered": "Registreret",
@@ -325,7 +523,9 @@
       "name": "Navn",
       "id": "ID",
       "external_id": "Eksternt ID",
-      "empty_spool_weight": "Tom Spolevægt"
+      "empty_spool_weight": "Tom Spolevægt",
+      "filament_count": "Filamenter",
+      "spool_count": "Spoler"
     },
     "vendor": "Producenter",
     "fields_help": {
@@ -342,7 +542,9 @@
       "notFound": "Intet kamera fundet.",
       "streamApiNotSupported": "Denne browser understøtter ikke MediaStream API'et."
     },
-    "description": "Skan en Spoolman QR-kode for at se detaljer om spolen."
+    "description": "Skan en Spoolman QR-kode for at se detaljer om spolen.",
+    "camera_auto": "Automatisk kamera",
+    "camera_n": "Kamera {{n}}"
   },
   "notifications": {
     "deleteSuccess": "Sletning af {{resource}} var succesfuld(t)",
@@ -403,7 +605,33 @@
     "no_recent": "Ingen nyligt brugte spoler",
     "by_material": "Efter materiale",
     "by_location": "Efter placering",
-    "by_vendor": "Efter producent"
+    "by_vendor": "Efter producent",
+    "all_spools": "Alle spoler",
+    "no_spools": "Ingen spoler endnu",
+    "shopping_list": "Indkøbsliste",
+    "shopping_list_empty": "Ingen filamenter under deres grænse for lav beholdning.",
+    "usage": {
+      "tab": "Forbrug",
+      "empty": "Intet filamentforbrug registreret endnu.",
+      "loading": "Indlæser...",
+      "bucket": {
+        "day": "Dag",
+        "week": "Uge",
+        "month": "Måned",
+        "year": "År"
+      }
+    },
+    "create": {
+      "spool": "Ny spole",
+      "filament": "Nyt filament",
+      "vendor": "Ny producent"
+    },
+    "kpi": {
+      "this_month": "denne måned",
+      "top": "top",
+      "materials_one": "{{count}} materiale",
+      "materials_other": "{{count}} materialer"
+    }
   },
   "settings": {
     "header": "Indstillinger",
@@ -419,6 +647,10 @@
       "round_prices": {
         "label": "Afrund priser",
         "tooltip": "Afrund priser til nærmeste heltal."
+      },
+      "unit_scaling": {
+        "label": "Skalér store enheder",
+        "tooltip": "Vis store vægte og længder automatisk skaleret (f.eks. 1,5 kg, 64,37 m) i stedet for rå gram/millimeter i liste- og detaljevisningerne. Gemte værdier og API'et påvirkes ikke."
       }
     },
     "extra_fields": {
@@ -430,7 +662,9 @@
         "order": "Sortering",
         "default_value": "Standardværdi",
         "multi_choice": "Multi-valg",
-        "choices": "Valgmuligheder"
+        "choices": "Valgmuligheder",
+        "copy_from_filament": "Kopiér fra filament",
+        "link_template": "Link-URL"
       },
       "field_type": {
         "integer_range": "Heltalspænd",
@@ -440,11 +674,12 @@
         "boolean": "Boolean (Ja/Nej)",
         "choice": "Valg",
         "text": "Tekst",
-        "integer": "Heltal"
+        "integer": "Heltal",
+        "link": "Link"
       },
       "choices_missing_error": "Du kan ikke fjerne valgmuligheder. De følgende valgmuligheder mangler: {{choices}}",
       "tab": "Ekstra felter",
-      "description": "<p>Her kan du tilføje ekstra felter til dine poster.</p><p>Når et felt er tilføjet kan du ikke redigere dens Nøgle eller Type, og for visse felttyper kan du ikke fjerne valg, eller ændre multi-valgstatus. Hvis du fjerner et felt, vil associeret data i alle poster blive slettet.</p><p>Nøglen er hvad andre programmer læser/skriver data som, så hvis dit felt skal integreres med et tredjepartsprogram, skal du sørge for at indstille det korrekt. Standardværdi bliver kun tilføjet til nye felter.</p><p>Ekstra felter kan ikke sorteres eller filtreres i oversigterne.</p>",
+      "description": "<p>Her kan du tilføje ekstra brugerdefinerede felter til dine poster.</p><p>Når et felt er tilføjet, kan du ikke ændre dets nøgle eller type, og for felter af typen valg kan du ikke fjerne valgmuligheder eller ændre multi-valgstatus. Hvis du fjerner et felt, slettes de tilknyttede data for alle poster.</p><p>Nøglen er det, andre programmer læser/skriver dataene som, så hvis dit brugerdefinerede felt skal integreres med et tredjepartsprogram, skal du sørge for at indstille den korrekt. Standardværdien anvendes kun på nye poster.</p><p>Ekstra felter kan vises og sorteres i tabelvisningerne. Valg- og boolean-felter har også filtermuligheder dér, og alle ekstra felttyper understøtter filtrering efter tomme værdier.</p><p>For spolefelter kan du aktivere \"Kopiér fra filament\", så en ny spole ved oprettelsen arver værdien fra et filamentfelt med samme nøgle (medmindre spolen selv angiver en værdi).</p><p>Et \"Link\"-felt gemmer en kort værdi pr. post (f.eks. et produktnummer) og gør den til et klikbart link ved hjælp af Link-URL-skabelonen — indsæt {} der, hvor værdien skal stå, f.eks. https://www.amazon.com/dp/{}.</p>",
       "boolean_true": "Ja",
       "boolean_false": "Nej",
       "non_unique_key_error": "Nøglen skal være Unik.",
@@ -460,6 +695,68 @@
         "tooltip": "Stilen der er forvalgt, når du downloader et 3D-printbart filamentprøvekort. Nye stile kan bidrages til Spoolman i client/src/utils/swatch/styles.ts."
       },
       "preview_description": "Forhåndsvisning med to eksempelfilamenter — tekst og QR-kode printes automatisk i sort eller hvid, alt efter hvad der giver bedst kontrast til filamentets farve:"
+    },
+    "import_export": {
+      "tab": "Import / Eksport",
+      "export_title": "Eksportér data",
+      "export_help": "Download dine producenter, filamenter eller spoler som CSV eller JSON. Producent- og filamentdata følger med spolerne.",
+      "import_title": "Importér data",
+      "import_help": "Upload en CSV- eller JSON-fil i samme form som en eksport. Hele filen anvendes som én alt-eller-intet-transaktion; brug først en testkørsel for at se resultatet på forhånd.",
+      "report_title": "Lagerrapport",
+      "report_help": "Åbn en printvenlig oversigt over din aktuelle beholdning.",
+      "report_heading": "Spoolman-lagerrapport",
+      "entities": {
+        "spools": "Spoler",
+        "filaments": "Filamenter",
+        "vendors": "Producenter"
+      },
+      "modes": {
+        "create": "Opret nye",
+        "upsert": "Opdatér eller opret",
+        "skip_existing": "Spring eksisterende over"
+      },
+      "dry_run": "Testkørsel",
+      "dry_run_prefix": "Testkørsel —",
+      "choose_file": "Vælg fil",
+      "validate": "Validér",
+      "import_button": "Importér",
+      "print_report": "Print rapport",
+      "no_file": "Vælg venligst en fil først.",
+      "result": "{{created}} oprettet, {{updated}} opdateret, {{skipped}} sprunget over.",
+      "import_errors": "Importen mislykkedes",
+      "threemf": {
+        "title": "Importér et slicet 3MF-projekt",
+        "help": "Upload en slicet .3mf fra Bambu Studio eller OrcaSlicer for at aflæse, hvor meget af hvert filament printet brugte, matche det med dine spoler og fratrække forbruget i ét trin.",
+        "choose_file": "Vælg .3mf-fil",
+        "no_filaments": "Der blev ikke fundet noget filamentforbrug i denne 3MF.",
+        "no_match": "Ingen matchende spole — vælg en",
+        "col_filament": "Printfilament",
+        "col_used": "Brugt",
+        "col_spool": "Spole der skal justeres",
+        "apply": "Anvend forbrug",
+        "applied": "Forbrug registreret på {{count}} spole(r).",
+        "applied_partial": "Forbrug registreret på {{ok}} spole(r); {{fail}} mislykkedes."
+      }
+    },
+    "printers": {
+      "tab": "Printere",
+      "description": "<p>Administrér dine printere her. Når du har mindst én, kan du tildele en spole til en printer fra spolens opret- eller redigeringsformular.</p>",
+      "add_title": "Tilføj printer",
+      "edit_title": "Redigér printer",
+      "delete_confirm": "Slet printeren \"{{name}}\"? Spoler, der er tildelt den, mister tildelingen, men slettes ikke."
+    },
+    "custom_links": {
+      "sidebar_tab": "Sidepanel-links",
+      "spool_tab": "Spolehandlinger",
+      "sidebar_description": "<p>Tilføj dine egne links til sidepanelet i venstre side, f.eks. til din printers Mainsail- eller Fluidd-side. De åbner i en ny fane.</p>",
+      "spool_description": "<p>Tilføj brugerdefinerede handlingsknapper til hver spole. URL'en kan indeholde spolens felter i krøllede parenteser — {id}, {filament_id}, {location}, {lot_nr}, {comment} — som udfyldes pr. spole, så værktøjer som nfc2klipper eller Moonrakers endpoint til aktiv spole kun er ét klik væk.</p>",
+      "name": "Navn",
+      "url": "URL",
+      "url_template": "URL-skabelon",
+      "url_template_help": "Brug {id} der, hvor spolens ID skal stå, f.eks. http://moonraker.local/...?id={id}",
+      "add_title": "Tilføj link",
+      "edit_title": "Redigér link",
+      "delete_confirm": "Slet dette link?"
     }
   },
   "locations": {
@@ -468,7 +765,29 @@
     "locations": "Lokationer",
     "new_location": "Ny lokation",
     "no_location": "Ingen lokation",
-    "no_locations_help": "Denne side lader dig organisere dine spoler i lokationer, tilføj nogle spoler for at komme i gang!"
+    "no_locations_help": "Denne side lader dig organisere dine spoler i lokationer, tilføj nogle spoler for at komme i gang!",
+    "location": "Lokation",
+    "fields": {
+      "button": "Brugerdefinerede felter",
+      "title": "Brugerdefinerede felter — {{name}}",
+      "saved": "Lokationsfelter gemt",
+      "save_error": "Kunne ikke gemme lokationsfelterne",
+      "load_error": "Kunne ikke indlæse lokationen"
+    },
+    "show": {
+      "name": "Navn",
+      "comment": "Kommentar",
+      "spool_count": "Spoler opbevaret her",
+      "spools_here": "Spoler på denne lokation",
+      "no_spools": "Der er ingen spoler på denne lokation."
+    },
+    "print": {
+      "title": "Print lokationsetiketter",
+      "button": "Print etiketter",
+      "description": "Vælg de lokationer, der skal printes QR-etiketter til.",
+      "select_placeholder": "Vælg lokationer",
+      "none_selected": "Ingen lokationer valgt"
+    }
   },
   "calibration": {
     "title": "Kalibrering",
@@ -613,5 +932,92 @@
     "tag_material": "Materiale",
     "tag_material_type": "Materialetype",
     "qidi_write_info": "Qidi tags gemmer kun materiale og farve. Tagget vil blive skrevet med de nærmest matchende Qidi materiale- og farvekoder."
+  },
+  "errorBoundary": {
+    "title": "Noget gik galt",
+    "subTitle": "Denne side kunne ikke vises. Hvis det begyndte, efter at du ændrede eller delte visningsindstillinger, plejer det at hjælpe at nulstille dem.",
+    "reset": "Nulstil visningsindstillinger & genindlæs",
+    "home": "Gå til forsiden"
+  },
+  "apiToken": {
+    "title": "API-token påkrævet",
+    "help": "Denne Spoolman-instans kræver en API-token. Indtast den for at fortsætte; den gemmes i denne browser.",
+    "placeholder": "API-token",
+    "submit": "Gem token"
+  },
+  "auth": {
+    "logout": "Log ud",
+    "login": {
+      "title": "Log ind",
+      "submit": "Log ind",
+      "username": "Brugernavn",
+      "password": "Adgangskode"
+    },
+    "roles": {
+      "admin": "Administrator",
+      "readonly": "Skrivebeskyttet"
+    },
+    "users": {
+      "tab": "Brugere",
+      "title": "Brugerkonti",
+      "help": "Opret konti for at kræve login. Skrivebeskyttede brugere kan se alt, men ikke foretage ændringer. Den første konto er altid administrator.",
+      "role": "Rolle",
+      "add": "Tilføj bruger",
+      "need_fields": "Indtast et brugernavn og en adgangskode.",
+      "created": "Brugeren {{username}} blev oprettet.",
+      "reset_password": "Nulstil adgangskode",
+      "reset_password_for": "Nulstil adgangskode for {{username}}",
+      "reset_password_help": "Indtast en ny adgangskode til denne bruger.",
+      "password_reset": "Adgangskoden er opdateret.",
+      "delete_confirm": "Slet denne bruger?"
+    }
+  },
+  "colorFilter": {
+    "button": "Farve",
+    "title": "Filtrér efter lignende farve",
+    "threshold": "Tolerance",
+    "help": "Vis elementer, hvis farve ligger inden for denne tolerance i forhold til den valgte farve.",
+    "advanced": "Flere farver"
+  },
+  "theme": {
+    "label": "Tema",
+    "system": "System",
+    "light": "Lyst",
+    "dark": "Mørkt"
+  },
+  "scan": {
+    "title": "Skan",
+    "qr": "QR-kode",
+    "nfc": "NFC",
+    "nfc_hint": "NFC-skanning er ikke tilgængelig i denne browser. Brug Chrome til Android, eller tilslut en NFC-læser på serversiden.",
+    "action": {
+      "open": "Åbn",
+      "move": "Flyt spole"
+    },
+    "move": {
+      "scan_spool": "Skan en spole, der skal flyttes.",
+      "scan_location": "Spole #{{id}} valgt. Skan nu den lokation, spolen skal flyttes til.",
+      "confirm_title": "Flyt spole?",
+      "confirm_content": "Flyt spole #{{spool}} til \"{{location}}\"?",
+      "moved": "Spole #{{spool}} blev flyttet til \"{{location}}\".",
+      "load_error": "Kunne ikke indlæse den skannede lokation."
+    },
+    "clear": {
+      "recognized": "\"Ryd spole\"-kode genkendt. Spoolman har ingen aktiv spole; din printer eller Moonraker-integration håndterer rydningen."
+    },
+    "barcode": {
+      "unknown_title": "Ukendt stregkode",
+      "unknown_content": "Intet filament har stregkoden {{code}}. Opret et filament og husk denne stregkode?",
+      "create_filament": "Opret filament",
+      "lookup_error": "Kunne ikke slå stregkoden op."
+    }
+  },
+  "printer": {
+    "printer": "Printer",
+    "fields": {
+      "name": "Navn",
+      "comment": "Kommentar",
+      "spool_count": "Spoler"
+    }
   }
 }

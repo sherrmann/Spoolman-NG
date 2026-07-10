@@ -28,7 +28,16 @@
     "hideArchived": "Arşivlenenleri gizle",
     "showArchived": "Arşivlenenleri göster",
     "notAccessTitle": "Erişim için yetkiniz bulunmamakta",
-    "clearFilters": "Filtreleri temizle"
+    "clearFilters": "Filtreleri temizle",
+    "search": "Ara",
+    "resetUsage": "Kullanımı sıfırla",
+    "hideArchivedTooltip": "Aktif makaralara geri dön",
+    "showArchivedTooltip": "Arşivlenmiş makaralara geç",
+    "columns": "Sütunlar",
+    "clearFiltersTooltip": "Tüm filtreleri ve sıralamayı sıfırla",
+    "labelsAndTags": "Etiketler ve NFC",
+    "export": "Dışa Aktar",
+    "columnsTooltip": "Tablo sütunlarını seçin, yeniden sıralayın ve gizleyin"
   },
   "warnWhenUnsavedChanges": "Çıkmak istediğinizden emin misiniz? Kaydedilmemiş değişiklikleriniz bulunmakta.",
   "notifications": {
@@ -99,7 +108,18 @@
       "deleteSettingsConfirm": "Mevcut kayıtlı etiketi silmek istediğinizden emin misiniz?",
       "settingsName": "Kayıtlı Etiket Adı",
       "saveSetting": "Kaydet",
-      "saveAsImage": "Resim olarak kaydet"
+      "saveAsImage": "Resim olarak kaydet",
+      "pageSizeMode": {
+        "label": "Sayfa Boyutu Modu",
+        "tooltip": "\"Otomatik\", sayfa geometrisini yazıcının/tarayıcının seçmesine bırakır (varsayılan). \"Etiket boyutuna uydur\", yukarıdaki kağıt boyutlarından açık bir @page boyutu üretir — etiketlerin doğru boyutta ve yönde yazdırılması için rulo/etiket yazıcılarında (ör. Brother QL) bunu kullanın. En iyi Chrome'da desteklenir.",
+        "auto": "Otomatik (yazıcı varsayılanı)",
+        "matchLabel": "Etiket boyutuna uydur"
+      },
+      "saveAsZpl": "ZPL indir",
+      "invalidGeometry": "Etiket ızgarası kağıda sığmıyor",
+      "invalidGeometryHelp": "Kenar boşlukları ve aralıklar etiketlere yer bırakmıyor. Kenar boşluklarını, aralıkları, sütun veya satır sayısını azaltın — ya da daha büyük bir kağıt boyutu seçin.",
+      "contentClipped": "Bazı etiket içerikleri kesiliyor",
+      "contentClippedHelp": "En az bir etiketin içeriği etikete sığmıyor ve yazdırıldığında kesilecek. Her etiketin daha büyük olması için metin boyutunu küçültün, şablonu kısaltın veya daha az sütun/satır kullanın."
     },
     "qrcode": {
       "button": "Etiketleri Yazdır",
@@ -126,7 +146,38 @@
       "exportButton": "Etiketleri Dışa Aktar",
       "printFilamentTitle": "Filament Etiketlerini Yazdır",
       "printSpoolTitle": "Makara Etiketlerini Yazdır",
-      "templateHelpFilament": "Filament nesnesinin değerlerini metin olarak eklemek için {} işaretini kullanın. Örneğin, {id} filamente ait kimlik numarasıyla, {vendor.name} ise üretici adıyla değiştirilecektir. Eğer bir değer eksikse, yerine \"?\" ibaresi konur. İkinci bir {} çifti kullanılarak bu durum önlenebilir. Ayrıca, iki {} çifti arasındaki herhangi bir metin, değer eksikse tamamen kaldırılır. Örneğin, {Article: {article_number}} ifadesi yalnızca filamentin artikel numarası varsa etikette gösterilecektir. Metni kalın yapmak için çift yıldız işareti ** ile metni çevreleyin. Tüm kullanılabilir etiketlerin listesini görmek için butona tıklayın."
+      "templateHelpFilament": "Filament nesnesinin değerlerini metin olarak eklemek için {} işaretini kullanın. Örneğin, {id} filamente ait kimlik numarasıyla, {vendor.name} ise üretici adıyla değiştirilecektir. Eğer bir değer eksikse, yerine \"?\" ibaresi konur. İkinci bir {} çifti kullanılarak bu durum önlenebilir. Ayrıca, iki {} çifti arasındaki herhangi bir metin, değer eksikse tamamen kaldırılır. Örneğin, {Article: {article_number}} ifadesi yalnızca filamentin artikel numarası varsa etikette gösterilecektir. Metni kalın yapmak için çift yıldız işareti ** ile metni çevreleyin. Tüm kullanılabilir etiketlerin listesini görmek için butona tıklayın.",
+      "textColumns": {
+        "label": "Metin Sütunları",
+        "tooltip": "Etiket metnini bu sayıda sütuna yayar. Birkaç kısa satırı olan dar etiketler için kullanışlıdır."
+      },
+      "qrPadding": "QR İç Boşluğu",
+      "customPayload": {
+        "label": "Özel QR İçeriği",
+        "tooltip": "Taranan QR içeriğini bir şablonla değiştirin (etiket şablonuyla aynı alanlar kullanılır). Varsayılan Spoolman içeriği için boş bırakın. Özel bir değer, yalnızca tanınan bir biçimle eşleşmeye devam ederse (WEB+SPOOLMAN:S-{id} / F-{id} ya da bir /spool/show/{id} URL'si) Spoolman içinde taranabilir."
+      },
+      "qrErrorLevel": {
+        "label": "QR Hata Düzeltme",
+        "tooltip": "Daha yüksek düzeyler etiketteki hasara/kire karşı daha dayanıklıdır, ancak QR kodunu daha yoğun hale getirir (küçük boyutlarda taranması zorlaşır). Varsayılan, H (en yüksek) düzeyidir."
+      },
+      "qrPlacement": {
+        "label": "QR Konumu",
+        "tooltip": "QR kodunun etiket metnine göre nerede duracağını belirler. Üste veya alta yerleştirmek uzun ve dar etiketlere uygundur.",
+        "left": "Sol",
+        "top": "Üst",
+        "bottom": "Alt"
+      },
+      "showColorSwatch": {
+        "label": "Renk Numunesi Yazdır",
+        "tooltip": "Etikete filament renginde küçük bir renkli kutu yazdırır."
+      },
+      "barcode1d": {
+        "label": "1D Barkod",
+        "tooltip": "Yalnızca çizgisel barkod okuyabilen tarayıcılar için, QR içeriğinin 1D barkodunu isteğe bağlı olarak QR kodunun yanına yazdırın.",
+        "none": "Yok",
+        "code128": "Code 128"
+      },
+      "tooltip": "Seçili satırların etiketlerini yazdırın veya sonraki sayfada öğe seçin"
     },
     "spoolSelect": {
       "title": "Makaraları Seçin",
@@ -135,7 +186,11 @@
       "noSpoolsSelected": "Hiçbir makara seçimi yapmadınız.",
       "selectAll": "Tümünü Seçin/Kaldırın",
       "selectedTotal_one": "{{count}} makara seçildi",
-      "selectedTotal_other": "{{count}} makara seçildi"
+      "selectedTotal_other": "{{count}} makara seçildi",
+      "hidePrinted": "Yazdırılmış Olanları Gizle",
+      "reprintConfirmTitle": "Etiketler yeniden yazdırılsın mı?",
+      "reprintConfirmContent_one": "Seçili {{count}} makaranın zaten yazdırılmış bir etiketi var. Yeniden yazdırılsın mı?",
+      "reprintConfirmContent_other": "Seçili {{count}} makaranın zaten yazdırılmış etiketleri var. Yeniden yazdırılsın mı?"
     },
     "filamentSelect": {
       "title": "Filamentleri Seçin",
@@ -143,7 +198,11 @@
       "noFilamentsSelected": "Hiçbir filament seçimi yapmadınız.",
       "selectAll": "Tümünü Seçin/Kaldırın",
       "selectedTotal_one": "{{count}} filament seçildi",
-      "selectedTotal_other": "{{count}} filament seçildi"
+      "selectedTotal_other": "{{count}} filament seçildi",
+      "hidePrinted": "Yazdırılmış Olanları Gizle",
+      "reprintConfirmTitle": "Etiketler yeniden yazdırılsın mı?",
+      "reprintConfirmContent_one": "Seçili {{count}} filamentin zaten yazdırılmış bir etiketi var. Yeniden yazdırılsın mı?",
+      "reprintConfirmContent_other": "Seçili {{count}} filamentin zaten yazdırılmış etiketleri var. Yeniden yazdırılsın mı?"
     }
   },
   "scanner": {
@@ -156,7 +215,9 @@
       "notReadable": "Kamera okunabilir değil.",
       "notFound": "Kamera bulunamadı.",
       "unknown": "Bilinmeyen hata oluştu.({{error}})"
-    }
+    },
+    "camera_auto": "Otomatik kamera",
+    "camera_n": "Kamera {{n}}"
   },
   "spool": {
     "spool": "Makaralar",
@@ -182,7 +243,13 @@
       "last_used": "Son Kullanım Tarihi",
       "registered": "Kayıtlı",
       "comment": "Yorum",
-      "archived": "Arşivlendi"
+      "archived": "Arşivlendi",
+      "filament_name_only": "Ad",
+      "vendor_name": "Üretici",
+      "color": "Renk",
+      "printer": "Yazıcı",
+      "diameter": "Çap",
+      "color_hex": "Renk"
     },
     "fields_help": {
       "price": "Makaranın fiyatı eğer makara fiyatı belirlenmemişse filament fiyatı devralınacaktır.",
@@ -194,7 +261,10 @@
       "spool_weight": "Makaranın boş ağırlığıdır. Bu alan boş bırakılırsa, filamentten veya üreticiden gelen değer kullanılır.",
       "location": "Makaralarınızı birden fazla konumda saklamanız durumunda makaranın bulunduğu yer bilgisidir.",
       "lot_nr": "Üretici lot numarası. Birden fazla makara kullanımı durumunda tutarlı renk alınmasını sağlamak için kullanılabilir.",
-      "external_filament": "Dış veritabanından bir filament seçtiniz. Bu makarayı oluşturduğunuzda otomatik olarak bir filament nesnesi (ve muhtemelen bir üretici nesnesi) oluşturulacaktır. Eğer bu filament için zaten bir filament nesnesi oluşturduysanız, bu işlem tekrarlanan (çift) filament nesneleri yaratabilir."
+      "external_filament": "Dış veritabanından bir filament seçtiniz. Bu makarayı oluşturduğunuzda otomatik olarak bir filament nesnesi (ve muhtemelen bir üretici nesnesi) oluşturulacaktır. Eğer bu filament için zaten bir filament nesnesi oluşturduysanız, bu işlem tekrarlanan (çift) filament nesneleri yaratabilir.",
+      "printer": "Bu makaranın şu anda takılı olduğu yazıcı. Yazıcılarınızı Ayarlar bölümünden yönetin.",
+      "diameter": "Bu makaraya özgü ölçülmüş filament çapı; uzunluk hesaplamalarında kullanılır. Filamentin çapını kullanmak için boş bırakın.",
+      "color_hex": "Bu makaraya özgü, filamentin rengini geçersiz kılan isteğe bağlı renk. Filamentin rengini kullanmak için temizleyin."
     },
     "titles": {
       "create": "Makara Oluştur",
@@ -218,10 +288,75 @@
       "spool_updated": "Bu makara, siz bu sayfayı açtığınızdan beri başka biri veya bir şey tarafından güncellendi. Kaydetme işlemi bu değişikliklerin üzerine yazacaktır!"
     },
     "messages": {
-      "archive": "Bu makarayı arşivlemek istediğinizden emin misiniz?"
+      "archive": "Bu makarayı arşivlemek istediğinizden emin misiniz?",
+      "update_error": "Değişiklikler kaydedilemedi. Lütfen tekrar deneyin.",
+      "reset_usage": "Bu makaranın kullanılan ağırlığı sıfırlansın mı? Bu işlem ilk/son kullanım tarihlerini de temizler."
     },
     "formats": {
       "last_used": "Son kullanım tarihi {{date}}"
+    },
+    "custom_actions": "İşlemler",
+    "bulk": {
+      "edit": "Düzenle",
+      "clear_selection": "Seçimi temizle",
+      "edit_help": "Seçili tüm makaralarda değiştirmek istediğiniz alanları işaretleyin. İşaretlenmeyen alanlar olduğu gibi bırakılır.",
+      "apply": "Uygula",
+      "nothing_selected": "Değiştirmek için en az bir alan işaretleyin.",
+      "selected_one": "{{count}} seçildi",
+      "selected_other": "{{count}} seçildi",
+      "edit_title_one": "{{count}} makarayı düzenle",
+      "edit_title_other": "{{count}} makarayı düzenle",
+      "applied_one": "{{count}} makara güncellendi.",
+      "applied_other": "{{count}} makara güncellendi.",
+      "applied_partial_one": "{{count}} makara güncellendi, {{failed}} tanesi başarısız oldu.",
+      "applied_partial_other": "{{count}} makara güncellendi, {{failed}} tanesi başarısız oldu.",
+      "archive_confirm_one": "{{count}} makara arşivlensin mi?",
+      "archive_confirm_other": "{{count}} makara arşivlensin mi?",
+      "unarchive_confirm_one": "{{count}} makara arşivden çıkarılsın mı?",
+      "unarchive_confirm_other": "{{count}} makara arşivden çıkarılsın mı?"
+    },
+    "weigh": {
+      "button": "Makaraları Tart",
+      "title": "Makaraları Tart",
+      "help": "Bir makara bulun, ölçümünü girin; ardından pencereyi kapatmadan bir sonrakini tartmak için Kaydet ve Sonraki'ye tıklayın.",
+      "spool": "Makara",
+      "search_placeholder": "ID, filament veya lot numarasıyla arayın…",
+      "save_next": "Kaydet ve Sonraki",
+      "done": "Bitti",
+      "updated": "{{name}} güncellendi",
+      "pick_spool": "Önce bir makara seçin.",
+      "tooltip": "Birden çok makarayı art arda yeniden tartın"
+    },
+    "view": {
+      "grid": "Izgara görünümü",
+      "table": "Tablo görünümü",
+      "grid_tooltip": "Makaralara renkli kutucuklar halinde göz atın",
+      "table_tooltip": "Tam tabloya geri dön"
+    },
+    "filament_extra_fields": "Filament Alanları",
+    "sibling_spools": {
+      "title": "Bu filamentin diğer makaraları",
+      "button": "Kardeş makaralar",
+      "tooltip": "Bu filamentin tüm makaralarını listele"
+    },
+    "usage_history": {
+      "title": "Kullanım geçmişi",
+      "time": "Zaman",
+      "type": "Tür",
+      "change": "Değişim",
+      "comment": "Yorum",
+      "empty": "Henüz kullanım kaydedilmedi."
+    },
+    "weight_history": {
+      "title": "Ağırlık geçmişi",
+      "chart_label": "Zaman içinde ölçülen ağırlık",
+      "idle_gain": "Ölçülen ağırlık iki ölçüm arasında {{grams}} g arttı — makara nem almış olabilir. (Deneysel)"
+    },
+    "totals": {
+      "shown_one": "{{count}} makara gösteriliyor",
+      "shown_other": "{{count}} makara gösteriliyor",
+      "selected_one": "{{count}} makara seçildi",
+      "selected_other": "{{count}} makara seçildi"
     }
   },
   "filament": {
@@ -248,7 +383,21 @@
       "coaxial": "Koekstrüde edilmiş",
       "longitudinal": "Boylamsal",
       "external_id": "Harici ID",
-      "spools": "Makaraları Göster"
+      "spools": "Makaraları Göster",
+      "color_hue": "Renk",
+      "spool_count": "Makaralar",
+      "remaining_weight": "Stokta",
+      "low_stock_threshold": "Düşük Stok Eşiği",
+      "reserve_count": "Yedek Makaralar",
+      "settings_extruder_temp_range": "Extruder Sıcaklık Aralığı",
+      "settings_bed_temp_range": "Tabla Sıcaklık Aralığı",
+      "temp_range_min": "Min",
+      "temp_range_max": "Maks",
+      "spool_type": "Makara Türü",
+      "finish": "Yüzey",
+      "pattern": "Desen",
+      "translucent": "Yarı Saydam",
+      "glow": "Karanlıkta Parlayan"
     },
     "fields_help": {
       "name": "Filament adı, aynı üreticinin diğer filament türlerinden ayırt edilebilmesi için kullanılır. Örneğin, renk bilgisini içermelidir.",
@@ -257,7 +406,11 @@
       "weight": "Dolu bir makaradaki filamentin ağırlığıdır (net ağırlık). Bu değer yalnızca filamentin ağırlığını içermelidir, makaranın kendisinin ağırlığı dahil edilmemelidir. Genellikle ambalaj üzerinde yazan değerdir.",
       "spool_weight": "Boş bir makaranın ağırlığıdır. Makaradaki ölçülen ağırlığın hesaplanmasında kullanılır.",
       "article_number": "Örn. EAN, UPC, gibi.",
-      "multi_color_direction": "Filamentler iki farklı şekilde birden fazla renge sahip olabilir: Birincisi, çift renkli filamentlerde olduğu gibi, koekstrüzyon yoluyla sabit çoklu renklerle üretilen filamentlerdir. İkincisi ise, makara boyunca renk geçişleri olan gradyan filamentlerde görülen boyuna (uzunlamasına) renk değişiklikleridir."
+      "multi_color_direction": "Filamentler iki farklı şekilde birden fazla renge sahip olabilir: Birincisi, çift renkli filamentlerde olduğu gibi, koekstrüzyon yoluyla sabit çoklu renklerle üretilen filamentlerdir. İkincisi ise, makara boyunca renk geçişleri olan gradyan filamentlerde görülen boyuna (uzunlamasına) renk değişiklikleridir.",
+      "low_stock_threshold": "Bu filamentin makaralarındaki toplam kalan ağırlık bu gram değerinin altına düştüğünde filamenti yeniden sipariş için işaretler.",
+      "reserve_count": "Elinizde bulundurduğunuz açılmamış yedek makara sayısı; her biri için ayrı bir makara oluşturmadan takip edilir.",
+      "settings_extruder_temp_range": "Üreticinin önerdiği extruder sıcaklık aralığı (min–maks). İsteğe bağlıdır; yalnızca tek bir değeriniz varsa boş bırakın.",
+      "settings_bed_temp_range": "Üreticinin önerdiği tabla sıcaklık aralığı (min–maks). İsteğe bağlıdır; yalnızca tek bir değeriniz varsa boş bırakın."
     },
     "titles": {
       "create": "Filament Oluştur",
@@ -275,12 +428,17 @@
       "import_3dfp_help": "3dfilamentprofiles.com adresinden veri alarak bilgileri otomatik olarak doldurun",
       "import_3dfp_placeholder": "örn. 12875",
       "import_3dfp_success": "Filament 3dfilamentprofiles.com adresinden başarıyla alındı",
-      "import_3dfp_error": "3dfilamentprofiles.com adresinden filament verisi alınamadı"
+      "import_3dfp_error": "3dfilamentprofiles.com adresinden filament verisi alınamadı",
+      "must_be_positive": "0'dan büyük olmalıdır.",
+      "new_vendor_prompt": "Yeni üretici ekle",
+      "vendor_created": "Üretici oluşturuldu",
+      "vendor_create_error": "Üretici oluşturulamadı"
     },
     "buttons": {
       "add_spool": "Makara Ekle",
       "fetch": "Getir",
-      "download_swatch": "Numune"
+      "download_swatch": "Numune",
+      "download_slicer": "Dilimleyici profili"
     },
     "swatch": {
       "title": "3D yazdırılabilir numune",
@@ -298,6 +456,46 @@
         "card": "Kart"
       },
       "download": ".3mf indir"
+    },
+    "spool_type_options": {
+      "plastic": "Plastik",
+      "cardboard": "Karton",
+      "metal": "Metal"
+    },
+    "finish_options": {
+      "matte": "Mat",
+      "glossy": "Parlak"
+    },
+    "pattern_options": {
+      "marble": "Mermer",
+      "sparkle": "Simli"
+    },
+    "tabs": {
+      "details": "Detaylar"
+    },
+    "bulk": {
+      "edit": "Düzenle",
+      "clear_selection": "Seçimi temizle",
+      "edit_help": "Seçili tüm filamentlerde değiştirmek istediğiniz alanları işaretleyin. İşaretlenmeyen alanlar olduğu gibi bırakılır.",
+      "apply": "Uygula",
+      "nothing_selected": "Değiştirmek için en az bir alan işaretleyin.",
+      "selected_one": "{{count}} seçildi",
+      "selected_other": "{{count}} seçildi",
+      "edit_title_one": "{{count}} filamenti düzenle",
+      "edit_title_other": "{{count}} filamenti düzenle",
+      "applied_one": "{{count}} filament güncellendi.",
+      "applied_other": "{{count}} filament güncellendi.",
+      "applied_partial_one": "{{count}} filament güncellendi, {{failed}} tanesi başarısız oldu.",
+      "applied_partial_other": "{{count}} filament güncellendi, {{failed}} tanesi başarısız oldu."
+    },
+    "view": {
+      "grid": "Izgara görünümü",
+      "table": "Tablo görünümü",
+      "grid_tooltip": "Filamentlere renkli kutucuklar halinde göz atın",
+      "table_tooltip": "Tam tabloya geri dön"
+    },
+    "messages": {
+      "update_error": "Değişiklikler kaydedilemedi. Lütfen tekrar deneyin."
     }
   },
   "vendor": {
@@ -308,7 +506,9 @@
       "empty_spool_weight": "Boş Makara Ağırlığı",
       "external_id": "Harici ID",
       "registered": "Kayıtlı",
-      "comment": "Yorum"
+      "comment": "Yorum",
+      "filament_count": "Filamentler",
+      "spool_count": "Makaralar"
     },
     "fields_help": {
       "empty_spool_weight": "Bu üreticiden boş bir makaranın ağırlığı."
@@ -319,10 +519,12 @@
       "edit": "Üretici Düzenle",
       "list": "Üreticiler",
       "show": "Üretici Göster",
-      "show_title": "[Üretici#{{id}}] {{name}}"
+      "show_title": "[Üretici#{{id}}] {{name}}",
+      "view_spools": "Makaraları göster"
     },
     "form": {
-      "vendor_updated": "Bu üretici, siz bu sayfayı açtıktan sonra başka biri veya bir şey tarafından güncellendi. Kaydetme işlemi bu değişikliklerin üzerine yazacaktır!"
+      "vendor_updated": "Bu üretici, siz bu sayfayı açtıktan sonra başka biri veya bir şey tarafından güncellendi. Kaydetme işlemi bu değişikliklerin üzerine yazacaktır!",
+      "duplicate_name_warning": "Bu ada sahip bir üretici zaten var."
     }
   },
   "home": {
@@ -337,7 +539,33 @@
     "no_recent": "Son kullanılan makara yok",
     "by_material": "Malzemeye göre",
     "by_location": "Konuma göre",
-    "by_vendor": "Üreticiye göre"
+    "by_vendor": "Üreticiye göre",
+    "all_spools": "Tüm Makaralar",
+    "no_spools": "Henüz makara yok",
+    "shopping_list": "Alışveriş Listesi",
+    "shopping_list_empty": "Düşük stok eşiğinin altında filament yok.",
+    "usage": {
+      "tab": "Kullanım",
+      "empty": "Henüz filament kullanımı kaydedilmedi.",
+      "loading": "Yükleniyor...",
+      "bucket": {
+        "day": "Gün",
+        "week": "Hafta",
+        "month": "Ay",
+        "year": "Yıl"
+      }
+    },
+    "create": {
+      "spool": "Yeni makara",
+      "filament": "Yeni filament",
+      "vendor": "Yeni üretici"
+    },
+    "kpi": {
+      "this_month": "bu ay",
+      "top": "en çok",
+      "materials_one": "{{count}} malzeme",
+      "materials_other": "{{count}} malzeme"
+    }
   },
   "help": {
     "help": "Yardım",
@@ -374,11 +602,15 @@
       "round_prices": {
         "label": "Fiyatları Yuvarla",
         "tooltip": "Fiyatları en yakın tam sayıya yuvarla."
+      },
+      "unit_scaling": {
+        "label": "Büyük birimleri ölçekle",
+        "tooltip": "Liste ve detay görünümlerinde büyük ağırlık ve uzunlukları ham gram/milimetre yerine otomatik ölçeklenmiş olarak (ör. 1,5 kg veya 64,37 m) gösterir. Kayıtlı değerler ve API bundan etkilenmez."
       }
     },
     "extra_fields": {
       "tab": "Ekstra Alanlar",
-      "description": "<p>Burada varlıklarınıza ekstra özel alanlar ekleyebilirsiniz.</p><p>Bir alan eklendikten sonra, anahtarını (key) veya türünü değiştiremezsiniz; seçim türündeki alanlarda ise seçenekleri kaldıramaz veya çoklu seçim durumunu değiştiremezsiniz. Bir alanı silerseniz, o alana bağlı tüm varlıkların verileri silinir.</p><p>Anahtar, diğer programların veriyi okuduğu/yazdığı isimdir; bu nedenle, özel alanınız üçüncü taraf bir programla entegrasyon için kullanılacaksa doğru şekilde ayarlandığından emin olun. Varsayılan değer yalnızca yeni öğelere uygulanır.</p><p>Ekstra alanlar tablo görünümünde sıralanamaz veya filtrelenemez.</p>",
+      "description": "<p>Burada varlıklarınıza ekstra özel alanlar ekleyebilirsiniz.</p><p>Bir alan eklendikten sonra anahtarını veya türünü değiştiremezsiniz; seçim türündeki alanlarda ise seçenekleri kaldıramaz veya çoklu seçim durumunu değiştiremezsiniz. Bir alanı silerseniz, tüm varlıklardaki ilişkili veriler silinir.</p><p>Anahtar, diğer programların veriyi okurken/yazarken kullandığı isimdir; bu nedenle özel alanınız üçüncü taraf bir programla entegre olacaksa doğru ayarlandığından emin olun. Varsayılan değer yalnızca yeni öğelere uygulanır.</p><p>Ekstra alanlar tablo görünümlerinde gösterilebilir ve sıralanabilir. Seçim listesi ve ikili değer alanları orada filtre seçenekleri de sunar; ayrıca tüm ekstra alan türleri boş değerlere göre filtrelemeyi destekler.</p><p>Makara alanlarında \"Filamentten Kopyala\" seçeneğini etkinleştirirseniz, yeni bir makara oluşturulurken aynı anahtara sahip filament alanındaki değeri devralır (makara kendi değerini belirlemedikçe).</p><p>\"Bağlantı\" alanı, öğe başına kısa bir değer (ör. bir artikel numarası) saklar ve Bağlantı URL'si şablonunu kullanarak bunu tıklanabilir bir bağlantıya dönüştürür — değerin geleceği yere {} koyun; ör. https://www.amazon.com/dp/{}.</p>",
       "params": {
         "key": "Anahtar",
         "name": "İsim",
@@ -387,7 +619,9 @@
         "order": "Sipariş",
         "default_value": "Varsayılan Değer",
         "choices": "Seçenekler",
-        "multi_choice": "Çoklu Seçim"
+        "multi_choice": "Çoklu Seçim",
+        "copy_from_filament": "Filamentten Kopyala",
+        "link_template": "Bağlantı URL'si"
       },
       "field_type": {
         "text": "Metin",
@@ -397,7 +631,8 @@
         "float_range": "Ondalıklı Sayı Aralığı",
         "datetime": "Tarih+Saat",
         "boolean": "İkili Değer",
-        "choice": "Seçim Listesi"
+        "choice": "Seçim Listesi",
+        "link": "Bağlantı"
       },
       "boolean_true": "Evet",
       "boolean_false": "Hayır",
@@ -414,6 +649,68 @@
         "tooltip": "3D yazdırılabilir filament numunesi indirilirken önceden seçili olan stil. Yeni stiller client/src/utils/swatch/styles.ts dosyasında Spoolman'a eklenebilir."
       },
       "preview_description": "İki örnek filamentle önizleme — metin ve QR kodu, filament rengiyle hangisi daha iyi kontrast oluşturuyorsa otomatik olarak siyah veya beyaz yazdırılır:"
+    },
+    "import_export": {
+      "tab": "İçe / Dışa Aktar",
+      "export_title": "Verileri dışa aktar",
+      "export_help": "Üreticilerinizi, filamentlerinizi veya makaralarınızı CSV ya da JSON olarak indirin. Üretici ve filament verileri makaralara dahil edilir.",
+      "import_title": "Verileri içe aktar",
+      "import_help": "Dışa aktarmayla aynı biçimde bir CSV veya JSON dosyası yükleyin. Dosyanın tamamı, ya hep ya hiç mantığıyla tek bir işlem olarak uygulanır; sonucu önizlemek için önce deneme çalıştırması yapın.",
+      "report_title": "Envanter raporu",
+      "report_help": "Mevcut stokunuzun yazdırılabilir bir özetini açın.",
+      "report_heading": "Spoolman Envanter Raporu",
+      "entities": {
+        "spools": "Makaralar",
+        "filaments": "Filamentler",
+        "vendors": "Üreticiler"
+      },
+      "modes": {
+        "create": "Yeni oluştur",
+        "upsert": "Güncelle veya oluştur",
+        "skip_existing": "Mevcut olanları atla"
+      },
+      "dry_run": "Deneme çalıştırması",
+      "dry_run_prefix": "Deneme çalıştırması —",
+      "choose_file": "Dosya seç",
+      "validate": "Doğrula",
+      "import_button": "İçe aktar",
+      "print_report": "Raporu yazdır",
+      "no_file": "Lütfen önce bir dosya seçin.",
+      "result": "{{created}} oluşturuldu, {{updated}} güncellendi, {{skipped}} atlandı.",
+      "import_errors": "İçe aktarma başarısız",
+      "threemf": {
+        "title": "Dilimlenmiş bir 3MF projesi içe aktar",
+        "help": "Baskının her filamentten ne kadar kullandığını okumak, bunları makaralarınızla eşleştirmek ve kullanımı tek adımda stoktan düşmek için Bambu Studio veya OrcaSlicer'dan dilimlenmiş bir .3mf yükleyin.",
+        "choose_file": ".3mf dosyası seç",
+        "no_filaments": "Bu 3MF içinde filament kullanımı bulunamadı.",
+        "no_match": "Eşleşen makara yok — bir tane seçin",
+        "col_filament": "Baskı filamenti",
+        "col_used": "Kullanılan",
+        "col_spool": "Ayarlanacak makara",
+        "apply": "Kullanımı uygula",
+        "applied": "{{count}} makaraya kullanım kaydedildi.",
+        "applied_partial": "{{ok}} makaraya kullanım kaydedildi; {{fail}} tanesi başarısız oldu."
+      }
+    },
+    "printers": {
+      "tab": "Yazıcılar",
+      "description": "<p>Yazıcılarınızı buradan yönetin. En az bir yazıcınız olduğunda, makaranın oluşturma veya düzenleme formundan makarayı bir yazıcıya atayabilirsiniz.</p>",
+      "add_title": "Yazıcı ekle",
+      "edit_title": "Yazıcıyı düzenle",
+      "delete_confirm": "\"{{name}}\" yazıcısı silinsin mi? Bu yazıcıya atanmış makaraların yalnızca ataması kaldırılır, makaralar silinmez."
+    },
+    "custom_links": {
+      "sidebar_tab": "Kenar Çubuğu Bağlantıları",
+      "spool_tab": "Makara İşlemleri",
+      "sidebar_description": "<p>Sol kenar çubuğuna kendi bağlantılarınızı ekleyin; ör. yazıcınızın Mainsail veya Fluidd sayfasına. Bağlantılar yeni sekmede açılır.</p>",
+      "spool_description": "<p>Her makaraya özel işlem düğmeleri ekleyin. URL, makaranın alanlarını süslü parantez içinde içerebilir — {id}, {filament_id}, {location}, {lot_nr}, {comment} — bunlar her makara için ayrı doldurulur; böylece nfc2klipper veya Moonraker'ın aktif makara uç noktası gibi araçlara tek tıkla ulaşırsınız.</p>",
+      "name": "Ad",
+      "url": "URL",
+      "url_template": "URL Şablonu",
+      "url_template_help": "Makara ID'sinin geleceği yere {id} yazın; ör. http://moonraker.local/...?id={id}",
+      "add_title": "Bağlantı ekle",
+      "edit_title": "Bağlantıyı düzenle",
+      "delete_confirm": "Bu bağlantı silinsin mi?"
     }
   },
   "documentTitle": {
@@ -456,7 +753,29 @@
     "no_location": "Konum Yok",
     "no_locations_help": "Bu sayfa, makaralarınızı konumlara göre düzenlemenizi sağlar. Başlamak için birkaç makara ekleyin!",
     "error_empty": "Ad boş olamaz",
-    "error_exists": "Konum zaten mevcut"
+    "error_exists": "Konum zaten mevcut",
+    "location": "Konum",
+    "fields": {
+      "button": "Özel alanlar",
+      "title": "Özel alanlar — {{name}}",
+      "saved": "Konum alanları kaydedildi",
+      "save_error": "Konum alanları kaydedilemedi",
+      "load_error": "Konum yüklenemedi"
+    },
+    "show": {
+      "name": "Ad",
+      "comment": "Yorum",
+      "spool_count": "Burada saklanan makaralar",
+      "spools_here": "Bu konumdaki makaralar",
+      "no_spools": "Bu konumda saklanan makara yok."
+    },
+    "print": {
+      "title": "Konum Etiketlerini Yazdır",
+      "button": "Etiketleri yazdır",
+      "description": "Taranabilir QR etiketleri yazdırılacak konumları seçin.",
+      "select_placeholder": "Konumları seçin",
+      "none_selected": "Konum seçilmedi"
+    }
   },
   "calibration": {
     "title": "Kalibrasyon",
@@ -601,5 +920,92 @@
     "tag_material": "Malzeme",
     "tag_material_type": "Malzeme Türü",
     "qidi_write_info": "Qidi etiketleri yalnızca malzeme ve renk bilgisini saklar. Etikete, en yakın eşleşen Qidi malzeme ve renk kodları yazılacaktır."
+  },
+  "errorBoundary": {
+    "title": "Bir şeyler ters gitti",
+    "subTitle": "Bu sayfa görüntülenemedi. Sorun, görünüm ayarlarını değiştirdikten veya paylaştıktan sonra başladıysa, ayarları sıfırlamak genellikle sorunu çözer.",
+    "reset": "Görünüm ayarlarını sıfırla ve yeniden yükle",
+    "home": "Ana sayfaya git"
+  },
+  "apiToken": {
+    "title": "API token gerekli",
+    "help": "Bu Spoolman sunucusu bir API token'ı gerektiriyor. Devam etmek için girin; token bu tarayıcıda saklanır.",
+    "placeholder": "API token",
+    "submit": "Token'ı kaydet"
+  },
+  "auth": {
+    "logout": "Çıkış yap",
+    "login": {
+      "title": "Giriş yap",
+      "submit": "Giriş yap",
+      "username": "Kullanıcı adı",
+      "password": "Şifre"
+    },
+    "roles": {
+      "admin": "Yönetici",
+      "readonly": "Salt okunur"
+    },
+    "users": {
+      "tab": "Kullanıcılar",
+      "title": "Kullanıcı hesapları",
+      "help": "Giriş yapmayı zorunlu kılmak için hesaplar oluşturun. Salt okunur kullanıcılar her şeyi görüntüleyebilir ancak değişiklik yapamaz. İlk hesap her zaman yöneticidir.",
+      "role": "Rol",
+      "add": "Kullanıcı ekle",
+      "need_fields": "Bir kullanıcı adı ve şifre girin.",
+      "created": "{{username}} kullanıcısı oluşturuldu.",
+      "reset_password": "Şifreyi sıfırla",
+      "reset_password_for": "{{username}} kullanıcısının şifresini sıfırla",
+      "reset_password_help": "Bu kullanıcı için yeni bir şifre girin.",
+      "password_reset": "Şifre güncellendi.",
+      "delete_confirm": "Bu kullanıcı silinsin mi?"
+    }
+  },
+  "colorFilter": {
+    "button": "Renk",
+    "title": "Benzer renge göre filtrele",
+    "threshold": "Tolerans",
+    "help": "Rengi, seçilen renge bu tolerans dahilinde yakın olan öğeleri göster.",
+    "advanced": "Daha fazla renk"
+  },
+  "theme": {
+    "label": "Tema",
+    "system": "Sistem",
+    "light": "Açık",
+    "dark": "Koyu"
+  },
+  "scan": {
+    "title": "Tarama",
+    "qr": "QR Kod",
+    "nfc": "NFC",
+    "nfc_hint": "NFC tarama bu tarayıcıda kullanılamıyor. Android Chrome kullanın veya sunucu tarafında bir NFC okuyucu bağlayın.",
+    "action": {
+      "open": "Aç",
+      "move": "Makarayı taşı"
+    },
+    "move": {
+      "scan_spool": "Taşınacak makarayı tarayın.",
+      "scan_location": "Makara #{{id}} seçildi. Şimdi hedef konumu tarayın.",
+      "confirm_title": "Makara taşınsın mı?",
+      "confirm_content": "#{{spool}} numaralı makara \"{{location}}\" konumuna taşınsın mı?",
+      "moved": "#{{spool}} numaralı makara \"{{location}}\" konumuna taşındı.",
+      "load_error": "Taranan konum yüklenemedi."
+    },
+    "clear": {
+      "recognized": "Makara temizleme kodu tanındı. Spoolman'de aktif makara tutulmaz; temizleme işlemini yazıcınız veya Moonraker entegrasyonunuz üstlenir."
+    },
+    "barcode": {
+      "unknown_title": "Bilinmeyen barkod",
+      "unknown_content": "Hiçbir filamentin {{code}} barkodu yok. Bir filament oluşturulup bu barkod ona kaydedilsin mi?",
+      "create_filament": "Filament oluştur",
+      "lookup_error": "Bu barkod sorgulanamadı."
+    }
+  },
+  "printer": {
+    "printer": "Yazıcı",
+    "fields": {
+      "name": "Ad",
+      "comment": "Yorum",
+      "spool_count": "Makaralar"
+    }
   }
 }

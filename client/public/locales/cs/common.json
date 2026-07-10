@@ -28,7 +28,16 @@
     "notAccessTitle": "Nemáte oprávnění k přístupu",
     "clearFilters": "Vypnout filtry",
     "saveAndAdd": "Uložit a přidat",
-    "continue": "Pokračovat"
+    "continue": "Pokračovat",
+    "search": "Hledat",
+    "resetUsage": "Vynulovat spotřebu",
+    "hideArchivedTooltip": "Zpět na aktivní cívky",
+    "showArchivedTooltip": "Přepnout na archivované cívky",
+    "columns": "Sloupce",
+    "clearFiltersTooltip": "Zrušit všechny filtry a řazení",
+    "labelsAndTags": "Štítky a tagy",
+    "export": "Export",
+    "columnsTooltip": "Vyberte, přeuspořádejte a skryjte sloupce tabulky"
   },
   "warnWhenUnsavedChanges": "Jste si jisti, že chcete odejít? Máte neuložené změny.",
   "notifications": {
@@ -98,7 +107,18 @@
       "deleteSettingsConfirm": "Opravdu chcete tuto předvolbu smazat?",
       "duplicateSettings": "Duplikát",
       "saveSetting": "Uložit předvolby",
-      "saveAsImage": "Uložit jako obrázek"
+      "saveAsImage": "Uložit jako obrázek",
+      "pageSizeMode": {
+        "label": "Velikost stránky",
+        "tooltip": "„Automaticky“ ponechá volbu geometrie stránky na tiskárně/prohlížeči (výchozí). „Podle velikosti štítku“ vygeneruje explicitní velikost @page z výše uvedených rozměrů papíru — použijte pro rolové/štítkové tiskárny (např. Brother QL), aby se štítky tiskly ve správné velikosti a orientaci. Nejlépe podporováno v Chrome.",
+        "auto": "Automaticky (výchozí nastavení tiskárny)",
+        "matchLabel": "Podle velikosti štítku"
+      },
+      "saveAsZpl": "Stáhnout ZPL",
+      "invalidGeometry": "Mřížka štítků se nevejde na papír",
+      "invalidGeometryHelp": "Okraje a rozteče nenechávají na štítky žádné místo. Zmenšete okraje, rozteče, počet sloupců nebo řádků — nebo zvolte větší velikost papíru.",
+      "contentClipped": "Část obsahu štítků je oříznuta",
+      "contentClippedHelp": "Obsah alespoň jednoho štítku se nevejde do jeho plochy a při tisku bude oříznut. Zmenšete velikost textu, zkraťte šablonu, nebo použijte méně sloupců/řádků, aby byl každý štítek větší."
     },
     "qrcode": {
       "button": "Tisk štítků",
@@ -137,7 +157,38 @@
       "exportButton": "Exportovat štítky",
       "printFilamentTitle": "Tisk štítků filamentů",
       "printSpoolTitle": "Tisk štítků cívek",
-      "templateHelpFilament": "Pomocí {} vložíte hodnoty objektu filamentu jako text. Například {id} bude nahrazeno ID filamentu nebo {vendor.name} bude nahrazeno názvem výrobce. Pokud hodnota chybí, bude nahrazena znakem „?“. K odstranění této hodnoty lze použít druhou sadu {}. Kromě toho bude odstraněn jakýkoli text mezi sadami {}, pokud hodnota chybí. Například {Article: {article_number}} zobrazí popisek pouze v případě, že filament má číslo výrobku. Text uzavřete dvojitou hvězdičkou **, aby byl tučný. Kliknutím na tlačítko zobrazíte seznam všech dostupných značek."
+      "templateHelpFilament": "Pomocí {} vložíte hodnoty objektu filamentu jako text. Například {id} bude nahrazeno ID filamentu nebo {vendor.name} bude nahrazeno názvem výrobce. Pokud hodnota chybí, bude nahrazena znakem „?“. K odstranění této hodnoty lze použít druhou sadu {}. Kromě toho bude odstraněn jakýkoli text mezi sadami {}, pokud hodnota chybí. Například {Article: {article_number}} zobrazí popisek pouze v případě, že filament má číslo výrobku. Text uzavřete dvojitou hvězdičkou **, aby byl tučný. Kliknutím na tlačítko zobrazíte seznam všech dostupných značek.",
+      "textColumns": {
+        "label": "Sloupce textu",
+        "tooltip": "Rozloží text štítku do tohoto počtu sloupců. Hodí se pro úzké štítky s několika krátkými řádky."
+      },
+      "qrPadding": "Odsazení QR kódu",
+      "customPayload": {
+        "label": "Vlastní obsah QR kódu",
+        "tooltip": "Přepíše skenovaný obsah QR kódu šablonou (stejné značky jako u štítku). Ponechte prázdné, chcete-li použít výchozí obsah Spoolman. Vlastní hodnota se ve Spoolmanu naskenuje jen tehdy, pokud stále odpovídá rozpoznávanému formátu (WEB+SPOOLMAN:S-{id} / F-{id} nebo URL /spool/show/{id})."
+      },
+      "qrErrorLevel": {
+        "label": "Korekce chyb QR kódu",
+        "tooltip": "Vyšší úrovně snesou větší poškození/znečištění štítku, ale QR kód je hustší (při malé velikosti se hůře skenuje). Výchozí je H (nejvyšší)."
+      },
+      "qrPlacement": {
+        "label": "Umístění QR kódu",
+        "tooltip": "Kde je QR kód umístěn vůči textu štítku. Umístění nad text nebo pod něj se hodí pro vysoké úzké štítky.",
+        "left": "Vlevo",
+        "top": "Nahoře",
+        "bottom": "Dole"
+      },
+      "showColorSwatch": {
+        "label": "Tisknout vzorek barvy",
+        "tooltip": "Vytiskne na štítek malý barevný čtvereček s barvou filamentu."
+      },
+      "barcode1d": {
+        "label": "1D čárový kód",
+        "tooltip": "Volitelně vytiskne vedle QR kódu i 1D čárový kód se stejným obsahem, pro skenery, které čtou pouze lineární čárové kódy.",
+        "none": "Žádný",
+        "code128": "Code 128"
+      },
+      "tooltip": "Vytiskněte štítky pro vybrané řádky, nebo vyberte položky na další stránce"
     },
     "spoolSelect": {
       "title": "Vybrat cívky",
@@ -147,7 +198,12 @@
       "selectAll": "Vybrat/odebrat vše",
       "selectedTotal_one": "{{count}} vybraná cívka",
       "selectedTotal_few": "{{count}} vybrané cívky",
-      "selectedTotal_other": "{{count}} vybraných cívek"
+      "selectedTotal_other": "{{count}} vybraných cívek",
+      "hidePrinted": "Skrýt již vytištěné",
+      "reprintConfirmTitle": "Vytisknout štítky znovu?",
+      "reprintConfirmContent_one": "{{count}} vybraná cívka již má vytištěný štítek. Vytisknout jej znovu?",
+      "reprintConfirmContent_few": "{{count}} vybrané cívky již mají vytištěné štítky. Vytisknout je znovu?",
+      "reprintConfirmContent_other": "{{count}} vybraných cívek již má vytištěné štítky. Vytisknout je znovu?"
     },
     "filamentSelect": {
       "title": "Vybrat filamenty",
@@ -156,7 +212,12 @@
       "selectAll": "Vybrat/odebrat vše",
       "selectedTotal_one": "{{count}} vybraný filament",
       "selectedTotal_few": "{{count}} vybrané filamenty",
-      "selectedTotal_other": "{{count}} vybraných filamentů"
+      "selectedTotal_other": "{{count}} vybraných filamentů",
+      "hidePrinted": "Skrýt již vytištěné",
+      "reprintConfirmTitle": "Vytisknout štítky znovu?",
+      "reprintConfirmContent_one": "{{count}} vybraný filament již má vytištěný štítek. Vytisknout jej znovu?",
+      "reprintConfirmContent_few": "{{count}} vybrané filamenty již mají vytištěné štítky. Vytisknout je znovu?",
+      "reprintConfirmContent_other": "{{count}} vybraných filamentů již má vytištěné štítky. Vytisknout je znovu?"
     }
   },
   "scanner": {
@@ -169,7 +230,9 @@
       "notReadable": "Kamera není čitelná.",
       "notFound": "Nebyla nalezena žádná kamera.",
       "unknown": "Došlo k neznámé chybě. ({{error}})"
-    }
+    },
+    "camera_auto": "Automatická kamera",
+    "camera_n": "Kamera {{n}}"
   },
   "spool": {
     "spool": "Cívky",
@@ -195,7 +258,13 @@
       "spool_weight": "Prázdná hmotnost",
       "initial_weight": "Výchozí hmotnost",
       "filament_internal": "Interní",
-      "filament_external": "Externí"
+      "filament_external": "Externí",
+      "filament_name_only": "Název",
+      "vendor_name": "Výrobce",
+      "color": "Barva",
+      "printer": "Tiskárna",
+      "diameter": "Průměr",
+      "color_hex": "Barva"
     },
     "fields_help": {
       "weight_to_use": "Vyberte, jakou hodnotu hmotnosti chcete zadat. Naměřená hmotnost je k dispozici pouze v případě, že je pro vybraný filament nastavena hmotnost cívky.",
@@ -207,7 +276,10 @@
       "price": "Cena celé cívky. Pokud není nastavena, předpokládá se cena filamentu.",
       "spool_weight": "Hmotnost prázdné cívky. Nechte prázdné, chcete-li použít hodnotu z filamentu nebo od výrobce.",
       "initial_weight": "Počáteční hmotnost vlákna na cívce (čistá hmotnost). Pokud není nastavena, použije se hmotnost z objektu filament.",
-      "external_filament": "Vybrali jste filament z externí databáze. Objekt filamentu (a případně i objekt výrobce) se vytvoří automaticky při vytvoření této cívky. Tím se mohou vytvořit duplicitní objekty filamentů, pokud jste již objekt filamentu pro toto vlákno vytvořili."
+      "external_filament": "Vybrali jste filament z externí databáze. Objekt filamentu (a případně i objekt výrobce) se vytvoří automaticky při vytvoření této cívky. Tím se mohou vytvořit duplicitní objekty filamentů, pokud jste již objekt filamentu pro toto vlákno vytvořili.",
+      "printer": "Tiskárna, ve které je tato cívka právě vložena. Tiskárny spravujte v Nastavení.",
+      "diameter": "Naměřený průměr filamentu této konkrétní cívky, používá se při výpočtech délky. Ponechte prázdné, chcete-li použít průměr filamentu.",
+      "color_hex": "Volitelná barva této konkrétní cívky, která přepíše barvu filamentu. Vymažte, chcete-li použít barvu filamentu."
     },
     "titles": {
       "create": "Vytvořit cívku",
@@ -220,7 +292,9 @@
       "adjust": "Nastavení cívky filamentu"
     },
     "messages": {
-      "archive": "Opravdu chcete tuto cívku archivovat?"
+      "archive": "Opravdu chcete tuto cívku archivovat?",
+      "update_error": "Změny se nepodařilo uložit. Zkuste to prosím znovu.",
+      "reset_usage": "Vynulovat použitou hmotnost této cívky? Tím se vymažou data prvního/posledního použití."
     },
     "form": {
       "new_location_prompt": "Zadejte nové umístění",
@@ -235,6 +309,77 @@
     },
     "formats": {
       "last_used": "Naposledy použitý {{date}}"
+    },
+    "custom_actions": "Akce",
+    "bulk": {
+      "edit": "Upravit",
+      "clear_selection": "Zrušit výběr",
+      "edit_help": "Zaškrtněte pole, které chcete změnit u všech vybraných cívek. Nezaškrtnutá pole zůstanou beze změny.",
+      "apply": "Použít",
+      "nothing_selected": "Zaškrtněte alespoň jedno pole, které chcete změnit.",
+      "selected_one": "{{count}} vybraná",
+      "selected_few": "{{count}} vybrané",
+      "selected_other": "{{count}} vybraných",
+      "edit_title_one": "Upravit {{count}} cívku",
+      "edit_title_few": "Upravit {{count}} cívky",
+      "edit_title_other": "Upravit {{count}} cívek",
+      "applied_one": "Aktualizována {{count}} cívka.",
+      "applied_few": "Aktualizovány {{count}} cívky.",
+      "applied_other": "Aktualizováno {{count}} cívek.",
+      "applied_partial_one": "Aktualizována {{count}} cívka, {{failed}} se nezdařilo.",
+      "applied_partial_few": "Aktualizovány {{count}} cívky, {{failed}} se nezdařilo.",
+      "applied_partial_other": "Aktualizováno {{count}} cívek, {{failed}} se nezdařilo.",
+      "archive_confirm_one": "Archivovat {{count}} cívku?",
+      "archive_confirm_few": "Archivovat {{count}} cívky?",
+      "archive_confirm_other": "Archivovat {{count}} cívek?",
+      "unarchive_confirm_one": "Zrušit archivaci {{count}} cívky?",
+      "unarchive_confirm_few": "Zrušit archivaci {{count}} cívek?",
+      "unarchive_confirm_other": "Zrušit archivaci {{count}} cívek?"
+    },
+    "weigh": {
+      "button": "Vážit cívky",
+      "title": "Vážit cívky",
+      "help": "Najděte cívku, zadejte naměřenou hodnotu a pomocí Uložit a další zvažte další cívku bez zavírání okna.",
+      "spool": "Cívka",
+      "search_placeholder": "Hledat podle ID, filamentu, čísla šarže…",
+      "save_next": "Uložit a další",
+      "done": "Hotovo",
+      "updated": "Aktualizováno: {{name}}",
+      "pick_spool": "Nejprve vyberte cívku.",
+      "tooltip": "Převažte několik cívek za sebou"
+    },
+    "view": {
+      "grid": "Zobrazení v mřížce",
+      "table": "Zobrazení v tabulce",
+      "grid_tooltip": "Procházejte cívky jako barevné dlaždice",
+      "table_tooltip": "Zpět na úplnou tabulku"
+    },
+    "filament_extra_fields": "Pole filamentu",
+    "sibling_spools": {
+      "title": "Ostatní cívky tohoto filamentu",
+      "button": "Ostatní cívky",
+      "tooltip": "Zobrazit všechny cívky tohoto filamentu"
+    },
+    "usage_history": {
+      "title": "Historie použití",
+      "time": "Čas",
+      "type": "Typ",
+      "change": "Změna",
+      "comment": "Komentář",
+      "empty": "Zatím nebylo zaznamenáno žádné použití."
+    },
+    "weight_history": {
+      "title": "Historie hmotnosti",
+      "chart_label": "Naměřená hmotnost v čase",
+      "idle_gain": "Naměřená hmotnost mezi měřeními vzrostla o {{grams}} g — cívka mohla absorbovat vlhkost. (Experimentální)"
+    },
+    "totals": {
+      "shown_one": "Zobrazena {{count}} cívka",
+      "shown_few": "Zobrazeny {{count}} cívky",
+      "shown_other": "Zobrazeno {{count}} cívek",
+      "selected_one": "Vybrána {{count}} cívka",
+      "selected_few": "Vybrány {{count}} cívky",
+      "selected_other": "Vybráno {{count}} cívek"
     }
   },
   "filament": {
@@ -261,7 +406,21 @@
       "single_color": "Jediný",
       "coaxial": "Koextrudovaný",
       "longitudinal": "Podélná",
-      "multi_color": "Více"
+      "multi_color": "Více",
+      "color_hue": "Barva",
+      "spool_count": "Cívky",
+      "remaining_weight": "Skladem",
+      "low_stock_threshold": "Práh nízkého stavu",
+      "reserve_count": "Rezervní cívky",
+      "settings_extruder_temp_range": "Rozsah teplot extruderu",
+      "settings_bed_temp_range": "Rozsah teplot podložky",
+      "temp_range_min": "Min",
+      "temp_range_max": "Max",
+      "spool_type": "Typ cívky",
+      "finish": "Povrch",
+      "pattern": "Vzor",
+      "translucent": "Průsvitný",
+      "glow": "Svítící ve tmě"
     },
     "fields_help": {
       "name": "Název filamentu, aby se tento typ vlákna odlišil od ostatních filamentů od stejného výrobce. Měl by obsahovat například barvu.",
@@ -270,7 +429,11 @@
       "weight": "Hmotnost plného cívky filamentu (čistá hmotnost). Tato hmotnost by neměla zahrnovat hmotnost samotné cívky, ale pouze filamentu. Obvykle se uvádí na obalu.",
       "spool_weight": "Hmotnost prázdné cívky. Slouží k určení naměřené hmotnosti cívky.",
       "article_number": "Např. EAN, UPC, atd.",
-      "multi_color_direction": "Filamenty mohou mít více barev dvěma způsoby: buď koextruzí jako dvoubarevná vlákna s konzistentními více barvami, nebo podélnými změnami barev jako gradientní vlákna, která mění barvy podél cívky."
+      "multi_color_direction": "Filamenty mohou mít více barev dvěma způsoby: buď koextruzí jako dvoubarevná vlákna s konzistentními více barvami, nebo podélnými změnami barev jako gradientní vlákna, která mění barvy podél cívky.",
+      "low_stock_threshold": "Označí tento filament k doobjednání, jakmile celková zbývající hmotnost všech jeho cívek klesne pod tento počet gramů.",
+      "reserve_count": "Počet nerozbalených náhradních cívek, které máte v zásobě, evidovaných bez vytváření samostatné cívky pro každou z nich.",
+      "settings_extruder_temp_range": "Výrobcem doporučený rozsah teplot extruderu (min–max). Volitelné, ponechte prázdné, pokud máte jen jednu hodnotu.",
+      "settings_bed_temp_range": "Výrobcem doporučený rozsah teplot podložky (min–max). Volitelné, ponechte prázdné, pokud máte jen jednu hodnotu."
     },
     "titles": {
       "create": "Vytvořit filament",
@@ -288,12 +451,17 @@
       "import_3dfp_help": "Automaticky vyplní informace načtením z 3dfilamentprofiles.com",
       "import_3dfp_placeholder": "např. 12875",
       "import_3dfp_success": "Filament byl úspěšně načten z 3dfilamentprofiles.com",
-      "import_3dfp_error": "Nepodařilo se načíst data filamentu z 3dfilamentprofiles.com"
+      "import_3dfp_error": "Nepodařilo se načíst data filamentu z 3dfilamentprofiles.com",
+      "must_be_positive": "Musí být větší než 0.",
+      "new_vendor_prompt": "Přidat nového výrobce",
+      "vendor_created": "Výrobce byl vytvořen",
+      "vendor_create_error": "Nepodařilo se vytvořit výrobce"
     },
     "buttons": {
       "add_spool": "Přidat cívku",
       "fetch": "Načíst",
-      "download_swatch": "Vzorek"
+      "download_swatch": "Vzorek",
+      "download_slicer": "Profil pro slicer"
     },
     "swatch": {
       "title": "Vzorek pro 3D tisk",
@@ -311,6 +479,50 @@
         "card": "Karta"
       },
       "download": "Stáhnout .3mf"
+    },
+    "spool_type_options": {
+      "plastic": "Plastová",
+      "cardboard": "Kartonová",
+      "metal": "Kovová"
+    },
+    "finish_options": {
+      "matte": "Matný",
+      "glossy": "Lesklý"
+    },
+    "pattern_options": {
+      "marble": "Mramorový",
+      "sparkle": "Třpytivý"
+    },
+    "tabs": {
+      "details": "Podrobnosti"
+    },
+    "bulk": {
+      "edit": "Upravit",
+      "clear_selection": "Zrušit výběr",
+      "edit_help": "Zaškrtněte pole, které chcete změnit u všech vybraných filamentů. Nezaškrtnutá pole zůstanou beze změny.",
+      "apply": "Použít",
+      "nothing_selected": "Zaškrtněte alespoň jedno pole, které chcete změnit.",
+      "selected_one": "{{count}} vybraný",
+      "selected_few": "{{count}} vybrané",
+      "selected_other": "{{count}} vybraných",
+      "edit_title_one": "Upravit {{count}} filament",
+      "edit_title_few": "Upravit {{count}} filamenty",
+      "edit_title_other": "Upravit {{count}} filamentů",
+      "applied_one": "Aktualizován {{count}} filament.",
+      "applied_few": "Aktualizovány {{count}} filamenty.",
+      "applied_other": "Aktualizováno {{count}} filamentů.",
+      "applied_partial_one": "Aktualizován {{count}} filament, {{failed}} se nezdařilo.",
+      "applied_partial_few": "Aktualizovány {{count}} filamenty, {{failed}} se nezdařilo.",
+      "applied_partial_other": "Aktualizováno {{count}} filamentů, {{failed}} se nezdařilo."
+    },
+    "view": {
+      "grid": "Zobrazení v mřížce",
+      "table": "Zobrazení v tabulce",
+      "grid_tooltip": "Procházejte filamenty jako barevné dlaždice",
+      "table_tooltip": "Zpět na úplnou tabulku"
+    },
+    "messages": {
+      "update_error": "Změny se nepodařilo uložit. Zkuste to prosím znovu."
     }
   },
   "vendor": {
@@ -321,7 +533,9 @@
       "registered": "Registrováno",
       "comment": "Komentář",
       "empty_spool_weight": "Hmotnost prázdné cívky",
-      "external_id": "Externí ID"
+      "external_id": "Externí ID",
+      "filament_count": "Filamenty",
+      "spool_count": "Cívky"
     },
     "titles": {
       "create": "Vytvořit výrobce",
@@ -329,10 +543,12 @@
       "edit": "Upravit výrobce",
       "list": "Výrobci",
       "show": "Zobrazit výrobce",
-      "show_title": "[Výrobce #{{id}}] {{name}}"
+      "show_title": "[Výrobce #{{id}}] {{name}}",
+      "view_spools": "Zobrazit cívky"
     },
     "form": {
-      "vendor_updated": "Od otevření této stránky byl tento prodejce někým/něčím aktualizován. Uložením se tyto změny přepíší!"
+      "vendor_updated": "Od otevření této stránky byl tento prodejce někým/něčím aktualizován. Uložením se tyto změny přepíší!",
+      "duplicate_name_warning": "Výrobce s tímto názvem již existuje."
     },
     "fields_help": {
       "empty_spool_weight": "Hmotnost prázdné cívky od tohoto výrobce."
@@ -405,7 +621,34 @@
     "no_recent": "Žádné nedávno použité cívky",
     "by_material": "Podle materiálu",
     "by_location": "Podle umístění",
-    "by_vendor": "Podle výrobce"
+    "by_vendor": "Podle výrobce",
+    "all_spools": "Všechny cívky",
+    "no_spools": "Zatím žádné cívky",
+    "shopping_list": "Nákupní seznam",
+    "shopping_list_empty": "Žádné filamenty nejsou pod prahem nízkého stavu.",
+    "usage": {
+      "tab": "Spotřeba",
+      "empty": "Zatím nebyla zaznamenána žádná spotřeba filamentu.",
+      "loading": "Načítání...",
+      "bucket": {
+        "day": "Den",
+        "week": "Týden",
+        "month": "Měsíc",
+        "year": "Rok"
+      }
+    },
+    "create": {
+      "spool": "Nová cívka",
+      "filament": "Nový filament",
+      "vendor": "Nový výrobce"
+    },
+    "kpi": {
+      "this_month": "tento měsíc",
+      "top": "top",
+      "materials_one": "{{count}} materiál",
+      "materials_few": "{{count}} materiály",
+      "materials_other": "{{count}} materiálů"
+    }
   },
   "settings": {
     "extra_fields": {
@@ -418,7 +661,9 @@
         "default_value": "Výchozí hodnota",
         "multi_choice": "Výběr z více možností",
         "unit": "Jednotka",
-        "choices": "Volby"
+        "choices": "Volby",
+        "copy_from_filament": "Kopírovat z filamentu",
+        "link_template": "URL odkazu"
       },
       "field_type": {
         "text": "Text",
@@ -428,7 +673,8 @@
         "datetime": "Datumčas",
         "choice": "Volba",
         "float_range": "Plovoucí rozsah",
-        "boolean": "Logická hodnota"
+        "boolean": "Logická hodnota",
+        "link": "Odkaz"
       },
       "boolean_true": "Ano",
       "boolean_false": "Ne",
@@ -436,7 +682,7 @@
       "non_unique_key_error": "Tento klíč musí být jedinečný.",
       "key_not_changed": "Změňte prosím klíč na jiný.",
       "delete_confirm": "Smazat pole {{name}}?",
-      "description": "<p>Zde můžete přidat další vlastní pole k subjektům.</p><p>Jakmile je pole přidáno, nemůžete změnit jeho klíč ani typ a u polí typu výběr nemůžete odebrat volby ani změnit stav více voleb. Pokud pole odstraníte, budou odstraněna přidružená data pro všechny subjekty.</p><p>Klíčové je, jako co ostatní programy čtou/zapisují data, takže pokud má být vaše vlastní pole integrováno s programem třetí strany, ujistěte se, že je správně nastaveno. Výchozí hodnota se použije pouze pro nové položky.</p><p>Výstupní pole nelze v zobrazeních tabulky řadit ani filtrovat.</p>",
+      "description": "<p>Zde můžete k subjektům přidat další vlastní pole.</p><p>Jakmile je pole přidáno, nemůžete změnit jeho klíč ani typ a u polí typu volba nemůžete odebrat volby ani změnit stav vícenásobné volby. Pokud pole odstraníte, budou smazána přidružená data všech subjektů.</p><p>Klíč je to, pod čím ostatní programy data čtou/zapisují, takže pokud se má vaše vlastní pole integrovat s programem třetí strany, nastavte jej správně. Výchozí hodnota se použije jen u nových položek.</p><p>Další pole lze zobrazit a řadit v tabulkových zobrazeních. Pole typu volba a logická hodnota tam nabízejí i možnosti filtrování a všechny typy dalších polí podporují filtrování prázdných hodnot.</p><p>U polí cívky zapněte „Kopírovat z filamentu“, aby nová cívka při vytvoření převzala hodnotu z pole filamentu se stejným klíčem (pokud si cívka nenastaví vlastní).</p><p>Pole typu „Odkaz“ ukládá u každé položky krátkou hodnotu (např. číslo výrobku) a pomocí šablony URL odkazu ji promění v klikatelný odkaz — vložte {} tam, kam má přijít hodnota, např. https://www.amazon.com/dp/{}.</p>",
       "delete_confirm_description": "Tím se odstraní pole a všechna související data pro všechny subjekty."
     },
     "header": "Nastavení",
@@ -452,6 +698,10 @@
       "round_prices": {
         "label": "Zaokrouhlené ceny",
         "tooltip": "Zaokrouhlete ceny na nejbližší celé číslo."
+      },
+      "unit_scaling": {
+        "label": "Převádět velké jednotky",
+        "tooltip": "Zobrazovat velké hmotnosti a délky automaticky převedené (např. 1,5 kg, 64,37 m) místo hrubých gramů/milimetrů v seznamech a detailních zobrazeních. Uložené hodnoty ani API tím nejsou ovlivněny."
       }
     },
     "settings": "Nastavení",
@@ -462,6 +712,68 @@
         "tooltip": "Styl předvybraný při stahování vzorku filamentu pro 3D tisk. Nové styly lze do Spoolmanu přispět v souboru client/src/utils/swatch/styles.ts."
       },
       "preview_description": "Náhled se dvěma ukázkovými filamenty — text a QR kód se automaticky tisknou černě nebo bíle podle toho, co lépe kontrastuje s barvou filamentu:"
+    },
+    "import_export": {
+      "tab": "Import / Export",
+      "export_title": "Export dat",
+      "export_help": "Stáhněte své výrobce, filamenty nebo cívky jako CSV nebo JSON. Data výrobců a filamentů jsou součástí exportu cívek.",
+      "import_title": "Import dat",
+      "import_help": "Nahrajte soubor CSV nebo JSON ve stejné podobě jako export. Celý soubor se použije jako jedna transakce „všechno, nebo nic“; nejprve si výsledek prohlédněte pomocí zkušebního běhu.",
+      "report_title": "Přehled zásob",
+      "report_help": "Otevře tisknutelný souhrn vašich aktuálních zásob.",
+      "report_heading": "Přehled zásob Spoolman",
+      "entities": {
+        "spools": "Cívky",
+        "filaments": "Filamenty",
+        "vendors": "Výrobci"
+      },
+      "modes": {
+        "create": "Vytvořit nové",
+        "upsert": "Aktualizovat nebo vytvořit",
+        "skip_existing": "Přeskočit existující"
+      },
+      "dry_run": "Zkušební běh",
+      "dry_run_prefix": "Zkušební běh —",
+      "choose_file": "Vybrat soubor",
+      "validate": "Ověřit",
+      "import_button": "Importovat",
+      "print_report": "Vytisknout přehled",
+      "no_file": "Nejprve prosím vyberte soubor.",
+      "result": "Vytvořeno: {{created}}, aktualizováno: {{updated}}, přeskočeno: {{skipped}}.",
+      "import_errors": "Import se nezdařil",
+      "threemf": {
+        "title": "Import naslicovaného projektu 3MF",
+        "help": "Nahrajte naslicovaný soubor .3mf z Bambu Studio nebo OrcaSlicer — načte se, kolik kterého filamentu tisk spotřeboval, spáruje se to s vašimi cívkami a spotřeba se odečte v jednom kroku.",
+        "choose_file": "Vybrat soubor .3mf",
+        "no_filaments": "V tomto 3MF nebyla nalezena žádná spotřeba filamentu.",
+        "no_match": "Žádná odpovídající cívka — vyberte nějakou",
+        "col_filament": "Filament tisku",
+        "col_used": "Spotřebováno",
+        "col_spool": "Cívka k úpravě",
+        "apply": "Zapsat spotřebu",
+        "applied": "Spotřeba zaznamenána u cívek: {{count}}.",
+        "applied_partial": "Spotřeba zaznamenána u cívek: {{ok}}; neúspěšných: {{fail}}."
+      }
+    },
+    "printers": {
+      "tab": "Tiskárny",
+      "description": "<p>Zde spravujte své tiskárny. Jakmile máte alespoň jednu, můžete cívku přiřadit tiskárně ve formuláři vytvoření nebo úpravy cívky.</p>",
+      "add_title": "Přidat tiskárnu",
+      "edit_title": "Upravit tiskárnu",
+      "delete_confirm": "Smazat tiskárnu „{{name}}“? Cívkám, které jsou k ní přiřazeny, bude přiřazení zrušeno; smazány nebudou."
+    },
+    "custom_links": {
+      "sidebar_tab": "Odkazy v postranním panelu",
+      "spool_tab": "Akce cívky",
+      "sidebar_description": "<p>Přidejte si do levého postranního panelu vlastní odkazy, např. na stránku Mainsail nebo Fluidd vaší tiskárny. Otevírají se v nové kartě.</p>",
+      "spool_description": "<p>Přidejte ke každé cívce vlastní akční tlačítka. URL může obsahovat pole cívky ve složených závorkách — {id}, {filament_id}, {location}, {lot_nr}, {comment} — která se doplní pro každou cívku, takže nástroje jako nfc2klipper nebo endpoint aktivní cívky Moonrakeru jsou na jedno kliknutí.</p>",
+      "name": "Název",
+      "url": "URL",
+      "url_template": "Šablona URL",
+      "url_template_help": "Použijte {id} v místě, kam má přijít ID cívky, např. http://moonraker.local/...?id={id}",
+      "add_title": "Přidat odkaz",
+      "edit_title": "Upravit odkaz",
+      "delete_confirm": "Smazat tento odkaz?"
     }
   },
   "locations": {
@@ -470,7 +782,29 @@
     "new_location": "Nové umístění",
     "no_location": "Žádné umístění",
     "error_empty": "Název nesmí být prázdný",
-    "error_exists": "Umístění již existuje"
+    "error_exists": "Umístění již existuje",
+    "location": "Umístění",
+    "fields": {
+      "button": "Vlastní pole",
+      "title": "Vlastní pole — {{name}}",
+      "saved": "Pole umístění byla uložena",
+      "save_error": "Nepodařilo se uložit pole umístění",
+      "load_error": "Nepodařilo se načíst umístění"
+    },
+    "show": {
+      "name": "Název",
+      "comment": "Komentář",
+      "spool_count": "Zde uložené cívky",
+      "spools_here": "Cívky v tomto umístění",
+      "no_spools": "V tomto umístění nejsou uloženy žádné cívky."
+    },
+    "print": {
+      "title": "Tisk štítků umístění",
+      "button": "Tisk štítků",
+      "description": "Vyberte umístění, pro která chcete vytisknout skenovatelné QR štítky.",
+      "select_placeholder": "Vyberte umístění",
+      "none_selected": "Nejsou vybrána žádná umístění"
+    }
   },
   "calibration": {
     "title": "Kalibrace",
@@ -615,5 +949,92 @@
     "tag_material": "Materiál",
     "tag_material_type": "Typ materiálu",
     "qidi_write_info": "Tagy Qidi ukládají pouze materiál a barvu. Na tag budou zapsány nejbližší odpovídající kódy materiálu a barvy Qidi."
+  },
+  "errorBoundary": {
+    "title": "Něco se pokazilo",
+    "subTitle": "Tuto stránku se nepodařilo vykreslit. Pokud k tomu začalo docházet po změně nebo sdílení nastavení zobrazení, obvykle pomůže jejich resetování.",
+    "reset": "Resetovat nastavení zobrazení a znovu načíst",
+    "home": "Přejít na domovskou stránku"
+  },
+  "apiToken": {
+    "title": "Je vyžadován API token",
+    "help": "Tato instance Spoolman vyžaduje API token. Zadejte jej pro pokračování; bude uložen v tomto prohlížeči.",
+    "placeholder": "API token",
+    "submit": "Uložit token"
+  },
+  "auth": {
+    "logout": "Odhlásit se",
+    "login": {
+      "title": "Přihlášení",
+      "submit": "Přihlásit se",
+      "username": "Uživatelské jméno",
+      "password": "Heslo"
+    },
+    "roles": {
+      "admin": "Administrátor",
+      "readonly": "Pouze pro čtení"
+    },
+    "users": {
+      "tab": "Uživatelé",
+      "title": "Uživatelské účty",
+      "help": "Vytvořte účty, aby bylo vyžadováno přihlášení. Uživatelé s právy pouze pro čtení mohou vše zobrazit, ale nemohou provádět změny. První účet je vždy administrátor.",
+      "role": "Role",
+      "add": "Přidat uživatele",
+      "need_fields": "Zadejte uživatelské jméno a heslo.",
+      "created": "Uživatel {{username}} byl vytvořen.",
+      "reset_password": "Resetovat heslo",
+      "reset_password_for": "Resetovat heslo pro uživatele {{username}}",
+      "reset_password_help": "Zadejte nové heslo pro tohoto uživatele.",
+      "password_reset": "Heslo bylo změněno.",
+      "delete_confirm": "Smazat tohoto uživatele?"
+    }
+  },
+  "colorFilter": {
+    "button": "Barva",
+    "title": "Filtrovat podle podobné barvy",
+    "threshold": "Tolerance",
+    "help": "Zobrazit položky, jejichž barva je v rámci této tolerance od vybrané barvy.",
+    "advanced": "Více barev"
+  },
+  "theme": {
+    "label": "Motiv",
+    "system": "Systémový",
+    "light": "Světlý",
+    "dark": "Tmavý"
+  },
+  "scan": {
+    "title": "Skenovat",
+    "qr": "QR kód",
+    "nfc": "NFC",
+    "nfc_hint": "Skenování NFC není v tomto prohlížeči k dispozici. Použijte Chrome pro Android, nebo připojte NFC čtečku na straně serveru.",
+    "action": {
+      "open": "Otevřít",
+      "move": "Přesunout cívku"
+    },
+    "move": {
+      "scan_spool": "Naskenujte cívku, kterou chcete přesunout.",
+      "scan_location": "Cívka #{{id}} vybrána. Nyní naskenujte cílové umístění.",
+      "confirm_title": "Přesunout cívku?",
+      "confirm_content": "Přesunout cívku #{{spool}} do „{{location}}“?",
+      "moved": "Cívka #{{spool}} byla přesunuta do „{{location}}“.",
+      "load_error": "Nepodařilo se načíst naskenované umístění."
+    },
+    "clear": {
+      "recognized": "Rozpoznán kód pro zrušení aktivní cívky. Spoolman žádnou aktivní cívku nevede; její zrušení zajišťuje vaše tiskárna nebo integrace Moonraker."
+    },
+    "barcode": {
+      "unknown_title": "Neznámý čárový kód",
+      "unknown_content": "Žádný filament nemá čárový kód {{code}}. Vytvořit filament a zapamatovat si tento čárový kód?",
+      "create_filament": "Vytvořit filament",
+      "lookup_error": "Tento čárový kód se nepodařilo vyhledat."
+    }
+  },
+  "printer": {
+    "printer": "Tiskárna",
+    "fields": {
+      "name": "Název",
+      "comment": "Komentář",
+      "spool_count": "Cívky"
+    }
   }
 }

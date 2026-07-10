@@ -28,7 +28,16 @@
     "hideArchived": "Ocultar Arquivados",
     "showArchived": "Mostrar Arquivados",
     "notAccessTitle": "Você não tem permissão para acessar",
-    "clearFilters": "Limpar Filtros"
+    "clearFilters": "Limpar Filtros",
+    "search": "Pesquisar",
+    "resetUsage": "Zerar uso",
+    "hideArchivedTooltip": "Voltar aos carretéis ativos",
+    "showArchivedTooltip": "Alternar para os carretéis arquivados",
+    "columns": "Colunas",
+    "clearFiltersTooltip": "Redefinir todos os filtros e a ordenação",
+    "labelsAndTags": "Etiquetas e Tags",
+    "export": "Exportar",
+    "columnsTooltip": "Escolher, reordenar e ocultar colunas da tabela"
   },
   "warnWhenUnsavedChanges": "Você tem certeza que deseja sair? Você tem alterações não salvas.",
   "notifications": {
@@ -99,13 +108,24 @@
       "deleteSettingsConfirm": "Tem certeza de que deseja excluir esta predefinição?",
       "settingsName": "Nome da Predefinição",
       "saveSetting": "Salvar Predefinições",
-      "saveAsImage": "Salvar como Imagem"
+      "saveAsImage": "Salvar como Imagem",
+      "pageSizeMode": {
+        "label": "Tamanho da Página",
+        "tooltip": "\"Automático\" deixa a impressora/o navegador escolher a geometria da página (padrão). \"Igual ao tamanho da etiqueta\" emite um tamanho @page explícito a partir das dimensões de papel acima — use com impressoras de rolo/etiquetas (ex.: Brother QL) para que as etiquetas saiam no tamanho e na orientação corretos. Funciona melhor no Chrome.",
+        "auto": "Automático (padrão da impressora)",
+        "matchLabel": "Igual ao tamanho da etiqueta"
+      },
+      "saveAsZpl": "Baixar ZPL",
+      "invalidGeometry": "A grade de etiquetas não cabe no papel",
+      "invalidGeometryHelp": "As margens e o espaçamento não deixam espaço para as etiquetas. Reduza as margens, o espaçamento, as colunas ou as linhas — ou escolha um tamanho de papel maior.",
+      "contentClipped": "Parte do conteúdo das etiquetas está cortada",
+      "contentClippedHelp": "O conteúdo de pelo menos uma etiqueta não cabe dentro dela e será cortado na impressão. Reduza o tamanho do texto, encurte o modelo ou use menos colunas/linhas para que cada etiqueta fique maior."
     },
     "qrcode": {
       "button": "Imprimir Etiquetas",
       "title": "Impressão de Etiquetas",
       "template": "Modelo de Etiqueta",
-      "templateHelp": "Use \"{tag}\" para inserir valores do objeto carretel como texto. Por exemplo, {id} será substituído pelo valor do \"id\" do carretel ou {filament.material} será substituído pelo material do carretel. Se um valor estiver faltando, ele será substituído por \"?\". Um segundo conjunto de chaves, exemplo \"{{tag}}\", pode ser usado para remover isso. Além disso, qualquer texto entre os conjuntos de chaves será removido se o valor não existir. Por exemplo, {Lote Nº: {lot_nr}} só mostrará o rótulo se o carretel tiver um número de lote. Coloque o texto com asterisco duplo ** para colocar em negrito. Clique no botão ao lado para ver uma lista de todas as tags disponíveis.",
+      "templateHelp": "Use {} para inserir valores do objeto carretel como texto. Por exemplo, {id} será substituído pelo ID do carretel, ou {filament.material} será substituído pelo material do carretel. Se um valor estiver faltando, ele será substituído por \"?\". Um segundo conjunto de {} pode ser usado para remover isso. Além disso, qualquer texto entre os conjuntos de {} será removido se o valor estiver faltando. Por exemplo, {Lot Nr: {lot_nr}} só mostrará o texto se o carretel tiver um número de lote. Coloque o texto entre asteriscos duplos ** para deixá-lo em negrito. Adicione um formato após dois-pontos: números como {remaining_weight:0.0} são arredondados para essa quantidade de casas decimais, e datas como {registered:YYYY-MM-DD HH:mm} formatam a data/hora no seu fuso horário local. Comece uma linha com {size:1.5} para escalar a linha inteira (aqui 1,5×). Clique no botão para ver uma lista de todas as tags disponíveis.",
       "textSize": "Tamanho do Texto da Etiqueta",
       "showContent": "Imprimir Etiqueta",
       "useHTTPUrl": {
@@ -126,7 +146,38 @@
       "exportButton": "Exportar Etiquetas",
       "printFilamentTitle": "Imprimir Etiquetas de Filamento",
       "printSpoolTitle": "Imprimir Etiquetas de Carretel",
-      "templateHelpFilament": "Use {} para inserir valores do objeto filamento como texto. Por exemplo, {id} será substituído pelo id do filamento, ou {vendor.name} será substituído pelo nome do fabricante. Se um valor estiver faltando, ele será substituído por \"?\". Um segundo conjunto de {} pode ser usado para remover isso. Além disso, qualquer texto entre os conjuntos de {} será removido se o valor estiver faltando. Por exemplo, {Article: {article_number}} só mostrará o rótulo se o filamento tiver um número de artigo. Coloque o texto entre asteriscos duplos ** para deixá-lo em negrito. Clique no botão para ver uma lista de todas as tags disponíveis."
+      "templateHelpFilament": "Use {} para inserir valores do objeto filamento como texto. Por exemplo, {id} será substituído pelo id do filamento, ou {vendor.name} será substituído pelo nome do fabricante. Se um valor estiver faltando, ele será substituído por \"?\". Um segundo conjunto de {} pode ser usado para remover isso. Além disso, qualquer texto entre os conjuntos de {} será removido se o valor estiver faltando. Por exemplo, {Article: {article_number}} só mostrará o rótulo se o filamento tiver um número de artigo. Coloque o texto entre asteriscos duplos ** para deixá-lo em negrito. Clique no botão para ver uma lista de todas as tags disponíveis.",
+      "textColumns": {
+        "label": "Colunas de Texto",
+        "tooltip": "Distribui o texto da etiqueta nesta quantidade de colunas. Útil para etiquetas estreitas com várias linhas curtas."
+      },
+      "qrPadding": "Margem do QR",
+      "customPayload": {
+        "label": "Conteúdo Personalizado do QR",
+        "tooltip": "Substitui o conteúdo escaneado do QR por um modelo (mesmas tags da etiqueta). Deixe em branco para usar o conteúdo padrão do Spoolman. Um valor personalizado só é reconhecido ao escanear dentro do Spoolman se ainda corresponder a um formato conhecido (WEB+SPOOLMAN:S-{id} / F-{id} ou uma URL /spool/show/{id})."
+      },
+      "qrErrorLevel": {
+        "label": "Correção de Erros do QR",
+        "tooltip": "Níveis mais altos toleram mais danos/sujeira na etiqueta, mas tornam o código QR mais denso (mais difícil de escanear quando pequeno). H (o mais alto) é o padrão."
+      },
+      "qrPlacement": {
+        "label": "Posição do QR",
+        "tooltip": "Onde o código QR fica em relação ao texto da etiqueta. Colocá-lo acima ou abaixo combina com etiquetas altas e estreitas.",
+        "left": "Esquerda",
+        "top": "Acima",
+        "bottom": "Abaixo"
+      },
+      "showColorSwatch": {
+        "label": "Imprimir Amostra de Cor",
+        "tooltip": "Imprime na etiqueta um pequeno quadrado com a cor do filamento."
+      },
+      "barcode1d": {
+        "label": "Código de Barras 1D",
+        "tooltip": "Opcionalmente, imprime um código de barras 1D com o conteúdo do QR ao lado do código QR, para leitores que só leem códigos de barras lineares.",
+        "none": "Nenhum",
+        "code128": "Code 128"
+      },
+      "tooltip": "Imprimir etiquetas das linhas selecionadas ou escolher itens na próxima página"
     },
     "spoolSelect": {
       "title": "Selecionar Carretéis",
@@ -136,7 +187,12 @@
       "selectAll": "Selecionar/Desselecionar Tudo",
       "selectedTotal_one": "{{count}} carretel selecionado",
       "selectedTotal_many": "{{count}} carretéis selecionados",
-      "selectedTotal_other": "{{count}} carretéis selecionados"
+      "selectedTotal_other": "{{count}} carretéis selecionados",
+      "hidePrinted": "Ocultar Já Impressos",
+      "reprintConfirmTitle": "Reimprimir etiquetas?",
+      "reprintConfirmContent_one": "{{count}} carretel selecionado já tem uma etiqueta impressa. Deseja imprimi-la novamente?",
+      "reprintConfirmContent_many": "{{count}} carretéis selecionados já têm etiquetas impressas. Deseja imprimi-las novamente?",
+      "reprintConfirmContent_other": "{{count}} carretéis selecionados já têm etiquetas impressas. Deseja imprimi-las novamente?"
     },
     "filamentSelect": {
       "title": "Selecionar Filamentos",
@@ -145,7 +201,12 @@
       "selectAll": "Selecionar/Desselecionar Tudo",
       "selectedTotal_one": "{{count}} filamento selecionado",
       "selectedTotal_many": "{{count}} filamentos selecionados",
-      "selectedTotal_other": "{{count}} filamentos selecionados"
+      "selectedTotal_other": "{{count}} filamentos selecionados",
+      "hidePrinted": "Ocultar Já Impressos",
+      "reprintConfirmTitle": "Reimprimir etiquetas?",
+      "reprintConfirmContent_one": "{{count}} filamento selecionado já tem uma etiqueta impressa. Deseja imprimi-la novamente?",
+      "reprintConfirmContent_many": "{{count}} filamentos selecionados já têm etiquetas impressas. Deseja imprimi-las novamente?",
+      "reprintConfirmContent_other": "{{count}} filamentos selecionados já têm etiquetas impressas. Deseja imprimi-las novamente?"
     }
   },
   "scanner": {
@@ -158,7 +219,9 @@
       "notReadable": "A câmera não está legível.",
       "notFound": "Nenhuma câmera foi encontrada.",
       "unknown": "Ocorreu um erro desconhecido. ({{error}})"
-    }
+    },
+    "camera_auto": "Câmera automática",
+    "camera_n": "Câmera {{n}}"
   },
   "spool": {
     "spool": "Carretéis",
@@ -184,7 +247,13 @@
       "last_used": "Último Uso",
       "registered": "Registrado",
       "comment": "Comentário",
-      "archived": "Arquivado"
+      "archived": "Arquivado",
+      "filament_name_only": "Nome",
+      "vendor_name": "Fabricante",
+      "color": "Cor",
+      "printer": "Impressora",
+      "diameter": "Diâmetro",
+      "color_hex": "Cor"
     },
     "fields_help": {
       "price": "Preço de um carretel cheio. Se não for definido, o preço do filamento será assumido.",
@@ -196,7 +265,10 @@
       "spool_weight": "O peso do carretel vazio. Deixe em branco para utilizar o valor do filamento ou do fabricante.",
       "location": "Onde o carretel está localizado se você tiver vários locais onde armazena seus carretéis.",
       "lot_nr": "Número de lote do fabricante. Pode ser usado para garantir que uma impressão tenha cores consistentes se vários carretéis forem usados.",
-      "external_filament": "Você selecionou um filamento do banco de dados externo. Um objeto de filamento (e possivelmente um objeto de fabricante) será criado automaticamente quando você criar este carretel. Isso pode criar objetos de filamento duplicados se você já tiver criado um objeto de filamento para esse filamento."
+      "external_filament": "Você selecionou um filamento do banco de dados externo. Um objeto de filamento (e possivelmente um objeto de fabricante) será criado automaticamente quando você criar este carretel. Isso pode criar objetos de filamento duplicados se você já tiver criado um objeto de filamento para esse filamento.",
+      "printer": "A impressora em que este carretel está carregado no momento. Gerencie suas impressoras nas Configurações.",
+      "diameter": "Diâmetro medido do filamento deste carretel específico, usado nos cálculos de comprimento. Deixe vazio para usar o diâmetro do filamento.",
+      "color_hex": "Cor opcional deste carretel específico, sobrepondo a cor do filamento. Limpe o campo para usar a cor do filamento."
     },
     "titles": {
       "create": "Criar Carretel",
@@ -220,10 +292,83 @@
       "spool_updated": "Este carretel foi atualizado por alguém/outra coisa desde que você abriu esta página. Salvar irá sobrescrever essas alterações!"
     },
     "messages": {
-      "archive": "Tem certeza de que deseja arquivar este carretel?"
+      "archive": "Tem certeza de que deseja arquivar este carretel?",
+      "update_error": "Não foi possível salvar as alterações. Tente novamente.",
+      "reset_usage": "Zerar o peso utilizado deste carretel? Isso limpa as datas de primeiro/último uso."
     },
     "formats": {
       "last_used": "Última utilização em {{date}}"
+    },
+    "custom_actions": "Ações",
+    "bulk": {
+      "edit": "Editar",
+      "clear_selection": "Limpar seleção",
+      "edit_help": "Marque um campo para alterá-lo em todos os carretéis selecionados. Campos desmarcados permanecem inalterados.",
+      "apply": "Aplicar",
+      "nothing_selected": "Marque pelo menos um campo para alterar.",
+      "selected_one": "{{count}} selecionado",
+      "selected_many": "{{count}} selecionados",
+      "selected_other": "{{count}} selecionados",
+      "edit_title_one": "Editar {{count}} carretel",
+      "edit_title_many": "Editar {{count}} carretéis",
+      "edit_title_other": "Editar {{count}} carretéis",
+      "applied_one": "{{count}} carretel atualizado.",
+      "applied_many": "{{count}} carretéis atualizados.",
+      "applied_other": "{{count}} carretéis atualizados.",
+      "applied_partial_one": "{{count}} carretel atualizado, {{failed}} com falha.",
+      "applied_partial_many": "{{count}} carretéis atualizados, {{failed}} com falha.",
+      "applied_partial_other": "{{count}} carretéis atualizados, {{failed}} com falha.",
+      "archive_confirm_one": "Arquivar {{count}} carretel?",
+      "archive_confirm_many": "Arquivar {{count}} carretéis?",
+      "archive_confirm_other": "Arquivar {{count}} carretéis?",
+      "unarchive_confirm_one": "Desarquivar {{count}} carretel?",
+      "unarchive_confirm_many": "Desarquivar {{count}} carretéis?",
+      "unarchive_confirm_other": "Desarquivar {{count}} carretéis?"
+    },
+    "weigh": {
+      "button": "Pesar Carretéis",
+      "title": "Pesar Carretéis",
+      "help": "Encontre um carretel, insira a medição e use Salvar e Próximo para pesar o seguinte sem fechar a janela.",
+      "spool": "Carretel",
+      "search_placeholder": "Pesquisar por ID, filamento, número do lote…",
+      "save_next": "Salvar e Próximo",
+      "done": "Concluir",
+      "updated": "{{name}} atualizado",
+      "pick_spool": "Selecione um carretel primeiro.",
+      "tooltip": "Pesar novamente vários carretéis em sequência"
+    },
+    "view": {
+      "grid": "Visualização em grade",
+      "table": "Visualização em tabela",
+      "grid_tooltip": "Navegar pelos carretéis como blocos coloridos",
+      "table_tooltip": "Voltar à tabela completa"
+    },
+    "filament_extra_fields": "Campos do Filamento",
+    "sibling_spools": {
+      "title": "Outros carretéis deste filamento",
+      "button": "Carretéis irmãos",
+      "tooltip": "Listar todos os carretéis deste filamento"
+    },
+    "usage_history": {
+      "title": "Histórico de uso",
+      "time": "Data/Hora",
+      "type": "Tipo",
+      "change": "Variação",
+      "comment": "Comentário",
+      "empty": "Nenhum uso registrado ainda."
+    },
+    "weight_history": {
+      "title": "Histórico de peso",
+      "chart_label": "Peso medido ao longo do tempo",
+      "idle_gain": "O peso medido aumentou {{grams}} g entre as medições — o carretel pode ter absorvido umidade. (Experimental)"
+    },
+    "totals": {
+      "shown_one": "{{count}} carretel exibido",
+      "shown_many": "{{count}} carretéis exibidos",
+      "shown_other": "{{count}} carretéis exibidos",
+      "selected_one": "{{count}} carretel selecionado",
+      "selected_many": "{{count}} carretéis selecionados",
+      "selected_other": "{{count}} carretéis selecionados"
     }
   },
   "filament": {
@@ -250,7 +395,21 @@
       "coaxial": "Coextrusada",
       "longitudinal": "Longitudinal",
       "external_id": "ID Externo",
-      "spools": "Mostrar Carretéis"
+      "spools": "Mostrar Carretéis",
+      "color_hue": "Cor",
+      "spool_count": "Carretéis",
+      "remaining_weight": "Em Estoque",
+      "low_stock_threshold": "Limite de Estoque Baixo",
+      "reserve_count": "Carretéis de Reserva",
+      "settings_extruder_temp_range": "Faixa de Temp. da Extrusora",
+      "settings_bed_temp_range": "Faixa de Temp. da Mesa",
+      "temp_range_min": "Mín",
+      "temp_range_max": "Máx",
+      "spool_type": "Tipo de Carretel",
+      "finish": "Acabamento",
+      "pattern": "Padrão",
+      "translucent": "Translúcido",
+      "glow": "Brilha no Escuro"
     },
     "fields_help": {
       "name": "Nome do filamento, para distinguir este tipo de filamento entre outros do mesmo fabricante. Deve conter a cor, por exemplo.",
@@ -259,7 +418,11 @@
       "weight": "O peso do filamento de um carretel cheio (peso líquido). Isso não deve incluir o peso do carretel em si, apenas o filamento. É o que normalmente está escrito na embalagem.",
       "spool_weight": "O peso de um carretel vazio. Usado para determinar o peso medido de um carretel.",
       "article_number": "Por exemplo: EAN, UPC, etc.",
-      "multi_color_direction": "Os filamentos podem ter múltiplas cores de duas maneiras: por meio de coextrusão, como os filamentos bicolores com as cores consistentes ao longo do carretel, ou por meio de mudanças longitudinais de cor, como os filamentos gradientes que mudam as cores ao longo do carretel."
+      "multi_color_direction": "Os filamentos podem ter múltiplas cores de duas maneiras: por meio de coextrusão, como os filamentos bicolores com as cores consistentes ao longo do carretel, ou por meio de mudanças longitudinais de cor, como os filamentos gradientes que mudam as cores ao longo do carretel.",
+      "low_stock_threshold": "Sinaliza este filamento para recompra quando o peso restante total dos seus carretéis cair abaixo desta quantidade de gramas.",
+      "reserve_count": "Quantidade de carretéis sobressalentes fechados que você mantém em estoque, controlada sem criar um carretel para cada um.",
+      "settings_extruder_temp_range": "Faixa de temperatura da extrusora recomendada pelo fabricante (mín–máx). Opcional; deixe em branco se você tiver apenas um valor.",
+      "settings_bed_temp_range": "Faixa de temperatura da mesa recomendada pelo fabricante (mín–máx). Opcional; deixe em branco se você tiver apenas um valor."
     },
     "titles": {
       "create": "Criar Filamento",
@@ -277,12 +440,17 @@
       "import_3dfp_help": "Preencha as informações automaticamente buscando de 3dfilamentprofiles.com",
       "import_3dfp_placeholder": "ex.: 12875",
       "import_3dfp_success": "Filamento obtido de 3dfilamentprofiles.com com sucesso",
-      "import_3dfp_error": "Falha ao obter dados do filamento de 3dfilamentprofiles.com"
+      "import_3dfp_error": "Falha ao obter dados do filamento de 3dfilamentprofiles.com",
+      "must_be_positive": "Deve ser maior que 0.",
+      "new_vendor_prompt": "Adicionar um novo fabricante",
+      "vendor_created": "Fabricante criado",
+      "vendor_create_error": "Falha ao criar o fabricante"
     },
     "buttons": {
       "add_spool": "Adicionar Carretel",
       "fetch": "Buscar",
-      "download_swatch": "Amostra"
+      "download_swatch": "Amostra",
+      "download_slicer": "Perfil do fatiador"
     },
     "swatch": {
       "title": "Amostra imprimível em 3D",
@@ -300,6 +468,50 @@
         "card": "Cartão"
       },
       "download": "Baixar .3mf"
+    },
+    "spool_type_options": {
+      "plastic": "Plástico",
+      "cardboard": "Papelão",
+      "metal": "Metal"
+    },
+    "finish_options": {
+      "matte": "Fosco",
+      "glossy": "Brilhante"
+    },
+    "pattern_options": {
+      "marble": "Marmorizado",
+      "sparkle": "Glitter"
+    },
+    "tabs": {
+      "details": "Detalhes"
+    },
+    "bulk": {
+      "edit": "Editar",
+      "clear_selection": "Limpar seleção",
+      "edit_help": "Marque um campo para alterá-lo em todos os filamentos selecionados. Campos desmarcados permanecem inalterados.",
+      "apply": "Aplicar",
+      "nothing_selected": "Marque pelo menos um campo para alterar.",
+      "selected_one": "{{count}} selecionado",
+      "selected_many": "{{count}} selecionados",
+      "selected_other": "{{count}} selecionados",
+      "edit_title_one": "Editar {{count}} filamento",
+      "edit_title_many": "Editar {{count}} filamentos",
+      "edit_title_other": "Editar {{count}} filamentos",
+      "applied_one": "{{count}} filamento atualizado.",
+      "applied_many": "{{count}} filamentos atualizados.",
+      "applied_other": "{{count}} filamentos atualizados.",
+      "applied_partial_one": "{{count}} filamento atualizado, {{failed}} com falha.",
+      "applied_partial_many": "{{count}} filamentos atualizados, {{failed}} com falha.",
+      "applied_partial_other": "{{count}} filamentos atualizados, {{failed}} com falha."
+    },
+    "view": {
+      "grid": "Visualização em grade",
+      "table": "Visualização em tabela",
+      "grid_tooltip": "Navegar pelos filamentos como blocos coloridos",
+      "table_tooltip": "Voltar à tabela completa"
+    },
+    "messages": {
+      "update_error": "Não foi possível salvar as alterações. Tente novamente."
     }
   },
   "vendor": {
@@ -310,7 +522,9 @@
       "empty_spool_weight": "Peso do Carretel Vazio",
       "external_id": "ID Externo",
       "registered": "Registrado",
-      "comment": "Comentário"
+      "comment": "Comentário",
+      "filament_count": "Filamentos",
+      "spool_count": "Carretéis"
     },
     "fields_help": {
       "empty_spool_weight": "O peso de um carretel vazio deste fabricante."
@@ -321,10 +535,12 @@
       "edit": "Editar Fabricante",
       "list": "Fabricantes",
       "show": "Mostrar Fabricante",
-      "show_title": "[Fabricante #{{id}}] {{name}}"
+      "show_title": "[Fabricante #{{id}}] {{name}}",
+      "view_spools": "Ver carretéis"
     },
     "form": {
-      "vendor_updated": "Este fabricante foi atualizado por alguém/alguma coisa desde que você abriu esta página. Salvar sobrescreverá essas alterações!"
+      "vendor_updated": "Este fabricante foi atualizado por alguém/alguma coisa desde que você abriu esta página. Salvar sobrescreverá essas alterações!",
+      "duplicate_name_warning": "Já existe um fabricante com este nome."
     }
   },
   "home": {
@@ -339,7 +555,34 @@
     "no_recent": "Nenhuma bobina usada recentemente",
     "by_material": "Por material",
     "by_location": "Por localização",
-    "by_vendor": "Por fabricante"
+    "by_vendor": "Por fabricante",
+    "all_spools": "Todos os Carretéis",
+    "no_spools": "Nenhum carretel ainda",
+    "shopping_list": "Lista de Compras",
+    "shopping_list_empty": "Nenhum filamento abaixo do seu limite de estoque baixo.",
+    "usage": {
+      "tab": "Uso",
+      "empty": "Nenhum uso de filamento registrado ainda.",
+      "loading": "Carregando...",
+      "bucket": {
+        "day": "Dia",
+        "week": "Semana",
+        "month": "Mês",
+        "year": "Ano"
+      }
+    },
+    "create": {
+      "spool": "Novo carretel",
+      "filament": "Novo filamento",
+      "vendor": "Novo fabricante"
+    },
+    "kpi": {
+      "this_month": "este mês",
+      "top": "principal",
+      "materials_one": "{{count}} material",
+      "materials_many": "{{count}} materiais",
+      "materials_other": "{{count}} materiais"
+    }
   },
   "help": {
     "help": "Ajuda",
@@ -376,11 +619,15 @@
       "round_prices": {
         "label": "Arredondar preços",
         "tooltip": "Arredonda os preços para o número inteiro mais próximo."
+      },
+      "unit_scaling": {
+        "label": "Converter unidades grandes",
+        "tooltip": "Exibe pesos e comprimentos grandes convertidos automaticamente (ex.: 1,5 kg, 64,37 m) em vez de gramas/milímetros brutos nas listas e telas de detalhes. Os valores armazenados e a API não são afetados."
       }
     },
     "extra_fields": {
       "tab": "Campos Extras",
-      "description": "<p>Aqui você pode adicionar campos personalizados extras às suas entidades.</p><p>Depois que um campo é adicionado, você não pode alterar sua chave ou tipo, e para campos do tipo \"escolha\" você não pode remover as opções ou alterar o estado de \"múltipla de escolha\". Se você remover um campo, os dados associados a ele em todas as entidades serão excluídos.</p><p>A chave é como outros programas leem/gravam os dados, portanto, se o seu campo personalizado for para uma integração com um programa de terceiros, certifique-se de configurá-lo corretamente. O valor padrão é aplicado somente a novos itens.</p><p>Campos extras não podem ser ordenados ou filtrados nas visualizações de tabela.</p>",
+      "description": "<p>Aqui você pode adicionar campos personalizados extras às suas entidades.</p><p>Depois que um campo é adicionado, você não pode alterar sua chave ou tipo, e para campos do tipo opção você não pode remover opções nem alterar o estado de múltipla escolha. Se você remover um campo, os dados associados de todas as entidades serão excluídos.</p><p>A chave é como outros programas leem/gravam os dados; portanto, se o seu campo personalizado precisar se integrar a um programa de terceiros, certifique-se de configurá-la corretamente. O valor padrão é aplicado somente a novos itens.</p><p>Campos extras podem ser exibidos e ordenados nas visualizações de tabela. Campos de opção e booleanos também oferecem opções de filtro ali, e todos os tipos de campos extras permitem filtrar por valores vazios.</p><p>Para campos de carretel, ative \"Copiar do Filamento\" para que um novo carretel herde, no momento da criação, o valor de um campo de filamento com a mesma chave (a menos que o carretel defina o próprio valor).</p><p>Um campo \"Link\" armazena um valor curto por item (ex.: um número de artigo) e o transforma em um link clicável usando o modelo de URL do Link — coloque {} onde o valor deve entrar, ex.: https://www.amazon.com/dp/{}.</p>",
       "params": {
         "key": "Chave",
         "name": "Nome",
@@ -389,7 +636,9 @@
         "order": "Ordem",
         "default_value": "Valor Padrão",
         "choices": "Opções",
-        "multi_choice": "Múltipla Escolha"
+        "multi_choice": "Múltipla Escolha",
+        "copy_from_filament": "Copiar do Filamento",
+        "link_template": "URL do Link"
       },
       "field_type": {
         "text": "Texto",
@@ -399,7 +648,8 @@
         "float_range": "Intervalo Decimal",
         "datetime": "Data e Hora",
         "boolean": "Booleano",
-        "choice": "Opção"
+        "choice": "Opção",
+        "link": "Link"
       },
       "boolean_true": "Sim",
       "boolean_false": "Não",
@@ -416,6 +666,68 @@
         "tooltip": "O estilo pré-selecionado ao baixar uma amostra de filamento imprimível em 3D. Novos estilos podem ser contribuídos ao Spoolman em client/src/utils/swatch/styles.ts."
       },
       "preview_description": "Pré-visualização com dois filamentos de exemplo — o texto e o código QR são impressos automaticamente em preto ou branco, o que contrastar melhor com a cor do filamento:"
+    },
+    "import_export": {
+      "tab": "Importar / Exportar",
+      "export_title": "Exportar dados",
+      "export_help": "Baixe seus fabricantes, filamentos ou carretéis como CSV ou JSON. Os dados de fabricante e filamento são incluídos com os carretéis.",
+      "import_title": "Importar dados",
+      "import_help": "Envie um arquivo CSV ou JSON no mesmo formato de uma exportação. O arquivo inteiro é aplicado como uma única transação tudo-ou-nada; use primeiro uma simulação para pré-visualizar o resultado.",
+      "report_title": "Relatório de inventário",
+      "report_help": "Abra um resumo imprimível do seu estoque atual.",
+      "report_heading": "Relatório de Inventário do Spoolman",
+      "entities": {
+        "spools": "Carretéis",
+        "filaments": "Filamentos",
+        "vendors": "Fabricantes"
+      },
+      "modes": {
+        "create": "Criar novos",
+        "upsert": "Atualizar ou criar",
+        "skip_existing": "Ignorar existentes"
+      },
+      "dry_run": "Simulação",
+      "dry_run_prefix": "Simulação —",
+      "choose_file": "Escolher arquivo",
+      "validate": "Validar",
+      "import_button": "Importar",
+      "print_report": "Imprimir relatório",
+      "no_file": "Escolha um arquivo primeiro.",
+      "result": "Criados: {{created}}, atualizados: {{updated}}, ignorados: {{skipped}}.",
+      "import_errors": "Falha na importação",
+      "threemf": {
+        "title": "Importar um projeto 3MF fatiado",
+        "help": "Envie um .3mf fatiado do Bambu Studio ou do OrcaSlicer para ler quanto de cada filamento a impressão usou, associar aos seus carretéis e subtrair o uso em uma única etapa.",
+        "choose_file": "Escolher arquivo .3mf",
+        "no_filaments": "Nenhum uso de filamento foi encontrado neste 3MF.",
+        "no_match": "Nenhum carretel correspondente — escolha um",
+        "col_filament": "Filamento da impressão",
+        "col_used": "Usado",
+        "col_spool": "Carretel a ajustar",
+        "apply": "Aplicar uso",
+        "applied": "Uso registrado em {{count}} carretel(éis).",
+        "applied_partial": "Uso registrado em {{ok}} carretel(éis); {{fail}} com falha."
+      }
+    },
+    "printers": {
+      "tab": "Impressoras",
+      "description": "<p>Gerencie suas impressoras aqui. Assim que você tiver pelo menos uma, poderá atribuir um carretel a uma impressora no formulário de criação ou edição do carretel.</p>",
+      "add_title": "Adicionar impressora",
+      "edit_title": "Editar impressora",
+      "delete_confirm": "Excluir a impressora \"{{name}}\"? Os carretéis atribuídos a ela serão desvinculados, não excluídos."
+    },
+    "custom_links": {
+      "sidebar_tab": "Links da Barra Lateral",
+      "spool_tab": "Ações de Carretel",
+      "sidebar_description": "<p>Adicione seus próprios links à barra lateral esquerda, ex.: para a página do Mainsail ou do Fluidd da sua impressora. Eles abrem em uma nova aba.</p>",
+      "spool_description": "<p>Adicione botões de ação personalizados a cada carretel. A URL pode incluir os campos do carretel entre chaves — {id}, {filament_id}, {location}, {lot_nr}, {comment} — preenchidos por carretel, deixando ferramentas como o nfc2klipper ou o endpoint de carretel ativo do Moonraker a um clique de distância.</p>",
+      "name": "Nome",
+      "url": "URL",
+      "url_template": "Modelo de URL",
+      "url_template_help": "Use {id} onde o ID do carretel deve entrar, ex.: http://moonraker.local/...?id={id}",
+      "add_title": "Adicionar link",
+      "edit_title": "Editar link",
+      "delete_confirm": "Excluir este link?"
     }
   },
   "documentTitle": {
@@ -458,7 +770,29 @@
     "no_location": "Sem Local",
     "no_locations_help": "Esta página permite que você organize seus carretéis em locais, adicione alguns carretéis para começar!",
     "error_empty": "O nome não pode estar vazio",
-    "error_exists": "A localização já existe"
+    "error_exists": "A localização já existe",
+    "location": "Local",
+    "fields": {
+      "button": "Campos personalizados",
+      "title": "Campos personalizados — {{name}}",
+      "saved": "Campos do local salvos",
+      "save_error": "Falha ao salvar os campos do local",
+      "load_error": "Falha ao carregar o local"
+    },
+    "show": {
+      "name": "Nome",
+      "comment": "Comentário",
+      "spool_count": "Carretéis armazenados aqui",
+      "spools_here": "Carretéis neste local",
+      "no_spools": "Nenhum carretel está armazenado neste local."
+    },
+    "print": {
+      "title": "Imprimir Etiquetas de Local",
+      "button": "Imprimir etiquetas",
+      "description": "Selecione os locais para imprimir etiquetas QR escaneáveis.",
+      "select_placeholder": "Selecionar locais",
+      "none_selected": "Nenhum local selecionado"
+    }
   },
   "calibration": {
     "title": "Calibração",
@@ -603,5 +937,92 @@
     "tag_material": "Material",
     "tag_material_type": "Tipo de Material",
     "qidi_write_info": "As tags Qidi armazenam apenas material e cor. A tag será gravada com os códigos de material e cor Qidi mais próximos."
+  },
+  "errorBoundary": {
+    "title": "Algo deu errado",
+    "subTitle": "Esta página não pôde ser exibida. Se isso começou após alterar ou compartilhar configurações de visualização, redefini-las geralmente resolve o problema.",
+    "reset": "Redefinir configurações de visualização e recarregar",
+    "home": "Ir para a página inicial"
+  },
+  "apiToken": {
+    "title": "Token de API necessário",
+    "help": "Esta instância do Spoolman exige um token de API. Insira-o para continuar; ele fica armazenado neste navegador.",
+    "placeholder": "Token de API",
+    "submit": "Salvar token"
+  },
+  "auth": {
+    "logout": "Sair",
+    "login": {
+      "title": "Entrar",
+      "submit": "Entrar",
+      "username": "Nome de usuário",
+      "password": "Senha"
+    },
+    "roles": {
+      "admin": "Administrador",
+      "readonly": "Somente leitura"
+    },
+    "users": {
+      "tab": "Usuários",
+      "title": "Contas de usuário",
+      "help": "Crie contas para exigir login. Usuários somente leitura podem ver tudo, mas não podem fazer alterações. A primeira conta é sempre de administrador.",
+      "role": "Função",
+      "add": "Adicionar usuário",
+      "need_fields": "Informe um nome de usuário e uma senha.",
+      "created": "Usuário {{username}} criado.",
+      "reset_password": "Redefinir senha",
+      "reset_password_for": "Redefinir senha de {{username}}",
+      "reset_password_help": "Digite uma nova senha para este usuário.",
+      "password_reset": "Senha atualizada.",
+      "delete_confirm": "Excluir este usuário?"
+    }
+  },
+  "colorFilter": {
+    "button": "Cor",
+    "title": "Filtrar por cor semelhante",
+    "threshold": "Tolerância",
+    "help": "Mostrar itens cuja cor esteja dentro desta tolerância em relação à cor escolhida.",
+    "advanced": "Mais cores"
+  },
+  "theme": {
+    "label": "Tema",
+    "system": "Sistema",
+    "light": "Claro",
+    "dark": "Escuro"
+  },
+  "scan": {
+    "title": "Escanear",
+    "qr": "Código QR",
+    "nfc": "NFC",
+    "nfc_hint": "A leitura NFC não está disponível neste navegador. Use o Chrome no Android ou conecte um leitor NFC no servidor.",
+    "action": {
+      "open": "Abrir",
+      "move": "Mover carretel"
+    },
+    "move": {
+      "scan_spool": "Escaneie um carretel para mover.",
+      "scan_location": "Carretel #{{id}} selecionado. Agora escaneie o local de destino.",
+      "confirm_title": "Mover carretel?",
+      "confirm_content": "Mover o carretel #{{spool}} para \"{{location}}\"?",
+      "moved": "Carretel #{{spool}} movido para \"{{location}}\".",
+      "load_error": "Falha ao carregar o local escaneado."
+    },
+    "clear": {
+      "recognized": "Código de limpar carretel reconhecido. O Spoolman não mantém um carretel ativo; a limpeza fica por conta da sua impressora ou da integração com o Moonraker."
+    },
+    "barcode": {
+      "unknown_title": "Código de barras desconhecido",
+      "unknown_content": "Nenhum filamento tem o código de barras {{code}}. Criar um filamento e memorizar este código de barras?",
+      "create_filament": "Criar filamento",
+      "lookup_error": "Não foi possível consultar esse código de barras."
+    }
+  },
+  "printer": {
+    "printer": "Impressora",
+    "fields": {
+      "name": "Nome",
+      "comment": "Comentário",
+      "spool_count": "Carretéis"
+    }
   }
 }

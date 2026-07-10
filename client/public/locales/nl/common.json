@@ -21,7 +21,16 @@
     "clone": "Klonen",
     "clear": "Wissen",
     "saveAndAdd": "Opslaan en Toevoegen",
-    "continue": "Doorgaan"
+    "continue": "Doorgaan",
+    "search": "Zoeken",
+    "resetUsage": "Verbruik resetten",
+    "hideArchivedTooltip": "Terug naar de actieve spoelen",
+    "showArchivedTooltip": "Overschakelen naar de gearchiveerde spoelen",
+    "columns": "Kolommen",
+    "clearFiltersTooltip": "Alle filters en sortering resetten",
+    "labelsAndTags": "Labels & tags",
+    "export": "Exporteren",
+    "columnsTooltip": "Tabelkolommen kiezen, herschikken en verbergen"
   },
   "actions": {
     "create": "Aanmaken",
@@ -72,7 +81,18 @@
       "itemCopies": "Itemkopieën",
       "duplicateSettings": "Dupliceren",
       "saveSetting": "Voorinstelling opslaan",
-      "saveAsImage": "Opslaan als afbeelding"
+      "saveAsImage": "Opslaan als afbeelding",
+      "pageSizeMode": {
+        "label": "Paginaformaat",
+        "tooltip": "\"Automatisch\" laat de printer/browser de paginageometrie bepalen (standaard). \"Labelformaat aanhouden\" geeft een expliciet @page-formaat op basis van de papierafmetingen hierboven — gebruik dit voor rol-/labelprinters (bijv. Brother QL) zodat labels op het juiste formaat en in de juiste oriëntatie worden afgedrukt. Werkt het best in Chrome.",
+        "auto": "Automatisch (printerstandaard)",
+        "matchLabel": "Labelformaat aanhouden"
+      },
+      "saveAsZpl": "ZPL downloaden",
+      "invalidGeometry": "Het labelraster past niet op het papier",
+      "invalidGeometryHelp": "De marges en tussenruimte laten geen ruimte over voor de labels. Verklein de marges, tussenruimte, kolommen of rijen — of kies een groter papierformaat.",
+      "contentClipped": "Een deel van de labelinhoud valt weg",
+      "contentClippedHelp": "De inhoud van minstens één label past niet binnen het label en wordt bij het afdrukken afgesneden. Verklein de tekstgrootte, maak het sjabloon korter of gebruik minder kolommen/rijen zodat elk label groter is."
     },
     "qrcode": {
       "extruderTemp": "ET: {{temp}}",
@@ -111,7 +131,38 @@
       "exportButton": "Labels exporteren",
       "printFilamentTitle": "Filamentlabels afdrukken",
       "printSpoolTitle": "Spoellabels afdrukken",
-      "templateHelpFilament": "Gebruik {} om waarden van het filament-object als tekst in te voegen. Bijvoorbeeld, {id} wordt vervangen door het filament-id, of {vendor.name} wordt vervangen door de naam van de fabrikant. Als een waarde ontbreekt, wordt deze vervangen door \"?\". Een tweede set {} kan worden gebruikt om dit te verwijderen. Bovendien wordt alle tekst tussen de sets {} verwijderd als de waarde ontbreekt. Bijvoorbeeld, {Article: {article_number}} toont alleen het label als een filament een artikelnummer heeft. Sluit tekst in met dubbele asterisk ** om deze vet te maken. Klik op de knop om een lijst met alle beschikbare tags te bekijken."
+      "templateHelpFilament": "Gebruik {} om waarden van het filament-object als tekst in te voegen. Bijvoorbeeld, {id} wordt vervangen door het filament-id, of {vendor.name} wordt vervangen door de naam van de fabrikant. Als een waarde ontbreekt, wordt deze vervangen door \"?\". Een tweede set {} kan worden gebruikt om dit te verwijderen. Bovendien wordt alle tekst tussen de sets {} verwijderd als de waarde ontbreekt. Bijvoorbeeld, {Article: {article_number}} toont alleen het label als een filament een artikelnummer heeft. Sluit tekst in met dubbele asterisk ** om deze vet te maken. Klik op de knop om een lijst met alle beschikbare tags te bekijken.",
+      "textColumns": {
+        "label": "Tekstkolommen",
+        "tooltip": "Verdeel de labeltekst over dit aantal kolommen. Handig voor smalle labels met meerdere korte regels."
+      },
+      "qrPadding": "QR-witruimte",
+      "customPayload": {
+        "label": "Aangepaste QR-inhoud",
+        "tooltip": "Vervang de gescande QR-inhoud door een sjabloon (zelfde tags als het label). Laat leeg om de standaard Spoolman-inhoud te gebruiken. Een aangepaste waarde is binnen Spoolman alleen scanbaar als deze nog steeds overeenkomt met een herkend formaat (WEB+SPOOLMAN:S-{id} / F-{id} of een /spool/show/{id}-URL)."
+      },
+      "qrErrorLevel": {
+        "label": "QR-foutcorrectie",
+        "tooltip": "Hogere niveaus verdragen meer schade/vuil op het label, maar maken de QR-code dichter (moeilijker te scannen als hij klein is). H (hoogste) is de standaard."
+      },
+      "qrPlacement": {
+        "label": "QR-positie",
+        "tooltip": "Waar de QR-code staat ten opzichte van de labeltekst. Boven of onder plaatsen past goed bij hoge, smalle labels.",
+        "left": "Links",
+        "top": "Boven",
+        "bottom": "Onder"
+      },
+      "showColorSwatch": {
+        "label": "Kleurstaal afdrukken",
+        "tooltip": "Druk een klein gekleurd vakje met de filamentkleur af op het label."
+      },
+      "barcode1d": {
+        "label": "1D-barcode",
+        "tooltip": "Druk optioneel naast de QR-code een 1D-barcode van de QR-inhoud af, voor scanners die alleen lineaire barcodes lezen.",
+        "none": "Geen",
+        "code128": "Code 128"
+      },
+      "tooltip": "Druk labels af voor de geselecteerde rijen, of kies items op de volgende pagina"
     },
     "spoolSelect": {
       "selectedTotal_one": "{{count}} spoel geselecteerd",
@@ -120,7 +171,11 @@
       "showArchived": "Gearchiveerde tonen",
       "title": "Spoelen selecteren",
       "selectAll": "Alles (de)selecteren",
-      "noSpoolsSelected": "U heeft geen spoelen geselecteerd."
+      "noSpoolsSelected": "U heeft geen spoelen geselecteerd.",
+      "hidePrinted": "Reeds afgedrukte verbergen",
+      "reprintConfirmTitle": "Labels opnieuw afdrukken?",
+      "reprintConfirmContent_one": "{{count}} geselecteerde spoel heeft al een afgedrukt label. Opnieuw afdrukken?",
+      "reprintConfirmContent_other": "{{count}} geselecteerde spoelen hebben al afgedrukte labels. Opnieuw afdrukken?"
     },
     "filamentSelect": {
       "title": "Filamenten selecteren",
@@ -128,7 +183,11 @@
       "noFilamentsSelected": "U heeft geen filamenten geselecteerd.",
       "selectAll": "Alles (de)selecteren",
       "selectedTotal_one": "{{count}} filament geselecteerd",
-      "selectedTotal_other": "{{count}} filamenten geselecteerd"
+      "selectedTotal_other": "{{count}} filamenten geselecteerd",
+      "hidePrinted": "Reeds afgedrukte verbergen",
+      "reprintConfirmTitle": "Labels opnieuw afdrukken?",
+      "reprintConfirmContent_one": "{{count}} geselecteerd filament heeft al een afgedrukt label. Opnieuw afdrukken?",
+      "reprintConfirmContent_other": "{{count}} geselecteerde filamenten hebben al afgedrukte labels. Opnieuw afdrukken?"
     }
   },
   "notifications": {
@@ -214,7 +273,13 @@
       "initial_weight": "Initieel gewicht",
       "spool_weight": "Leeg gewicht",
       "filament_internal": "Intern",
-      "filament_external": "Extern"
+      "filament_external": "Extern",
+      "filament_name_only": "Naam",
+      "vendor_name": "Fabrikant",
+      "color": "Kleur",
+      "printer": "Printer",
+      "diameter": "Diameter",
+      "color_hex": "Kleur"
     },
     "titles": {
       "archive": "Spoel archiveren",
@@ -236,11 +301,16 @@
       "price": "Prijs van een volledige spoel. Als dit niet wordt ingevuld, wordt in plaats daarvan uitgegaan van de prijs van het filament.",
       "initial_weight": "Het initiële gewicht van het filament op de spoel (nettogewicht). Als dit niet is opgegeven, wordt het gewicht van het filament-object gebruikt.",
       "spool_weight": "Het gewicht van de spoel als deze leeg is. Laat dit leeg om de waarde van het filament of de fabrikant te gebruiken.",
-      "external_filament": "U heeft een filament uit de externe database geselecteerd. Er wordt automatisch een filament-object (en mogelijk een fabrikant-object) gemaakt wanneer u deze spoel maakt. Hierdoor kunnen dubbele filament-objecten ontstaan als u al een filament-object voor dit filament hebt gemaakt."
+      "external_filament": "U heeft een filament uit de externe database geselecteerd. Er wordt automatisch een filament-object (en mogelijk een fabrikant-object) gemaakt wanneer u deze spoel maakt. Hierdoor kunnen dubbele filament-objecten ontstaan als u al een filament-object voor dit filament hebt gemaakt.",
+      "printer": "De printer waarop deze spoel momenteel geladen is. Beheer uw printers in Instellingen.",
+      "diameter": "Gemeten filamentdiameter voor deze specifieke spoel, gebruikt in lengteberekeningen. Laat leeg om de diameter van het filament te gebruiken.",
+      "color_hex": "Optionele kleur voor deze specifieke spoel, die de kleur van het filament overschrijft. Wis om de kleur van het filament te gebruiken."
     },
     "spool": "Spoelen",
     "messages": {
-      "archive": "Weet u zeker dat u deze spoel wil archiveren?"
+      "archive": "Weet u zeker dat u deze spoel wil archiveren?",
+      "update_error": "Kon de wijzigingen niet opslaan. Probeer het opnieuw.",
+      "reset_usage": "Het gebruikte gewicht van deze spoel op nul zetten? Dit wist de datums van eerste/laatste gebruik."
     },
     "form": {
       "new_location_prompt": "Voer een nieuwe locatie in",
@@ -255,6 +325,69 @@
     },
     "formats": {
       "last_used": "Laatst gebruikt {{date}}"
+    },
+    "custom_actions": "Acties",
+    "bulk": {
+      "edit": "Bewerken",
+      "clear_selection": "Selectie wissen",
+      "edit_help": "Vink een veld aan om het op elke geselecteerde spoel te wijzigen. Niet-aangevinkte velden blijven ongewijzigd.",
+      "apply": "Toepassen",
+      "nothing_selected": "Vink minstens één veld aan om te wijzigen.",
+      "selected_one": "{{count}} geselecteerd",
+      "selected_other": "{{count}} geselecteerd",
+      "edit_title_one": "{{count}} spoel bewerken",
+      "edit_title_other": "{{count}} spoelen bewerken",
+      "applied_one": "{{count}} spoel bijgewerkt.",
+      "applied_other": "{{count}} spoelen bijgewerkt.",
+      "applied_partial_one": "{{count}} spoel bijgewerkt, {{failed}} mislukt.",
+      "applied_partial_other": "{{count}} spoelen bijgewerkt, {{failed}} mislukt.",
+      "archive_confirm_one": "{{count}} spoel archiveren?",
+      "archive_confirm_other": "{{count}} spoelen archiveren?",
+      "unarchive_confirm_one": "{{count}} spoel terugzetten?",
+      "unarchive_confirm_other": "{{count}} spoelen terugzetten?"
+    },
+    "weigh": {
+      "button": "Spoelen wegen",
+      "title": "Spoelen wegen",
+      "help": "Zoek een spoel, voer de meting in en kies Opslaan & volgende om de volgende te wegen zonder te sluiten.",
+      "spool": "Spoel",
+      "search_placeholder": "Zoeken op ID, filament, lotnummer…",
+      "save_next": "Opslaan & volgende",
+      "done": "Klaar",
+      "updated": "{{name}} bijgewerkt",
+      "pick_spool": "Selecteer eerst een spoel.",
+      "tooltip": "Meerdere spoelen achter elkaar opnieuw wegen"
+    },
+    "view": {
+      "grid": "Rasterweergave",
+      "table": "Tabelweergave",
+      "grid_tooltip": "Spoelen bekijken als kleurtegels",
+      "table_tooltip": "Terug naar de volledige tabel"
+    },
+    "filament_extra_fields": "Filamentvelden",
+    "sibling_spools": {
+      "title": "Andere spoelen van dit filament",
+      "button": "Verwante spoelen",
+      "tooltip": "Alle spoelen van dit filament weergeven"
+    },
+    "usage_history": {
+      "title": "Verbruiksgeschiedenis",
+      "time": "Tijd",
+      "type": "Type",
+      "change": "Wijziging",
+      "comment": "Opmerking",
+      "empty": "Nog geen verbruik geregistreerd."
+    },
+    "weight_history": {
+      "title": "Gewichtsgeschiedenis",
+      "chart_label": "Gemeten gewicht in de tijd",
+      "idle_gain": "Het gemeten gewicht steeg met {{grams}} g tussen metingen — de spoel heeft mogelijk vocht opgenomen. (Experimenteel)"
+    },
+    "totals": {
+      "shown_one": "{{count}} spoel getoond",
+      "shown_other": "{{count}} spoelen getoond",
+      "selected_one": "{{count}} spoel geselecteerd",
+      "selected_other": "{{count}} spoelen geselecteerd"
     }
   },
   "filament": {
@@ -265,7 +398,11 @@
       "price": "Prijs van een volledige spoel.",
       "weight": "Het filamentgewicht van een volle spoel (nettogewicht). Dit mag niet het gewicht van de spoel zelf omvatten, alleen het filament. Dit staat meestal op de verpakking.",
       "material": "Bv. PLA, ABS, PETG, enz.",
-      "multi_color_direction": "Filamenten kunnen op twee manieren meerdere kleuren hebben: door coëxtrusie, zoals tweekleurige filamenten met consistente meerkleuren, of door kleurveranderingen in de lengterichting, zoals verloopfilamenten die van kleur veranderen langs de spoel."
+      "multi_color_direction": "Filamenten kunnen op twee manieren meerdere kleuren hebben: door coëxtrusie, zoals tweekleurige filamenten met consistente meerkleuren, of door kleurveranderingen in de lengterichting, zoals verloopfilamenten die van kleur veranderen langs de spoel.",
+      "low_stock_threshold": "Markeer dit filament om bij te bestellen wanneer het totale resterende gewicht van alle spoelen onder dit aantal grammen zakt.",
+      "reserve_count": "Aantal ongeopende reservespoelen dat u op voorraad heeft, bijgehouden zonder voor elk een spoel aan te maken.",
+      "settings_extruder_temp_range": "Door de fabrikant aanbevolen temperatuurbereik van de extruder (min–max). Optioneel, laat leeg als u maar één waarde heeft.",
+      "settings_bed_temp_range": "Door de fabrikant aanbevolen temperatuurbereik van het bed (min–max). Optioneel, laat leeg als u maar één waarde heeft."
     },
     "fields": {
       "material": "Materiaal",
@@ -289,7 +426,21 @@
       "single_color": "Enkel",
       "multi_color": "Meervoudig",
       "coaxial": "Gecoëxtrudeerde",
-      "longitudinal": "Longitudinaal"
+      "longitudinal": "Longitudinaal",
+      "color_hue": "Kleur",
+      "spool_count": "Spoelen",
+      "remaining_weight": "Op voorraad",
+      "low_stock_threshold": "Drempel lage voorraad",
+      "reserve_count": "Reservespoelen",
+      "settings_extruder_temp_range": "Temperatuurbereik extruder",
+      "settings_bed_temp_range": "Temperatuurbereik bed",
+      "temp_range_min": "Min",
+      "temp_range_max": "Max",
+      "spool_type": "Spoeltype",
+      "finish": "Afwerking",
+      "pattern": "Patroon",
+      "translucent": "Doorschijnend",
+      "glow": "Lichtgevend in het donker"
     },
     "titles": {
       "clone": "Filament klonen",
@@ -308,12 +459,17 @@
       "import_3dfp_help": "Vul automatisch informatie in door deze op te halen van 3dfilamentprofiles.com",
       "import_3dfp_placeholder": "bv. 12875",
       "import_3dfp_success": "Filament succesvol opgehaald van 3dfilamentprofiles.com",
-      "import_3dfp_error": "Ophalen van filamentgegevens van 3dfilamentprofiles.com mislukt"
+      "import_3dfp_error": "Ophalen van filamentgegevens van 3dfilamentprofiles.com mislukt",
+      "must_be_positive": "Moet groter zijn dan 0.",
+      "new_vendor_prompt": "Een nieuwe fabrikant toevoegen",
+      "vendor_created": "Fabrikant aangemaakt",
+      "vendor_create_error": "Aanmaken van fabrikant mislukt"
     },
     "buttons": {
       "add_spool": "Spoel toevoegen",
       "fetch": "Ophalen",
-      "download_swatch": "Kleurstaal"
+      "download_swatch": "Kleurstaal",
+      "download_slicer": "Slicerprofiel"
     },
     "swatch": {
       "title": "3D-printbare kleurstaal",
@@ -331,6 +487,46 @@
         "card": "Kaart"
       },
       "download": ".3mf downloaden"
+    },
+    "spool_type_options": {
+      "plastic": "Kunststof",
+      "cardboard": "Karton",
+      "metal": "Metaal"
+    },
+    "finish_options": {
+      "matte": "Mat",
+      "glossy": "Glanzend"
+    },
+    "pattern_options": {
+      "marble": "Marmer",
+      "sparkle": "Glitter"
+    },
+    "tabs": {
+      "details": "Details"
+    },
+    "bulk": {
+      "edit": "Bewerken",
+      "clear_selection": "Selectie wissen",
+      "edit_help": "Vink een veld aan om het op elk geselecteerd filament te wijzigen. Niet-aangevinkte velden blijven ongewijzigd.",
+      "apply": "Toepassen",
+      "nothing_selected": "Vink minstens één veld aan om te wijzigen.",
+      "selected_one": "{{count}} geselecteerd",
+      "selected_other": "{{count}} geselecteerd",
+      "edit_title_one": "{{count}} filament bewerken",
+      "edit_title_other": "{{count}} filamenten bewerken",
+      "applied_one": "{{count}} filament bijgewerkt.",
+      "applied_other": "{{count}} filamenten bijgewerkt.",
+      "applied_partial_one": "{{count}} filament bijgewerkt, {{failed}} mislukt.",
+      "applied_partial_other": "{{count}} filamenten bijgewerkt, {{failed}} mislukt."
+    },
+    "view": {
+      "grid": "Rasterweergave",
+      "table": "Tabelweergave",
+      "grid_tooltip": "Filamenten bekijken als kleurtegels",
+      "table_tooltip": "Terug naar de volledige tabel"
+    },
+    "messages": {
+      "update_error": "Kon de wijzigingen niet opslaan. Probeer het opnieuw."
     }
   },
   "scanner": {
@@ -343,7 +539,9 @@
       "notFound": "Geen camera gevonden.",
       "streamApiNotSupported": "De browser ondersteunt de MediaStream API niet."
     },
-    "description": "Scan een Spoolman QR-Code om details van de spoel te tonen."
+    "description": "Scan een Spoolman QR-Code om details van de spoel te tonen.",
+    "camera_auto": "Automatische camera",
+    "camera_n": "Camera {{n}}"
   },
   "vendor": {
     "titles": {
@@ -352,7 +550,8 @@
       "clone": "Fabrikant klonen",
       "create": "Fabrikant maken",
       "list": "Fabrikanten",
-      "show_title": "[Fabrikant #{{id}}] {{name}}"
+      "show_title": "[Fabrikant #{{id}}] {{name}}",
+      "view_spools": "Spoelen bekijken"
     },
     "fields": {
       "registered": "Geregistreerd",
@@ -360,11 +559,14 @@
       "name": "Naam",
       "id": "ID",
       "empty_spool_weight": "Gewicht lege spoel",
-      "external_id": "Extern ID"
+      "external_id": "Extern ID",
+      "filament_count": "Filamenten",
+      "spool_count": "Spoelen"
     },
     "vendor": "Fabrikanten",
     "form": {
-      "vendor_updated": "Deze fabrikant is bijgewerkt door iemand/iets anders sinds je deze pagina geopend hebt. De veranderingen worden overschreven als je opslaat!"
+      "vendor_updated": "Deze fabrikant is bijgewerkt door iemand/iets anders sinds je deze pagina geopend hebt. De veranderingen worden overschreven als je opslaat!",
+      "duplicate_name_warning": "Er bestaat al een fabrikant met deze naam."
     },
     "fields_help": {
       "empty_spool_weight": "Het gewicht van een lege spoel van deze fabrikant."
@@ -403,7 +605,33 @@
     "no_recent": "Geen recent gebruikte spoelen",
     "by_material": "Per materiaal",
     "by_location": "Per locatie",
-    "by_vendor": "Per fabrikant"
+    "by_vendor": "Per fabrikant",
+    "all_spools": "Alle spoelen",
+    "no_spools": "Nog geen spoelen",
+    "shopping_list": "Bestellijst",
+    "shopping_list_empty": "Geen filamenten onder hun drempel voor lage voorraad.",
+    "usage": {
+      "tab": "Verbruik",
+      "empty": "Nog geen filamentverbruik geregistreerd.",
+      "loading": "Laden...",
+      "bucket": {
+        "day": "Dag",
+        "week": "Week",
+        "month": "Maand",
+        "year": "Jaar"
+      }
+    },
+    "create": {
+      "spool": "Nieuwe spoel",
+      "filament": "Nieuw filament",
+      "vendor": "Nieuwe fabrikant"
+    },
+    "kpi": {
+      "this_month": "deze maand",
+      "top": "top",
+      "materials_one": "{{count}} materiaal",
+      "materials_other": "{{count}} materialen"
+    }
   },
   "settings": {
     "header": "Instellingen",
@@ -419,6 +647,10 @@
       "round_prices": {
         "label": "Afgeronde prijzen",
         "tooltip": "Rond prijzen af op het dichtstbijzijnde gehele getal."
+      },
+      "unit_scaling": {
+        "label": "Grote eenheden schalen",
+        "tooltip": "Toon grote gewichten en lengtes automatisch geschaald (bijv. 1,5 kg of 64,37 m) in plaats van ruwe grammen/millimeters in de lijst- en detailweergaven. Opgeslagen waarden en de API blijven ongewijzigd."
       }
     },
     "extra_fields": {
@@ -431,7 +663,9 @@
         "order": "Volgorde",
         "default_value": "Standaardwaarde",
         "choices": "Keuzes",
-        "multi_choice": "Meerkeuze"
+        "multi_choice": "Meerkeuze",
+        "copy_from_filament": "Kopiëren van filament",
+        "link_template": "Link-URL"
       },
       "field_type": {
         "text": "Tekst",
@@ -441,7 +675,8 @@
         "float_range": "Bereik van kommagetallen",
         "datetime": "Datum/tijd",
         "boolean": "Booleaanse waarde",
-        "choice": "Keuze"
+        "choice": "Keuze",
+        "link": "Link"
       },
       "boolean_true": "Ja",
       "boolean_false": "Nee",
@@ -450,7 +685,7 @@
       "key_not_changed": "Key niet gewijzigd.",
       "delete_confirm": "Veld {{name}} verwijderen?",
       "delete_confirm_description": "Hierdoor worden het veld en alle bijbehorende gegevens voor alle entiteiten verwijderd.",
-      "description": "<p>Hier kunt u extra aangepaste velden toevoegen aan uw entiteiten.</p><p>Zodra een veld is toegevoegd, kunt u de key of het type ervan niet wijzigen, en voor velden met keuzetypes kunt u geen keuzes verwijderen of de meervoudige velden wijzigen. Als u een veld verwijdert, worden de bijbehorende gegevens voor alle entiteiten verwijderd.</p><p>De key is hoe andere programma's de gegevens lezen/schrijven, dus of uw aangepaste veld moet worden geïntegreerd met een derde partij programma, zorg ervoor dat u het correct instelt. De standaardwaarde wordt alleen toegepast op nieuwe items.</p><p>Extra velden kunnen niet worden gesorteerd of gefilterd in de tabelweergaven.</p>"
+      "description": "<p>Hier kunt u extra aangepaste velden toevoegen aan uw entiteiten.</p><p>Zodra een veld is toegevoegd, kunt u de key of het type ervan niet meer wijzigen, en voor keuzevelden kunt u geen keuzes verwijderen of de meerkeuze-instelling wijzigen. Als u een veld verwijdert, worden de bijbehorende gegevens voor alle entiteiten verwijderd.</p><p>De key is waaronder andere programma's de gegevens lezen/schrijven; als uw aangepaste veld dus met een programma van derden moet integreren, zorg er dan voor dat u deze correct instelt. De standaardwaarde wordt alleen toegepast op nieuwe items.</p><p>Extra velden kunnen worden getoond en gesorteerd in de tabelweergaven. Keuze- en booleaanse velden bieden daar ook filteropties, en alle typen extra velden ondersteunen filteren op lege waarden.</p><p>Schakel voor spoelvelden \"Kopiëren van filament\" in om een nieuwe spoel bij het aanmaken de waarde te laten overnemen van een filamentveld met dezelfde key (tenzij de spoel een eigen waarde instelt).</p><p>Een \"Link\"-veld slaat per item een korte waarde op (bijv. een artikelnummer) en maakt er een klikbare link van met behulp van het Link-URL-sjabloon — zet {} waar de waarde moet komen, bijv. https://www.amazon.com/dp/{}.</p>"
     },
     "settings": "Instellingen",
     "swatch": {
@@ -460,6 +695,68 @@
         "tooltip": "De stijl die vooraf geselecteerd is bij het downloaden van een 3D-printbare filamentstaal. Nieuwe stijlen kunnen aan Spoolman worden bijgedragen in client/src/utils/swatch/styles.ts."
       },
       "preview_description": "Voorbeeld met twee voorbeeldfilamenten — de tekst en QR-code worden automatisch in zwart of wit geprint, afhankelijk van wat het best contrasteert met de filamentkleur:"
+    },
+    "import_export": {
+      "tab": "Import / Export",
+      "export_title": "Gegevens exporteren",
+      "export_help": "Download uw fabrikanten, filamenten of spoelen als CSV of JSON. Fabrikant- en filamentgegevens worden bij spoelen meegeleverd.",
+      "import_title": "Gegevens importeren",
+      "import_help": "Upload een CSV- of JSON-bestand in dezelfde vorm als een export. Het hele bestand wordt toegepast als één alles-of-niets-transactie; doe eerst een proefrun om het resultaat te bekijken.",
+      "report_title": "Voorraadrapport",
+      "report_help": "Open een afdrukbaar overzicht van uw huidige voorraad.",
+      "report_heading": "Spoolman-voorraadrapport",
+      "entities": {
+        "spools": "Spoelen",
+        "filaments": "Filamenten",
+        "vendors": "Fabrikanten"
+      },
+      "modes": {
+        "create": "Nieuw aanmaken",
+        "upsert": "Bijwerken of aanmaken",
+        "skip_existing": "Bestaande overslaan"
+      },
+      "dry_run": "Proefrun",
+      "dry_run_prefix": "Proefrun —",
+      "choose_file": "Bestand kiezen",
+      "validate": "Valideren",
+      "import_button": "Importeren",
+      "print_report": "Rapport afdrukken",
+      "no_file": "Kies eerst een bestand.",
+      "result": "{{created}} aangemaakt, {{updated}} bijgewerkt, {{skipped}} overgeslagen.",
+      "import_errors": "Import mislukt",
+      "threemf": {
+        "title": "Een gesliced 3MF-project importeren",
+        "help": "Upload een gesliced .3mf-bestand uit Bambu Studio of OrcaSlicer om uit te lezen hoeveel van elk filament de print heeft gebruikt, dit aan uw spoelen te koppelen en het verbruik in één stap af te trekken.",
+        "choose_file": ".3mf-bestand kiezen",
+        "no_filaments": "Geen filamentverbruik gevonden in deze 3MF.",
+        "no_match": "Geen passende spoel — kies er een",
+        "col_filament": "Printfilament",
+        "col_used": "Gebruikt",
+        "col_spool": "Aan te passen spoel",
+        "apply": "Verbruik toepassen",
+        "applied": "Verbruik geregistreerd op {{count}} spoel(en).",
+        "applied_partial": "Verbruik geregistreerd op {{ok}} spoel(en); {{fail}} mislukt."
+      }
+    },
+    "printers": {
+      "tab": "Printers",
+      "description": "<p>Beheer hier uw printers. Zodra u er minstens één heeft, kunt u een spoel aan een printer toewijzen via het aanmaak- of bewerkformulier van de spoel.</p>",
+      "add_title": "Printer toevoegen",
+      "edit_title": "Printer bewerken",
+      "delete_confirm": "Printer \"{{name}}\" verwijderen? Spoelen die eraan zijn toegewezen worden losgekoppeld, niet verwijderd."
+    },
+    "custom_links": {
+      "sidebar_tab": "Zijbalklinks",
+      "spool_tab": "Spoelacties",
+      "sidebar_description": "<p>Voeg uw eigen links toe aan de linkerzijbalk, bijv. naar de Mainsail- of Fluidd-pagina van uw printer. Ze openen in een nieuw tabblad.</p>",
+      "spool_description": "<p>Voeg aangepaste actieknoppen toe aan elke spoel. De URL kan de velden van de spoel tussen accolades bevatten — {id}, {filament_id}, {location}, {lot_nr}, {comment} — die per spoel worden ingevuld, zodat tools als nfc2klipper of het active-spool-eindpunt van Moonraker één klik verwijderd zijn.</p>",
+      "name": "Naam",
+      "url": "URL",
+      "url_template": "URL-sjabloon",
+      "url_template_help": "Gebruik {id} waar de spoel-ID moet komen, bijv. http://moonraker.local/...?id={id}",
+      "add_title": "Link toevoegen",
+      "edit_title": "Link bewerken",
+      "delete_confirm": "Deze link verwijderen?"
     }
   },
   "locations": {
@@ -468,7 +765,29 @@
     "locations": "Locaties",
     "new_location": "Nieuwe locatie",
     "error_empty": "Naam mag niet leeg zijn",
-    "error_exists": "Locatie bestaat al"
+    "error_exists": "Locatie bestaat al",
+    "location": "Locatie",
+    "fields": {
+      "button": "Aangepaste velden",
+      "title": "Aangepaste velden — {{name}}",
+      "saved": "Locatievelden opgeslagen",
+      "save_error": "Opslaan van locatievelden mislukt",
+      "load_error": "Laden van locatie mislukt"
+    },
+    "show": {
+      "name": "Naam",
+      "comment": "Opmerking",
+      "spool_count": "Spoelen hier opgeslagen",
+      "spools_here": "Spoelen op deze locatie",
+      "no_spools": "Er zijn geen spoelen opgeslagen op deze locatie."
+    },
+    "print": {
+      "title": "Locatielabels afdrukken",
+      "button": "Labels afdrukken",
+      "description": "Selecteer de locaties waarvoor u scanbare QR-labels wilt afdrukken.",
+      "select_placeholder": "Locaties selecteren",
+      "none_selected": "Geen locaties geselecteerd"
+    }
   },
   "calibration": {
     "title": "Kalibratie",
@@ -613,5 +932,92 @@
     "tag_material": "Materiaal",
     "tag_material_type": "Materiaaltype",
     "qidi_write_info": "Qidi-tags slaan alleen materiaal en kleur op. De tag wordt geschreven met de best passende Qidi-materiaal- en kleurcodes."
+  },
+  "errorBoundary": {
+    "title": "Er is iets misgegaan",
+    "subTitle": "Deze pagina kon niet worden weergegeven. Als dit begon na het wijzigen of delen van weergave-instellingen, lost het resetten daarvan het meestal op.",
+    "reset": "Weergave-instellingen resetten & herladen",
+    "home": "Ga naar de startpagina"
+  },
+  "apiToken": {
+    "title": "API-token vereist",
+    "help": "Deze Spoolman-installatie vereist een API-token. Voer het in om door te gaan; het wordt in deze browser opgeslagen.",
+    "placeholder": "API-token",
+    "submit": "Token opslaan"
+  },
+  "auth": {
+    "logout": "Uitloggen",
+    "login": {
+      "title": "Inloggen",
+      "submit": "Inloggen",
+      "username": "Gebruikersnaam",
+      "password": "Wachtwoord"
+    },
+    "roles": {
+      "admin": "Beheerder",
+      "readonly": "Alleen-lezen"
+    },
+    "users": {
+      "tab": "Gebruikers",
+      "title": "Gebruikersaccounts",
+      "help": "Maak accounts aan om inloggen verplicht te maken. Alleen-lezen gebruikers kunnen alles bekijken, maar niets wijzigen. Het eerste account is altijd een beheerder.",
+      "role": "Rol",
+      "add": "Gebruiker toevoegen",
+      "need_fields": "Voer een gebruikersnaam en wachtwoord in.",
+      "created": "Gebruiker {{username}} aangemaakt.",
+      "reset_password": "Wachtwoord resetten",
+      "reset_password_for": "Wachtwoord resetten voor {{username}}",
+      "reset_password_help": "Voer een nieuw wachtwoord in voor deze gebruiker.",
+      "password_reset": "Wachtwoord bijgewerkt.",
+      "delete_confirm": "Deze gebruiker verwijderen?"
+    }
+  },
+  "colorFilter": {
+    "button": "Kleur",
+    "title": "Filteren op vergelijkbare kleur",
+    "threshold": "Tolerantie",
+    "help": "Toon items waarvan de kleur binnen deze tolerantie van de gekozen kleur ligt.",
+    "advanced": "Meer kleuren"
+  },
+  "theme": {
+    "label": "Thema",
+    "system": "Systeem",
+    "light": "Licht",
+    "dark": "Donker"
+  },
+  "scan": {
+    "title": "Scannen",
+    "qr": "QR-code",
+    "nfc": "NFC",
+    "nfc_hint": "NFC-scannen is niet beschikbaar in deze browser. Gebruik Chrome op Android, of sluit een NFC-lezer op de server aan.",
+    "action": {
+      "open": "Openen",
+      "move": "Spoel verplaatsen"
+    },
+    "move": {
+      "scan_spool": "Scan een spoel om te verplaatsen.",
+      "scan_location": "Spoel #{{id}} geselecteerd. Scan nu de bestemmingslocatie.",
+      "confirm_title": "Spoel verplaatsen?",
+      "confirm_content": "Spoel #{{spool}} verplaatsen naar \"{{location}}\"?",
+      "moved": "Spoel #{{spool}} verplaatst naar \"{{location}}\".",
+      "load_error": "Laden van de gescande locatie mislukt."
+    },
+    "clear": {
+      "recognized": "Code voor 'spoel wissen' herkend. Spoolman heeft geen actieve spoel; uw printer of Moonraker-integratie handelt het wissen af."
+    },
+    "barcode": {
+      "unknown_title": "Onbekende barcode",
+      "unknown_content": "Geen enkel filament heeft de barcode {{code}}. Een filament aanmaken en deze barcode onthouden?",
+      "create_filament": "Filament aanmaken",
+      "lookup_error": "Kon die barcode niet opzoeken."
+    }
+  },
+  "printer": {
+    "printer": "Printer",
+    "fields": {
+      "name": "Naam",
+      "comment": "Opmerking",
+      "spool_count": "Spoelen"
+    }
   }
 }

@@ -28,7 +28,16 @@
     "notAccessTitle": "Nie masz zezwolenia na dostęp",
     "clearFilters": "Wyczyść filtry",
     "saveAndAdd": "Zapisz i dodaj",
-    "continue": "Kontynuuj"
+    "continue": "Kontynuuj",
+    "search": "Szukaj",
+    "resetUsage": "Resetuj zużycie",
+    "hideArchivedTooltip": "Wróć do aktywnych szpul",
+    "showArchivedTooltip": "Przełącz na zarchiwizowane szpule",
+    "columns": "Kolumny",
+    "clearFiltersTooltip": "Zresetuj wszystkie filtry i sortowanie",
+    "labelsAndTags": "Etykiety i tagi",
+    "export": "Eksportuj",
+    "columnsTooltip": "Wybierz, uporządkuj i ukryj kolumny tabeli"
   },
   "spool": {
     "titles": {
@@ -64,7 +73,13 @@
       "initial_weight": "Waga początkowa",
       "spool_weight": "Waga pusta",
       "filament_internal": "Wewnętrzne",
-      "filament_external": "Zewnętrzne"
+      "filament_external": "Zewnętrzne",
+      "filament_name_only": "Nazwa",
+      "vendor_name": "Producent",
+      "color": "Kolor",
+      "printer": "Drukarka",
+      "diameter": "Średnica",
+      "color_hex": "Kolor"
     },
     "fields_help": {
       "location": "Wpisz gdzie znajduje się szpula, jeśli masz wiele lokalizacji, w których przechowujesz szpule.",
@@ -76,10 +91,15 @@
       "price": "Cena pełnej szpuli. Jeśli nie ustawiona, cena filamentu będzie domyślna.",
       "initial_weight": "Masa początkowa filamentu(netto). Może być podana przez producenta, ale możesz ustawić dla każdej szpuli, aby uwzględnić ewentualne niedokładności.",
       "spool_weight": "Waga pustej szpuli. Pozostaw puste, aby użyć wartości z filamentu lub od producenta.",
-      "external_filament": "Wybrałeś filament z zewnętrznej bazy. Element filamentu (możliwe też że element producenta) zostanie stworzony automatycznie gdy stworzysz szpulę. Może to spowodować utworzenie się duplikatów elementów filamentu jeżeli już stworzyłeś element filamentu dla tego filamentu."
+      "external_filament": "Wybrałeś filament z zewnętrznej bazy. Element filamentu (możliwe też że element producenta) zostanie stworzony automatycznie gdy stworzysz szpulę. Może to spowodować utworzenie się duplikatów elementów filamentu jeżeli już stworzyłeś element filamentu dla tego filamentu.",
+      "printer": "Drukarka, na której ta szpula jest obecnie załadowana. Drukarkami zarządzasz w Ustawieniach.",
+      "diameter": "Zmierzona średnica filamentu dla tej konkretnej szpuli, używana w obliczeniach długości. Pozostaw puste, aby użyć średnicy filamentu.",
+      "color_hex": "Opcjonalny kolor tej konkretnej szpuli, nadpisujący kolor filamentu. Wyczyść, aby użyć koloru filamentu."
     },
     "messages": {
-      "archive": "Czy na pewno chcesz zarchiwizować tę szpulę?"
+      "archive": "Czy na pewno chcesz zarchiwizować tę szpulę?",
+      "update_error": "Nie udało się zapisać zmian. Spróbuj ponownie.",
+      "reset_usage": "Wyzerować zużytą wagę tej szpuli? Spowoduje to wyczyszczenie dat pierwszego/ostatniego użycia."
     },
     "form": {
       "new_location_prompt": "Wprowadź nową lokalizację",
@@ -94,6 +114,77 @@
     },
     "formats": {
       "last_used": "Ostatnio użyty {{date}}"
+    },
+    "custom_actions": "Akcje",
+    "bulk": {
+      "edit": "Edytuj",
+      "clear_selection": "Wyczyść zaznaczenie",
+      "edit_help": "Zaznacz pole, aby zmienić je we wszystkich wybranych szpulach. Niezaznaczone pola pozostaną bez zmian.",
+      "apply": "Zastosuj",
+      "nothing_selected": "Zaznacz co najmniej jedno pole do zmiany.",
+      "selected_one": "Wybrano {{count}}",
+      "selected_few": "Wybrano {{count}}",
+      "selected_many": "Wybrano {{count}}",
+      "edit_title_one": "Edytuj {{count}} szpulę",
+      "edit_title_few": "Edytuj {{count}} szpule",
+      "edit_title_many": "Edytuj {{count}} szpul",
+      "applied_one": "Zaktualizowano {{count}} szpulę.",
+      "applied_few": "Zaktualizowano {{count}} szpule.",
+      "applied_many": "Zaktualizowano {{count}} szpul.",
+      "applied_partial_one": "Zaktualizowano {{count}} szpulę, nie powiodło się: {{failed}}.",
+      "applied_partial_few": "Zaktualizowano {{count}} szpule, nie powiodło się: {{failed}}.",
+      "applied_partial_many": "Zaktualizowano {{count}} szpul, nie powiodło się: {{failed}}.",
+      "archive_confirm_one": "Zarchiwizować {{count}} szpulę?",
+      "archive_confirm_few": "Zarchiwizować {{count}} szpule?",
+      "archive_confirm_many": "Zarchiwizować {{count}} szpul?",
+      "unarchive_confirm_one": "Odarchiwizować {{count}} szpulę?",
+      "unarchive_confirm_few": "Odarchiwizować {{count}} szpule?",
+      "unarchive_confirm_many": "Odarchiwizować {{count}} szpul?"
+    },
+    "weigh": {
+      "button": "Zważ szpule",
+      "title": "Ważenie szpul",
+      "help": "Znajdź szpulę, wprowadź pomiar, a następnie wybierz „Zapisz i następna”, aby zważyć kolejną bez zamykania okna.",
+      "spool": "Szpula",
+      "search_placeholder": "Szukaj po ID, filamencie, numerze partii…",
+      "save_next": "Zapisz i następna",
+      "done": "Gotowe",
+      "updated": "Zaktualizowano {{name}}",
+      "pick_spool": "Najpierw wybierz szpulę.",
+      "tooltip": "Zważ ponownie kilka szpul z rzędu"
+    },
+    "view": {
+      "grid": "Widok siatki",
+      "table": "Widok tabeli",
+      "grid_tooltip": "Przeglądaj szpule jako kolorowe kafelki",
+      "table_tooltip": "Wróć do pełnej tabeli"
+    },
+    "filament_extra_fields": "Pola filamentu",
+    "sibling_spools": {
+      "title": "Inne szpule tego filamentu",
+      "button": "Pokrewne szpule",
+      "tooltip": "Wyświetl wszystkie szpule tego filamentu"
+    },
+    "usage_history": {
+      "title": "Historia zużycia",
+      "time": "Czas",
+      "type": "Typ",
+      "change": "Zmiana",
+      "comment": "Komentarz",
+      "empty": "Nie zarejestrowano jeszcze żadnego zużycia."
+    },
+    "weight_history": {
+      "title": "Historia wagi",
+      "chart_label": "Zmierzona waga w czasie",
+      "idle_gain": "Zmierzona waga wzrosła o {{grams}} g między pomiarami — szpula mogła wchłonąć wilgoć. (Eksperymentalne)"
+    },
+    "totals": {
+      "shown_one": "Wyświetlono {{count}} szpulę",
+      "shown_few": "Wyświetlono {{count}} szpule",
+      "shown_many": "Wyświetlono {{count}} szpul",
+      "selected_one": "Wybrano {{count}} szpulę",
+      "selected_few": "Wybrano {{count}} szpule",
+      "selected_many": "Wybrano {{count}} szpul"
     }
   },
   "dashboard": {
@@ -163,7 +254,18 @@
       "addSettings": "Dodaj nowe ustawienia",
       "deleteSettings": "Usuń aktualne ustawienie",
       "settingsName": "Nazwa ustawienia",
-      "saveSetting": "Zapisz ustawienie"
+      "saveSetting": "Zapisz ustawienie",
+      "pageSizeMode": {
+        "label": "Rozmiar strony",
+        "tooltip": "„Automatyczny” pozwala drukarce/przeglądarce wybrać geometrię strony (domyślne). „Dopasuj do rozmiaru etykiety” generuje jawny rozmiar @page na podstawie powyższych wymiarów papieru — użyj tego dla drukarek rolkowych/etykietowych (np. Brother QL), aby etykiety drukowały się we właściwym rozmiarze i orientacji. Najlepiej obsługiwane w Chrome.",
+        "auto": "Automatyczny (domyślne ustawienie drukarki)",
+        "matchLabel": "Dopasuj do rozmiaru etykiety"
+      },
+      "saveAsZpl": "Pobierz ZPL",
+      "invalidGeometry": "Siatka etykiet nie mieści się na papierze",
+      "invalidGeometryHelp": "Marginesy i odstępy nie zostawiają miejsca na etykiety. Zmniejsz marginesy, odstępy, liczbę kolumn lub wierszy — albo wybierz większy rozmiar papieru.",
+      "contentClipped": "Część zawartości etykiet jest ucięta",
+      "contentClippedHelp": "Zawartość co najmniej jednej etykiety nie mieści się w jej obrębie i zostanie ucięta podczas drukowania. Zmniejsz rozmiar tekstu, skróć szablon lub użyj mniejszej liczby kolumn/wierszy, aby każda etykieta była większa."
     },
     "qrcode": {
       "button": "Drukuj etykiety",
@@ -202,7 +304,38 @@
       "exportButton": "Eksportuj etykiety",
       "printFilamentTitle": "Drukuj etykiety filamentów",
       "printSpoolTitle": "Drukuj etykiety szpul",
-      "templateHelpFilament": "Użyj {}, aby wstawić wartości obiektu filamentu jako tekst. Na przykład {id} zostanie zastąpione identyfikatorem filamentu, a {vendor.name} zostanie zastąpione nazwą producenta. Jeśli brakuje wartości, zostanie ona zastąpiona „?”. Drugi zestaw {} może być użyty do usunięcia tego. Ponadto każdy tekst między zestawami {} zostanie usunięty, jeśli brakuje wartości. Na przykład {Article: {article_number}} pokaże etykietę tylko wtedy, gdy filament ma numer artykułu. Otocz tekst podwójną gwiazdką **, aby go pogrubić. Kliknij przycisk, aby wyświetlić listę wszystkich dostępnych tagów."
+      "templateHelpFilament": "Użyj {}, aby wstawić wartości obiektu filamentu jako tekst. Na przykład {id} zostanie zastąpione identyfikatorem filamentu, a {vendor.name} zostanie zastąpione nazwą producenta. Jeśli brakuje wartości, zostanie ona zastąpiona „?”. Drugi zestaw {} może być użyty do usunięcia tego. Ponadto każdy tekst między zestawami {} zostanie usunięty, jeśli brakuje wartości. Na przykład {Article: {article_number}} pokaże etykietę tylko wtedy, gdy filament ma numer artykułu. Otocz tekst podwójną gwiazdką **, aby go pogrubić. Kliknij przycisk, aby wyświetlić listę wszystkich dostępnych tagów.",
+      "textColumns": {
+        "label": "Kolumny tekstu",
+        "tooltip": "Rozmieść tekst etykiety w podanej liczbie kolumn. Przydatne dla wąskich etykiet z kilkoma krótkimi liniami."
+      },
+      "qrPadding": "Margines kodu QR",
+      "customPayload": {
+        "label": "Niestandardowa zawartość kodu QR",
+        "tooltip": "Zastąp skanowaną zawartość kodu QR szablonem (te same tagi co na etykiecie). Pozostaw puste, aby użyć domyślnej zawartości Spoolman. Niestandardowa wartość będzie skanowana w Spoolmanie tylko wtedy, gdy nadal pasuje do rozpoznawanego formatu (WEB+SPOOLMAN:S-{id} / F-{id} lub URL /spool/show/{id})."
+      },
+      "qrErrorLevel": {
+        "label": "Korekcja błędów QR",
+        "tooltip": "Wyższe poziomy tolerują więcej uszkodzeń/zabrudzeń etykiety, ale sprawiają, że kod QR jest gęstszy (trudniejszy do zeskanowania, gdy jest mały). Domyślny jest H (najwyższy)."
+      },
+      "qrPlacement": {
+        "label": "Położenie kodu QR",
+        "tooltip": "Gdzie kod QR znajduje się względem tekstu etykiety. Umieszczenie go nad lub pod tekstem pasuje do wysokich, wąskich etykiet.",
+        "left": "Po lewej",
+        "top": "Na górze",
+        "bottom": "Na dole"
+      },
+      "showColorSwatch": {
+        "label": "Drukuj próbkę koloru",
+        "tooltip": "Drukuj na etykiecie małe kolorowe pole z kolorem filamentu."
+      },
+      "barcode1d": {
+        "label": "Kod kreskowy 1D",
+        "tooltip": "Opcjonalnie drukuj obok kodu QR kod kreskowy 1D z zawartością kodu QR, dla skanerów odczytujących tylko kody liniowe.",
+        "none": "Brak",
+        "code128": "Code 128"
+      },
+      "tooltip": "Drukuj etykiety dla zaznaczonych wierszy lub wybierz elementy na następnej stronie"
     },
     "spoolSelect": {
       "title": "Wybierz szpule",
@@ -212,7 +345,12 @@
       "selectedTotal_one": "Wybrano {{count}} szpulę",
       "selectedTotal_few": "Wybrano {{count}} szpule",
       "selectedTotal_many": "Wybrano {{count}} szpul",
-      "noSpoolsSelected": "Nie wybrano żadnych szpul."
+      "noSpoolsSelected": "Nie wybrano żadnych szpul.",
+      "hidePrinted": "Ukryj już wydrukowane",
+      "reprintConfirmTitle": "Wydrukować etykiety ponownie?",
+      "reprintConfirmContent_one": "{{count}} wybrana szpula ma już wydrukowaną etykietę. Wydrukować ją ponownie?",
+      "reprintConfirmContent_few": "{{count}} wybrane szpule mają już wydrukowane etykiety. Wydrukować je ponownie?",
+      "reprintConfirmContent_many": "{{count}} wybranych szpul ma już wydrukowane etykiety. Wydrukować je ponownie?"
     },
     "filamentSelect": {
       "title": "Wybierz filamenty",
@@ -221,7 +359,12 @@
       "selectAll": "Wybierz/Odznacz wszystko",
       "selectedTotal_one": "Wybrano {{count}} filament",
       "selectedTotal_few": "Wybrano {{count}} filamenty",
-      "selectedTotal_many": "Wybrano {{count}} filamentów"
+      "selectedTotal_many": "Wybrano {{count}} filamentów",
+      "hidePrinted": "Ukryj już wydrukowane",
+      "reprintConfirmTitle": "Wydrukować etykiety ponownie?",
+      "reprintConfirmContent_one": "{{count}} wybrany filament ma już wydrukowaną etykietę. Wydrukować ją ponownie?",
+      "reprintConfirmContent_few": "{{count}} wybrane filamenty mają już wydrukowane etykiety. Wydrukować je ponownie?",
+      "reprintConfirmContent_many": "{{count}} wybranych filamentów ma już wydrukowane etykiety. Wydrukować je ponownie?"
     }
   },
   "scanner": {
@@ -234,7 +377,9 @@
       "notFound": "Nie znaleziono kamery.",
       "unknown": "Wystąpił nieznany błąd. ({{error}})"
     },
-    "description": "Zeskanuj kod QR Spoolman, aby wyświetlić szczegółowe informacje o szpuli."
+    "description": "Zeskanuj kod QR Spoolman, aby wyświetlić szczegółowe informacje o szpuli.",
+    "camera_auto": "Automatyczna kamera",
+    "camera_n": "Kamera {{n}}"
   },
   "filament": {
     "filament": "Filamenty",
@@ -260,7 +405,21 @@
       "single_color": "Pojedynczy",
       "multi_color": "Wielo",
       "longitudinal": "Wzdłużny",
-      "coaxial": "Koekstrudowany"
+      "coaxial": "Koekstrudowany",
+      "color_hue": "Kolor",
+      "spool_count": "Szpule",
+      "remaining_weight": "Na stanie",
+      "low_stock_threshold": "Próg niskiego zapasu",
+      "reserve_count": "Szpule zapasowe",
+      "settings_extruder_temp_range": "Zakres temperatur ekstrudera",
+      "settings_bed_temp_range": "Zakres temperatur stołu",
+      "temp_range_min": "Min",
+      "temp_range_max": "Maks",
+      "spool_type": "Typ szpuli",
+      "finish": "Wykończenie",
+      "pattern": "Wzór",
+      "translucent": "Półprzezroczysty",
+      "glow": "Świecący w ciemności"
     },
     "fields_help": {
       "material": "Np. PLA, ABS, PETG itp.",
@@ -269,7 +428,11 @@
       "article_number": "Np. EAN, UPC itp.",
       "name": "Nazwa filamentu, aby odróżnić ten typ filamentu od innych pochodzących od tego samego producenta. Powinna zawierać np. kolor.",
       "weight": "Waga filamentu na pełnej szpuli (waga netto). Nie powinno to obejmować wagi samej szpuli, a jedynie filamentu. Jest to zwykle napisane na opakowaniu.",
-      "multi_color_direction": "Filamenty mogą mieć wiele kolorów na dwa sposoby: Kolory mogą się ciągnąć równolegle na całej długości filamentu lub kolory filamentu mogą się zmieniać na długości filamentu."
+      "multi_color_direction": "Filamenty mogą mieć wiele kolorów na dwa sposoby: Kolory mogą się ciągnąć równolegle na całej długości filamentu lub kolory filamentu mogą się zmieniać na długości filamentu.",
+      "low_stock_threshold": "Oznacz ten filament do ponownego zamówienia, gdy łączna pozostała waga na jego szpulach spadnie poniżej tej liczby gramów.",
+      "reserve_count": "Liczba nieotwartych zapasowych szpul, które masz pod ręką, śledzona bez tworzenia szpuli dla każdej z nich.",
+      "settings_extruder_temp_range": "Zalecany przez producenta zakres temperatur ekstrudera (min–maks). Opcjonalne, pozostaw puste, jeśli masz tylko jedną wartość.",
+      "settings_bed_temp_range": "Zalecany przez producenta zakres temperatur stołu (min–maks). Opcjonalne, pozostaw puste, jeśli masz tylko jedną wartość."
     },
     "titles": {
       "create": "Tworzenie filamentu",
@@ -282,17 +445,22 @@
     "form": {
       "filament_updated": "Ten filament został zaktualizowany przez kogoś/coś innego od czasu otwarcia tej strony. Zapisanie nadpisze te zmiany!",
       "import_external": "Importuj z zewnątrz",
-      "import_external_description": "Wybierz filament z listy by automatycznie zpopulować jego informacje w formularzu tworzenia filamentu. Spowoduje to nadpisanie danych które wpisałeś już w formularzu. Producent zostanie automatycznie stworzony jeżeli klikniesz Ok, jeżeli będzie to wymagane.",
+      "import_external_description": "Wybierz filament z listy, aby automatycznie uzupełnić jego dane w formularzu tworzenia filamentu. Spowoduje to nadpisanie danych wprowadzonych w formularzu.<br><br>W razie potrzeby obiekt Producent zostanie utworzony automatycznie po kliknięciu Ok.",
       "import_3dfp": "ID 3D Filament Profiles",
       "import_3dfp_help": "Automatycznie uzupełnij informacje, pobierając je z 3dfilamentprofiles.com",
       "import_3dfp_placeholder": "np. 12875",
       "import_3dfp_success": "Pomyślnie pobrano filament z 3dfilamentprofiles.com",
-      "import_3dfp_error": "Nie udało się pobrać danych filamentu z 3dfilamentprofiles.com"
+      "import_3dfp_error": "Nie udało się pobrać danych filamentu z 3dfilamentprofiles.com",
+      "must_be_positive": "Musi być większe niż 0.",
+      "new_vendor_prompt": "Dodaj nowego producenta",
+      "vendor_created": "Utworzono producenta",
+      "vendor_create_error": "Nie udało się utworzyć producenta"
     },
     "buttons": {
       "add_spool": "Dodaj Szpulę",
       "fetch": "Pobierz",
-      "download_swatch": "Próbka"
+      "download_swatch": "Próbka",
+      "download_slicer": "Profil slicera"
     },
     "swatch": {
       "title": "Próbka do druku 3D",
@@ -310,6 +478,50 @@
         "card": "Karta"
       },
       "download": "Pobierz .3mf"
+    },
+    "spool_type_options": {
+      "plastic": "Plastikowa",
+      "cardboard": "Kartonowa",
+      "metal": "Metalowa"
+    },
+    "finish_options": {
+      "matte": "Matowe",
+      "glossy": "Błyszczące"
+    },
+    "pattern_options": {
+      "marble": "Marmurowy",
+      "sparkle": "Brokatowy"
+    },
+    "tabs": {
+      "details": "Szczegóły"
+    },
+    "bulk": {
+      "edit": "Edytuj",
+      "clear_selection": "Wyczyść zaznaczenie",
+      "edit_help": "Zaznacz pole, aby zmienić je we wszystkich wybranych filamentach. Niezaznaczone pola pozostaną bez zmian.",
+      "apply": "Zastosuj",
+      "nothing_selected": "Zaznacz co najmniej jedno pole do zmiany.",
+      "selected_one": "Wybrano {{count}}",
+      "selected_few": "Wybrano {{count}}",
+      "selected_many": "Wybrano {{count}}",
+      "edit_title_one": "Edytuj {{count}} filament",
+      "edit_title_few": "Edytuj {{count}} filamenty",
+      "edit_title_many": "Edytuj {{count}} filamentów",
+      "applied_one": "Zaktualizowano {{count}} filament.",
+      "applied_few": "Zaktualizowano {{count}} filamenty.",
+      "applied_many": "Zaktualizowano {{count}} filamentów.",
+      "applied_partial_one": "Zaktualizowano {{count}} filament, nie powiodło się: {{failed}}.",
+      "applied_partial_few": "Zaktualizowano {{count}} filamenty, nie powiodło się: {{failed}}.",
+      "applied_partial_many": "Zaktualizowano {{count}} filamentów, nie powiodło się: {{failed}}."
+    },
+    "view": {
+      "grid": "Widok siatki",
+      "table": "Widok tabeli",
+      "grid_tooltip": "Przeglądaj filamenty jako kolorowe kafelki",
+      "table_tooltip": "Wróć do pełnej tabeli"
+    },
+    "messages": {
+      "update_error": "Nie udało się zapisać zmian. Spróbuj ponownie."
     }
   },
   "vendor": {
@@ -320,7 +532,9 @@
       "registered": "Zarejestrowano",
       "comment": "Komentarz",
       "empty_spool_weight": "Waga pustej szpuli",
-      "external_id": "Zewnętrzne ID"
+      "external_id": "Zewnętrzne ID",
+      "filament_count": "Filamenty",
+      "spool_count": "Szpule"
     },
     "titles": {
       "create": "Stwórz producenta",
@@ -328,10 +542,12 @@
       "edit": "Edytuj producenta",
       "list": "Producenci",
       "show": "Pokaż producenta",
-      "show_title": "[Producent #{{id}}] {{name}}"
+      "show_title": "[Producent #{{id}}] {{name}}",
+      "view_spools": "Zobacz szpule"
     },
     "form": {
-      "vendor_updated": "Ten producent został zaktualizowany przez kogoś/coś innego od czasu otwarcia tej strony. Zapisanie spowoduje nadpisanie tych zmian!"
+      "vendor_updated": "Ten producent został zaktualizowany przez kogoś/coś innego od czasu otwarcia tej strony. Zapisanie spowoduje nadpisanie tych zmian!",
+      "duplicate_name_warning": "Producent o tej nazwie już istnieje."
     },
     "fields_help": {
       "empty_spool_weight": "Waga pustej szpuli od tego producenta."
@@ -405,7 +621,34 @@
     "no_recent": "Brak ostatnio używanych szpul",
     "by_material": "Wg materiału",
     "by_location": "Wg lokalizacji",
-    "by_vendor": "Wg producenta"
+    "by_vendor": "Wg producenta",
+    "all_spools": "Wszystkie szpule",
+    "no_spools": "Brak szpul",
+    "shopping_list": "Lista zakupów",
+    "shopping_list_empty": "Brak filamentów poniżej progu niskiego zapasu.",
+    "usage": {
+      "tab": "Zużycie",
+      "empty": "Nie zarejestrowano jeszcze zużycia filamentu.",
+      "loading": "Wczytywanie...",
+      "bucket": {
+        "day": "Dzień",
+        "week": "Tydzień",
+        "month": "Miesiąc",
+        "year": "Rok"
+      }
+    },
+    "create": {
+      "spool": "Nowa szpula",
+      "filament": "Nowy filament",
+      "vendor": "Nowy producent"
+    },
+    "kpi": {
+      "this_month": "w tym miesiącu",
+      "top": "top",
+      "materials_one": "{{count}} materiał",
+      "materials_few": "{{count}} materiały",
+      "materials_many": "{{count}} materiałów"
+    }
   },
   "settings": {
     "settings": "Ustawienia",
@@ -421,6 +664,10 @@
       "round_prices": {
         "tooltip": "Zaokrąglij ceny do najbliższej liczby całkowitej.",
         "label": "Zaokrąglone ceny"
+      },
+      "unit_scaling": {
+        "label": "Skaluj duże jednostki",
+        "tooltip": "Wyświetlaj duże wagi i długości w automatycznie skalowanych jednostkach (np. 1,5 kg lub 64,37 m) zamiast surowych gramów/milimetrów w widokach listy i szczegółów. Zapisane wartości i API pozostają bez zmian."
       }
     },
     "extra_fields": {
@@ -435,7 +682,9 @@
         "default_value": "Domyślna wartość",
         "key": "Klucz",
         "choices": "Wybory",
-        "multi_choice": "Wielokrotny wybór"
+        "multi_choice": "Wielokrotny wybór",
+        "copy_from_filament": "Kopiuj z filamentu",
+        "link_template": "URL linku"
       },
       "field_type": {
         "integer": "Liczba całkowita",
@@ -445,10 +694,11 @@
         "text": "Tekst",
         "float_range": "Zakres",
         "datetime": "Data i Czas",
-        "boolean": "Wartość logiczna"
+        "boolean": "Wartość logiczna",
+        "link": "Link"
       },
       "non_unique_key_error": "Klucz musi być unikalny.",
-      "description": "<p>Tutaj możesz dodać dodatkowe pola niestandardowe do swoich podmiotów.</p><p>Po dodaniu pola nie można zmienić jego klucza ani typu, a w przypadku pól typu wyboru nie można usunąć wyborów ani zmienić stanu wielokrotnego wyboru. Jeśli usuniesz pole, powiązane dane dla wszystkich podmiotów zostaną usunięte.</p><p>Klucz jest tym, co inne programy odczytują/zapisują jako dane, więc jeśli twoje niestandardowe pole ma być zintegrowane z programem innej firmy, upewnij się, że ustawiłeś je poprawnie. Wartość domyślna jest stosowana tylko do nowych elementów.</p><p>Dodatkowych pól nie można sortować ani filtrować w widokach tabeli.</p>",
+      "description": "<p>Tutaj możesz dodać dodatkowe niestandardowe pola do swoich obiektów.</p><p>Po dodaniu pola nie można zmienić jego klucza ani typu, a w przypadku pól typu wyboru nie można usuwać opcji ani zmieniać stanu wielokrotnego wyboru. Jeśli usuniesz pole, powiązane z nim dane wszystkich obiektów zostaną usunięte.</p><p>Klucz to nazwa, pod którą inne programy odczytują/zapisują dane, więc jeśli twoje niestandardowe pole ma się integrować z zewnętrznym programem, ustaw go poprawnie. Wartość domyślna jest stosowana tylko do nowych elementów.</p><p>Dodatkowe pola można wyświetlać i sortować w widokach tabeli. Pola wyboru i logiczne udostępniają tam także opcje filtrowania, a wszystkie typy dodatkowych pól obsługują filtrowanie pustych wartości.</p><p>W przypadku pól szpuli włącz „Kopiuj z filamentu”, aby nowa szpula przy tworzeniu dziedziczyła wartość z pola filamentu o tym samym kluczu (chyba że szpula ustawia własną).</p><p>Pole „Link” przechowuje krótką wartość dla każdego elementu (np. numer artykułu) i zamienia ją w klikalny link przy użyciu szablonu URL linku — wstaw {} w miejscu wartości, np. https://www.amazon.com/dp/{}.</p>",
       "choices_missing_error": "Nie możesz usunąc możliwośći wyboru. Ten wybór nie istnieje: {{choices}}",
       "key_not_changed": "Zmień klucz na inny.",
       "delete_confirm": "Usunąć pole {{name}}?",
@@ -462,6 +712,68 @@
         "tooltip": "Styl wstępnie wybrany przy pobieraniu próbki filamentu do druku 3D. Nowe style można dodać do Spoolmana w pliku client/src/utils/swatch/styles.ts."
       },
       "preview_description": "Podgląd z dwoma przykładowymi filamentami — tekst i kod QR są automatycznie drukowane na czarno lub biało, zależnie od tego, co lepiej kontrastuje z kolorem filamentu:"
+    },
+    "import_export": {
+      "tab": "Import / Eksport",
+      "export_title": "Eksport danych",
+      "export_help": "Pobierz producentów, filamenty lub szpule jako CSV lub JSON. Dane producentów i filamentów są dołączane do szpul.",
+      "import_title": "Import danych",
+      "import_help": "Prześlij plik CSV lub JSON w tym samym formacie co eksport. Cały plik jest stosowany jako jedna transakcja „wszystko albo nic”; najpierw wykonaj przebieg próbny, aby podejrzeć wynik.",
+      "report_title": "Raport magazynowy",
+      "report_help": "Otwórz podsumowanie bieżącego zapasu do wydruku.",
+      "report_heading": "Raport magazynowy Spoolman",
+      "entities": {
+        "spools": "Szpule",
+        "filaments": "Filamenty",
+        "vendors": "Producenci"
+      },
+      "modes": {
+        "create": "Utwórz nowe",
+        "upsert": "Zaktualizuj lub utwórz",
+        "skip_existing": "Pomiń istniejące"
+      },
+      "dry_run": "Przebieg próbny",
+      "dry_run_prefix": "Przebieg próbny —",
+      "choose_file": "Wybierz plik",
+      "validate": "Sprawdź poprawność",
+      "import_button": "Importuj",
+      "print_report": "Drukuj raport",
+      "no_file": "Najpierw wybierz plik.",
+      "result": "Utworzono: {{created}}, zaktualizowano: {{updated}}, pominięto: {{skipped}}.",
+      "import_errors": "Import nie powiódł się",
+      "threemf": {
+        "title": "Importuj pocięty projekt 3MF",
+        "help": "Prześlij pocięty plik .3mf z Bambu Studio lub OrcaSlicer, aby odczytać, ile każdego filamentu zużył wydruk, dopasować to do szpul i odjąć zużycie w jednym kroku.",
+        "choose_file": "Wybierz plik .3mf",
+        "no_filaments": "Nie znaleziono zużycia filamentu w tym pliku 3MF.",
+        "no_match": "Brak pasującej szpuli — wybierz jedną",
+        "col_filament": "Filament wydruku",
+        "col_used": "Zużyto",
+        "col_spool": "Szpula do korekty",
+        "apply": "Zastosuj zużycie",
+        "applied": "Zarejestrowano zużycie na {{count}} szpuli(-ach).",
+        "applied_partial": "Zarejestrowano zużycie na {{ok}} szpuli(-ach); nie powiodło się: {{fail}}."
+      }
+    },
+    "printers": {
+      "tab": "Drukarki",
+      "description": "<p>Tutaj zarządzasz swoimi drukarkami. Gdy masz co najmniej jedną, możesz przypisać szpulę do drukarki w formularzu tworzenia lub edycji szpuli.</p>",
+      "add_title": "Dodaj drukarkę",
+      "edit_title": "Edytuj drukarkę",
+      "delete_confirm": "Usunąć drukarkę „{{name}}”? Przypisane do niej szpule zostaną odpięte, a nie usunięte."
+    },
+    "custom_links": {
+      "sidebar_tab": "Linki w pasku bocznym",
+      "spool_tab": "Akcje szpuli",
+      "sidebar_description": "<p>Dodaj własne linki do lewego paska bocznego, np. do strony Mainsail lub Fluidd swojej drukarki. Otwierają się w nowej karcie.</p>",
+      "spool_description": "<p>Dodaj niestandardowe przyciski akcji do każdej szpuli. URL może zawierać pola szpuli w nawiasach klamrowych — {id}, {filament_id}, {location}, {lot_nr}, {comment} — które są wypełniane dla każdej szpuli, dzięki czemu narzędzia takie jak nfc2klipper czy endpoint aktywnej szpuli Moonrakera są na wyciągnięcie ręki.</p>",
+      "name": "Nazwa",
+      "url": "URL",
+      "url_template": "Szablon URL",
+      "url_template_help": "Użyj {id} w miejscu, w którym ma się znaleźć ID szpuli, np. http://moonraker.local/...?id={id}",
+      "add_title": "Dodaj link",
+      "edit_title": "Edytuj link",
+      "delete_confirm": "Usunąć ten link?"
     }
   },
   "locations": {
@@ -470,7 +782,29 @@
     "no_location": "Brak lokalizacji",
     "no_locations_help": "Ta strona pozwala uporządkować szpule w lokalizacjach, dodaj kilka szpul aby rozpocząć!",
     "error_empty": "Nazwa nie może być pusta",
-    "error_exists": "Lokalizacja już istnieje"
+    "error_exists": "Lokalizacja już istnieje",
+    "location": "Lokalizacja",
+    "fields": {
+      "button": "Pola niestandardowe",
+      "title": "Pola niestandardowe — {{name}}",
+      "saved": "Zapisano pola lokalizacji",
+      "save_error": "Nie udało się zapisać pól lokalizacji",
+      "load_error": "Nie udało się wczytać lokalizacji"
+    },
+    "show": {
+      "name": "Nazwa",
+      "comment": "Komentarz",
+      "spool_count": "Szpule przechowywane tutaj",
+      "spools_here": "Szpule w tej lokalizacji",
+      "no_spools": "W tej lokalizacji nie ma żadnych szpul."
+    },
+    "print": {
+      "title": "Drukuj etykiety lokalizacji",
+      "button": "Drukuj etykiety",
+      "description": "Wybierz lokalizacje, dla których chcesz wydrukować skanowalne etykiety QR.",
+      "select_placeholder": "Wybierz lokalizacje",
+      "none_selected": "Nie wybrano lokalizacji"
+    }
   },
   "calibration": {
     "title": "Kalibracja",
@@ -615,5 +949,92 @@
     "tag_material": "Materiał",
     "tag_material_type": "Typ materiału",
     "qidi_write_info": "Tagi Qidi przechowują tylko materiał i kolor. Tag zostanie zapisany z najbliżej pasującymi kodami materiału i koloru Qidi."
+  },
+  "errorBoundary": {
+    "title": "Coś poszło nie tak",
+    "subTitle": "Nie udało się wyświetlić tej strony. Jeśli zaczęło się to po zmianie lub udostępnieniu ustawień widoku, ich zresetowanie zwykle rozwiązuje problem.",
+    "reset": "Zresetuj ustawienia widoku i odśwież",
+    "home": "Przejdź do strony głównej"
+  },
+  "apiToken": {
+    "title": "Wymagany token API",
+    "help": "Ta instancja Spoolman wymaga tokenu API. Wprowadź go, aby kontynuować; zostanie zapisany w tej przeglądarce.",
+    "placeholder": "Token API",
+    "submit": "Zapisz token"
+  },
+  "auth": {
+    "logout": "Wyloguj",
+    "login": {
+      "title": "Zaloguj się",
+      "submit": "Zaloguj się",
+      "username": "Nazwa użytkownika",
+      "password": "Hasło"
+    },
+    "roles": {
+      "admin": "Administrator",
+      "readonly": "Tylko do odczytu"
+    },
+    "users": {
+      "tab": "Użytkownicy",
+      "title": "Konta użytkowników",
+      "help": "Utwórz konta, aby wymagać logowania. Użytkownicy z dostępem tylko do odczytu mogą wszystko przeglądać, ale nie mogą wprowadzać zmian. Pierwsze konto jest zawsze kontem administratora.",
+      "role": "Rola",
+      "add": "Dodaj użytkownika",
+      "need_fields": "Wprowadź nazwę użytkownika i hasło.",
+      "created": "Utworzono użytkownika {{username}}.",
+      "reset_password": "Zresetuj hasło",
+      "reset_password_for": "Zresetuj hasło użytkownika {{username}}",
+      "reset_password_help": "Wprowadź nowe hasło dla tego użytkownika.",
+      "password_reset": "Hasło zostało zaktualizowane.",
+      "delete_confirm": "Usunąć tego użytkownika?"
+    }
+  },
+  "colorFilter": {
+    "button": "Kolor",
+    "title": "Filtruj według podobnego koloru",
+    "threshold": "Tolerancja",
+    "help": "Pokaż elementy, których kolor mieści się w tej tolerancji względem wybranego koloru.",
+    "advanced": "Więcej kolorów"
+  },
+  "theme": {
+    "label": "Motyw",
+    "system": "Systemowy",
+    "light": "Jasny",
+    "dark": "Ciemny"
+  },
+  "scan": {
+    "title": "Skanowanie",
+    "qr": "Kod QR",
+    "nfc": "NFC",
+    "nfc_hint": "Skanowanie NFC nie jest dostępne w tej przeglądarce. Użyj Chrome na Androidzie lub podłącz czytnik NFC po stronie serwera.",
+    "action": {
+      "open": "Otwórz",
+      "move": "Przenieś szpulę"
+    },
+    "move": {
+      "scan_spool": "Zeskanuj szpulę do przeniesienia.",
+      "scan_location": "Wybrano szpulę #{{id}}. Teraz zeskanuj lokalizację docelową.",
+      "confirm_title": "Przenieść szpulę?",
+      "confirm_content": "Przenieść szpulę #{{spool}} do „{{location}}”?",
+      "moved": "Przeniesiono szpulę #{{spool}} do „{{location}}”.",
+      "load_error": "Nie udało się wczytać zeskanowanej lokalizacji."
+    },
+    "clear": {
+      "recognized": "Rozpoznano kod „wyczyść szpulę”. Spoolman nie ma aktywnej szpuli; jej czyszczenie obsługuje drukarka lub integracja z Moonrakerem."
+    },
+    "barcode": {
+      "unknown_title": "Nieznany kod kreskowy",
+      "unknown_content": "Żaden filament nie ma kodu kreskowego {{code}}. Utworzyć filament i zapamiętać ten kod?",
+      "create_filament": "Utwórz filament",
+      "lookup_error": "Nie udało się wyszukać tego kodu kreskowego."
+    }
+  },
+  "printer": {
+    "printer": "Drukarka",
+    "fields": {
+      "name": "Nazwa",
+      "comment": "Komentarz",
+      "spool_count": "Szpule"
+    }
   }
 }

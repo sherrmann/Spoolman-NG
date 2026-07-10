@@ -28,7 +28,16 @@
     "hideArchived": "Paslėpti archyvuotus",
     "showArchived": "Rodyti archyvuotus",
     "notAccessTitle": "Nepakanka teisių",
-    "clearFilters": "Valyti filtrus"
+    "clearFilters": "Valyti filtrus",
+    "search": "Ieškoti",
+    "resetUsage": "Atstatyti naudojimą",
+    "hideArchivedTooltip": "Grįžti prie aktyvių ričių",
+    "showArchivedTooltip": "Perjungti į archyvuotas rites",
+    "columns": "Stulpeliai",
+    "clearFiltersTooltip": "Atstatyti visus filtrus ir rikiavimą",
+    "labelsAndTags": "Etiketės ir žymos",
+    "export": "Eksportuoti",
+    "columnsTooltip": "Pasirinkite, pertvarkykite ir slėpkite lentelės stulpelius"
   },
   "warnWhenUnsavedChanges": "Ar tikrai norite išeiti? Yra neišsaugotų pakeitimų.",
   "notifications": {
@@ -99,7 +108,18 @@
       "deleteSettingsConfirm": "Ar tikrai norite ištrinti šį išankstinį nustatymą?",
       "settingsName": "Iš anksto nustatytas pavadinimas",
       "saveSetting": "Išsaugoti išankstinius nustatymus",
-      "saveAsImage": "Įrašyti kaip paveikslėlį"
+      "saveAsImage": "Įrašyti kaip paveikslėlį",
+      "pageSizeMode": {
+        "label": "Puslapio dydis",
+        "tooltip": "„Automatinis“ leidžia spausdintuvui / naršyklei pačiai parinkti puslapio geometriją (numatytoji parinktis). „Atitikti etiketės dydį“ pagal aukščiau nurodytus popieriaus matmenis sugeneruoja aiškų @page dydį — naudokite šią parinktį ruloniniams / etikečių spausdintuvams (pvz., Brother QL), kad etiketės būtų spausdinamos tinkamu dydžiu ir orientacija. Geriausiai palaikoma Chrome naršyklėje.",
+        "auto": "Automatinis (spausdintuvo numatytasis)",
+        "matchLabel": "Atitikti etiketės dydį"
+      },
+      "saveAsZpl": "Atsisiųsti ZPL",
+      "invalidGeometry": "Etikečių tinklelis netelpa ant popieriaus",
+      "invalidGeometryHelp": "Paraštės ir tarpai nepalieka vietos etiketėms. Sumažinkite paraštes, tarpus, stulpelių ar eilučių skaičių — arba pasirinkite didesnį popieriaus dydį.",
+      "contentClipped": "Dalis etikečių turinio nukirpta",
+      "contentClippedHelp": "Bent vienos etiketės turinys netelpa į etiketę ir spausdinant bus nukirptas. Sumažinkite teksto dydį, sutrumpinkite šabloną arba naudokite mažiau stulpelių / eilučių, kad kiekviena etiketė būtų didesnė."
     },
     "qrcode": {
       "button": "Spausdinti etiketes",
@@ -126,7 +146,38 @@
       "exportButton": "Eksportuoti etiketes",
       "printFilamentTitle": "Spausdinti gijų etiketes",
       "printSpoolTitle": "Spausdinti ričių etiketes",
-      "templateHelpFilament": "Norėdami įterpti gijos objekto reikšmes kaip tekstą, naudokite {}. Pavyzdžiui, {id} bus pakeistas gijos ID, o {vendor.name} bus pakeistas gamintojo pavadinimu. Jei reikšmės trūksta, ji bus pakeista simboliu „?“. Norėdami tai pašalinti, galima naudoti antrą {} rinkinį. Be to, bet koks tekstas tarp {} rinkinių bus pašalintas, jei reikšmės trūksta. Pavyzdžiui, {Article: {article_number}} rodys tekstą tik tuo atveju, jei gija turi gaminio numerį. Apsukite tekstą dviguba žvaigždute **, kad jis būtų paryškintas. Spustelėkite mygtuką, kad peržiūrėtumėte visų galimų žymų sąrašą."
+      "templateHelpFilament": "Norėdami įterpti gijos objekto reikšmes kaip tekstą, naudokite {}. Pavyzdžiui, {id} bus pakeistas gijos ID, o {vendor.name} bus pakeistas gamintojo pavadinimu. Jei reikšmės trūksta, ji bus pakeista simboliu „?“. Norėdami tai pašalinti, galima naudoti antrą {} rinkinį. Be to, bet koks tekstas tarp {} rinkinių bus pašalintas, jei reikšmės trūksta. Pavyzdžiui, {Article: {article_number}} rodys tekstą tik tuo atveju, jei gija turi gaminio numerį. Apsukite tekstą dviguba žvaigždute **, kad jis būtų paryškintas. Spustelėkite mygtuką, kad peržiūrėtumėte visų galimų žymų sąrašą.",
+      "textColumns": {
+        "label": "Teksto stulpeliai",
+        "tooltip": "Išdėstyti etiketės tekstą per tiek stulpelių. Patogu siauroms etiketėms su keliomis trumpomis eilutėmis."
+      },
+      "qrPadding": "QR paraštė",
+      "customPayload": {
+        "label": "Tinkintas QR turinys",
+        "tooltip": "Pakeiskite nuskaitomą QR turinį šablonu (tos pačios žymos kaip ir etiketėje). Palikite tuščią, jei norite naudoti numatytąjį Spoolman turinį. Tinkinta reikšmė Spoolman viduje nuskaitoma tik tada, jei ji vis dar atitinka atpažįstamą formatą (WEB+SPOOLMAN:S-{id} / F-{id} arba /spool/show/{id} URL)."
+      },
+      "qrErrorLevel": {
+        "label": "QR klaidų taisymas",
+        "tooltip": "Aukštesni lygiai toleruoja daugiau etiketės pažeidimų / nešvarumų, bet QR kodas tampa tankesnis (mažą sunkiau nuskaityti). Numatytasis yra H (aukščiausias)."
+      },
+      "qrPlacement": {
+        "label": "QR vieta",
+        "tooltip": "Kur QR kodas yra etiketės teksto atžvilgiu. Išdėstymas viršuje arba apačioje tinka aukštoms, siauroms etiketėms.",
+        "left": "Kairėje",
+        "top": "Viršuje",
+        "bottom": "Apačioje"
+      },
+      "showColorSwatch": {
+        "label": "Spausdinti spalvos pavyzdį",
+        "tooltip": "Etiketėje spausdinti mažą gijos spalvos kvadratėlį."
+      },
+      "barcode1d": {
+        "label": "1D brūkšninis kodas",
+        "tooltip": "Pasirinktinai šalia QR kodo spausdinti 1D brūkšninį kodą su QR turiniu — skaitytuvams, kurie nuskaito tik linijinius brūkšninius kodus.",
+        "none": "Nėra",
+        "code128": "Code 128"
+      },
+      "tooltip": "Spausdinti pasirinktų eilučių etiketes arba pasirinkti elementus kitame puslapyje"
     },
     "spoolSelect": {
       "title": "Pasirinkite ritę",
@@ -136,7 +187,12 @@
       "selectAll": "Pasirinkti/Atšaukti visų pasirinkimą",
       "selectedTotal_one": "{{count}} ritė pasirinkta",
       "selectedTotal_few": "{{count}} ritės pasirinktos",
-      "selectedTotal_other": "{{count}} ričių pasirinkta"
+      "selectedTotal_other": "{{count}} ričių pasirinkta",
+      "hidePrinted": "Slėpti jau atspausdintas",
+      "reprintConfirmTitle": "Spausdinti etiketes iš naujo?",
+      "reprintConfirmContent_one": "{{count}} pasirinkta ritė jau turi atspausdintą etiketę. Spausdinti ją dar kartą?",
+      "reprintConfirmContent_few": "{{count}} pasirinktos ritės jau turi atspausdintas etiketes. Spausdinti jas dar kartą?",
+      "reprintConfirmContent_other": "{{count}} pasirinktų ričių jau turi atspausdintas etiketes. Spausdinti jas dar kartą?"
     },
     "filamentSelect": {
       "title": "Pasirinkite gijas",
@@ -145,7 +201,12 @@
       "selectAll": "Pasirinkti/Atšaukti visų pasirinkimą",
       "selectedTotal_one": "{{count}} gija pasirinkta",
       "selectedTotal_few": "{{count}} gijos pasirinktos",
-      "selectedTotal_other": "{{count}} gijų pasirinkta"
+      "selectedTotal_other": "{{count}} gijų pasirinkta",
+      "hidePrinted": "Slėpti jau atspausdintas",
+      "reprintConfirmTitle": "Spausdinti etiketes iš naujo?",
+      "reprintConfirmContent_one": "{{count}} pasirinkta gija jau turi atspausdintą etiketę. Spausdinti ją dar kartą?",
+      "reprintConfirmContent_few": "{{count}} pasirinktos gijos jau turi atspausdintas etiketes. Spausdinti jas dar kartą?",
+      "reprintConfirmContent_other": "{{count}} pasirinktų gijų jau turi atspausdintas etiketes. Spausdinti jas dar kartą?"
     }
   },
   "scanner": {
@@ -158,7 +219,9 @@
       "notReadable": "Kameros rodmenys neįskaitomi.",
       "notFound": "Nerasta jokios kameros.",
       "unknown": "Įvyko nežinoma klaida. ({{error}})"
-    }
+    },
+    "camera_auto": "Automatinė kamera",
+    "camera_n": "Kamera {{n}}"
   },
   "spool": {
     "spool": "Ritės",
@@ -184,7 +247,13 @@
       "last_used": "Paskutinį kartą panaudota",
       "registered": "Registruota",
       "comment": "Komentaras",
-      "archived": "Archyvuota"
+      "archived": "Archyvuota",
+      "filament_name_only": "Pavadinimas",
+      "vendor_name": "Gamintojas",
+      "color": "Spalva",
+      "printer": "Spausdintuvas",
+      "diameter": "Skersmuo",
+      "color_hex": "Spalva"
     },
     "fields_help": {
       "price": "Pilnos ritės kaina. Jei nenustatyta, bus laikoma, kad kaina yra pačios gijos kaina.",
@@ -196,7 +265,10 @@
       "spool_weight": "Tuščios ritės svoris. Palikite tuščią, jei norite naudoti vertę, nurodytą ant gijos arba gamintojo.",
       "location": "Kur yra ritė, jei rites laikote keliose vietose.",
       "lot_nr": "Gamintojo partijos numeris. Gali būti naudojamas siekiant užtikrinti, kad spaudinio spalva būtų vienoda, jei naudojamos kelios ritės.",
-      "external_filament": "Pasirinkote gijąiš išorinės duomenų bazės. Kuriant šią ritę, bus automatiškai sukurtas gijos objektas (ir galbūt gamintojo objektas). Tai gali sukurti pasikartojančius gijų objektus, jei jau sukūrėte šios gijos objektą."
+      "external_filament": "Pasirinkote gijąiš išorinės duomenų bazės. Kuriant šią ritę, bus automatiškai sukurtas gijos objektas (ir galbūt gamintojo objektas). Tai gali sukurti pasikartojančius gijų objektus, jei jau sukūrėte šios gijos objektą.",
+      "printer": "Spausdintuvas, į kurį šiuo metu įdėta ši ritė. Spausdintuvus tvarkykite nustatymuose.",
+      "diameter": "Išmatuotas šios konkrečios ritės gijos skersmuo, naudojamas ilgio skaičiavimams. Palikite tuščią, jei norite naudoti gijos skersmenį.",
+      "color_hex": "Neprivaloma šios konkrečios ritės spalva, pakeičianti gijos spalvą. Išvalykite, jei norite naudoti gijos spalvą."
     },
     "titles": {
       "create": "Sukurti ritę",
@@ -220,10 +292,83 @@
       "spool_updated": "Šią ritę kažkas kitas atnaujino nuo tada, kai atidarėte šį puslapį. Išsaugojus šie pakeitimai bus perrašyti!"
     },
     "messages": {
-      "archive": "Ar tikrai norite archyvuoti šią ritę?"
+      "archive": "Ar tikrai norite archyvuoti šią ritę?",
+      "update_error": "Nepavyko išsaugoti pakeitimų. Bandykite dar kartą.",
+      "reset_usage": "Atstatyti šios ritės sunaudotą svorį į nulį? Tai išvalys pirmojo / paskutinio naudojimo datas."
     },
     "formats": {
       "last_used": "Paskutinį kartą naudota {{date}}"
+    },
+    "custom_actions": "Veiksmai",
+    "bulk": {
+      "edit": "Redaguoti",
+      "clear_selection": "Išvalyti pasirinkimą",
+      "edit_help": "Pažymėkite lauką, kurį norite pakeisti visose pasirinktose ritėse. Nepažymėti laukai lieka nepakeisti.",
+      "apply": "Taikyti",
+      "nothing_selected": "Pažymėkite bent vieną keistiną lauką.",
+      "selected_one": "Pasirinkta {{count}}",
+      "selected_few": "Pasirinktos {{count}}",
+      "selected_other": "Pasirinkta {{count}}",
+      "edit_title_one": "Redaguoti {{count}} ritę",
+      "edit_title_few": "Redaguoti {{count}} rites",
+      "edit_title_other": "Redaguoti {{count}} ričių",
+      "applied_one": "Atnaujinta {{count}} ritė.",
+      "applied_few": "Atnaujintos {{count}} ritės.",
+      "applied_other": "Atnaujinta {{count}} ričių.",
+      "applied_partial_one": "Atnaujinta {{count}} ritė, {{failed}} nepavyko.",
+      "applied_partial_few": "Atnaujintos {{count}} ritės, {{failed}} nepavyko.",
+      "applied_partial_other": "Atnaujinta {{count}} ričių, {{failed}} nepavyko.",
+      "archive_confirm_one": "Archyvuoti {{count}} ritę?",
+      "archive_confirm_few": "Archyvuoti {{count}} rites?",
+      "archive_confirm_other": "Archyvuoti {{count}} ričių?",
+      "unarchive_confirm_one": "Išarchyvuoti {{count}} ritę?",
+      "unarchive_confirm_few": "Išarchyvuoti {{count}} rites?",
+      "unarchive_confirm_other": "Išarchyvuoti {{count}} ričių?"
+    },
+    "weigh": {
+      "button": "Sverti rites",
+      "title": "Sverti rites",
+      "help": "Raskite ritę, įveskite jos matavimą, tada spauskite „Išsaugoti ir kitą“, kad pasvertumėte kitą ritę neuždarydami lango.",
+      "spool": "Ritė",
+      "search_placeholder": "Ieškoti pagal ID, giją, partijos numerį…",
+      "save_next": "Išsaugoti ir kitą",
+      "done": "Atlikta",
+      "updated": "Atnaujinta {{name}}",
+      "pick_spool": "Pirmiausia pasirinkite ritę.",
+      "tooltip": "Iš eilės persverti kelias rites"
+    },
+    "view": {
+      "grid": "Tinklelio rodinys",
+      "table": "Lentelės rodinys",
+      "grid_tooltip": "Naršyti rites kaip spalvų plyteles",
+      "table_tooltip": "Grįžti į pilną lentelę"
+    },
+    "filament_extra_fields": "Gijos laukai",
+    "sibling_spools": {
+      "title": "Kitos šios gijos ritės",
+      "button": "Susijusios ritės",
+      "tooltip": "Rodyti visas šios gijos rites"
+    },
+    "usage_history": {
+      "title": "Naudojimo istorija",
+      "time": "Laikas",
+      "type": "Tipas",
+      "change": "Pokytis",
+      "comment": "Komentaras",
+      "empty": "Naudojimas dar neužfiksuotas."
+    },
+    "weight_history": {
+      "title": "Svorio istorija",
+      "chart_label": "Išmatuotas svoris laikui bėgant",
+      "idle_gain": "Tarp matavimų išmatuotas svoris padidėjo {{grams}} g — ritė galėjo sugerti drėgmės. (Eksperimentinė funkcija)"
+    },
+    "totals": {
+      "shown_one": "Rodoma {{count}} ritė",
+      "shown_few": "Rodomos {{count}} ritės",
+      "shown_other": "Rodoma {{count}} ričių",
+      "selected_one": "Pasirinkta {{count}} ritė",
+      "selected_few": "Pasirinktos {{count}} ritės",
+      "selected_other": "Pasirinkta {{count}} ričių"
     }
   },
   "filament": {
@@ -250,7 +395,21 @@
       "coaxial": "Koekstruduotas",
       "longitudinal": "Išilginis",
       "external_id": "Išorinis ID",
-      "spools": "Rodyti rites"
+      "spools": "Rodyti rites",
+      "color_hue": "Spalva",
+      "spool_count": "Ritės",
+      "remaining_weight": "Atsargos",
+      "low_stock_threshold": "Mažų atsargų riba",
+      "reserve_count": "Atsarginės ritės",
+      "settings_extruder_temp_range": "Ekstruderio temp. intervalas",
+      "settings_bed_temp_range": "Pado temp. intervalas",
+      "temp_range_min": "Min.",
+      "temp_range_max": "Maks.",
+      "spool_type": "Ritės tipas",
+      "finish": "Paviršius",
+      "pattern": "Raštas",
+      "translucent": "Peršviečiama",
+      "glow": "Šviečia tamsoje"
     },
     "fields_help": {
       "name": "Gijos pavadinimas, kad būtų galima atskirti šį gijos tipą nuo kitų to paties gamintojo gijų. Pavyzdžiui, turėtų būti nurodyta spalva.",
@@ -259,7 +418,11 @@
       "weight": "Pilnos ritės gijos svoris (grynasis svoris). Į šį skaičių neturėtų būti įtrauktas pačios ritės svoris, tik gijos svoris. Tai paprastai nurodoma ant pakuotės.",
       "spool_weight": "Tuščios ritės svoris. Naudojamas išmatuotam ritės svoriui nustatyti.",
       "article_number": "Pvz. EAN, UPC, ir tt.",
-      "multi_color_direction": "Gijos turėti kelias spalvas dviem būdais: arba dėl koekstruzijos, kaip dviejų spalvų gijos su nuosekliomis daugiaspalvėmis spalvomis, arba dėl išilginių spalvų pokyčių, kaip gradientinės gijos, kurios keičia spalvas išilgai ritės."
+      "multi_color_direction": "Gijos turėti kelias spalvas dviem būdais: arba dėl koekstruzijos, kaip dviejų spalvų gijos su nuosekliomis daugiaspalvėmis spalvomis, arba dėl išilginių spalvų pokyčių, kaip gradientinės gijos, kurios keičia spalvas išilgai ritės.",
+      "low_stock_threshold": "Pažymėti šią giją kaip užsakytiną, kai bendras likęs visų jos ričių svoris nukrenta žemiau šio gramų skaičiaus.",
+      "reserve_count": "Neatidarytų atsarginių ričių, kurias laikote atsargoje, skaičius — sekamas nekuriant ritės kiekvienai iš jų.",
+      "settings_extruder_temp_range": "Gamintojo rekomenduojamas ekstruderio temperatūros intervalas (min.–maks.). Neprivaloma; palikite tuščią, jei turite tik vieną reikšmę.",
+      "settings_bed_temp_range": "Gamintojo rekomenduojamas pado temperatūros intervalas (min.–maks.). Neprivaloma; palikite tuščią, jei turite tik vieną reikšmę."
     },
     "titles": {
       "create": "Kirti giją",
@@ -277,12 +440,17 @@
       "import_3dfp_help": "Automatiškai užpildyti informaciją, gaunant duomenis iš 3dfilamentprofiles.com",
       "import_3dfp_placeholder": "pvz. 12875",
       "import_3dfp_success": "Gija sėkmingai gauta iš 3dfilamentprofiles.com",
-      "import_3dfp_error": "Nepavyko gauti gijos duomenų iš 3dfilamentprofiles.com"
+      "import_3dfp_error": "Nepavyko gauti gijos duomenų iš 3dfilamentprofiles.com",
+      "must_be_positive": "Turi būti didesnis už 0.",
+      "new_vendor_prompt": "Pridėti naują gamintoją",
+      "vendor_created": "Gamintojas sukurtas",
+      "vendor_create_error": "Nepavyko sukurti gamintojo"
     },
     "buttons": {
       "add_spool": "Pridėti ritę",
       "fetch": "Gauti",
-      "download_swatch": "Pavyzdys"
+      "download_swatch": "Pavyzdys",
+      "download_slicer": "Slicer profilis"
     },
     "swatch": {
       "title": "3D spausdinamas pavyzdys",
@@ -300,6 +468,50 @@
         "card": "Kortelė"
       },
       "download": "Atsisiųsti .3mf"
+    },
+    "spool_type_options": {
+      "plastic": "Plastikinė",
+      "cardboard": "Kartoninė",
+      "metal": "Metalinė"
+    },
+    "finish_options": {
+      "matte": "Matinis",
+      "glossy": "Blizgus"
+    },
+    "pattern_options": {
+      "marble": "Marmurinis",
+      "sparkle": "Blizgučiai"
+    },
+    "tabs": {
+      "details": "Informacija"
+    },
+    "bulk": {
+      "edit": "Redaguoti",
+      "clear_selection": "Išvalyti pasirinkimą",
+      "edit_help": "Pažymėkite lauką, kurį norite pakeisti visose pasirinktose gijose. Nepažymėti laukai lieka nepakeisti.",
+      "apply": "Taikyti",
+      "nothing_selected": "Pažymėkite bent vieną keistiną lauką.",
+      "selected_one": "Pasirinkta {{count}}",
+      "selected_few": "Pasirinktos {{count}}",
+      "selected_other": "Pasirinkta {{count}}",
+      "edit_title_one": "Redaguoti {{count}} giją",
+      "edit_title_few": "Redaguoti {{count}} gijas",
+      "edit_title_other": "Redaguoti {{count}} gijų",
+      "applied_one": "Atnaujinta {{count}} gija.",
+      "applied_few": "Atnaujintos {{count}} gijos.",
+      "applied_other": "Atnaujinta {{count}} gijų.",
+      "applied_partial_one": "Atnaujinta {{count}} gija, {{failed}} nepavyko.",
+      "applied_partial_few": "Atnaujintos {{count}} gijos, {{failed}} nepavyko.",
+      "applied_partial_other": "Atnaujinta {{count}} gijų, {{failed}} nepavyko."
+    },
+    "view": {
+      "grid": "Tinklelio rodinys",
+      "table": "Lentelės rodinys",
+      "grid_tooltip": "Naršyti gijas kaip spalvų plyteles",
+      "table_tooltip": "Grįžti į pilną lentelę"
+    },
+    "messages": {
+      "update_error": "Nepavyko išsaugoti pakeitimų. Bandykite dar kartą."
     }
   },
   "vendor": {
@@ -310,7 +522,9 @@
       "empty_spool_weight": "Tuščios ritės svoris",
       "external_id": "Išorinis ID",
       "registered": "Registruota",
-      "comment": "Komentaras"
+      "comment": "Komentaras",
+      "filament_count": "Gijos",
+      "spool_count": "Ritės"
     },
     "fields_help": {
       "empty_spool_weight": "Tuščios šio gamintojo ritės svoris."
@@ -321,10 +535,12 @@
       "edit": "Redaguoti gamintoją",
       "list": "Gamintojai",
       "show": "Rodyti gamintojus",
-      "show_title": "[Gamintojas #{{id}}] {{name}}"
+      "show_title": "[Gamintojas #{{id}}] {{name}}",
+      "view_spools": "Rodyti rites"
     },
     "form": {
-      "vendor_updated": "Šio gamintojo duomenis atnaujino kažkas kitas nuo tada, kai atidarėte šį puslapį. Išsaugojus šiuos pakeitimus bus perrašyti!"
+      "vendor_updated": "Šio gamintojo duomenis atnaujino kažkas kitas nuo tada, kai atidarėte šį puslapį. Išsaugojus šiuos pakeitimus bus perrašyti!",
+      "duplicate_name_warning": "Gamintojas tokiu pavadinimu jau egzistuoja."
     }
   },
   "home": {
@@ -339,7 +555,34 @@
     "no_recent": "Nėra neseniai naudotų ričių",
     "by_material": "Pagal medžiagą",
     "by_location": "Pagal vietą",
-    "by_vendor": "Pagal gamintoją"
+    "by_vendor": "Pagal gamintoją",
+    "all_spools": "Visos ritės",
+    "no_spools": "Ričių dar nėra",
+    "shopping_list": "Pirkinių sąrašas",
+    "shopping_list_empty": "Nėra gijų, kurių atsargos būtų žemiau mažų atsargų ribos.",
+    "usage": {
+      "tab": "Naudojimas",
+      "empty": "Gijų naudojimas dar neužfiksuotas.",
+      "loading": "Kraunasi...",
+      "bucket": {
+        "day": "Diena",
+        "week": "Savaitė",
+        "month": "Mėnuo",
+        "year": "Metai"
+      }
+    },
+    "create": {
+      "spool": "Nauja ritė",
+      "filament": "Nauja gija",
+      "vendor": "Naujas gamintojas"
+    },
+    "kpi": {
+      "this_month": "šį mėnesį",
+      "top": "populiariausia",
+      "materials_one": "{{count}} medžiaga",
+      "materials_few": "{{count}} medžiagos",
+      "materials_other": "{{count}} medžiagų"
+    }
   },
   "help": {
     "help": "Pagalba",
@@ -376,11 +619,15 @@
       "round_prices": {
         "label": "Apvalinti kainas",
         "tooltip": "Apvalinkite kainas iki artimiausio sveikojo skaičiaus."
+      },
+      "unit_scaling": {
+        "label": "Automatiškai parinkti vienetus",
+        "tooltip": "Sąrašo ir informacijos rodiniuose didelius svorius bei ilgius rodyti automatiškai pritaikytu masteliu (pvz., 1,5 kg, 64,37 m) vietoj grynų gramų / milimetrų. Saugomos reikšmės ir API nesikeičia."
       }
     },
     "extra_fields": {
       "tab": "Papildomi laukai",
-      "description": "<p>Čia galite pridėti papildomų pasirinktinių laukų prie savo objektų.</p><p>Pridėjus lauką, negalite keisti jo rakto ar tipo, o pasirinkimų tipo laukų negalite pašalinti pasirinkimų ar pakeisti kelių pasirinkimų būsenos. Jei pašalinsite lauką, bus ištrinti su visais objektais susiję duomenys.</p><p>Raktas yra tai, kaip kitos programos skaito / rašo duomenis, todėl jei jūsų pasirinktinis laukas turėtų būti integruotas su trečiosios šalies programa, įsitikinkite, kad jis nustatytas teisingai. Numatytoji reikšmė taikoma tik naujiems elementams.</p><p>Papildomų laukų negalima rūšiuoti ar filtruoti lentelės rodiniuose.</p>",
+      "description": "<p>Čia galite pridėti papildomų tinkintų laukų prie savo objektų.</p><p>Pridėjus lauką, negalima keisti jo rakto ar tipo, o pasirinkimo tipo laukuose negalima pašalinti pasirinkimų ar keisti kelių pasirinkimų būsenos. Jei pašalinsite lauką, bus ištrinti visų objektų susiję duomenys.</p><p>Raktas yra tai, kaip kitos programos skaito / rašo duomenis, todėl jei jūsų tinkintas laukas turi integruotis su trečiosios šalies programa, įsitikinkite, kad jis nustatytas teisingai. Numatytoji reikšmė taikoma tik naujiems elementams.</p><p>Papildomus laukus galima rodyti ir rikiuoti lentelės rodiniuose. Pasirinkimo ir loginiai laukai ten turi ir filtravimo parinktis, o visi papildomų laukų tipai palaiko filtravimą pagal tuščias reikšmes.</p><p>Ričių laukams įjunkite „Kopijuoti iš gijos“, kad nauja ritė kūrimo metu paveldėtų reikšmę iš gijos lauko su tuo pačiu raktu (nebent ritė nustato savo).</p><p>„Nuoroda“ tipo laukas saugo trumpą kiekvieno elemento reikšmę (pvz., gaminio numerį) ir paverčia ją spustelima nuoroda pagal nuorodos URL šabloną — įrašykite {} ten, kur turi būti reikšmė, pvz., https://www.amazon.com/dp/{}.</p>",
       "params": {
         "key": "Raktas",
         "name": "Pavadinimas",
@@ -389,7 +636,9 @@
         "order": "Tvarka",
         "default_value": "Numatytoji reikšmė",
         "choices": "Pasirinkimai",
-        "multi_choice": "Keli pasirinkimai"
+        "multi_choice": "Keli pasirinkimai",
+        "copy_from_filament": "Kopijuoti iš gijos",
+        "link_template": "Nuorodos URL"
       },
       "field_type": {
         "text": "Tekstas",
@@ -399,7 +648,8 @@
         "float_range": "Realūs skaičiai",
         "datetime": "Data Laikas",
         "boolean": "Loginis",
-        "choice": "Pasirinkimas"
+        "choice": "Pasirinkimas",
+        "link": "Nuoroda"
       },
       "boolean_true": "Taip",
       "boolean_false": "Ne",
@@ -416,6 +666,68 @@
         "tooltip": "Stilius, iš anksto parenkamas atsisiunčiant 3D spausdinamą gijos pavyzdį. Naujų stilių galima pridėti prie Spoolman faile client/src/utils/swatch/styles.ts."
       },
       "preview_description": "Peržiūra su dviem pavyzdinėmis gijomis — tekstas ir QR kodas automatiškai spausdinami juodai arba baltai, atsižvelgiant į tai, kas geriau kontrastuoja su gijos spalva:"
+    },
+    "import_export": {
+      "tab": "Importas / eksportas",
+      "export_title": "Eksportuoti duomenis",
+      "export_help": "Atsisiųskite savo gamintojus, gijas ar rites CSV arba JSON formatu. Gamintojų ir gijų duomenys įtraukiami kartu su ritėmis.",
+      "import_title": "Importuoti duomenis",
+      "import_help": "Įkelkite CSV arba JSON failą, kurio struktūra tokia pati kaip eksporto. Visas failas taikomas kaip viena „viskas arba nieko“ operacija; pirmiausia naudokite bandomąjį vykdymą rezultatui peržiūrėti.",
+      "report_title": "Atsargų ataskaita",
+      "report_help": "Atidaryti spausdinamą dabartinių atsargų suvestinę.",
+      "report_heading": "Spoolman atsargų ataskaita",
+      "entities": {
+        "spools": "Ritės",
+        "filaments": "Gijos",
+        "vendors": "Gamintojai"
+      },
+      "modes": {
+        "create": "Kurti naujus",
+        "upsert": "Atnaujinti arba sukurti",
+        "skip_existing": "Praleisti esamus"
+      },
+      "dry_run": "Bandomasis vykdymas",
+      "dry_run_prefix": "Bandomasis vykdymas —",
+      "choose_file": "Pasirinkti failą",
+      "validate": "Tikrinti",
+      "import_button": "Importuoti",
+      "print_report": "Spausdinti ataskaitą",
+      "no_file": "Pirmiausia pasirinkite failą.",
+      "result": "Sukurta: {{created}}, atnaujinta: {{updated}}, praleista: {{skipped}}.",
+      "import_errors": "Importuoti nepavyko",
+      "threemf": {
+        "title": "Importuoti supjaustytą 3MF projektą",
+        "help": "Įkelkite supjaustytą .3mf iš Bambu Studio ar OrcaSlicer, kad nuskaitytumėte, kiek kiekvienos gijos sunaudojo spaudinys, susietumėte ją su savo ritėmis ir vienu žingsniu atimtumėte sunaudotą kiekį.",
+        "choose_file": "Pasirinkti .3mf failą",
+        "no_filaments": "Šiame 3MF gijų naudojimo nerasta.",
+        "no_match": "Atitinkančios ritės nėra — pasirinkite",
+        "col_filament": "Spaudinio gija",
+        "col_used": "Sunaudota",
+        "col_spool": "Koreguojama ritė",
+        "apply": "Taikyti naudojimą",
+        "applied": "Naudojimas užfiksuotas {{count}} ritei (-ėms).",
+        "applied_partial": "Naudojimas užfiksuotas {{ok}} ritei (-ėms); {{fail}} nepavyko."
+      }
+    },
+    "printers": {
+      "tab": "Spausdintuvai",
+      "description": "<p>Čia tvarkykite savo spausdintuvus. Kai turėsite bent vieną, ritę spausdintuvui galėsite priskirti ritės kūrimo ar redagavimo formoje.</p>",
+      "add_title": "Pridėti spausdintuvą",
+      "edit_title": "Redaguoti spausdintuvą",
+      "delete_confirm": "Šalinti spausdintuvą „{{name}}“? Jam priskirtos ritės bus atsietos, o ne ištrintos."
+    },
+    "custom_links": {
+      "sidebar_tab": "Šoninės juostos nuorodos",
+      "spool_tab": "Ričių veiksmai",
+      "sidebar_description": "<p>Pridėkite savo nuorodų į kairiąją šoninę juostą, pvz., į savo spausdintuvo Mainsail ar Fluidd puslapį. Jos atidaromos naujame skirtuke.</p>",
+      "spool_description": "<p>Pridėkite tinkintų veiksmų mygtukų kiekvienai ritei. URL gali būti ritės laukų riestiniuose skliaustuose — {id}, {filament_id}, {location}, {lot_nr}, {comment} — jie užpildomi kiekvienai ritei atskirai, todėl tokie įrankiai kaip nfc2klipper ar Moonraker aktyvios ritės sąsaja pasiekiami vienu paspaudimu.</p>",
+      "name": "Pavadinimas",
+      "url": "URL",
+      "url_template": "URL šablonas",
+      "url_template_help": "Naudokite {id} ten, kur turi būti ritės ID, pvz., http://moonraker.local/...?id={id}",
+      "add_title": "Pridėti nuorodą",
+      "edit_title": "Redaguoti nuorodą",
+      "delete_confirm": "Šalinti šią nuorodą?"
     }
   },
   "documentTitle": {
@@ -458,7 +770,29 @@
     "no_location": "Be vietos",
     "no_locations_help": "Šiame puslapyje galite tvarkyti rites pagal vietas, pridėkite keletą ričių, kad pradėtumėte!",
     "error_empty": "Pavadinimas negali būti tuščias",
-    "error_exists": "Vieta jau egzistuoja"
+    "error_exists": "Vieta jau egzistuoja",
+    "location": "Vieta",
+    "fields": {
+      "button": "Tinkinti laukai",
+      "title": "Tinkinti laukai — {{name}}",
+      "saved": "Vietos laukai išsaugoti",
+      "save_error": "Nepavyko išsaugoti vietos laukų",
+      "load_error": "Nepavyko įkelti vietos"
+    },
+    "show": {
+      "name": "Pavadinimas",
+      "comment": "Komentaras",
+      "spool_count": "Čia laikomos ritės",
+      "spools_here": "Ritės šioje vietoje",
+      "no_spools": "Šioje vietoje ričių nelaikoma."
+    },
+    "print": {
+      "title": "Spausdinti vietų etiketes",
+      "button": "Spausdinti etiketes",
+      "description": "Pasirinkite vietas, kurioms spausdinti nuskaitomas QR etiketes.",
+      "select_placeholder": "Pasirinkite vietas",
+      "none_selected": "Nepasirinkta jokių vietų"
+    }
   },
   "calibration": {
     "title": "Kalibravimas",
@@ -603,5 +937,92 @@
     "tag_material": "Medžiaga",
     "tag_material_type": "Medžiagos tipas",
     "qidi_write_info": "Qidi žymos saugo tik medžiagą ir spalvą. Į žymą bus įrašyti artimiausi atitinkantys Qidi medžiagos ir spalvos kodai."
+  },
+  "errorBoundary": {
+    "title": "Kažkas nutiko ne taip",
+    "subTitle": "Nepavyko atvaizduoti šio puslapio. Jei tai prasidėjo pakeitus rodinio nustatymus ar jais pasidalijus, jų atstatymas dažniausiai padeda.",
+    "reset": "Atstatyti rodinio nustatymus ir perkrauti",
+    "home": "Eiti į pradžios puslapį"
+  },
+  "apiToken": {
+    "title": "Reikalingas API prieigos raktas",
+    "help": "Šiam Spoolman serveriui reikalingas API prieigos raktas. Įveskite jį, kad tęstumėte; jis saugomas šioje naršyklėje.",
+    "placeholder": "API prieigos raktas",
+    "submit": "Išsaugoti raktą"
+  },
+  "auth": {
+    "logout": "Atsijungti",
+    "login": {
+      "title": "Prisijungti",
+      "submit": "Prisijungti",
+      "username": "Naudotojo vardas",
+      "password": "Slaptažodis"
+    },
+    "roles": {
+      "admin": "Administratorius",
+      "readonly": "Tik skaitymo"
+    },
+    "users": {
+      "tab": "Naudotojai",
+      "title": "Naudotojų paskyros",
+      "help": "Sukurkite paskyras, kad prisijungimas būtų privalomas. Tik skaitymo teises turintys naudotojai gali viską peržiūrėti, bet negali atlikti pakeitimų. Pirmoji paskyra visada yra administratoriaus.",
+      "role": "Vaidmuo",
+      "add": "Pridėti naudotoją",
+      "need_fields": "Įveskite naudotojo vardą ir slaptažodį.",
+      "created": "Sukurtas naudotojas {{username}}.",
+      "reset_password": "Atstatyti slaptažodį",
+      "reset_password_for": "Atstatyti {{username}} slaptažodį",
+      "reset_password_help": "Įveskite naują šio naudotojo slaptažodį.",
+      "password_reset": "Slaptažodis atnaujintas.",
+      "delete_confirm": "Šalinti šį naudotoją?"
+    }
+  },
+  "colorFilter": {
+    "button": "Spalva",
+    "title": "Filtruoti pagal panašią spalvą",
+    "threshold": "Tolerancija",
+    "help": "Rodyti elementus, kurių spalva nuo pasirinktos spalvos skiriasi ne daugiau kaip šia tolerancija.",
+    "advanced": "Daugiau spalvų"
+  },
+  "theme": {
+    "label": "Tema",
+    "system": "Sistemos",
+    "light": "Šviesi",
+    "dark": "Tamsi"
+  },
+  "scan": {
+    "title": "Nuskaityti",
+    "qr": "QR kodas",
+    "nfc": "NFC",
+    "nfc_hint": "NFC nuskaitymas šioje naršyklėje negalimas. Naudokite Android Chrome arba prijunkite serverio NFC skaitytuvą.",
+    "action": {
+      "open": "Atidaryti",
+      "move": "Perkelti ritę"
+    },
+    "move": {
+      "scan_spool": "Nuskaitykite ritę, kurią norite perkelti.",
+      "scan_location": "Pasirinkta ritė #{{id}}. Dabar nuskaitykite paskirties vietą.",
+      "confirm_title": "Perkelti ritę?",
+      "confirm_content": "Perkelti ritę #{{spool}} į „{{location}}“?",
+      "moved": "Ritė #{{spool}} perkelta į „{{location}}“.",
+      "load_error": "Nepavyko įkelti nuskaitytos vietos."
+    },
+    "clear": {
+      "recognized": "Atpažintas ritės išvalymo kodas. Spoolman aktyvios ritės neturi; jos išvalymą tvarko jūsų spausdintuvas arba Moonraker integracija."
+    },
+    "barcode": {
+      "unknown_title": "Nežinomas brūkšninis kodas",
+      "unknown_content": "Nė viena gija neturi brūkšninio kodo {{code}}. Sukurti giją ir įsiminti šį brūkšninį kodą?",
+      "create_filament": "Sukurti giją",
+      "lookup_error": "Nepavyko rasti šio brūkšninio kodo."
+    }
+  },
+  "printer": {
+    "printer": "Spausdintuvas",
+    "fields": {
+      "name": "Pavadinimas",
+      "comment": "Komentaras",
+      "spool_count": "Ritės"
+    }
   }
 }
