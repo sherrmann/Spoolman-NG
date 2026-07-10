@@ -129,6 +129,38 @@ jobs:
           cd client
           npm run test:coverage
   #
+  # Mobile companion app (mobile/): typecheck + pure-logic unit tests. Native
+  # Android/iOS builds are deliberately not part of PR CI (slow, SDK-heavy) —
+  # see docs/mobile-companion-app.md.
+  #
+  mobile-tests:
+    needs: [meta]
+    if: ${{ needs.meta.outputs.skip_build != 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install node
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: '22'
+
+      - name: Install mobile dependencies
+        run: |
+          cd mobile
+          npm ci
+
+      - name: Typecheck mobile app
+        run: |
+          cd mobile
+          npm run typecheck
+
+      - name: Run mobile unit tests
+        run: |
+          cd mobile
+          npm test
+  #
   # Browser e2e for the PWA service-worker / manifest base-path flows (#93, #95).
   # Serves the built client through the real backend SinglePageApplication
   # (client/e2e/serve.py) and drives it with Playwright/Chromium at both a root

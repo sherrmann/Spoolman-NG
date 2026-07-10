@@ -1,9 +1,12 @@
 # Mobile Companion App — Feasibility & Design
 
-> **Status: design proposal.** Nothing in this document is implemented yet. It
-> records the feasibility assessment, the recommended architecture, the pitfalls
-> (there are real ones, especially on iOS), and a phased roadmap for companion
-> apps on Android and iOS.
+> **Status: P0 implemented.** The Android-first proof of concept from the
+> roadmap below lives in [`mobile/`](../mobile/README.md): WebView shell +
+> token seeding, native camera scan → shared grammar → navigate, and NFC
+> (NDEF + raw NTAG213) → `/nfc/lookup` → navigate. Later phases (P1–P3) are
+> still design. This document records the feasibility assessment, the
+> recommended architecture, the pitfalls (there are real ones, especially on
+> iOS), and the phased roadmap.
 
 ## Why an app at all
 
