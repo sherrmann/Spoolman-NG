@@ -1,6 +1,7 @@
 // Thin typed client for the handful of Spoolman NG endpoints the shell calls
 // natively. The hosted web UI does everything else through its own transport.
 
+import { ForwardAuthError, extractAuthUrl, looksLikeForwardAuth } from "../lib/forwardAuth";
 import { apiUrl } from "../lib/serverProfile";
 
 export interface ServerInfo {
@@ -50,7 +51,7 @@ async function request<T>(
       signal: controller.signal,
     });
     if (!response.ok) {
-      throw new ApiError(response.status, await safeText(response));
+      throw new ApiError(response.status, await safeText(response), response.url);
     }
     return (await response.json()) as T;
   } finally {
@@ -68,10 +69,14 @@ async function safeText(response: Response): Promise<string> {
 
 export class ApiError extends Error {
   status: number;
+  body: string;
+  url: string;
 
-  constructor(status: number, body: string) {
+  constructor(status: number, body: string, url = "") {
     super(`HTTP ${status}${body ? `: ${body}` : ""}`);
     this.status = status;
+    this.body = body;
+    this.url = url;
   }
 }
 
@@ -83,7 +88,21 @@ export class ApiError extends Error {
 export async function probeServer(
   baseUrl: string,
 ): Promise<{ info: ServerInfo; auth: AuthStatus | null }> {
-  const info = await request<ServerInfo>(apiUrl(baseUrl, "/info"), null, { timeoutMs: 8000 });
+  let info: ServerInfo;
+  try {
+    info = await request<ServerInfo>(apiUrl(baseUrl, "/info"), null, { timeoutMs: 8000 });
+  } catch (e) {
+    // A forward-auth gateway (Authelia, Authentik, …) blocks even the public
+    // /info. Surface that as its own error so setup can route the user through
+    // an in-WebView portal login instead of showing a dead-end failure.
+    if (
+      e instanceof ApiError &&
+      looksLikeForwardAuth({ status: e.status, body: e.body, finalUrl: e.url, baseUrl })
+    ) {
+      throw new ForwardAuthError(extractAuthUrl(e.body));
+    }
+    throw e;
+  }
   let auth: AuthStatus | null = null;
   try {
     auth = await request<AuthStatus>(apiUrl(baseUrl, "/auth/status"), null, { timeoutMs: 8000 });

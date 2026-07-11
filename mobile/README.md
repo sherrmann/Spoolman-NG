@@ -13,8 +13,18 @@ things a browser cannot deliver on the default plain-HTTP LAN deployment —
   `/api/v1/auth/status`; an optional API token is stored in the platform
   keystore and seeded into the web UI's `localStorage` seam. A login performed
   inside the web UI is mirrored back and persisted.
-- Full web UI in the WebView (hardware back navigates history; external links
-  open in the system browser).
+- **Servers behind a login portal (Authelia, Authentik, oauth2-proxy, …).**
+  A forward-auth gateway blocks even the public `/api/v1/info`, so setup
+  detects the wall (a 401/403 or off-origin redirect on `/info`) and, instead
+  of a dead-end error, offers to continue into the app and sign in at the
+  portal. The WebView shares its cookie jar with native requests
+  (`sharedCookiesEnabled` / `thirdPartyCookiesEnabled`), so the portal session
+  cookie set during that login also authenticates the native probe and
+  `nfc/lookup` calls. A stacked Spoolman API token still rides along as a
+  bearer header.
+- Full web UI in the WebView (hardware back navigates history; clicked
+  external links open in the system browser, while forward-auth redirects stay
+  in-app to complete login).
 - **QR/barcode scan button**: decodes the printed label payloads
   (`WEB+SPOOLMAN:S-<id>` and deep-link URLs, spool/filament/location) with the
   web client's own grammar — `client/src/utils/scan.ts`, vendored
@@ -94,5 +104,6 @@ MIFARE Classic (Qidi) on iPhone, ever, and NFC reads are foreground-only.
 |---|---|
 | Server detection | `GET /api/v1/info`, `GET /api/v1/auth/status` (public even with auth on) |
 | Auth | Bearer token seeded into `localStorage["spoolmanApiToken"]` (the web client attaches it to axios/fetch/WS itself) |
+| Forward-auth (Authelia, etc.) | Detected at setup when `/info` is walled off; the user signs in at the portal inside the WebView, and the shared cookie jar carries the session to native requests |
 | NFC lookup | `POST /api/v1/nfc/lookup` with `raw_data_b64` + `nfc_tag_uid`, `auto_create` on request |
 | Scan payloads | `client/src/utils/scan.ts`, vendored into `src/shared/scan.ts` by `scripts/sync-shared.mjs` (regenerated on `npm install`; `src/shared/drift.test.ts` fails when the copy is stale). Metro cannot bundle files outside the project root — Expo CLI recomputes `watchFolders` and ignores `metro.config.js` — hence the sync instead of a direct import. |
