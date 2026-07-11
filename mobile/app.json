@@ -19,6 +19,7 @@
     },
     "android": {
       "package": "app.spoolman.companion",
+      "permissions": ["REQUEST_INSTALL_PACKAGES"],
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",

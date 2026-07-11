@@ -53,6 +53,32 @@ jobs:
           cd mobile
           npm ci
 
+      # Stamp the release tag into the app so the in-app updater can compare its
+      # own version against the latest GitHub release. Only tag builds (vX.Y.Z)
+      # are stamped; workflow_dispatch/branch builds keep app.json's dev version.
+      - name: Stamp the release version into the app
+        run: |
+          cd mobile
+          ref_name="${GITHUB_REF_NAME}"
+          case "$ref_name" in
+            v[0-9]*)
+              VER="${ref_name#v}" node -e '
+                const fs = require("fs");
+                const cfg = JSON.parse(fs.readFileSync("app.json", "utf8"));
+                const ver = process.env.VER;
+                const [a = 0, b = 0, c = 0] = ver.split(".").map((n) => parseInt(n, 10) || 0);
+                cfg.expo.version = ver;
+                cfg.expo.android = cfg.expo.android || {};
+                cfg.expo.android.versionCode = a * 10000 + b * 100 + c;
+                fs.writeFileSync("app.json", JSON.stringify(cfg, null, 2) + "\n");
+                console.log("Stamped version " + ver + " (versionCode " + cfg.expo.android.versionCode + ")");
+              '
+              ;;
+            *)
+              echo "Non-tag build ($ref_name) — keeping the dev version in app.json."
+              ;;
+          esac
+
       - name: Generate the native Android project
         run: |
           cd mobile
