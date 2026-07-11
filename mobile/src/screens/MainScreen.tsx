@@ -28,6 +28,7 @@ import {
   type TagReadResult,
 } from "../nfc/readTag";
 import { checkForUpdate, downloadAndInstallApk } from "../update/updater";
+import { PasskeySetupModal } from "./PasskeySetupModal";
 
 interface MainScreenProps {
   profile: ServerProfile;
@@ -39,10 +40,17 @@ interface MainScreenProps {
 export function MainScreen({ profile, token, onTokenChange, onChangeServer }: MainScreenProps) {
   const webviewRef = useRef<WebView>(null);
   const canGoBackRef = useRef(false);
+  // The most recent off-origin https origin the WebView visited — usually the
+  // forward-auth portal during the login round-trip, but any off-origin hop
+  // (OAuth upstream, redirect) can land here too. Only a passkey-setup prefill
+  // fallback for portals discovered after setup; the vetted setup-time
+  // detection (profile.authOrigin) wins when present.
+  const portalOriginRef = useRef<string | null>(null);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [nfcStatus, setNfcStatus] = useState<string | null>(null);
   const [nfcAvailable, setNfcAvailable] = useState(false);
   const [updateStatus, setUpdateStatus] = useState<string | null>(null);
+  const [passkeySetupOpen, setPasskeySetupOpen] = useState(false);
 
   const origin = originOf(profile.baseUrl);
 
@@ -244,7 +252,10 @@ export function MainScreen({ profile, token, onTokenChange, onChangeServer }: Ma
       { text: "Close", style: "cancel" as const },
       { text: "Reload", onPress: () => webviewRef.current?.reload() },
       ...(Platform.OS === "android"
-        ? [{ text: "Check for updates", onPress: () => runUpdateCheck(true) }]
+        ? [
+            { text: "Check for updates", onPress: () => runUpdateCheck(true) },
+            { text: "Passkey setup", onPress: () => setPasskeySetupOpen(true) },
+          ]
         : []),
       { text: "Change server", style: "destructive" as const, onPress: onChangeServer },
     ];
@@ -275,6 +286,10 @@ export function MainScreen({ profile, token, onTokenChange, onChangeServer }: Ma
         }}
         onNavigationStateChange={(navState) => {
           canGoBackRef.current = navState.canGoBack;
+          const navOrigin = originOf(navState.url);
+          if (/^https:\/\//i.test(navOrigin) && navOrigin !== origin) {
+            portalOriginRef.current = navOrigin;
+          }
         }}
         onShouldStartLoadWithRequest={(request) => {
           // Keep the shell on the configured server and let forward-auth
@@ -315,6 +330,16 @@ export function MainScreen({ profile, token, onTokenChange, onChangeServer }: Ma
         }}
       />
 
+      {/* Mounted per open: reads the app identity natively and seeds the
+          domain prefill from the latest portal detection at that moment. */}
+      {passkeySetupOpen && (
+        <PasskeySetupModal
+          visible
+          initialDomain={hostOf(profile.authOrigin ?? portalOriginRef.current ?? origin)}
+          onClose={() => setPasskeySetupOpen(false)}
+        />
+      )}
+
       {updateStatus !== null && (
         <View style={styles.updateOverlay} pointerEvents="auto">
           <ActivityIndicator size="large" color="#dc7734" />
@@ -327,6 +352,11 @@ export function MainScreen({ profile, token, onTokenChange, onChangeServer }: Ma
 
 function truncate(value: string, max: number): string {
   return value.length > max ? `${value.slice(0, max)}…` : value;
+}
+
+/** "https://auth.example.com" -> "auth.example.com" for the domain input. */
+function hostOf(origin: string): string {
+  return origin.replace(/^https?:\/\//i, "");
 }
 
 function errorMessage(e: unknown): string {

@@ -21,7 +21,13 @@ export async function loadProfile(): Promise<ServerProfile | null> {
       parsed !== null &&
       typeof (parsed as { baseUrl?: unknown }).baseUrl === "string"
     ) {
-      return parsed as ServerProfile;
+      const profile = parsed as ServerProfile;
+      // Optional fields must hold their declared type — drop anything else so
+      // a corrupted entry can't crash consumers expecting a string.
+      if (typeof profile.authOrigin !== "string") {
+        delete profile.authOrigin;
+      }
+      return profile;
     }
   } catch {
     /* corrupted or unavailable — treat as unset */

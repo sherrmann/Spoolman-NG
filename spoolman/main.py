@@ -15,6 +15,7 @@ from scheduler.asyncio.scheduler import Scheduler
 
 from spoolman import env, externaldb, tigertagdb
 from spoolman.api.v1.router import app as v1_app
+from spoolman.assetlinks import register_assetlinks_route
 from spoolman.auth import initialize_auth_state
 from spoolman.client import SinglePageApplication
 from spoolman.database import database
@@ -99,6 +100,11 @@ window.SPOOLMAN_BASE_PATH = "{base_path}";
         media_type="text/javascript",
     )
 
+
+# Android Digital Asset Links for companion-app passkeys. Like /metrics, this
+# must be registered before the SPA catch-all below; unlike every other route
+# it lives at the true domain root (Android ignores SPOOLMAN_BASE_PATH).
+register_assetlinks_route(app)
 
 # Mount the client side app
 app.mount(base_path, app=SinglePageApplication(directory="client/dist", base_path=env.get_base_path()))

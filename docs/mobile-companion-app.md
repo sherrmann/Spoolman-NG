@@ -356,9 +356,19 @@ the `spoolmanApiToken` localStorage key as public API.
     FOR_APP requires the relying party's domain to host a Digital Asset Links
     file authorizing this app + its signing cert (see `mobile/README.md` →
     Passkeys; the Mobile APK workflow prints the fingerprint + a ready
-    `assetlinks.json`). Caveats: the patch is pinned to the library version
-    (re-run `npx patch-package react-native-webview` after a bump); needs a
-    recent Android System WebView and on-device verification; `mediation:
+    `assetlinks.json`). The file must sit at the **exact RP-ID hostname**
+    (no parent-domain fallback, no redirects, `application/json`, publicly
+    trusted TLS); Authelia's RP ID is the portal's exact hostname (from
+    `X-Forwarded-Host`, not configurable). To reduce the friction: the server
+    serves its own `/.well-known/assetlinks.json` (released fingerprint +
+    `SPOOLMAN_ANDROID_CERT_FINGERPRINTS` extras — `spoolman/assetlinks.py`),
+    so the RP-is-Spoolman case is zero-config, and the app's ⚙ → *Passkey
+    setup* assistant (`src/screens/PasskeySetupModal.tsx`) shows the installed
+    APK's real fingerprint (local Expo module `modules/app-signing`) and
+    verifies the hosted file with concrete pass/fail reasons. Caveats: the
+    patch is pinned to the library version (re-run
+    `npx patch-package react-native-webview` after a bump); needs a recent
+    Android System WebView and on-device verification; `mediation:
     "conditional"` is unsupported in WebView; iOS WKWebView passkeys are a
     separate, untried path.
 17. **In-app self-update (Android).** The app polls
