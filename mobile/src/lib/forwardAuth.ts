@@ -104,10 +104,14 @@ export function extractAuthUrl(body: string | undefined): string | null {
 }
 
 function decodeEntities(value: string): string {
+  // Decode the ampersand entity LAST: unescaping "&amp;" first could turn an
+  // input like "&amp;quot;" into a live "&quot;" and then into '"', a
+  // double-unescape (CodeQL js/double-escaping). Doing it last means each
+  // other entity only decodes if it was a real entity in the source.
   return value
-    .replace(/&amp;/g, "&")
     .replace(/&#x2F;/gi, "/")
     .replace(/&#47;/g, "/")
     .replace(/&quot;/g, '"')
-    .replace(/&#x3D;/gi, "=");
+    .replace(/&#x3D;/gi, "=")
+    .replace(/&amp;/g, "&");
 }

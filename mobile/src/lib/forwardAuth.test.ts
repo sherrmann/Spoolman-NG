@@ -68,6 +68,13 @@ describe("extractAuthUrl", () => {
     ).toBe("https://sso.example.com/login");
   });
 
+  it("does not double-unescape entities (ampersand decoded last)", () => {
+    // A pre-escaped "&amp;quot;" must decode to the literal text "&quot;",
+    // never to '"' — otherwise it is a double-unescape (CodeQL js/double-escaping).
+    const body = 'href="https://sso.example.com/?next=a&amp;quot;b"';
+    expect(extractAuthUrl(body)).toBe("https://sso.example.com/?next=a&quot;b");
+  });
+
   it("returns null for a body with no recoverable URL", () => {
     expect(extractAuthUrl("401 Unauthorized")).toBeNull();
     expect(extractAuthUrl(undefined)).toBeNull();
