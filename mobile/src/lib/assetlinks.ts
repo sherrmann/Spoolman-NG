@@ -11,6 +11,14 @@
 /** The relation that delegates credential (passkey) ceremonies to an app. */
 export const LOGIN_CREDS_RELATION = "delegate_permission/common.get_login_creds";
 
+/**
+ * SHA-256 of the key that signs released companion APKs — the fallback shown
+ * when the installed cert can't be read natively. Must match
+ * RELEASE_CERT_FINGERPRINT in spoolman/assetlinks.py.
+ */
+export const RELEASED_APK_FINGERPRINT =
+  "FA:C6:17:45:DC:09:03:78:6F:B9:ED:E6:2A:96:2B:39:9F:73:48:F0:BB:6F:89:9B:83:32:66:75:91:03:3B:9C";
+
 /** Uppercase and trim a colon-delimited SHA-256 fingerprint for comparison. */
 export function normalizeFingerprint(fingerprint: string): string {
   return fingerprint.trim().toUpperCase();

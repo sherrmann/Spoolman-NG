@@ -13,7 +13,7 @@ import {
 
 import { probeServer } from "../api/spoolman";
 import { ForwardAuthError } from "../lib/forwardAuth";
-import { normalizeBaseUrl, type ServerProfile } from "../lib/serverProfile";
+import { normalizeBaseUrl, originOf, type ServerProfile } from "../lib/serverProfile";
 
 interface SetupScreenProps {
   onDone: (profile: ServerProfile, token: string | null) => void;
@@ -80,7 +80,16 @@ export function SetupScreen({ onDone }: SetupScreenProps) {
     if (!portal) {
       return;
     }
-    onDone({ baseUrl: portal.baseUrl, name: "Spoolman" }, portal.token);
+    // Keep the portal's origin: its hostname is the WebAuthn RP ID, which the
+    // passkey setup assistant prefills.
+    onDone(
+      {
+        baseUrl: portal.baseUrl,
+        name: "Spoolman",
+        authOrigin: portal.authUrl ? originOf(portal.authUrl) : undefined,
+      },
+      portal.token,
+    );
   };
 
   return (

@@ -5,6 +5,12 @@
 export interface ServerProfile {
   baseUrl: string;
   name?: string;
+  /**
+   * Origin of the forward-auth login portal detected at setup (e.g.
+   * "https://auth.example.com"), when there is one. The portal's hostname is
+   * the WebAuthn RP ID, which the passkey setup assistant needs.
+   */
+  authOrigin?: string;
 }
 
 /**
