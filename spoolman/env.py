@@ -2,6 +2,7 @@
 
 import logging
 import os
+import re
 import subprocess
 import sys
 from datetime import datetime
@@ -130,6 +131,34 @@ def get_auth_secret() -> str | None:
     if secret is not None and secret.strip() == "":
         return None
     return secret
+
+
+_SHA256_FINGERPRINT = re.compile(r"(?:[0-9A-F]{2}:){31}[0-9A-F]{2}")
+
+
+def get_android_cert_fingerprints() -> list[str]:
+    """Get extra Android signing-cert SHA-256 fingerprints for /.well-known/assetlinks.json.
+
+    Comma-separated, colon-delimited hex fingerprints (as printed by
+    `apksigner verify --print-certs` or the Mobile APK workflow summary), for
+    self-built companion APKs. They are served in addition to the released
+    APK's fingerprint (see spoolman/assetlinks.py). Returns [] when unset.
+    """
+    raw = os.getenv("SPOOLMAN_ANDROID_CERT_FINGERPRINTS")
+    if raw is None:
+        return []
+    fingerprints = []
+    for item in raw.split(","):
+        fingerprint = item.strip().upper()
+        if not fingerprint:
+            continue
+        if not _SHA256_FINGERPRINT.fullmatch(fingerprint):
+            raise ValueError(
+                "Failed to parse SPOOLMAN_ANDROID_CERT_FINGERPRINTS variable: "
+                f"'{item.strip()}' is not a colon-separated SHA-256 fingerprint.",
+            )
+        fingerprints.append(fingerprint)
+    return fingerprints
 
 
 def get_db_schema() -> str | None:
