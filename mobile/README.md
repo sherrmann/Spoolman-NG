@@ -247,6 +247,20 @@ oauth2-proxy doesn't run WebAuthn itself — the passkey prompt happens at the
 host the file on *that* IdP's domain. Public IdPs (Google etc.) can't vouch
 for your APK, so portal passkeys aren't achievable there.
 
+### Known limitation: Bitwarden (and other third-party providers) vs. Authelia
+
+Even with a correct DAL file, a passkey stored in **Bitwarden** currently fails
+at Authelia with an origin-validation error. Bitwarden stamps assertions from
+DAL-validated non-browser apps with the native app facet
+(`android:apk-key-hash:<cert-hash>`) instead of the web origin — by design,
+confirmed in their source — and Authelia only accepts its own `https://` origin
+(hardcoded single-origin list; no config key extends it as of 4.39/4.40).
+Until Authelia gains configurable extra WebAuthn origins, in-app options are:
+use a passkey stored in **Google Password Manager** (may pass the web origin —
+unverified, test it), or password/TOTP in the app with Bitwarden passkeys kept
+for real browsers. Desktop/mobile *browser* passkey logins are unaffected
+(browsers are privileged and pass the https origin).
+
 ### Notes
 
 - Must be served over **HTTPS** with `Content-Type: application/json`, **no
