@@ -160,7 +160,10 @@ debug key, see the signing note below):
 ```json
 [
   {
-    "relation": ["delegate_permission/common.get_login_creds"],
+    "relation": [
+      "delegate_permission/common.handle_all_urls",
+      "delegate_permission/common.get_login_creds"
+    ],
     "target": {
       "namespace": "android_app",
       "package_name": "app.spoolman.companion",
@@ -171,6 +174,12 @@ debug key, see the signing note below):
   }
 ]
 ```
+
+Both relations matter: `get_login_creds` is the credential-sharing grant, but
+**third-party passkey providers check `handle_all_urls`** — Bitwarden queries
+Google's Digital Asset Links API for that relation only and shows *"Passkeys
+not supported for this app"* when it's absent. If you hand-author the file,
+include both (the in-app checker warns if `handle_all_urls` is missing).
 
 If you build with your own `ANDROID_DEBUG_KEYSTORE_B64`, use *your* key's
 SHA-256 — the Mobile APK workflow prints it (and a ready-to-host

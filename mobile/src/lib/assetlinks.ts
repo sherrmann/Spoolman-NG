@@ -12,6 +12,14 @@
 export const LOGIN_CREDS_RELATION = "delegate_permission/common.get_login_creds";
 
 /**
+ * The app-links relation. Third-party credential providers (Bitwarden checks
+ * this one ONLY, via Google's assetlinks:check API) require it for passkeys in
+ * non-browser apps — without it Bitwarden says "Passkeys not supported for
+ * this app". Google's docs recommend publishing both relations together.
+ */
+export const HANDLE_ALL_URLS_RELATION = "delegate_permission/common.handle_all_urls";
+
+/**
  * SHA-256 of the key that signs released companion APKs — the fallback shown
  * when the installed cert can't be read natively. Must match
  * RELEASE_CERT_FINGERPRINT in spoolman/assetlinks.py.
@@ -29,7 +37,7 @@ export function buildAssetlinksJson(packageName: string, fingerprints: string[])
   return JSON.stringify(
     [
       {
-        relation: [LOGIN_CREDS_RELATION],
+        relation: [HANDLE_ALL_URLS_RELATION, LOGIN_CREDS_RELATION],
         target: {
           namespace: "android_app",
           package_name: packageName,
@@ -70,6 +78,8 @@ export interface AssetlinksVerdict {
   ok: boolean;
   /** Human-readable reasons the check failed; empty when ok. */
   problems: string[];
+  /** Non-fatal issues worth surfacing even when ok (e.g. provider quirks). */
+  warnings: string[];
 }
 
 /**
@@ -88,6 +98,7 @@ export function verifyAssetlinks(
     return {
       ok: false,
       problems: ["The file is not a JSON array of statements — check it against the template above."],
+      warnings: [],
     };
   }
 
@@ -103,6 +114,7 @@ export function verifyAssetlinks(
     return {
       ok: false,
       problems: [`No statement targets the app package ${packageName}.`],
+      warnings: [],
     };
   }
 
@@ -114,8 +126,24 @@ export function verifyAssetlinks(
     return {
       ok: false,
       problems: [`The statement for ${packageName} is missing the "${LOGIN_CREDS_RELATION}" relation.`],
+      warnings: [],
     };
   }
+
+  // Bitwarden (and historically Google Password Manager) validates the OTHER
+  // relation — a file with only get_login_creds fails there with "Passkeys not
+  // supported for this app". Non-fatal because providers may accept it.
+  const hasHandleAllUrls = withRelation.some((statement) => {
+    const relation = (statement as { relation?: unknown }).relation;
+    return Array.isArray(relation) && relation.includes(HANDLE_ALL_URLS_RELATION);
+  });
+  const warnings = hasHandleAllUrls
+    ? []
+    : [
+        `The statement is missing "${HANDLE_ALL_URLS_RELATION}" — third-party passkey providers ` +
+          "like Bitwarden require it and will say passkeys are not supported for this app. " +
+          "Host both relations (the template above includes both).",
+      ];
 
   const listed = new Set<string>();
   for (const statement of withRelation) {
@@ -132,6 +160,7 @@ export function verifyAssetlinks(
     return {
       ok: false,
       problems: [`The statement for ${packageName} lists no sha256_cert_fingerprints.`],
+      warnings,
     };
   }
   if (installedFingerprints.length > 0) {
@@ -143,10 +172,11 @@ export function verifyAssetlinks(
           "None of the listed fingerprints match this APK's signing certificate. " +
             `This APK is signed with ${installed.join(" or ")}.`,
         ],
+        warnings,
       };
     }
   }
-  return { ok: true, problems: [] };
+  return { ok: true, problems: [], warnings };
 }
 
 export interface ResponseMeta {

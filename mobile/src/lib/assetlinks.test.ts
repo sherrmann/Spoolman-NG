@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildAssetlinksJson,
+  HANDLE_ALL_URLS_RELATION,
   LOGIN_CREDS_RELATION,
   normalizeFingerprint,
   RELEASED_APK_FINGERPRINT,
@@ -18,7 +19,7 @@ const OTHER_FP = Array(32).fill("CD").join(":");
 
 function statement(overrides?: Partial<{ relation: unknown; target: Record<string, unknown> }>) {
   return {
-    relation: [LOGIN_CREDS_RELATION],
+    relation: [HANDLE_ALL_URLS_RELATION, LOGIN_CREDS_RELATION],
     target: {
       namespace: "android_app",
       package_name: PKG,
@@ -35,11 +36,13 @@ describe("normalizeFingerprint", () => {
 });
 
 describe("buildAssetlinksJson", () => {
-  it("renders a single get_login_creds statement with normalized fingerprints", () => {
+  it("renders one statement with both relations and normalized fingerprints", () => {
+    // handle_all_urls is required by Bitwarden's validation; get_login_creds is
+    // the credential grant. Both, per Google's credential-sharing docs.
     const parsed = JSON.parse(buildAssetlinksJson(PKG, [FP.toLowerCase()]));
     expect(parsed).toEqual([
       {
-        relation: [LOGIN_CREDS_RELATION],
+        relation: [HANDLE_ALL_URLS_RELATION, LOGIN_CREDS_RELATION],
         target: {
           namespace: "android_app",
           package_name: PKG,
@@ -88,8 +91,21 @@ describe("wellKnownUrl", () => {
 });
 
 describe("verifyAssetlinks", () => {
-  it("passes for a well-formed statement matching package and fingerprint", () => {
-    expect(verifyAssetlinks([statement()], PKG, [FP])).toEqual({ ok: true, problems: [] });
+  it("passes cleanly for a statement with both relations, matching package and fingerprint", () => {
+    expect(verifyAssetlinks([statement()], PKG, [FP])).toEqual({
+      ok: true,
+      problems: [],
+      warnings: [],
+    });
+  });
+
+  it("warns (but passes) when handle_all_urls is missing — Bitwarden requires it", () => {
+    const verdict = verifyAssetlinks([statement({ relation: [LOGIN_CREDS_RELATION] })], PKG, [FP]);
+    expect(verdict.ok).toBe(true);
+    expect(verdict.problems).toEqual([]);
+    expect(verdict.warnings).toHaveLength(1);
+    expect(verdict.warnings[0]).toContain(HANDLE_ALL_URLS_RELATION);
+    expect(verdict.warnings[0]).toContain("Bitwarden");
   });
 
   it("matches fingerprints case-insensitively", () => {
