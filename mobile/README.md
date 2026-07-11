@@ -121,7 +121,7 @@ MIFARE Classic (Qidi) on iPhone, ever, and NFC reads are foreground-only.
 | Server detection | `GET /api/v1/info`, `GET /api/v1/auth/status` (public even with auth on) |
 | Auth | Bearer token seeded into `localStorage["spoolmanApiToken"]` (the web client attaches it to axios/fetch/WS itself) |
 | Forward-auth (Authelia, etc.) | Detected at setup when `/info` is walled off; the user signs in at the portal inside the WebView, and the shared cookie jar carries the session to native requests |
-| Passkeys / WebAuthn | Enabled on the Android WebView (`WEB_AUTHENTICATION_SUPPORT_FOR_APP`) via a `patch-package` patch; needs a Digital Asset Links file on the IdP domain (see below) |
+| Passkeys / WebAuthn | Enabled on the Android WebView (`WEB_AUTHENTICATION_SUPPORT_FOR_APP`) via a `patch-package` patch; needs a Digital Asset Links file on the RP domain — Spoolman serves its own, forward-auth portals need it hosted on theirs, and ⚙ → *Passkey setup* verifies it (see below) |
 | Updates (Android) | `GET https://api.github.com/repos/sherrmann/Spoolman-NG/releases/latest`; newer `spoolman-companion-*.apk` is downloaded and handed to the system installer |
 | NFC lookup | `POST /api/v1/nfc/lookup` with `raw_data_b64` + `nfc_tag_uid`, `auto_create` on request |
 | Scan payloads | `client/src/utils/scan.ts`, vendored into `src/shared/scan.ts` by `scripts/sync-shared.mjs` (regenerated on `npm install`; `src/shared/drift.test.ts` fails when the copy is stale). Metro cannot bundle files outside the project root — Expo CLI recomputes `watchFolders` and ignores `metro.config.js` — hence the sync instead of a direct import. |
@@ -130,17 +130,32 @@ MIFARE Classic (Qidi) on iPhone, ever, and NFC reads are foreground-only.
 
 Android only lets a **real browser** use passkeys for arbitrary sites without
 extra setup. A normal app embedding a login page (like this one) must use
-`WEB_AUTHENTICATION_SUPPORT_FOR_APP`, and Android then requires the identity
-provider's domain to **vouch for the app** via a
-[Digital Asset Links](https://developers.google.com/digital-asset-links) file.
-Without it the passkey ceremony fails with *"an unknown error has occurred"*.
-This is a platform security rule, not a Spoolman limitation — password/OTP
-login works regardless.
+`WEB_AUTHENTICATION_SUPPORT_FOR_APP`, and Android then requires the WebAuthn
+Relying Party's domain to **vouch for the app** via a
+[Digital Asset Links](https://developers.google.com/digital-asset-links) file
+at `https://<rp-domain>/.well-known/assetlinks.json`. Without it the passkey
+ceremony fails with *"an unknown error has occurred"*. This is a platform
+security rule, not a Spoolman limitation — password/OTP login works regardless.
 
-**One-time setup** — host this at `https://<IdP-domain>/.well-known/assetlinks.json`,
-where `<IdP-domain>` matches your identity provider's **WebAuthn RP ID**
-(for Authelia, `webauthn.display_name`'s host / `identity_validation` domain —
-usually your auth or apex domain; for Authentik/Keycloak, the realm's domain):
+**Which domain?** Android fetches the file from the **exact hostname** of the
+WebAuthn RP ID — no parent-domain fallback, no redirects. In practice that is
+the hostname in the address bar at the moment the passkey prompt appears:
+
+- **No login portal** (Spoolman's built-in accounts, or a proxy that doesn't
+  intercept): the RP is Spoolman's own domain — and **Spoolman already serves
+  the file there**, so passkeys are zero-config. Self-built APKs add their
+  key via the server env var `SPOOLMAN_ANDROID_CERT_FINGERPRINTS`
+  (comma-separated SHA-256s, appended to the released APK's).
+- **Forward-auth portal** (Authelia, Authentik, …): the RP is the **portal's
+  hostname** and the file must be reachable there. Per-IdP notes below.
+
+**In-app assistant** — ⚙ → *Passkey setup* shows the installed APK's real
+package + signing fingerprint, the exact JSON to host, and checks the hosted
+file with concrete pass/fail reasons. Use it instead of debugging blind.
+
+The file Android expects (this is what Spoolman serves and the assistant
+renders; the fingerprint below is the released APK's — the well-known Android
+debug key, see the signing note below):
 
 ```json
 [
@@ -157,17 +172,81 @@ usually your auth or apex domain; for Authentik/Keycloak, the realm's domain):
 ]
 ```
 
-The fingerprint above is the **default debug signing key** every prebuilt APK
-uses (publicly known — see the signing note below). If you build with your own
-`ANDROID_DEBUG_KEYSTORE_B64`, use *your* key's SHA-256 instead — the Mobile APK
-workflow prints it (and a ready-to-host `assetlinks.json`) in its run summary,
-or run `apksigner verify --print-certs spoolman-companion-*.apk`.
+If you build with your own `ANDROID_DEBUG_KEYSTORE_B64`, use *your* key's
+SHA-256 — the Mobile APK workflow prints it (and a ready-to-host
+`assetlinks.json`) in its run summary, or run
+`apksigner verify --print-certs spoolman-companion-*.apk`. Multiple
+fingerprints in one array are fine (e.g. released + self-built).
 
-Notes:
-- Must be served over **HTTPS** with `Content-Type: application/json`; no
-  redirects. Behind a forward-auth proxy, allow `/.well-known/assetlinks.json`
-  through unauthenticated.
+### Authelia
+
+Authelia's RP ID is the **portal's exact hostname** (taken from
+`X-Forwarded-Host`; not configurable — e.g. `auth.example.com`), so the file
+must be served on that domain. Authelia itself won't serve static files; the
+easiest robust option is a reverse-proxy rule on the portal domain that
+forwards the path to Spoolman's built-in endpoint, so the served fingerprints
+stay managed by `SPOOLMAN_ANDROID_CERT_FINGERPRINTS`:
+
+```yaml
+# Traefik (Docker labels on the Spoolman container)
+- traefik.http.routers.spoolman-dal.rule=Host(`auth.example.com`) && Path(`/.well-known/assetlinks.json`)
+- traefik.http.routers.spoolman-dal.service=spoolman
+# No auth middleware on this router — the file must be public.
+```
+
+```caddyfile
+# Caddy
+auth.example.com {
+  handle /.well-known/assetlinks.json {
+    reverse_proxy spoolman:8000
+  }
+  # ... existing Authelia portal config ...
+}
+```
+
+```nginx
+# nginx
+location = /.well-known/assetlinks.json {
+  proxy_pass http://spoolman:8000;
+}
+```
+
+(Serving a static copy of the JSON works just as well.) Passkey login in the
+portal itself needs **Authelia ≥ 4.39**. If Spoolman's *own* domain is also
+behind Authelia and you rely on the built-in endpoint for a different RP,
+bypass it in the ACL:
+
+```yaml
+access_control:
+  rules:
+    - domain: spoolman.example.com
+      resources: ['^/\.well-known/assetlinks\.json$']
+      policy: bypass
+```
+
+### Authentik / Keycloak
+
+Same rule: the RP ID is the hostname you see during login (the Authentik host
+/ the Keycloak realm's public hostname). Host the file there — a static file
+in the ingress/proxy for that domain, or a proxy rule to Spoolman's endpoint
+as above.
+
+### oauth2-proxy
+
+oauth2-proxy doesn't run WebAuthn itself — the passkey prompt happens at the
+**upstream IdP** it redirects to (Keycloak, Google, …). Self-hosted upstream:
+host the file on *that* IdP's domain. Public IdPs (Google etc.) can't vouch
+for your APK, so portal passkeys aren't achievable there.
+
+### Notes
+
+- Must be served over **HTTPS** with `Content-Type: application/json`, **no
+  redirects**, and a **publicly-trusted certificate** — Google's verifier
+  won't accept self-signed/private-CA certs even if the device trusts them.
+- Behind a forward-auth proxy, the path must be reachable unauthenticated.
 - Needs a recent Android System WebView and a device passkey provider (e.g.
   Google Password Manager). `mediation: "conditional"` (autofill) is not
   supported in a WebView; the user taps the passkey button.
+- Verification results are cached by the platform — after fixing the file,
+  give it a little time and retry.
 - iOS WKWebView passkeys are a separate, untried path (associated domains).
