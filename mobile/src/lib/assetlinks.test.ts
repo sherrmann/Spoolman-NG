@@ -1,9 +1,12 @@
+import { readFileSync } from "node:fs";
+
 import { describe, expect, it } from "vitest";
 
 import {
   buildAssetlinksJson,
   LOGIN_CREDS_RELATION,
   normalizeFingerprint,
+  RELEASED_APK_FINGERPRINT,
   responseWarnings,
   verifyAssetlinks,
   wellKnownUrl,
@@ -142,6 +145,17 @@ describe("verifyAssetlinks", () => {
   });
 });
 
+describe("cross-language constants", () => {
+  // The server serves these values from spoolman/assetlinks.py; the app
+  // displays them. Nothing but this test couples the two languages — a
+  // signing-key rotation that updates one side must not drift past the other.
+  it("matches spoolman/assetlinks.py's package name and release fingerprint", () => {
+    const py = readFileSync(new URL("../../../spoolman/assetlinks.py", import.meta.url), "utf-8");
+    expect(py).toContain(RELEASED_APK_FINGERPRINT);
+    expect(py).toContain(`ANDROID_PACKAGE_NAME = "${PKG}"`);
+  });
+});
+
 describe("responseWarnings", () => {
   const url = "https://auth.example.com/.well-known/assetlinks.json";
 
@@ -163,6 +177,21 @@ describe("responseWarnings", () => {
 
   it("ignores a trailing-slash-only difference", () => {
     expect(responseWarnings({ requestedUrl: url, finalUrl: `${url}/` })).toEqual([]);
+  });
+
+  it("ignores benign normalization differences (host case, explicit :443)", () => {
+    expect(
+      responseWarnings({
+        requestedUrl: url,
+        finalUrl: "https://AUTH.example.com:443/.well-known/assetlinks.json",
+      }),
+    ).toEqual([]);
+  });
+
+  it("still flags a real redirect to another host or path", () => {
+    expect(
+      responseWarnings({ requestedUrl: url, finalUrl: "https://auth.example.com/login" }),
+    ).toHaveLength(1);
   });
 
   it("warns on a wrong content type", () => {

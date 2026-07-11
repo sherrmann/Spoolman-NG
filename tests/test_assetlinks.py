@@ -69,10 +69,15 @@ def test_unset_env_returns_empty_list(monkeypatch: pytest.MonkeyPatch):
 
 
 def _make_app(dist: Path, base_path: str = "") -> FastAPI:
-    """Replicate main.py's registration order: the route BEFORE the SPA mount."""
+    """Replicate main.py exactly: the route BEFORE the SPA mount, mounted at base_path.
+
+    main.py mounts at the raw base_path — the empty string for root deploys, not
+    "/" — and Starlette compiles Mount("") and Mount("/") differently, so the
+    fidelity matters for the shadowing assertions below.
+    """
     app = FastAPI()
     register_assetlinks_route(app)
-    app.mount(base_path if base_path else "/", SinglePageApplication(directory=str(dist), base_path=base_path))
+    app.mount(base_path, SinglePageApplication(directory=str(dist), base_path=base_path))
     return app
 
 
@@ -103,3 +108,29 @@ async def test_route_stays_at_the_true_root_under_a_base_path(tmp_path: Path):
         resp = await client.get("/.well-known/assetlinks.json")
         assert resp.status_code == 200
         assert resp.json() == build_assetlinks()
+
+
+def test_registering_after_a_root_mount_fails_loudly(tmp_path: Path):
+    # The route must beat the SPA catch-all; if a refactor flips the order in
+    # main.py, the server must refuse to start rather than silently serve
+    # index.html for the well-known path.
+    app = FastAPI()
+    app.mount("", SinglePageApplication(directory=str(_make_dist(tmp_path)), base_path=""))
+    with pytest.raises(RuntimeError, match="catch-all mount"):
+        register_assetlinks_route(app)
+
+
+def test_sub_path_mounts_do_not_trip_the_ordering_guard(tmp_path: Path):
+    # main.py mounts /api/v1 before this route — only root catch-alls shadow.
+    app = FastAPI()
+    app.mount("/api/v1", FastAPI())
+    register_assetlinks_route(app)
+    app.mount("", SinglePageApplication(directory=str(_make_dist(tmp_path)), base_path=""))
+
+
+def test_malformed_env_fails_at_startup_not_per_request(monkeypatch: pytest.MonkeyPatch):
+    # A typo in the env var must fail registration (server boot), not turn the
+    # public endpoint into a permanent 500.
+    monkeypatch.setenv("SPOOLMAN_ANDROID_CERT_FINGERPRINTS", "oops")
+    with pytest.raises(ValueError, match="SPOOLMAN_ANDROID_CERT_FINGERPRINTS"):
+        register_assetlinks_route(FastAPI())

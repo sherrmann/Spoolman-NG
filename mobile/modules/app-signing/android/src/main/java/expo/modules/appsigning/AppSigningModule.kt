@@ -33,7 +33,7 @@ class AppSigningModule : Module() {
           @Suppress("DEPRECATION")
           context.packageManager.getPackageInfo(
             context.packageName,
-            @Suppress("DEPRECATION") PackageManager.GET_SIGNATURES,
+            PackageManager.GET_SIGNATURES,
           ).signatures ?: emptyArray()
         }
       signatures.map { signature ->

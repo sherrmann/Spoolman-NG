@@ -47,6 +47,8 @@ interface CheckResult {
  * occurred" into a concrete pass/fail.
  */
 export function PasskeySetupModal({ visible, initialDomain, onClose }: PasskeySetupModalProps) {
+  // The parent mounts this modal fresh on each open, so seeding state from
+  // props here picks up the latest detected portal domain.
   const [domain, setDomain] = useState(initialDomain ?? "");
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<CheckResult | null>(null);
@@ -58,15 +60,6 @@ export function PasskeySetupModal({ visible, initialDomain, onClose }: PasskeySe
     ? installedFingerprints
     : [RELEASED_APK_FINGERPRINT];
   const json = buildAssetlinksJson(packageName, fingerprints);
-
-  // Re-prefill when opened for a (possibly newly-detected) portal domain.
-  const [seenInitial, setSeenInitial] = useState(initialDomain);
-  if (initialDomain !== seenInitial) {
-    setSeenInitial(initialDomain);
-    if (!domain && initialDomain) {
-      setDomain(initialDomain);
-    }
-  }
 
   const runCheck = async () => {
     const url = wellKnownUrl(domain);
@@ -82,19 +75,25 @@ export function PasskeySetupModal({ visible, initialDomain, onClose }: PasskeySe
     setResult(null);
     try {
       const fetched = await fetchAssetlinks(url);
+      // Redirect/content-type diagnostics matter most when the fetch "failed"
+      // (e.g. a forward-auth redirect to a login page reads as invalid JSON).
+      const warnings = responseWarnings({
+        requestedUrl: url,
+        finalUrl: fetched.finalUrl,
+        contentType: fetched.contentType,
+      });
       if (fetched.error !== undefined || fetched.payload === undefined) {
-        setResult({ checkedUrl: url, warnings: [], error: fetched.error ?? "No response." });
+        setResult({ checkedUrl: url, warnings, error: fetched.error ?? "No response." });
         return;
       }
-      setResult({
-        checkedUrl: url,
-        verdict: verifyAssetlinks(fetched.payload, packageName, installedFingerprints),
-        warnings: responseWarnings({
-          requestedUrl: url,
-          finalUrl: fetched.finalUrl,
-          contentType: fetched.contentType,
-        }),
-      });
+      const verdict = verifyAssetlinks(fetched.payload, packageName, installedFingerprints);
+      if (verdict.ok && installedFingerprints.length === 0) {
+        warnings.push(
+          "This APK's signing certificate couldn't be read, so the fingerprint match was " +
+            "skipped — make sure the hosted fingerprint really is this APK's.",
+        );
+      }
+      setResult({ checkedUrl: url, verdict, warnings });
     } finally {
       setBusy(false);
     }

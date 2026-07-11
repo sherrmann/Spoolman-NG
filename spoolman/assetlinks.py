@@ -13,6 +13,7 @@ Content-Type: application/json.
 
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
+from starlette.routing import Mount
 
 from spoolman import env
 
@@ -44,14 +45,26 @@ def build_assetlinks() -> list[dict]:
     ]
 
 
+WELL_KNOWN_PATH = "/.well-known/assetlinks.json"
+
+
 def register_assetlinks_route(app: FastAPI) -> None:
     """Register the well-known route. Must run BEFORE the SPA catch-all is mounted.
 
     The path is deliberately not prefixed with SPOOLMAN_BASE_PATH: Android looks
-    for the file at the true domain root only.
+    for the file at the true domain root only. The statement list is built here,
+    once — a malformed SPOOLMAN_ANDROID_CERT_FINGERPRINTS fails the server at
+    startup instead of turning every request to this public endpoint into a 500.
     """
+    for route in app.routes:
+        if isinstance(route, Mount) and WELL_KNOWN_PATH.startswith(route.path):
+            raise RuntimeError(
+                f"register_assetlinks_route must run before the catch-all mount at '{route.path}', "
+                "which would shadow the well-known path.",
+            )
+    payload = build_assetlinks()
 
-    @app.get("/.well-known/assetlinks.json")
+    @app.get(WELL_KNOWN_PATH)
     def get_assetlinks() -> JSONResponse:
         """Return the Android Digital Asset Links statement list."""
-        return JSONResponse(content=build_assetlinks())
+        return JSONResponse(content=payload)

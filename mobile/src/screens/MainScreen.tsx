@@ -40,9 +40,11 @@ interface MainScreenProps {
 export function MainScreen({ profile, token, onTokenChange, onChangeServer }: MainScreenProps) {
   const webviewRef = useRef<WebView>(null);
   const canGoBackRef = useRef(false);
-  // The most recent off-origin https origin the WebView visited — in practice
-  // the forward-auth portal during the login round-trip. Better passkey-setup
-  // prefill than the setup-time probe (covers portals discovered later).
+  // The most recent off-origin https origin the WebView visited — usually the
+  // forward-auth portal during the login round-trip, but any off-origin hop
+  // (OAuth upstream, redirect) can land here too. Only a passkey-setup prefill
+  // fallback for portals discovered after setup; the vetted setup-time
+  // detection (profile.authOrigin) wins when present.
   const portalOriginRef = useRef<string | null>(null);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [nfcStatus, setNfcStatus] = useState<string | null>(null);
@@ -328,11 +330,15 @@ export function MainScreen({ profile, token, onTokenChange, onChangeServer }: Ma
         }}
       />
 
-      <PasskeySetupModal
-        visible={passkeySetupOpen}
-        initialDomain={hostOf(portalOriginRef.current ?? profile.authOrigin ?? origin)}
-        onClose={() => setPasskeySetupOpen(false)}
-      />
+      {/* Mounted per open: reads the app identity natively and seeds the
+          domain prefill from the latest portal detection at that moment. */}
+      {passkeySetupOpen && (
+        <PasskeySetupModal
+          visible
+          initialDomain={hostOf(profile.authOrigin ?? portalOriginRef.current ?? origin)}
+          onClose={() => setPasskeySetupOpen(false)}
+        />
+      )}
 
       {updateStatus !== null && (
         <View style={styles.updateOverlay} pointerEvents="auto">

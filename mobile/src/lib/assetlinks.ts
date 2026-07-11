@@ -163,7 +163,7 @@ export interface ResponseMeta {
  */
 export function responseWarnings(meta: ResponseMeta): string[] {
   const warnings: string[] = [];
-  if (meta.finalUrl && stripTrailingSlash(meta.finalUrl) !== stripTrailingSlash(meta.requestedUrl)) {
+  if (meta.finalUrl && comparableUrl(meta.finalUrl) !== comparableUrl(meta.requestedUrl)) {
     warnings.push(
       "The request was redirected — Google's verifier does not follow redirects, " +
         `so the file must be served directly at ${meta.requestedUrl}.`,
@@ -178,6 +178,15 @@ export function responseWarnings(meta: ResponseMeta): string[] {
   return warnings;
 }
 
-function stripTrailingSlash(url: string): string {
-  return url.replace(/\/+$/, "");
+/**
+ * Normalize a URL for redirect detection so benign differences — host case,
+ * an explicit :443, trailing slashes — don't read as a redirect.
+ */
+function comparableUrl(url: string): string {
+  const match = url.match(/^(https?):\/\/([^/?#]+)([^?#]*)/i);
+  if (!match) {
+    return url.replace(/\/+$/, "");
+  }
+  const host = match[2].toLowerCase().replace(/:443$/, "");
+  return `${match[1].toLowerCase()}://${host}${match[3].replace(/\/+$/, "")}`;
 }
