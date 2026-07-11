@@ -1,0 +1,22 @@
+diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt
+index f83033b..8c3b947 100644
+--- a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt
++++ b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt
+@@ -83,6 +83,17 @@ class RNCWebViewManagerImpl(private val newArch: Boolean = false) {
+         settings.allowUniversalAccessFromFileURLs = false
+         settings.mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
+ 
++        // Enable WebAuthn (passkeys) for any page the WebView loads — universal,
++        // not tied to a particular identity provider. Uses androidx.webkit's
++        // WEB_AUTHENTICATION feature (webkit 1.12.0+); a no-op on WebView
++        // versions that do not support it. Patched in via patch-package.
++        if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_AUTHENTICATION)) {
++            WebSettingsCompat.setWebAuthenticationSupport(
++                settings,
++                WebSettingsCompat.WEB_AUTHENTICATION_SUPPORT_FOR_BROWSER
++            )
++        }
++
+         // Fixes broken full-screen modals/galleries due to body height being 0.
+         webView.layoutParams = ViewGroup.LayoutParams(
+             ViewGroup.LayoutParams.MATCH_PARENT,

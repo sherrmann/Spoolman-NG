@@ -346,6 +346,25 @@ the `spoolmanApiToken` localStorage key as public API.
     self-signed-HTTPS servers fail TLS — recommend plain HTTP on the LAN or
     real certificates (Let's Encrypt, Tailscale) rather than shipping a
     cert-trust bypass.
+16. **Passkeys / WebAuthn in the WebView.** Android WebView keeps `navigator.
+    credentials` disabled unless the embedder opts in via androidx.webkit's
+    `setWebAuthenticationSupport`; `react-native-webview` does not expose it,
+    so it is patched on (`patches/react-native-webview+*.patch`,
+    `WEB_AUTHENTICATION_SUPPORT_FOR_BROWSER`). This is universal — every login
+    page the WebView loads gets WebAuthn, not just one IdP. Caveats: the patch
+    is pinned to the library version (re-run `npx patch-package
+    react-native-webview` after a bump); it needs a recent Android System
+    WebView and on-device verification; iOS WKWebView passkeys are a separate,
+    untried path.
+17. **In-app self-update (Android).** The app polls
+    `releases/latest` on launch and offers to download + install a newer
+    `spoolman-companion-*.apk` through the system installer
+    (`REQUEST_INSTALL_PACKAGES`; the user grants "install unknown apps" once).
+    The release APK's version is stamped from the git tag at build time
+    (`mobile-apk.yml`) so `nativeApplicationVersion` is comparable to the
+    release tag — without that stamp a released build reads `0.1.0` and would
+    self-nag forever. Obtainium remains the zero-code alternative. iOS is out
+    of scope (no sideload install path).
 
 ## Roadmap & effort (solo-maintainer person-days)
 

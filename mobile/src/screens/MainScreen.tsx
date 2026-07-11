@@ -1,5 +1,14 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Alert, BackHandler, Linking, Platform, StyleSheet, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  BackHandler,
+  Linking,
+  Platform,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { WebView } from "react-native-webview";
 
 import { ApiError, nfcLookup } from "../api/spoolman";
@@ -18,6 +27,7 @@ import {
   readSpoolmanTag,
   type TagReadResult,
 } from "../nfc/readTag";
+import { checkForUpdate, downloadAndInstallApk } from "../update/updater";
 
 interface MainScreenProps {
   profile: ServerProfile;
@@ -32,12 +42,63 @@ export function MainScreen({ profile, token, onTokenChange, onChangeServer }: Ma
   const [scannerOpen, setScannerOpen] = useState(false);
   const [nfcStatus, setNfcStatus] = useState<string | null>(null);
   const [nfcAvailable, setNfcAvailable] = useState(false);
+  const [updateStatus, setUpdateStatus] = useState<string | null>(null);
 
   const origin = originOf(profile.baseUrl);
 
   useEffect(() => {
     ensureNfcStarted().then(setNfcAvailable);
   }, []);
+
+  const startInstall = useCallback(async (apkUrl: string) => {
+    setUpdateStatus("Downloading update… 0%");
+    try {
+      await downloadAndInstallApk(apkUrl, (fraction) => {
+        setUpdateStatus(`Downloading update… ${Math.round(fraction * 100)}%`);
+      });
+      // The system installer takes over here; clear our overlay.
+      setUpdateStatus(null);
+    } catch (e) {
+      setUpdateStatus(null);
+      Alert.alert("Update failed", errorMessage(e));
+    }
+  }, []);
+
+  const runUpdateCheck = useCallback(
+    async (manual: boolean) => {
+      const info = await checkForUpdate();
+      if (!info) {
+        if (manual) {
+          Alert.alert("You're up to date", "No newer companion app has been released.");
+        }
+        return;
+      }
+      Alert.alert(
+        "Update available",
+        `Version ${info.release.version} is available (you have ${info.currentVersion}).`,
+        [
+          { text: "Later", style: "cancel" },
+          { text: "Release notes", onPress: () => Linking.openURL(info.release.htmlUrl).catch(() => {}) },
+          {
+            text: "Update",
+            onPress: () => {
+              if (info.release.apkUrl) {
+                startInstall(info.release.apkUrl);
+              }
+            },
+          },
+        ],
+      );
+    },
+    [startInstall],
+  );
+
+  // Quietly check for a newer release once per app launch (release builds only).
+  useEffect(() => {
+    if (!__DEV__) {
+      runUpdateCheck(false).catch(() => {});
+    }
+  }, [runUpdateCheck]);
 
   // Android hardware back navigates the web app's history first.
   useEffect(() => {
@@ -179,12 +240,16 @@ export function MainScreen({ profile, token, onTokenChange, onChangeServer }: Ma
   }, [lookupTag, nfcAvailable]);
 
   const handleSettings = useCallback(() => {
-    Alert.alert(profile.name ?? "Server", profile.baseUrl, [
-      { text: "Close", style: "cancel" },
+    const buttons = [
+      { text: "Close", style: "cancel" as const },
       { text: "Reload", onPress: () => webviewRef.current?.reload() },
-      { text: "Change server", style: "destructive", onPress: onChangeServer },
-    ]);
-  }, [onChangeServer, profile]);
+      ...(Platform.OS === "android"
+        ? [{ text: "Check for updates", onPress: () => runUpdateCheck(true) }]
+        : []),
+      { text: "Change server", style: "destructive" as const, onPress: onChangeServer },
+    ];
+    Alert.alert(profile.name ?? "Server", profile.baseUrl, buttons);
+  }, [onChangeServer, profile, runUpdateCheck]);
 
   return (
     <View style={styles.container}>
@@ -249,6 +314,13 @@ export function MainScreen({ profile, token, onTokenChange, onChangeServer }: Ma
           setNfcStatus(null);
         }}
       />
+
+      {updateStatus !== null && (
+        <View style={styles.updateOverlay} pointerEvents="auto">
+          <ActivityIndicator size="large" color="#dc7734" />
+          <Text style={styles.updateText}>{updateStatus}</Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -278,5 +350,21 @@ const styles = StyleSheet.create({
     bottom: 24,
     alignItems: "center",
     gap: 12,
+  },
+  updateOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.7)",
+    gap: 16,
+  },
+  updateText: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });

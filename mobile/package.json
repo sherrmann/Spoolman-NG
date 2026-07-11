@@ -4,8 +4,11 @@
   "main": "index.ts",
   "dependencies": {
     "expo": "~57.0.4",
+    "expo-application": "~57.0.0",
     "expo-build-properties": "~57.0.3",
     "expo-camera": "~57.0.1",
+    "expo-file-system": "~57.0.0",
+    "expo-intent-launcher": "~57.0.0",
     "expo-secure-store": "~57.0.0",
     "expo-status-bar": "~57.0.0",
     "react": "19.2.3",
@@ -15,6 +18,7 @@
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
+    "patch-package": "^8.0.1",
     "typescript": "~6.0.3",
     "vitest": "^4.1.10"
   },
@@ -27,6 +31,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "sync-shared": "node scripts/sync-shared.mjs",
+    "postinstall": "patch-package",
     "prepare": "npm run sync-shared"
   },
   "private": true

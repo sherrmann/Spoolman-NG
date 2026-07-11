@@ -35,6 +35,22 @@ things a browser cannot deliver on the default plain-HTTP LAN deployment —
   memory (pages 4–39) for everything else, then asks the server via
   `POST /api/v1/nfc/lookup` — the same endpoint Klipper NFC daemons use. Bound
   spools open directly; unbound tags offer server-side auto-create.
+- **Passkeys / WebAuthn in the login WebView.** The embedded Android WebView
+  has WebAuthn enabled (`WEB_AUTHENTICATION_SUPPORT_FOR_BROWSER` via
+  androidx.webkit), so `navigator.credentials` works for **any** page it loads
+  — Authelia, Authentik, Keycloak, or Spoolman's own login. This is a universal
+  WebView capability, not tied to one identity provider. Enabled through a
+  `patch-package` patch to `react-native-webview` (see `patches/`), because the
+  library does not expose the setting itself. Requires a reasonably recent
+  Android System WebView; a no-op on versions without the feature.
+- **In-app self-update (Android).** On launch the app checks the GitHub
+  `releases/latest` and, when a newer `spoolman-companion-*.apk` is published,
+  offers to download and install it (via the system package installer — you
+  grant "install unknown apps" once). Also available on demand from the ⚙
+  menu → "Check for updates". Version logic is in `src/lib/update.ts` (tested);
+  the download/install is `src/update/updater.ts`. Prefer a hands-off flow?
+  Point [Obtainium](https://github.com/ImranR98/Obtainium) at this repo — it
+  tracks the same release asset. iOS updates go through the App Store/TestFlight.
 
 Not in P0 (next milestones, per the design doc): ISO 15693/OpenPrintTag and
 MIFARE Classic/Qidi raw reads, retail-barcode lookup, native login form,
@@ -105,5 +121,7 @@ MIFARE Classic (Qidi) on iPhone, ever, and NFC reads are foreground-only.
 | Server detection | `GET /api/v1/info`, `GET /api/v1/auth/status` (public even with auth on) |
 | Auth | Bearer token seeded into `localStorage["spoolmanApiToken"]` (the web client attaches it to axios/fetch/WS itself) |
 | Forward-auth (Authelia, etc.) | Detected at setup when `/info` is walled off; the user signs in at the portal inside the WebView, and the shared cookie jar carries the session to native requests |
+| Passkeys / WebAuthn | Enabled on the Android WebView (`WEB_AUTHENTICATION_SUPPORT_FOR_BROWSER`) via a `patch-package` patch — works for any login page the WebView loads |
+| Updates (Android) | `GET https://api.github.com/repos/sherrmann/Spoolman-NG/releases/latest`; newer `spoolman-companion-*.apk` is downloaded and handed to the system installer |
 | NFC lookup | `POST /api/v1/nfc/lookup` with `raw_data_b64` + `nfc_tag_uid`, `auto_create` on request |
 | Scan payloads | `client/src/utils/scan.ts`, vendored into `src/shared/scan.ts` by `scripts/sync-shared.mjs` (regenerated on `npm install`; `src/shared/drift.test.ts` fails when the copy is stale). Metro cannot bundle files outside the project root — Expo CLI recomputes `watchFolders` and ignores `metro.config.js` — hence the sync instead of a direct import. |
