@@ -9,7 +9,7 @@ import { ScannerModal } from "../components/ScannerModal";
 import { bytesToBase64 } from "../lib/base64";
 import { buildNavigateScript, buildStartupInjection, parseWebViewMessage } from "../lib/inject";
 import { decideScanAction, parseNdefCandidate } from "../lib/scanActions";
-import { appUrl, originOf, type ServerProfile } from "../lib/serverProfile";
+import { appUrl, originOf, shouldOpenExternally, type ServerProfile } from "../lib/serverProfile";
 import {
   cancelNfcRead,
   ensureNfcStarted,
@@ -195,6 +195,11 @@ export function MainScreen({ profile, token, onTokenChange, onChangeServer }: Ma
         originWhitelist={["*"]}
         domStorageEnabled
         javaScriptEnabled
+        // Share the WebView cookie jar with native fetch so a forward-auth
+        // (Authelia, etc.) session cookie set during in-app login also
+        // authenticates the native probe and NFC-lookup requests.
+        sharedCookiesEnabled
+        thirdPartyCookiesEnabled
         allowsBackForwardNavigationGestures
         injectedJavaScriptBeforeContentLoaded={buildStartupInjection(token)}
         onMessage={(event) => {
@@ -207,13 +212,11 @@ export function MainScreen({ profile, token, onTokenChange, onChangeServer }: Ma
           canGoBackRef.current = navState.canGoBack;
         }}
         onShouldStartLoadWithRequest={(request) => {
-          // Keep the shell on the configured server; everything else (Ko-fi,
-          // docs, SpoolmanDB links) opens in the system browser.
-          if (
-            request.url.startsWith(origin) ||
-            request.url.startsWith("about:") ||
-            request.url.startsWith("data:")
-          ) {
+          // Keep the shell on the configured server and let forward-auth
+          // redirects (off-origin, non-click) load in-WebView so login can
+          // complete; only clicked external links (Ko-fi, docs, SpoolmanDB)
+          // open in the system browser.
+          if (!shouldOpenExternally(request.url, request.navigationType, origin)) {
             return true;
           }
           Linking.openURL(request.url).catch(() => {});

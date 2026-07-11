@@ -12,10 +12,17 @@ import {
 } from "react-native";
 
 import { probeServer } from "../api/spoolman";
+import { ForwardAuthError } from "../lib/forwardAuth";
 import { normalizeBaseUrl, type ServerProfile } from "../lib/serverProfile";
 
 interface SetupScreenProps {
   onDone: (profile: ServerProfile, token: string | null) => void;
+}
+
+interface PortalState {
+  baseUrl: string;
+  token: string | null;
+  authUrl: string | null;
 }
 
 export function SetupScreen({ onDone }: SetupScreenProps) {
@@ -23,6 +30,7 @@ export function SetupScreen({ onDone }: SetupScreenProps) {
   const [tokenInput, setTokenInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [portal, setPortal] = useState<PortalState | null>(null);
 
   const connect = async () => {
     const baseUrl = normalizeBaseUrl(url);
@@ -32,6 +40,7 @@ export function SetupScreen({ onDone }: SetupScreenProps) {
     }
     setBusy(true);
     setError(null);
+    setPortal(null);
     try {
       const { info, auth } = await probeServer(baseUrl);
       const token = tokenInput.trim() || null;
@@ -51,6 +60,13 @@ export function SetupScreen({ onDone }: SetupScreenProps) {
       }
       onDone(profile, token);
     } catch (e) {
+      if (e instanceof ForwardAuthError) {
+        // Server is behind a login portal (Authelia, etc.). We cannot probe
+        // past it, so offer to open the app and sign in there — the session
+        // cookie set during that login is shared with native requests.
+        setPortal({ baseUrl, token: tokenInput.trim() || null, authUrl: e.authUrl });
+        return;
+      }
       setError(
         `Could not reach a Spoolman server at ${baseUrl} — check the address, port and that ` +
           `your phone is on the same network. (${e instanceof Error ? e.message : String(e)})`,
@@ -58,6 +74,13 @@ export function SetupScreen({ onDone }: SetupScreenProps) {
     } finally {
       setBusy(false);
     }
+  };
+
+  const continueToPortal = () => {
+    if (!portal) {
+      return;
+    }
+    onDone({ baseUrl: portal.baseUrl, name: "Spoolman" }, portal.token);
   };
 
   return (
@@ -100,21 +123,55 @@ export function SetupScreen({ onDone }: SetupScreenProps) {
 
         {error && <Text style={styles.error}>{error}</Text>}
 
-        <TouchableOpacity
-          style={[styles.button, busy && styles.buttonDisabled]}
-          onPress={connect}
-          disabled={busy}
-          accessibilityRole="button"
-        >
-          {busy ? (
-            <ActivityIndicator color="#ffffff" />
-          ) : (
-            <Text style={styles.buttonText}>Connect</Text>
-          )}
-        </TouchableOpacity>
+        {portal && (
+          <Text style={styles.notice}>
+            This server is behind a login portal
+            {portal.authUrl ? ` (${originLabel(portal.authUrl)})` : ""} — an extra sign-in that
+            sits in front of Spoolman. Continue to sign in inside the app; scanning works once
+            you're through.
+          </Text>
+        )}
+
+        {portal ? (
+          <>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={continueToPortal}
+              accessibilityRole="button"
+            >
+              <Text style={styles.buttonText}>Continue to sign in</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.secondaryButton}
+              onPress={() => setPortal(null)}
+              accessibilityRole="button"
+            >
+              <Text style={styles.secondaryButtonText}>Back</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <TouchableOpacity
+            style={[styles.button, busy && styles.buttonDisabled]}
+            onPress={connect}
+            disabled={busy}
+            accessibilityRole="button"
+          >
+            {busy ? (
+              <ActivityIndicator color="#ffffff" />
+            ) : (
+              <Text style={styles.buttonText}>Connect</Text>
+            )}
+          </TouchableOpacity>
+        )}
       </ScrollView>
     </KeyboardAvoidingView>
   );
+}
+
+/** "https://auth.example.ch/?rd=…" -> "auth.example.ch" for a compact label. */
+function originLabel(authUrl: string): string {
+  const match = authUrl.match(/^https?:\/\/([^/?#]+)/i);
+  return match ? match[1] : authUrl;
 }
 
 const styles = StyleSheet.create({
@@ -163,6 +220,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
   },
+  notice: {
+    color: "#555555",
+    marginBottom: 16,
+    fontSize: 13,
+    lineHeight: 19,
+  },
   button: {
     backgroundColor: "#dc7734",
     borderRadius: 10,
@@ -176,5 +239,15 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontSize: 16,
     fontWeight: "700",
+  },
+  secondaryButton: {
+    marginTop: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  secondaryButtonText: {
+    color: "#888888",
+    fontSize: 15,
+    fontWeight: "600",
   },
 });

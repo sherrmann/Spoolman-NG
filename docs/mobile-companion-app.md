@@ -303,8 +303,18 @@ the `spoolmanApiToken` localStorage key as public API.
 9. **Multi-server storage isolation.** localStorage is per-origin (two servers
    on different origins are naturally isolated); two instances on the *same*
    origin under different base paths share the token key — rare, document it.
-   WebView cookie/data stores are per-app, acceptable because Spoolman auth is
-   header/localStorage-based, not cookie-based.
+   WebView cookie/data stores are per-app. Spoolman's *own* auth is
+   header/localStorage-based, but a **forward-auth gateway in front of it
+   (Authelia, Authentik, oauth2-proxy, Traefik/Caddy ForwardAuth) is
+   cookie-based** — so the WebView shares its cookie jar with native fetch
+   (`sharedCookiesEnabled` / `thirdPartyCookiesEnabled`) and setup detects the
+   wall (401/403 or off-origin redirect on the public `/info`) to route the
+   user through an in-WebView portal login. See `src/lib/forwardAuth.ts`. The
+   gateway cookie and the Spoolman bearer token are independent layers and
+   both travel with each request once present. Open follow-ups: portal
+   sessions expire (a lapsed cookie surfaces as a 401 on native lookups →
+   re-open the UI to re-login); iOS WKWebView cookie sharing needs on-device
+   confirmation.
 10. **No service worker in the WebView over HTTP** — harmless: registration
     already no-ops on insecure origins today, and the app is online-first.
     Suppress PWA install prompts when `SpoolmanNative` is present.

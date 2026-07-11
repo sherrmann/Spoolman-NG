@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { apiUrl, appUrl, normalizeBaseUrl, originOf } from "./serverProfile";
+import { apiUrl, appUrl, normalizeBaseUrl, originOf, shouldOpenExternally } from "./serverProfile";
 
 describe("normalizeBaseUrl", () => {
   it("defaults to http:// for bare hosts (the common LAN deployment)", () => {
@@ -47,5 +47,28 @@ describe("URL builders", () => {
   it("extracts the origin for the external-link policy", () => {
     expect(originOf("https://x.example.com/spoolman")).toBe("https://x.example.com");
     expect(originOf("http://pi:7912")).toBe("http://pi:7912");
+  });
+});
+
+describe("shouldOpenExternally", () => {
+  const origin = "https://spoolman-ng.sherrmann.ch";
+
+  it("keeps same-origin, about: and data: navigations in the WebView", () => {
+    expect(shouldOpenExternally(`${origin}/spool`, "click", origin)).toBe(false);
+    expect(shouldOpenExternally("about:blank", "other", origin)).toBe(false);
+    expect(shouldOpenExternally("data:text/html,x", "other", origin)).toBe(false);
+  });
+
+  it("keeps an off-origin forward-auth redirect in the WebView so login completes", () => {
+    // The Authelia round-trip is a redirect ("other"), not a user click.
+    expect(shouldOpenExternally("https://auth.sherrmann.ch/?rd=x", "other", origin)).toBe(false);
+    expect(shouldOpenExternally("https://auth.sherrmann.ch/login", "formsubmit", origin)).toBe(
+      false,
+    );
+  });
+
+  it("sends a clicked external link to the system browser", () => {
+    expect(shouldOpenExternally("https://ko-fi.com/donate", "click", origin)).toBe(true);
+    expect(shouldOpenExternally("https://spoolmandb.org", "click", origin)).toBe(true);
   });
 });

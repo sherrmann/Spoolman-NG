@@ -39,6 +39,25 @@ export function originOf(baseUrl: string): string {
   return match ? match[1] : baseUrl;
 }
 
+/**
+ * Whether a navigation should be handed to the system browser instead of
+ * staying in the WebView. The shell keeps the configured server in-app, but a
+ * forward-auth login (Authelia, etc.) redirects off-origin to a portal and
+ * MUST load in the WebView so the session cookie is set — so only *clicked*
+ * off-origin links (Ko-fi, docs, SpoolmanDB) go out; redirects and form
+ * submits (the SSO round-trip) stay in.
+ */
+export function shouldOpenExternally(
+  url: string,
+  navigationType: string | undefined,
+  origin: string,
+): boolean {
+  if (url.startsWith(origin) || url.startsWith("about:") || url.startsWith("data:")) {
+    return false;
+  }
+  return navigationType === "click";
+}
+
 export function apiUrl(baseUrl: string, path: string): string {
   return `${baseUrl}/api/v1${path}`;
 }
