@@ -13,7 +13,10 @@ def test_get_assetlinks():
     assert result.headers["content-type"].startswith("application/json")
     statements = result.json()
     assert isinstance(statements, list)
-    assert statements[0]["relation"] == ["delegate_permission/common.get_login_creds"]
+    # Both relations: get_login_creds (the credential grant) and handle_all_urls
+    # (required by Bitwarden's Google-API-based validation).
+    assert "delegate_permission/common.get_login_creds" in statements[0]["relation"]
+    assert "delegate_permission/common.handle_all_urls" in statements[0]["relation"]
     target = statements[0]["target"]
     assert target["namespace"] == "android_app"
     assert target["package_name"] == "app.spoolman.companion"

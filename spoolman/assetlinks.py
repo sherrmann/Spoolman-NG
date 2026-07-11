@@ -35,7 +35,17 @@ def build_assetlinks() -> list[dict]:
             fingerprints.append(fingerprint)
     return [
         {
-            "relation": ["delegate_permission/common.get_login_creds"],
+            # Both relations, per Google's credential-sharing docs. get_login_creds
+            # is the credential-delegation grant; handle_all_urls is what
+            # third-party providers actually check today (Bitwarden queries
+            # Google's assetlinks:check API for handle_all_urls ONLY and shows
+            # "Passkeys not supported for this app" without it). It has no other
+            # effect unless the app also declares matching app-link intent
+            # filters, which the companion app does not.
+            "relation": [
+                "delegate_permission/common.handle_all_urls",
+                "delegate_permission/common.get_login_creds",
+            ],
             "target": {
                 "namespace": "android_app",
                 "package_name": ANDROID_PACKAGE_NAME,

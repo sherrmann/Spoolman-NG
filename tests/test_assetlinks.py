@@ -27,11 +27,16 @@ from spoolman.client import SinglePageApplication
 EXTRA_FP = ":".join(["AB"] * 32)
 
 
-def test_default_payload_is_a_single_get_login_creds_statement():
+def test_default_payload_is_a_single_statement_with_both_relations():
+    # get_login_creds is the credential grant; handle_all_urls is what
+    # Bitwarden (via Google's assetlinks:check API) requires — see assetlinks.py.
     payload = build_assetlinks()
     assert payload == [
         {
-            "relation": ["delegate_permission/common.get_login_creds"],
+            "relation": [
+                "delegate_permission/common.handle_all_urls",
+                "delegate_permission/common.get_login_creds",
+            ],
             "target": {
                 "namespace": "android_app",
                 "package_name": ANDROID_PACKAGE_NAME,

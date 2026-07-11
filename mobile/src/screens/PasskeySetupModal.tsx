@@ -87,6 +87,7 @@ export function PasskeySetupModal({ visible, initialDomain, onClose }: PasskeySe
         return;
       }
       const verdict = verifyAssetlinks(fetched.payload, packageName, installedFingerprints);
+      warnings.push(...verdict.warnings);
       if (verdict.ok && installedFingerprints.length === 0) {
         warnings.push(
           "This APK's signing certificate couldn't be read, so the fingerprint match was " +
