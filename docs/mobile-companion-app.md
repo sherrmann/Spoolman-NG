@@ -349,13 +349,18 @@ the `spoolmanApiToken` localStorage key as public API.
 16. **Passkeys / WebAuthn in the WebView.** Android WebView keeps `navigator.
     credentials` disabled unless the embedder opts in via androidx.webkit's
     `setWebAuthenticationSupport`; `react-native-webview` does not expose it,
-    so it is patched on (`patches/react-native-webview+*.patch`,
-    `WEB_AUTHENTICATION_SUPPORT_FOR_BROWSER`). This is universal — every login
-    page the WebView loads gets WebAuthn, not just one IdP. Caveats: the patch
-    is pinned to the library version (re-run `npx patch-package
-    react-native-webview` after a bump); it needs a recent Android System
-    WebView and on-device verification; iOS WKWebView passkeys are a separate,
-    untried path.
+    so it is patched on (`patches/react-native-webview+*.patch`). Use
+    `WEB_AUTHENTICATION_SUPPORT_FOR_APP` — the mode Android documents for
+    non-browser apps. `FOR_BROWSER` is only for privileged browser apps and
+    makes the ceremony fail with "an unknown error"; that was the initial bug.
+    FOR_APP requires the relying party's domain to host a Digital Asset Links
+    file authorizing this app + its signing cert (see `mobile/README.md` →
+    Passkeys; the Mobile APK workflow prints the fingerprint + a ready
+    `assetlinks.json`). Caveats: the patch is pinned to the library version
+    (re-run `npx patch-package react-native-webview` after a bump); needs a
+    recent Android System WebView and on-device verification; `mediation:
+    "conditional"` is unsupported in WebView; iOS WKWebView passkeys are a
+    separate, untried path.
 17. **In-app self-update (Android).** The app polls
     `releases/latest` on launch and offers to download + install a newer
     `spoolman-companion-*.apk` through the system installer
