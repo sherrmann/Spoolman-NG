@@ -36,13 +36,13 @@ things a browser cannot deliver on the default plain-HTTP LAN deployment —
   `POST /api/v1/nfc/lookup` — the same endpoint Klipper NFC daemons use. Bound
   spools open directly; unbound tags offer server-side auto-create.
 - **Passkeys / WebAuthn in the login WebView.** The embedded Android WebView
-  has WebAuthn enabled (`WEB_AUTHENTICATION_SUPPORT_FOR_BROWSER` via
-  androidx.webkit), so `navigator.credentials` works for **any** page it loads
-  — Authelia, Authentik, Keycloak, or Spoolman's own login. This is a universal
-  WebView capability, not tied to one identity provider. Enabled through a
+  has WebAuthn enabled (`WEB_AUTHENTICATION_SUPPORT_FOR_APP` via androidx.webkit),
+  so `navigator.credentials` works for the login page it loads — Authelia,
+  Authentik, Keycloak, or Spoolman's own login. Enabled through a
   `patch-package` patch to `react-native-webview` (see `patches/`), because the
   library does not expose the setting itself. Requires a reasonably recent
-  Android System WebView; a no-op on versions without the feature.
+  Android System WebView; a no-op on versions without the feature. **One-time
+  server setup is required** — see [Passkeys](#passkeys-webauthn) below.
 - **In-app self-update (Android).** On launch the app checks the GitHub
   `releases/latest` and, when a newer `spoolman-companion-*.apk` is published,
   offers to download and install it (via the system package installer — you
@@ -121,7 +121,53 @@ MIFARE Classic (Qidi) on iPhone, ever, and NFC reads are foreground-only.
 | Server detection | `GET /api/v1/info`, `GET /api/v1/auth/status` (public even with auth on) |
 | Auth | Bearer token seeded into `localStorage["spoolmanApiToken"]` (the web client attaches it to axios/fetch/WS itself) |
 | Forward-auth (Authelia, etc.) | Detected at setup when `/info` is walled off; the user signs in at the portal inside the WebView, and the shared cookie jar carries the session to native requests |
-| Passkeys / WebAuthn | Enabled on the Android WebView (`WEB_AUTHENTICATION_SUPPORT_FOR_BROWSER`) via a `patch-package` patch — works for any login page the WebView loads |
+| Passkeys / WebAuthn | Enabled on the Android WebView (`WEB_AUTHENTICATION_SUPPORT_FOR_APP`) via a `patch-package` patch; needs a Digital Asset Links file on the IdP domain (see below) |
 | Updates (Android) | `GET https://api.github.com/repos/sherrmann/Spoolman-NG/releases/latest`; newer `spoolman-companion-*.apk` is downloaded and handed to the system installer |
 | NFC lookup | `POST /api/v1/nfc/lookup` with `raw_data_b64` + `nfc_tag_uid`, `auto_create` on request |
 | Scan payloads | `client/src/utils/scan.ts`, vendored into `src/shared/scan.ts` by `scripts/sync-shared.mjs` (regenerated on `npm install`; `src/shared/drift.test.ts` fails when the copy is stale). Metro cannot bundle files outside the project root — Expo CLI recomputes `watchFolders` and ignores `metro.config.js` — hence the sync instead of a direct import. |
+
+## Passkeys (WebAuthn)
+
+Android only lets a **real browser** use passkeys for arbitrary sites without
+extra setup. A normal app embedding a login page (like this one) must use
+`WEB_AUTHENTICATION_SUPPORT_FOR_APP`, and Android then requires the identity
+provider's domain to **vouch for the app** via a
+[Digital Asset Links](https://developers.google.com/digital-asset-links) file.
+Without it the passkey ceremony fails with *"an unknown error has occurred"*.
+This is a platform security rule, not a Spoolman limitation — password/OTP
+login works regardless.
+
+**One-time setup** — host this at `https://<IdP-domain>/.well-known/assetlinks.json`,
+where `<IdP-domain>` matches your identity provider's **WebAuthn RP ID**
+(for Authelia, `webauthn.display_name`'s host / `identity_validation` domain —
+usually your auth or apex domain; for Authentik/Keycloak, the realm's domain):
+
+```json
+[
+  {
+    "relation": ["delegate_permission/common.get_login_creds"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.spoolman.companion",
+      "sha256_cert_fingerprints": [
+        "FA:C6:17:45:DC:09:03:78:6F:B9:ED:E6:2A:96:2B:39:9F:73:48:F0:BB:6F:89:9B:83:32:66:75:91:03:3B:9C"
+      ]
+    }
+  }
+]
+```
+
+The fingerprint above is the **default debug signing key** every prebuilt APK
+uses (publicly known — see the signing note below). If you build with your own
+`ANDROID_DEBUG_KEYSTORE_B64`, use *your* key's SHA-256 instead — the Mobile APK
+workflow prints it (and a ready-to-host `assetlinks.json`) in its run summary,
+or run `apksigner verify --print-certs spoolman-companion-*.apk`.
+
+Notes:
+- Must be served over **HTTPS** with `Content-Type: application/json`; no
+  redirects. Behind a forward-auth proxy, allow `/.well-known/assetlinks.json`
+  through unauthenticated.
+- Needs a recent Android System WebView and a device passkey provider (e.g.
+  Google Password Manager). `mediation: "conditional"` (autofill) is not
+  supported in a WebView; the user taps the passkey button.
+- iOS WKWebView passkeys are a separate, untried path (associated domains).

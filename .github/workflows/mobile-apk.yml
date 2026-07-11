@@ -107,6 +107,30 @@ jobs:
           cp mobile/android/app/build/outputs/apk/release/app-release.apk \
             "/tmp/companion-apk/spoolman-companion-${ref_name}.apk"
 
+      # Passkeys (WebAuthn) in the WebView use FOR_APP mode, which needs the
+      # relying-party domain to host a Digital Asset Links file naming this app
+      # and its signing certificate. Print that fingerprint and a ready-to-host
+      # assetlinks.json so a user with any keystore knows exactly what to serve.
+      - name: Emit signing fingerprint + assetlinks.json for passkeys
+        run: |
+          apk="mobile/android/app/build/outputs/apk/release/app-release.apk"
+          apksigner=$(ls "$ANDROID_HOME"/build-tools/*/apksigner 2>/dev/null | sort -V | tail -1)
+          fp=$("$apksigner" verify --print-certs "$apk" 2>/dev/null \
+            | awk -F': ' '/SHA-256/{print toupper($2); exit}' \
+            | sed 's/\(..\)/\1:/g; s/:$//')
+          pkg=$(node -e "console.log(require('./mobile/app.json').expo.android.package)")
+          {
+            echo "### Passkeys: Digital Asset Links"
+            echo ""
+            echo "Host this at \`https://<your-SSO-domain>/.well-known/assetlinks.json\`"
+            echo "(the domain must match your IdP's WebAuthn RP ID):"
+            echo ""
+            echo '```json'
+            echo "[{\"relation\":[\"delegate_permission/common.get_login_creds\"],\"target\":{\"namespace\":\"android_app\",\"package_name\":\"${pkg}\",\"sha256_cert_fingerprints\":[\"${fp}\"]}}]"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+        continue-on-error: true
+
       - name: Upload APK artifact
         uses: actions/upload-artifact@v7.0.1
         with:
