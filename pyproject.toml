@@ -70,6 +70,10 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::StarletteDeprecationWarning",
+    "ignore::DeprecationWarning:datetime.datetime.utcnow",
+]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 testpaths = ["tests"]

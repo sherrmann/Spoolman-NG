@@ -7,7 +7,7 @@ nothing is written and the errors are returned. A dry run validates and reports 
 without committing.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Query, Request
@@ -58,7 +58,7 @@ _PARAMS = {
 
 
 def _now() -> datetime:
-    return datetime.utcnow().replace(microsecond=0)
+    return datetime.now(timezone.utc).replace(microsecond=0)
 
 
 async def _build_vendor(

@@ -2,7 +2,7 @@
 
 import logging
 from collections.abc import Sequence
-from datetime import datetime
+from datetime import datetime, timezone
 
 import sqlalchemy
 from sqlalchemy import case, func
@@ -89,7 +89,7 @@ async def create(
 
     spool = models.Spool(
         filament=filament_item,
-        registered=datetime.utcnow().replace(microsecond=0),
+        registered=datetime.now(timezone.utc).replace(microsecond=0),
         initial_weight=initial_weight,
         spool_weight=spool_weight,
         used_weight=used_weight,
@@ -424,7 +424,7 @@ def _record_usage_event(
     db.add(
         models.SpoolUsageEvent(
             spool_id=spool_id,
-            time=datetime.utcnow().replace(microsecond=0),
+            time=datetime.now(timezone.utc).replace(microsecond=0),
             event_type=event_type,
             delta=delta,
             measured_weight=measured_weight,
@@ -515,8 +515,8 @@ async def use_weight(
     spool = await get_by_id(db, spool_id)
 
     if spool.first_used is None:
-        spool.first_used = datetime.utcnow().replace(microsecond=0)
-    spool.last_used = datetime.utcnow().replace(microsecond=0)
+        spool.first_used = datetime.now(timezone.utc).replace(microsecond=0)
+    spool.last_used = datetime.now(timezone.utc).replace(microsecond=0)
 
     _record_usage_event(
         db,
@@ -583,8 +583,8 @@ async def use_length(
     spool = await get_by_id(db, spool_id)
 
     if spool.first_used is None:
-        spool.first_used = datetime.utcnow().replace(microsecond=0)
-    spool.last_used = datetime.utcnow().replace(microsecond=0)
+        spool.first_used = datetime.now(timezone.utc).replace(microsecond=0)
+    spool.last_used = datetime.now(timezone.utc).replace(microsecond=0)
 
     _record_usage_event(db, spool_id, "use", weight_delta, comment=comment, idempotency_key=idempotency_key)
     await db.commit()
@@ -712,7 +712,7 @@ async def spool_changed(spool: models.Spool, typ: EventType, delta: dict | None 
         spool = Spool.from_db(spool)
         await websocket_manager.send(
             ("spool", str(spool.id)),
-            SpoolEvent(type=typ, resource="spool", date=datetime.utcnow(), payload=spool, payload_extras=delta),
+            SpoolEvent(type=typ, resource="spool", date=datetime.now(timezone.utc), payload=spool, payload_extras=delta),
         )
     except Exception:
         # Important to have a catch-all here since we don't want to stop the call if this fails.

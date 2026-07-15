@@ -35,7 +35,7 @@ async def create_session(
     await filament_db.get_by_id(db, filament_id)  # raises ItemNotFoundError if filament missing
 
     db_item = models.CalibrationSession(
-        registered=datetime.utcnow().replace(microsecond=0),
+        registered=datetime.now(timezone.utc).replace(microsecond=0),
         filament_id=filament_id,
         status=status,
         printer_name=printer_name,
@@ -144,7 +144,7 @@ async def create_step_result(
         notes=notes,
         confidence=confidence,
         recorded_at=(
-            utc_timezone_naive(recorded_at) if recorded_at is not None else datetime.utcnow().replace(microsecond=0)
+            utc_timezone_naive(recorded_at) if recorded_at is not None else datetime.now(timezone.utc).replace(microsecond=0)
         ),
     )
     db.add(db_item)
