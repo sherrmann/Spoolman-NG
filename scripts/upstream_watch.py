@@ -37,7 +37,8 @@ def render_watch_issue(commits: list[dict], issues: list[dict], prs: list[dict])
         out += [f"### New upstream commits ({len(commits)})", ""]
         for c in commits:
             dirs = ", ".join(f"`{d}`" for d in c["dirs"]) or "`.`"
-            out.append(f"- [ ] `{c['sha'][:9]}` {c['subject']} ({dirs}) — port / skip?")
+            # Subject is backticked too: "(#N)" in upstream subjects must not auto-link against our repo.
+            out.append(f"- [ ] `{c['sha'][:9]}` `{c['subject']}` ({dirs}) — port / skip?")
         out.append("")
     if issues:
         out += [f"### New upstream issues ({len(issues)})", ""]
@@ -79,8 +80,17 @@ def new_issues_and_prs(since: str) -> tuple[list[dict], list[dict]]:
         capture_output=True,
         text=True,
     ).stdout
-    # --paginate concatenates JSON arrays; normalise before parsing.
-    items = json.loads("[" + raw.replace("][", ",").strip("[]") + "]") if raw.strip() else []
+    # --paginate concatenates JSON arrays ("[…][…]"); decode them as a stream —
+    # string splicing would crash on an empty page ("[]"). (gh's --slurp flag
+    # would do this for us, but needs gh >= 2.47; this works on any version.)
+    decoder = json.JSONDecoder()
+    items: list[dict] = []
+    idx, end = 0, len(raw)
+    while idx < end:
+        page, idx = decoder.raw_decode(raw, idx)
+        items.extend(page)
+        while idx < end and raw[idx] in " \t\r\n":
+            idx += 1
 
     def _row(i: dict) -> dict:
         return {"number": i["number"], "title": i["title"], "created_at": i["created_at"]}

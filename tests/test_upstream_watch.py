@@ -1,5 +1,6 @@
 """Tests for scripts/upstream_watch.py (pure functions only)."""
 
+import re
 import sys
 from pathlib import Path
 
@@ -18,12 +19,20 @@ def test_render_body_backticks_refs_and_lists_all() -> None:
     prs = [{"number": 971, "title": "New PR", "created_at": "2026-07-13T10:00:00Z"}]
     body = render_watch_issue(commits, issues, prs)
     assert "### New upstream commits (1)" in body
-    assert f"- [ ] `{'a' * 9}` Fix theme (`client`, `spoolman`) — port / skip?" in body
+    assert f"- [ ] `{'a' * 9}` `Fix theme` (`client`, `spoolman`) — port / skip?" in body
     assert "`Donkie/Spoolman#970`" in body
     assert "`Donkie/Spoolman#971`" in body
     # zero un-backticked upstream refs (no cross-link spam from listings):
     assert "Donkie/Spoolman#" not in body.replace("`Donkie/Spoolman#", "")
     assert "github.com/Donkie" not in body
+
+
+def test_render_backticks_commit_subjects_with_issue_refs() -> None:
+    commits = [{"sha": "b" * 40, "subject": "add System option (#947)", "dirs": ["client"]}]
+    body = render_watch_issue(commits, [], [])
+    assert "`add System option (#947)`" in body
+    # the upstream PR number must not appear outside backticks (it would auto-link against our repo):
+    assert "#947" not in re.sub(r"`[^`]*`", "", body)
 
 
 def test_filter_created_after() -> None:
