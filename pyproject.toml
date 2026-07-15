@@ -150,6 +150,13 @@ ignore = [
 # package): INP001 (no __init__.py by design) and TC002 (keep the Starlette Request
 # import runtime-visible rather than gating it behind TYPE_CHECKING in a tiny script).
 "client/e2e/*.py" = ["INP001", "TC002"]
+# scripts/ holds standalone maintenance scripts (run directly, not imported as a
+# package), same rationale as client/e2e above.
+"scripts/*.py" = ["INP001"]
+# The triage-table fixture mirrors real markdown table rows verbatim (one row
+# per line, matching docs/upstream-triage.md), so lines run long; the paired
+# assertions are grouped by the row they check rather than split arbitrarily.
+"tests/test_upstream_ledger.py" = ["E501", "PT018"]
 "migrations/versions/*" = ["N999"]
 # NFC support modules are binary-protocol codecs and hardware (USB/NFC) I/O.
 # Magic byte values, branchy decoders/state machines, defensive broad-except
