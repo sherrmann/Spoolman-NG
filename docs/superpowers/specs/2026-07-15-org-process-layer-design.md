@@ -18,6 +18,7 @@ Verified facts this design rests on:
 1. **Watch cadence: weekly** (Mondays, alongside the existing mutation-testing schedule).
 2. **Upstream visibility: organic only.** Going forward, upstream references in fork PRs/issues/commits are written unbackticked so GitHub cross-links them. No retroactive editing of the 98 existing issue bodies (would fire ~132 timeline events upstream at once). No mass commenting on upstream issues. Whether to hand-write comments on a few high-traffic upstream issues is deferred to the fork-announcement milestone.
 3. **Organisation: trial first.** No blind transfer. Phase 0 (below) empirically verifies cost/behavior before any real repo moves.
+4. **Secrets stay (2026-07-15).** The existing classic PAT keeps powering the release/bump pipeline. Fine-grained PAT / GitHub App migration is deferred — natural revisit point is the org migration, which forces a secrets review anyway.
 
 ---
 
@@ -71,7 +72,7 @@ Verified facts this design rests on:
 
 1. **spoolman-ng-addons CI (from zero):** one workflow with two jobs on PR + push-to-master: (a) `frenck/action-addon-linter` against `spoolman_ng/` + yamllint; (b) amd64 docker build smoke of the add-on. Branch protection on master requiring both.
 2. **Version-bump sync becomes a PR:** the release pipeline's direct push to spoolman-ng-addons changes to "create branch + PR with auto-merge". Same automation, now gated by the new lint and auditable. (Requires the addons repo to allow auto-merge.)
-3. **Secrets:** replace the classic PAT with a fine-grained PAT scoped to exactly: spoolman-ng-addons `contents: write` + `pull_requests: write`, and this repo's `contents: write` for the release bump. If the org lands (D), prefer a GitHub App installed on both repos. Rotate and delete the classic PAT afterwards.
+3. **Secrets: deferred** (decision 4). The classic PAT stays; C2's PR-based sync works with it unchanged. Revisit at org migration.
 4. **Dependabot** in spoolman-ng-addons (`github-actions`, `docker` ecosystems), matching the other two repos.
 5. **Release notes:** enable GitHub auto-generated notes (`.github/release.yml` categories from labels) + the ledger section from A.
 6. **Explicitly out of scope now:** per-PR mutation testing (weekly stays), SHA-pinning all actions (separate chore), CodeQL on the addons repo (nothing to scan).
@@ -82,18 +83,18 @@ Verified facts this design rests on:
 1. Create a free **throwaway trial org** (e.g. `spoolman-ng-trial`) — the real org name (`spoolman-ng` proposed) is decided at the Phase 0→1 review gate, because GitHub org names are hard to reclaim after deletion and the trial shouldn't burn the good name.
 2. Create a public scratch repo in it with a workflow exercising: scheduled + push-triggered Actions runs, a ghcr.io package publish under the org namespace, and a Pages deploy.
 3. Verify empirically: Actions run without a payment method and the org's billing page shows $0 / "Free" plan with public-repo usage not metered; ghcr package is pullable anonymously; Pages serves.
-4. Pilot transfer: move **spoolman-ng-addons** (lowest stakes: no packages, no Pages, no external links yet) into the org. Verify: web + git redirects work, issues/stars intact, what happened to repo secrets and branch protection, and that the release pipeline's bump job (with the new fine-grained token re-scoped to the org repo) still works.
+4. Pilot transfer: move **spoolman-ng-addons** (lowest stakes: no packages, no Pages, no external links yet) into the org. Verify: web + git redirects work, issues/stars intact, what happened to repo secrets and branch protection, and that the release pipeline's bump job — still using the existing classic PAT — works against the transferred repo (classic PATs cover org repos the user can access, unless the org restricts them; verifying this is a trial goal).
 5. Document findings in the migration checklist; **stop here and review** before Phase 1.
 
 **Phase 1 — SpoolmanDB transfer:** transfer repo; Pages URL changes to `<org>.github.io/SpoolmanDB`. Transition: keep a stub `SpoolmanDB` repo on the personal account whose scheduled workflow republishes the org build's `filaments.json` to the old Pages URL for **6 months** (sunset date recorded in the stub README). New releases point `EXTERNAL_DB_URL` default at the org URL.
 
-**Phase 2 — main repo transfer:** transfer `Spoolman-NG`; update `ghcr.io` publish to **dual-publish** (`ghcr.io/sherrmann/spoolman-ng` + `ghcr.io/<org>/spoolman-ng`) for **3 months** (noted in the README with the sunset date), then sunset the personal path. Docker Hub (`cookiemonster95`) unaffected. Update README/Moonraker `update_manager` docs (git redirects make this non-urgent but it should be same-release). Re-create repo secrets (transfers don't reliably carry them; we're re-issuing tokens in C3 anyway).
+**Phase 2 — main repo transfer:** transfer `Spoolman-NG`; update `ghcr.io` publish to **dual-publish** (`ghcr.io/sherrmann/spoolman-ng` + `ghcr.io/<org>/spoolman-ng`) for **3 months** (noted in the README with the sunset date), then sunset the personal path. Docker Hub (`cookiemonster95`) unaffected. Update README/Moonraker `update_manager` docs (git redirects make this non-urgent but it should be same-release). Re-create repo secrets if the transfer drops them (re-add the existing PAT secret; the Phase 0 pilot will have established the exact behavior).
 
 **Rollback:** GitHub allows transferring back; redirects then point the other way. The trial phase exists precisely so Phases 1–2 only run with verified facts.
 
 ## Build order
 
-Independent pieces, cheapest-first: **C1/C4 (addons CI + dependabot) → A (ledger) → B (watch) → B2 (SpoolmanDB sync) → C2/C3 (PR-based sync + token swap) → D Phase 0 (org trial) → review gate → D Phases 1–2.**
+Independent pieces, cheapest-first: **C1/C4 (addons CI + dependabot) → A (ledger) → B (watch) → B2 (SpoolmanDB sync) → C2 (PR-based sync) → D Phase 0 (org trial) → review gate → D Phases 1–2.**
 
 ## Testing
 
