@@ -93,3 +93,22 @@ manufacturers there; Spoolman NG installs sync from it by default (see
 ## Security issues
 
 Please report vulnerabilities privately — see [SECURITY.md](SECURITY.md).
+
+## Upstream references
+
+When a change addresses an upstream issue, add a plain-text line to the **fork issue** body:
+
+    Upstream: https://github.com/Donkie/Spoolman/issues/NNN
+
+Written **unbackticked**, so GitHub cross-links it quietly upstream. `scripts/upstream_ledger.py`
+reads this line from the fork issue body only — not the PR — to attribute entries in
+`docs/upstream/SOLVED.md`. Adding the same line to the PR body too is encouraged (it gives you the
+same organic upstream cross-link there), but it has no effect on the ledger.
+
+When a PR ports (or deliberately skips) upstream commits, add one trailer line per commit:
+
+    Upstream-commit: <sha> ported
+    Upstream-commit: <sha> skipped — <short reason>
+
+Exception: **generated** listings (the weekly `upstream-watch` issues) backtick upstream refs on
+purpose — bulk listings must not cross-link 100 upstream threads. Only real work items link.

@@ -1,0 +1,1772 @@
+{
+  "solved": [
+    {
+      "fork_issue": 44,
+      "upstream": [
+        426
+      ],
+      "title": "Guard useInitialTableState JSON.parse (and add an ErrorBoundary) so corrupt saved state can't blank the list pages",
+      "kind": "fix",
+      "pri": "P1",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 45,
+      "upstream": [
+        780
+      ],
+      "title": "Normalize color_hex in the filament validator so oversized values cannot 500 and brick the filament list",
+      "kind": "fix",
+      "pri": "P1",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 47,
+      "upstream": [
+        923
+      ],
+      "title": "Cover fetch() reads and the WebSocket live provider in the 401 auth-reload handler",
+      "kind": "fix",
+      "pri": "P1",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 49,
+      "upstream": [
+        201,
+        478,
+        539,
+        688,
+        742,
+        746
+      ],
+      "title": "Show spool count per filament (and spool/filament counts per vendor) as list columns",
+      "kind": "feature",
+      "pri": "P1",
+      "pr": 151,
+      "released_in": "v2026.7.2"
+    },
+    {
+      "fork_issue": 51,
+      "upstream": [
+        17,
+        356,
+        598
+      ],
+      "title": "Add free-text search across the spool/filament list pages (matching all fields, including comments and tags)",
+      "kind": "feature",
+      "pri": "P1",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 53,
+      "upstream": [
+        265,
+        347,
+        572
+      ],
+      "title": "Show total remaining weight in stock per filament on the Filament list",
+      "kind": "feature",
+      "pri": "P1",
+      "pr": 151,
+      "released_in": "v2026.7.2"
+    },
+    {
+      "fork_issue": 55,
+      "upstream": [
+        212,
+        566,
+        705
+      ],
+      "title": "Add CSV/JSON import for spools, filaments, and vendors (round-tripping the existing export format)",
+      "kind": "feature",
+      "pri": "P1",
+      "pr": 152,
+      "released_in": "v2026.7.2"
+    },
+    {
+      "fork_issue": 58,
+      "upstream": [
+        669,
+        685,
+        795
+      ],
+      "title": "Add value-formatting to the label template language (numeric rounding/precision, date/time formatting, per-tag font size)",
+      "kind": "feature",
+      "pri": "P1",
+      "pr": 153,
+      "released_in": "v2026.7.2"
+    },
+    {
+      "fork_issue": 46,
+      "upstream": [
+        109,
+        739
+      ],
+      "title": "Expose the existing color-similarity filter as a UI control on the Filament and Spool lists",
+      "kind": "feature",
+      "pri": "P1",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 48,
+      "upstream": [
+        229,
+        501
+      ],
+      "title": "Add opt-in bearer-token API authentication (SPOOLMAN_API_TOKEN)",
+      "kind": "feature",
+      "pri": "P1",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 50,
+      "upstream": [
+        751,
+        916
+      ],
+      "title": "Add a persisted, timestamped per-spool usage/adjustment log",
+      "kind": "feature",
+      "pri": "P1",
+      "pr": 150,
+      "released_in": "v2026.7.2"
+    },
+    {
+      "fork_issue": 52,
+      "upstream": [
+        775,
+        852
+      ],
+      "title": "Add optional user accounts with password login and admin/read-only roles",
+      "kind": "feature",
+      "pri": "P1",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 54,
+      "upstream": [
+        69
+      ],
+      "title": "Suggest a default density value based on the entered material",
+      "kind": "feature",
+      "pri": "P1",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 59,
+      "upstream": [
+        794,
+        829
+      ],
+      "title": "Render printed QR codes at a predictable size independent of label text length, and expose QR padding",
+      "kind": "fix",
+      "pri": "P2",
+      "pr": 153,
+      "released_in": "v2026.7.2"
+    },
+    {
+      "fork_issue": 60,
+      "upstream": [
+        1
+      ],
+      "title": "Make PUT /spool/{id}/use idempotent against client retries",
+      "kind": "fix",
+      "pri": "P2",
+      "pr": 150,
+      "released_in": "v2026.7.2"
+    },
+    {
+      "fork_issue": 62,
+      "upstream": [
+        438
+      ],
+      "title": "Make the /spool/print spool picker table fill the viewport instead of a fixed 400px height",
+      "kind": "fix",
+      "pri": "P2",
+      "pr": 153,
+      "released_in": "v2026.7.2"
+    },
+    {
+      "fork_issue": 63,
+      "upstream": [
+        459
+      ],
+      "title": "Sort text columns (manufacturer/vendor name) case-insensitively",
+      "kind": "fix",
+      "pri": "P2",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 64,
+      "upstream": [
+        540
+      ],
+      "title": "Suppress the adjacent newline when a conditional label block resolves to empty",
+      "kind": "fix",
+      "pri": "P2",
+      "pr": 153,
+      "released_in": "v2026.7.2"
+    },
+    {
+      "fork_issue": 65,
+      "upstream": [
+        577
+      ],
+      "title": "Honor extra-field order in filament forms, list columns, and show page",
+      "kind": "fix",
+      "pri": "P2",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 66,
+      "upstream": [
+        634
+      ],
+      "title": "Preserve manually-entered measured weight when empty/initial weight is changed afterward",
+      "kind": "fix",
+      "pri": "P2",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 67,
+      "upstream": [
+        671
+      ],
+      "title": "Reject filament density/diameter of 0 in the form instead of failing with a 422",
+      "kind": "fix",
+      "pri": "P2",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 69,
+      "upstream": [
+        797
+      ],
+      "title": "Fix JS integer-precision loss on large CockroachDB IDs that makes the UI 404 on vendor_id",
+      "kind": "fix",
+      "pri": "P2",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 70,
+      "upstream": [
+        851
+      ],
+      "title": "Add External ID field to the filament Create form and the column show/hide list",
+      "kind": "fix",
+      "pri": "P2",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 71,
+      "upstream": [
+        886
+      ],
+      "title": "Emit explicit @page size/orientation so labels print correctly on roll/label printers",
+      "kind": "fix",
+      "pri": "P2",
+      "pr": 153,
+      "released_in": "v2026.7.2"
+    },
+    {
+      "fork_issue": 72,
+      "upstream": [
+        925
+      ],
+      "title": "Make 'Save as Image' export all labels (single image per page or a zip) instead of N separate downloads",
+      "kind": "fix",
+      "pri": "P2",
+      "pr": 153,
+      "released_in": "v2026.7.2"
+    },
+    {
+      "fork_issue": 73,
+      "upstream": [
+        273,
+        453,
+        734,
+        749
+      ],
+      "title": "Add multi-row selection with bulk edit/archive/relocate for spools and filaments",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 74,
+      "upstream": [
+        261,
+        473,
+        826
+      ],
+      "title": "Add an optional per-spool color override that falls back to the filament color",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": 181,
+      "released_in": "v2026.7.4"
+    },
+    {
+      "fork_issue": 75,
+      "upstream": [
+        26,
+        932
+      ],
+      "title": "Add a Printer entity with spool assignment for per-printer usage attribution",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": 188,
+      "released_in": "v2026.7.4"
+    },
+    {
+      "fork_issue": 84,
+      "upstream": [
+        90,
+        935
+      ],
+      "title": "Support printable/scannable location labels with a scan-to-move workflow (label resolves to the location's current spool)",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": 179,
+      "released_in": "v2026.7.4"
+    },
+    {
+      "fork_issue": 85,
+      "upstream": [
+        92,
+        355
+      ],
+      "title": "Add a unit-system setting and apply m/kg auto-scaling across list and show views",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": 156,
+      "released_in": "v2026.7.2"
+    },
+    {
+      "fork_issue": 86,
+      "upstream": [
+        327,
+        729
+      ],
+      "title": "Add a vendor/manufacturer filter column to the Spool list and a 'view spools' shortcut from the Vendor page",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 91,
+      "upstream": [
+        559,
+        567
+      ],
+      "title": "Persist additional SpoolmanDB catalog fields (spool_type, finish, pattern, translucent, glow) on the local Filament",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": 184,
+      "released_in": "v2026.7.4"
+    },
+    {
+      "fork_issue": 93,
+      "upstream": [
+        380,
+        755
+      ],
+      "title": "Track label-printed status per spool/filament and use it in the print flow (hide/mark printed, warn before reprint)",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 95,
+      "upstream": [
+        779,
+        883
+      ],
+      "title": "Add a UI to export/print the full inventory list (CSV/JSON export button and a printable report with color swatches)",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": 152,
+      "released_in": "v2026.7.2"
+    },
+    {
+      "fork_issue": 97,
+      "upstream": [
+        789,
+        887
+      ],
+      "title": "Let the camera scanner read additional barcode formats (data matrix/UPC/EAN) and support retail-barcode spool lookup/create",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 76,
+      "upstream": [
+        11
+      ],
+      "title": "Export filament profiles in slicer-native formats (PrusaSlicer/OrcaSlicer/Bambu Studio/Cura)",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 77,
+      "upstream": [
+        139
+      ],
+      "title": "Add a one-click 'Reset usage' action for spools",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": 150,
+      "released_in": "v2026.7.2"
+    },
+    {
+      "fork_issue": 78,
+      "upstream": [
+        236
+      ],
+      "title": "Add SPOOLMAN_DB_SCHEMA env var to select the Postgres/CockroachDB schema",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 79,
+      "upstream": [
+        249
+      ],
+      "title": "Add a vertical/rotated text orientation option for QR label printing on narrow labels",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": 154,
+      "released_in": "v2026.7.2"
+    },
+    {
+      "fork_issue": 80,
+      "upstream": [
+        260
+      ],
+      "title": "Publish a reference client/docs for SPI-GPIO RFID readers (MFRC522/RC-522) against the NFC API",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 81,
+      "upstream": [
+        262
+      ],
+      "title": "Add historical filament consumption and cost statistics (weekly/monthly/annual)",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 82,
+      "upstream": [
+        306
+      ],
+      "title": "Warn on (or block) creating a vendor whose name already exists",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 83,
+      "upstream": [
+        334
+      ],
+      "title": "Surface filament-level custom fields on the Spool list/detail views",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 87,
+      "upstream": [
+        396
+      ],
+      "title": "Localize date/time display format to the active UI language (or add a date-format setting)",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": 157,
+      "released_in": "v2026.7.2"
+    },
+    {
+      "fork_issue": 89,
+      "upstream": [
+        406
+      ],
+      "title": "Publish a Home Assistant Supervisor add-on packaging for Spoolman",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 90,
+      "upstream": [
+        430
+      ],
+      "title": "Add resizable column widths to Spool/Filament list tables",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": 159,
+      "released_in": "v2026.7.2"
+    },
+    {
+      "fork_issue": 92,
+      "upstream": [
+        514
+      ],
+      "title": "Add a settings-driven list of custom external links in the sidebar",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": 190,
+      "released_in": "v2026.7.5"
+    },
+    {
+      "fork_issue": 94,
+      "upstream": [
+        520
+      ],
+      "title": "Add drag-to-reorder table columns and split the Spool list's Filament column into Vendor + Name",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": 158,
+      "released_in": "v2026.7.2"
+    },
+    {
+      "fork_issue": 96,
+      "upstream": [
+        546
+      ],
+      "title": "Document Podman / rootless + SELinux setup in the installation guide",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 98,
+      "upstream": [
+        558
+      ],
+      "title": "Log spool use/measure API mutations (id, requested value, resulting delta) for debugging",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": 150,
+      "released_in": "v2026.7.2"
+    },
+    {
+      "fork_issue": 99,
+      "upstream": [
+        571
+      ],
+      "title": "Add a header-level bulk 'Update Spool Weight' workflow with search/filter and save-and-update-more",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 100,
+      "upstream": [
+        583
+      ],
+      "title": "Show a quick list of sibling spools (same filament) on the Spool Show page",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 102,
+      "upstream": [
+        606
+      ],
+      "title": "Add a ZPL (Zebra thermal printer) export option for spool/filament labels",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 104,
+      "upstream": [
+        609
+      ],
+      "title": "Add spool weight-history logging with moisture-drift estimation",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 105,
+      "upstream": [
+        614
+      ],
+      "title": "Import a sliced .3mf project to auto-select and bulk-adjust matching spools",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 107,
+      "upstream": [
+        656
+      ],
+      "title": "Add QR-code placement (side/above/below) and per-line text sizing to label print templates",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 110,
+      "upstream": [
+        693
+      ],
+      "title": "Add a camera device selector to the QR scanner modal",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 112,
+      "upstream": [
+        703
+      ],
+      "title": "Support extruder/bed temperature ranges (not just single values) on filaments",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": 183,
+      "released_in": "v2026.7.4"
+    },
+    {
+      "fork_issue": 114,
+      "upstream": [
+        713
+      ],
+      "title": "Add an optional colour swatch to printed spool/filament labels",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 101,
+      "upstream": [
+        720
+      ],
+      "title": "Add a per-spool filament diameter override",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 103,
+      "upstream": [
+        763
+      ],
+      "title": "Promote locations to a first-class entity with support for custom/extra fields",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": 175,
+      "released_in": "v2026.7.3"
+    },
+    {
+      "fork_issue": 106,
+      "upstream": [
+        769
+      ],
+      "title": "Expose QR error-correction level (module density) as a user setting",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 108,
+      "upstream": [
+        807
+      ],
+      "title": "Add query-parameter filtering to GET /api/v1/external/filament",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 109,
+      "upstream": [
+        834
+      ],
+      "title": "Add per-filament low-stock threshold with aggregate remaining-weight alert",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": 151,
+      "released_in": "v2026.7.2"
+    },
+    {
+      "fork_issue": 111,
+      "upstream": [
+        847
+      ],
+      "title": "Build the client bundle inside the Dockerfile (native-arch build stage)",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 113,
+      "upstream": [
+        853
+      ],
+      "title": "Add a sort-by-hue option to the spool/filament list views",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 115,
+      "upstream": [
+        870
+      ],
+      "title": "Add empty spool weight as an optional spool-list column",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": 155,
+      "released_in": "v2026.7.2"
+    },
+    {
+      "fork_issue": 116,
+      "upstream": [
+        882
+      ],
+      "title": "Add reserve/unopened-stock counts per filament with a low-stock shopping list (without one Spool row per unit)",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": 151,
+      "released_in": "v2026.7.2"
+    },
+    {
+      "fork_issue": 117,
+      "upstream": [
+        934
+      ],
+      "title": "Persist the last-used spool consumption mode (length/weight/measured weight) across sessions",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": 150,
+      "released_in": "v2026.7.2"
+    },
+    {
+      "fork_issue": 118,
+      "upstream": [
+        937
+      ],
+      "title": "Support linked custom-field definitions with copy-on-create or live sync between Filament and Spool",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": 185,
+      "released_in": "v2026.7.4"
+    },
+    {
+      "fork_issue": 120,
+      "upstream": [
+        44
+      ],
+      "title": "Migrate spool/filament/vendor show pages from stacked Title+Field to antd Descriptions",
+      "kind": "fix",
+      "pri": "P3",
+      "pr": 192,
+      "released_in": "v2026.7.5"
+    },
+    {
+      "fork_issue": 121,
+      "upstream": [
+        597
+      ],
+      "title": "Fix low-contrast swatch border for dark/black filaments in dark mode",
+      "kind": "fix",
+      "pri": "P3",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 122,
+      "upstream": [
+        771
+      ],
+      "title": "Give spool-table date columns explicit widths so they stop ballooning when empty",
+      "kind": "fix",
+      "pri": "P3",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 124,
+      "upstream": [
+        774
+      ],
+      "title": "Location page: fall back to spool.initial_weight for total weight when the filament has no weight",
+      "kind": "fix",
+      "pri": "P3",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 123,
+      "upstream": [
+        303,
+        336
+      ],
+      "title": "Document full uninstall (native/systemd and Docker) and migrating an install between native and Docker",
+      "kind": "feature",
+      "pri": "P3",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 125,
+      "upstream": [
+        65
+      ],
+      "title": "Allow creating a new vendor inline from the filament create form",
+      "kind": "feature",
+      "pri": "P3",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 126,
+      "upstream": [
+        191
+      ],
+      "title": "Show filament color in the spool-create filament dropdown",
+      "kind": "feature",
+      "pri": "P3",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 127,
+      "upstream": [
+        202
+      ],
+      "title": "Auto-focus the first field and submit on Enter in entity Create forms",
+      "kind": "feature",
+      "pri": "P3",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 128,
+      "upstream": [
+        274
+      ],
+      "title": "Make the Save / Save & Add button bar sticky on long Create forms",
+      "kind": "feature",
+      "pri": "P3",
+      "pr": 171,
+      "released_in": "v2026.7.3"
+    },
+    {
+      "fork_issue": 129,
+      "upstream": [
+        308
+      ],
+      "title": "Add a 'link' custom field type with base-URL templating",
+      "kind": "feature",
+      "pri": "P3",
+      "pr": 189,
+      "released_in": "v2026.7.4"
+    },
+    {
+      "fork_issue": 130,
+      "upstream": [
+        329
+      ],
+      "title": "Emit spool websocket events when a spool's linked filament or vendor changes",
+      "kind": "feature",
+      "pri": "P3",
+      "pr": 186,
+      "released_in": "v2026.7.4"
+    },
+    {
+      "fork_issue": 131,
+      "upstream": [
+        374
+      ],
+      "title": "Add a compact all-spools color-swatch grid to the Home dashboard",
+      "kind": "feature",
+      "pri": "P3",
+      "pr": 191,
+      "released_in": "v2026.7.5"
+    },
+    {
+      "fork_issue": 132,
+      "upstream": [
+        418
+      ],
+      "title": "Reserve and document a WEB+SPOOLMAN 'clear spool' QR/NFC sentinel value",
+      "kind": "feature",
+      "pri": "P3",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 133,
+      "upstream": [
+        467
+      ],
+      "title": "Add an optional multi-column CSS layout for label text content",
+      "kind": "feature",
+      "pri": "P3",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 134,
+      "upstream": [
+        505
+      ],
+      "title": "Add a filter-aware totals/summary row to the Spool (and Filament) list tables",
+      "kind": "feature",
+      "pri": "P3",
+      "pr": 160,
+      "released_in": "v2026.7.2"
+    },
+    {
+      "fork_issue": 136,
+      "upstream": [
+        545
+      ],
+      "title": "Document that printers are Spoolman clients (moonraker.conf [spoolman] example distinct from update-manager)",
+      "kind": "feature",
+      "pri": "P3",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 138,
+      "upstream": [
+        664
+      ],
+      "title": "Add an optional 1D barcode alongside the QR code on printed labels",
+      "kind": "feature",
+      "pri": "P3",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 139,
+      "upstream": [
+        768
+      ],
+      "title": "Add an optional grid/gallery view mode to the Spool list",
+      "kind": "feature",
+      "pri": "P3",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 140,
+      "upstream": [
+        783
+      ],
+      "title": "Add configurable custom action links/buttons per spool",
+      "kind": "feature",
+      "pri": "P3",
+      "pr": 190,
+      "released_in": "v2026.7.5"
+    },
+    {
+      "fork_issue": 141,
+      "upstream": [
+        841
+      ],
+      "title": "Support vendor/filament logo images and standard small-label size presets in label printing",
+      "kind": "feature",
+      "pri": "P3",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 137,
+      "upstream": [
+        884
+      ],
+      "title": "Add a custom/raw QR payload option to spool & filament label printing",
+      "kind": "feature",
+      "pri": "P3",
+      "pr": null,
+      "released_in": null
+    }
+  ],
+  "in_progress": [
+    {
+      "fork_issue": 56,
+      "upstream": [
+        217
+      ],
+      "title": "Add Bambu Lab AMS/Cloud integration to sync spool assignment and usage",
+      "kind": "feature",
+      "pri": "P1"
+    },
+    {
+      "fork_issue": 57,
+      "upstream": [
+        728,
+        814
+      ],
+      "title": "Fix inherited (filament-level) spool price dropping to 0 on the spool list after a live update",
+      "kind": "fix",
+      "pri": "P2"
+    },
+    {
+      "fork_issue": 61,
+      "upstream": [
+        299
+      ],
+      "title": "Allow creating/measuring a spool heavier than its theoretical weight without a negative-used-weight error",
+      "kind": "fix",
+      "pri": "P2"
+    },
+    {
+      "fork_issue": 68,
+      "upstream": [
+        791
+      ],
+      "title": "Support running the Docker image as a non-root user (skip usermod/gosu when not root)",
+      "kind": "fix",
+      "pri": "P2"
+    },
+    {
+      "fork_issue": 88,
+      "upstream": [
+        552,
+        740
+      ],
+      "title": "Support attaching a reference image/photo to a filament",
+      "kind": "feature",
+      "pri": "P2"
+    },
+    {
+      "fork_issue": 119,
+      "upstream": [
+        947
+      ],
+      "title": "Add a system/auto theme mode that live-follows the OS color-scheme preference",
+      "kind": "feature",
+      "pri": "P2"
+    },
+    {
+      "fork_issue": 135,
+      "upstream": [
+        843
+      ],
+      "title": "Add a 'transfer weight to another spool' option to the spool adjust modal",
+      "kind": "feature",
+      "pri": "P3"
+    }
+  ],
+  "skipped": [
+    {
+      "upstream": 18,
+      "reason": "already-implemented",
+      "title": "Mobile Support"
+    },
+    {
+      "upstream": 33,
+      "reason": "already-implemented",
+      "title": "Database of Spool Weights by Manufacturer"
+    },
+    {
+      "upstream": 42,
+      "reason": "already-implemented",
+      "title": "Add possibility to add/edit spool length"
+    },
+    {
+      "upstream": 46,
+      "reason": "already-implemented",
+      "title": "Add create w/spool to filament creation page"
+    },
+    {
+      "upstream": 49,
+      "reason": "already-fixed",
+      "title": "Filaments: Name in Grid is not updated after change"
+    },
+    {
+      "upstream": 66,
+      "reason": "superseded",
+      "title": "QR Code scanning add button with a supported data for a db entry embedded in the QR code."
+    },
+    {
+      "upstream": 68,
+      "reason": "already-implemented",
+      "title": "Allow the QR code to be configured as a URL"
+    },
+    {
+      "upstream": 72,
+      "reason": "out-of-scope",
+      "title": "Plugin system for users to add features they think are a good idea but may not directly coincide with the projects overall goals."
+    },
+    {
+      "upstream": 74,
+      "reason": "already-fixed",
+      "title": "Improve label layout"
+    },
+    {
+      "upstream": 76,
+      "reason": "already-implemented",
+      "title": "Show all filament spools in the filament page"
+    },
+    {
+      "upstream": 101,
+      "reason": "already-implemented",
+      "title": "Set default Value in Create Filament and \"Save and Continue\" Option"
+    },
+    {
+      "upstream": 126,
+      "reason": "already-fixed",
+      "title": "Hamburger Menu oddly positioned on mobile (webapp)"
+    },
+    {
+      "upstream": 129,
+      "reason": "out-of-scope",
+      "title": "Swap/add vendor and manufacturer properties"
+    },
+    {
+      "upstream": 142,
+      "reason": "already-implemented",
+      "title": "Centralized database of Vendors and Filaments"
+    },
+    {
+      "upstream": 144,
+      "reason": "already-implemented",
+      "title": "Non-uniform colors"
+    },
+    {
+      "upstream": 178,
+      "reason": "already-implemented",
+      "title": "Right alignment of numbers"
+    },
+    {
+      "upstream": 179,
+      "reason": "already-fixed",
+      "title": "List caching are not refreshed"
+    },
+    {
+      "upstream": 200,
+      "reason": "already-implemented",
+      "title": "Add Transmission Distance to use in HueForge"
+    },
+    {
+      "upstream": 203,
+      "reason": "already-implemented",
+      "title": "User Presets for pre-populated values"
+    },
+    {
+      "upstream": 205,
+      "reason": "superseded (by upstream #212's generic CSV/JSON import re\u2026",
+      "title": "Import CSV from OctoPrint plugin Spools"
+    },
+    {
+      "upstream": 207,
+      "reason": "superseded (by issue 265's filament-grouping/aggregate-st\u2026",
+      "title": "Inventory Management"
+    },
+    {
+      "upstream": 226,
+      "reason": "insufficient-info",
+      "title": "Used filament gets subtracted incorrectly - more"
+    },
+    {
+      "upstream": 245,
+      "reason": "already-implemented",
+      "title": "Materials database & button to create spool into filaments creation"
+    },
+    {
+      "upstream": 246,
+      "reason": "support-question",
+      "title": "Select Spool Not Work In Mainsail"
+    },
+    {
+      "upstream": 247,
+      "reason": "already-fixed",
+      "title": "Update from KlipperScreen doesn't restart Spoolman service"
+    },
+    {
+      "upstream": 254,
+      "reason": "already-implemented",
+      "title": "Editing storage location/storage location"
+    },
+    {
+      "upstream": 258,
+      "reason": "already-implemented",
+      "title": "New tab file for active or used coils"
+    },
+    {
+      "upstream": 263,
+      "reason": "already-fixed",
+      "title": "Display error in spool overview and filament overview"
+    },
+    {
+      "upstream": 287,
+      "reason": "already-implemented",
+      "title": "Load Cell Actual Measured weight"
+    },
+    {
+      "upstream": 290,
+      "reason": "already-implemented",
+      "title": "Multiple Spool Count."
+    },
+    {
+      "upstream": 292,
+      "reason": "already-implemented",
+      "title": "Move price & weight into spool"
+    },
+    {
+      "upstream": 294,
+      "reason": "already-implemented",
+      "title": "Labelprinter"
+    },
+    {
+      "upstream": 295,
+      "reason": "out-of-scope",
+      "title": "Create slicer filament presets"
+    },
+    {
+      "upstream": 317,
+      "reason": "already-implemented",
+      "title": "Spools Quantity"
+    },
+    {
+      "upstream": 318,
+      "reason": "already-implemented",
+      "title": "Subtype of filament"
+    },
+    {
+      "upstream": 344,
+      "reason": "already-implemented",
+      "title": "Ability to sort spools by vendor?"
+    },
+    {
+      "upstream": 353,
+      "reason": "superseded by the fork's external filament catalog / 3D F\u2026",
+      "title": "Separate list for generic filament types"
+    },
+    {
+      "upstream": 359,
+      "reason": "already-implemented",
+      "title": "Allow a way to visualize multi color or color changing filament."
+    },
+    {
+      "upstream": 360,
+      "reason": "already-implemented",
+      "title": "Quickly update location info from list of spools"
+    },
+    {
+      "upstream": 379,
+      "reason": "already-implemented",
+      "title": "Move the end-of-spool remainder of filament into another, dedicated spool"
+    },
+    {
+      "upstream": 395,
+      "reason": "already-implemented",
+      "title": "Feature request - Add (SDS) Safety Data Sheet & Technical Data Sheet"
+    },
+    {
+      "upstream": 404,
+      "reason": "already-fixed",
+      "title": "Keep loosing access to spools"
+    },
+    {
+      "upstream": 405,
+      "reason": "environment-specific",
+      "title": "Filament not auto-updating in Fluidd/Mainsail when using 127.0.0.1"
+    },
+    {
+      "upstream": 407,
+      "reason": "environment-specific",
+      "title": "Application startup failed"
+    },
+    {
+      "upstream": 411,
+      "reason": "out-of-scope",
+      "title": "Mobile octoprint, scanning qrcode to select filament"
+    },
+    {
+      "upstream": 412,
+      "reason": "already-fixed",
+      "title": "Permissions error after upgrading to 0.18.1"
+    },
+    {
+      "upstream": 413,
+      "reason": "out-of-scope",
+      "title": "Issue with octoprint plugin, need serious help"
+    },
+    {
+      "upstream": 415,
+      "reason": "already-implemented",
+      "title": "Read Parameters from Spoolman into Printer"
+    },
+    {
+      "upstream": 419,
+      "reason": "already-implemented",
+      "title": "Documentation and/or tutorial to explain the process of finding the density of a filament"
+    },
+    {
+      "upstream": 420,
+      "reason": "already-implemented",
+      "title": "Create Filament Swatch Card"
+    },
+    {
+      "upstream": 427,
+      "reason": "already-implemented",
+      "title": "selective search for extra fields"
+    },
+    {
+      "upstream": 429,
+      "reason": "environment-specific",
+      "title": "Sonic Pad"
+    },
+    {
+      "upstream": 437,
+      "reason": "already-fixed",
+      "title": "New colour box makes black and white hard to see in dark and light mode"
+    },
+    {
+      "upstream": 440,
+      "reason": "already-implemented",
+      "title": "additional filament textures, glitter, shine, etc"
+    },
+    {
+      "upstream": 441,
+      "reason": "environment-specific",
+      "title": "Unable to run Spoolman in Docker Container on MacOS"
+    },
+    {
+      "upstream": 444,
+      "reason": "out-of-scope",
+      "title": "Add additional color changing method"
+    },
+    {
+      "upstream": 450,
+      "reason": "out-of-scope",
+      "title": "Add air filter tracking"
+    },
+    {
+      "upstream": 452,
+      "reason": "support-question",
+      "title": "Problems during installation in Dokker/Portainer"
+    },
+    {
+      "upstream": 456,
+      "reason": "already-implemented",
+      "title": "Datenbank Sicherung"
+    },
+    {
+      "upstream": 466,
+      "reason": "environment-specific",
+      "title": "Print Preview Renders Differently by Browser"
+    },
+    {
+      "upstream": 489,
+      "reason": "already-fixed",
+      "title": "Unable to leave price input field empty if focused once"
+    },
+    {
+      "upstream": 490,
+      "reason": "out-of-scope",
+      "title": "Helm Chart?"
+    },
+    {
+      "upstream": 494,
+      "reason": "already-implemented",
+      "title": "Spool creation streamlining"
+    },
+    {
+      "upstream": 495,
+      "reason": "already-implemented",
+      "title": "Import from External and Internal"
+    },
+    {
+      "upstream": 498,
+      "reason": "already-implemented",
+      "title": "Print on Label Printer"
+    },
+    {
+      "upstream": 504,
+      "reason": "support-question",
+      "title": "spoolman don't connect with happy hare"
+    },
+    {
+      "upstream": 508,
+      "reason": "insufficient-info",
+      "title": "Stopped Working"
+    },
+    {
+      "upstream": 510,
+      "reason": "already-fixed",
+      "title": "Visual bug: title coloumns not scaling"
+    },
+    {
+      "upstream": 522,
+      "reason": "insufficient-info",
+      "title": "Spoolman no longer reachable after Ubuntu Upgrade to 24.04.1 LTS"
+    },
+    {
+      "upstream": 524,
+      "reason": "already-fixed",
+      "title": "Page doesn't render after adding an extra field with special characters"
+    },
+    {
+      "upstream": 535,
+      "reason": "already-implemented",
+      "title": "Add update git-repo style for Moonraker update service"
+    },
+    {
+      "upstream": 538,
+      "reason": "already-fixed",
+      "title": "500 Internal Server Error"
+    },
+    {
+      "upstream": 543,
+      "reason": "environment-specific",
+      "title": "Update Manager Moonraker Permission denied"
+    },
+    {
+      "upstream": 544,
+      "reason": "already-fixed",
+      "title": "column width of the filament"
+    },
+    {
+      "upstream": 550,
+      "reason": "already-implemented",
+      "title": "Show printer name near spool"
+    },
+    {
+      "upstream": 554,
+      "reason": "already-fixed",
+      "title": "Incorrect handling of the decimal separator of a number when using a comma instead of a period."
+    },
+    {
+      "upstream": 556,
+      "reason": "already-fixed",
+      "title": "invalid mount config for type \"bind\""
+    },
+    {
+      "upstream": 560,
+      "reason": "already-implemented",
+      "title": "filament spool adjustment"
+    },
+    {
+      "upstream": 563,
+      "reason": "out-of-scope",
+      "title": "Implementing Anycubic Kobra 3 goklipper"
+    },
+    {
+      "upstream": 564,
+      "reason": "already-implemented",
+      "title": "Add API Route to add a new Location"
+    },
+    {
+      "upstream": 568,
+      "reason": "already-implemented",
+      "title": "Display HEX value on Filament Details page"
+    },
+    {
+      "upstream": 569,
+      "reason": "already-implemented",
+      "title": "Automatically Calculate Remaining Weight when entering a spool"
+    },
+    {
+      "upstream": 573,
+      "reason": "already-implemented",
+      "title": "Managing process parameters"
+    },
+    {
+      "upstream": 576,
+      "reason": "already-fixed (same root cause as filament table header o\u2026",
+      "title": "Table Header Overlap in German Language Version"
+    },
+    {
+      "upstream": 580,
+      "reason": "already-implemented",
+      "title": "Color and Shade Filament column breakout"
+    },
+    {
+      "upstream": 589,
+      "reason": "environment-specific",
+      "title": "Help to fix please: Spoolman docker needs to get restart to start reading the filament from the printer"
+    },
+    {
+      "upstream": 592,
+      "reason": "out-of-scope",
+      "title": "Add Purge Information to Spoolman"
+    },
+    {
+      "upstream": 599,
+      "reason": "environment-specific",
+      "title": "Alpine linux support"
+    },
+    {
+      "upstream": 600,
+      "reason": "already-implemented",
+      "title": "Sorting spool list by extra-field"
+    },
+    {
+      "upstream": 612,
+      "reason": "already-fixed",
+      "title": "mmu gate field incorrectly displayed"
+    },
+    {
+      "upstream": 613,
+      "reason": "insufficient-info",
+      "title": "Column width is incorrect"
+    },
+    {
+      "upstream": 641,
+      "reason": "already-implemented",
+      "title": "Spool Locations"
+    },
+    {
+      "upstream": 643,
+      "reason": "already-implemented",
+      "title": "Support storing Transmission Distance for filaments"
+    },
+    {
+      "upstream": 665,
+      "reason": "already-fixed",
+      "title": "Spool weight"
+    },
+    {
+      "upstream": 674,
+      "reason": "already-fixed",
+      "title": "Layout CSS bug: Button icons should not wrap."
+    },
+    {
+      "upstream": 687,
+      "reason": "already-fixed",
+      "title": "Support for Emoji in Label Templates"
+    },
+    {
+      "upstream": 695,
+      "reason": "already-implemented",
+      "title": "Mobile View"
+    },
+    {
+      "upstream": 698,
+      "reason": "out-of-scope",
+      "title": "Option to change ID for spools"
+    },
+    {
+      "upstream": 700,
+      "reason": "superseded (by the external filament-catalog auto-create \u2026",
+      "title": "Add spool/filament/manufacturer UX overhaul"
+    },
+    {
+      "upstream": 708,
+      "reason": "insufficient-info",
+      "title": "High CPU Usage"
+    },
+    {
+      "upstream": 709,
+      "reason": "already-implemented",
+      "title": "Activate the spool through location"
+    },
+    {
+      "upstream": 716,
+      "reason": "already-implemented",
+      "title": "Search spools in API and more by extra fields and/or add field for UID"
+    },
+    {
+      "upstream": 723,
+      "reason": "already-implemented",
+      "title": "Create NFC tags"
+    },
+    {
+      "upstream": 724,
+      "reason": "insufficient-info",
+      "title": "Starting problem after update"
+    },
+    {
+      "upstream": 737,
+      "reason": "insufficient-info",
+      "title": "Spoolman Losing Data"
+    },
+    {
+      "upstream": 741,
+      "reason": "already-implemented",
+      "title": "QR Code link to Filaments / Custom"
+    },
+    {
+      "upstream": 744,
+      "reason": "already-implemented",
+      "title": "Additional weight field"
+    },
+    {
+      "upstream": 745,
+      "reason": "already-fixed",
+      "title": "Dockerfile size optimization"
+    },
+    {
+      "upstream": 757,
+      "reason": "insufficient-info",
+      "title": "Migration colors"
+    },
+    {
+      "upstream": 759,
+      "reason": "superseded (fork's rewritten drag-orderable, modal-based \u2026",
+      "title": "Location Tab not sorting in order"
+    },
+    {
+      "upstream": 764,
+      "reason": "out-of-scope",
+      "title": "manual extrusion not recorded."
+    },
+    {
+      "upstream": 767,
+      "reason": "support-question",
+      "title": "Spoolman wont load front end."
+    },
+    {
+      "upstream": 772,
+      "reason": "already-implemented",
+      "title": "Expose base URL in spoolman API"
+    },
+    {
+      "upstream": 776,
+      "reason": "already-implemented",
+      "title": "Support for OpenPrintTag"
+    },
+    {
+      "upstream": 781,
+      "reason": "already-implemented",
+      "title": "Please add documentation on how to configure the Spoolman service"
+    },
+    {
+      "upstream": 788,
+      "reason": "environment-specific",
+      "title": "[Integration Issue] Consumption Data (POST /use/filament) Not Received from OctoEverywhere API Tunnel"
+    },
+    {
+      "upstream": 796,
+      "reason": "support-question",
+      "title": "this project is still alive?"
+    },
+    {
+      "upstream": 799,
+      "reason": "already-implemented",
+      "title": "RFID"
+    },
+    {
+      "upstream": 813,
+      "reason": "already-implemented",
+      "title": "Add Spool Type object holding the weight of an empty spool"
+    },
+    {
+      "upstream": 824,
+      "reason": "already-implemented",
+      "title": "Ability to print QR-codes for Filament aswell as Spool"
+    },
+    {
+      "upstream": 828,
+      "reason": "already-implemented",
+      "title": "Generate Json Data from a Spool for writing onto a NFC Tag"
+    },
+    {
+      "upstream": 830,
+      "reason": "already-fixed",
+      "title": "Moonraker warning - update_manager after upgrade"
+    },
+    {
+      "upstream": 833,
+      "reason": "out-of-scope",
+      "title": "Feature Request: Add Kexcelled to external filaments list"
+    },
+    {
+      "upstream": 854,
+      "reason": "insufficient-info",
+      "title": "Export spool library to Hueforge JSON format"
+    },
+    {
+      "upstream": 881,
+      "reason": "already-fixed",
+      "title": "Standalone installation fails in Debian 12/13"
+    },
+    {
+      "upstream": 900,
+      "reason": "out-of-scope",
+      "title": "Color should be definable with the Spool and not the Filament"
+    },
+    {
+      "upstream": 911,
+      "reason": "already-implemented",
+      "title": "Import from 3D Filament Profile Database"
+    },
+    {
+      "upstream": 918,
+      "reason": "already-implemented",
+      "title": "Lost Database Twice"
+    },
+    {
+      "upstream": 926,
+      "reason": "out-of-scope",
+      "title": "Remaining weight is not correct after printing coloured objects"
+    },
+    {
+      "upstream": 939,
+      "reason": "already-implemented",
+      "title": "Fetch filament info from https://3dfilamentprofiles.com/"
+    },
+    {
+      "upstream": 944,
+      "reason": "out-of-scope",
+      "title": "loading info into lane_data"
+    },
+    {
+      "upstream": 945,
+      "reason": "out-of-scope",
+      "title": "external fillament to add"
+    },
+    {
+      "upstream": 949,
+      "reason": "support-question",
+      "title": "SpoolmanDB-Community"
+    }
+  ],
+  "upstream_commits": []
+}

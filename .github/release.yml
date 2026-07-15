@@ -1,0 +1,13 @@
+changelog:
+  exclude:
+    labels:
+      - upstream-watch
+  categories:
+    - title: Fixes
+      labels: [bug]
+    - title: Features
+      labels: [enhancement]
+    - title: Documentation
+      labels: [documentation]
+    - title: Other changes
+      labels: ["*"]

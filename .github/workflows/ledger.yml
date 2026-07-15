@@ -1,0 +1,67 @@
+name: Upstream ledger
+
+on:
+  release:
+    types: [published]
+  schedule:
+    - cron: "30 5 * * 1" # Mondays 05:30 UTC, after the upstream watch
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to append the upstream section to (optional)"
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ledger
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: master
+          fetch-depth: 0 # ledger maps merge commits to release tags
+
+      - name: Regenerate ledger
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 scripts/upstream_ledger.py --write
+
+      - name: Commit if changed
+        run: |
+          if git diff --quiet -- docs/upstream; then
+            echo "ledger unchanged"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/upstream
+          git commit -m "docs: regenerate upstream ledger [skip ci]"
+          git pull --rebase origin master
+          git push origin master
+
+      - name: Append upstream section to the release notes
+        if: github.event_name == 'release' || inputs.tag != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: |
+          python3 scripts/upstream_ledger.py --release-notes "${TAG}" > /tmp/section.md
+          if [ ! -s /tmp/section.md ]; then
+            echo "no upstream issues in ${TAG}"
+            exit 0
+          fi
+          gh release view "${TAG}" --json body --jq .body > /tmp/body.md
+          if grep -q "### Upstream issues addressed" /tmp/body.md; then
+            echo "section already present"
+            exit 0
+          fi
+          printf '\n' >> /tmp/body.md
+          cat /tmp/section.md >> /tmp/body.md
+          gh release edit "${TAG}" --notes-file /tmp/body.md
