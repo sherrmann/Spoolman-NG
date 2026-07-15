@@ -156,7 +156,7 @@ ignore = [
 # The triage-table fixture mirrors real markdown table rows verbatim (one row
 # per line, matching docs/upstream-triage.md), so lines run long; the paired
 # assertions are grouped by the row they check rather than split arbitrarily.
-"tests/test_upstream_ledger.py" = ["E501", "PT018"]
+"tests/test_upstream_ledger.py" = ["E501"]
 "migrations/versions/*" = ["N999"]
 # NFC support modules are binary-protocol codecs and hardware (USB/NFC) I/O.
 # Magic byte values, branchy decoders/state machines, defensive broad-except

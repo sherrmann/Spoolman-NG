@@ -29,11 +29,14 @@ def test_parse_triage_fixture() -> None:
     rows, skips = parse_triage(FIXTURE)
     assert [r.fork_issue for r in rows] == [56, 49]
     assert rows[0].upstream == [217]
-    assert rows[0].kind == "feature" and rows[0].pri == "P1" and rows[0].effort == "L"
+    assert rows[0].kind == "feature"
+    assert rows[0].pri == "P1"
+    assert rows[0].effort == "L"
     assert rows[0].title == "Add Bambu Lab AMS/Cloud integration"
     assert rows[1].upstream == [201, 478]
     assert len(skips) == 1
-    assert skips[0].upstream == 18 and skips[0].reason == "already-implemented"
+    assert skips[0].upstream == 18
+    assert skips[0].reason == "already-implemented"
     assert skips[0].title == "Mobile Support"
 
 
