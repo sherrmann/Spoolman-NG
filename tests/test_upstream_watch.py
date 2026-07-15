@@ -35,6 +35,23 @@ def test_render_backticks_commit_subjects_with_issue_refs() -> None:
     assert "#947" not in re.sub(r"`[^`]*`", "", body)
 
 
+def test_render_sanitizes_hostile_titles_and_subjects() -> None:
+    """Hostile upstream titles/subjects must never leak outside their backtick span.
+
+    @mentions, cross-repo refs, or literal backticks in upstream-controlled text would otherwise
+    ping a user or cross-link from our issue.
+    """
+    hostile = "Fix `x` @someuser see Donkie/Spoolman#5"
+    commits = [{"sha": "c" * 40, "subject": hostile, "dirs": ["client"]}]
+    issues = [{"number": 5, "title": hostile, "created_at": "2026-07-12T10:00:00Z"}]
+    prs = [{"number": 6, "title": hostile, "created_at": "2026-07-13T10:00:00Z"}]
+    body = render_watch_issue(commits, issues, prs)
+    stripped = re.sub(r"`[^`]*`", "", body)
+    assert "@someuser" not in stripped
+    assert "Donkie/Spoolman#" not in stripped
+    assert "#5" not in stripped
+
+
 def test_filter_created_after() -> None:
     items = [
         {"number": 1, "created_at": "2026-07-05T00:00:00Z"},

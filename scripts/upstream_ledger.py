@@ -80,7 +80,7 @@ def parse_triage(text: str) -> tuple[list[TriageRow], list[SkipRow]]:
     return rows, skips
 
 
-_REF_LINE = re.compile(r"^\s*\**Upstream:?\**", re.IGNORECASE)
+_REF_LINE = re.compile(r"^\s*\**Upstream\**\s*:", re.IGNORECASE)
 _REF = re.compile(r"Donkie/Spoolman(?:#|/issues/)(\d+)")
 _TRAILER = re.compile(
     r"Upstream-commit:\s*([0-9a-f]{7,40})\s+(ported|skipped)(?:\s*[—–-]\s*(\S.*?))?\s*$",  # noqa: RUF001
@@ -250,19 +250,25 @@ class GitHubClient:
             cursor = page["pageInfo"]["endCursor"]
 
     def merged_trailer_prs(self) -> list[dict]:
-        """Search merged fork PRs whose body contains an 'Upstream-commit:' trailer."""
-        query = """query($q:String!,$cursor:String){search(query:$q,type:ISSUE,first:100,after:$cursor){
-          pageInfo{hasNextPage endCursor}
-          nodes{... on PullRequest{number body mergeCommit{oid}}}}}"""
-        q = f'repo:{self.owner}/{self.name} is:pr is:merged "Upstream-commit:" in:body'
+        """Page through every merged fork PR, keeping those whose body has an 'Upstream-commit:' trailer.
+
+        Cursor-paginates repository.pullRequests directly rather than the `search` API: GitHub is
+        migrating issue/PR search off PRs, and search caps at 1000 results — a silent failure mode
+        here (an empty ports table) that pagination over the PR connection doesn't share.
+        """
+        query = """query($owner:String!,$name:String!,$cursor:String){
+          repository(owner:$owner,name:$name){
+            pullRequests(states:MERGED,first:100,after:$cursor,orderBy:{field:UPDATED_AT,direction:DESC}){
+              pageInfo{hasNextPage endCursor}
+              nodes{number body mergeCommit{oid}}}}}"""
         out: list[dict] = []
         cursor = None
         while True:
-            args = ["api", "graphql", "-f", f"query={query}", "-f", f"q={q}"]
+            args = ["api", "graphql", "-f", f"query={query}", "-f", f"owner={self.owner}", "-f", f"name={self.name}"]
             if cursor:
                 args += ["-f", f"cursor={cursor}"]
-            page = json.loads(self._gh(*args))["data"]["search"]
-            out += page["nodes"]
+            page = json.loads(self._gh(*args))["data"]["repository"]["pullRequests"]
+            out += [pr for pr in page["nodes"] if "Upstream-commit:" in (pr.get("body") or "")]
             if not page["pageInfo"]["hasNextPage"]:
                 return out
             cursor = page["pageInfo"]["endCursor"]

@@ -154,8 +154,7 @@ ignore = [
 # package), same rationale as client/e2e above.
 "scripts/*.py" = ["INP001"]
 # The triage-table fixture mirrors real markdown table rows verbatim (one row
-# per line, matching docs/upstream-triage.md), so lines run long; the paired
-# assertions are grouped by the row they check rather than split arbitrarily.
+# per line, matching docs/upstream-triage.md), so lines run long.
 "tests/test_upstream_ledger.py" = ["E501"]
 "migrations/versions/*" = ["N999"]
 # NFC support modules are binary-protocol codecs and hardware (USB/NFC) I/O.

@@ -18,6 +18,17 @@ from pathlib import Path
 UPSTREAM = "Donkie/Spoolman"
 
 
+def _sanitize(text: str) -> str:
+    """Neutralize literal backticks so upstream-controlled text can't escape its backtick span.
+
+    Commit subjects and issue/PR titles are upstream-controlled and always rendered inside a single
+    pair of backticks so GitHub won't auto-link @mentions or owner/repo#N references embedded in
+    them. A literal backtick in that text would otherwise close the span early and let the remainder
+    render as live Markdown — replacing backticks with a lookalike keeps the whole string inert.
+    """
+    return text.replace("`", "'")
+
+
 def filter_created_after(items: list[dict], watermark: str) -> list[dict]:
     """Keep only items whose ISO-8601 `created_at` sorts strictly after `watermark`."""
     return [i for i in items if i["created_at"] > watermark]
@@ -37,16 +48,19 @@ def render_watch_issue(commits: list[dict], issues: list[dict], prs: list[dict])
         out += [f"### New upstream commits ({len(commits)})", ""]
         for c in commits:
             dirs = ", ".join(f"`{d}`" for d in c["dirs"]) or "`.`"
-            # Subject is backticked too: "(#N)" in upstream subjects must not auto-link against our repo.
-            out.append(f"- [ ] `{c['sha'][:9]}` `{c['subject']}` ({dirs}) — port / skip?")
+            # Subject is backticked and sanitized: "(#N)" in upstream subjects must not auto-link
+            # against our repo, and a literal backtick in the subject must not escape the span.
+            out.append(f"- [ ] `{c['sha'][:9]}` `{_sanitize(c['subject'])}` ({dirs}) — port / skip?")
         out.append("")
     if issues:
         out += [f"### New upstream issues ({len(issues)})", ""]
-        out += [f"- [ ] `{UPSTREAM}#{i['number']}` {i['title']} — fix / implement / skip?" for i in issues]
+        # Title is backticked and sanitized too: an upstream title containing @user or
+        # owner/repo#N would otherwise ping/cross-link from our issue.
+        out += [f"- [ ] `{UPSTREAM}#{i['number']}` `{_sanitize(i['title'])}` — fix / implement / skip?" for i in issues]
         out.append("")
     if prs:
         out += [f"### New upstream PRs ({len(prs)})", ""]
-        out += [f"- [ ] `{UPSTREAM}#{p['number']}` {p['title']} — mine / ignore?" for p in prs]
+        out += [f"- [ ] `{UPSTREAM}#{p['number']}` `{_sanitize(p['title'])}` — mine / ignore?" for p in prs]
         out.append("")
     return "\n".join(out)
 

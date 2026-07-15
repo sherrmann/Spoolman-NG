@@ -723,6 +723,11 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      # actions: write lets this job dispatch ledger.yml below — GITHUB_TOKEN-created
+      # events (like the release this job just created) don't trigger workflows, but
+      # workflow_dispatch is exempt, so we dispatch it explicitly instead of relying
+      # on ledger.yml's `release: types: [published]` trigger to fire on its own.
+      actions: write
     steps:
       - name: Download built spoolman
         uses: actions/download-artifact@v8.0.1
@@ -785,6 +790,13 @@ jobs:
             When attached below, `spoolman-companion-*.apk` is the sideloadable Android companion app: the full web UI plus **native QR/barcode and NFC scanning**, working against plain-HTTP LAN servers with no TLS setup. Install it directly or track releases with [Obtainium](https://github.com/ImranR98/Obtainium) — details in [mobile/README.md](https://github.com/${{ github.repository }}/blob/master/mobile/README.md).
 
             ---
+
+      # This release was just created with GITHUB_TOKEN, so its `release: types:
+      # [published]` event won't fire on ledger.yml — dispatch it explicitly instead.
+      - name: Trigger ledger regeneration for this release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run ledger.yml --ref master -f tag="${GITHUB_REF_NAME}"
   #
   # Keep the Home Assistant add-on repository (sherrmann/spoolman-ng-addons) in step
   # with each release: HA only offers add-on updates when the add-on's config.yaml

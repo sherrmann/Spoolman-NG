@@ -71,6 +71,17 @@ def test_upstream_refs_from_body() -> None:
     assert upstream_refs_from_body(None) == []
 
 
+def test_upstream_refs_from_body_requires_colon() -> None:
+    # Bold-inside ("**Upstream:**") and plain ("Upstream:") forms are covered above; this covers
+    # bold-outside ("**Upstream**:") and confirms prose that merely starts with the word "Upstream"
+    # (no colon) is not mistaken for a marker line.
+    body = (
+        "**Upstream**: https://github.com/Donkie/Spoolman/issues/700\n"
+        "Upstream fixed this differently, see Donkie/Spoolman#500\n"
+    )
+    assert upstream_refs_from_body(body) == [700]
+
+
 def test_parse_trailers() -> None:
     body = "Ports two things.\nUpstream-commit: abc1234 ported\nUpstream-commit: def5678 skipped — fork has own theme\n"
     assert parse_trailers(body) == [("abc1234", "ported", ""), ("def5678", "skipped", "fork has own theme")]
