@@ -823,8 +823,16 @@ jobs:
           fi
           git config user.name "${GITHUB_ACTOR}"
           git config user.email "${GITHUB_ACTOR_ID}+${GITHUB_ACTOR}@users.noreply.github.com"
+          branch="release-bump/${ver}"
+          git checkout -b "${branch}"
           git commit -am "Bump Spoolman NG add-on to ${ver}"
-          git push
+          git push origin "${branch}"
+          gh pr create --repo sherrmann/spoolman-ng-addons --head "${branch}" \
+            --title "Bump Spoolman NG add-on to ${ver}" \
+            --body "Automated release bump. Server changes: https://github.com/sherrmann/Spoolman-NG/releases/tag/v${ver}"
+          gh pr merge --repo sherrmann/spoolman-ng-addons "${branch}" --auto --squash
+        env:
+          GH_TOKEN: ${{ secrets.PAT }}
   #
   # Deploy the freshly published :edge image to the spoolman-ng test instance
   # on the VPS. The SSH key is forced-command — the server runs
