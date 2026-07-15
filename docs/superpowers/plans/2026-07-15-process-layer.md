@@ -1175,7 +1175,7 @@ jobs:
           fi
 ```
 
-Note the GITHUB_TOKEN trap this design dodges: PRs created with `GITHUB_TOKEN` don't trigger `pull_request` workflows, so required checks would never report and auto-merge would hang. Step 1's push-trigger on `upstream-sync/**` is the fix — the checks attach to the branch SHA via the push event.
+Note the GITHUB_TOKEN trap: events created with `GITHUB_TOKEN` — **including branch pushes, not just PR creation** — don't trigger workflows, so neither the push trigger nor `pull_request` fires and auto-merge would hang. `workflow_dispatch` is documented as exempt from this rule, so the sync job must explicitly `gh workflow run build.yml --ref "${branch}"` after pushing (needs `actions: write`); the resulting check runs attach to the branch head SHA and satisfy the required contexts. (CORRECTED DURING EXECUTION — the original plan text wrongly claimed a push-triggered run would fire; caught by the Task 7 review. The `upstream-sync/**` push trigger stays: it's what makes the dispatched run's checks land, and covers manually-pushed sync branches.)
 
 - [ ] **Step 3: Enable issues, auto-merge, protection, label; drop stale branch**
 
