@@ -251,10 +251,21 @@ class GitHubClient:
 
     def merged_trailer_prs(self) -> list[dict]:
         """Search merged fork PRs whose body contains an 'Upstream-commit:' trailer."""
-        query = """query($q:String!){search(query:$q,type:ISSUE,first:100){
+        query = """query($q:String!,$cursor:String){search(query:$q,type:ISSUE,first:100,after:$cursor){
+          pageInfo{hasNextPage endCursor}
           nodes{... on PullRequest{number body mergeCommit{oid}}}}}"""
         q = f'repo:{self.owner}/{self.name} is:pr is:merged "Upstream-commit:" in:body'
-        return json.loads(self._gh("api", "graphql", "-f", f"query={query}", "-f", f"q={q}"))["data"]["search"]["nodes"]
+        out: list[dict] = []
+        cursor = None
+        while True:
+            args = ["api", "graphql", "-f", f"query={query}", "-f", f"q={q}"]
+            if cursor:
+                args += ["-f", f"cursor={cursor}"]
+            page = json.loads(self._gh(*args))["data"]["search"]
+            out += page["nodes"]
+            if not page["pageInfo"]["hasNextPage"]:
+                return out
+            cursor = page["pageInfo"]["endCursor"]
 
 
 def first_release_containing(oid: str, repo_root: Path) -> str | None:
