@@ -47,7 +47,8 @@ def render_watch_issue(commits: list[dict], issues: list[dict], prs: list[dict])
     if commits:
         out += [f"### New upstream commits ({len(commits)})", ""]
         for c in commits:
-            dirs = ", ".join(f"`{d}`" for d in c["dirs"]) or "`.`"
+            # Dir names are upstream path components — sanitized like subjects/titles (#235).
+            dirs = ", ".join(f"`{_sanitize(d)}`" for d in c["dirs"]) or "`.`"
             # Subject is backticked and sanitized: "(#N)" in upstream subjects must not auto-link
             # against our repo, and a literal backtick in the subject must not escape the span.
             out.append(f"- [ ] `{c['sha'][:9]}` `{_sanitize(c['subject'])}` ({dirs}) — port / skip?")
