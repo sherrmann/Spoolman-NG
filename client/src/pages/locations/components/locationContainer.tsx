@@ -3,7 +3,13 @@ import { Input, Modal, Spin } from "antd";
 import { useEffect, useMemo, useState } from "react";
 import { useSetSetting } from "../../../utils/querySettings";
 import { ISpool } from "../../spools/model";
-import { EMPTYLOC, useLocations, useLocationsSpoolOrders, useRenameSpoolLocation } from "../functions";
+import {
+  EMPTYLOC,
+  renameSpoolOrderKey,
+  useLocations,
+  useLocationsSpoolOrders,
+  useRenameSpoolLocation,
+} from "../functions";
 import { Location } from "./location";
 
 interface LocationContainerProps {
@@ -113,6 +119,11 @@ export function LocationContainer({ modalOpen, setModalOpen }: LocationContainer
     const newLocs = [...locationsList].filter((loc) => loc != EMPTYLOC);
     newLocs[newLocs.indexOf(location)] = newTitle;
     setLocationsSetting.mutate(newLocs);
+
+    // Keep the column's manual spool order under its new name (#225)
+    if (locationsSpoolOrders[location]) {
+      setLocationsSpoolOrders.mutate(renameSpoolOrderKey(locationsSpoolOrders, location, newTitle));
+    }
   };
 
   const setLocationSpoolOrder = (location: string, spoolOrder: number[]) => {

@@ -75,10 +75,26 @@ interface LocationRename {
   new: string;
 }
 
+/**
+ * Rename a location's key in the manual spool-order map (#225) so a column rename keeps its
+ * hand-sorted order instead of orphaning it under the old name.
+ */
+export function renameSpoolOrderKey(
+  orders: Record<string, number[]>,
+  oldName: string,
+  newName: string,
+): Record<string, number[]> {
+  if (!(oldName in orders)) return { ...orders };
+  const { [oldName]: moved, ...rest } = orders;
+  return { ...rest, [newName]: moved };
+}
+
 export function useRenameSpoolLocation() {
   const queryClient = useQueryClient();
-  const queryKey = ["default", "spool"];
-  const queryKeyList = ["default", "spool", "list"];
+  // Refine v5 prefixes all data queries with "data" (KeyBuilder.data()); react-query matches key
+  // prefixes from index 0, so the old v4 shape (["default", "spool"]) matched nothing (#225).
+  const queryKey = ["data", "default", "spool"];
+  const queryKeyList = ["data", "default", "spool", "list"];
 
   return useMutation<string, unknown, LocationRename, undefined>({
     mutationFn: async (value) => {
