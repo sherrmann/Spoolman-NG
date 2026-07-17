@@ -71,3 +71,51 @@ describe("spool write helpers attach the API token (#224)", () => {
     expect(headers.Authorization).toBeUndefined();
   });
 });
+
+// #227: the write helpers must surface HTTP failures. They used to swallow any non-ok
+// response, so the adjust modal closed as success on a server 400 and the user believed
+// the measurement was recorded.
+describe("spool write helpers surface HTTP errors (#227)", () => {
+  it("setSpoolArchived throws the server message on a non-ok response", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({ ok: false, status: 400, json: async () => ({ message: "nope" }) }) as unknown as Response),
+    );
+
+    await expect(setSpoolArchived(spool, true)).rejects.toThrow("nope");
+  });
+
+  it("useSpoolFilamentMeasure throws the server message on a 400", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          ({
+            ok: false,
+            status: 400,
+            json: async () => ({ message: "Initial weight is not set." }),
+          }) as unknown as Response,
+      ),
+    );
+
+    await expect(useSpoolFilamentMeasure(spool, 1050)).rejects.toThrow("Initial weight is not set.");
+  });
+
+  it("useSpoolFilament falls back to a generic error when the body is not JSON", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          ({
+            ok: false,
+            status: 502,
+            json: async () => {
+              throw new SyntaxError("not json");
+            },
+          }) as unknown as Response,
+      ),
+    );
+
+    await expect(useSpoolFilament(spool, undefined, 5)).rejects.toThrow("HTTP 502");
+  });
+});

@@ -160,7 +160,11 @@ export const SpoolList = () => {
   const currencyFormatter = useCurrencyFormatter();
   const currency = useCurrency();
   const unitScaling = useUnitScaling();
-  const { openSpoolAdjustModal, spoolAdjustModal } = useSpoolAdjustModal();
+  // antd message instance (with its context holder rendered below) for inline edit and
+  // adjust/archive error toasts, matching the app's existing message.useMessage() pattern.
+  const [messageApi, messageContextHolder] = message.useMessage();
+
+  const { openSpoolAdjustModal, spoolAdjustModal } = useSpoolAdjustModal(messageApi);
 
   // User-configured per-spool action links (#140), appended to each row's action menu when set.
   const actionLinks = useSpoolActionLinks();
@@ -169,10 +173,6 @@ export const SpoolList = () => {
   // the same breakpoint mechanism the header uses (Grid.useBreakpoint / !md).
   const screens = Grid.useBreakpoint();
   const inlineEditEnabled = !!screens.md;
-
-  // antd message instance (with its context holder rendered below) for inline
-  // edit error toasts, matching the app's existing message.useMessage() pattern.
-  const [messageApi, messageContextHolder] = message.useMessage();
 
   // Location options for the inline Select: existing locations from settings +
   // locations already in use, deduped — mirroring the create/edit spool form.
@@ -412,7 +412,13 @@ export const SpoolList = () => {
 
   // Function for opening an ant design modal that asks for confirmation for archiving a spool
   const archiveSpool = async (spool: ISpoolCollapsed, archive: boolean) => {
-    await setSpoolArchived(spool, archive);
+    try {
+      await setSpoolArchived(spool, archive);
+    } catch (error) {
+      // Surface the failure (#227) - the row would otherwise just silently stay put.
+      messageApi.error(error instanceof Error && error.message ? error.message : t("notifications.error"));
+      return;
+    }
     invalidate({
       resource: "spool",
       id: spool.id,
