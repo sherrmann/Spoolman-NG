@@ -53,3 +53,40 @@ describe("parseStringSettingValue", () => {
     expect(parseStringSettingValue("[1,2,3]", "default")).toBe("default");
   });
 });
+
+// useSetSetting must go through the authenticated transport: with SPOOLMAN_API_TOKEN or user
+// accounts configured, a bare fetch without the Authorization header 401s every settings write
+// (currency, locations, spool orders, …) — issue #224.
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import React from "react";
+import { afterEach, vi } from "vitest";
+import { useSetSetting } from "./querySettings";
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+  localStorage.removeItem("spoolmanApiToken");
+});
+
+describe("useSetSetting (#224)", () => {
+  it("attaches the stored API token as Authorization header on the POST", async () => {
+    localStorage.setItem("spoolmanApiToken", "sekrit-224");
+    const seen: { init?: RequestInit }[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (_url: string, init?: RequestInit) => {
+        seen.push({ init });
+        return { ok: true, json: async () => ({ value: '"EUR"', is_set: true, type: "string" }) } as Response;
+      }),
+    );
+    const wrapper = ({ children }: { children: React.ReactNode }) =>
+      React.createElement(QueryClientProvider, { client: new QueryClient() }, children);
+
+    const { result } = renderHook(() => useSetSetting<string>("currency"), { wrapper });
+    act(() => result.current.mutate("EUR"));
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    const headers = (seen[0].init?.headers ?? {}) as Record<string, string>;
+    expect(headers.Authorization).toBe("Bearer sekrit-224");
+  });
+});

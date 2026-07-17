@@ -7,6 +7,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { formatLength, formatNumberOnUserInput, formatWeight, numberParser } from "../../utils/parsing";
 import { SpoolType, useGetExternalDBFilaments } from "../../utils/queryExternalDB";
 import { useSavedState } from "../../utils/saveload";
+import { apiFetch } from "../../utils/authReloadHandler";
 import { getAPIURL } from "../../utils/url";
 import { IFilament } from "../filaments/model";
 import { ISpool } from "./model";
@@ -22,7 +23,7 @@ export async function setSpoolArchived(spool: ISpool, archived: boolean) {
     }),
   };
   const request = new Request(getAPIURL() + "/spool/" + spool.id);
-  await fetch(request, init);
+  await apiFetch(request, init);
 }
 
 /**
@@ -43,7 +44,7 @@ export async function useSpoolFilament(spool: ISpool, length?: number, weight?: 
     }),
   };
   const request = new Request(`${getAPIURL()}/spool/${spool.id}/use`);
-  await fetch(request, init);
+  await apiFetch(request, init);
 }
 
 /**
@@ -62,7 +63,7 @@ export async function useSpoolFilamentMeasure(spool: ISpool, weight: number) {
     }),
   };
   const request = new Request(`${getAPIURL()}/spool/${spool.id}/measure`);
-  await fetch(request, init);
+  await apiFetch(request, init);
 }
 
 /**
@@ -78,7 +79,7 @@ export function useGetSpoolsByIds(ids: number[]) {
       return {
         queryKey: ["spool", id],
         queryFn: async () => {
-          const res = await fetch(getAPIURL() + "/spool/" + id);
+          const res = await apiFetch(getAPIURL() + "/spool/" + id);
           return (await res.json()) as ISpool;
         },
       };

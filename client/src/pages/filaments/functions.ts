@@ -1,5 +1,6 @@
 import { useQueries } from "@tanstack/react-query";
 import { ExternalFilament } from "../../utils/queryExternalDB";
+import { apiFetch } from "../../utils/authReloadHandler";
 import { getAPIURL } from "../../utils/url";
 import { getOrCreateVendorFromExternal } from "../vendors/functions";
 import { IFilament } from "./model";
@@ -37,7 +38,7 @@ export async function createFilamentFromExternal(externalFilament: ExternalFilam
     external_id: externalFilament.id,
   };
 
-  const response = await fetch(getAPIURL() + "/filament", {
+  const response = await apiFetch(getAPIURL() + "/filament", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -63,7 +64,7 @@ export function useGetFilamentsByIds(ids: number[]) {
       return {
         queryKey: ["filament", id],
         queryFn: async () => {
-          const res = await fetch(getAPIURL() + "/filament/" + id);
+          const res = await apiFetch(getAPIURL() + "/filament/" + id);
           if (!res.ok) {
             throw new Error(`Failed to fetch filament ${id} (status ${res.status})`);
           }

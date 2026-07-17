@@ -2,6 +2,7 @@ import { GetListResponse } from "@refinedev/core";
 import { useMutation, useQueries, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useGetSetting } from "../../utils/querySettings";
+import { apiFetch } from "../../utils/authReloadHandler";
 import { getAPIURL } from "../../utils/url";
 import { ISpool } from "../spools/model";
 import { ILocation } from "./model";
@@ -14,7 +15,7 @@ export function useGetLocationsByIds(ids: number[]) {
     queries: ids.map((id) => ({
       queryKey: ["location", id],
       queryFn: async () => {
-        const res = await fetch(`${getAPIURL()}/locations/${id}`);
+        const res = await apiFetch(`${getAPIURL()}/locations/${id}`);
         return (await res.json()) as ILocation;
       },
     })),
@@ -27,7 +28,7 @@ export function useGetLocationsByIds(ids: number[]) {
  * a partial case-insensitive match, so we pick the exact-name row from the results.
  */
 export async function getLocationByName(name: string): Promise<ILocation | null> {
-  const response = await fetch(`${getAPIURL()}/locations?${new URLSearchParams({ name })}`);
+  const response = await apiFetch(`${getAPIURL()}/locations?${new URLSearchParams({ name })}`);
   if (!response.ok) {
     return null;
   }
@@ -45,7 +46,7 @@ export async function getOrCreateLocationByName(name: string): Promise<ILocation
   if (existing) {
     return existing;
   }
-  const response = await fetch(`${getAPIURL()}/locations`, {
+  const response = await apiFetch(`${getAPIURL()}/locations`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name }),
@@ -58,7 +59,7 @@ export async function getOrCreateLocationByName(name: string): Promise<ILocation
 
 /** Replace a location's custom-field values (#103). extra values are JSON-encoded strings. */
 export async function updateLocationExtra(id: number, extra: { [key: string]: string }): Promise<ILocation> {
-  const response = await fetch(`${getAPIURL()}/locations/${id}`, {
+  const response = await apiFetch(`${getAPIURL()}/locations/${id}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ extra }),
@@ -81,7 +82,7 @@ export function useRenameSpoolLocation() {
 
   return useMutation<string, unknown, LocationRename, undefined>({
     mutationFn: async (value) => {
-      const response = await fetch(getAPIURL() + "/location/" + value.old, {
+      const response = await apiFetch(getAPIURL() + "/location/" + value.old, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

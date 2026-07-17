@@ -1,3 +1,4 @@
+import { apiFetch } from "../../utils/authReloadHandler";
 import { getAPIURL } from "../../utils/url";
 import { IVendor } from "./model";
 
@@ -24,7 +25,7 @@ export function isDuplicateVendorName(name: string, existingNames: string[]): bo
  */
 export async function getVendorByExternalID(external_id: string): Promise<IVendor | null> {
   // Make a search using GET and query params
-  const response = await fetch(`${getAPIURL()}/vendor?${new URLSearchParams({ external_id })}`);
+  const response = await apiFetch(`${getAPIURL()}/vendor?${new URLSearchParams({ external_id })}`);
   if (!response.ok) {
     return null;
   }
@@ -43,7 +44,7 @@ export async function getVendorByExternalID(external_id: string): Promise<IVendo
  * vendor has no external-DB provenance.
  */
 export async function createVendor(name: string): Promise<IVendor> {
-  const response = await fetch(getAPIURL() + "/vendor", {
+  const response = await apiFetch(getAPIURL() + "/vendor", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -71,7 +72,7 @@ export async function getOrCreateVendorFromExternal(vendor_external_id: string):
     external_id: vendor_external_id,
   };
 
-  const response = await fetch(getAPIURL() + "/vendor", {
+  const response = await apiFetch(getAPIURL() + "/vendor", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

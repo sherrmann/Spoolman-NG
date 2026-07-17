@@ -52,7 +52,7 @@ export function useSetSetting<T>(key: string) {
 
   return useMutation<SettingResponseValue, unknown, T, SettingResponseValue | undefined>({
     mutationFn: async (value) => {
-      const response = await fetch(`${getAPIURL()}/setting/${key}`, {
+      const response = await apiFetch(`${getAPIURL()}/setting/${key}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

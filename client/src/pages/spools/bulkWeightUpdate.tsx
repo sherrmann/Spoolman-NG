@@ -7,6 +7,7 @@ import type { InputNumberRef } from "rc-input-number";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { formatNumberOnUserInput, formatWeight, numberParser } from "../../utils/parsing";
 import { useSavedState } from "../../utils/saveload";
+import { apiFetch } from "../../utils/authReloadHandler";
 import { getAPIURL } from "../../utils/url";
 import { useSpoolFilament, useSpoolFilamentMeasure } from "./functions";
 import { ISpool } from "./model";
@@ -52,7 +53,7 @@ export function useBulkWeightUpdateModal(messageApi: MessageInstance) {
   const fetchSpools = useCallback(async (term: string) => {
     const params = new URLSearchParams({ allow_archived: "false", limit: "20" });
     if (term) params.set("search", term);
-    const res = await fetch(`${getAPIURL()}/spool?${params.toString()}`);
+    const res = await apiFetch(`${getAPIURL()}/spool?${params.toString()}`);
     if (!res.ok) return;
     const spools: ISpool[] = await res.json();
     setOptions(spools.map((s) => ({ value: s.id, label: spoolLabel(s), spool: s })));
