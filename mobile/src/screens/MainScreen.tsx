@@ -277,9 +277,9 @@ export function MainScreen({ profile, token, onTokenChange, onChangeServer }: Ma
         sharedCookiesEnabled
         thirdPartyCookiesEnabled
         allowsBackForwardNavigationGestures
-        injectedJavaScriptBeforeContentLoaded={buildStartupInjection(token)}
+        injectedJavaScriptBeforeContentLoaded={buildStartupInjection(token, origin)}
         onMessage={(event) => {
-          const message = parseWebViewMessage(event.nativeEvent.data);
+          const message = parseWebViewMessage(event.nativeEvent.data, event.nativeEvent.url, origin);
           if (message && message.token !== token) {
             onTokenChange(message.token);
           }
