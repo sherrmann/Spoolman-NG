@@ -58,3 +58,17 @@ def test_filter_created_after() -> None:
         {"number": 2, "created_at": "2026-07-07T00:00:00Z"},
     ]
     assert [i["number"] for i in filter_created_after(items, "2026-07-06T00:00:00Z")] == [2]
+
+
+def test_render_sanitizes_hostile_directory_names() -> None:
+    """Directory names come from upstream path components and share the titles' exposure (#235).
+
+    A backtick in a top-level path name (git permits it) would close the code span early and let
+    an embedded @mention or owner/repo#N ref render live, defeating the no-cross-link invariant.
+    """
+    commits = [{"sha": "c" * 40, "subject": "x", "dirs": ["a`@someuser see Donkie/Spoolman#5", "client"]}]
+    body = render_watch_issue(commits, [], [])
+    assert body is not None
+    stripped = re.sub(r"`[^`]*`", "", body)
+    assert "@someuser" not in stripped
+    assert "Donkie/Spoolman#" not in stripped
