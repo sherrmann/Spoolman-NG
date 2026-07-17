@@ -45,6 +45,12 @@ CI runs all of the above plus lint (`ruff`, `eslint`, `prettier`, `tsc`),
 CodeQL, hadolint, multi-arch Docker builds, and a weekly mutation-testing run
 (Stryker enforces a ≥90% mutation score on crown-jewel client modules).
 
+None of this touches real hardware or platforms CI can't emulate — NFC
+readers, label printers, non-Chromium browsers, Synology/NAS boxes, the
+mobile companion app on a physical phone. See
+[docs/device-testing-list.md](docs/device-testing-list.md) for what to check
+by hand and on which priority tier before a release.
+
 ## UI conventions
 
 These rules keep the client's interaction model consistent as features are added:
