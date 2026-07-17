@@ -651,6 +651,11 @@ async def measure(
     if initial_weight is None or initial_weight == 0:
         raise SpoolMeasureError("Initial weight is not set.")
 
+    if spool_weight is None:
+        # No tare weight on the spool or its filament (#229): treat it as 0, matching the
+        # remaining-weight math everywhere else, instead of crashing on None arithmetic.
+        spool_weight = 0
+
     initial_gross_weight = initial_weight + spool_weight
 
     # if the measurement is greater than the initial weight, set the initial weight to the measurement
