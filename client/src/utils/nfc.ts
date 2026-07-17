@@ -1,4 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { apiFetch } from "./authReloadHandler";
 import { getAPIURL } from "./url";
 
 /**
@@ -81,7 +82,7 @@ export function useNfcStatus() {
     queryKey: ["nfc", "status"],
     staleTime: 30000,
     queryFn: async () => {
-      const response = await fetch(`${getAPIURL()}/nfc/status`);
+      const response = await apiFetch(`${getAPIURL()}/nfc/status`);
       if (!response.ok) {
         throw new Error(`NFC request failed with status ${response.status}`);
       }
@@ -96,7 +97,7 @@ export function useNfcStatus() {
 export function useNfcRead() {
   return useMutation<NfcReadResponse>({
     mutationFn: async () => {
-      const response = await fetch(`${getAPIURL()}/nfc/read`, {
+      const response = await apiFetch(`${getAPIURL()}/nfc/read`, {
         method: "POST",
       });
       if (!response.ok) {
@@ -113,7 +114,7 @@ export function useNfcRead() {
 export function useNfcWrite() {
   return useMutation<NfcWriteResponse, Error, NfcWriteRequest>({
     mutationFn: async (request: NfcWriteRequest) => {
-      const response = await fetch(`${getAPIURL()}/nfc/write`, {
+      const response = await apiFetch(`${getAPIURL()}/nfc/write`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(request),
@@ -132,7 +133,7 @@ export function useNfcWrite() {
 export function useNfcEncode() {
   return useMutation<NfcEncodeResponse, Error, NfcEncodeRequest>({
     mutationFn: async (request: NfcEncodeRequest) => {
-      const response = await fetch(`${getAPIURL()}/nfc/encode`, {
+      const response = await apiFetch(`${getAPIURL()}/nfc/encode`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(request),
@@ -168,7 +169,7 @@ export interface NfcBindResponse {
 export function useNfcBind() {
   return useMutation<NfcBindResponse, Error, NfcBindRequest>({
     mutationFn: async (request: NfcBindRequest) => {
-      const response = await fetch(`${getAPIURL()}/nfc/bind`, {
+      const response = await apiFetch(`${getAPIURL()}/nfc/bind`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(request),
@@ -214,7 +215,7 @@ export interface NfcCreateFromTagResponse {
 export function useNfcCreateFromTag() {
   return useMutation<NfcCreateFromTagResponse, Error, NfcCreateFromTagRequest>({
     mutationFn: async (request: NfcCreateFromTagRequest) => {
-      const response = await fetch(`${getAPIURL()}/nfc/create-from-tag`, {
+      const response = await apiFetch(`${getAPIURL()}/nfc/create-from-tag`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(request),

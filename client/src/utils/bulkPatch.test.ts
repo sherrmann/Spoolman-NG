@@ -39,4 +39,21 @@ describe("bulkPatch", () => {
 
     expect(failed).toBe(1);
   });
+
+  it("attaches the stored API token as Authorization header (#224)", async () => {
+    localStorage.setItem("spoolmanApiToken", "sekrit-224");
+    const seen: Record<string, string>[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (_url: string, init: RequestInit) => {
+        seen.push((init.headers as Record<string, string>) ?? {});
+        return { ok: true } as Response;
+      }),
+    );
+
+    await bulkPatch("spool", [1], { archived: true });
+
+    localStorage.removeItem("spoolmanApiToken");
+    expect(seen[0].Authorization).toBe("Bearer sekrit-224");
+  });
 });

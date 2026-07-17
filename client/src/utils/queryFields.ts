@@ -69,7 +69,7 @@ export function useSetField(entity_type: EntityType) {
 
   return useMutation<Field[], unknown, { key: string; params: FieldParameters }, { previousFields?: Field[] }>({
     mutationFn: async ({ key, params }) => {
-      const response = await fetch(`${getAPIURL()}/field/${entity_type}/${key}`, {
+      const response = await apiFetch(`${getAPIURL()}/field/${entity_type}/${key}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -164,7 +164,7 @@ export function useDeleteField(entity_type: EntityType) {
 
   return useMutation<Field[], unknown, string>({
     mutationFn: async (key) => {
-      const response = await fetch(`${getAPIURL()}/field/${entity_type}/${key}`, {
+      const response = await apiFetch(`${getAPIURL()}/field/${entity_type}/${key}`, {
         method: "DELETE",
       });
 

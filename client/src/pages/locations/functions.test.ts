@@ -59,3 +59,19 @@ describe("getOrCreateLocationByName (#103)", () => {
     expect(fetchMock.mock.calls[1][1]?.method).toBe("POST");
   });
 });
+
+describe("API token attachment (#224)", () => {
+  it("attaches the stored token as Authorization header on the create POST", async () => {
+    localStorage.setItem("spoolmanApiToken", "sekrit-224");
+    const fetchMock = mockFetch((url, init) => {
+      if (init?.method === "POST") return { ok: true, body: loc({ id: 99, name: "New Box" }) };
+      return { ok: true, body: [] };
+    });
+
+    await getOrCreateLocationByName("New Box");
+
+    localStorage.removeItem("spoolmanApiToken");
+    const headers = (fetchMock.mock.calls[1][1]?.headers ?? {}) as Record<string, string>;
+    expect(headers.Authorization).toBe("Bearer sekrit-224");
+  });
+});

@@ -19,5 +19,20 @@ export default defineConfig([
   tseslint.configs.recommended,
   reactPlugin.configs.flat.recommended,
   reactPlugin.configs.flat["jsx-runtime"],
+  {
+    // Bare fetch() skips the Authorization header and 401 handling, silently breaking every
+    // write under SPOOLMAN_API_TOKEN / user accounts (#224). Route API calls through apiFetch.
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["src/**/*.test.*", "src/test/**", "src/utils/authReloadHandler.ts"],
+    rules: {
+      "no-restricted-globals": [
+        "error",
+        {
+          name: "fetch",
+          message: "Use apiFetch from utils/authReloadHandler so the API token and 401 handling are attached (#224).",
+        },
+      ],
+    },
+  },
   eslintConfigPrettier,
 ]);

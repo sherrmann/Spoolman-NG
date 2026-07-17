@@ -160,7 +160,7 @@ export const QRScannerPanel = ({ onClose }: { onClose?: () => void }) => {
       }
       processingRef.current = true;
       try {
-        const res = await fetch(`${getAPIURL()}/locations/${outcome.locationId}`);
+        const res = await apiFetch(`${getAPIURL()}/locations/${outcome.locationId}`);
         if (!res.ok) {
           throw new Error("load");
         }
