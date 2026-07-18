@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   compareVersions,
+  isUnstampedDevVersion,
   isUpdateAvailable,
   normalizeVersion,
   parseLatestRelease,
@@ -76,5 +77,25 @@ describe("parseLatestRelease", () => {
     expect(parseLatestRelease(null)).toBeNull();
     expect(parseLatestRelease({})).toBeNull();
     expect(parseLatestRelease({ assets: [] })).toBeNull();
+  });
+});
+
+// #223: workflow_dispatch APKs are stamped "<latest tag>-dev.<run>" so the updater can
+// reason about them, and truly unstamped local dev builds (app.json's 0.1.0) skip the
+// auto-check instead of nagging forever.
+describe("dev build handling (#223)", () => {
+  it("a dev build of the latest release is not offered a downgrade to it", () => {
+    expect(isUpdateAvailable("2026.7.10-dev.123", "v2026.7.10")).toBe(false);
+  });
+
+  it("a dev build is still offered the next real release", () => {
+    expect(isUpdateAvailable("2026.7.10-dev.123", "v2026.7.11")).toBe(true);
+  });
+
+  it("recognizes the unstamped dev fallback version", () => {
+    expect(isUnstampedDevVersion("0.1.0")).toBe(true);
+    expect(isUnstampedDevVersion("v0.1.0")).toBe(true);
+    expect(isUnstampedDevVersion("2026.7.10")).toBe(false);
+    expect(isUnstampedDevVersion("2026.7.10-dev.5")).toBe(false);
   });
 });

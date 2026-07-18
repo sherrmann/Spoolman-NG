@@ -57,6 +57,19 @@ export function compareVersions(a: string, b: string): -1 | 0 | 1 {
   return 0;
 }
 
+/** app.json's placeholder version, present in unstamped local dev builds (#223). */
+export const DEV_FALLBACK_VERSION = "0.1.0";
+
+/**
+ * True for the unstamped dev fallback version. CI stamps both tag builds
+ * (vX.Y.Z) and dispatch builds (<latest tag>-dev.<run>); only local
+ * `expo run:android` builds still read 0.1.0, and the auto-update check
+ * must not nag those forever (#223).
+ */
+export function isUnstampedDevVersion(value: string): boolean {
+  return normalizeVersion(value) === DEV_FALLBACK_VERSION;
+}
+
 /** True when latestTag is a strictly newer version than the installed one. */
 export function isUpdateAvailable(currentVersion: string, latestTag: string): boolean {
   return compareVersions(latestTag, currentVersion) > 0;
