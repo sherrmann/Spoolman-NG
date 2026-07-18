@@ -17,6 +17,7 @@ tests_deployment/run.sh moonraker    # real Moonraker validates the updater reci
 tests_deployment/run.sh runtime      # virtual-printer e2e: a print consumes filament in Spoolman
 tests_deployment/run.sh helm         # chart install into a throwaway k3d cluster (needs helm/k3d/kubectl)
 tests_deployment/run.sh octoprint    # OctoPrint-Spoolman plugin against token-protected NG
+tests_deployment/run.sh hacs         # Home Assistant Core loads the HACS integration
 ```
 
 Requirements: `uv` (repo dev env), Docker for everything except `zip`, network access,

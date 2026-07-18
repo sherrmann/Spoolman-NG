@@ -8,6 +8,7 @@
 #   tests_deployment/run.sh runtime      # virtual-printer e2e: a print consumes filament in Spoolman
 #   tests_deployment/run.sh helm         # chart install into a throwaway k3d cluster
 #   tests_deployment/run.sh octoprint    # OctoPrint-Spoolman plugin against token-protected NG
+#   tests_deployment/run.sh hacs         # Home Assistant Core loads the HACS integration
 # Extra arguments go to pytest, e.g.:  tests_deployment/run.sh native -k debian
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -24,6 +25,7 @@ case "$target" in
   runtime)   paths=(tests_deployment/test_moonraker_runtime.py) ;;
   helm)      paths=(tests_deployment/test_helm_chart.py) ;;
   octoprint) paths=(tests_deployment/test_octoprint_plugin.py) ;;
+  hacs)      paths=(tests_deployment/test_ha_integration.py) ;;
   *)         paths=("$target") ;;
 esac
 
