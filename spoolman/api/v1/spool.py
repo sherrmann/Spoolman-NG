@@ -182,6 +182,13 @@ class SpoolParameters(BaseModel):
 
 class SpoolUpdateParameters(SpoolParameters):
     filament_id: int | None = Field(None, description="The ID of the filament type of this spool.")
+    extra: dict[str, str | None] | None = Field(  # type: ignore[assignment]  # None marks deletion (#233)
+        None,
+        description=(
+            "Extra fields to change on this spool. Keys present are set to the given value, "
+            "a null value removes the key, and keys not mentioned are left unchanged."
+        ),
+    )
     label_printed_at: datetime | None = Field(
         None,
         description=(
@@ -603,7 +610,10 @@ async def create(  # noqa: ANN201
         "Update any attribute of a spool. "
         "Only fields specified in the request will be affected. "
         "remaining_weight and used_weight can't be set at the same time. "
-        "If extra is set, all existing extra fields will be removed and replaced with the new ones."
+        "If extra is set, its keys are merged into the spool's existing extra fields: each key "
+        "present is set to its value, a null value removes the key, and keys not mentioned are "
+        "left unchanged. (Deliberately unlike the other entities, which replace the whole set: "
+        "concurrent writers - e.g. the NFC flow and a user edit - must not clobber each other.)"
     ),
     response_model_exclude_none=True,
     response_model=Spool,

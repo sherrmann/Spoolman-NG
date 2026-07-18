@@ -331,8 +331,10 @@ async def update(  # noqa: C901
             # Store the enum's string value, not the enum member (#74; mirrors filament.update).
             spool.multi_color_direction = v.value if v is not None else None
         elif k == "extra":
+            # Merge semantics (#233): keys present are replaced, a None value deletes the
+            # key, keys not mentioned stay. Unlike the other entities, which replace all.
             spool.extra = [f for f in spool.extra if f.key not in v]
-            spool.extra.extend([models.SpoolField(key=k, value=v) for k, v in v.items()])
+            spool.extra.extend([models.SpoolField(key=k2, value=v2) for k2, v2 in v.items() if v2 is not None])
         elif k == "printer_id":
             # #75: validate the reassignment (no DB-level FK) and set the relationship object so the
             # post-commit spool_changed payload has it loaded; a null clears the assignment.
