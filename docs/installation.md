@@ -73,6 +73,18 @@ add it with `uv sync --extra nfc`. For reader hardware, USB pass-through, udev
 rules, the `SPOOLMAN_NFC_*` variables, and the browser Web NFC (HTTPS/Android)
 requirements, see the [NFC guide](nfc.md).
 
+### Updating a native install
+
+```bash
+cd ~/Spoolman && bash scripts/update.sh          # to the latest release
+bash scripts/update.sh --tag v2026.7.12          # to (or back to) a specific one
+```
+
+The updater overlays the new release onto the install (`.env`, `.venv` and the
+local `uv/` toolchain are preserved), re-syncs Python dependencies (keeping the
+NFC extra if present), and restarts the `Spoolman` systemd service when one is
+installed. Klipper users can have Moonraker do this automatically instead:
+
 ### One-click updates from Moonraker (Klipper users)
 
 Two steps. First allow Moonraker to restart the service by adding `Spoolman` on

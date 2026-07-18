@@ -12,7 +12,7 @@ against the real consumers, not re-implementations of them. Unlike `tests/` and
 tests_deployment/run.sh              # all contract suites (~15-25 min cold)
 tests_deployment/run.sh zip          # release contract only (seconds, no docker)
 tests_deployment/run.sh addon        # HA add-on options contract
-tests_deployment/run.sh native       # install.sh matrix; -k debian for one distro
+tests_deployment/run.sh native       # install.sh matrix + update.sh upgrade path; -k debian for one distro
 tests_deployment/run.sh moonraker    # real Moonraker validates the updater recipe
 tests_deployment/run.sh runtime      # virtual-printer e2e: a print consumes filament in Spoolman
 tests_deployment/run.sh helm         # chart install into a throwaway k3d cluster (needs helm/k3d/kubectl)

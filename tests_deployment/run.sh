@@ -20,7 +20,7 @@ case "$target" in
   all)       paths=(tests_deployment) ;;
   zip)       paths=(tests_deployment/test_release_zip.py) ;;
   addon)     paths=(tests_deployment/test_ha_addon.py) ;;
-  native)    paths=(tests_deployment/test_native_install.py) ;;
+  native)    paths=(tests_deployment/test_native_install.py tests_deployment/test_native_update.py) ;;
   moonraker) paths=(tests_deployment/test_moonraker_updater.py) ;;
   runtime)   paths=(tests_deployment/test_moonraker_runtime.py) ;;
   helm)      paths=(tests_deployment/test_helm_chart.py) ;;
