@@ -10,6 +10,7 @@ import {
   getFilamentName,
   getSpoolName,
   getWeightPct,
+  staleSpools,
   locationBreakdown,
   lowStockFilaments,
   lowStockSpools,
@@ -428,5 +429,51 @@ describe("presentation helpers", () => {
     // No weights → total defaults to DEFAULT_TOTAL_WEIGHT and remaining defaults to total → 100%.
     expect(getWeightPct(spool({ filament: filament() }))).toBe(100);
     expect(DEFAULT_TOTAL_WEIGHT).toBe(1000);
+  });
+});
+
+// #202: the "Gathering Dust" card lists the least-recently-used active spools. Never-used
+// spools rank by their registration date (their only age signal); near-empty spools are
+// excluded — a finished spool is "stale" forever but the right action is archiving it.
+describe("staleSpools (#202)", () => {
+  const base = { filament: filament({ weight: 1000 }) };
+
+  it("orders by last_used ascending, interleaving never-used spools by registered date", () => {
+    const oldNeverUsed = spool({ ...base, registered: "2023-01-01T00:00:00Z" });
+    const usedLongAgo = spool({ ...base, last_used: "2024-06-01T00:00:00Z", registered: "2024-01-01T00:00:00Z" });
+    const usedRecently = spool({ ...base, last_used: "2026-07-01T00:00:00Z", registered: "2024-01-01T00:00:00Z" });
+    const result = staleSpools([usedRecently, oldNeverUsed, usedLongAgo]);
+    expect(result.map((r) => r.spool.id)).toEqual([oldNeverUsed.id, usedLongAgo.id, usedRecently.id]);
+  });
+
+  it("flags never-used spools and dates them by registration", () => {
+    const s = spool({ ...base, registered: "2023-01-01T00:00:00Z" });
+    const [entry] = staleSpools([s]);
+    expect(entry.neverUsed).toBe(true);
+    expect(entry.staleSince).toBe("2023-01-01T00:00:00Z");
+  });
+
+  it("excludes near-empty spools", () => {
+    const depleted = spool({ ...base, remaining_weight: 10, last_used: "2020-01-01T00:00:00Z" });
+    const stale = spool({ ...base, remaining_weight: 500, last_used: "2024-01-01T00:00:00Z" });
+    expect(staleSpools([depleted, stale]).map((r) => r.spool.id)).toEqual([stale.id]);
+  });
+
+  it("caps at the limit", () => {
+    const spools = Array.from({ length: 8 }, (_, i) =>
+      spool({ ...base, last_used: `2024-0${(i % 8) + 1}-01T00:00:00Z` }),
+    );
+    expect(staleSpools(spools).length).toBe(5);
+    expect(staleSpools(spools, 3).length).toBe(3);
+  });
+
+  it("does not mutate its input", () => {
+    const spools = [
+      spool({ ...base, last_used: "2024-06-01T00:00:00Z" }),
+      spool({ ...base, last_used: "2023-06-01T00:00:00Z" }),
+    ];
+    const ids = spools.map((s) => s.id);
+    staleSpools(spools);
+    expect(spools.map((s) => s.id)).toEqual(ids);
   });
 });

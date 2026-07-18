@@ -164,3 +164,33 @@ describe("Home dashboard interactions", () => {
     expect(screen.getByRole("tab", { name: /home\.low_stock/ })).toHaveAttribute("aria-selected", "true");
   });
 });
+
+// #202: the Gathering Dust card surfaces the least-recently-used spools so forgotten
+// inventory (moisture risk) is visible from the dashboard.
+describe("Gathering Dust card (#202)", () => {
+  beforeEach(() => {
+    nextId = 1;
+    mockedUseList.mockReset();
+  });
+
+  it("lists stale spools oldest-first with a never-used badge", () => {
+    setSpoolQuery({
+      data: [
+        spool({ registered: "2023-01-01T00:00:00Z", location: "Shelf A" }), // never used, oldest
+        spool({ last_used: "2026-07-01T00:00:00Z", location: "Shelf B" }),
+      ],
+    });
+    renderHome();
+
+    expect(screen.getByText("home.gathering_dust")).toBeInTheDocument();
+    expect(screen.getByText(/home\.never_used/)).toBeInTheDocument();
+    expect(screen.queryByText("home.no_stale")).not.toBeInTheDocument();
+  });
+
+  it("shows the empty state when every spool is depleted", () => {
+    setSpoolQuery({ data: [spool({ remaining_weight: 5, initial_weight: 1000, last_used: "2020-01-01T00:00:00Z" })] });
+    renderHome();
+
+    expect(screen.getByText("home.no_stale")).toBeInTheDocument();
+  });
+});
