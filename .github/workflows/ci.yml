@@ -763,6 +763,10 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64,linux/arm/v7
           push: true
+          # BuildKit attestations (#273): SBOM + provenance attached to the manifests,
+          # so docker scout / `docker sbom` and catalog reviewers get supply-chain data.
+          provenance: true
+          sbom: true
           tags: |
             ${{ steps.meta-ghcr.outputs.tags }}
             ${{ steps.meta-dh.outputs.tags }}
@@ -774,6 +778,20 @@ jobs:
             type=registry,ref=ghcr.io/${{ env.GHCR_IMAGE }}:buildcache-amd64
             type=registry,ref=ghcr.io/${{ env.GHCR_IMAGE }}:buildcache-arm64
             type=registry,ref=ghcr.io/${{ env.GHCR_IMAGE }}:buildcache-armv7
+
+      # Keep the Docker Hub repository page populated (#273). Pinned to a commit SHA
+      # (#237 policy: it receives the Docker Hub credential). The description API's
+      # token-scope requirements differ from push scope, so a failure here must not
+      # redden a release — continue-on-error, like the other post-publish niceties.
+      - name: Sync Docker Hub description
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        continue-on-error: true
+        uses: peter-evans/dockerhub-description@1b9a80c056b620d92cedb9d9b5a223409c68ddfa # v5.0.0
+        with:
+          username: cookiemonster95
+          password: ${{ secrets.REMOTE_REGISTRY_PASSWORD }}
+          repository: cookiemonster95/spoolman-ng
+          readme-filepath: docs/dockerhub.md
   #
   # Android companion app APK (mobile/) for the GitHub release. Delegates to
   # the standalone Mobile APK workflow (also runnable via workflow_dispatch);
