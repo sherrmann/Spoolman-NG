@@ -21,6 +21,21 @@ def datetime_to_str(dt: datetime) -> str:
 SpoolmanDateTime = Annotated[datetime, PlainSerializer(datetime_to_str)]
 
 
+def _extra_fields_description(entity: str) -> str:
+    r"""Build the description for an entity's ``extra`` field.
+
+    Every value in the ``extra`` map is a JSON-encoded string, regardless of the field's
+    configured type. For example, an ``integer`` field returns ``"42"`` (not ``42``) and a
+    ``text`` field returns ``"\"hello\""``. Consumers must JSON-decode each value to get the
+    typed value. This keeps the map uniformly typed as ``dict[str, str]`` on the wire.
+    """
+    return (
+        f"Extra fields for this {entity}. Every value is a JSON-encoded string, regardless of the field's "
+        'configured type: e.g. an integer field returns "42" (not 42) and a text field returns "\\"hello\\"". '
+        "Consumers must JSON-decode each value. Query the /fields endpoint for the type of each field."
+    )
+
+
 def _normalize_stored_color_hex(value: str | None) -> str | None:
     """Defensively normalize a stored color_hex when serializing out of the DB.
 
@@ -115,10 +130,7 @@ class Vendor(BaseModel):
         examples=[9],
     )
     extra: dict[str, str] = Field(
-        description=(
-            "Extra fields for this vendor. All values are JSON-encoded data. "
-            "Query the /fields endpoint for more details about the fields."
-        ),
+        description=_extra_fields_description("vendor"),
     )
 
     @staticmethod
@@ -166,10 +178,7 @@ class Location(BaseModel):
         examples=[3],
     )
     extra: dict[str, str] = Field(
-        description=(
-            "Extra fields for this location. All values are JSON-encoded data. "
-            "Query the /fields endpoint for more details about the fields."
-        ),
+        description=_extra_fields_description("location"),
     )
 
     @staticmethod
@@ -208,10 +217,7 @@ class Printer(BaseModel):
         examples=[1],
     )
     extra: dict[str, str] = Field(
-        description=(
-            "Extra fields for this printer. All values are JSON-encoded data. "
-            "Query the /fields endpoint for more details about the fields."
-        ),
+        description=_extra_fields_description("printer"),
     )
 
     @staticmethod
@@ -440,10 +446,7 @@ class Filament(BaseModel):
         examples=[2500.0],
     )
     extra: dict[str, str] = Field(
-        description=(
-            "Extra fields for this filament. All values are JSON-encoded data. "
-            "Query the /fields endpoint for more details about the fields."
-        ),
+        description=_extra_fields_description("filament"),
     )
 
     @staticmethod
@@ -616,10 +619,7 @@ class Spool(BaseModel):
         description="When a label was last printed for this spool. Null means never printed. UTC Timezone.",
     )
     extra: dict[str, str] = Field(
-        description=(
-            "Extra fields for this spool. All values are JSON-encoded data. "
-            "Query the /fields endpoint for more details about the fields."
-        ),
+        description=_extra_fields_description("spool"),
     )
 
     @staticmethod
