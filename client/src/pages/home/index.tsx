@@ -37,6 +37,9 @@ import {
   lowStockSpools as computeLowStockSpools,
   materialBreakdown,
   recentSpools as computeRecentSpools,
+  STALE_ALERT_DAYS,
+  STALE_WARN_DAYS,
+  staleSpools,
   registeredWithinDays,
   totalRemainingWeight as computeTotalRemainingWeight,
   totalValue as computeTotalValue,
@@ -98,6 +101,7 @@ export const Home = () => {
   const lowStockFilamentsData = computeLowStockFilaments(allFilaments);
   const hasShoppingList = lowStockFilamentsData.length > 0;
   const recentSpools = computeRecentSpools(allSpools);
+  const staleList = staleSpools(allSpools);
   const materialBreakdownData = materialBreakdown(allSpools);
   const locationBreakdownData = locationBreakdown(allSpools, t("locations.no_location"));
   const vendorBreakdownData = vendorBreakdown(allSpools);
@@ -532,6 +536,49 @@ export const Home = () => {
                       />
                       <div>
                         <div className="timeline-time">{dayjs(spool.last_used).fromNow()}</div>
+                        <div className="timeline-name">{getSpoolName(spool)}</div>
+                        <div className="timeline-detail">
+                          {spool.filament.material ?? ""} · {formatWeight(spool.remaining_weight ?? 0, 0)} ·{" "}
+                          {spool.location || t("locations.no_location")}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="dash-right-section" style={{ background: S.low }}>
+            <div className="dash-section-header">
+              <h3 className="dash-section-title">{t("home.gathering_dust")}</h3>
+            </div>
+            {staleList.length === 0 ? (
+              <div className="dash-empty">{t("home.no_stale")}</div>
+            ) : (
+              <div className="timeline-list">
+                {staleList.map(({ spool, staleSince, neverUsed }) => {
+                  const days = dayjs().diff(dayjs(staleSince), "day");
+                  const ageColor =
+                    days >= STALE_ALERT_DAYS
+                      ? token.colorError
+                      : days >= STALE_WARN_DAYS
+                        ? token.colorWarning
+                        : undefined;
+                  return (
+                    <div key={spool.id} className="timeline-item" onClick={() => navigate(showUrl("spool", spool.id))}>
+                      <div
+                        className="timeline-dot"
+                        style={{
+                          backgroundColor: ageColor ?? (isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)"),
+                        }}
+                      />
+                      <div>
+                        <div className="timeline-time" style={{ color: ageColor }}>
+                          {neverUsed
+                            ? `${t("home.never_used")} · ${dayjs(staleSince).fromNow()}`
+                            : dayjs(staleSince).fromNow()}
+                        </div>
                         <div className="timeline-name">{getSpoolName(spool)}</div>
                         <div className="timeline-detail">
                           {spool.filament.material ?? ""} · {formatWeight(spool.remaining_weight ?? 0, 0)} ·{" "}

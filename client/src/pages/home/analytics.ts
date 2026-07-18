@@ -170,3 +170,31 @@ export function getWeightPct(spool: ISpool): number {
   const remaining = spool.remaining_weight ?? total;
   return Math.max(0, Math.min(100, (remaining / total) * 100));
 }
+
+/** Age labels turn amber past this many days unused, red past STALE_ALERT_DAYS (#202). */
+export const STALE_WARN_DAYS = 90;
+export const STALE_ALERT_DAYS = 180;
+
+/** Below this remaining fraction a spool counts as finished, not stale (#202). */
+const DEPLETED_FRACTION = 0.02;
+
+export interface StaleSpool {
+  spool: ISpool;
+  /** The date the staleness is measured from: last_used, or registered when never used. */
+  staleSince: string;
+  neverUsed: boolean;
+}
+
+/**
+ * The least-recently-used active spools, oldest first (#202). Never-used spools rank by
+ * their registration date — a two-year-old unopened spool outranks one printed months ago.
+ * Near-empty spools are excluded: a finished spool is "stale" forever, but the right
+ * action there is archiving, not drying.
+ */
+export function staleSpools(spools: ISpool[], limit = 5): StaleSpool[] {
+  return spools
+    .filter((s) => remainingFraction(s) >= DEPLETED_FRACTION)
+    .map((s) => ({ spool: s, staleSince: s.last_used ?? s.registered, neverUsed: !s.last_used }))
+    .sort((a, b) => dayjs(a.staleSince).valueOf() - dayjs(b.staleSince).valueOf())
+    .slice(0, limit);
+}
