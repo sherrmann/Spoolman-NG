@@ -6,6 +6,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parents[1] / "scripts"))
 
+import subprocess
+
+import pytest
+import upstream_watch
 from upstream_watch import filter_created_after, render_watch_issue
 
 
@@ -72,3 +76,17 @@ def test_render_sanitizes_hostile_directory_names() -> None:
     stripped = re.sub(r"`[^`]*`", "", body)
     assert "@someuser" not in stripped
     assert "Donkie/Spoolman#" not in stripped
+
+
+def test_new_commits_signals_unreachable_watermark(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """#236: an upstream force-push makes the watermark SHA unreachable and git log fail.
+
+    new_commits must signal that (None) instead of crashing the run, so main can reset
+    the watermark to FETCH_HEAD and recover on its own the following week.
+    """
+
+    def _boom(*_args: str) -> str:
+        raise subprocess.CalledProcessError(128, "git log")
+
+    monkeypatch.setattr(upstream_watch, "_git", _boom)
+    assert upstream_watch.new_commits(tmp_path, "deadbeef") is None

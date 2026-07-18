@@ -70,9 +70,16 @@ def _git(repo_root: Path, *args: str) -> str:
     return subprocess.run(["git", "-C", str(repo_root), *args], check=True, capture_output=True, text=True).stdout
 
 
-def new_commits(repo_root: Path, since_sha: str) -> list[dict]:
-    """List commits on FETCH_HEAD since `since_sha`, each with the top-level dirs it touched."""
-    log = _git(repo_root, "log", "--reverse", "--format=%H%x09%s", f"{since_sha}..FETCH_HEAD")
+def new_commits(repo_root: Path, since_sha: str) -> list[dict] | None:
+    """List commits on FETCH_HEAD since `since_sha`, each with the top-level dirs it touched.
+
+    Returns None when `since_sha` is no longer reachable (upstream force-push/history
+    rewrite) so the caller can reset the watermark instead of failing every week (#236).
+    """
+    try:
+        log = _git(repo_root, "log", "--reverse", "--format=%H%x09%s", f"{since_sha}..FETCH_HEAD")
+    except subprocess.CalledProcessError:
+        return None
     commits = []
     for line in log.splitlines():
         sha, subject = line.split("\t", 1)
@@ -127,6 +134,12 @@ def main(argv: list[str] | None = None) -> int:
     state = json.loads(args.state.read_text())
 
     commits = new_commits(repo_root, state["last_commit_sha"])
+    if commits is None:
+        # Upstream rewrote history past the watermark; reset to the fetched head so next
+        # week resumes normally. This week's commit list is skipped (#236).
+        print("WARNING: watch watermark unreachable (upstream force-push?); resetting to FETCH_HEAD")
+        state["last_commit_sha"] = _git(repo_root, "rev-parse", "FETCH_HEAD").strip()
+        commits = []
     issues_all, prs_all = new_issues_and_prs(min(state["last_issue_seen_at"], state["last_pr_seen_at"]))
     issues = filter_created_after(issues_all, state["last_issue_seen_at"])
     prs = filter_created_after(prs_all, state["last_pr_seen_at"])
