@@ -106,9 +106,28 @@ def download(url: str, dest: Path, *, timeout: float = 300) -> None:
 
 def http_get(url: str, *, headers: dict[str, str] | None = None, timeout: float = 10) -> tuple[int, str]:
     """GET ``url`` returning (status, body); HTTP errors are returned, not raised."""
+    return http_request(url, headers=headers, timeout=timeout)
+
+
+def http_request(
+    url: str,
+    *,
+    method: str = "GET",
+    json_body: dict | None = None,
+    headers: dict[str, str] | None = None,
+    timeout: float = 10,
+) -> tuple[int, str]:
+    """Loopback-only HTTP request returning (status, body); HTTP errors are returned, not raised."""
     if not url.startswith(("http://127.0.0.1", "http://localhost")):
         raise ValueError(f"harness only talks to loopback, got: {url}")
-    request = urllib.request.Request(url, headers=headers or {})  # noqa: S310 - loopback only, checked above
+    all_headers = dict(headers or {})
+    data = None
+    if json_body is not None:
+        data = json.dumps(json_body).encode()
+        all_headers["Content-Type"] = "application/json"
+    request = urllib.request.Request(  # noqa: S310 - loopback only, checked above
+        url, data=data, headers=all_headers, method=method
+    )
     try:
         with urllib.request.urlopen(request, timeout=timeout) as resp:  # noqa: S310
             return resp.status, resp.read().decode(errors="replace")

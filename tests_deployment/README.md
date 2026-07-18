@@ -14,6 +14,7 @@ tests_deployment/run.sh zip          # release contract only (seconds, no docker
 tests_deployment/run.sh addon        # HA add-on options contract
 tests_deployment/run.sh native       # install.sh matrix; -k debian for one distro
 tests_deployment/run.sh moonraker    # real Moonraker validates the updater recipe
+tests_deployment/run.sh runtime      # virtual-printer e2e: a print consumes filament in Spoolman
 ```
 
 Requirements: `uv` (repo dev env), Docker for everything except `zip`, network access,
@@ -51,9 +52,10 @@ the latest (or pinned) release.
 
 ## Roadmap (#277)
 
-This directory holds the fast, deterministic channel contracts. Planned additions
-(tracked as tiers in #277, but organised here by what they test): virtual-printer
-e2e for the runtime `[spoolman]` component (see [playground/](playground/)), the
+This directory holds the channel contracts plus the virtual-printer runtime e2e
+(`test_moonraker_runtime.py`, built on [playground/](playground/) — it skips unless
+the simulavr MCU image has been built once via `playground/up.sh`). Planned
+additions (tracked as tiers in #277, but organised here by what they test): the
 OctoPrint plugin, HA Core + the HACS integration, and k3d + Helm; the heavyweight
 appliance checks (HAOS Supervisor install, nested Proxmox, NixOS module) stay
 manual.
