@@ -6,6 +6,7 @@ same commands a user would run, and must not depend on the Python docker SDK.
 
 from __future__ import annotations
 
+import http.client
 import json
 import os
 import shutil
@@ -133,9 +134,9 @@ def http_request(
             return resp.status, resp.read().decode(errors="replace")
     except urllib.error.HTTPError as err:
         return err.code, err.read().decode(errors="replace")
-    except OSError as err:
-        # Connection refused/reset while a container is still booting — report as "not up"
-        # (status 0) so polling probes can retry instead of crashing.
+    except (OSError, http.client.HTTPException) as err:
+        # Connection refused/reset — or a service speaking not-quite-HTTP-yet while a
+        # container boots — report as "not up" (status 0) so polling probes retry.
         return 0, str(err)
 
 
@@ -147,6 +148,9 @@ class Container:
     name: str = field(default_factory=lambda: f"spoolman-deploy-{uuid.uuid4().hex[:8]}")
     publish: list[str] = field(default_factory=list)
     volumes: list[str] = field(default_factory=list)
+    env: dict[str, str] = field(default_factory=dict)
+    network: str | None = None
+    network_alias: str | None = None
 
     def start(self, *, command: list[str] | None = None, pull_timeout: float = 600) -> Container:
         """Create and start the container (defaults to an idle `sleep infinity`)."""
@@ -155,6 +159,12 @@ class Container:
             args += ["-p", spec]
         for spec in self.volumes:
             args += ["-v", spec]
+        for key, value in self.env.items():
+            args += ["-e", f"{key}={value}"]
+        if self.network:
+            args += ["--network", self.network]
+        if self.network_alias:
+            args += ["--network-alias", self.network_alias]
         args.append(self.image)
         args += command if command is not None else ["sleep", "infinity"]
         run(args, timeout=pull_timeout)
@@ -207,3 +217,19 @@ def docker_available() -> bool:
     if docker is None:
         return False
     return subprocess.run([docker, "info"], capture_output=True, check=False).returncode == 0
+
+
+def docker_network(name: str) -> str:
+    """Create (idempotently) a labelled docker network and return its name."""
+    docker = _tool("docker")
+    exists = subprocess.run([docker, "network", "inspect", name], capture_output=True, check=False)
+    if exists.returncode != 0:
+        run([docker, "network", "create", "--label", DOCKER_LABEL, name])
+    return name
+
+
+def remove_docker_network(name: str) -> None:
+    """Remove a docker network (best-effort; kept with SPOOLMAN_DEPLOY_KEEP)."""
+    if os.environ.get("SPOOLMAN_DEPLOY_KEEP"):
+        return
+    run([_tool("docker"), "network", "rm", name], check=False)
