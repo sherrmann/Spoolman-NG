@@ -124,6 +124,40 @@ sudo systemctl restart moonraker
 
 (Re-downloading the latest zip over the install fixes it too.)
 
+## Kubernetes (Helm chart)
+
+An official chart is published with every release as an OCI artifact:
+
+```bash
+helm install spoolman oci://ghcr.io/sherrmann/charts/spoolman-ng
+```
+
+Defaults: one replica (the bundled SQLite database is single-writer — scale the
+database via `SPOOLMAN_DB_*`, not the web process), a 1 Gi PVC for the data
+directory, health probes on `/api/v1/health`, and a non-root security context.
+Common values:
+
+```yaml
+env:                       # any SPOOLMAN_* variable from the reference below
+  SPOOLMAN_DB_TYPE: postgres
+  SPOOLMAN_DB_HOST: my-postgres
+dbPasswordSecret:          # mounts the secret key as a file (SPOOLMAN_DB_PASSWORD_FILE)
+  name: my-db-secret
+  key: password
+ingress:
+  enabled: true
+  hosts:
+    - host: spoolman.example.com
+      paths: [{ path: /, pathType: Prefix }]
+persistence:
+  size: 1Gi                # or existingClaim: my-pvc
+```
+
+For sub-path serving behind a shared ingress, set `env.SPOOLMAN_BASE_PATH` and
+`probes.path` together (e.g. `/spoolman` and `/spoolman/api/v1/health`). Using
+TrueCharts or another third-party chart instead? They work too — just override
+the image repository to `ghcr.io/sherrmann/spoolman-ng`.
+
 ## Connecting your printers (Moonraker clients)
 
 Install the Spoolman **server once**. Each printer is a **client** — it does
