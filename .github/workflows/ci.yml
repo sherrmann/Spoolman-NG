@@ -460,6 +460,67 @@ jobs:
           up-flags: "--abort-on-container-exit"
           down-flags: "--volumes"
   #
+  # Non-root smoke tests (#239): the image must boot under --user (Kubernetes
+  # runAsNonRoot, OpenShift arbitrary UIDs), ignore PUID/PGID with a notice when
+  # unprivileged, and fail loudly on an invalid PUID instead of boot-looping.
+  #
+  test-nonroot:
+    needs: [build-amd64]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download built image
+        uses: actions/download-artifact@v8.0.1
+        with:
+          name: spoolman-image
+          path: /tmp
+
+      - name: Load built image
+        run: docker load --input /tmp/spoolman-image/spoolman.tar 2>/dev/null || docker load --input /tmp/spoolman.tar
+
+      - name: Smoke-test non-root scenarios
+        run: |
+          set -e
+          wait_healthy() {
+            for _ in $(seq 1 45); do
+              if curl -sf http://localhost:8000/api/v1/health >/dev/null 2>&1; then return 0; fi
+              sleep 2
+            done
+            echo "::error::$1: API did not respond on /api/v1/health"
+            docker logs smoke || true
+            return 1
+          }
+          cleanup() { docker rm -f smoke >/dev/null 2>&1 || true; }
+
+          echo "::group::--user 1000:1000 boots and serves"
+          cleanup
+          docker run -d --name smoke -p 8000:8000 --user 1000:1000 spoolman:test
+          wait_healthy "--user 1000:1000"
+          echo "::endgroup::"
+
+          echo "::group::--user 12345:12345 (arbitrary UID) boots with a writable data dir"
+          cleanup
+          docker run -d --name smoke -p 8000:8000 --user 12345:12345             --tmpfs /home/app/.local/share/spoolman:uid=12345,gid=12345 spoolman:test
+          wait_healthy "--user 12345:12345"
+          echo "::endgroup::"
+
+          echo "::group::--user with PUID set is ignored with a notice, still boots"
+          cleanup
+          docker run -d --name smoke -p 8000:8000 --user 1000:1000 -e PUID=998 spoolman:test
+          wait_healthy "--user + PUID"
+          docker logs smoke 2>&1 | grep -q "ignoring PUID" || {
+            echo "::error::expected the ignoring-PUID notice in the logs"; docker logs smoke; exit 1; }
+          echo "::endgroup::"
+
+          echo "::group::PUID=0 fails fast with a clear error (no boot loop)"
+          cleanup
+          if timeout 30 docker run --name smoke -e PUID=0 spoolman:test 2>&1 | grep -q "Invalid PUID"; then
+            echo "rejected as expected"
+          else
+            echo "::error::PUID=0 did not fail with the invalid-PUID message"; exit 1
+          fi
+          cleanup
+          echo "::endgroup::"
+  #
   # Build the arm64 image, then boot it under QEMU and hit the health endpoint.
   # Like build-armv7, arm64 is otherwise only built (never run) in CI, so a
   # dependency bump could break the published image with nothing noticing. Runs
