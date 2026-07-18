@@ -60,7 +60,7 @@ systemd service):
 
 ```bash
 curl -fsSL https://github.com/sherrmann/Spoolman-NG/releases/latest/download/spoolman.zip -o spoolman.zip \
-  && unzip spoolman.zip -d ~/Spoolman && cd ~/Spoolman && ./scripts/install.sh
+  && unzip spoolman.zip -d ~/Spoolman && cd ~/Spoolman && bash ./scripts/install.sh
 ```
 
 The installer creates `.env` from `.env.example`, which sets the port to
@@ -75,18 +75,54 @@ requirements, see the [NFC guide](nfc.md).
 
 ### One-click updates from Moonraker (Klipper users)
 
-Add this to `moonraker.conf` (adjust `path` to your install directory):
+Two steps. First allow Moonraker to restart the service by adding `Spoolman` on
+its own line at the bottom of `~/printer_data/moonraker.asvc`. Then add this to
+`moonraker.conf` (adjust `path` to your install directory):
 
 ```ini
-[update_manager spoolman]
-type: web
+[update_manager Spoolman]
+type: zip
 channel: stable
 repo: sherrmann/Spoolman-NG
 path: ~/Spoolman
+virtualenv: .venv
+requirements: requirements.txt
+persistent_files:
+  .env
+  uv
+managed_services: Spoolman
 ```
 
-Spoolman NG then appears in Mainsail/Fluidd's update list and tracks new
-releases automatically.
+Spoolman NG then appears in Mainsail/Fluidd's update list. On each update
+Moonraker downloads the new release zip, extracts it over the install,
+reinstalls changed Python dependencies into `.venv`, and restarts the
+`Spoolman` service. Notes:
+
+- The section name is capital-S **Spoolman**, matching the systemd unit the
+  installer creates and the `moonraker.asvc` entry.
+- `.venv` is preserved automatically (Moonraker keeps a `virtualenv` that lives
+  inside `path`); `.env` and the installer's local `uv/` toolchain need the
+  explicit `persistent_files` entries. Everything else is replaced on update.
+- Do **not** use `type: web` — Moonraker's web updater is for static front-ends
+  (Mainsail/Fluidd themselves): it deletes everything not in `persistent_files`
+  (including `.venv`), never reinstalls dependencies, and never restarts the
+  service.
+- The recipe needs a release that ships `requirements.txt` at the zip root
+  (releases after 2026-07-19). Moonraker checks the file exists at startup, so
+  on an older install re-run the install one-liner once (with `unzip -o`)
+  before adding the stanza.
+
+**Migrating an existing native install** (set up before 2026-07-19): older
+releases shipped a `release_info.json` whose project name does not match the
+GitHub repository, and Moonraker trusts that file over your configured `repo:`
+— update checks fail until it is corrected. Fix it once, then restart Moonraker:
+
+```bash
+sed -i 's/"Spoolman NG"/"Spoolman-NG"/' ~/Spoolman/release_info.json
+sudo systemctl restart moonraker
+```
+
+(Re-downloading the latest zip over the install fixes it too.)
 
 ## Connecting your printers (Moonraker clients)
 
@@ -102,7 +138,7 @@ server: http://<spoolman-host>:7912
 
 Restart Moonraker and the printer reports filament usage to that one Spoolman
 instance; repeat the stanza on every printer. Note this is **not** the same as
-the `[update_manager spoolman]` block above — that one only auto-updates the
+the `[update_manager Spoolman]` block above — that one only auto-updates the
 Spoolman software from Mainsail/Fluidd, whereas `[spoolman]` is what actually
 wires a printer into filament tracking. See the
 [Moonraker `[spoolman]` documentation](https://moonraker.readthedocs.io/en/latest/configuration/#spoolman)

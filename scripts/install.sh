@@ -128,6 +128,11 @@ echo -e "${GREEN}Installing Spoolman backend and its dependencies...${NC}"
 
 uv sync --no-dev
 
+# Moonraker's update manager installs dependency updates through `<venv>/bin/pip` and
+# silently skips them when it is missing (#263). uv-created venvs ship without pip, so
+# seed it (uv installs into ./.venv; works regardless of the base python's ensurepip).
+uv pip install pip
+
 #
 # Initialize the .env file if it doesn't exist
 #
