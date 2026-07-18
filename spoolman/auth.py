@@ -92,6 +92,10 @@ def _principal_for_token(state: AuthState, token: str | None) -> Principal | Non
     """Resolve a bearer token to a principal, or None when it is missing/invalid."""
     if token is None:
         return None
+    if not token.isascii():
+        # secrets.compare_digest raises TypeError on non-ASCII strings; a stray header
+        # byte is legal on the wire and must read as invalid credentials, not a 500 (#231).
+        return None
     if state.static_token is not None and secrets.compare_digest(token, state.static_token):
         return Principal(name="api-token", role=ROLE_ADMIN)
     if state.accounts_enabled and state.signing_secret is not None:
