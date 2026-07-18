@@ -2,10 +2,25 @@
 
 **Spoolman NG** is a community-maintained continuation of [Spoolman](https://github.com/Donkie/Spoolman) by Donkie. Full per-release notes (auto-generated from merged pull requests) are published on the [GitHub Releases](https://github.com/sherrmann/Spoolman-NG/releases) page; this file summarizes notable changes.
 
-## Unreleased
+## [2026.7.10] — 2026-07-11
+
+- **Digital Asset Links: `handle_all_urls` served too** — Bitwarden (and other credential managers that validate app↔site association themselves) require the `handle_all_urls` relation in `/.well-known/assetlinks.json`; the server now serves both relations, so in-app passkey flows work with third-party credential managers as well.
+
+## [2026.7.9] — 2026-07-11
+
+- **Frictionless passkey setup**: the server now serves `/.well-known/assetlinks.json` itself (no manual reverse-proxy config), and the companion app gained an in-app **passkey setup assistant** that reads the app identity natively and walks through the domain association.
+- **Companion app passkeys**: the login WebView supports WebAuthn ceremonies (via the WebView's `WEB_AUTHENTICATION_SUPPORT_FOR_APP` mode), so passkey login through a forward-auth portal (e.g. Authelia) works inside the app.
+- **Companion app self-update (Android)**: the app checks GitHub releases and can download and install the release APK in-app.
+
+## [2026.7.8] — 2026-07-10
+
+- **Companion app: forward-auth gateways supported** — a server behind Authelia or a similar portal is detected during setup, and login completes through an in-WebView portal flow instead of a dead-end connection error.
+
+## [2026.7.7] — 2026-07-10
 
 - **Fixed: auth blocked every intended-open endpoint on real deployments.** With an API token or user accounts configured, `/api/v1/health`, `/docs`, `/redoc`, `/auth/status` and even `/auth/login` returned 401 — making password login impossible and breaking health monitoring. The middleware compared its sub-app-relative open-path list against the full request path (Starlette keeps the mount prefix in `root_path`); the unit harness drove the app unmounted, which is why tests stayed green. Found by the Home Assistant add-on live-testing round; now covered by mounted-app regression tests including `SPOOLMAN_BASE_PATH` prefixes.
 - **Home Assistant add-on moved to a dedicated repository**: [`sherrmann/spoolman-ng-addons`](https://github.com/sherrmann/spoolman-ng-addons) — Supervisor requires the repository manifest at the git root, so the in-tree `ha-addon/` packaging could only ever be installed by manual copy. The add-on is now installable by URL from the HA add-on store, and every release pushes a matching version bump there so updates appear in the HA UI automatically.
+- **API docs deploy fixed**: docs now deploy from master pushes — tag refs are blocked by the Pages environment.
 
 ## [2026.7.6] — 2026-07-10
 
