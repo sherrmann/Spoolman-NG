@@ -15,8 +15,14 @@ Metrics are then served at `http://<host>:<port>/metrics` (honoring
 `SPOOLMAN_BASE_PATH` if set). Spool and filament gauges refresh from the
 database once per minute.
 
-> The metrics endpoint is unauthenticated, like the rest of the API — keep it
-> on a trusted network or behind an authenticating reverse proxy.
+> The metrics endpoint is **always unauthenticated — deliberately, even when API
+> auth (`SPOOLMAN_API_TOKEN` / user accounts) is enabled** (#232): Prometheus
+> scrapers conventionally run without credentials, so `/metrics` is served
+> outside the auth middleware. The gauges include your inventory and prices —
+> keep the port on a trusted network, or restrict `/metrics` at your reverse
+> proxy (e.g. an nginx `location = /metrics` block allowing only the Prometheus
+> host) if the API is otherwise exposed with auth. The server logs a reminder at
+> startup when both metrics and auth are enabled.
 
 ## Exported metrics
 

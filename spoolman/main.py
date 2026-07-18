@@ -16,7 +16,7 @@ from scheduler.asyncio.scheduler import Scheduler
 from spoolman import env, externaldb, tigertagdb
 from spoolman.api.v1.router import app as v1_app
 from spoolman.assetlinks import register_assetlinks_route
-from spoolman.auth import initialize_auth_state
+from spoolman.auth import auth_state, initialize_auth_state
 from spoolman.client import SinglePageApplication
 from spoolman.database import database
 from spoolman.prometheus.metrics import BUILD_INFO, registry
@@ -204,6 +204,15 @@ async def startup() -> None:
         await initialize_auth_state(session)
     finally:
         await session_gen.aclose()
+
+    # Deliberate (#232): /metrics is served from the root app and is NOT behind the API
+    # auth middleware — Prometheus scrapers conventionally run without credentials. Make
+    # that visible when both features are on, since the gauges include inventory + prices.
+    if env.is_metrics_enabled() and auth_state.auth_required():
+        logger.info(
+            "Metrics are enabled: /metrics is intentionally unauthenticated even though API "
+            "auth is configured - keep it on a trusted network or restrict it at the proxy.",
+        )
 
     # Setup scheduler
     schedule = Scheduler()
