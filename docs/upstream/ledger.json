@@ -161,6 +161,18 @@
       "released_in": null
     },
     {
+      "fork_issue": 57,
+      "upstream": [
+        728,
+        814
+      ],
+      "title": "Fix inherited (filament-level) spool price dropping to 0 on the spool list after a live update",
+      "kind": "fix",
+      "pri": "P2",
+      "pr": null,
+      "released_in": null
+    },
+    {
       "fork_issue": 59,
       "upstream": [
         794,
@@ -182,6 +194,17 @@
       "pri": "P2",
       "pr": 150,
       "released_in": "v2026.7.2"
+    },
+    {
+      "fork_issue": 61,
+      "upstream": [
+        299
+      ],
+      "title": "Allow creating/measuring a spool heavier than its theoretical weight without a negative-used-weight error",
+      "kind": "fix",
+      "pri": "P2",
+      "pr": 250,
+      "released_in": "v2026.7.11"
     },
     {
       "fork_issue": 62,
@@ -244,6 +267,17 @@
         671
       ],
       "title": "Reject filament density/diameter of 0 in the form instead of failing with a 422",
+      "kind": "fix",
+      "pri": "P2",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 68,
+      "upstream": [
+        791
+      ],
+      "title": "Support running the Docker image as a non-root user (skip usermod/gosu when not root)",
       "kind": "fix",
       "pri": "P2",
       "pr": null,
@@ -802,6 +836,17 @@
       "released_in": "v2026.7.4"
     },
     {
+      "fork_issue": 119,
+      "upstream": [
+        947
+      ],
+      "title": "Add a system/auto theme mode that live-follows the OS color-scheme preference",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": null,
+      "released_in": null
+    },
+    {
       "fork_issue": 120,
       "upstream": [
         44
@@ -1045,49 +1090,12 @@
       "pri": "P1"
     },
     {
-      "fork_issue": 57,
-      "upstream": [
-        728,
-        814
-      ],
-      "title": "Fix inherited (filament-level) spool price dropping to 0 on the spool list after a live update",
-      "kind": "fix",
-      "pri": "P2"
-    },
-    {
-      "fork_issue": 61,
-      "upstream": [
-        299
-      ],
-      "title": "Allow creating/measuring a spool heavier than its theoretical weight without a negative-used-weight error",
-      "kind": "fix",
-      "pri": "P2"
-    },
-    {
-      "fork_issue": 68,
-      "upstream": [
-        791
-      ],
-      "title": "Support running the Docker image as a non-root user (skip usermod/gosu when not root)",
-      "kind": "fix",
-      "pri": "P2"
-    },
-    {
       "fork_issue": 88,
       "upstream": [
         552,
         740
       ],
       "title": "Support attaching a reference image/photo to a filament",
-      "kind": "feature",
-      "pri": "P2"
-    },
-    {
-      "fork_issue": 119,
-      "upstream": [
-        947
-      ],
-      "title": "Add a system/auto theme mode that live-follows the OS color-scheme preference",
       "kind": "feature",
       "pri": "P2"
     },
