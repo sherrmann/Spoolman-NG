@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from spoolman.auth import TOKEN_TTL_SECONDS, Principal, auth_state, get_signing_secret
+from spoolman.auth import TOKEN_TTL_SECONDS, Principal, auth_state, get_signing_secret, refresh_user_roles
 from spoolman.database import user as user_db
 from spoolman.database.database import get_db_session
 from spoolman.users import ROLE_ADMIN, ROLES, hash_password, mint_token, verify_password
@@ -120,7 +120,7 @@ async def create_user(
     except IntegrityError as exc:
         await db.rollback()
         raise HTTPException(status_code=409, detail=f"A user named '{body.username}' already exists.") from exc
-    auth_state.accounts_enabled = True
+    await refresh_user_roles(db)
     return _to_response(user)
 
 
@@ -141,6 +141,7 @@ async def update_user(
             raise HTTPException(status_code=400, detail="Cannot remove the last administrator.")
     password_hash = hash_password(body.password) if body.password is not None else None
     user = await user_db.update(db, user_id, password_hash=password_hash, role=role)
+    await refresh_user_roles(db)
     return _to_response(user)
 
 
@@ -154,4 +155,4 @@ async def delete_user(
     if target.role == ROLE_ADMIN and await user_db.count_admins(db) <= 1:
         raise HTTPException(status_code=400, detail="Cannot delete the last administrator.")
     await user_db.delete(db, user_id)
-    auth_state.accounts_enabled = await user_db.count(db) > 0
+    await refresh_user_roles(db)

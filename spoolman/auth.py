@@ -21,7 +21,7 @@ The middleware stamps ``request.state.principal`` (name + role) for downstream h
 
 import logging
 import secrets
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.types import ASGIApp, Receive, Scope, Send
@@ -58,6 +58,11 @@ class AuthState:
     static_token: str | None = None
     signing_secret: bytes | None = None
     accounts_enabled: bool = False
+    # Live username -> role map (#234). Login tokens are stateless, so this map is what makes
+    # account deletion/demotion take effect immediately instead of at token expiry: the signed-
+    # token path resolves the principal's existence and role from here, not from the token's
+    # claims. Maintained at startup and by the account endpoints on every mutation.
+    user_roles: dict[str, str] = field(default_factory=dict)
 
     def auth_required(self) -> bool:
         """Whether requests must authenticate (a token is configured or accounts exist)."""
@@ -101,7 +106,14 @@ def _principal_for_token(state: AuthState, token: str | None) -> Principal | Non
     if state.accounts_enabled and state.signing_secret is not None:
         payload = verify_token(token, state.signing_secret)
         if payload is not None:
-            return Principal(name=str(payload.get("sub", "")), role=str(payload.get("role", ROLE_READONLY)))
+            name = str(payload.get("sub", ""))
+            role = state.user_roles.get(name)
+            if role is None:
+                # Account deleted since the token was minted (#234): the token is dead.
+                return None
+            # The account's CURRENT role wins over the claim baked into the token (#234),
+            # so demotions (and promotions) apply without waiting for expiry or re-login.
+            return Principal(name=name, role=role)
     return None
 
 
@@ -221,14 +233,25 @@ def get_signing_secret() -> bytes:
     return auth_state.signing_secret
 
 
-async def initialize_auth_state(db: AsyncSession) -> None:
-    """Populate the process-wide auth state at startup: static token, signing secret, account count."""
-    from spoolman import env  # noqa: PLC0415
+async def refresh_user_roles(db: AsyncSession) -> None:
+    """Rebuild the live username -> role map (and accounts_enabled) from the database (#234).
+
+    Called at startup and after every account mutation, so outstanding login tokens are
+    checked against current reality on each request.
+    """
     from spoolman.database import user  # noqa: PLC0415
+
+    auth_state.user_roles = {u.username: u.role for u in await user.list_all(db)}
+    auth_state.accounts_enabled = bool(auth_state.user_roles)
+
+
+async def initialize_auth_state(db: AsyncSession) -> None:
+    """Populate the process-wide auth state at startup: static token, signing secret, accounts."""
+    from spoolman import env  # noqa: PLC0415
 
     auth_state.static_token = env.get_api_token()
     auth_state.signing_secret = _resolve_signing_secret()
-    auth_state.accounts_enabled = (await user.count(db)) > 0
+    await refresh_user_roles(db)
     if auth_state.auth_required():
         logger.info(
             "API authentication is ENABLED (token=%s, accounts=%s).",
