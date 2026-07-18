@@ -306,7 +306,13 @@ jobs:
         run: |
           echo "GIT_COMMIT=$(git rev-parse --short HEAD)" > build.txt
           echo "BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> build.txt
-  
+
+      # Moonraker's zip updater reinstalls Python dependencies from a requirements file
+      # (#263) — export the locked runtime set (no dev group, no nfc extra, matching
+      # scripts/install.sh's default `uv sync --no-dev`) into the release artifact.
+      - name: Export Moonraker requirements
+        run: uv export --frozen --no-dev --no-hashes --no-emit-project -o requirements.txt
+
       # Remove client source and keep only the built dist
       - name: Clean
         run: |
@@ -803,15 +809,24 @@ jobs:
           name: companion-apk
           path: /tmp/companion-apk
       
+      # project_name must be the literal GitHub repo name (#261): Moonraker builds its
+      # API URLs from project_owner/project_name and *overrides* the user's configured
+      # repo with them on mismatch — "Spoolman NG" (with a space) broke update checks.
       - name: Generate release info
         run: |
           cd /tmp/spoolman
           echo '{
-            "project_name": "Spoolman NG",
+            "project_name": "Spoolman-NG",
             "project_owner": "${{ github.repository_owner }}",
             "version": "${{ github.ref_name }}",
             "asset_name": "spoolman.zip"
           }' > release_info.json
+
+      # actions/upload-artifact does not preserve file modes, so build-client's chmod is
+      # lost by the time the artifact lands here. zip records modes at creation time —
+      # restore +x or the documented `./scripts/install.sh` one-liner fails (#264).
+      - name: Restore script permissions
+        run: chmod +x /tmp/spoolman/scripts/*.sh
 
       - name: Zip
         run: |
@@ -827,7 +842,11 @@ jobs:
         id: create-release
         with:
           draft: false
-          name: Spoolman NG ${{ github.ref_name }}
+          # The bare tag, not "Spoolman NG vX" (#262): Moonraker takes the release *title*
+          # as the remote version and string-compares it against release_info.json's
+          # version — any decoration means a perpetual "update available". Branding
+          # stays in the release body below.
+          name: ${{ github.ref_name }}
           tag_name: ${{ github.ref_name }}
           files: |
             /tmp/spoolman/spoolman.zip

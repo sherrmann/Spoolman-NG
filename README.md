@@ -107,7 +107,7 @@ Best for running Spoolman directly on a host — e.g. on a Raspberry Pi next to 
 
 ```bash
 curl -fsSL https://github.com/sherrmann/Spoolman-NG/releases/latest/download/spoolman.zip -o spoolman.zip \
-  && unzip spoolman.zip -d ~/Spoolman && cd ~/Spoolman && ./scripts/install.sh
+  && unzip spoolman.zip -d ~/Spoolman && cd ~/Spoolman && bash ./scripts/install.sh
 ```
 
 The UI then runs on `http://<host>:7912` (configurable via `.env`). Your database lives in a separate data directory, so updates never touch it.
@@ -116,17 +116,23 @@ The UI then runs on `http://<host>:7912` (configurable via `.env`). Your databas
 
 ### One-click updates from Moonraker (Klipper users)
 
-If you run Klipper, you can update Spoolman NG straight from Mainsail/Fluidd. Add this to your `moonraker.conf` (adjust `path` to your install directory):
+If you run Klipper, you can update Spoolman NG straight from Mainsail/Fluidd. Add this to your `moonraker.conf` (adjust `path` to your install directory) and add `Spoolman` on its own line to `~/printer_data/moonraker.asvc` so Moonraker may restart the service:
 
 ```ini
-[update_manager spoolman]
-type: web
+[update_manager Spoolman]
+type: zip
 channel: stable
 repo: sherrmann/Spoolman-NG
 path: ~/Spoolman
+virtualenv: .venv
+requirements: requirements.txt
+persistent_files:
+  .env
+  uv
+managed_services: Spoolman
 ```
 
-Spoolman NG then shows up in your printer UI's update list and tracks new releases automatically. (The releases ship the `release_info.json` that Moonraker's `web` update type expects.)
+Spoolman NG then shows up in your printer UI's update list, tracks new releases automatically, reinstalls changed Python dependencies, and restarts the service after each update. Do **not** use `type: web` — Moonraker's web updater is for static front-ends and deletes the virtualenv on update. See the [Moonraker update notes](docs/installation.md#one-click-updates-from-moonraker-klipper-users) for details and for migrating an install set up before this recipe existed.
 
 For all configuration options (databases, backups, base path, every environment variable), see the [Installation & Configuration guide](docs/installation.md).
 
