@@ -49,8 +49,17 @@ def addon_container(cache_dir: Path, tmp_path_factory: pytest.TempPathFactory) -
     repo = _addon_repo(cache_dir)
     base_image = os.environ.get("SPOOLMAN_IMAGE", "ghcr.io/sherrmann/spoolman-ng:latest")
     run(
-        [docker, "build", "-t", ADDON_IMAGE, "--label", DOCKER_LABEL,
-         "--build-arg", f"BUILD_FROM={base_image}", str(repo / "spoolman_ng")],
+        [
+            docker,
+            "build",
+            "-t",
+            ADDON_IMAGE,
+            "--label",
+            DOCKER_LABEL,
+            "--build-arg",
+            f"BUILD_FROM={base_image}",
+            str(repo / "spoolman_ng"),
+        ],
         timeout=900,
     )
 
@@ -59,8 +68,20 @@ def addon_container(cache_dir: Path, tmp_path_factory: pytest.TempPathFactory) -
 
     name = f"spoolman-deploy-addon-{uuid.uuid4().hex[:8]}"
     run(
-        [docker, "run", "-d", "--label", DOCKER_LABEL, "--name", name,
-         "-p", "127.0.0.1::8000", "-v", f"{data_dir}:/data", ADDON_IMAGE],
+        [
+            docker,
+            "run",
+            "-d",
+            "--label",
+            DOCKER_LABEL,
+            "--name",
+            name,
+            "-p",
+            "127.0.0.1::8000",
+            "-v",
+            f"{data_dir}:/data",
+            ADDON_IMAGE,
+        ],
     )
     host_port = run([docker, "port", name, "8000/tcp"]).stdout.strip().splitlines()[0]
     url = f"http://{host_port}"

@@ -144,9 +144,7 @@ def update_status(release: Release) -> Iterator[tuple[dict, Container]]:
 def _spoolman_updater(status: dict, box: Container) -> dict:
     version_info = status.get("version_info", {})
     if "Spoolman" not in version_info:
-        warnings = box.exec(
-            "grep -iE 'spoolman|update_manager' /root/moonraker.log | tail -20", check=False
-        ).stdout
+        warnings = box.exec("grep -iE 'spoolman|update_manager' /root/moonraker.log | tail -20", check=False).stdout
         pytest.fail(
             "#263: Moonraker did not load the [update_manager Spoolman] section — with no "
             "requirements.txt in the install, the documented 'type: zip' recipe fails config "
@@ -174,9 +172,7 @@ def test_detected_repo_matches_the_configured_repo(update_status: tuple[dict, Co
     assert not updater.get("anomalies"), f"#261: Moonraker anomalies: {updater['anomalies']}"
 
 
-def test_no_phantom_update_for_the_latest_release(
-    update_status: tuple[dict, Container], release: Release
-) -> None:
+def test_no_phantom_update_for_the_latest_release(update_status: tuple[dict, Container], release: Release) -> None:
     """#262: with the latest zip installed, local and remote versions must be string-equal."""
     if release.local:
         pytest.skip("local zip under test — the remote version is the published release's title (#262)")
