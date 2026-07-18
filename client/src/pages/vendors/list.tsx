@@ -14,7 +14,7 @@ import {
   RichColumn,
   SortedColumn,
 } from "../../components/column";
-import { useLiveify } from "../../components/liveify";
+import { carryForwardFields, useLiveify } from "../../components/liveify";
 import { removeUndefined } from "../../utils/filtering";
 import { EntityType, useGetFields } from "../../utils/queryFields";
 import { TableState, useInitialTableState, useStoreInitialState } from "../../utils/saveload";
@@ -98,7 +98,12 @@ export const VendorList = () => {
   const dataSource = useLiveify(
     "vendor",
     queryDataSource,
-    useCallback((record: IVendor) => record, []),
+    // filament_count/spool_count are REST-list-only and absent from websocket payloads;
+    // carry them forward so a live update doesn't blank the count columns (#226).
+    useCallback(
+      (record: IVendor, previous?: IVendor) => carryForwardFields(record, previous, ["filament_count", "spool_count"]),
+      [],
+    ),
   );
 
   if (tableProps.pagination) {
