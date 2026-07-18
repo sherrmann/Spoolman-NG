@@ -21,12 +21,14 @@ jobs:
       - name: Token identity
         env:
           GH_TOKEN: ${{ secrets.PAT }}
-        run: gh api user --jq '"token acts as: " + .login'
+        run: |
+          gh api user --jq '"token acts as: " + .login'
 
       - name: Contents read on the add-ons repo
         env:
           GH_TOKEN: ${{ secrets.PAT }}
-        run: gh api "repos/${ADDONS_REPO}/contents/spoolman_ng/config.yaml" --jq '"can read: " + .name'
+        run: |
+          gh api "repos/${ADDONS_REPO}/contents/spoolman_ng/config.yaml" --jq '"can read: " + .name'
 
       - name: Pull-request write on the add-ons repo (no-op probe)
         env:
