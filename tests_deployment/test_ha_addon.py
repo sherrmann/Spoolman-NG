@@ -1,4 +1,4 @@
-"""Tier 1 — Home Assistant add-on options contract (#277).
+"""Home Assistant add-on options contract (#277).
 
 Builds the real add-on image (sherrmann/spoolman-ng-addons) on top of the published
 server image and runs it the way the Supervisor does: options in /data/options.json,
