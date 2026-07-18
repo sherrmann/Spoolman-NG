@@ -1,0 +1,21 @@
+apiVersion: v2
+name: spoolman-ng
+description: Spoolman NG — keep track of your inventory of 3D-printer filament spools.
+type: application
+home: https://github.com/sherrmann/Spoolman-NG
+sources:
+  - https://github.com/sherrmann/Spoolman-NG
+icon: https://raw.githubusercontent.com/sherrmann/Spoolman-NG/master/assets/spoolman-logo-light.svg
+keywords:
+  - 3d-printing
+  - filament
+  - spoolman
+  - klipper
+  - moonraker
+maintainers:
+  - name: sherrmann
+    url: https://github.com/sherrmann
+# version/appVersion are stamped at release time (helm package --version/--app-version
+# from the git tag); the placeholders below keep checkout installs working.
+version: 0.0.0-dev
+appVersion: latest

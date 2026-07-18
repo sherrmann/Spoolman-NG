@@ -1,0 +1,16 @@
+Spoolman NG is starting.
+
+Reach the UI:
+{{- if .Values.ingress.enabled }}
+{{- range .Values.ingress.hosts }}
+  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ .host }}{{ (index .paths 0).path }}
+{{- end }}
+{{- else }}
+  kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "spoolman-ng.fullname" . }} 7912:{{ .Values.service.port }}
+  then open http://localhost:7912
+{{- end }}
+
+Data lives in {{ if .Values.persistence.enabled }}PVC "{{ .Values.persistence.existingClaim | default (include "spoolman-ng.fullname" .) }}"{{ else }}an emptyDir (NOT persisted — enable persistence!){{ end }}.
+The default database is SQLite (single replica by design); point SPOOLMAN_DB_* env
+values at PostgreSQL/MySQL for an external database. All server options:
+https://github.com/sherrmann/Spoolman-NG/blob/master/docs/installation.md

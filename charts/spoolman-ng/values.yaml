@@ -1,0 +1,74 @@
+# Default values for spoolman-ng. Deliberately small: one replica (the default
+# SQLite database is single-writer), a PVC for the data directory, health probes,
+# and plain SPOOLMAN_* env passthrough. Point SPOOLMAN_DB_* at an external
+# PostgreSQL/MySQL for anything beyond a homelab single node.
+
+image:
+  repository: ghcr.io/sherrmann/spoolman-ng
+  # Defaults to the chart's appVersion (the matching release).
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# SPOOLMAN_* environment variables, e.g.:
+#   SPOOLMAN_DB_TYPE: postgres
+#   SPOOLMAN_DB_HOST: my-postgres
+#   SPOOLMAN_METRICS_ENABLED: "TRUE"
+env: {}
+
+# Raw container env entries for anything env's simple map can't express
+# (valueFrom, fieldRef, ...).
+extraEnv: []
+
+# Mount a key of an existing Secret as a file and point SPOOLMAN_DB_PASSWORD_FILE
+# at it (avoids putting the database password into a plain env value).
+dbPasswordSecret:
+  name: ""
+  key: password
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: spoolman.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  # For sub-path serving (myhost.com/spoolman), also set env.SPOOLMAN_BASE_PATH.
+
+persistence:
+  enabled: true
+  # Use an existing PVC instead of creating one.
+  existingClaim: ""
+  storageClass: ""
+  accessModes:
+    - ReadWriteOnce
+  size: 1Gi
+
+probes:
+  # Adjust when serving under SPOOLMAN_BASE_PATH (e.g. /spoolman/api/v1/health).
+  path: /api/v1/health
+
+# The image runs fine as its unprivileged user; fsGroup makes the PVC writable.
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+securityContext: {}
+resources: {}
+podAnnotations: {}
+podLabels: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
