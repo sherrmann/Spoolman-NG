@@ -220,3 +220,14 @@ def test_signing_secret_is_ephemeral_and_random_without_config(monkeypatch: pyte
     monkeypatch.delenv("SPOOLMAN_API_TOKEN", raising=False)
     # A fresh random key each call — nothing persisted to disk.
     assert _resolve_signing_secret() != _resolve_signing_secret()
+
+
+def test_non_ascii_bearer_token_is_a_401_not_a_500(token_client: TestClient):
+    """#231: a non-ASCII header byte must read as invalid credentials.
+
+    secrets.compare_digest raises TypeError on non-ASCII strings; the byte is legal on
+    the wire (decoded via latin-1), so it must 401, not 500.
+    """
+    # Raw bytes: httpx refuses to encode non-ASCII str headers, but the wire allows the byte.
+    response = token_client.get("/spool", headers=[(b"authorization", b"Bearer caf\xe9")])
+    assert response.status_code == 401
