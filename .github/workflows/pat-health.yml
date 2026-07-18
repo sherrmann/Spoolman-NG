@@ -1,0 +1,50 @@
+name: PAT Health
+
+# One-click verification that the cross-repo PAT (secrets.PAT) still has what the
+# release automation needs — run it after rotating or re-scoping the token. The
+# release tail half-fails *quietly* when the PAT degrades (the release publishes,
+# then sync-ha-addon dies; see the v2026.7.11/v2026.7.12 tag runs), so this gives
+# a fast answer without cutting a release. All probes are non-destructive.
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+env:
+  ADDONS_REPO: sherrmann/spoolman-ng-addons
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Token identity
+        env:
+          GH_TOKEN: ${{ secrets.PAT }}
+        run: gh api user --jq '"token acts as: " + .login'
+
+      - name: Contents read on the add-ons repo
+        env:
+          GH_TOKEN: ${{ secrets.PAT }}
+        run: gh api "repos/${ADDONS_REPO}/contents/spoolman_ng/config.yaml" --jq '"can read: " + .name'
+
+      - name: Pull-request write on the add-ons repo (no-op probe)
+        env:
+          GH_TOKEN: ${{ secrets.PAT }}
+        # POST /pulls with head == base can never create a PR: a token WITH
+        # "Pull requests: write" reaches validation and gets HTTP 422, a token
+        # WITHOUT it is rejected earlier with HTTP 403. 422 is the pass signal.
+        run: |
+          set +e
+          out=$(gh api -X POST "repos/${ADDONS_REPO}/pulls" \
+            -f title="pat-health probe" -f head=master -f base=master 2>&1)
+          set -e
+          if echo "$out" | grep -qiE "validation failed|no commits between"; then
+            echo "OK: PAT has pull-request write on ${ADDONS_REPO} (probe got the expected 422)."
+          elif echo "$out" | grep -qi "not accessible"; then
+            echo "::error::PAT lacks 'Pull requests: write' on ${ADDONS_REPO} — sync-ha-addon will fail on the next release. Probe response: $out"
+            exit 1
+          else
+            echo "::error::Unexpected probe response: $out"
+            exit 1
+          fi
