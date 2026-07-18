@@ -4,6 +4,7 @@
 
 ## Unreleased
 
+- **Image publishing polish** (#273) — multi-arch images now carry BuildKit **SBOM and provenance attestations**, and releases sync a proper overview to the Docker Hub page (`cookiemonster95/spoolman-ng`), which was previously blank.
 - **Docs: reverse proxies & networking** (#275) — canonical recipes in the installation guide: Caddy, nginx (with the WebSocket upgrade headers live updates need), Traefik incl. sub-path via `SPOOLMAN_BASE_PATH`, auth-at-proxy caveats for printer traffic, IPv6 (`SPOOLMAN_HOST=::`), and a rootless-Podman quadlet unit.
 - **New: `scripts/update.sh`** (#271) — one-command in-place updates for native installs without Moonraker: overlays the new release (preserving `.env`, `.venv`, `uv/`), re-syncs dependencies (keeping the NFC extra when present), seeds pip, and restarts the systemd service. Covered by an e2e that upgrades a real previous-release install.
 - **New: official Helm chart** (#274) — published with every release as an OCI artifact: `helm install spoolman oci://ghcr.io/sherrmann/charts/spoolman-ng`. Single replica by design (SQLite is single-writer), PVC-backed data directory, health probes, non-root security context, `SPOOLMAN_*` env passthrough, optional secret-file database password, and ingress with `SPOOLMAN_BASE_PATH` support. Verified by a new k3d install test (`tests_deployment/run.sh helm`); chart lint runs in CI.
