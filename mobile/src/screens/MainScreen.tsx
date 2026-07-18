@@ -15,9 +15,11 @@ import { ApiError, nfcLookup } from "../api/spoolman";
 import { Fab } from "../components/Fab";
 import { NfcModal } from "../components/NfcModal";
 import { ScannerModal } from "../components/ScannerModal";
+import { SettingsMenuModal } from "../components/SettingsMenuModal";
 import { bytesToBase64 } from "../lib/base64";
 import { buildNavigateScript, buildStartupInjection, parseWebViewMessage } from "../lib/inject";
 import { decideScanAction, parseNdefCandidate } from "../lib/scanActions";
+import { buildSettingsMenuEntries, type SettingsMenuAction } from "../lib/settingsMenu";
 import { appUrl, originOf, shouldOpenExternally, type ServerProfile } from "../lib/serverProfile";
 import {
   cancelNfcRead,
@@ -247,20 +249,25 @@ export function MainScreen({ profile, token, onTokenChange, onChangeServer }: Ma
     }
   }, [lookupTag, nfcAvailable]);
 
-  const handleSettings = useCallback(() => {
-    const buttons = [
-      { text: "Close", style: "cancel" as const },
-      { text: "Reload", onPress: () => webviewRef.current?.reload() },
-      ...(Platform.OS === "android"
-        ? [
-            { text: "Check for updates", onPress: () => runUpdateCheck(true) },
-            { text: "Passkey setup", onPress: () => setPasskeySetupOpen(true) },
-          ]
-        : []),
-      { text: "Change server", style: "destructive" as const, onPress: onChangeServer },
-    ];
-    Alert.alert(profile.name ?? "Server", profile.baseUrl, buttons);
-  }, [onChangeServer, profile, runUpdateCheck]);
+  // Real menu instead of Alert.alert (#221): RN's Android Alert renders at most three
+  // buttons and silently dropped "Passkey setup" and "Change server" from the old list.
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const handleSettings = useCallback(() => setSettingsOpen(true), []);
+  const onSettingsSelect = useCallback(
+    (action: SettingsMenuAction) => {
+      setSettingsOpen(false);
+      if (action === "reload") {
+        webviewRef.current?.reload();
+      } else if (action === "update-check") {
+        runUpdateCheck(true);
+      } else if (action === "passkey-setup") {
+        setPasskeySetupOpen(true);
+      } else if (action === "change-server") {
+        onChangeServer();
+      }
+    },
+    [onChangeServer, runUpdateCheck],
+  );
 
   return (
     <View style={styles.container}>
@@ -316,6 +323,14 @@ export function MainScreen({ profile, token, onTokenChange, onChangeServer }: Ma
         />
       </View>
 
+      <SettingsMenuModal
+        visible={settingsOpen}
+        title={profile.name ?? "Server"}
+        subtitle={profile.baseUrl}
+        entries={buildSettingsMenuEntries(Platform.OS)}
+        onSelect={onSettingsSelect}
+        onClose={() => setSettingsOpen(false)}
+      />
       <ScannerModal
         visible={scannerOpen}
         onClose={() => setScannerOpen(false)}
