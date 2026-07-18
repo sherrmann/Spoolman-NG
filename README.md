@@ -112,7 +112,7 @@ curl -fsSL https://github.com/sherrmann/Spoolman-NG/releases/latest/download/spo
   && unzip spoolman.zip -d ~/Spoolman && cd ~/Spoolman && bash ./scripts/install.sh
 ```
 
-The UI then runs on `http://<host>:7912` (configurable via `.env`). Your database lives in a separate data directory, so updates never touch it.
+The UI then runs on `http://<host>:7912` (configurable via `.env`). Your database lives in a separate data directory, so updates never touch it. Update later with `bash scripts/update.sh` (or one-click from Moonraker, below).
 
 > The native install omits the optional **NFC** feature by default; add it on any platform with `uv sync --extra nfc`.
 
