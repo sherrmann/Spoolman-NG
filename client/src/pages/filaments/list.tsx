@@ -28,7 +28,7 @@ import {
 import { ColumnManager } from "../../components/columnManager";
 import { ColorSimilarityFilter, ColorSimilarityValue } from "../../components/colorSimilarityFilter";
 import { EditableNumberCell, EditableSelectCell, EditableTextCell } from "../../components/inlineEdit";
-import { useLiveify } from "../../components/liveify";
+import { carryForwardFields, useLiveify } from "../../components/liveify";
 import { ResizableHeaderCell } from "../../components/resizableHeaderCell";
 import SpoolIcon from "../../components/spoolIcon";
 import SwatchDownloadModal from "../../components/swatchDownloadModal";
@@ -57,14 +57,16 @@ export interface IFilamentCollapsed extends Omit<IFilament, "vendor"> {
   color_hue?: number | null;
 }
 
-function collapseFilament(element: IFilament): IFilamentCollapsed {
+function collapseFilament(element: IFilament, previous?: IFilamentCollapsed): IFilamentCollapsed {
   let vendor_name: string | null;
   if (element.vendor) {
     vendor_name = element.vendor.name;
   } else {
     vendor_name = null;
   }
-  return { ...element, "vendor.name": vendor_name };
+  // spool_count/remaining_weight are REST-list-only and absent from websocket payloads;
+  // carry them forward so a live update doesn't blank the stock columns (#226).
+  return carryForwardFields({ ...element, "vendor.name": vendor_name }, previous, ["spool_count", "remaining_weight"]);
 }
 
 function translateColumnI18nKey(columnName: string): string {
@@ -200,7 +202,7 @@ export const FilamentList = () => {
         select(data) {
           return {
             total: data.total,
-            data: data.data.map(collapseFilament),
+            data: data.data.map((f) => collapseFilament(f)),
           };
         },
       },
