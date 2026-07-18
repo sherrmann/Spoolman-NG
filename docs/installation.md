@@ -170,6 +170,84 @@ For sub-path serving behind a shared ingress, set `env.SPOOLMAN_BASE_PATH` and
 TrueCharts or another third-party chart instead? They work too — just override
 the image repository to `ghcr.io/sherrmann/spoolman-ng`.
 
+## Reverse proxies & networking
+
+Common reasons to put a proxy in front of Spoolman: HTTPS (required for the
+browser NFC scanner), SSO at the edge, or serving it under a sub-path next to
+other services. Two Spoolman specifics to get right:
+
+- **WebSockets**: live updates (and Moonraker's connection) run over WS under
+  `/api/v1/…` — a proxy without upgrade handling serves the UI fine while live
+  updates silently die.
+- **Sub-paths**: set `SPOOLMAN_BASE_PATH` (e.g. `/spoolman`) — the client, PWA
+  manifest and service worker are all base-path aware.
+
+**Caddy** (automatic TLS, WS works out of the box):
+
+```caddy
+spoolman.example.com {
+    reverse_proxy localhost:7912
+}
+```
+
+**nginx** (the `Upgrade`/`Connection` headers are the part people miss):
+
+```nginx
+location / {
+    proxy_pass http://127.0.0.1:7912;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;      # WebSocket live updates
+    proxy_set_header Connection "upgrade";
+}
+```
+
+**Traefik** (docker-compose labels; sub-path variant):
+
+```yaml
+services:
+  spoolman:
+    image: ghcr.io/sherrmann/spoolman-ng:latest
+    environment:
+      - SPOOLMAN_BASE_PATH=/spoolman
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.spoolman.rule=PathPrefix(`/spoolman`)
+      - traefik.http.services.spoolman.loadbalancer.server.port=8000
+```
+
+(Traefik proxies WebSockets natively — no extra config. For a dedicated
+hostname, use a ``Host(`spoolman.example.com`)`` rule and drop the base path.)
+
+**Auth at the proxy**: forward-auth/SSO layers (Authelia, OAuth2 Proxy, basic
+auth) work in front of Spoolman — but Klipper printers talk to Spoolman through
+Moonraker, which cannot authenticate (see
+[Security & exposure](../README.md#security--exposure)): keep an unauthenticated
+path for printer traffic (LAN bypass rule or a separate internal port).
+
+**IPv6**: the default `SPOOLMAN_HOST=0.0.0.0` binds IPv4 only; set
+`SPOOLMAN_HOST=::` for a dual-stack listener.
+
+**Rootless Podman (quadlet)**: instead of compose, a systemd
+`~/.config/containers/systemd/spoolman.container` unit:
+
+```ini
+[Container]
+Image=ghcr.io/sherrmann/spoolman-ng:latest
+PublishPort=7912:8000
+Volume=%h/spoolman-data:/home/app/.local/share/spoolman:Z
+Environment=TZ=Europe/Stockholm
+
+[Install]
+WantedBy=default.target
+```
+
+Then `systemctl --user daemon-reload && systemctl --user start spoolman`. The
+`:Z` relabel and user-namespace notes from
+[Rootless Podman](#rootless-podman-fedora--selinux) above apply.
+
 ## Connecting your printers (Moonraker clients)
 
 Install the Spoolman **server once**. Each printer is a **client** — it does

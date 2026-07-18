@@ -99,7 +99,9 @@ server {
 
 Then open Spoolman at `https://spoolman.example.com` on Chrome for Android and the
 browser scanner becomes available. A tunnel that provides HTTPS (e.g. Tailscale
-Funnel, Cloudflare Tunnel) works too.
+Funnel, Cloudflare Tunnel) works too. More recipes — Traefik, sub-paths, IPv6,
+Podman quadlets, auth-at-proxy caveats — in
+[Reverse proxies & networking](installation.md#reverse-proxies--networking).
 
 ## Server-side USB reader
 
