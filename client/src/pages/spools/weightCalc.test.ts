@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { WeightToEnter } from "./model";
-import { displayForMode, usedWeightFromEntered } from "./weightCalc";
+import { correctOverweight, displayForMode, usedWeightFromEntered } from "./weightCalc";
 
 // #66: the three weight modes are views of one net used_weight. These tests pin the round-trip and,
 // crucially, the regression: changing initial/spool weight after entering a value must preserve the
@@ -44,5 +44,26 @@ describe("weightCalc", () => {
     // Used weight is absolute: changing the spool/filament weight must not move it.
     expect(usedWeightFromEntered(WeightToEnter.used_weight, 250, 1000, 200)).toBe(250);
     expect(usedWeightFromEntered(WeightToEnter.used_weight, 250, 900, 350)).toBe(250);
+  });
+});
+
+// #61: a spool physically heavier than its theoretical weight (measured > filament+spool, or
+// remaining > filament weight) used to submit a negative used_weight, which the backend rejects
+// with a 422. The correction mirrors the backend measure() path: raise initial_weight to match
+// physical reality and zero the usage.
+describe("correctOverweight (#61)", () => {
+  it("is a no-op for non-negative used weight", () => {
+    expect(correctOverweight(200, 1000)).toEqual({ used: 200, initial: 1000 });
+    expect(correctOverweight(0, 1000)).toEqual({ used: 0, initial: 1000 });
+  });
+
+  it("absorbs a measured-above-gross deficit into initial_weight", () => {
+    // Measured 1250 on a 1000 g filament with a 200 g spool: used = 1000+200-1250 = -50.
+    expect(correctOverweight(-50, 1000)).toEqual({ used: 0, initial: 1050 });
+  });
+
+  it("absorbs a remaining-above-nominal deficit into initial_weight", () => {
+    // Remaining 1100 entered on a 1000 g filament: used = 1000-1100 = -100.
+    expect(correctOverweight(-100, 1000)).toEqual({ used: 0, initial: 1100 });
   });
 });
