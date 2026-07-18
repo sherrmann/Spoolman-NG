@@ -1,4 +1,4 @@
-"""Tier 1 — release-zip contract (#277).
+"""Release-zip contract (#277).
 
 Asserts the *published* `spoolman.zip` and its GitHub release satisfy what the native
 install docs and Moonraker's zip updater require. Each assertion cites the audit issue

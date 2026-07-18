@@ -9,7 +9,7 @@ against the real consumers, not re-implementations of them. Unlike `tests/` and
 ## Running
 
 ```bash
-tests_deployment/run.sh              # all of Tier 1 (~15-25 min cold)
+tests_deployment/run.sh              # all contract suites (~15-25 min cold)
 tests_deployment/run.sh zip          # release contract only (seconds, no docker)
 tests_deployment/run.sh addon        # HA add-on options contract
 tests_deployment/run.sh native       # install.sh matrix; -k debian for one distro
@@ -49,10 +49,11 @@ the corresponding fix ships in a release:
 When a fix lands, its test goes green with no harness change: the harness always tests
 the latest (or pinned) release.
 
-## Tiers (see #277)
+## Roadmap (#277)
 
-- **Tier 1** (this directory): channel contracts — fast, deterministic, nightly + post-release.
-- **Tier 2** (planned): virtual Klipper printer (prind/simulavr) exercising the runtime
-  `[spoolman]` component, OctoPrint plugin, HA Core + HACS integration, k3d + Helm.
-- **Tier 3** (planned, manual): HAOS VM installing the add-on repo via the real
-  Supervisor, nested Proxmox running the community script, NixOS module test.
+This directory holds the fast, deterministic channel contracts. Planned additions
+(tracked as tiers in #277, but organised here by what they test): virtual-printer
+e2e for the runtime `[spoolman]` component (see [playground/](playground/)), the
+OctoPrint plugin, HA Core + the HACS integration, and k3d + Helm; the heavyweight
+appliance checks (HAOS Supervisor install, nested Proxmox, NixOS module) stay
+manual.

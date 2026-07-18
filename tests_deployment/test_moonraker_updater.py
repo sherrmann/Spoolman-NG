@@ -1,4 +1,4 @@
-"""Tier 1 — Moonraker update_manager validation (#277).
+"""Moonraker update_manager validation (#277).
 
 Runs the *real* Moonraker (no Klipper needed) against a native install of the published
 zip, configured with the target `type: zip` recipe from #263, and asserts through

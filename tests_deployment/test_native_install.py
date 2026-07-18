@@ -1,4 +1,4 @@
-"""Tier 1 — native install matrix (#277).
+"""Native install matrix (#277).
 
 Runs the *published* release zip through `scripts/install.sh` in clean distro containers
 (the way the Klipper/OpenNept4une guides do), then boots the server and hits the health
