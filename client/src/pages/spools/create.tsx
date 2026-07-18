@@ -33,7 +33,7 @@ import { getCurrencySymbol, useCurrency } from "../../utils/settings";
 import { createFilamentFromExternal } from "../filaments/functions";
 import { FilamentColor, useGetFilamentSelectOptions } from "./functions";
 import { ISpool, ISpoolParsedExtras, WeightToEnter } from "./model";
-import { displayForMode, usedWeightFromEntered } from "./weightCalc";
+import { correctOverweight, displayForMode, usedWeightFromEntered } from "./weightCalc";
 
 dayjs.extend(utc);
 
@@ -124,6 +124,13 @@ export const SpoolCreate = (props: IResourceComponentsProps & CreateOrCloneProps
 
   const handleSubmit = async (redirectTo: "list" | "edit" | "create") => {
     const values = StringifiedExtras(await form.validateFields());
+    // #61: a spool heavier than its theoretical weight would submit a negative used_weight
+    // (422 from the backend). Absorb the deficit into initial_weight, like measure() does.
+    if ((values.used_weight ?? 0) < 0) {
+      const corrected = correctOverweight(values.used_weight ?? 0, values.initial_weight ?? getFilamentWeight());
+      values.used_weight = corrected.used;
+      values.initial_weight = corrected.initial;
+    }
     if (selectedFilament?.is_internal === false) {
       // Filament ID being a string indicates its an external filament.
       // If so, we should first create the internal filament version, then create the spool(s)

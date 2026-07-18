@@ -39,3 +39,12 @@ export function displayForMode(
   }
   return usedWeight;
 }
+
+/**
+ * Mirror of the backend measure() auto-correction (#61): a spool physically heavier than its
+ * theoretical weight raises initial_weight to match reality and zeroes the usage, instead of
+ * submitting a negative used_weight the backend rejects with a 422.
+ */
+export function correctOverweight(used: number, initial: number): { used: number; initial: number } {
+  return used >= 0 ? { used, initial } : { used: 0, initial: initial - used };
+}
