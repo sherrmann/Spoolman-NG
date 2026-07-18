@@ -762,7 +762,8 @@ jobs:
         run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
       - name: Create release and upload build
-        uses: softprops/action-gh-release@v3
+        # Pinned to a commit SHA (#237): this job holds the release GITHUB_TOKEN.
+        uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
         id: create-release
         with:
           draft: false
@@ -857,7 +858,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to spoolman-ng
-        uses: appleboy/ssh-action@v1
+        # Pinned to a commit SHA (#237): this job holds the VPS deploy key.
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
         with:
           host: ${{ secrets.VPS_HOST }}
           port: ${{ secrets.VPS_PORT }}
