@@ -36,6 +36,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          # Tag refs are needed to derive the dev version for dispatch builds (#223).
+          fetch-tags: true
 
       - name: Install node
         uses: actions/setup-node@v6.4.0
@@ -53,9 +56,11 @@ jobs:
           cd mobile
           npm ci
 
-      # Stamp the release tag into the app so the in-app updater can compare its
-      # own version against the latest GitHub release. Only tag builds (vX.Y.Z)
-      # are stamped; workflow_dispatch/branch builds keep app.json's dev version.
+      # Stamp a comparable version into the app so the in-app updater can reason
+      # about it. Tag builds (vX.Y.Z) get the tag; dispatch/branch builds get
+      # "<latest tag>-dev.<run number>" with the tag's versionCode, so they never
+      # nag "update available" against their own base release and never trip
+      # Android's versionCode downgrade check when sideloaded over it (#223).
       - name: Stamp the release version into the app
         run: |
           cd mobile
@@ -75,7 +80,19 @@ jobs:
               '
               ;;
             *)
-              echo "Non-tag build ($ref_name) — keeping the dev version in app.json."
+              latest_tag=$(git tag --list 'v[0-9]*' --sort=-v:refname | head -1)
+              base="${latest_tag#v}"
+              : "${base:=0.1.0}"
+              VER="${base}-dev.${GITHUB_RUN_NUMBER}" BASE="$base" node -e '
+                const fs = require("fs");
+                const cfg = JSON.parse(fs.readFileSync("app.json", "utf8"));
+                const [a = 0, b = 0, c = 0] = process.env.BASE.split(".").map((n) => parseInt(n, 10) || 0);
+                cfg.expo.version = process.env.VER;
+                cfg.expo.android = cfg.expo.android || {};
+                cfg.expo.android.versionCode = a * 10000 + b * 100 + c;
+                fs.writeFileSync("app.json", JSON.stringify(cfg, null, 2) + "\n");
+                console.log("Stamped dev version " + process.env.VER + " (versionCode " + cfg.expo.android.versionCode + ")");
+              '
               ;;
           esac
 

@@ -8,7 +8,7 @@ import * as FileSystem from "expo-file-system/legacy";
 import * as IntentLauncher from "expo-intent-launcher";
 import { Platform } from "react-native";
 
-import { isUpdateAvailable, parseLatestRelease, UPDATE_REPO, type LatestRelease } from "../lib/update";
+import { isUpdateAvailable, parseLatestRelease, UPDATE_REPO, type LatestRelease, isUnstampedDevVersion } from "../lib/update";
 
 /** The installed app version (Android versionName), or "0.1.0" for dev builds. */
 export function getCurrentVersion(): string {
@@ -54,6 +54,10 @@ export async function checkForUpdate(): Promise<UpdateInfo | null> {
     return null;
   }
   const currentVersion = getCurrentVersion();
+  if (isUnstampedDevVersion(currentVersion)) {
+    // Unstamped local dev build - "is 0.1.0 outdated?" is meaningless (#223).
+    return null;
+  }
   if (!isUpdateAvailable(currentVersion, release.tag)) {
     return null;
   }
