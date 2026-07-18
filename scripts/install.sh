@@ -69,7 +69,8 @@ if [[ -f /etc/os-release ]]; then
         echo -e "${GREEN}Detected Arch-based system. Using pacman package manager.${NC}"
     elif [[ "$ID_LIKE" == *"fedora"* || "$ID" == *"fedora"* ]]; then
         pkg_manager="dnf"
-        update_cmd="$SUDO $pkg_manager update"
+        # makecache, not "dnf update": the latter is a full system upgrade and prompts (#272).
+        update_cmd="$SUDO $pkg_manager makecache"
         install_cmd="$SUDO $pkg_manager install -y"
         echo -e "${GREEN}Detected Fedora-based system. Using dnf package manager.${NC}"
     else
@@ -85,6 +86,8 @@ if ! command -v pg_config &>/dev/null; then
         packages+=" libpq-dev"
     elif [[ "$pkg_manager" == "pacman" ]]; then
         packages+=" postgresql-libs"
+    elif [[ "$pkg_manager" == "dnf" ]]; then
+        packages+=" libpq-devel"
     else
         echo -e "${ORANGE}pg_config not found and automatic installation not supported for this OS. Please install libpq-dev or postgresql-libs manually.${NC}"
     fi
