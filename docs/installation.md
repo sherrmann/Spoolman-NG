@@ -142,7 +142,7 @@ database types.
 | `SPOOLMAN_DIR_BACKUPS` | `<data dir>/backups` | Where SQLite backups are written. |
 | `SPOOLMAN_DIR_LOGS` | `<data dir>` | Log directory. |
 | `SPOOLMAN_LOGGING_LEVEL` | `INFO` | `DEBUG`, `INFO`, `WARNING`, `ERROR`, or `CRITICAL`. |
-| `PUID` / `PGID` | `1000` | Docker only: uid/gid of the in-container user that owns the data volume. |
+| `PUID` / `PGID` | `1000` | Docker only: uid/gid of the in-container user that owns the data volume. Applied only when the container starts as root; under `--user`/`runAsNonRoot` they are ignored with a logged notice — pick the uid/gid via `--user` (or `securityContext`) instead, and make sure the data dir is writable by that uid (or point `SPOOLMAN_DIR_DATA` at one that is). |
 
 ### Features
 

@@ -101,6 +101,10 @@ RUN chmod +x /home/app/spoolman/entrypoint.sh
 WORKDIR /home/app/spoolman
 
 ENV PATH="/home/app/spoolman/.venv/bin:${PATH}"
+# Arbitrary-UID runs (--user, OpenShift) get no passwd entry and would inherit
+# HOME=/, making platformdirs resolve the data dir under / and crash on mkdir.
+# Pin HOME so the data dir always resolves to the documented mount point (#239).
+ENV HOME=/home/app
 
 ARG GIT_COMMIT=unknown
 ARG BUILD_DATE=unknown
