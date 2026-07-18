@@ -23,6 +23,7 @@ import {
   Dropdown,
   Modal,
   Progress,
+  message,
   Row,
   Space,
   Statistic,
@@ -68,6 +69,8 @@ export const SpoolShow = () => {
   const currencyFormatter = useCurrencyFormatter();
   const unitScaling = useUnitScaling();
   const invalidate = useInvalidate();
+  // antd message instance for surfacing adjust/archive failures (#227), matching list.tsx.
+  const [messageApi, messageContextHolder] = message.useMessage();
 
   const { query } = useShow<ISpool>({
     liveMode: "auto",
@@ -136,14 +139,20 @@ export const SpoolShow = () => {
   const showNfcButton = true;
 
   // Provides the function to open the spool adjustment modal and the modal component itself
-  const { openSpoolAdjustModal, spoolAdjustModal } = useSpoolAdjustModal();
+  const { openSpoolAdjustModal, spoolAdjustModal } = useSpoolAdjustModal(messageApi);
 
   // User-configured per-spool action links (#140), rendered as a dropdown only when configured.
   const actionLinks = useSpoolActionLinks();
 
   // Function for opening an ant design modal that asks for confirmation for archiving a spool
   const archiveSpool = async (spool: ISpool, archive: boolean) => {
-    await setSpoolArchived(spool, archive);
+    try {
+      await setSpoolArchived(spool, archive);
+    } catch (error) {
+      // Surface the failure (#227) - the page would otherwise just silently stay unchanged.
+      messageApi.error(error instanceof Error && error.message ? error.message : t("notifications.error"));
+      return;
+    }
     invalidate({
       resource: "spool",
       id: spool.id,
@@ -358,6 +367,7 @@ export const SpoolShow = () => {
           </Tooltip>
           {editButtonProps && <EditButton {...editButtonProps} />}
           {refreshButtonProps && <RefreshButton {...refreshButtonProps} />}
+          {messageContextHolder}
           {spoolAdjustModal}
           <NfcBindModal
             spool={record}

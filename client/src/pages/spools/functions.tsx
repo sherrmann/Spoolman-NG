@@ -2,6 +2,7 @@ import { useInvalidate, useSelect, useTranslate } from "@refinedev/core";
 import { useQueries, useQueryClient } from "@tanstack/react-query";
 import { Form, InputNumber, Modal, Radio } from "antd";
 import { useForm } from "antd/es/form/Form";
+import type { MessageInstance } from "antd/es/message/interface";
 import type { InputNumberRef } from "rc-input-number";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { formatLength, formatNumberOnUserInput, formatWeight, numberParser } from "../../utils/parsing";
@@ -11,6 +12,24 @@ import { apiFetch } from "../../utils/authReloadHandler";
 import { getAPIURL } from "../../utils/url";
 import { IFilament } from "../filaments/model";
 import { ISpool } from "./model";
+
+/**
+ * Throw the server's error message (or an HTTP-status fallback) on a non-ok response, so
+ * callers can surface failures instead of silently treating them as success (#227).
+ */
+async function ensureOk(res: Response): Promise<void> {
+  if (res.ok) return;
+  let message = `HTTP ${res.status}`;
+  try {
+    const body = (await res.json()) as { message?: unknown };
+    if (typeof body?.message === "string" && body.message) {
+      message = body.message;
+    }
+  } catch {
+    /* non-JSON error body — keep the status fallback */
+  }
+  throw new Error(message);
+}
 
 export async function setSpoolArchived(spool: ISpool, archived: boolean) {
   const init: RequestInit = {
@@ -23,7 +42,7 @@ export async function setSpoolArchived(spool: ISpool, archived: boolean) {
     }),
   };
   const request = new Request(getAPIURL() + "/spool/" + spool.id);
-  await apiFetch(request, init);
+  await ensureOk(await apiFetch(request, init));
 }
 
 /**
@@ -44,7 +63,7 @@ export async function useSpoolFilament(spool: ISpool, length?: number, weight?: 
     }),
   };
   const request = new Request(`${getAPIURL()}/spool/${spool.id}/use`);
-  await apiFetch(request, init);
+  await ensureOk(await apiFetch(request, init));
 }
 
 /**
@@ -63,7 +82,7 @@ export async function useSpoolFilamentMeasure(spool: ISpool, weight: number) {
     }),
   };
   const request = new Request(`${getAPIURL()}/spool/${spool.id}/measure`);
-  await apiFetch(request, init);
+  await ensureOk(await apiFetch(request, init));
 }
 
 /**
@@ -226,7 +245,7 @@ export function useGetFilamentSelectOptions() {
 
 type MeasurementType = "length" | "weight" | "measured_weight";
 
-export function useSpoolAdjustModal() {
+export function useSpoolAdjustModal(messageApi: MessageInstance) {
   const t = useTranslate();
   const [form] = useForm();
   const queryClient = useQueryClient();
@@ -260,12 +279,19 @@ export function useSpoolAdjustModal() {
         return;
       }
 
-      if (measurementType === "length") {
-        await useSpoolFilament(curSpool, value, undefined);
-      } else if (measurementType === "weight") {
-        await useSpoolFilament(curSpool, undefined, value);
-      } else {
-        await useSpoolFilamentMeasure(curSpool, value);
+      try {
+        if (measurementType === "length") {
+          await useSpoolFilament(curSpool, value, undefined);
+        } else if (measurementType === "weight") {
+          await useSpoolFilament(curSpool, undefined, value);
+        } else {
+          await useSpoolFilamentMeasure(curSpool, value);
+        }
+      } catch (error) {
+        // Surface the rejection and keep the dialog open (#227) — closing silently made a
+        // failed adjustment look recorded.
+        messageApi.error(error instanceof Error && error.message ? error.message : t("spool.messages.update_error"));
+        return;
       }
 
       // The adjustment changed the spool's counters AND appended to its usage log —
@@ -303,7 +329,7 @@ export function useSpoolAdjustModal() {
         </Form>
       </Modal>
     );
-  }, [curSpool, measurementType, t, queryClient, invalidate, form]);
+  }, [curSpool, measurementType, t, queryClient, invalidate, form, messageApi]);
 
   return {
     openSpoolAdjustModal,
