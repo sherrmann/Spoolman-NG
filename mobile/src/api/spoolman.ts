@@ -53,7 +53,15 @@ async function request<T>(
     if (!response.ok) {
       throw new ApiError(response.status, await safeText(response), response.url);
     }
-    return (await response.json()) as T;
+    // Read as text and parse ourselves: a redirect-style forward-auth gateway answers with
+    // a 200 HTML portal page, and probeServer needs the body + final URL to recognize it
+    // (#222). A raw response.json() would throw a context-free SyntaxError instead.
+    const text = await response.text();
+    try {
+      return JSON.parse(text) as T;
+    } catch {
+      throw new ApiError(response.status, text.slice(0, 300), response.url);
+    }
   } finally {
     clearTimeout(timer);
   }
