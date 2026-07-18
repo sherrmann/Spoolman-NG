@@ -172,7 +172,15 @@ def test_no_auth_configured_passes_through_as_anonymous_admin():
 
 @pytest.fixture
 def accounts_client() -> TestClient:
-    return _make_client(AuthState(signing_secret=SECRET, accounts_enabled=True))
+    # #234: signed tokens are only honored for accounts that still exist, so the
+    # fixture registers alice/bob in the live role map like the real endpoints do.
+    return _make_client(
+        AuthState(
+            signing_secret=SECRET,
+            accounts_enabled=True,
+            user_roles={"alice": ROLE_ADMIN, "bob": ROLE_READONLY},
+        ),
+    )
 
 
 def test_accounts_enabled_requires_a_token(accounts_client: TestClient):
@@ -231,3 +239,32 @@ def test_non_ascii_bearer_token_is_a_401_not_a_500(token_client: TestClient):
     # Raw bytes: httpx refuses to encode non-ASCII str headers, but the wire allows the byte.
     response = token_client.get("/spool", headers=[(b"authorization", b"Bearer caf\xe9")])
     assert response.status_code == 401
+
+
+# --- #234 immediate revocation ---------------------------------------------
+
+
+def _accounts_state(user_roles: dict[str, str]) -> AuthState:
+    return AuthState(signing_secret=SECRET, accounts_enabled=True, user_roles=user_roles)
+
+
+def test_deleted_users_token_stops_working_immediately():
+    """#234: a signed token whose account no longer exists must read as invalid."""
+    client = _make_client(_accounts_state({}))  # alice was deleted after minting
+    token = mint_token("alice", ROLE_ADMIN, SECRET, ttl_seconds=3600)
+    assert client.get("/spool", headers=_auth(token)).status_code == 401
+
+
+def test_demotion_applies_to_existing_tokens_immediately():
+    """#234: the account's CURRENT role wins over the role claim baked into the token."""
+    client = _make_client(_accounts_state({"alice": ROLE_READONLY}))
+    token = mint_token("alice", ROLE_ADMIN, SECRET, ttl_seconds=3600)  # minted before the demotion
+    assert client.get("/spool", headers=_auth(token)).status_code == 200
+    assert client.post("/spool", headers=_auth(token)).status_code == 403
+
+
+def test_promotion_applies_to_existing_tokens_immediately():
+    """#234: symmetric to demotion — an admin promotion takes effect without a re-login."""
+    client = _make_client(_accounts_state({"bob": ROLE_ADMIN}))
+    token = mint_token("bob", ROLE_READONLY, SECRET, ttl_seconds=3600)
+    assert client.post("/spool", headers=_auth(token)).status_code == 200
