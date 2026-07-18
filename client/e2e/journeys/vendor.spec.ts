@@ -31,7 +31,9 @@ test.describe("vendor (manufacturer) journey", () => {
     // Show page renders the created record
     await page.goto(`${APP_BASE_URL}/vendor/show/${id}`);
     await expect(page.getByText(name, { exact: false }).first()).toBeVisible();
-    await expect(page.getByText("120")).toBeVisible();
+    // exact: the timestamped vendor name above can itself contain "120" (e.g.
+    // "Mainsail 1784354360120"), which trips strict mode on a substring match.
+    await expect(page.getByText("120", { exact: true })).toBeVisible();
 
     // Edit (header button on the show page) → change the empty spool weight
     await page.getByRole("button", { name: "Edit" }).first().click();
