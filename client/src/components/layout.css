@@ -24,8 +24,11 @@
   flex-direction: column;
 }
 
-/* Override refine's wrapper div (inline: minHeight:360, padding) */
-.spoolman-root .ant-layout-content > div {
+/* Override refine's wrapper div (inline: minHeight:360, padding).
+   :not(.ant-row) keeps the blanket flex-direction:column from hijacking antd Rows that
+   sit directly under a nested Content — it silently stacked the print dialog's
+   preview/settings columns at every viewport width (#296). */
+.spoolman-root .ant-layout-content > div:not(.ant-row) {
   flex: 1 !important;
   min-height: 0 !important;
   display: flex !important;
@@ -33,7 +36,7 @@
 }
 
 @media (max-width: 1024px) {
-  .spoolman-root .ant-layout-content > div {
+  .spoolman-root .ant-layout-content > div:not(.ant-row) {
     flex: none !important;
     height: auto !important;
     overflow: visible !important;

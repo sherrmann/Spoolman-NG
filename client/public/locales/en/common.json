@@ -171,7 +171,19 @@
       "invalidGeometry": "The label grid does not fit on the paper",
       "invalidGeometryHelp": "Margins and spacing leave no room for the labels. Reduce the margins, spacing, columns or rows — or pick a larger paper size.",
       "contentClipped": "Some label content is cut off",
-      "contentClippedHelp": "At least one label’s content does not fit inside its label and will be clipped when printed. Reduce the text size, shorten the template, or use fewer columns/rows so each label is larger."
+      "contentClippedHelp": "At least one label’s content does not fit inside its label and will be clipped when printed. Reduce the text size, shorten the template, or use fewer columns/rows so each label is larger.",
+      "checklist": {
+        "title": "Before you print",
+        "intro": "Browser print dialogs often re-scale pages, which breaks the label geometry. In the print dialog that opens next, check:",
+        "scale": "Scale is 100% / “Actual size” — never “Fit to page”.",
+        "paperSize": "The selected paper size is exactly {{width}} × {{height}} mm.",
+        "margins": "Margins are set to “None” (Spoolman already handles margins).",
+        "headersFooters": "Headers and footers are turned off.",
+        "pageSizeModeHint": "You picked a label paper size but Page Size is “Automatic”. “Match label size” tells the browser the exact page geometry.",
+        "pageSizeModeApply": "Switch to Match label size",
+        "dontShowAgain": "Don't show this again",
+        "printNow": "Print now"
+      }
     },
     "qrcode": {
       "button": "Print Labels",
