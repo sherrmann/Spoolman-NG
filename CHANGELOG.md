@@ -4,6 +4,7 @@
 
 ## Unreleased
 
+- **API: filament 'ordered' state** (#298, backend half) — three additive nullable fields on filament: `ordered_at`, `order_url`, `order_note`. Settable at create or PATCH, cleared with explicit `null`; integrations (e.g. the HA integration's low-stock notifications) can now detect that replenishment is already on its way. UI lands separately.
 - **Fixed: label preview now sits beside the settings** (#296) — a global layout rule (from the dashboard redesign) silently forced the print dialog's two columns to stack at every window size, leaving half the screen empty. Wide screens get preview + settings side by side; below ~1000 px they stack intentionally.
 - **New: pre-print checklist** (#296) — clicking Print first shows the geometry checks that browser print dialogs commonly break: scale 100 % (never "fit to page"), the exact paper size in mm, margins off, headers/footers off. When a label paper size is used with automatic page sizing, a one-click "Match label size" fix is offered. Dismissible with "don't show again".
 - **New: label QR size setting** (#295) — the printed QR square is now adjustable in mm from the label dialogs (Auto keeps the old fill-half-the-label behavior); a soft warning flags sizes under 10 mm as hard to phone-scan. Also fixes the QR overflowing its half of narrow labels: the SVG's intrinsic size no longer overrides the layout split.
