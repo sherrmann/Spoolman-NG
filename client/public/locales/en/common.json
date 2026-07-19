@@ -668,6 +668,14 @@
       "materials_other": "{{count}} materials"
     }
   },
+  "lowstock": {
+    "title": "Low Stock",
+    "edit_threshold": "Set alert threshold",
+    "section": {
+      "explicit": "Below your set threshold",
+      "fallback": "Below the {{grams}} g default"
+    }
+  },
   "help": {
     "help": "Help",
     "resources": {

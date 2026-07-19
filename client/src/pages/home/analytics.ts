@@ -9,8 +9,6 @@ import { ISpool } from "../spools/model";
 // A spool with no weight information at all falls back to this nominal total so
 // the low-stock ratio stays finite.
 export const DEFAULT_TOTAL_WEIGHT = 1000;
-// A spool is "low stock" once its remaining fraction drops below this.
-export const LOW_STOCK_THRESHOLD = 0.15;
 
 export interface MaterialStat {
   count: number;
@@ -57,35 +55,61 @@ function remainingFraction(s: ISpool): number {
   return (s.remaining_weight ?? total) / total;
 }
 
-/** Spools below the low-stock threshold, ordered most-depleted first. */
-export function lowStockSpools(spools: ISpool[]): ISpool[] {
-  return spools
-    .filter((s) => remainingFraction(s) < LOW_STOCK_THRESHOLD)
-    .sort((a, b) => remainingFraction(a) - remainingFraction(b));
-}
-
-export interface LowStockFilament {
+export interface LowStockRow {
   filament: IFilament;
   remaining: number;
   threshold: number;
+  /** Why this row is listed: its own threshold, or the global gram fallback. Drives section separation. */
+  reason: "explicit" | "fallback";
+  /** Oldest open order for this filament, if any — drives the "Ordered" pill and the sink-to-bottom sort. */
+  onOrder?: { order_id: number; ordered_at: string };
+}
+
+export interface LowStockSections {
+  /** Rows flagged by their own low_stock_threshold; largest shortfall first, on-order rows last. */
+  explicit: LowStockRow[];
+  /** Rows flagged only by the global gram fallback; same ordering. */
+  fallback: LowStockRow[];
+  /** Total flagged filaments across both sections — the dashboard KPI badge count. */
+  count: number;
+}
+
+/** On-order rows sink to the bottom of their section; otherwise largest shortfall first. */
+function compareLowStockRows(a: LowStockRow, b: LowStockRow): number {
+  const ao = a.onOrder ? 1 : 0;
+  const bo = b.onOrder ? 1 : 0;
+  if (ao !== bo) return ao - bo;
+  return b.threshold - b.remaining - (a.threshold - a.remaining);
 }
 
 /**
- * Filaments to reorder (#109 / #116): those with a low_stock_threshold set whose server-computed
- * total remaining weight has dropped to or below it. Ordered by largest shortfall first. Filaments
- * without a threshold, or whose aggregate is not populated, are never flagged.
+ * Merged per-filament Low Stock (#298 redesign — supersedes lowStockSpools and the old lowStockFilaments).
+ * A filament is flagged when its server-computed aggregate remaining weight is at or below its own
+ * low_stock_threshold when set, else at or below the global fallback `fallbackG` (absolute grams; a value
+ * <= 0 disables the fallback). Explicit-threshold and fallback-caught rows are returned in separate
+ * sections so the UI can show WHY each is listed; within each, on-order filaments sink last.
  */
-export function lowStockFilaments(filaments: IFilament[]): LowStockFilament[] {
-  return filaments
-    .filter(
-      (f) => f.low_stock_threshold != null && f.remaining_weight != null && f.remaining_weight <= f.low_stock_threshold,
-    )
-    .map((f) => ({
+export function computeLowStock(filaments: IFilament[], fallbackG: number): LowStockSections {
+  const explicit: LowStockRow[] = [];
+  const fallback: LowStockRow[] = [];
+  for (const f of filaments) {
+    if (f.remaining_weight == null) continue;
+    const hasExplicit = f.low_stock_threshold != null;
+    const threshold = hasExplicit ? (f.low_stock_threshold as number) : fallbackG;
+    if (threshold <= 0) continue; // fallback disabled, or a nonsensical explicit 0
+    if (f.remaining_weight > threshold) continue;
+    const row: LowStockRow = {
       filament: f,
-      remaining: f.remaining_weight as number,
-      threshold: f.low_stock_threshold as number,
-    }))
-    .sort((a, b) => b.threshold - b.remaining - (a.threshold - a.remaining));
+      remaining: f.remaining_weight,
+      threshold,
+      reason: hasExplicit ? "explicit" : "fallback",
+      onOrder: f.on_order,
+    };
+    (hasExplicit ? explicit : fallback).push(row);
+  }
+  explicit.sort(compareLowStockRows);
+  fallback.sort(compareLowStockRows);
+  return { explicit, fallback, count: explicit.length + fallback.length };
 }
 
 /** Human label for a filament: "Vendor - Name", falling back to the name or id. */

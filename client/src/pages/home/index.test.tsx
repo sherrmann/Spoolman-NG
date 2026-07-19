@@ -18,12 +18,19 @@ vi.mock("@refinedev/core", () => ({
   // interpolation params (in which case the key itself is the best stand-in).
   useTranslate: () => (key: string, fallback?: unknown) => (typeof fallback === "string" ? fallback : key),
   useNavigation: () => ({ showUrl: (resource: string, id: number) => `/${resource}/show/${id}` }),
+  // Used by the Low Stock row's inline ThresholdEdit (#298); not exercised by these
+  // render-state tests, so no-op stubs are enough.
+  useUpdate: () => ({ mutate: vi.fn() }),
+  useInvalidate: () => vi.fn(),
 }));
 vi.mock("react-i18next", () => ({
   Trans: ({ i18nKey }: { i18nKey: string }) => <span>{i18nKey}</span>,
 }));
 vi.mock("../../utils/settings", () => ({
   useCurrencyFormatter: () => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }),
+  // Matches the shipped default (#298 low-stock redesign) so plain fixture spools/filaments
+  // (no explicit low_stock_threshold) are only flagged when a test deliberately drops below it.
+  useLowStockFallbackG: () => 200,
 }));
 // The Usage tab's chart (#81) queries /stats/usage via react-query; stub it so the dashboard
 // renders without a QueryClient in these boundary tests.
@@ -58,19 +65,37 @@ interface SpoolQueryState {
   isLoading?: boolean;
   isError?: boolean;
   refetch?: () => void;
+  // Drives the merged per-filament Low Stock tab (#298); defaults to none so plain spool-only
+  // tests see no low-stock filaments regardless of the spools' own weights.
+  filaments?: IFilament[];
 }
 
-function setSpoolQuery({ data = [], isLoading = false, isError = false, refetch = vi.fn() }: SpoolQueryState) {
-  // useList is called for "spool", "filament" and "vendor"; only the spool query drives
-  // the render-state branches. filament/vendor just supply KPI totals.
-  mockedUseList.mockImplementation(
-    (opts) =>
-      (opts?.resource === "spool"
-        ? { result: { data, total: data.length }, query: { isLoading, isError, refetch } }
-        : { result: { total: 0 }, query: { isLoading: false, isError: false } }) as unknown as ReturnType<
+function setSpoolQuery({
+  data = [],
+  isLoading = false,
+  isError = false,
+  refetch = vi.fn(),
+  filaments = [],
+}: SpoolQueryState) {
+  // useList is called for "spool", "filament", "vendor" and "order"; only the spool query drives
+  // the render-state branches. filament supplies both the KPI total and (via its aggregate
+  // fields) the Low Stock tab; vendor/order just supply KPI totals / on-order lookups.
+  mockedUseList.mockImplementation((opts) => {
+    if (opts?.resource === "spool") {
+      return { result: { data, total: data.length }, query: { isLoading, isError, refetch } } as unknown as ReturnType<
         typeof useList
-      >,
-  );
+      >;
+    }
+    if (opts?.resource === "filament") {
+      return {
+        result: { data: filaments, total: filaments.length },
+        query: { isLoading: false, isError: false },
+      } as unknown as ReturnType<typeof useList>;
+    }
+    return { result: { total: 0 }, query: { isLoading: false, isError: false } } as unknown as ReturnType<
+      typeof useList
+    >;
+  });
 }
 
 function renderHome() {
@@ -127,9 +152,10 @@ describe("Home render states", () => {
   });
 });
 
-// A spool whose remaining fraction falls below the low-stock threshold.
-function lowStockSpool(): ISpool {
-  return spool({ remaining_weight: 30, initial_weight: 1000 });
+// A filament caught by the low-stock gram fallback (#298): no explicit threshold, but its
+// aggregate remaining weight has dropped to/below the 200 g default mocked above.
+function lowStockFilament(): IFilament {
+  return filament({ remaining_weight: 30 });
 }
 
 describe("Home dashboard interactions", () => {
@@ -157,7 +183,7 @@ describe("Home dashboard interactions", () => {
   });
 
   it("shows the low-stock warning icon and defaults to the low-stock tab when stock is low", () => {
-    setSpoolQuery({ data: [lowStockSpool(), spool()] });
+    setSpoolQuery({ data: [spool(), spool()], filaments: [lowStockFilament()] });
     renderHome();
     // At least one warning triangle is rendered (tab label + KPI footer).
     expect(screen.getAllByLabelText("warning").length).toBeGreaterThan(0);

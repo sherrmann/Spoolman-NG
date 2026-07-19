@@ -2,7 +2,6 @@ import { bench, describe } from "vitest";
 import { IFilament } from "../filaments/model";
 import { ISpool } from "../spools/model";
 import {
-  lowStockSpools,
   materialBreakdown,
   locationBreakdown,
   recentSpools,
@@ -77,15 +76,11 @@ for (const size of [1_000, 5_000, 10_000]) {
     bench("all home-page aggregations combined", () => {
       totalRemainingWeight(inventory);
       totalValue(inventory);
-      lowStockSpools(inventory);
       recentSpools(inventory);
       materialBreakdown(inventory);
       locationBreakdown(inventory, "No location");
       vendorBreakdown(inventory);
       registeredWithinDays(inventory, 30);
-    });
-    bench("lowStockSpools (filter + sort)", () => {
-      lowStockSpools(inventory);
     });
     bench("recentSpools (dayjs-parse heavy)", () => {
       recentSpools(inventory);

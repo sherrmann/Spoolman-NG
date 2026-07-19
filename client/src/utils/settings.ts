@@ -13,6 +13,15 @@ export function useUnitScaling(): boolean {
   return JSON.parse(useGetSetting("unit_scaling").data?.value ?? "false");
 }
 
+/**
+ * Global fallback low-stock threshold in absolute grams (#298 low-stock redesign). A filament with no
+ * explicit low_stock_threshold is flagged once its aggregate remaining weight drops to/below this.
+ * Ships at 200 g so Low Stock works out of the box (US5); 0 disables the fallback.
+ */
+export function useLowStockFallbackG(): number {
+  return JSON.parse(useGetSetting("low_stock_fallback_g").data?.value ?? "200");
+}
+
 export function getCurrencySymbol(locale: string | undefined, currency: string) {
   return (0)
     .toLocaleString(locale, {
