@@ -3,8 +3,9 @@ import { expect, test } from "../fixtures";
 
 // Print-dialog permutations (TESTING_STRATEGY "Remaining"): the spool-select step
 // (select-all, empty-selection error) and the QR dialog's template editing with its
-// live label preview. The real Print button opens the browser print dialog, so it
-// is asserted visible but never clicked.
+// live label preview. Clicking Print opens the pre-print checklist (#296); tests
+// interact with it via Cancel ONLY — "Print now" would invoke the real browser print
+// pipeline, which hangs headless runs.
 
 async function seedSpool(request: import("@playwright/test").APIRequestContext, name: string): Promise<number> {
   const fil = await (
@@ -105,6 +106,71 @@ test.describe("print dialog journeys", () => {
       const restoredWidth = (await qrContainer.boundingBox())?.width ?? 0;
       expect(restoredWidth).toBeCloseTo(autoWidth, 0);
     }).toPass();
+  });
+
+  test("print button opens the pre-print checklist with the exact paper size (#296)", async ({ page, request }) => {
+    const spoolId = await seedSpool(request, `Chk ${Date.now()}`);
+
+    await page.goto(`${APP_BASE_URL}/spool/print?spools=${spoolId}`);
+    await expect(page.getByRole("button", { name: /Print$/ })).toBeVisible();
+
+    // Print does not fire immediately — the checklist warns about browser-dialog rescaling
+    // first, quoting the exact page size the OS dialog must be set to (A4 default).
+    await page.getByRole("button", { name: /Print$/ }).click();
+    await expect(page.getByText("Before you print")).toBeVisible();
+    await expect(page.getByText(/210 × 297/)).toBeVisible();
+
+    // No label/auto mismatch on A4 ⇒ no page-size-mode hint.
+    await expect(page.getByRole("button", { name: "Switch to Match label size" })).toHaveCount(0);
+
+    await page.getByRole("button", { name: "Cancel" }).click();
+    await expect(page.getByText("Before you print")).toBeHidden();
+  });
+
+  test("checklist offers the page-size-mode switch for label paper on auto (#296)", async ({ page, request }) => {
+    const spoolId = await seedSpool(request, `ChkLbl ${Date.now()}`);
+
+    await page.goto(`${APP_BASE_URL}/spool/print?spools=${spoolId}`);
+    await expect(page.getByRole("button", { name: /Print$/ })).toBeVisible();
+
+    // Pick a curated label size while pageSizeMode stays "auto".
+    await page.getByText("Layout Settings", { exact: true }).click();
+    await page.locator(".ant-form-item", { hasText: "Paper Size" }).first().locator(".ant-select").click();
+    await page.locator(".ant-select-item-option", { hasText: "Label 62×29 mm" }).click();
+
+    await page.getByRole("button", { name: /Print$/ }).click();
+    await expect(page.getByText("Before you print")).toBeVisible();
+    await expect(page.getByText(/62 × 29/)).toBeVisible();
+
+    // Applying the hint flips pageSizeMode to "label" and the hint disappears reactively.
+    await page.getByRole("button", { name: "Switch to Match label size" }).click();
+    await expect(page.getByRole("button", { name: "Switch to Match label size" })).toHaveCount(0);
+    await page.getByRole("button", { name: "Cancel" }).click();
+  });
+
+  test("preview and settings sit side by side on wide screens and stack on narrow ones", async ({ page, request }) => {
+    const spoolId = await seedSpool(request, `Layout ${Date.now()}`);
+
+    await page.setViewportSize({ width: 1600, height: 900 });
+    await page.goto(`${APP_BASE_URL}/spool/print?spools=${spoolId}`);
+    const preview = page.locator(".print-page").first();
+    const settings = page.getByText("Skip Items", { exact: true });
+    await expect(preview).toBeVisible();
+
+    // Side by side: the settings column overlaps the preview's vertical range.
+    const wideP = (await preview.boundingBox())!;
+    const wideS = (await settings.boundingBox())!;
+    expect(wideS.y).toBeLessThan(wideP.y + wideP.height);
+    expect(wideS.x).toBeGreaterThan(wideP.x);
+
+    // Stacked: the preview keeps a real height (no flex collapse) and the columns no
+    // longer share horizontal space.
+    await page.setViewportSize({ width: 800, height: 900 });
+    await expect(preview).toBeVisible();
+    const narrowP = (await preview.boundingBox())!;
+    expect(narrowP.height).toBeGreaterThan(50);
+    const narrowS = (await settings.boundingBox())!;
+    expect(narrowS.x).toBeLessThan(narrowP.x + narrowP.width);
   });
 
   test("out-of-bounds label content raises the clipped-content warning", async ({ page, request }) => {

@@ -22,6 +22,7 @@ import { useReactToPrint } from "react-to-print";
 import { formatNumberOnUserInput, numberParser } from "../../utils/parsing";
 import { useSavedState } from "../../utils/saveload";
 import { bitmapToZpl } from "../../utils/zpl";
+import PrePrintChecklistModal from "./prePrintChecklistModal";
 import { PrintSettings } from "./printing";
 
 /** Decode a `data:image/png;base64,...` URL into raw bytes for zipping. */
@@ -128,6 +129,10 @@ const PrintingDialog = ({
 
   const [collapseState, setCollapseState] = useSavedState<string[]>("print-collapseState", []);
   const [previewScale, setPreviewScale] = useSavedState("print-previewScale", 0.6);
+  // #296: the pre-print checklist warns about browser print-dialog pitfalls (fit-to-page
+  // scaling etc.) before the real print fires. Opting out is committed only on proceed.
+  const [skipPrintChecklist, setSkipPrintChecklist] = useSavedState("print-skipPrintChecklist", false);
+  const [checklistOpen, setChecklistOpen] = useState(false);
 
   const margin = printSettings?.margin || { top: 10, bottom: 10, left: 10, right: 10 };
   const printerMargin = printSettings?.printerMargin || { top: 5, bottom: 5, left: 5, right: 5 };
@@ -357,12 +362,18 @@ const PrintingDialog = ({
     <>
       <Row gutter={16}>
         <Col
-          span={14}
+          xs={24}
+          lg={12}
+          xl={14}
           style={{
             // This magic makes this column take the height of the sibling column
             // https://stackoverflow.com/a/49065029/2911165
             display: "flex",
             flexDirection: "column",
+            // Without an explicit minimum, flexbox's auto-minimum (min-content) can exceed
+            // the column's share and wrap the whole Row, dropping the preview onto its own
+            // line even on wide screens. Stacking below lg is the intentional variant.
+            minWidth: 0,
           }}
         >
           {/* Out-of-bounds guard rails for the live preview (which is also the print source). */}
@@ -390,6 +401,9 @@ const PrintingDialog = ({
               overflow: "auto",
               flexBasis: "0px",
               flexGrow: "1",
+              // In the stacked (below-lg) layout the column is content-sized, so a
+              // flex-basis-0 child would collapse to nothing without a floor.
+              minHeight: "40vh",
             }}
           >
             <div
@@ -443,7 +457,7 @@ const PrintingDialog = ({
             </div>
           </div>
         </Col>
-        <Col span={10}>
+        <Col xs={24} lg={12} xl={10} style={{ minWidth: 0 }}>
           <Form labelAlign="left" colon={false} labelWrap={true} labelCol={{ span: 8 }} wrapperCol={{ span: 16 }}>
             {extraSettingsStart}
             <Divider />
@@ -1032,12 +1046,35 @@ const PrintingDialog = ({
             <Button type="primary" icon={<TagOutlined />} size="large" onClick={saveAsZpl}>
               {t("printing.generic.saveAsZpl")}
             </Button>
-            <Button type="primary" icon={<PrinterOutlined />} size="large" onClick={() => reactToPrintFn()}>
+            <Button
+              type="primary"
+              icon={<PrinterOutlined />}
+              size="large"
+              onClick={() => (skipPrintChecklist ? reactToPrintFn() : setChecklistOpen(true))}
+            >
               {t("printing.generic.print")}
             </Button>
           </Space>
         </Col>
       </Row>
+      <PrePrintChecklistModal
+        open={checklistOpen}
+        paperWidth={paperWidth}
+        paperHeight={paperHeight}
+        showPageSizeModeHint={paperSize.startsWith("Label") && pageSizeMode === "auto"}
+        onApplyPageSizeMode={() => {
+          printSettings.pageSizeMode = "label";
+          setPrintSettings(printSettings);
+        }}
+        onCancel={() => setChecklistOpen(false)}
+        onConfirm={(dontShowAgain) => {
+          if (dontShowAgain) {
+            setSkipPrintChecklist(true);
+          }
+          setChecklistOpen(false);
+          reactToPrintFn();
+        }}
+      />
     </>
   );
 };
