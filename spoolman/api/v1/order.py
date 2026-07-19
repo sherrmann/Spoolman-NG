@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from spoolman.api.v1.models import Message, Order, OrderEvent
+from spoolman.api.v1.models import Message, Order, OrderEvent, Spool
 from spoolman.database import order
 from spoolman.database.database import get_db_session
 from spoolman.database.utils import parse_sort
@@ -34,6 +34,30 @@ class OrderLineParameters(BaseModel):
     arrived_at: datetime | None = Field(
         None,
         description="When this line arrived. Null means still outstanding. Usually set via /order/{id}/arrive.",
+    )
+
+
+class ArriveLine(BaseModel):
+    line_id: int = Field(description="ID of the order line to mark arrived.")
+    quantity: int | None = Field(
+        None,
+        ge=1,
+        description="Delivered quantity. Omit for the whole line; a value below the line's count splits it.",
+    )
+
+
+class ArriveParameters(BaseModel):
+    lines: list[ArriveLine] | None = Field(
+        None,
+        description="Lines to mark arrived. Omit to arrive every still-outstanding line in full.",
+    )
+    create_spools: bool = Field(default=False, description="Create one spool per arriving unit.")
+    location_id: int | None = Field(None, description="Location entity ID to assign to the created spools.")
+
+
+class ArriveResponse(BaseModel):
+    spools: list[Spool] = Field(
+        description="Spools created for the arriving quantities (empty when create_spools=false).",
     )
 
 
@@ -162,6 +186,36 @@ async def update(db: Annotated[AsyncSession, Depends(get_db_session)], order_id:
     replace_lines = "lines" in patch_data
     db_item = await order.update(db=db, order_id=order_id, data=patch_data, replace_lines=replace_lines)
     return Order.from_db(db_item)
+
+
+@router.post(
+    "/{order_id}/arrive",
+    name="Mark order arrived",
+    description=(
+        "Mark order lines arrived. Omit `lines` to arrive every outstanding line; a `quantity` below a line's "
+        "count splits it into an arrived part and a still-open remainder. With `create_spools`, one spool per "
+        "arriving unit is created, carrying the line price and (optional) location."
+    ),
+    response_model_exclude_none=True,
+    response_model=ArriveResponse,
+    responses={400: {"model": Message}, 404: {"model": Message}},
+)
+async def arrive(  # noqa: ANN201
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+    order_id: int,
+    body: ArriveParameters,
+):
+    try:
+        spools = await order.arrive(
+            db=db,
+            order_id=order_id,
+            lines=[line.model_dump() for line in body.lines] if body.lines is not None else None,
+            create_spools=body.create_spools,
+            location_id=body.location_id,
+        )
+    except ValueError as e:
+        return JSONResponse(status_code=400, content=Message(message=str(e)).model_dump())
+    return ArriveResponse(spools=[Spool.from_db(s) for s in spools])
 
 
 @router.delete(

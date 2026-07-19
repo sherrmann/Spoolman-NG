@@ -127,6 +127,109 @@ async def update(*, db: AsyncSession, order_id: int, data: dict, replace_lines: 
     return order
 
 
+def _resolve_arrival_requests(
+    order: models.Order,
+    order_id: int,
+    lines: list[dict] | None,
+) -> list[tuple[models.OrderLine, int]]:
+    """Resolve the requested arrivals into (line, arriving_quantity) pairs.
+
+    ``lines`` is None means every still-outstanding line, arriving in full. Otherwise each entry names
+    a line and an optional quantity (defaulting to the whole line).
+    """
+    if lines is None:
+        return [(line, line.quantity) for line in order.lines if line.arrived_at is None]
+
+    by_id = {line.id: line for line in order.lines}
+    requests: list[tuple[models.OrderLine, int]] = []
+    for req in lines:
+        line = by_id.get(req["line_id"])
+        if line is None:
+            raise ItemNotFoundError(f"Order {order_id} has no line with ID {req['line_id']}.")
+        if line.arrived_at is not None:
+            raise ValueError(f"Order line {line.id} has already arrived.")
+        qty = req.get("quantity")
+        if qty is None or qty >= line.quantity:
+            requests.append((line, line.quantity))
+        else:
+            if qty < 1:
+                raise ValueError("Arrival quantity must be >= 1.")
+            requests.append((line, qty))
+    return requests
+
+
+def _apply_arrival(
+    order: models.Order,
+    line: models.OrderLine,
+    qty: int,
+    now: datetime,
+) -> list[tuple[int, float | None]]:
+    """Mark ``line`` arrived (splitting it if ``qty`` is a partial quantity).
+
+    Returns one (filament_id, price_per_unit) tuple per arriving unit.
+    """
+    if qty >= line.quantity:
+        line.arrived_at = now
+        return [(line.filament_id, line.price_per_unit)] * line.quantity
+
+    # Split: shrink the open line, add a new arrived line for the delivered quantity.
+    line.quantity -= qty
+    order.lines.append(
+        models.OrderLine(
+            filament_id=line.filament_id,
+            quantity=qty,
+            price_per_unit=line.price_per_unit,
+            arrived_at=now,
+        ),
+    )
+    return [(line.filament_id, line.price_per_unit)] * qty
+
+
+async def arrive(
+    *,
+    db: AsyncSession,
+    order_id: int,
+    lines: list[dict] | None = None,
+    create_spools: bool = False,
+    location_id: int | None = None,
+) -> list[models.Spool]:
+    """Mark order lines arrived, splitting on a partial quantity, optionally creating spools.
+
+    ``lines`` is a list of {"line_id": int, "quantity"?: int}; omitted or None means every still-
+    outstanding line, arriving in full. A quantity below a line's count splits the line into an
+    arrived part (quantity) and a still-open remainder. When ``create_spools`` is True, one spool per
+    arriving unit is created, copying the line's ``price_per_unit`` into the spool price and the
+    resolved location name (from ``location_id``) into the spool location.
+
+    Returns the created spools (empty when ``create_spools`` is False).
+    """
+    from spoolman.database import location, spool  # noqa: PLC0415  (avoid import cycle at module load)
+
+    order = await get_by_id(db, order_id)
+    requests = _resolve_arrival_requests(order, order_id, lines)
+
+    now = datetime.utcnow().replace(microsecond=0)
+    location_name: str | None = None
+    if location_id is not None:
+        location_name = (await location.get_by_id(db, location_id)).name
+
+    arriving: list[tuple[int, float | None]] = []  # (filament_id, price_per_unit) per unit
+    for line, qty in requests:
+        arriving.extend(_apply_arrival(order, line, qty, now))
+
+    await db.commit()
+    order = await get_by_id(db, order_id)
+    await order_changed(order, EventType.UPDATED)
+
+    created: list[models.Spool] = []
+    if create_spools:
+        for filament_id, price in arriving:
+            created.append(
+                await spool.create(db=db, filament_id=filament_id, price=price, location=location_name),
+            )
+    return created
+
+
 async def delete(db: AsyncSession, order_id: int) -> None:
     """Delete an order. Its lines cascade (ORM delete-orphan + DB ON DELETE CASCADE)."""
     order = await get_by_id(db, order_id)
