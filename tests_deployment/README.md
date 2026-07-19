@@ -18,6 +18,7 @@ tests_deployment/run.sh runtime      # virtual-printer e2e: a print consumes fil
 tests_deployment/run.sh helm         # chart install into a throwaway k3d cluster (needs helm/k3d/kubectl)
 tests_deployment/run.sh octoprint    # OctoPrint-Spoolman plugin against token-protected NG
 tests_deployment/run.sh hacs         # Home Assistant Core loads the HACS integration
+tests_deployment/run.sh upgrade      # data survives previous-image -> latest on the same volume
 ```
 
 Requirements: `uv` (repo dev env), Docker for everything except `zip`, network access,

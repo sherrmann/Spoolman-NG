@@ -345,6 +345,52 @@ jobs:
           name: spoolman
           path: .
   #
+  # Pre-release artifact gate: reconstruct the release zip exactly the way publish-release
+  # does and run the zip contract against it — a packaging regression (missing
+  # requirements.txt, lost exec bits, bad release_info) fails HERE, before anything
+  # publishes. Keep the packaging steps in sync with publish-release below.
+  #
+  verify-artifact:
+    needs: [build-client]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.2.0
+        with:
+          version: "0.11.26"
+
+      - name: "Set up Python"
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: "pyproject.toml"
+
+      - name: Download built spoolman
+        uses: actions/download-artifact@v8.0.1
+        with:
+          name: spoolman
+          path: /tmp/spoolman
+
+      - name: Package like publish-release
+        run: |
+          cd /tmp/spoolman
+          echo '{
+            "project_name": "Spoolman-NG",
+            "project_owner": "${{ github.repository_owner }}",
+            "version": "v0.0.0-ci",
+            "asset_name": "spoolman.zip"
+          }' > release_info.json
+          chmod +x scripts/*.sh
+          zip -qr /tmp/spoolman-ci.zip .
+
+      - name: Run the release-zip contract against the candidate
+        run: |
+          uv sync
+          SPOOLMAN_ZIP_PATH=/tmp/spoolman-ci.zip uv run pytest -v tests_deployment/test_release_zip.py
+
+  #
   # Build native image for integration tests
   #
   build-amd64:
@@ -691,7 +737,7 @@ jobs:
     # push minted :latest images (and the GitHub release + deploy downstream) even when
     # those suites were red — they ran as siblings, and a failing sibling doesn't stop
     # independent jobs.
-    needs: [test, unit-tests, client-tests, e2e, build-amd64, build-arm64, build-armv7, style, build-client]
+    needs: [test, unit-tests, client-tests, e2e, build-amd64, build-arm64, build-armv7, style, build-client, verify-artifact]
     runs-on: ubuntu-latest
     permissions:
       packages: write

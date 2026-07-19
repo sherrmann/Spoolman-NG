@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
+import subprocess
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path
@@ -79,6 +81,32 @@ def release(cache_dir: Path) -> Release:
 
 @pytest.fixture(scope="session")
 def docker() -> None:
-    """Skip docker-driven tests cleanly when the daemon is unavailable."""
+    """Skip docker-driven tests cleanly when the daemon is unavailable.
+
+    Also refresh the :latest server image once per session — `docker run` never
+    re-pulls a cached tag, so suites would otherwise silently test a stale local
+    :latest instead of the current release.
+    """
     if not docker_available():
         pytest.skip("docker daemon not available")
+    if not os.environ.get("SPOOLMAN_ZIP_PATH") and not os.environ.get("SPOOLMAN_IMAGE"):
+        subprocess.run(
+            [shutil.which("docker") or "docker", "pull", "-q", "ghcr.io/sherrmann/spoolman-ng:latest"],
+            capture_output=True,
+            check=False,
+            timeout=600,
+        )
+
+
+def previous_release(cache_dir: Path, current_tag: str) -> tuple[str, Path]:
+    """Tag + cached zip of the newest published release older than ``current_tag``."""
+    releases = github_json(f"repos/{REPO}/releases?per_page=10")
+    older = [r for r in releases if not r.get("draft") and r["tag_name"] != current_tag]
+    if not older:
+        pytest.skip("no previous release available to upgrade from")
+    prev = older[0]
+    zip_path = cache_dir / "releases" / prev["tag_name"] / "spoolman.zip"
+    if not zip_path.exists():
+        asset = next(a for a in prev["assets"] if a["name"] == "spoolman.zip")
+        download(asset["browser_download_url"], zip_path)
+    return prev["tag_name"], zip_path

@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from tests_deployment.helpers import Container, wait_for
+from tests_deployment.helpers import Container, binfmt_available, wait_for
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -29,6 +29,12 @@ DISTROS = {
     ),
     "fedora": ("fedora:latest", "dnf -y install unzip"),
     "arch": ("archlinux:latest", "pacman -Sy --noconfirm unzip"),
+    # The primary Klipper hardware is a Pi: exercise the install on arm64 under qemu
+    # binfmt (skipped where binfmt isn't registered). Everything is slower emulated.
+    "debian-arm64": (
+        "debian:trixie",
+        "apt-get update && apt-get install -y --no-install-recommends ca-certificates curl unzip",
+    ),
 }
 
 
@@ -44,16 +50,20 @@ class InstallBox:
 def install_box(request: pytest.FixtureRequest, release: Release) -> Iterator[InstallBox]:
     distro = request.param
     image, bootstrap = DISTROS[distro]
-    box = Container(image=image).start()
+    emulated = distro.endswith("-arm64")
+    if emulated and not binfmt_available("aarch64"):
+        pytest.skip("qemu binfmt for aarch64 not registered ")
+        # register with: docker run --privileged tonistiigi/binfmt --install arm64
+    box = Container(image=image, platform="linux/arm64" if emulated else None).start(pull_timeout=900)
     try:
-        box.exec(bootstrap, timeout=600)
+        box.exec(bootstrap, timeout=1200 if emulated else 600)
         box.copy_in(release.zip_path, "/root/spoolman.zip")
         box.exec("unzip -q /root/spoolman.zip -d /root/Spoolman", timeout=120)
         # Running as root triggers install.sh's confirmation prompt; feed it a 'y'.
         proc = box.exec(
             "bash scripts/install.sh -systemd=no",
             workdir="/root/Spoolman",
-            timeout=900,
+            timeout=1800 if emulated else 900,
             check=False,
             input_text="y\n",
         )

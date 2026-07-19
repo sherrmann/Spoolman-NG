@@ -20,10 +20,11 @@ import pytest
 from tests_deployment.helpers import (
     Container,
     docker_network,
+    fresh_clone,
+    git_head,
     http_get,
     http_request,
     remove_docker_network,
-    run,
     wait_for,
 )
 
@@ -40,11 +41,8 @@ HA_PASSWORD = "spoolman-e2e-password"  # noqa: S105 - fixture value, not a secre
 
 
 def _integration_checkout(cache_dir: Path) -> Path:
-    clone = cache_dir / "spoolman-homeassistant"
-    if not (clone / "custom_components" / "spoolman").is_dir():
-        git = shutil.which("git")
-        assert git, "git is required to clone the HA integration"
-        run([git, "clone", "--depth", "1", INTEGRATION_REPO, str(clone)])
+    clone = fresh_clone(INTEGRATION_REPO, cache_dir / "spoolman-homeassistant")
+    print(f"[consumers] spoolman-homeassistant @ {git_head(clone)}")  # noqa: T201
     return clone / "custom_components" / "spoolman"
 
 
@@ -127,6 +125,10 @@ def stack(cache_dir: Path, tmp_path_factory: pytest.TempPathFactory) -> Iterator
         # Finish the remaining onboarding steps (best effort — API access works without).
         http_request(f"{ha_url}/api/onboarding/core_config", method="POST", json_body={}, headers=auth)
         http_request(f"{ha_url}/api/onboarding/analytics", method="POST", json_body={}, headers=auth)
+
+        status, body = http_get(f"{ha_url}/api/config", headers=auth, timeout=15)
+        if status == 200:
+            print(f"[consumers] home-assistant {json.loads(body).get('version')}")  # noqa: T201
 
         yield {"spoolman": spoolman_url, "ha": ha_url, "token": token}
     finally:
