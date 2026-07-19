@@ -470,11 +470,13 @@ async def find(
     # Populate the per-filament spool_count / remaining_weight aggregates (issues #49 / #53) for the
     # returned page in a single grouped query, then attach them to each response object.
     aggregates = await filament.get_aggregates(db, [db_item.id for db_item in db_items])
+    on_order_map = await filament.get_on_order(db, [db_item.id for db_item in db_items])
     filaments_out = [
         Filament.from_db(
             db_item,
             spool_count=aggregates.get(db_item.id, (None, None))[0],
             remaining_weight=aggregates.get(db_item.id, (None, None))[1],
+            on_order=on_order_map.get(db_item.id),
         )
         for db_item in db_items
     ]
@@ -520,7 +522,8 @@ async def get(
 ) -> Filament:
     db_item = await filament.get_by_id(db, filament_id)
     spool_count, remaining_weight = (await filament.get_aggregates(db, [filament_id])).get(filament_id, (0, 0.0))
-    return Filament.from_db(db_item, spool_count=spool_count, remaining_weight=remaining_weight)
+    on_order = (await filament.get_on_order(db, [filament_id])).get(filament_id)
+    return Filament.from_db(db_item, spool_count=spool_count, remaining_weight=remaining_weight, on_order=on_order)
 
 
 @router.websocket(

@@ -370,6 +370,13 @@ class Pattern(Enum):
     SPARKLE = "sparkle"
 
 
+class OnOrderInfo(BaseModel):
+    """The oldest open order containing a filament (#298); the HA/HACS on-order signal."""
+
+    order_id: int = Field(description="ID of the oldest open order containing this filament.")
+    ordered_at: SpoolmanDateTime = Field(description="When that order was placed. UTC Timezone.")
+
+
 class Filament(BaseModel):
     id: int = Field(description="Unique internal ID of this filament type.")
     registered: SpoolmanDateTime = Field(description="When the filament was registered in the database. UTC Timezone.")
@@ -549,6 +556,14 @@ class Filament(BaseModel):
         ),
         examples=[2500.0],
     )
+    on_order: OnOrderInfo | None = Field(
+        None,
+        description=(
+            "The oldest open order containing this filament type, as {order_id, ordered_at}, or null when nothing "
+            "of it is outstanding. Only populated on the filament list and detail endpoints; null in "
+            "nested/websocket payloads. This is the Home Assistant / HACS on-order signal."
+        ),
+    )
     extra: dict[str, str] = Field(
         description=_extra_fields_description("filament"),
     )
@@ -559,6 +574,7 @@ class Filament(BaseModel):
         *,
         spool_count: int | None = None,
         remaining_weight: float | None = None,
+        on_order: "tuple[int, datetime] | None" = None,
     ) -> "Filament":
         """Create a new Pydantic filament object from a database filament object.
 
@@ -601,6 +617,7 @@ class Filament(BaseModel):
             label_printed_at=item.label_printed_at,
             spool_count=spool_count,
             remaining_weight=remaining_weight,
+            on_order=OnOrderInfo(order_id=on_order[0], ordered_at=on_order[1]) if on_order is not None else None,
             extra={field.key: field.value for field in item.extra},
         )
 
