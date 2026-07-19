@@ -16,7 +16,12 @@ cd "$(dirname "$0")"
 PRIND_DIR="$(pwd)/../.cache/prind"
 if [ ! -d "$PRIND_DIR/.git" ]; then
   git clone --depth 1 https://github.com/mkuf/prind "$PRIND_DIR"
+elif [ -n "$(find "$PRIND_DIR/.git" -maxdepth 1 -name FETCH_HEAD -mtime +7 2>/dev/null)" ] || \
+     [ ! -f "$PRIND_DIR/.git/FETCH_HEAD" ] && [ -n "$(find "$PRIND_DIR/.git" -maxdepth 1 -name HEAD -mtime +7 2>/dev/null)" ]; then
+  # prind is a moving target: refresh checkouts older than a week (config patch below re-applies).
+  git -C "$PRIND_DIR" fetch --depth 1 origin && git -C "$PRIND_DIR" reset --hard '@{upstream}'
 fi
+echo "prind @ $(git -C "$PRIND_DIR" rev-parse --short HEAD)"
 
 # Enable Moonraker's [spoolman] component (ships commented out in prind).
 # In-network, traefik serves Spoolman under /spoolman on entrypoint :80.

@@ -69,9 +69,25 @@ def test_chart_installs_and_serves(cluster: dict[str, str]) -> None:
     assert tools
     env = cluster
 
+    # SPOOLMAN_IMAGE (repo:tag) lets CI point the chart at a candidate image; default
+    # is the published :latest, matching the other suites.
+    image = os.environ.get("SPOOLMAN_IMAGE", "ghcr.io/sherrmann/spoolman-ng:latest")
+    repo, _, tag = image.rpartition(":")
     # --wait exercises the readiness probe, the PVC bind, and the non-root context.
     proc = subprocess.run(
-        [tools["helm"], "install", "e2e", CHART, "--set", "image.tag=latest", "--wait", "--timeout", "6m"],
+        [
+            tools["helm"],
+            "install",
+            "e2e",
+            CHART,
+            "--set",
+            f"image.repository={repo}",
+            "--set",
+            f"image.tag={tag}",
+            "--wait",
+            "--timeout",
+            "6m",
+        ],
         env=env,
         capture_output=True,
         text=True,

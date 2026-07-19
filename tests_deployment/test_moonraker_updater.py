@@ -82,6 +82,10 @@ def update_status(release: Release) -> Iterator[tuple[dict, Container]]:
             "--no-cache-dir git+https://github.com/Arksine/moonraker.git",
             timeout=900,
         )
+        mr_ver = box.exec(
+            "/root/moonraker-env/bin/pip show moonraker 2>/dev/null | grep ^Version", check=False
+        ).stdout.strip()
+        print(f"[consumers] moonraker {mr_ver}")  # noqa: T201
         box.exec("mkdir -p /root/printer_data/config")
         box.exec(f"cat > /root/printer_data/config/moonraker.conf <<'EOF'\n{MOONRAKER_CONF}\nEOF")
         box.exec(

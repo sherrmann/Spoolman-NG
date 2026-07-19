@@ -15,8 +15,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from tests_deployment.conftest import REPO
-from tests_deployment.helpers import Container, download, github_json, wait_for
+from tests_deployment.conftest import previous_release
+from tests_deployment.helpers import Container, wait_for
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -28,28 +28,14 @@ pytestmark = pytest.mark.usefixtures("docker")
 UPDATE_SH = Path(__file__).parent.parent / "scripts" / "update.sh"
 
 
-def _previous_release(cache_dir: Path, current_tag: str) -> tuple[str, Path]:
-    """Tag + cached zip of the newest release older than ``current_tag``."""
-    releases = github_json(f"repos/{REPO}/releases?per_page=10")
-    older = [r for r in releases if not r.get("draft") and r["tag_name"] != current_tag]
-    if not older:
-        pytest.skip("no previous release available to upgrade from")
-    prev = older[0]
-    zip_path = cache_dir / "releases" / prev["tag_name"] / "spoolman.zip"
-    if not zip_path.exists():
-        asset = next(a for a in prev["assets"] if a["name"] == "spoolman.zip")
-        download(asset["browser_download_url"], zip_path)
-    return prev["tag_name"], zip_path
-
-
 @pytest.fixture(scope="module")
 def old_install(cache_dir: Path, release: Release) -> Iterator[tuple[Container, str]]:
     """Provide a Debian container running an install of the previous release."""
-    prev_tag, prev_zip = _previous_release(cache_dir, release.tag)
+    prev_tag, prev_zip = previous_release(cache_dir, release.tag)
     box = Container(image="debian:trixie").start()
     try:
         box.exec(
-            "apt-get update && apt-get install -y --no-install-recommends ca-certificates curl unzip",
+            "apt-get update && apt-get install -y --no-install-recommends ca-certificates curl unzip procps",
             timeout=600,
         )
         box.copy_in(prev_zip, "/root/spoolman.zip")
@@ -72,6 +58,32 @@ def test_update_sh_upgrades_to_the_latest_release(old_install: tuple[Container, 
     box, prev_tag = old_install
     if release.local:
         pytest.skip("update.sh downloads published releases; not applicable to a local zip")
+
+    # Real data created under the OLD release — the update must migrate, not lose it.
+    box.exec(
+        "nohup bash scripts/start.sh > /root/old-start.log 2>&1 & disown",
+        workdir="/root/Spoolman",
+        detach=True,
+    )
+
+    def _old_healthy() -> bool:
+        probe = box.exec("curl -sf http://localhost:7912/api/v1/health", check=False, timeout=15)
+        return probe.returncode == 0
+
+    wait_for(_old_healthy, timeout=180, what=f"the {prev_tag} install to serve on :7912")
+    box.exec(
+        "curl -sf -X POST -H 'Content-Type: application/json' "
+        '-d \'{"name":"upgrade PLA","material":"PLA","density":1.24,"diameter":1.75,"weight":1000}\' '
+        "http://localhost:7912/api/v1/filament",
+        timeout=30,
+    )
+    spool_body = box.exec(
+        "curl -sf -X POST -H 'Content-Type: application/json' -d '{\"filament_id\":1}' "
+        "http://localhost:7912/api/v1/spool",
+        timeout=30,
+    ).stdout
+    assert json.loads(spool_body)["id"] == 1, spool_body
+    box.exec("pkill -f 'uvicorn spoolman.main' || true", check=False)
 
     # A user customization that the update must not touch.
     box.exec("echo '# e2e-preserve-marker' >> /root/Spoolman/.env")
@@ -110,3 +122,7 @@ def test_update_sh_upgrades_to_the_latest_release(old_install: tuple[Container, 
     except TimeoutError:
         log = box.exec("tail -c 2000 /root/start.log", check=False).stdout
         pytest.fail(f"updated server did not become healthy; start.log tail:\n{log}")
+
+    # The database created under the old release survived the upgrade + migrations.
+    spool = json.loads(box.exec("curl -sf http://localhost:7912/api/v1/spool/1", timeout=30).stdout)
+    assert spool["filament"]["name"] == "upgrade PLA", spool

@@ -9,6 +9,7 @@
 #   tests_deployment/run.sh helm         # chart install into a throwaway k3d cluster
 #   tests_deployment/run.sh octoprint    # OctoPrint-Spoolman plugin against token-protected NG
 #   tests_deployment/run.sh hacs         # Home Assistant Core loads the HACS integration
+#   tests_deployment/run.sh upgrade      # data survives previous-image -> latest on the same volume
 # Extra arguments go to pytest, e.g.:  tests_deployment/run.sh native -k debian
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -26,6 +27,7 @@ case "$target" in
   helm)      paths=(tests_deployment/test_helm_chart.py) ;;
   octoprint) paths=(tests_deployment/test_octoprint_plugin.py) ;;
   hacs)      paths=(tests_deployment/test_ha_integration.py) ;;
+  upgrade)   paths=(tests_deployment/test_image_upgrade.py) ;;
   *)         paths=("$target") ;;
 esac
 

@@ -15,11 +15,11 @@ import time
 import urllib.request
 import uuid
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-    from pathlib import Path
 
 #: Label applied to every container/image the harness creates, so stale resources are
 #: identifiable (and removable) even after an aborted run:
@@ -151,6 +151,8 @@ class Container:
     env: dict[str, str] = field(default_factory=dict)
     network: str | None = None
     network_alias: str | None = None
+    #: e.g. "linux/arm64" — requires qemu binfmt for foreign architectures.
+    platform: str | None = None
 
     def start(self, *, command: list[str] | None = None, pull_timeout: float = 600) -> Container:
         """Create and start the container (defaults to an idle `sleep infinity`)."""
@@ -165,6 +167,8 @@ class Container:
             args += ["--network", self.network]
         if self.network_alias:
             args += ["--network-alias", self.network_alias]
+        if self.platform:
+            args += ["--platform", self.platform]
         args.append(self.image)
         args += command if command is not None else ["sleep", "infinity"]
         run(args, timeout=pull_timeout)
@@ -233,3 +237,34 @@ def remove_docker_network(name: str) -> None:
     if os.environ.get("SPOOLMAN_DEPLOY_KEEP"):
         return
     run([_tool("docker"), "network", "rm", name], check=False)
+
+
+def binfmt_available(qemu_arch: str) -> bool:
+    """Report whether the kernel runs foreign-arch binaries (e.g. ``aarch64``) via qemu binfmt."""
+    return Path(f"/proc/sys/fs/binfmt_misc/qemu-{qemu_arch}").exists()
+
+
+def fresh_clone(url: str, dest: Path, *, max_age_days: int = 7) -> Path:
+    """Clone ``url`` shallowly, refreshing a checkout older than ``max_age_days``.
+
+    The third-party consumers under test are moving targets; a stale cache would
+    quietly test last month's Moonraker/HA/prind.
+    """
+    git = _tool("git")
+    if not (dest / ".git").is_dir():
+        run([git, "clone", "--depth", "1", url, str(dest)])
+        return dest
+    stamp = dest / ".git" / "FETCH_HEAD"
+    if not stamp.exists():
+        stamp = dest / ".git" / "HEAD"
+    age_days = (time.time() - stamp.stat().st_mtime) / 86400
+    if age_days > max_age_days:
+        run([git, "-C", str(dest), "fetch", "--depth", "1", "origin"], check=False)
+        run([git, "-C", str(dest), "reset", "--hard", "@{upstream}"], check=False)
+    return dest
+
+
+def git_head(dest: Path) -> str:
+    """Short commit of a checkout, for consumer-version logging."""
+    proc = run([_tool("git"), "-C", str(dest), "rev-parse", "--short", "HEAD"], check=False)
+    return proc.stdout.strip() or "unknown"

@@ -125,6 +125,10 @@ def stack(tmp_path_factory: pytest.TempPathFactory) -> Iterator[dict[str, str]]:
 
         # Install the plugin the way the image intends (PIP_USER targets /octoprint/plugins).
         octoprint.exec(f"pip install --quiet {PLUGIN_URL}", timeout=600)
+        versions = octoprint.exec(
+            "pip show OctoPrint OctoPrint-Spoolman 2>/dev/null | grep -E '^(Name|Version)'", check=False
+        ).stdout.replace(chr(10), " ")
+        print(f"[consumers] {versions}")  # noqa: T201
         run(["docker", "restart", octoprint.name], timeout=120)
         # Restarting re-allocates ephemerally published host ports — re-resolve.
         op_url = f"http://{octoprint.port(5000)}"
