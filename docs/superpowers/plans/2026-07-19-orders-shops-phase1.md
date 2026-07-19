@@ -2730,6 +2730,8 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 
 ---
 
+> **Gate tweak (Sam, approved):** nav icons are monochrome antd outline icons (e.g. WarningOutlined, ShoppingCartOutlined), and the Low Stock nav item shows a red antd Badge with the count of low-stock filaments NOT on order (no badge when zero). Fold into Task 9's nav registration + tests.
+
 ## Task 9 (UI, gated): Always-visible Low Stock & Orders nav + Low Stock full page + Orders list page
 
 **Branch:** `claude/orders-ui-pages`.
