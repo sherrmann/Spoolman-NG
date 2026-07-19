@@ -1,0 +1,76 @@
+/* Low Stock full page (#298 redesign) — the same merged list as the dashboard tab, in a wider,
+   full-page layout instead of a narrow tab pane. Row surfaces are plain antd Cards so background/
+   hover/dark-mode colors come from the antd theme instead of being hand-rolled here. */
+
+.lowstock-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.lowstock-section-subhead {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.5;
+  margin-bottom: 12px;
+}
+
+.lowstock-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lowstock-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.lowstock-row-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+  flex: 1;
+}
+
+.lowstock-color-dot {
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.lowstock-info {
+  min-width: 0;
+}
+
+.lowstock-material {
+  font-size: 12px;
+  opacity: 0.5;
+  margin-top: 2px;
+}
+
+.lowstock-row-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+  margin-left: 16px;
+  text-align: right;
+}
+
+.lowstock-weight {
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.lowstock-weight .total {
+  font-weight: 400;
+  opacity: 0.5;
+}

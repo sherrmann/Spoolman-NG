@@ -11,6 +11,7 @@ import {
   getFilamentName,
   getSpoolName,
   getWeightPct,
+  lowStockNotOnOrderCount,
   staleSpools,
   locationBreakdown,
   materialBreakdown,
@@ -208,6 +209,35 @@ describe("computeLowStock", () => {
       on_order: { order_id: 7, ordered_at: "2026-07-10T00:00:00Z" },
     });
     expect(computeLowStock([ordered, plain], F).explicit.map((r) => r.filament.id)).toEqual([1, 2]);
+  });
+});
+
+// The always-visible Low Stock nav item's red badge (#298 gate tweak) counts flagged filaments
+// that are NOT already on order — an on-order row is being handled, so it shouldn't nag.
+describe("lowStockNotOnOrderCount", () => {
+  const F = 200;
+
+  it("counts flagged rows across both sections, excluding on-order ones", () => {
+    const plain = filament({ id: 1, low_stock_threshold: 500, remaining_weight: 400 });
+    const ordered = filament({
+      id: 2,
+      remaining_weight: 150, // caught by the fallback
+      on_order: { order_id: 7, ordered_at: "2026-07-10T00:00:00Z" },
+    });
+    const plainFallback = filament({ id: 3, remaining_weight: 100 });
+    const sections = computeLowStock([plain, ordered, plainFallback], F);
+    expect(lowStockNotOnOrderCount(sections)).toBe(2);
+  });
+
+  it("is zero when nothing is flagged, or everything flagged is already on order", () => {
+    expect(lowStockNotOnOrderCount(computeLowStock([], F))).toBe(0);
+    const allOrdered = filament({
+      id: 1,
+      low_stock_threshold: 500,
+      remaining_weight: 400,
+      on_order: { order_id: 1, ordered_at: "2026-07-10T00:00:00Z" },
+    });
+    expect(lowStockNotOnOrderCount(computeLowStock([allOrdered], F))).toBe(0);
   });
 });
 

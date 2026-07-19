@@ -112,6 +112,15 @@ export function computeLowStock(filaments: IFilament[], fallbackG: number): LowS
   return { explicit, fallback, count: explicit.length + fallback.length };
 }
 
+/**
+ * Count of Low Stock rows across both sections that are NOT already on order (#298 gate tweak) —
+ * drives the red badge on the always-visible "Low Stock" nav item. On-order rows are already being
+ * handled, so they don't contribute to the "needs attention" count.
+ */
+export function lowStockNotOnOrderCount(sections: LowStockSections): number {
+  return [...sections.explicit, ...sections.fallback].filter((r) => !r.onOrder).length;
+}
+
 /** Human label for a filament: "Vendor - Name", falling back to the name or id. */
 export function getFilamentName(filament: IFilament): string {
   const base = filament.name ?? filament.id.toString();

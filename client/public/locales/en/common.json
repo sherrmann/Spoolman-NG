@@ -674,7 +674,24 @@
     "section": {
       "explicit": "Below your set threshold",
       "fallback": "Below the {{grams}} g default"
-    }
+    },
+    "empty": "Nothing to reorder — you're well stocked.",
+    "mark_ordered": "Mark as ordered",
+    "create_order": "Create order",
+    "coming_soon": "Coming soon"
+  },
+  "orders": {
+    "title": "Orders",
+    "empty": "No orders yet.",
+    "new_order": "New order",
+    "order_number": "Order #",
+    "shop": "Shop",
+    "ordered_at": "Ordered",
+    "lines_summary": "{{arrived}} of {{total}} arrived · {{filaments}} filaments",
+    "arrived_action": "Arrived…",
+    "outstanding": "Outstanding",
+    "coming_soon": "Coming soon",
+    "state": { "open": "Open", "arrived": "Arrived" }
   },
   "help": {
     "help": "Help",

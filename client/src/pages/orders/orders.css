@@ -1,0 +1,19 @@
+/* Orders list page (#298) — arrived orders are done; grey them out so the eye goes to what's
+   still open. */
+
+.orders-row-arrived {
+  opacity: 0.55;
+}
+
+.orders-line-arrived {
+  opacity: 0.55;
+}
+
+.orders-lines-detail {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
