@@ -17,7 +17,7 @@ Two open issues asked for adjacent things: #298 wants a spool's low-stock alarm 
 - Give HACS/Home Assistant integrations a machine-readable on-order signal.
 
 **Non-goals**
-- Order lifecycle beyond `open`/`arrived` — no shipped, tracking, or partial arrivals.
+- Order lifecycle beyond `open`/`arrived` — no shipped states or tracking links. (Split shipments and partially delivered lines ARE covered, via per-line arrival with quantity splitting — without extra states.)
 - Catalog prices, customs, or shipping-cost modeling.
 - Coupling a user's personal shops to any community store registry.
 
@@ -26,9 +26,9 @@ Two open issues asked for adjacent things: #298 wants a spool's low-stock alarm 
 New tables mirror existing entity conventions in `spoolman/database/models.py` (plain `String`/`Text`/`Integer`/`Float` columns, `registered` timestamp, child `*Field` tables for extras — no native JSON/ARRAY columns exist today).
 
 - **Shop**: `name` (unique, required), `homepage` (nullable), `ships_to` (list of free-form region strings such as `"CH"`, `"EU"`, `"DE"`), `comment` (nullable), `registered`. `ships_to` is stored as a comma-separated string in a `Text` column — the fit for the current schema, which has no JSON/list columns; serialized to/from a JSON array at the API edge.
-- **Order**: `shop_id` (nullable FK → shop), `ordered_at` (datetime, default now), `order_number` (nullable), `url` (nullable), `comment` (nullable), `state` (`open` | `arrived`), `arrived_at` (nullable), `registered`.
-- **OrderLine**: `order_id` (FK → order), `filament_id` (FK → filament), `quantity` (int, `>= 1`, default 1), `price_per_unit` (nullable float). No unique constraint on `(order_id, filament_id)` — the same filament may appear twice in one order.
-- **No new columns on `filament`.** "On order" is derived at read time from open order lines, not stored.
+- **Order**: `shop_id` (nullable FK → shop), `ordered_at` (datetime, default now), `order_number` (nullable), `url` (nullable), `comment` (nullable), `registered`. **State is derived, not stored**: an order is *open* while any of its lines is un-arrived, *arrived* when all are (an order with zero lines is *arrived*-equivalent: it signals nothing).
+- **OrderLine**: `order_id` (FK → order), `filament_id` (FK → filament), `quantity` (int, `>= 1`, default 1), `price_per_unit` (nullable float), **`arrived_at` (nullable datetime — arrival is tracked per line to support split shipments)**. No unique constraint on `(order_id, filament_id)` — the same filament may appear twice in one order, including as the arrived/outstanding halves of a split line.
+- **No new columns on `filament`.** "On order" is derived at read time from **un-arrived order lines**, not stored.
 
 **Deletion semantics** (mirror the existing vendor↔filament restriction):
 - Deleting a Shop is restricted while any Order references it.
@@ -41,7 +41,7 @@ New tables mirror existing entity conventions in `spoolman/database/models.py` (
 
 - **`/shop` CRUD** mirroring `/vendor`: list, get, create, patch, delete, plus WebSocket events and find/filter query params as fits the existing vendor pattern.
 - **`/order` CRUD**: order lines are a nested array on the order payload; a PATCH that includes `lines` is a **full replace** of the line set, not a merge (omitting `lines` leaves them untouched). WebSocket events on create/update/delete.
-- **`POST /order/{order_id}/arrive`**, body `{ create_spools: bool, location_id?: int }`: sets `state = arrived` and `arrived_at = now`; if `create_spools` is true, creates `quantity` spools per line, copying each line's `price_per_unit` into the new spool's `price` and assigning `location_id` when given; returns the list of created spools (empty when `create_spools` is false).
+- **`POST /order/{order_id}/arrive`**, body `{ lines?: [{ line_id: int, quantity?: int }], create_spools: bool, location_id?: int }`: marks lines arrived (`arrived_at = now`). `lines` omitted = every still-outstanding line (the whole-delivery case stays one click). A `quantity` lower than the line's count **splits the line** into an arrived part and a still-open remainder (e.g. 4 ordered, 2 delivered → arrived ×2 + open ×2). When `create_spools` is true, creates spools for the arriving quantities, copying each line's `price_per_unit` into the new spool's `price` and assigning `location_id` when given; returns the created spools (empty when `create_spools` is false).
 - **Filament `on_order` computed field** on list and detail: `{ order_id, ordered_at } | null`, the **oldest open** order containing that filament. It uses the same aggregate mechanics as `spool_count` / `remaining_weight` — computed on the top-level query, `null` in nested payloads. This is the HA/HACS hook.
 - **New instance setting `purchase_regions`**: a list of region strings via the existing settings API. Unset = no region filtering.
 - **New purchase-options endpoint** for a filament: the server fetches and caches the SpoolmanDB `purchase_options.json` artifact alongside the existing external-DB sync, then returns options for the filament matched by EAN when known, else by `external_id`, filtered to options whose `ships_to` intersects `purchase_regions` (all options when `purchase_regions` is unset).
@@ -54,7 +54,7 @@ UI is progressively disclosed: nothing new is visible until the user opts in, an
 
 **US2 — bulk order.** As a user restocking several filaments, I want one order covering all of them. From the dashboard shopping list, multi-select rows → "Create order" builds a single order with one line per selected filament, quantities editable before save. *Acceptance:* one order exists with N lines; each selected filament shows the Ordered pill; quantities persist as entered.
 
-**US3 — arrival.** As a user whose order arrived, I want to turn it into spools without re-keying. Creating a spool for an on-order filament shows a banner offering to complete the order (create the spools per line, prices carried); alternatively the order page's "Arrived" button does the same via `POST /order/{id}/arrive`. *Acceptance:* spools are created with `price` = line `price_per_unit`; the order is `arrived`; the Ordered pills clear.
+**US3 — arrival, including split shipments.** As a user whose order (or part of it) arrived, I want to turn what actually came into spools without re-keying. Creating a spool for an on-order filament shows a banner offering to complete that filament's line; the order page's "Arrived" flow accepts per-line quantities (4 white ordered, 2 delivered → 2 spools created, 2 white remain on order; the delayed rest arrives later with one more click). *Acceptance:* spools are created with `price` = line `price_per_unit` for exactly the delivered quantities; pills clear per filament only when nothing of it remains outstanding; a fully delivered order derives to `arrived`.
 
 **US4 — where to buy.** As a user looking at a low-stock filament with a catalog match, I want region-filtered shop links. The filament view shows purchase options filtered by `purchase_regions`; clicking one can prefill the US1 "Mark as ordered" dialog with that shop. *Acceptance:* only options shipping to a configured region appear (all when unset); a click carries the shop into the dialog.
 
@@ -89,7 +89,8 @@ UI is progressively disclosed: nothing new is visible until the user opts in, an
 
 - **Order with zero lines:** allowed (a note-only order); it surfaces no pills and no `on_order` signal.
 - **Multiple open orders for one filament:** allowed; `on_order` reports the **oldest**, and the UI pill reflects that same order.
-- **Reopening an arrived order:** allowed via PATCH `state` back to `open`; spools already created stay untouched.
+- **Un-arriving:** clearing a line's `arrived_at` via PATCH reopens it (the derived order state follows); spools already created stay untouched.
+- **Split-line bookkeeping:** a partial arrival splits the line; the two halves are ordinary lines afterwards (editable, deletable). Splitting never changes the total ordered quantity.
 - **Arrive with `create_spools=true` on a bad line:** `quantity >= 1` is enforced by validation; the filament FK is enforced by the schema — neither can produce a zero-quantity or orphan spool.
 - **Shop delete with orders / filament delete with lines:** rejected with a 409-style restriction and a clear message, matching existing vendor-delete behavior.
 - **Purchase-options fetch failure or absent artifact:** the endpoint returns an empty list; the UI shows nothing, so the feature is simply invisible.
@@ -97,7 +98,7 @@ UI is progressively disclosed: nothing new is visible until the user opts in, an
 
 ## Decisions log
 
-1. **Two-state, grouped orders — not a full lifecycle.** `open`/`arrived` only; no shipped/tracking/partial arrivals. Keeps the model small and matches how a hobbyist actually tracks a reorder.
+1. **Two-state, grouped orders — not a full lifecycle.** `open`/`arrived` only, evaluated **per line** with quantity splitting, so split shipments and partial deliveries work without shipped/tracking states. Order state is derived from its lines. Keeps the model small and matches how a hobbyist actually tracks a reorder.
 2. **Shop is a first-class entity**, distinct from Vendor (manufacturer). A reorder targets a shop, not a manufacturer, and shops carry region shipping info.
 3. **Drop the #309 flat fields pre-release.** They are merged but unreleased, so reverting now avoids ever shipping product-type-scoped order state into the wire-stable v1 API.
 4. **EAN + id-keyed, separate catalog artifact.** EAN is the right key but under-covered; compiled `id` bridges. A separate `purchase_options.json` avoids combinatorial payload bloat and upstream-sync conflicts.
