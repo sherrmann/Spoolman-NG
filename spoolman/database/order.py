@@ -149,8 +149,12 @@ def _resolve_arrival_requests(
         if line.arrived_at is not None:
             raise ValueError(f"Order line {line.id} has already arrived.")
         qty = req.get("quantity")
-        if qty is None or qty >= line.quantity:
+        if qty is None or qty == line.quantity:
             requests.append((line, line.quantity))
+        elif qty > line.quantity:
+            raise ValueError(
+                f"quantity {qty} exceeds outstanding quantity {line.quantity} for line {line.id}",
+            )
         else:
             if qty < 1:
                 raise ValueError("Arrival quantity must be >= 1.")
@@ -168,7 +172,7 @@ def _apply_arrival(
 
     Returns one (filament_id, price_per_unit) tuple per arriving unit.
     """
-    if qty >= line.quantity:
+    if qty == line.quantity:
         line.arrived_at = now
         return [(line.filament_id, line.price_per_unit)] * line.quantity
 

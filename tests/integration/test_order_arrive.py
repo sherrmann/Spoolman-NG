@@ -94,6 +94,27 @@ async def test_arrive_with_location_id_sets_spool_location(client: AsyncClient):
     assert resp.json()["spools"][0]["location"] == "Dry Box 1"
 
 
+async def test_arrive_quantity_exceeding_line_is_rejected(client: AsyncClient):
+    white = await _filament(client, "White")
+    order = (
+        await client.post(ORDER, json={"lines": [{"filament_id": white, "quantity": 4, "price_per_unit": 20.0}]})
+    ).json()
+    line_id = order["lines"][0]["id"]
+
+    resp = await client.post(
+        f"{ORDER}/{order['id']}/arrive",
+        json={"lines": [{"line_id": line_id, "quantity": 5}], "create_spools": True},
+    )
+    assert resp.status_code == 400, resp.text
+
+    got = (await client.get(f"{ORDER}/{order['id']}")).json()
+    assert got["state"] == "open"
+    line = next(line for line in got["lines"] if line["id"] == line_id)
+    assert line["quantity"] == 4
+    assert line.get("arrived_at") is None
+    assert (await client.get(SPOOL)).headers["x-total-count"] == "0"
+
+
 async def test_canonical_mixed_arrival_then_second_arrival(client: AsyncClient):
     # The spec's canonical scenario: 4 white + 1 black ordered.
     white = await _filament(client, "White")
