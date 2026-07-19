@@ -29,6 +29,34 @@ class Vendor(Base):
     )
 
 
+class Shop(Base):
+    """A shop where filament is (re)ordered (#298). Distinct from Vendor (the manufacturer).
+
+    ``ships_to`` is a comma-separated list of free-form region strings (e.g. ``"CH,EU,DE"``), stored
+    in a Text column because the schema has no JSON/list columns; it is serialized to/from a JSON
+    array at the API edge. ``name`` is unique so inline shop autocomplete can dedupe.
+    """
+
+    __tablename__ = "shop"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    registered: Mapped[datetime] = mapped_column()
+    name: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    homepage: Mapped[str | None] = mapped_column(String(1024))
+    ships_to: Mapped[str | None] = mapped_column(
+        Text(),
+        comment="Comma-separated free-form region codes this shop ships to (e.g. 'CH,EU,DE'). "
+        "Serialized to/from a JSON array at the API edge. Null means unspecified.",
+    )
+    comment: Mapped[str | None] = mapped_column(String(1024))
+    # TODO(#298 Task 3): uncomment once `Order` is defined. SQLAlchemy configures every mapper in
+    # the shared registry together on first use (not just the one being queried), so an unresolved
+    # forward-ref here — `Order` doesn't exist until Task 3 — breaks mapper configuration for ALL
+    # entities, not just Shop (verified: it takes down test_location.py too). Left commented so
+    # Task 2 lands green in isolation; Task 3 must restore this line when it adds `Order.shop`.
+    # orders: Mapped[list["Order"]] = relationship(back_populates="shop")  # noqa: ERA001
+
+
 class Filament(Base):
     __tablename__ = "filament"
 

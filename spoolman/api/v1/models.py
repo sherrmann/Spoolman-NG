@@ -158,6 +158,44 @@ class Vendor(BaseModel):
         )
 
 
+class Shop(BaseModel):
+    id: int = Field(description="Unique internal ID of this shop.")
+    registered: SpoolmanDateTime = Field(description="When the shop was registered in the database. UTC Timezone.")
+    name: str = Field(max_length=64, description="Shop name (unique).", examples=["3DJake"])
+    homepage: str | None = Field(
+        None,
+        max_length=1024,
+        description="Shop homepage URL.",
+        examples=["https://3djake.com"],
+    )
+    ships_to: list[str] | None = Field(
+        None,
+        description=(
+            "Free-form region codes this shop ships to, e.g. ['CH', 'EU', 'DE']. Null/absent means unspecified. "
+            "Stored server-side as a comma-separated string."
+        ),
+        examples=[["CH", "EU"]],
+    )
+    comment: str | None = Field(
+        None,
+        max_length=1024,
+        description="Free text comment about this shop.",
+        examples=[""],
+    )
+
+    @staticmethod
+    def from_db(item: models.Shop) -> "Shop":
+        """Create a Pydantic shop object from a database shop object."""
+        return Shop(
+            id=item.id,
+            registered=item.registered,
+            name=item.name,
+            homepage=item.homepage,
+            ships_to=item.ships_to.split(",") if item.ships_to else None,
+            comment=item.comment,
+        )
+
+
 class Location(BaseModel):
     id: int = Field(description="Unique internal ID of this location.")
     registered: SpoolmanDateTime = Field(description="When the location was registered in the database. UTC Timezone.")
@@ -779,6 +817,13 @@ class VendorEvent(Event):
 
     payload: Vendor = Field(description="Updated vendor.")
     resource: Literal["vendor"] = Field(description="Resource type.")
+
+
+class ShopEvent(Event):
+    """Event."""
+
+    payload: Shop = Field(description="Updated shop.")
+    resource: Literal["shop"] = Field(description="Resource type.")
 
 
 class LocationEvent(Event):
