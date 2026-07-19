@@ -24,6 +24,7 @@ from spoolman.api.v1 import (
     import_,
     location,
     nfc,
+    order,
     other,
     printer,
     setting,
@@ -59,6 +60,7 @@ async def client(tmp_path: Path) -> AsyncIterator[AsyncClient]:
     app.include_router(filament.router, prefix="/api/v1")
     app.include_router(vendor.router, prefix="/api/v1")
     app.include_router(shop.router, prefix="/api/v1")
+    app.include_router(order.router, prefix="/api/v1")
     app.include_router(location.router, prefix="/api/v1")
     app.include_router(printer.router, prefix="/api/v1")
     app.include_router(spool.router, prefix="/api/v1")

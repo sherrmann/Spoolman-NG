@@ -114,15 +114,11 @@ async def delete(db: AsyncSession, shop_id: int) -> None:
     codebase, so the reference is checked explicitly rather than via a DB IntegrityError.
     """
     shop = await get_by_id(db, shop_id)
-    # TODO(#298 Task 3): `models.Order` doesn't exist until Task 3 adds it. Guard so this function
-    # (and the /shop DELETE endpoint) works standalone in Task 2; Task 3 must drop the hasattr
-    # guard once `Order` is defined, restoring an unconditional reference-count check.
-    if hasattr(models, "Order"):
-        order_count = await db.scalar(
-            select(func.count(models.Order.id)).where(models.Order.shop_id == shop_id),
-        )
-        if order_count:
-            raise ItemDeleteError(f"Cannot delete shop {shop_id}: {order_count} order(s) reference it.")
+    order_count = await db.scalar(
+        select(func.count(models.Order.id)).where(models.Order.shop_id == shop_id),
+    )
+    if order_count:
+        raise ItemDeleteError(f"Cannot delete shop {shop_id}: {order_count} order(s) reference it.")
     await db.delete(shop)
     await db.commit()
     await shop_changed(shop, EventType.DELETED)

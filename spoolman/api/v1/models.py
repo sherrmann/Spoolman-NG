@@ -196,6 +196,72 @@ class Shop(BaseModel):
         )
 
 
+class OrderLine(BaseModel):
+    id: int = Field(description="Unique internal ID of this order line.")
+    filament_id: int = Field(description="The filament type ordered on this line.")
+    quantity: int = Field(ge=1, description="Number of spools ordered on this line.", examples=[2])
+    price_per_unit: float | None = Field(
+        None,
+        ge=0,
+        description="Price of one spool on this line, in the configured currency; copied to spool price on arrival.",
+        examples=[19.9],
+    )
+    arrived_at: SpoolmanDateTime | None = Field(
+        None,
+        description="When this line arrived. Null means still outstanding. UTC Timezone.",
+    )
+
+    @staticmethod
+    def from_db(item: models.OrderLine) -> "OrderLine":
+        """Create a Pydantic order-line object from a database order-line object."""
+        return OrderLine(
+            id=item.id,
+            filament_id=item.filament_id,
+            quantity=item.quantity,
+            price_per_unit=item.price_per_unit,
+            arrived_at=item.arrived_at,
+        )
+
+
+class Order(BaseModel):
+    id: int = Field(description="Unique internal ID of this order.")
+    registered: SpoolmanDateTime = Field(description="When the order was registered in the database. UTC Timezone.")
+    shop: Shop | None = Field(None, description="The shop this order was placed with.")
+    ordered_at: SpoolmanDateTime = Field(description="When the order was placed. UTC Timezone.")
+    order_number: str | None = Field(
+        None, max_length=256, description="Shop order/reference number.", examples=["4711"]
+    )
+    url: str | None = Field(
+        None, max_length=1024, description="Link to the order.", examples=["https://.../orders/4711"]
+    )
+    comment: str | None = Field(None, max_length=1024, description="Free text comment about this order.", examples=[""])
+    lines: list[OrderLine] = Field(description="The lines of this order.")
+    state: Literal["open", "arrived"] = Field(
+        description=(
+            "Derived state: 'open' while any line is un-arrived, otherwise 'arrived' (an order with zero lines "
+            "is 'arrived'). Never stored."
+        ),
+        examples=["open"],
+    )
+
+    @staticmethod
+    def from_db(item: models.Order) -> "Order":
+        """Create a Pydantic order object from a database order object."""
+        lines = [OrderLine.from_db(line) for line in item.lines]
+        state = "open" if any(line.arrived_at is None for line in item.lines) else "arrived"
+        return Order(
+            id=item.id,
+            registered=item.registered,
+            shop=Shop.from_db(item.shop) if item.shop is not None else None,
+            ordered_at=item.ordered_at,
+            order_number=item.order_number,
+            url=item.url,
+            comment=item.comment,
+            lines=lines,
+            state=state,
+        )
+
+
 class Location(BaseModel):
     id: int = Field(description="Unique internal ID of this location.")
     registered: SpoolmanDateTime = Field(description="When the location was registered in the database. UTC Timezone.")
@@ -824,6 +890,13 @@ class ShopEvent(Event):
 
     payload: Shop = Field(description="Updated shop.")
     resource: Literal["shop"] = Field(description="Resource type.")
+
+
+class OrderEvent(Event):
+    """Event."""
+
+    payload: Order = Field(description="Updated order.")
+    resource: Literal["order"] = Field(description="Resource type.")
 
 
 class LocationEvent(Event):

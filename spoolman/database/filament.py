@@ -356,8 +356,17 @@ async def update(
 
 
 async def delete(db: AsyncSession, filament_id: int) -> None:
-    """Delete a filament object."""
+    """Delete a filament object.
+
+    Restricted while any order line references the filament (#298). FKs are not enforced on SQLite in
+    this codebase, so the reference is checked explicitly rather than via a DB IntegrityError.
+    """
     filament = await get_by_id(db, filament_id)
+    line_count = await db.scalar(
+        select(func.count(models.OrderLine.id)).where(models.OrderLine.filament_id == filament_id),
+    )
+    if line_count:
+        raise ItemDeleteError(f"Cannot delete filament {filament_id}: {line_count} order line(s) reference it.")
     await db.delete(filament)
     try:
         await db.commit()  # Flush immediately so any errors are propagated in this request.
