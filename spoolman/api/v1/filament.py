@@ -190,6 +190,26 @@ class FilamentParameters(BaseModel):
         ),
         examples=[2],
     )
+    ordered_at: datetime | None = Field(
+        None,
+        description=(
+            "When a replenishment order was placed for this filament (#298). Null means nothing on order; "
+            "pass null on update to clear. UTC Timezone."
+        ),
+        examples=["2026-07-19T09:00:00Z"],
+    )
+    order_url: str | None = Field(
+        None,
+        max_length=1024,
+        description="Link to the (bulk) order that replenishes this filament. Pass null on update to clear.",
+        examples=["https://shop.example.com/orders/4711"],
+    )
+    order_note: str | None = Field(
+        None,
+        max_length=1024,
+        description="Free-text order details: order number, quantity, supplier. Pass null on update to clear.",
+        examples=["3 spools, order #4711"],
+    )
     extra: dict[str, str] | None = Field(
         None,
         description="Extra fields for this filament.",
@@ -591,6 +611,9 @@ async def create(  # noqa: ANN201
         external_id=body.external_id,
         low_stock_threshold=body.low_stock_threshold,
         reserve_count=body.reserve_count,
+        ordered_at=body.ordered_at,
+        order_url=body.order_url,
+        order_note=body.order_note,
         extra=body.extra,
     )
 

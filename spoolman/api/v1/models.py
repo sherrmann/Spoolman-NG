@@ -428,6 +428,24 @@ class Filament(BaseModel):
         None,
         description="When a label was last printed for this filament type. Null means never printed. UTC Timezone.",
     )
+    ordered_at: SpoolmanDateTime | None = Field(
+        None,
+        description=(
+            "When a replenishment order was placed for this filament. Null means nothing on order. UTC Timezone."
+        ),
+    )
+    order_url: str | None = Field(
+        None,
+        max_length=1024,
+        description="Link to the (bulk) order that replenishes this filament.",
+        examples=["https://shop.example.com/orders/4711"],
+    )
+    order_note: str | None = Field(
+        None,
+        max_length=1024,
+        description="Free-text order details: order number, quantity, supplier.",
+        examples=["3 spools, order #4711"],
+    )
     spool_count: int | None = Field(
         None,
         description=(
@@ -495,6 +513,9 @@ class Filament(BaseModel):
             low_stock_threshold=item.low_stock_threshold,
             reserve_count=item.reserve_count,
             label_printed_at=item.label_printed_at,
+            ordered_at=item.ordered_at,
+            order_url=item.order_url,
+            order_note=item.order_note,
             spool_count=spool_count,
             remaining_weight=remaining_weight,
             extra={field.key: field.value for field in item.extra},

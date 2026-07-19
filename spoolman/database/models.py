@@ -83,6 +83,18 @@ class Filament(Base):
     label_printed_at: Mapped[datetime | None] = mapped_column(
         comment="When a label was last printed for this filament (#93). Null means never printed.",
     )
+    ordered_at: Mapped[datetime | None] = mapped_column(
+        comment="When a replenishment order was placed for this filament (#298). Null means nothing on order; "
+        "doubles as the boolean and as the age of the order.",
+    )
+    order_url: Mapped[str | None] = mapped_column(
+        String(1024),
+        comment="Link to the (bulk) order that replenishes this filament (#298).",
+    )
+    order_note: Mapped[str | None] = mapped_column(
+        String(1024),
+        comment="Free-text order details (#298): order number, quantity, supplier.",
+    )
     extra: Mapped[list["FilamentField"]] = relationship(
         back_populates="filament",
         cascade="save-update, merge, delete, delete-orphan",
