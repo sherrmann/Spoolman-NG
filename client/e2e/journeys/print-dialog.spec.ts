@@ -82,6 +82,23 @@ test.describe("print dialog journeys", () => {
     await qrSizeItem.getByRole("spinbutton").fill("20");
     await expect(page.getByText(/can be hard to scan/)).toHaveCount(0);
 
+    // Top placement puts the mm basis on the height axis; the QR svg must stay inside
+    // the reserved band instead of overflowing at its intrinsic 160px size (#295).
+    await page.locator(".ant-form-item", { hasText: "QR Placement" }).first().getByText("Top", { exact: true }).click();
+    await expect(async () => {
+      const containerBox = await qrContainer.boundingBox();
+      const svgBox = await page.locator(".print-qrcode-container svg").first().boundingBox();
+      expect(containerBox).not.toBeNull();
+      expect(svgBox).not.toBeNull();
+      expect(svgBox!.height).toBeLessThanOrEqual(containerBox!.height + 1);
+      expect(svgBox!.width).toBeLessThanOrEqual(containerBox!.width + 1);
+    }).toPass();
+    await page
+      .locator(".ant-form-item", { hasText: "QR Placement" })
+      .first()
+      .getByText("Left", { exact: true })
+      .click();
+
     // Auto restores the fill behavior.
     await qrSizeItem.getByText("Auto", { exact: true }).click();
     await expect(async () => {

@@ -5,6 +5,10 @@
 // scanners and short payloads can go smaller).
 export const MIN_SCANNABLE_QR_MM = 10;
 
+// Starting size when the user switches the QR from Auto to Custom, and the fallback when
+// the number input is cleared. Comfortably above the scannability floor.
+export const DEFAULT_QR_SIZE_MM = 20;
+
 // The flex basis of the QR container along the item's main axis. No manual size keeps
 // the historical fill behavior: half the label when text/swatch/barcode show beside it,
 // the whole label otherwise (#59). A manual size is the printed QR square, so the
