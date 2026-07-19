@@ -21,6 +21,7 @@
 - **Commit trailer** on every commit: `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>`.
 - **One branch + PR + squash-merge per shippable unit.** Changelog bullets go in `CHANGELOG.md` under `## Unreleased`.
 - **UI is gated:** per project rule, UI implementation happens only after mockup review and Sam's approval. Task 7 is a hard MOCKUP GATE that STOPS. Tasks 8+ (UI) must not begin until approval.
+- **2026-07-19 low-stock redesign (Sam) supersedes the original Task 8–12 text:** the dashboard's separate per-spool "Low Stock" and per-filament "Shopping List" tabs merge into one per-filament "Low Stock" view (global gram fallback via a new `low_stock_fallback_g` instance setting, inline per-row threshold editing), and "Low Stock" + "Orders" become always-visible main-menu items (the earlier conditional-Orders-nav rule is dropped). See spec §"Low-stock redesign" and Decisions #6; the rewritten Tasks 8–12 below are authoritative.
 
 ---
 
@@ -2204,23 +2205,220 @@ Present all six mockups (four re-labelled + two new) to Sam for review. **STOP h
 
 ---
 
-> **Tasks 8–12 are UI implementation. They are BLOCKED on Task 7 approval.** Each is a shippable unit with its own branch/PR (`claude/orders-ui-us1`, `...-us2`, `...-us3`, `...-us5`, `...-e2e`). The pure-logic helpers below are fully specified with TDD; the exact JSX/layout must match the approved mockups (adjust spacing, copy, and component composition to the approved design — the data flow, endpoints, and i18n keys below are fixed). All new user-facing strings are added English-only to `client/public/locales/en/common.json`.
+> **Tasks 8–12 are UI implementation. They are BLOCKED on Task 7 approval.** They implement the **2026-07-19 low-stock redesign** (spec §"Low-stock redesign", Decisions #6): the dashboard's two low-stock tabs — per-spool "Low Stock" and per-filament "Shopping List" — collapse into **one per-filament "Low Stock" tab**, and **"Low Stock" and "Orders" become always-visible main-menu items**. The approved mockups are `ui-review/orders-mock-A-shoppinglist.png` (merged Low Stock — dashboard tab + full page), `ui-review/orders-mock-B-dialog.png` (US1 mark-as-ordered), `ui-review/orders-mock-C-orders-page.png` (Orders page), and `ui-review/orders-mock-D-arrival-split.png` (US3 split arrival). Each task is a shippable unit with its own branch/PR (`claude/orders-ui-lowstock`, `…-pages`, `…-order-create`, `…-arrival`, `…-e2e`). Pure-logic helpers are specified with **TDD — write the failing test first**; the JSX/layout must match the approved mockups (adjust spacing, copy, and composition to the approved design — the data flow, endpoints, and i18n keys below are fixed). **Project rule:** after implementing each UI task, screenshot the running UI and compare it against the matching approved mock (`ui-review/orders-mock-A/B/C/D.png`) before committing. All new user-facing strings are added English-only to `client/public/locales/en/common.json`.
 
-## Task 8 (UI, gated): US1 — "Mark as ordered" dialog + Ordered pill
+## Task 8 (UI, gated): Merged per-filament Low Stock — fallback setting, sectioning logic, dashboard tab & KPI
 
-**Goal:** From a low-stock row, "Mark as ordered" opens one dialog (shop autocomplete with inline-create, optional url/order number/quantity/price-per-unit); on submit a one-line order is created via `POST /order`. The row then shows a calm blue pill `Ordered · <age> · <shop>` driven by the filament's `on_order`.
+**Branch:** `claude/orders-ui-lowstock`.
+
+**Goal:** Replace the dashboard's two low-stock tabs (per-spool "Low Stock" + per-filament "Shopping List") with a single per-filament **"Low Stock"** tab. A filament is flagged when its server-computed aggregate `remaining_weight` is at or below its own `low_stock_threshold` when set, else at or below a **new instance setting `low_stock_fallback_g`** (absolute grams, ships at 200 so Low Stock works out of the box — US5; `0` disables the fallback). Explicit-threshold rows sort above fallback-caught rows with light section separation (so the *reason* is visible); on-order filaments sink to the bottom of their section under the calm blue `Ordered · <age> · <shop>` pill (linking to the order). Every row carries an inline threshold-edit affordance (PATCH `filament.low_stock_threshold`). The dashboard KPI badge counts the merged filament list. `lowStockSpools()` is deleted.
 
 **Files:**
+- Modify (backend): `spoolman/settings.py` — register `low_stock_fallback_g`
+- Test (backend): `tests/integration/test_setting_low_stock_fallback.py`
+- Modify: `client/src/pages/home/analytics.ts` — replace `lowStockFilaments`→`computeLowStock`; delete `lowStockSpools`
+- Modify: `client/src/pages/home/analytics.test.ts` — drop the `lowStockSpools` blocks; rewrite `lowStockFilaments` as `computeLowStock`
+- Modify: `client/src/pages/home/analytics.bench.ts` — drop the `lowStockSpools` benchmark
+- Modify: `client/src/utils/settings.ts` — add `useLowStockFallbackG`
 - Create: `client/src/pages/orders/orderPill.tsx` + `client/src/pages/orders/orderPill.test.tsx`
-- Create: `client/src/pages/orders/markOrderedDialog.tsx`
-- Create: `client/src/pages/orders/useShops.ts` (react-query hook: list/create shop via `/shop`)
-- Modify: the low-stock row component in `client/src/pages/home/index.tsx` (shopping list) and/or `client/src/pages/filaments/` list to render the pill + entry point
+- Create: `client/src/pages/lowstock/thresholdEdit.tsx`
+- Create: `client/src/pages/lowstock/openOrders.ts` + `client/src/pages/lowstock/openOrders.test.ts`
+- Modify: `client/src/pages/home/index.tsx` — merge the two tabs into one "Low Stock" tab; KPI badge from `computeLowStock(...).count`
 - Modify: `client/public/locales/en/common.json`
 
 **Interfaces (pure logic, testable now):**
-- Produces: `formatOrderedPill(onOrder: {order_id: number; ordered_at: string}, shopName: string | undefined, now?: Date): string` → e.g. `"Ordered · 3d · 3DJake"` (shop omitted when unknown: `"Ordered · 3d"`).
+- `computeLowStock(filaments: IFilament[], fallbackG: number): LowStockSections` → `{ explicit: LowStockRow[]; fallback: LowStockRow[]; count: number }`.
+- `formatOrderedPill(onOrder, shopName, now?): string` → e.g. `"Ordered · 3d · 3DJake"`.
+- `openOrdersByFilament(orders: IOrder[]): Map<number, { order_id: number; shop_name?: string }>` — the oldest open order per filament (mirrors the server `on_order` rule).
 
-- [ ] **Step 1: Write the failing pill-format unit test**
+- [ ] **Step 1: Register the `low_stock_fallback_g` setting (backend) + failing integration test**
+
+In `spoolman/settings.py`, add after the `unit_scaling` registration (line 92):
+```python
+# Global fallback low-stock threshold in absolute grams (#298 low-stock redesign). The merged
+# per-filament Low Stock view flags a filament with no explicit low_stock_threshold once its aggregate
+# remaining weight drops to/below this. Ships at 200 g so Low Stock is truthful out of the box (US5);
+# set to 0 to disable the fallback (only explicit thresholds flag).
+register_setting("low_stock_fallback_g", SettingType.NUMBER, json.dumps(200))
+```
+Create `tests/integration/test_setting_low_stock_fallback.py`:
+```python
+"""Integration test for the low_stock_fallback_g instance setting (#298 low-stock redesign).
+
+The merged per-filament Low Stock view flags a filament with no explicit low_stock_threshold once its
+aggregate remaining weight drops to/below this global fallback (absolute grams). It ships registered
+with a sensible default so Low Stock works out of the box (US5); it is settable and type-checked.
+"""
+
+import json
+
+from httpx import AsyncClient
+
+SETTING = "/api/v1/setting/low_stock_fallback_g"
+HEADERS = {"content-type": "application/json"}
+
+
+async def test_fallback_setting_has_shipped_default(client: AsyncClient):
+    resp = await client.get(SETTING)
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["is_set"] is False  # unset -> the registered default is returned
+    assert json.loads(body["value"]) == 200
+
+
+async def test_fallback_setting_is_settable(client: AsyncClient):
+    assert (await client.post(SETTING, content=json.dumps(json.dumps(350)), headers=HEADERS)).status_code == 200
+    body = (await client.get(SETTING)).json()
+    assert body["is_set"] is True
+    assert json.loads(body["value"]) == 350
+
+
+async def test_fallback_setting_rejects_non_number(client: AsyncClient):
+    bad = await client.post(SETTING, content=json.dumps(json.dumps("lots")), headers=HEADERS)
+    assert bad.status_code == 400, bad.text
+```
+Run: `uv run pytest tests/integration/test_setting_low_stock_fallback.py -q`
+Expected: PASS (the setting is registered, so the default/settable/type-check cases all hold).
+
+- [ ] **Step 2: Rewrite the analytics unit tests for `computeLowStock` (they must fail first)**
+
+In `client/src/pages/home/analytics.test.ts`: remove `lowStockSpools` from the import from `./analytics` and delete the entire `describe("lowStockSpools", …)` block. Replace the `describe("lowStockFilaments", …)` block with (importing `computeLowStock` instead of `lowStockFilaments`):
+```typescript
+describe("computeLowStock", () => {
+  const F = 200; // fallback grams
+
+  it("flags a filament at or below its explicit threshold, not one strictly above", () => {
+    const below = filament({ id: 1, low_stock_threshold: 500, remaining_weight: 400 });
+    const at = filament({ id: 2, low_stock_threshold: 500, remaining_weight: 500 });
+    const above = filament({ id: 3, low_stock_threshold: 500, remaining_weight: 600 });
+    const { explicit, count } = computeLowStock([below, at, above], F);
+    expect(explicit.map((r) => r.filament.id)).toEqual([1, 2]);
+    expect(count).toBe(2);
+  });
+
+  it("uses the gram fallback for filaments without an explicit threshold", () => {
+    const caught = filament({ id: 1, remaining_weight: 150 }); // <= 200 fallback
+    const fine = filament({ id: 2, remaining_weight: 250 }); // > 200 fallback
+    const { explicit, fallback } = computeLowStock([caught, fine], F);
+    expect(explicit).toEqual([]);
+    expect(fallback.map((r) => r.filament.id)).toEqual([1]);
+    expect(fallback[0].reason).toBe("fallback");
+  });
+
+  it("disables the fallback when fallbackG <= 0 (only explicit thresholds flag)", () => {
+    const noThreshold = filament({ id: 1, remaining_weight: 10 });
+    const explicitLow = filament({ id: 2, low_stock_threshold: 100, remaining_weight: 50 });
+    const { explicit, fallback } = computeLowStock([noThreshold, explicitLow], 0);
+    expect(fallback).toEqual([]);
+    expect(explicit.map((r) => r.filament.id)).toEqual([2]);
+  });
+
+  it("never flags a filament whose aggregate remaining weight is not populated", () => {
+    expect(computeLowStock([filament({ low_stock_threshold: 500 })], F).count).toBe(0);
+  });
+
+  it("orders each section by largest shortfall first", () => {
+    const small = filament({ id: 1, low_stock_threshold: 500, remaining_weight: 450 }); // short 50
+    const large = filament({ id: 2, low_stock_threshold: 1000, remaining_weight: 100 }); // short 900
+    const mid = filament({ id: 3, low_stock_threshold: 800, remaining_weight: 500 }); // short 300
+    expect(computeLowStock([small, large, mid], F).explicit.map((r) => r.filament.id)).toEqual([2, 3, 1]);
+  });
+
+  it("sinks on-order filaments to the bottom of their section", () => {
+    const plain = filament({ id: 1, low_stock_threshold: 500, remaining_weight: 400 }); // short 100, not ordered
+    const ordered = filament({
+      id: 2,
+      low_stock_threshold: 1000,
+      remaining_weight: 100, // short 900, but on order -> sinks below the smaller shortfall
+      on_order: { order_id: 7, ordered_at: "2026-07-10T00:00:00Z" },
+    });
+    expect(computeLowStock([ordered, plain], F).explicit.map((r) => r.filament.id)).toEqual([1, 2]);
+  });
+});
+```
+Run: `cd client && npx vitest run src/pages/home/analytics.test.ts`
+Expected: FAIL — `computeLowStock` is not exported yet (and `lowStockSpools` import is gone).
+
+- [ ] **Step 3: Implement `computeLowStock` and delete `lowStockSpools` in `analytics.ts`**
+
+In `client/src/pages/home/analytics.ts`: delete `LOW_STOCK_THRESHOLD` **only if** nothing else uses it (grep first — `getWeightPct` uses its own literal; keep the export if referenced elsewhere), delete the `lowStockSpools` function, and replace the `LowStockFilament` interface + `lowStockFilaments` function with:
+```typescript
+export interface LowStockRow {
+  filament: IFilament;
+  remaining: number;
+  threshold: number;
+  /** Why this row is listed: its own threshold, or the global gram fallback. Drives section separation. */
+  reason: "explicit" | "fallback";
+  /** Oldest open order for this filament, if any — drives the "Ordered" pill and the sink-to-bottom sort. */
+  onOrder?: { order_id: number; ordered_at: string };
+}
+
+export interface LowStockSections {
+  /** Rows flagged by their own low_stock_threshold; largest shortfall first, on-order rows last. */
+  explicit: LowStockRow[];
+  /** Rows flagged only by the global gram fallback; same ordering. */
+  fallback: LowStockRow[];
+  /** Total flagged filaments across both sections — the dashboard KPI badge count. */
+  count: number;
+}
+
+/** On-order rows sink to the bottom of their section; otherwise largest shortfall first. */
+function compareLowStockRows(a: LowStockRow, b: LowStockRow): number {
+  const ao = a.onOrder ? 1 : 0;
+  const bo = b.onOrder ? 1 : 0;
+  if (ao !== bo) return ao - bo;
+  return b.threshold - b.remaining - (a.threshold - a.remaining);
+}
+
+/**
+ * Merged per-filament Low Stock (#298 redesign — supersedes lowStockSpools and the old lowStockFilaments).
+ * A filament is flagged when its server-computed aggregate remaining weight is at or below its own
+ * low_stock_threshold when set, else at or below the global fallback `fallbackG` (absolute grams; a value
+ * <= 0 disables the fallback). Explicit-threshold and fallback-caught rows are returned in separate
+ * sections so the UI can show WHY each is listed; within each, on-order filaments sink last.
+ */
+export function computeLowStock(filaments: IFilament[], fallbackG: number): LowStockSections {
+  const explicit: LowStockRow[] = [];
+  const fallback: LowStockRow[] = [];
+  for (const f of filaments) {
+    if (f.remaining_weight == null) continue;
+    const hasExplicit = f.low_stock_threshold != null;
+    const threshold = hasExplicit ? (f.low_stock_threshold as number) : fallbackG;
+    if (threshold <= 0) continue; // fallback disabled, or a nonsensical explicit 0
+    if (f.remaining_weight > threshold) continue;
+    const row: LowStockRow = {
+      filament: f,
+      remaining: f.remaining_weight,
+      threshold,
+      reason: hasExplicit ? "explicit" : "fallback",
+      onOrder: f.on_order,
+    };
+    (hasExplicit ? explicit : fallback).push(row);
+  }
+  explicit.sort(compareLowStockRows);
+  fallback.sort(compareLowStockRows);
+  return { explicit, fallback, count: explicit.length + fallback.length };
+}
+```
+In `client/src/pages/home/analytics.bench.ts`, remove the `lowStockSpools` import + its benchmark case (or repoint it to `computeLowStock(filaments, 200)`).
+Run: `cd client && npx vitest run src/pages/home/analytics.test.ts`
+Expected: PASS.
+
+- [ ] **Step 4: Add `useLowStockFallbackG` to the settings util**
+
+In `client/src/utils/settings.ts`, add:
+```typescript
+/**
+ * Global fallback low-stock threshold in absolute grams (#298 low-stock redesign). A filament with no
+ * explicit low_stock_threshold is flagged once its aggregate remaining weight drops to/below this.
+ * Ships at 200 g so Low Stock works out of the box (US5); 0 disables the fallback.
+ */
+export function useLowStockFallbackG(): number {
+  return JSON.parse(useGetSetting("low_stock_fallback_g").data?.value ?? "200");
+}
+```
+
+- [ ] **Step 5: Write the failing pill-format unit test**
 
 Create `client/src/pages/orders/orderPill.test.tsx`:
 ```typescript
@@ -2230,29 +2428,31 @@ import { formatOrderedPill } from "./orderPill";
 describe("formatOrderedPill", () => {
   const now = new Date("2026-07-19T00:00:00Z");
   it("shows age and shop", () => {
-    const s = formatOrderedPill({ order_id: 1, ordered_at: "2026-07-16T00:00:00Z" }, "3DJake", now);
-    expect(s).toBe("Ordered · 3d · 3DJake");
+    expect(formatOrderedPill({ order_id: 1, ordered_at: "2026-07-16T00:00:00Z" }, "3DJake", now)).toBe(
+      "Ordered · 3d · 3DJake",
+    );
   });
   it("omits the shop when unknown", () => {
-    const s = formatOrderedPill({ order_id: 1, ordered_at: "2026-07-18T00:00:00Z" }, undefined, now);
-    expect(s).toBe("Ordered · 1d");
+    expect(formatOrderedPill({ order_id: 1, ordered_at: "2026-07-18T00:00:00Z" }, undefined, now)).toBe("Ordered · 1d");
   });
-  it("uses today for a same-day order", () => {
-    const s = formatOrderedPill({ order_id: 1, ordered_at: "2026-07-19T00:00:00Z" }, "Prusa", now);
-    expect(s).toBe("Ordered · today · Prusa");
+  it("uses 'today' for a same-day order", () => {
+    expect(formatOrderedPill({ order_id: 1, ordered_at: "2026-07-19T00:00:00Z" }, "Prusa", now)).toBe(
+      "Ordered · today · Prusa",
+    );
   });
 });
 ```
-
-- [ ] **Step 2: Run it to verify it fails**
-
 Run: `cd client && npx vitest run src/pages/orders/orderPill.test.tsx`
-Expected: FAIL — `./orderPill` has no `formatOrderedPill` export.
+Expected: FAIL — no `formatOrderedPill` export.
 
-- [ ] **Step 3: Implement `formatOrderedPill` (and the pill component skeleton)**
+- [ ] **Step 6: Implement the pill (`formatOrderedPill` + `OrderedPill` component)**
 
-Create `client/src/pages/orders/orderPill.tsx` with the pure function and a small presentational component:
+Create `client/src/pages/orders/orderPill.tsx`:
 ```typescript
+import { Tag } from "antd";
+import { Link } from "react-router";
+
+/** Compose the calm on-order pill text: "Ordered · <age> · <shop>" ("today" same-day; shop omitted when unknown). */
 export function formatOrderedPill(
   onOrder: { order_id: number; ordered_at: string },
   shopName: string | undefined,
@@ -2262,68 +2462,499 @@ export function formatOrderedPill(
   const age = days <= 0 ? "today" : `${days}d`;
   return shopName ? `Ordered · ${age} · ${shopName}` : `Ordered · ${age}`;
 }
+
+/** Calm blue pill for an on-order Low Stock row; links through to the order (#298). */
+export function OrderedPill({
+  onOrder,
+  shopName,
+  orderHref,
+}: {
+  onOrder: { order_id: number; ordered_at: string };
+  shopName?: string;
+  orderHref: string;
+}) {
+  return (
+    <Link to={orderHref} onClick={(e) => e.stopPropagation()}>
+      <Tag color="blue" style={{ cursor: "pointer" }}>
+        {formatOrderedPill(onOrder, shopName)}
+      </Tag>
+    </Link>
+  );
+}
 ```
-Then add the calm-blue pill component (Ant Design `Tag color="blue"`) rendering `formatOrderedPill(...)`, matching the approved mock 1 styling. Wire it wherever a low-stock row is rendered (home shopping list; filament list): render the pill when `filament.on_order` is set; otherwise render the "Mark as ordered" entry point (see Step 5).
-
-- [ ] **Step 4: Run the unit test to verify it passes**
-
 Run: `cd client && npx vitest run src/pages/orders/orderPill.test.tsx`
 Expected: PASS.
 
-- [ ] **Step 5: Build the Mark-as-ordered dialog + shop hook**
+- [ ] **Step 7: Write + implement `openOrdersByFilament` (oldest-open map for pills)**
 
-Create `client/src/pages/orders/useShops.ts` — a react-query hook wrapping `GET /shop` (list, for autocomplete) and `POST /shop` (inline-create, tolerating a 409 by re-fetching and selecting the existing shop by name). Create `client/src/pages/orders/markOrderedDialog.tsx` — an Ant `Modal` + `Form` with: shop `AutoComplete` (options from `useShops`, free-text creates a shop on submit), optional `url`, `order_number`, `quantity` (default 1, min 1), `price_per_unit`. On submit: ensure the shop exists (create if new), then `POST /order` with body `{ shop_id, order_number, url, lines: [{ filament_id, quantity, price_per_unit }] }`. On success, invalidate the filament query so `on_order` refreshes and the pill appears. Match the approved mock 2 layout and copy. Add all strings to `client/public/locales/en/common.json` under a new `orders` namespace (keys: `orders.markOrdered`, `orders.shop`, `orders.createShop`, `orders.quantity`, `orders.pricePerUnit`, `orders.orderNumber`, `orders.url`, `orders.pill` etc.).
+Create `client/src/pages/lowstock/openOrders.test.ts`:
+```typescript
+import { describe, it, expect } from "vitest";
+import { openOrdersByFilament } from "./openOrders";
+import { IOrder } from "../orders/model";
 
-- [ ] **Step 6: Type-check, lint, format, run all client unit tests**
+const order = (o: Partial<IOrder>): IOrder => ({
+  id: 1,
+  registered: "",
+  ordered_at: "2026-07-10T00:00:00Z",
+  lines: [],
+  state: "open",
+  ...o,
+});
+
+describe("openOrdersByFilament", () => {
+  it("maps a filament to its open order id and shop name", () => {
+    const m = openOrdersByFilament([
+      order({ id: 5, shop: { id: 1, registered: "", name: "3DJake" }, lines: [{ id: 1, filament_id: 10, quantity: 1 }] }),
+    ]);
+    expect(m.get(10)).toEqual({ order_id: 5, shop_name: "3DJake" });
+  });
+  it("prefers the oldest open order for a filament", () => {
+    const m = openOrdersByFilament([
+      order({ id: 5, ordered_at: "2026-07-15T00:00:00Z", lines: [{ id: 1, filament_id: 10, quantity: 1 }] }),
+      order({ id: 6, ordered_at: "2026-07-01T00:00:00Z", lines: [{ id: 2, filament_id: 10, quantity: 1 }] }),
+    ]);
+    expect(m.get(10)?.order_id).toBe(6);
+  });
+  it("ignores arrived lines and arrived orders", () => {
+    const m = openOrdersByFilament([
+      order({ id: 5, state: "arrived", lines: [{ id: 1, filament_id: 10, quantity: 1, arrived_at: "2026-07-11T00:00:00Z" }] }),
+    ]);
+    expect(m.has(10)).toBe(false);
+  });
+});
+```
+Run it (`cd client && npx vitest run src/pages/lowstock/openOrders.test.ts`) — FAIL — then create `client/src/pages/lowstock/openOrders.ts`:
+```typescript
+import { IOrder } from "../orders/model";
+
+/**
+ * Map each on-order filament to the OLDEST open order that contains it (#298), for the Low Stock
+ * "Ordered · <age> · <shop>" pill and its order link. Mirrors the server's `on_order = oldest open`
+ * rule so the pill and the filament's on_order field agree.
+ */
+export function openOrdersByFilament(orders: IOrder[]): Map<number, { order_id: number; shop_name?: string }> {
+  const oldest = new Map<number, { order_id: number; ordered_at: string; shop_name?: string }>();
+  for (const order of orders) {
+    if (order.state !== "open") continue;
+    for (const line of order.lines) {
+      if (line.arrived_at) continue;
+      const prev = oldest.get(line.filament_id);
+      if (!prev || new Date(order.ordered_at).getTime() < new Date(prev.ordered_at).getTime()) {
+        oldest.set(line.filament_id, { order_id: order.id, ordered_at: order.ordered_at, shop_name: order.shop?.name });
+      }
+    }
+  }
+  const out = new Map<number, { order_id: number; shop_name?: string }>();
+  for (const [fid, v] of oldest) out.set(fid, { order_id: v.order_id, shop_name: v.shop_name });
+  return out;
+}
+```
+Re-run the test: PASS.
+
+- [ ] **Step 8: Build the inline threshold-edit affordance**
+
+Create `client/src/pages/lowstock/thresholdEdit.tsx` — a small edit control shown on **every** Low Stock row that PATCHes `filament.low_stock_threshold` and invalidates the filament list so the row re-sections/re-sorts:
+```typescript
+import { EditOutlined } from "@ant-design/icons";
+import { useInvalidate, useTranslate, useUpdate } from "@refinedev/core";
+import { InputNumber, Popover, Tooltip } from "antd";
+import { useState } from "react";
+
+/** Inline low-stock-threshold editor on every Low Stock row (#298 redesign). */
+export function ThresholdEdit({ filamentId, value }: { filamentId: number; value?: number }) {
+  const t = useTranslate();
+  const { mutate } = useUpdate();
+  const invalidate = useInvalidate();
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState<number | null>(value ?? null);
+
+  const save = () => {
+    mutate(
+      { resource: "filament", id: filamentId, values: { low_stock_threshold: draft }, successNotification: false },
+      { onSuccess: () => invalidate({ resource: "filament", invalidates: ["list"] }) },
+    );
+    setOpen(false);
+  };
+
+  return (
+    <Popover
+      open={open}
+      onOpenChange={setOpen}
+      trigger="click"
+      content={
+        <InputNumber autoFocus min={0} value={draft} addonAfter="g" onChange={setDraft} onPressEnter={save} onBlur={save} />
+      }
+    >
+      <Tooltip title={t("lowstock.edit_threshold")}>
+        <EditOutlined onClick={(e) => e.stopPropagation()} style={{ opacity: 0.6, cursor: "pointer" }} />
+      </Tooltip>
+    </Popover>
+  );
+}
+```
+
+- [ ] **Step 9: Merge the two dashboard tabs into one "Low Stock" tab + repoint the KPI badge**
+
+In `client/src/pages/home/index.tsx`:
+1. In the `./analytics` import block, remove `lowStockSpools as computeLowStockSpools` and change `lowStockFilaments as computeLowStockFilaments` to `computeLowStock`. Add imports:
+```typescript
+import { useLowStockFallbackG } from "../../utils/settings";
+import { IOrder } from "../orders/model";
+import { openOrdersByFilament } from "../lowstock/openOrders";
+import { OrderedPill } from "../orders/orderPill";
+import { ThresholdEdit } from "../lowstock/thresholdEdit";
+```
+2. Replace the calculation lines (currently `const lowStockSpools = …`, `const hasLowStock = …`, `const lowStockFilamentsData = …`, `const hasShoppingList = …`) with:
+```typescript
+const fallbackG = useLowStockFallbackG();
+const lowStock = computeLowStock(allFilaments, fallbackG);
+const hasLowStock = lowStock.count > 0;
+const openOrders = useList<IOrder>({ resource: "order", pagination: { mode: "off" } });
+const orderMap = openOrdersByFilament(openOrders.result?.data ?? []);
+```
+3. In the KPI "total weight" card, replace every `lowStockSpools.length` reference (the `color`, `opacity`, condition, and badge count) with `lowStock.count`, e.g. `{lowStock.count > 0 ? (<><WarningOutlined /> {lowStock.count} {t("home.low_stock").toUpperCase()}</>) : …}`.
+4. Replace **both** the old `key: "lowstock"` (per-spool) and `key: "shopping"` tab objects with this single merged tab object (keep `defaultActiveKey={hasLowStock ? "lowstock" : "materials"}`):
+```tsx
+{
+  key: "lowstock",
+  label: (
+    <span>
+      {hasLowStock && <WarningOutlined style={{ color: "#ff716c" }} />} {t("home.low_stock")}
+    </span>
+  ),
+  children: (
+    <div className="dash-section" style={{ background: S.low }}>
+      {lowStock.count === 0 ? (
+        <div className="dash-empty">{t("home.all_stocked")}</div>
+      ) : (
+        <>
+          {([
+            ["explicit", lowStock.explicit] as const,
+            ["fallback", lowStock.fallback] as const,
+          ]).map(([reason, rows]) =>
+            rows.length === 0 ? null : (
+              <div key={reason}>
+                <div className="dash-section-subhead" style={{ opacity: 0.5 }}>
+                  {reason === "explicit"
+                    ? t("lowstock.section.explicit")
+                    : t("lowstock.section.fallback", { grams: fallbackG })}
+                </div>
+                <div className="low-stock-list">
+                  {rows.map(({ filament, remaining, threshold, onOrder }) => {
+                    const hex = "#" + (filament.color_hex ?? "555555").replace("#", "");
+                    const order = onOrder ? orderMap.get(filament.id) : undefined;
+                    return (
+                      <div
+                        key={filament.id}
+                        className="low-stock-item"
+                        style={{ background: S.lowest }}
+                        onClick={() => navigate(showUrl("filament", filament.id))}
+                      >
+                        <div className="low-stock-left">
+                          <div
+                            className="low-stock-color-dot"
+                            style={{
+                              backgroundColor: hex,
+                              boxShadow: isDark ? `0 0 14px ${hex}50` : `0 1px 3px rgba(0,0,0,0.12)`,
+                            }}
+                          />
+                          <div className="low-stock-info">
+                            <h4>{getFilamentName(filament)}</h4>
+                            <p>
+                              {t("spool.fields.material")}: {filament.material ?? "?"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="low-stock-right" onClick={(e) => e.stopPropagation()}>
+                          {onOrder ? (
+                            <OrderedPill
+                              onOrder={onOrder}
+                              shopName={order?.shop_name}
+                              orderHref={`/orders?highlight=${onOrder.order_id}`}
+                            />
+                          ) : null}
+                          <div className="low-stock-weight" style={{ color: "#d7383b" }}>
+                            {formatWeight(remaining, 0)} <span className="total">/ {formatWeight(threshold, 0)}</span>
+                          </div>
+                          <ThresholdEdit filamentId={filament.id} value={filament.low_stock_threshold} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ),
+          )}
+        </>
+      )}
+    </div>
+  ),
+},
+```
+Add the `.dash-section-subhead` rule to `client/src/pages/home/home.css` (small, muted, letter-spaced label). The old `home.shopping_list*` i18n keys are now unused — leaving them is harmless; the merged empty state reuses `home.all_stocked`.
+
+- [ ] **Step 10: Add i18n keys**
+
+In `client/public/locales/en/common.json`, add a `lowstock` namespace (and keep `home.low_stock` = "Low Stock"):
+```json
+"lowstock": {
+  "title": "Low Stock",
+  "edit_threshold": "Set alert threshold",
+  "section": {
+    "explicit": "Below your set threshold",
+    "fallback": "Below the {{grams}} g default"
+  }
+}
+```
+(Further `lowstock.*`/`orders.*` keys are added by Tasks 9–11.)
+
+- [ ] **Step 11: Type-check, lint, format, unit tests; screenshot; commit**
 
 Run:
 ```bash
-cd client && npx tsc --noEmit && npm run lint && npx prettier --write src/pages/orders && npx vitest run
+cd client && npx tsc --noEmit && npm run lint && npx prettier --write src/pages/home src/pages/orders src/pages/lowstock src/utils/settings.ts && npx vitest run
+cd .. && uv run ruff check spoolman/ tests/ && uv run ruff format spoolman/ tests/ && uv run pytest tests/integration/test_setting_low_stock_fallback.py -q
 ```
-Expected: no type errors, lint clean, all unit tests pass.
-
-- [ ] **Step 7: Commit**
-
-Run (from repo root):
+Expected: all green. Then run the app, open the dashboard, and **screenshot the merged "Low Stock" tab; compare against `ui-review/orders-mock-A-shoppinglist.png`** (single tab, explicit-above-fallback sections, inline threshold edit). Commit:
 ```bash
-git add client/ && git commit -m "feat(#298): US1 mark-as-ordered dialog + on-order pill
+git add -A && git commit -m "feat(#298): merged per-filament Low Stock + low_stock_fallback_g setting
+
+Single dashboard Low Stock tab (explicit thresholds above the gram-fallback
+section, on-order rows sink last), inline threshold edit per row, KPI badge on
+the merged count; lowStockSpools removed. New instance setting low_stock_fallback_g
+(default 200 g) drives the fallback.
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
 
 ---
 
-## Task 9 (UI, gated): US2 — bulk order from the shopping list
+## Task 9 (UI, gated): Always-visible Low Stock & Orders nav + Low Stock full page + Orders list page
 
-**Goal:** On the dashboard shopping list, multi-select low-stock rows → "Create order" builds ONE order with one line per selected filament, quantities editable before save.
+**Branch:** `claude/orders-ui-pages`.
+
+**Goal:** Register **"Low Stock"** and **"Orders"** as always-visible main-menu items with routes (superseding the old conditional-nav rule — US5 amended). Build the Low Stock full page: the same merged list in a larger layout, sections, inline threshold edit on every row, and the Ordered pill — the reorder/shopping destination and future home of the #299 purchase links. Build the Orders list page: order #, shop, ordered date, a lines summary with arrived counts, the derived state pill, and a "New order" button (the per-order "Arrived…" action is wired in Task 11). With zero orders and zero thresholds both pages empty-state cleanly (US5).
 
 **Files:**
-- Create: `client/src/pages/orders/bulkOrder.ts` + `client/src/pages/orders/bulkOrder.test.ts` (pure selection→order-body mapping)
-- Create: `client/src/pages/orders/createOrderModal.tsx` (multi-line editable quantities)
-- Modify: `client/src/pages/home/index.tsx` (selection state + "Create order" action on the shopping list built from `lowStockFilaments`, see `client/src/pages/home/analytics.ts`)
+- Modify: `client/src/App.tsx` — register `lowstock` + `order` resources (icons + `list` paths, both always visible) and their routes; mirror the Locations resource (App.tsx lines 148–155) and its route (line 231)
+- Create: `client/src/pages/lowstock/index.tsx` (full page; reuses `computeLowStock`, `ThresholdEdit`, `OrderedPill`, `openOrdersByFilament`, `useLowStockFallbackG`)
+- Create: `client/src/pages/orders/index.tsx` (Orders list; reuses the state pill)
+- Create: `client/src/pages/orders/ordersState.ts` + `client/src/pages/orders/ordersState.test.ts` (pure lines-summary helper)
 - Modify: `client/public/locales/en/common.json`
 
 **Interfaces (pure logic):**
-- Produces: `buildOrderBody(selected: { filament_id: number; quantity: number }[], shopId?: number): { shop_id?: number; lines: { filament_id: number; quantity: number }[] }`.
+- `summarizeLines(order: IOrder): { total: number; arrived: number; outstanding: number; filaments: number }` — the Orders-list summary column.
 
-- [ ] **Step 1: Write the failing mapping test**
+- [ ] **Step 1: Write the failing lines-summary test**
 
-Create `client/src/pages/orders/bulkOrder.test.ts`:
+Create `client/src/pages/orders/ordersState.test.ts`:
 ```typescript
 import { describe, it, expect } from "vitest";
-import { buildOrderBody } from "./bulkOrder";
+import { summarizeLines } from "./ordersState";
+import { IOrder } from "./model";
 
-describe("buildOrderBody", () => {
-  it("maps selected filaments to one order with one line each", () => {
-    const body = buildOrderBody(
-      [
-        { filament_id: 10, quantity: 2 },
-        { filament_id: 11, quantity: 1 },
-      ],
-      5,
+const order = (o: Partial<IOrder>): IOrder => ({
+  id: 1,
+  registered: "",
+  ordered_at: "2026-07-10T00:00:00Z",
+  lines: [],
+  state: "open",
+  ...o,
+});
+
+describe("summarizeLines", () => {
+  it("rolls quantities into total/arrived/outstanding + filament count", () => {
+    const s = summarizeLines(
+      order({
+        lines: [
+          { id: 1, filament_id: 1, quantity: 4, arrived_at: "2026-07-11T00:00:00Z" },
+          { id: 2, filament_id: 2, quantity: 3 },
+        ],
+      }),
     );
-    expect(body).toEqual({
+    expect(s).toEqual({ total: 7, arrived: 4, outstanding: 3, filaments: 2 });
+  });
+  it("reports zero for a note-only order", () => {
+    expect(summarizeLines(order({ lines: [] }))).toEqual({ total: 0, arrived: 0, outstanding: 0, filaments: 0 });
+  });
+});
+```
+Run: `cd client && npx vitest run src/pages/orders/ordersState.test.ts` → FAIL.
+
+- [ ] **Step 2: Implement `summarizeLines`**
+
+Create `client/src/pages/orders/ordersState.ts`:
+```typescript
+import { IOrder } from "./model";
+
+export interface LinesSummary {
+  total: number;
+  arrived: number;
+  outstanding: number;
+  filaments: number;
+}
+
+/** Roll an order's lines into counts for the Orders-list summary column (#298). */
+export function summarizeLines(order: IOrder): LinesSummary {
+  let total = 0;
+  let arrived = 0;
+  for (const l of order.lines) {
+    total += l.quantity;
+    if (l.arrived_at) arrived += l.quantity;
+  }
+  return { total, arrived, outstanding: total - arrived, filaments: order.lines.length };
+}
+```
+Run the test again → PASS.
+
+- [ ] **Step 3: Register both nav items + routes in `App.tsx`**
+
+Add `WarningOutlined` and `ShoppingCartOutlined` to the `@ant-design/icons` import. In the `resources={[…]}` array, add (both **always visible**; the amended US5 drops the conditional-nav rule) right after the `locations` resource:
+```tsx
+{
+  name: "lowstock",
+  list: "/lowstock",
+  meta: { canDelete: false, label: t("lowstock.title"), icon: <WarningOutlined /> },
+},
+{
+  name: "order",
+  list: "/orders",
+  meta: { canDelete: false, label: t("orders.title"), icon: <ShoppingCartOutlined /> },
+},
+```
+(The resource `name: "order"` maps to the `/order` API via the dataProvider — matching `useList<IOrder>({ resource: "order" })` — while its menu entry links to the `/orders` page.) Add the routes next to the `/locations` route:
+```tsx
+<Route path="/lowstock" element={<LoadablePage name="lowstock" />} />
+<Route path="/orders" element={<LoadablePage name="orders" />} />
+```
+
+- [ ] **Step 4: Build the Low Stock full page**
+
+Create `client/src/pages/lowstock/index.tsx` — a full-width page rendering the same merged list as the dashboard tab, in a larger layout, using the shared helpers:
+```typescript
+import { useList, useTranslate } from "@refinedev/core";
+import { List } from "@refinedev/antd";
+import { Empty, Typography } from "antd";
+import { useLowStockFallbackG } from "../../utils/settings";
+import { computeLowStock, getFilamentName } from "../home/analytics";
+import { IFilament } from "../filaments/model";
+import { IOrder } from "../orders/model";
+import { OrderedPill } from "../orders/orderPill";
+import { openOrdersByFilament } from "./openOrders";
+import { ThresholdEdit } from "./thresholdEdit";
+```
+The component: fetch `filament` (pagination off) and `order` (pagination off), compute `computeLowStock(filaments, useLowStockFallbackG())`, build `openOrdersByFilament(orders)`, and render the two sections (explicit above fallback) with per-row: filament name/colour, remaining/threshold, `<ThresholdEdit>`, and `<OrderedPill>` when on order. Empty state via antd `Empty` + copy `lowstock.empty`. This page also hosts the US1 "Mark as ordered" per-row action and the US2 multi-select "Create order" button — both wired in Task 10 (leave a clearly-marked placeholder region for them, or a disabled button, so this task ships a truthful read-only page). Match `ui-review/orders-mock-A-shoppinglist.png` (full-page variant).
+
+- [ ] **Step 5: Build the Orders list page**
+
+Create `client/src/pages/orders/index.tsx` — a table of orders from `GET /order` (react-admin `useTable`/`useList` on resource `order`). Columns: order number, shop name (`order.shop?.name` or "—"), ordered date (formatted with the app's date util), lines summary from `summarizeLines` ("4 of 7 arrived · 2 filaments"), and a derived **state pill** — `<Tag color="blue">Open</Tag>` / `<Tag color="green">Arrived</Tag>` from `order.state` (`orders.state.open`/`orders.state.arrived`). A top-right **"New order"** button (opens the create-order flow; wired to the Task 10 modal). Each row: an expandable detail listing its lines with per-line arrived state (✓ / outstanding), and an **"Arrived…"** action button (opens the Task 11 arrive modal — leave the handler as a marked stub in this task). Empty-state cleanly (`orders.empty`) so zero orders reads fine (US5). Match `ui-review/orders-mock-C-orders-page.png`.
+
+- [ ] **Step 6: Add i18n keys**
+
+In `client/public/locales/en/common.json`, extend the `lowstock` namespace and add an `orders` namespace:
+```json
+"lowstock": { "empty": "Nothing to reorder — you're well stocked." },
+"orders": {
+  "title": "Orders",
+  "empty": "No orders yet.",
+  "new_order": "New order",
+  "order_number": "Order #",
+  "shop": "Shop",
+  "ordered_at": "Ordered",
+  "lines_summary": "{{arrived}} of {{total}} arrived · {{filaments}} filaments",
+  "arrived_action": "Arrived…",
+  "state": { "open": "Open", "arrived": "Arrived" }
+}
+```
+(Merge these into the objects created in Task 8 rather than duplicating the keys.)
+
+- [ ] **Step 7: Type-check, lint, format, unit tests; screenshots; commit**
+
+Run:
+```bash
+cd client && npx tsc --noEmit && npm run lint && npx prettier --write src/pages/lowstock src/pages/orders src/App.tsx && npx vitest run
+```
+Expected: all green. Run the app and **screenshot the Low Stock full page (vs `ui-review/orders-mock-A-shoppinglist.png`) and the Orders page (vs `ui-review/orders-mock-C-orders-page.png`)**; confirm both nav items are always present and both pages empty-state cleanly with no data. Commit:
+```bash
+cd .. && git add client/ && git commit -m "feat(#298): always-visible Low Stock & Orders nav + pages
+
+Low Stock full page (merged list, sections, inline threshold edit, Ordered pill)
+and Orders list page (state pill, lines summary, New order); both registered as
+always-visible main-menu items, superseding the conditional-nav rule (US5 amended).
+
+Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
+```
+
+---
+
+## Task 10 (UI, gated): US1 Mark-as-ordered dialog + US2 bulk order
+
+**Branch:** `claude/orders-ui-order-create`.
+
+**Goal:** **US1** — from any low-stock row (dashboard tab + full page), "Mark as ordered" opens the approved dialog (`ui-review/orders-mock-B-dialog.png`): a shop `AutoComplete` (creating a shop inline if it doesn't exist), an **order-date `DatePicker` defaulted to today (backdatable → `ordered_at`)**, a quantity, an optional price-per-unit, an optional order link (`url`), and an optional order number. On submit a one-line order is created (`POST /order`); the row then shows the Ordered pill. **US2** — on the Low Stock full page, multi-select rows → "Create order" builds one order with a line per selected filament, quantities editable before save.
+
+**Files:**
+- Create: `client/src/pages/orders/orderBody.ts` + `client/src/pages/orders/orderBody.test.ts` (pure body builders)
+- Create: `client/src/pages/orders/useShops.ts` (list + inline-create shop via `/shop`, tolerating a 409)
+- Create: `client/src/pages/orders/markOrderedDialog.tsx` (US1 single-line dialog)
+- Create: `client/src/pages/orders/createOrderModal.tsx` (US2 bulk, editable per-line quantities)
+- Modify: `client/src/pages/lowstock/index.tsx` (per-row "Mark as ordered" action + multi-select + "Create order")
+- Modify: `client/src/pages/home/index.tsx` (per-row "Mark as ordered" action on the dashboard tab)
+- Modify: `client/public/locales/en/common.json`
+
+**Interfaces (pure logic):**
+- `buildMarkOrderedBody(input)` and `buildBulkOrderBody(selected, orderedAt, shopId?)` → the `POST /order` body (nested `lines`, `ordered_at` carried so a backdated pick is honoured).
+
+- [ ] **Step 1: Write the failing order-body test**
+
+Create `client/src/pages/orders/orderBody.test.ts`:
+```typescript
+import { describe, it, expect } from "vitest";
+import { buildMarkOrderedBody, buildBulkOrderBody } from "./orderBody";
+
+describe("buildMarkOrderedBody", () => {
+  it("builds a one-line order with shop, price, number, url and the (backdated) ordered_at", () => {
+    expect(
+      buildMarkOrderedBody({
+        filament_id: 10,
+        quantity: 2,
+        orderedAt: "2026-07-01T00:00:00Z",
+        shopId: 5,
+        pricePerUnit: 19.9,
+        orderNumber: "4711",
+        url: "https://shop/4711",
+      }),
+    ).toEqual({
       shop_id: 5,
+      order_number: "4711",
+      url: "https://shop/4711",
+      ordered_at: "2026-07-01T00:00:00Z",
+      lines: [{ filament_id: 10, quantity: 2, price_per_unit: 19.9 }],
+    });
+  });
+  it("omits shop/price/number/url when not given", () => {
+    expect(buildMarkOrderedBody({ filament_id: 10, quantity: 1, orderedAt: "2026-07-19T00:00:00Z" })).toEqual({
+      ordered_at: "2026-07-19T00:00:00Z",
+      lines: [{ filament_id: 10, quantity: 1 }],
+    });
+  });
+});
+
+describe("buildBulkOrderBody", () => {
+  it("maps selected filaments to one order with one line each", () => {
+    expect(
+      buildBulkOrderBody(
+        [
+          { filament_id: 10, quantity: 2 },
+          { filament_id: 11, quantity: 1 },
+        ],
+        "2026-07-19T00:00:00Z",
+        5,
+      ),
+    ).toEqual({
+      shop_id: 5,
+      ordered_at: "2026-07-19T00:00:00Z",
       lines: [
         { filament_id: 10, quantity: 2 },
         { filament_id: 11, quantity: 1 },
@@ -2331,66 +2962,135 @@ describe("buildOrderBody", () => {
     });
   });
   it("omits shop_id when no shop chosen", () => {
-    const body = buildOrderBody([{ filament_id: 10, quantity: 1 }]);
-    expect(body).toEqual({ lines: [{ filament_id: 10, quantity: 1 }] });
+    expect(buildBulkOrderBody([{ filament_id: 10, quantity: 1 }], "2026-07-19T00:00:00Z")).toEqual({
+      ordered_at: "2026-07-19T00:00:00Z",
+      lines: [{ filament_id: 10, quantity: 1 }],
+    });
   });
 });
 ```
+Run: `cd client && npx vitest run src/pages/orders/orderBody.test.ts` → FAIL.
 
-- [ ] **Step 2: Run it to verify it fails**
+- [ ] **Step 2: Implement the body builders**
 
-Run: `cd client && npx vitest run src/pages/orders/bulkOrder.test.ts`
-Expected: FAIL — no `buildOrderBody` export.
-
-- [ ] **Step 3: Implement `buildOrderBody`**
-
-Create `client/src/pages/orders/bulkOrder.ts`:
+Create `client/src/pages/orders/orderBody.ts`:
 ```typescript
-export function buildOrderBody(
-  selected: { filament_id: number; quantity: number }[],
-  shopId?: number,
-): { shop_id?: number; lines: { filament_id: number; quantity: number }[] } {
-  const lines = selected.map((s) => ({ filament_id: s.filament_id, quantity: s.quantity }));
-  return shopId === undefined ? { lines } : { shop_id: shopId, lines };
+export interface OrderLineInput {
+  filament_id: number;
+  quantity: number;
+  price_per_unit?: number;
+}
+
+export interface NewOrderBody {
+  shop_id?: number;
+  order_number?: string;
+  url?: string;
+  ordered_at: string;
+  lines: OrderLineInput[];
+}
+
+/** POST /order body for the US1 single-line "Mark as ordered" dialog. */
+export function buildMarkOrderedBody(input: {
+  filament_id: number;
+  quantity: number;
+  orderedAt: string;
+  shopId?: number;
+  pricePerUnit?: number;
+  orderNumber?: string;
+  url?: string;
+}): NewOrderBody {
+  const line: OrderLineInput = { filament_id: input.filament_id, quantity: input.quantity };
+  if (input.pricePerUnit !== undefined) line.price_per_unit = input.pricePerUnit;
+  const body: NewOrderBody = { ordered_at: input.orderedAt, lines: [line] };
+  if (input.shopId !== undefined) body.shop_id = input.shopId;
+  if (input.orderNumber) body.order_number = input.orderNumber;
+  if (input.url) body.url = input.url;
+  return body;
+}
+
+/** POST /order body for the US2 bulk order: one line per selected filament. */
+export function buildBulkOrderBody(selected: OrderLineInput[], orderedAt: string, shopId?: number): NewOrderBody {
+  const body: NewOrderBody = { ordered_at: orderedAt, lines: selected.map((s) => ({ ...s })) };
+  if (shopId !== undefined) body.shop_id = shopId;
+  return body;
+}
+```
+Run the test again → PASS.
+
+- [ ] **Step 3: Build the shop hook**
+
+Create `client/src/pages/orders/useShops.ts` — a react-query hook exposing `shops` (`GET /shop`, for the autocomplete) and `ensureShop(name): Promise<number>` which returns an existing shop's id (case-insensitive name match) or `POST /shop` to create it, tolerating a 409 (duplicate name from a race) by refetching and matching by name. Use `apiFetch`/`getAPIURL` like `client/src/utils/querySettings.ts`, and invalidate the `shop` list on create.
+
+- [ ] **Step 4: Build the Mark-as-ordered dialog (US1)**
+
+Create `client/src/pages/orders/markOrderedDialog.tsx` — an antd `Modal` + `Form` opened from a low-stock row for a single `filament`. Fields (match `ui-review/orders-mock-B-dialog.png`):
+- shop `AutoComplete` — options from `useShops`, free text allowed (creates a shop on submit via `ensureShop`);
+- order date `DatePicker` — **`initialValues={{ ordered_at: dayjs() }}` (today), backdatable**; converted to `ordered_at` on submit (`values.ordered_at.utc().format()`);
+- `quantity` `InputNumber` (default 1, min 1);
+- `price_per_unit` `InputNumber` (optional);
+- `order_number` `Input` (optional);
+- `url` `Input` (optional).
+
+On submit: `const shopId = name ? await ensureShop(name) : undefined;` then `POST /order` with `buildMarkOrderedBody({ filament_id, quantity, orderedAt, shopId, pricePerUnit, orderNumber, url })` (via `useCreate`/`apiFetch`). On success invalidate the `filament` and `order` lists so `on_order` refreshes and the pill appears. Wire a "Mark as ordered" button/link onto each **non-on-order** low-stock row in both `home/index.tsx` (dashboard tab) and `lowstock/index.tsx` (on-order rows show the pill instead).
+
+- [ ] **Step 5: Build the bulk Create-order modal (US2)**
+
+Create `client/src/pages/orders/createOrderModal.tsx` — opened from the Low Stock full page's multi-select. It shows a table of the selected filaments with an editable quantity per row (default = `Math.max(1, Math.ceil(shortfall / spoolWeight))` or simply 1), an optional shop `AutoComplete` (reusing `useShops`), and an order-date `DatePicker` (today, backdatable). Submit `buildBulkOrderBody(selected, orderedAt, shopId)` via `POST /order`; on success invalidate the `filament` + `order` lists so each row shows the Ordered pill. Add antd `rowSelection` + a "Create order" button (enabled when ≥1 row is selected) to `lowstock/index.tsx`. Match the bulk variant of `ui-review/orders-mock-A-shoppinglist.png`.
+
+- [ ] **Step 6: Add i18n keys**
+
+Extend the `orders` namespace in `client/public/locales/en/common.json`:
+```json
+"orders": {
+  "mark_ordered": "Mark as ordered",
+  "create_order": "Create order",
+  "shop": "Shop",
+  "shop_placeholder": "Type a shop name (creates it if new)",
+  "order_date": "Order date",
+  "quantity": "Quantity",
+  "price_per_unit": "Price / spool",
+  "order_number_field": "Order number",
+  "url": "Order link",
+  "selected_count": "{{count}} selected"
 }
 ```
 
-- [ ] **Step 4: Run it to verify it passes**
-
-Run: `cd client && npx vitest run src/pages/orders/bulkOrder.test.ts`
-Expected: PASS.
-
-- [ ] **Step 5: Build the multi-select + Create-order modal**
-
-Add row selection to the shopping list in `client/src/pages/home/index.tsx` (Ant `Table` `rowSelection` or checkboxes) and a "Create order" button enabled when ≥1 row is selected. Create `client/src/pages/orders/createOrderModal.tsx`: a table of the selected filaments with an editable quantity per row (default from shortfall or 1), an optional shop autocomplete (reusing `useShops`), submitting `buildOrderBody(...)` via `POST /order`. On success invalidate the filaments query so each selected row shows the Ordered pill. Match approved mock 1 (bulk variant). Add i18n keys (`orders.createOrder`, `orders.selected`, ...).
-
-- [ ] **Step 6: Type-check, lint, format, unit tests; commit**
+- [ ] **Step 7: Type-check, lint, format, unit tests; screenshot; commit**
 
 Run:
 ```bash
-cd client && npx tsc --noEmit && npm run lint && npx prettier --write src/pages/orders src/pages/home && npx vitest run
-cd .. && git add client/ && git commit -m "feat(#298): US2 bulk order from shopping list
+cd client && npx tsc --noEmit && npm run lint && npx prettier --write src/pages/orders src/pages/lowstock src/pages/home && npx vitest run
+```
+Expected: all green. Run the app, open the dialog from a low-stock row, and **screenshot it against `ui-review/orders-mock-B-dialog.png`** (confirm the order-date field defaults to today and is backdatable). Commit:
+```bash
+cd .. && git add client/ && git commit -m "feat(#298): US1 mark-as-ordered dialog + US2 bulk order
+
+Shop autocomplete with inline create, order-date DatePicker defaulted to today
+(backdatable -> ordered_at), quantity/price/number/url; single-line order on
+submit. Bulk multi-select on the Low Stock page builds one order per selection.
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
-Expected: all green; commit succeeds.
 
 ---
 
-## Task 10 (UI, gated): US3 — arrival banner + order "Arrived" flow with split
+## Task 11 (UI, gated): US3 arrival dialog (split) + spool-create banner
 
-**Goal:** Creating a spool for an on-order filament shows a banner offering to complete that filament's line. The order page's "Arrived" flow accepts per-line delivered quantities (splitting on a partial), calling `POST /order/{id}/arrive`.
+**Branch:** `claude/orders-ui-arrival`.
+
+**Goal:** From the Orders page, "Arrived…" opens the approved arrival dialog (`ui-review/orders-mock-D-arrival-split.png`): a row per line with a **checkbox**, an **"N of M outstanding"** quantity `InputNumber` (default = outstanding), already-arrived lines shown **disabled with a ✓**, a **create-spools toggle** (carrying each line's price), and an optional location; submit `POST /order/{id}/arrive` with per-line quantities (a partial delivery splits the line). Also: creating a spool for an on-order filament shows a banner offering to complete that filament's outstanding line.
 
 **Files:**
-- Create: `client/src/pages/orders/arriveModal.tsx` (per-line quantity inputs; body from `ArriveParameters`)
+- Create: `client/src/pages/orders/arriveModal.tsx` (per-line checkboxes + quantities; body builder)
 - Create: `client/src/pages/orders/onOrderBanner.tsx` (spool-create banner)
-- Modify: the spool create page `client/src/pages/spools/create.tsx` (render the banner when the chosen filament's `on_order` is set)
+- Modify: `client/src/pages/orders/index.tsx` (wire the "Arrived…" action → `arriveModal`)
+- Modify: `client/src/pages/spools/create.tsx` (render the banner when the chosen filament's `on_order` is set)
 - Modify: `client/public/locales/en/common.json`
 
 **Interfaces (pure logic):**
-- Produces: `buildArriveBody(lines: { line_id: number; quantity: number; delivered: number }[], createSpools: boolean, locationId?: number)` → the `{ lines?: [{line_id, quantity?}], create_spools, location_id? }` body, omitting `quantity` when `delivered >= quantity` (whole line) and omitting a line entirely when `delivered === 0`.
+- `buildArriveBody(lines, createSpools, locationId?)` → `{ lines: [{line_id, quantity?}], create_spools, location_id? }`, omitting `quantity` for a fully delivered line, dropping unselected/zero lines, and setting `location_id` only when given.
 
-- [ ] **Step 1: Write the failing arrive-body test**
+- [ ] **Step 1: Write the failing arrive-body test (the mock-D split scenario)**
 
 Create `client/src/pages/orders/arriveModal.test.ts`:
 ```typescript
@@ -2398,46 +3098,50 @@ import { describe, it, expect } from "vitest";
 import { buildArriveBody } from "./arriveModal";
 
 describe("buildArriveBody", () => {
-  it("omits quantity for a fully delivered line and drops zero-delivered lines", () => {
+  it("splits a partial line, keeps a full line as-is, and drops unselected lines", () => {
     const body = buildArriveBody(
       [
-        { line_id: 1, quantity: 4, delivered: 2 }, // partial -> split
-        { line_id: 2, quantity: 1, delivered: 1 }, // full -> no quantity
-        { line_id: 3, quantity: 3, delivered: 0 }, // nothing -> omitted
+        { line_id: 1, quantity: 2, outstanding: 4, selected: true }, // partial -> split
+        { line_id: 2, quantity: 1, outstanding: 1, selected: true }, // full -> no quantity
+        { line_id: 3, quantity: 3, outstanding: 3, selected: false }, // unchecked -> omitted
       ],
       true,
       7,
     );
     expect(body).toEqual({
-      lines: [
-        { line_id: 1, quantity: 2 },
-        { line_id: 2 },
-      ],
+      lines: [{ line_id: 1, quantity: 2 }, { line_id: 2 }],
       create_spools: true,
       location_id: 7,
     });
   });
+  it("omits location_id when no location chosen and drops zero-quantity lines", () => {
+    const body = buildArriveBody([{ line_id: 1, quantity: 0, outstanding: 2, selected: true }], false);
+    expect(body).toEqual({ lines: [], create_spools: false });
+  });
 });
 ```
+Run: `cd client && npx vitest run src/pages/orders/arriveModal.test.ts` → FAIL.
 
-- [ ] **Step 2: Run it to verify it fails**
-
-Run: `cd client && npx vitest run src/pages/orders/arriveModal.test.ts`
-Expected: FAIL — no `buildArriveBody` export.
-
-- [ ] **Step 3: Implement `buildArriveBody` (and the modal skeleton)**
+- [ ] **Step 2: Implement `buildArriveBody`**
 
 In `client/src/pages/orders/arriveModal.tsx`, export:
 ```typescript
+export interface ArriveLineInput {
+  line_id: number;
+  quantity: number;
+  outstanding: number;
+  selected: boolean;
+}
+
 export function buildArriveBody(
-  lines: { line_id: number; quantity: number; delivered: number }[],
+  lines: ArriveLineInput[],
   createSpools: boolean,
   locationId?: number,
-): { lines: ({ line_id: number; quantity?: number })[]; create_spools: boolean; location_id?: number } {
+): { lines: { line_id: number; quantity?: number }[]; create_spools: boolean; location_id?: number } {
   const out = lines
-    .filter((l) => l.delivered > 0)
-    .map((l) => (l.delivered >= l.quantity ? { line_id: l.line_id } : { line_id: l.line_id, quantity: l.delivered }));
-  const body: { lines: ({ line_id: number; quantity?: number })[]; create_spools: boolean; location_id?: number } = {
+    .filter((l) => l.selected && l.quantity > 0)
+    .map((l) => (l.quantity >= l.outstanding ? { line_id: l.line_id } : { line_id: l.line_id, quantity: l.quantity }));
+  const body: { lines: { line_id: number; quantity?: number }[]; create_spools: boolean; location_id?: number } = {
     lines: out,
     create_spools: createSpools,
   };
@@ -2445,98 +3149,62 @@ export function buildArriveBody(
   return body;
 }
 ```
-Then build the modal: a row per outstanding line with a delivered-quantity `InputNumber` (0..quantity, default = quantity), a `create_spools` switch, an optional location select, submitting `buildArriveBody(...)` to `POST /order/{id}/arrive`. Show the split preview ("2 will arrive, 2 stay on order") per mock 6. On success invalidate the order + filament queries.
+Run the test again → PASS.
 
-- [ ] **Step 4: Run it to verify it passes**
+- [ ] **Step 3: Build the arrival dialog**
 
-Run: `cd client && npx vitest run src/pages/orders/arriveModal.test.ts`
-Expected: PASS.
+In the same file, build the modal from a given `order`. For each line:
+- **arrived** (`line.arrived_at` set): render a disabled row with the filament name and a green ✓ (`orders.arrived_check`), no input;
+- **outstanding**: a `Checkbox` (default checked), the filament name, and an `InputNumber` (min 1, max = outstanding, default = outstanding) labelled **"{{delivered}} of {{outstanding}} outstanding"** (`orders.n_of_m`). Show a live split preview per line when `delivered < outstanding` ("{{delivered}} will arrive, {{rest}} stay on order" — `orders.split_preview`).
 
-- [ ] **Step 5: Build the spool-create banner**
+A `create_spools` `Switch` (default on) and an optional location `Select` sit below the list. On submit, call `buildArriveBody(rows, createSpools, locationId)` and `POST /order/{order.id}/arrive` (via `apiFetch`/`useCustomMutation`); on success invalidate the `order`, `filament`, and `spool` lists so the state pill, the low-stock pills, and the spool count all refresh. Wire the Orders-page "Arrived…" action (Task 9 stub) to open this modal for its order. Match `ui-review/orders-mock-D-arrival-split.png`.
 
-Create `client/src/pages/orders/onOrderBanner.tsx` — an Ant `Alert` shown on the spool create page when the selected filament's `on_order` is set, offering "This filament is on order (order #<id>) — mark a line arrived?" that opens the arrive modal scoped to that filament's outstanding line. Wire it into `client/src/pages/spools/create.tsx`. Add i18n keys (`orders.arrived`, `orders.delivered`, `orders.willArrive`, `orders.stayOnOrder`, `orders.banner`, ...).
+- [ ] **Step 4: Build the spool-create banner**
 
-- [ ] **Step 6: Type-check, lint, format, unit tests; commit**
+Create `client/src/pages/orders/onOrderBanner.tsx` — an antd `Alert type="info"` shown on the spool create page when the selected filament's `on_order` is set: "This filament is on order (order #{{id}}) — mark its line arrived?" (`orders.banner`), with an action button that opens the arrive modal scoped to that filament's `on_order.order_id`. Render `<OnOrderBanner filament={selectedFilament} />` in `client/src/pages/spools/create.tsx` near the filament-selection field, guarded by `selectedFilament?.on_order`.
+
+- [ ] **Step 5: Add i18n keys**
+
+Extend the `orders` namespace:
+```json
+"orders": {
+  "arrived_check": "Arrived",
+  "n_of_m": "{{delivered}} of {{outstanding}} outstanding",
+  "split_preview": "{{delivered}} will arrive, {{rest}} stay on order",
+  "create_spools": "Create spools for the delivered items",
+  "location": "Location",
+  "banner": "This filament is on order (order #{{id}}) — mark its line arrived?",
+  "mark_arrived": "Mark arrived"
+}
+```
+
+- [ ] **Step 6: Type-check, lint, format, unit tests; screenshot; commit**
 
 Run:
 ```bash
 cd client && npx tsc --noEmit && npm run lint && npx prettier --write src/pages/orders src/pages/spools && npx vitest run
-cd .. && git add client/ && git commit -m "feat(#298): US3 arrival flow with split + spool-create banner
-
-Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
-Expected: green; commit succeeds.
-
----
-
-## Task 11 (UI, gated): US5 — conditional Orders nav/page + Shops under Settings
-
-**Goal:** The Orders nav item and page appear only once ≥1 order exists. Shops are managed under Settings (and via the inline autocomplete). No new columns/pills intrude on default views when there are zero orders.
-
-**Files:**
-- Create: `client/src/pages/orders/index.tsx` (Orders list + detail; react-admin resource or a plain page under `/orders`)
-- Modify: `client/src/App.tsx` (register the `/orders` route + conditional nav item — render the menu entry only when the orders count > 0; reuse the pattern the Locations/Printers entries use, lines ~105/231)
-- Create: `client/src/pages/settings/shopsSettings.tsx` (Shops CRUD table) + register it in `client/src/pages/settings/index.tsx`
-- Modify: `client/public/locales/en/common.json`
-
-**Interfaces (pure logic):**
-- Produces: `shouldShowOrdersNav(orderCount: number): boolean` → `orderCount > 0`.
-
-- [ ] **Step 1: Write the failing nav-visibility test**
-
-Create `client/src/pages/orders/nav.test.ts`:
-```typescript
-import { describe, it, expect } from "vitest";
-import { shouldShowOrdersNav } from "./index";
-
-describe("shouldShowOrdersNav", () => {
-  it("hides the nav item with zero orders", () => {
-    expect(shouldShowOrdersNav(0)).toBe(false);
-  });
-  it("shows it with at least one order", () => {
-    expect(shouldShowOrdersNav(1)).toBe(true);
-    expect(shouldShowOrdersNav(9)).toBe(true);
-  });
-});
-```
-
-- [ ] **Step 2: Run it to verify it fails**
-
-Run: `cd client && npx vitest run src/pages/orders/nav.test.ts`
-Expected: FAIL — no `shouldShowOrdersNav` export.
-
-- [ ] **Step 3: Implement `shouldShowOrdersNav` + the Orders page**
-
-In `client/src/pages/orders/index.tsx`, export `export function shouldShowOrdersNav(orderCount: number): boolean { return orderCount > 0; }` and build the Orders list/detail page (columns: shop, ordered date, state pill via `orderPill.tsx`, line count; detail lists lines with per-line arrived state and an "Arrived" button opening the Task 10 arrive modal). Match approved mock 5. Fetch orders via `GET /order` (react-query or react-admin dataProvider). Wire the nav gate in `App.tsx`: read the order count (a lightweight `GET /order?limit=1` reading `x-total-count`) and render the Orders menu item only when `shouldShowOrdersNav(count)`.
-
-- [ ] **Step 4: Run it to verify it passes**
-
-Run: `cd client && npx vitest run src/pages/orders/nav.test.ts`
-Expected: PASS.
-
-- [ ] **Step 5: Build the Shops settings panel**
-
-Create `client/src/pages/settings/shopsSettings.tsx` — a table with create/edit/delete of shops via `/shop` (name, homepage, ships_to as a tag input, comment), surfacing the 409 delete-restriction message when a shop still has orders. Register it in `client/src/pages/settings/index.tsx` alongside the other panels (see the existing `printerSettings.tsx` / `usersSettings.tsx` registration). Add i18n keys (`settings.shops.*`, `orders.state.open`, `orders.state.arrived`, ...).
-
-- [ ] **Step 6: Type-check, lint, format, unit tests; commit**
-
-Run:
+Expected: all green. Run the app, open the arrival dialog on a multi-quantity order, deliver a partial quantity, and **screenshot it against `ui-review/orders-mock-D-arrival-split.png`** (checkboxes, "N of M outstanding", disabled ✓ rows, create-spools toggle). Commit:
 ```bash
-cd client && npx tsc --noEmit && npm run lint && npx prettier --write src/pages/orders src/pages/settings src/App.tsx && npx vitest run
-cd .. && git add client/ && git commit -m "feat(#298): US5 conditional Orders nav/page + Shops settings
+cd .. && git add client/ && git commit -m "feat(#298): US3 split arrival dialog + spool-create banner
+
+Per-line checkboxes with 'N of M outstanding' quantities (partial -> split),
+already-arrived lines disabled with a check, create-spools toggle carrying price;
+POST /order/{id}/arrive. Spool-create banner offers to complete an on-order line.
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
-Expected: green; commit succeeds.
 
 ---
 
 ## Task 12 (UI, gated): e2e journeys
 
-**Goal:** Playwright journeys covering mark-as-ordered (US1), bulk order (US2), and the arrival banner/split (US3).
+**Branch:** `claude/orders-ui-e2e`.
+
+**Goal:** Playwright journeys covering the redesign end-to-end: mark-as-ordered (US1), bulk order (US2), split arrival + banner (US3), and the merged low-stock sections + always-visible nav.
 
 **Files:**
-- Create: `client/e2e/journeys/orders.spec.ts` (follow the conventions in `client/e2e/journeys/print-dialog.spec.ts`)
+- Create: `client/e2e/journeys/orders.spec.ts` (follow the conventions in `client/e2e/journeys/print-dialog.spec.ts` and `home.spec.ts` — API-seed via `request`, antd button/radio labels clicked by text)
 
 - [ ] **Step 1: Prepare the e2e build env**
 
@@ -2546,26 +3214,27 @@ cd client
 echo "VITE_APIURL=/api/v1" > .env.production
 npm run build
 ```
-Expected: production build succeeds (this is required before the e2e run per the repo convention).
+Expected: the production build succeeds (required before the e2e run per the repo convention).
 
-- [ ] **Step 2: Write the journeys (they must fail first against an un-built/older bundle, then pass)**
+- [ ] **Step 2: Write the journeys**
 
-Create `client/e2e/journeys/orders.spec.ts` following `print-dialog.spec.ts`'s structure. Three journeys:
-1. **mark-as-ordered:** create a filament with a `low_stock_threshold` and a below-threshold spool so it shows on the shopping list → click "Mark as ordered" → fill shop (inline create) + quantity/price → submit → assert the calm blue `Ordered · … · <shop>` pill appears and the filament detail's on-order state is set.
-2. **bulk order:** two low-stock filaments → multi-select on the shopping list → "Create order" → edit quantities → submit → assert one order exists with two lines (via the Orders page, now visible in nav) and both rows show the pill.
-3. **arrival banner + split:** an order of quantity 4 for one filament → open the spool create page for that filament → assert the on-order banner appears → open the arrive flow → deliver 2 → assert 2 spools created and the order still shows `open` with 2 outstanding.
+Create `client/e2e/journeys/orders.spec.ts` following `print-dialog.spec.ts`'s structure (a `seedFilament`/`seedSpool`/`seedOrder` helper via `request.post(\`${APP_BASE_URL}/api/v1/…\`)`). Four journeys — **do not** click any real browser Print; interact with antd controls by their visible text:
+1. **merged low-stock sections + nav:** seed one filament with a `low_stock_threshold` below its stock and one filament with no threshold but stock below the 200 g fallback → open the dashboard → assert there is a single **"Low Stock"** tab and **no "Shopping List" tab**, that both the "Below your set threshold" and "Below the … default" section headers appear, and that **"Low Stock"** and **"Orders"** nav items are both visible.
+2. **mark-as-ordered (US1):** from the Low Stock page (`/lowstock`), click "Mark as ordered" on a row → fill the shop autocomplete (inline create) + quantity/price → confirm the order-date field defaults to today → submit → assert the calm blue `Ordered · … · <shop>` pill appears on the row (and the filament's `on_order` is set via an API check).
+3. **bulk order (US2):** two low-stock filaments → `/lowstock` → multi-select both rows → "Create order" → edit quantities → submit → assert the Orders page (always in nav) lists one order summarising two filaments and both rows show the Ordered pill.
+4. **split arrival (US3):** API-seed an order of quantity 4 for one filament → Orders page → "Arrived…" → set delivered = 2 with create-spools on → submit → assert 2 spools now exist and the order still shows **Open** / "2 of 4 arrived". Then open the spool create page for that filament and assert the on-order banner appears.
 
 - [ ] **Step 3: Run the e2e suite**
 
-Run: `cd client && npm run test:e2e -- orders.spec.ts` (use the repo's actual e2e script name; check `package.json` `scripts` — likely `test:e2e` or `playwright test`).
-Expected: all three journeys pass.
+Run: `cd client && npm run test:e2e -- orders.spec.ts`
+Expected: all four journeys pass.
 
 - [ ] **Step 4: Lint, format, commit**
 
 Run:
 ```bash
 cd client && npm run lint && npx prettier --write e2e/journeys/orders.spec.ts
-cd .. && git add client/ && git commit -m "test(#298): e2e journeys — mark-as-ordered, bulk order, arrival split
+cd .. && git add client/ && git commit -m "test(#298): e2e journeys — merged low-stock, mark-as-ordered, bulk, split arrival
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
@@ -2581,7 +3250,7 @@ Expected: green; commit succeeds. This completes Phase-1 UI.
 - **arrive endpoint** (spec §"API", US3): Task 4 — omitted lines = all outstanding, quantity split, `create_spools`, price carry, `location_id` → spool location name, returns created spools. Named 4-white/1-black test. ✓
 - **on_order computed field** (spec §"API", edge "oldest", US6): Task 5 — oldest open order, list+detail only, null nested, oldest-wins + clears-on-arrival tests. ✓
 - **Client models** (map Task 6): Task 6 — `IFilament.on_order`, `IShop`/`IOrder`/`IOrderLine`. ✓
-- **UX US1/US2/US3/US5/US6** (spec §"UX"): Tasks 8/9/10/11 (mockup-gated) + US6 satisfied by the on_order field (Task 5). US5 opt-out = conditional nav (Task 11). ✓
+- **UX US1/US2/US3/US5/US6 + 2026-07-19 low-stock redesign** (spec §"UX", §"Low-stock redesign", Decisions #6): Task 8 (merged per-filament Low Stock, the `low_stock_fallback_g` setting, dashboard tab + KPI badge), Task 9 (always-visible Low Stock & Orders nav + pages, inline threshold edit), Task 10 (US1 mark-as-ordered dialog — shop autocomplete + order-date DatePicker defaulted to today; US2 bulk order), Task 11 (US3 split arrival dialog + spool-create banner), Task 12 (e2e). US5 works-without-config via the shipped 200 g fallback + always-visible-but-empty Orders page; US6 satisfied by the on_order field (Task 5). ✓ (All mockup-gated on Task 7; screenshots vs `ui-review/orders-mock-A/B/C/D.png` after each UI task.)
 - **Mockup gate** (project rule): Task 7 STOPS for approval before any UI. ✓
 - **OUT of scope, correctly deferred to Phase 2** (spec §"Phasing"): SpoolmanDB catalog, `purchase_options` endpoint, `purchase_regions` setting, US4 — not in this plan. ✓
 - **Edge cases** (spec §"Edge cases"): zero-line order = arrived (test in Task 3); multiple open orders → oldest (Task 5); un-arriving via PATCH lines full-replace (Task 3 semantics); split bookkeeping (Task 4); quantity ≥ 1 validation (arrive + line params). ✓
