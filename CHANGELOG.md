@@ -4,6 +4,7 @@
 
 ## Unreleased
 
+- **New: label QR size setting** (#295) — the printed QR square is now adjustable in mm from the label dialogs (Auto keeps the old fill-half-the-label behavior); a soft warning flags sizes under 10 mm as hard to phone-scan. Also fixes the QR overflowing its half of narrow labels: the SVG's intrinsic size no longer overrides the layout split.
 - **Deployment-arc hardening**: upgrades now carry *data* in the tests (native update and `docker compose pull`-style image swap both prove pre-upgrade spools survive migrations); a new CI `verify-artifact` job runs the release-zip contract against the candidate artifact *before* anything publishes; the native install matrix gains an **arm64 (Pi-class) leg** under QEMU; third-party consumer checkouts auto-refresh weekly and suites log consumer versions; suites refresh the local `:latest` image once per session (stale caches silently tested old releases).
 - **Image publishing polish** (#273) — multi-arch images now carry BuildKit **SBOM and provenance attestations**, and releases sync a proper overview to the Docker Hub page (`cookiemonster95/spoolman-ng`), which was previously blank.
 - **Docs: reverse proxies & networking** (#275) — canonical recipes in the installation guide: Caddy, nginx (with the WebSocket upgrade headers live updates need), Traefik incl. sub-path via `SPOOLMAN_BASE_PATH`, auth-at-proxy caveats for printer traffic, IPv6 (`SPOOLMAN_HOST=::`), and a rootless-Podman quadlet unit.

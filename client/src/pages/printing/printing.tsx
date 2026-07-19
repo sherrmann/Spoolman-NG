@@ -31,6 +31,8 @@ export interface QRCodePrintSettings {
   textSize?: number;
   // QR image padding in mm (#59). Optional — old presets default to 2 at read time.
   qrPadding?: number;
+  // Printed QR square size in mm (#295). Absent ⇒ auto: the historical fill-half-the-label behavior.
+  qrSize?: number;
   // QR error-correction level (#106). Higher = more redundancy but denser modules. Old presets default to "H".
   qrErrorLevel?: "L" | "M" | "Q" | "H";
   // Show a colored swatch of the filament colour next to the label text (#114). Default off.

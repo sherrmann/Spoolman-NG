@@ -184,6 +184,13 @@
         "tooltip": "Lay the label text out across this many columns. Handy for narrow labels with several short lines."
       },
       "qrPadding": "QR Padding",
+      "qrSize": {
+        "label": "QR Size",
+        "tooltip": "Printed size of the QR code square in mm. Auto keeps the historical behavior: the QR fills half the label (all of it if nothing else prints). QR Padding is added around the chosen size as a quiet zone.",
+        "auto": "Auto",
+        "custom": "Custom",
+        "tooSmall": "QR codes smaller than {{mm}} mm can be hard to scan with a phone camera."
+      },
       "showContent": "Print Label",
       "customPayload": {
         "label": "Custom QR Payload",
