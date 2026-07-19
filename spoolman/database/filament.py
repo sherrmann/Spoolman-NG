@@ -60,9 +60,6 @@ async def create(
     external_id: str | None = None,
     low_stock_threshold: float | None = None,
     reserve_count: int | None = None,
-    ordered_at: datetime | None = None,
-    order_url: str | None = None,
-    order_note: str | None = None,
     extra: dict[str, str] | None = None,
 ) -> models.Filament:
     """Add a new filament to the database."""
@@ -103,9 +100,6 @@ async def create(
         external_id=external_id,
         low_stock_threshold=low_stock_threshold,
         reserve_count=reserve_count,
-        ordered_at=utc_timezone_naive(ordered_at) if ordered_at is not None else None,
-        order_url=order_url,
-        order_note=order_note,
         extra=[models.FilamentField(key=k, value=v) for k, v in (extra or {}).items()],
     )
     db.add(filament)
