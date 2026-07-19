@@ -55,6 +55,41 @@ test.describe("print dialog journeys", () => {
     await expect(page.locator(".ant-modal-content").last()).toBeVisible();
   });
 
+  test("QR size setting shrinks the QR and warns when unscannably small (#295)", async ({ page, request }) => {
+    const spoolId = await seedSpool(request, `QrSize ${Date.now()}`);
+
+    await page.goto(`${APP_BASE_URL}/spool/print?spools=${spoolId}`);
+    await expect(page.getByRole("button", { name: /Print/ }).first()).toBeVisible();
+    await page.getByText("Content Settings", { exact: true }).click();
+
+    // Auto (the default) fills half the label — the pre-#295 behavior.
+    const qrContainer = page.locator(".print-qrcode-container").first();
+    const autoWidth = (await qrContainer.boundingBox())?.width ?? 0;
+    expect(autoWidth).toBeGreaterThan(0);
+
+    // Switching to a custom size gives a definite mm basis well under the auto half-label.
+    const qrSizeItem = page.locator(".ant-form-item", { hasText: "QR Size" }).first();
+    await qrSizeItem.getByText("Custom", { exact: true }).click();
+    await expect(async () => {
+      const customWidth = (await qrContainer.boundingBox())?.width ?? 0;
+      expect(customWidth).toBeGreaterThan(0);
+      expect(customWidth).toBeLessThan(autoWidth);
+    }).toPass();
+
+    // Below the scannability floor a soft warning appears; back at a sane size it clears.
+    await qrSizeItem.getByRole("spinbutton").fill("8");
+    await expect(page.getByText(/can be hard to scan/)).toBeVisible();
+    await qrSizeItem.getByRole("spinbutton").fill("20");
+    await expect(page.getByText(/can be hard to scan/)).toHaveCount(0);
+
+    // Auto restores the fill behavior.
+    await qrSizeItem.getByText("Auto", { exact: true }).click();
+    await expect(async () => {
+      const restoredWidth = (await qrContainer.boundingBox())?.width ?? 0;
+      expect(restoredWidth).toBeCloseTo(autoWidth, 0);
+    }).toPass();
+  });
+
   test("out-of-bounds label content raises the clipped-content warning", async ({ page, request }) => {
     // Deliberately short name: a long unbreakable token (like the timestamped names other
     // specs seed) genuinely clips in the default label's text box and would trip the

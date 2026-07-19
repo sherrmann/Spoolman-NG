@@ -17,6 +17,7 @@ import { ReactElement } from "react";
 import { code128Bars } from "../../utils/barcode";
 import { formatNumberOnUserInput, numberParser } from "../../utils/parsing";
 import { getBasePath } from "../../utils/url";
+import { MIN_SCANNABLE_QR_MM, qrContainerBasis } from "./labelLayout";
 import { QRCodePrintSettings } from "./printing";
 import PrintingDialog from "./printingDialog";
 
@@ -121,6 +122,8 @@ const QRCodePrintingDialog = ({
   const showQRCodeMode = printSettings?.showQRCodeMode || "withIcon";
   const textSize = printSettings?.textSize || 3;
   const qrPadding = printSettings?.qrPadding ?? 2;
+  // Printed QR square in mm (#295). undefined ⇒ auto (fill), the only behavior before the setting existed.
+  const qrSize = printSettings?.qrSize;
   // New optional layout/output settings — each defaults to the previous behavior (#106/#114/#79/#133/#138).
   const qrErrorLevel = printSettings?.qrErrorLevel ?? "H";
   const showColorSwatch = printSettings?.showColorSwatch ?? false;
@@ -173,7 +176,7 @@ const QRCodePrintingDialog = ({
   // Flex direction encodes QR placement (#79): row = beside the text (default), column = above,
   // column-reverse = below. The container basis becomes a vertical split for the stacked layouts.
   const itemFlexDirection = qrPlacement === "top" ? "column" : qrPlacement === "bottom" ? "column-reverse" : "row";
-  const containerBasis = showSide ? "50%" : "100%";
+  const containerBasis = qrContainerBasis({ showSide, qrSize, qrPadding });
 
   return (
     <PrintingDialog
@@ -350,6 +353,64 @@ const QRCodePrintingDialog = ({
               }}
             />
           </Form.Item>
+          <Form.Item
+            label={t("printing.qrcode.qrSize.label")}
+            tooltip={t("printing.qrcode.qrSize.tooltip")}
+            validateStatus={
+              qrSize !== undefined && qrSize < MIN_SCANNABLE_QR_MM && showQRCodeMode !== "no" ? "warning" : undefined
+            }
+            help={
+              qrSize !== undefined && qrSize < MIN_SCANNABLE_QR_MM && showQRCodeMode !== "no"
+                ? t("printing.qrcode.qrSize.tooSmall", { mm: MIN_SCANNABLE_QR_MM })
+                : undefined
+            }
+          >
+            <Radio.Group
+              disabled={showQRCodeMode === "no"}
+              options={[
+                { label: t("printing.qrcode.qrSize.auto"), value: "auto" },
+                { label: t("printing.qrcode.qrSize.custom"), value: "custom" },
+              ]}
+              onChange={(e: RadioChangeEvent) => {
+                setPrintSettings({ ...printSettings, qrSize: e.target.value === "auto" ? undefined : 20 });
+              }}
+              value={qrSize === undefined ? "auto" : "custom"}
+              optionType="button"
+              buttonStyle="solid"
+            />
+            {qrSize !== undefined && (
+              <Row>
+                <Col span={12}>
+                  <Slider
+                    disabled={showQRCodeMode === "no"}
+                    tooltip={{ formatter: (value) => `${value} mm` }}
+                    min={5}
+                    max={50}
+                    value={qrSize}
+                    step={0.5}
+                    onChange={(value) => {
+                      setPrintSettings({ ...printSettings, qrSize: value });
+                    }}
+                  />
+                </Col>
+                <Col span={12}>
+                  <InputNumber
+                    disabled={showQRCodeMode === "no"}
+                    min={1}
+                    step={0.5}
+                    style={{ margin: "0 16px" }}
+                    value={qrSize}
+                    addonAfter="mm"
+                    formatter={formatNumberOnUserInput}
+                    parser={numberParser}
+                    onChange={(value) => {
+                      setPrintSettings({ ...printSettings, qrSize: value ?? 20 });
+                    }}
+                  />
+                </Col>
+              </Row>
+            )}
+          </Form.Item>
           <Form.Item label={t("printing.qrcode.qrPadding")}>
             <Row>
               <Col span={12}>
@@ -397,15 +458,21 @@ const QRCodePrintingDialog = ({
 
             .print-page .print-qrcode-container {
               /* Definite basis that neither grows nor shrinks, so the QR renders at a consistent
-                 size regardless of the label text length (#59). */
+                 size regardless of the label text length (#59). min-width/height 0 drop the flex
+                 auto-minimum: without it the SVG's intrinsic size (160px) floors the container and
+                 silently overrides both a custom mm size and the 50% split on narrow labels (#295). */
               flex: 0 0 ${containerBasis};
               display: flex;
+              min-width: 0;
+              min-height: 0;
             }
 
             .print-page .print-qrcode {
               width: auto !important;
               height: auto !important;
               padding: ${qrPadding}mm;
+              min-width: 0;
+              min-height: 0;
             }
 
             .print-page .print-qrcode-title {
