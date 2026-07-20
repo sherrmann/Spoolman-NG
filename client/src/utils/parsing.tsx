@@ -145,6 +145,20 @@ export function formatWeight(weightInGrams: number, precision: number = 2): stri
 }
 
 /**
+ * Formats a weight for compact "N left" style displays (#298 gate-feedback): whole grams (no
+ * decimal) below 1000 g, kilograms with exactly one decimal place at and above 1000 g — e.g.
+ * "100 g" / "1.5 kg". `formatWeight` already owns the g/kg unit conversion but takes a single
+ * precision for both branches, which can't give grams 0 decimals and kilograms 1 at the same
+ * time — this is a thin wrapper that just picks the right precision per branch.
+ *
+ * @param {number} weightInGrams - The weight in grams to be formatted.
+ * @return {string} The formatted weight with the appropriate unit (kg or g).
+ */
+export function formatWeightCompact(weightInGrams: number): string {
+  return formatWeight(weightInGrams, weightInGrams >= 1000 ? 1 : 0);
+}
+
+/**
  * Formats the length in millimeters to either meters or millimeters based on the provided precision.
  *
  * @param {number} lengthInMillimeter - The length in millimeters to be formatted.

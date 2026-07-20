@@ -158,6 +158,110 @@ class Vendor(BaseModel):
         )
 
 
+class Shop(BaseModel):
+    id: int = Field(description="Unique internal ID of this shop.")
+    registered: SpoolmanDateTime = Field(description="When the shop was registered in the database. UTC Timezone.")
+    name: str = Field(max_length=64, description="Shop name (unique).", examples=["3DJake"])
+    homepage: str | None = Field(
+        None,
+        max_length=1024,
+        description="Shop homepage URL.",
+        examples=["https://3djake.com"],
+    )
+    ships_to: list[str] | None = Field(
+        None,
+        description=(
+            "Free-form region codes this shop ships to, e.g. ['CH', 'EU', 'DE']. Null/absent means unspecified. "
+            "Stored server-side as a comma-separated string."
+        ),
+        examples=[["CH", "EU"]],
+    )
+    comment: str | None = Field(
+        None,
+        max_length=1024,
+        description="Free text comment about this shop.",
+        examples=[""],
+    )
+
+    @staticmethod
+    def from_db(item: models.Shop) -> "Shop":
+        """Create a Pydantic shop object from a database shop object."""
+        return Shop(
+            id=item.id,
+            registered=item.registered,
+            name=item.name,
+            homepage=item.homepage,
+            ships_to=item.ships_to.split(",") if item.ships_to else None,
+            comment=item.comment,
+        )
+
+
+class OrderLine(BaseModel):
+    id: int = Field(description="Unique internal ID of this order line.")
+    filament_id: int = Field(description="The filament type ordered on this line.")
+    quantity: int = Field(ge=1, description="Number of spools ordered on this line.", examples=[2])
+    price_per_unit: float | None = Field(
+        None,
+        ge=0,
+        description="Price of one spool on this line, in the configured currency; copied to spool price on arrival.",
+        examples=[19.9],
+    )
+    arrived_at: SpoolmanDateTime | None = Field(
+        None,
+        description="When this line arrived. Null means still outstanding. UTC Timezone.",
+    )
+
+    @staticmethod
+    def from_db(item: models.OrderLine) -> "OrderLine":
+        """Create a Pydantic order-line object from a database order-line object."""
+        return OrderLine(
+            id=item.id,
+            filament_id=item.filament_id,
+            quantity=item.quantity,
+            price_per_unit=item.price_per_unit,
+            arrived_at=item.arrived_at,
+        )
+
+
+class Order(BaseModel):
+    id: int = Field(description="Unique internal ID of this order.")
+    registered: SpoolmanDateTime = Field(description="When the order was registered in the database. UTC Timezone.")
+    shop: Shop | None = Field(None, description="The shop this order was placed with.")
+    ordered_at: SpoolmanDateTime = Field(description="When the order was placed. UTC Timezone.")
+    order_number: str | None = Field(
+        None, max_length=256, description="Shop order/reference number.", examples=["4711"]
+    )
+    url: str | None = Field(
+        None, max_length=1024, description="Link to the order.", examples=["https://.../orders/4711"]
+    )
+    comment: str | None = Field(None, max_length=1024, description="Free text comment about this order.", examples=[""])
+    lines: list[OrderLine] = Field(description="The lines of this order.")
+    state: Literal["open", "arrived"] = Field(
+        description=(
+            "Derived state: 'open' while any line is un-arrived, otherwise 'arrived' (an order with zero lines "
+            "is 'arrived'). Never stored."
+        ),
+        examples=["open"],
+    )
+
+    @staticmethod
+    def from_db(item: models.Order) -> "Order":
+        """Create a Pydantic order object from a database order object."""
+        lines = [OrderLine.from_db(line) for line in item.lines]
+        state = "open" if any(line.arrived_at is None for line in item.lines) else "arrived"
+        return Order(
+            id=item.id,
+            registered=item.registered,
+            shop=Shop.from_db(item.shop) if item.shop is not None else None,
+            ordered_at=item.ordered_at,
+            order_number=item.order_number,
+            url=item.url,
+            comment=item.comment,
+            lines=lines,
+            state=state,
+        )
+
+
 class Location(BaseModel):
     id: int = Field(description="Unique internal ID of this location.")
     registered: SpoolmanDateTime = Field(description="When the location was registered in the database. UTC Timezone.")
@@ -264,6 +368,13 @@ class Pattern(Enum):
 
     MARBLE = "marble"
     SPARKLE = "sparkle"
+
+
+class OnOrderInfo(BaseModel):
+    """The oldest open order containing a filament (#298); the HA/HACS on-order signal."""
+
+    order_id: int = Field(description="ID of the oldest open order containing this filament.")
+    ordered_at: SpoolmanDateTime = Field(description="When that order was placed. UTC Timezone.")
 
 
 class Filament(BaseModel):
@@ -445,6 +556,14 @@ class Filament(BaseModel):
         ),
         examples=[2500.0],
     )
+    on_order: OnOrderInfo | None = Field(
+        None,
+        description=(
+            "The oldest open order containing this filament type, as {order_id, ordered_at}, or null when nothing "
+            "of it is outstanding. Only populated on the filament list and detail endpoints; null in "
+            "nested/websocket payloads. This is the Home Assistant / HACS on-order signal."
+        ),
+    )
     extra: dict[str, str] = Field(
         description=_extra_fields_description("filament"),
     )
@@ -455,6 +574,7 @@ class Filament(BaseModel):
         *,
         spool_count: int | None = None,
         remaining_weight: float | None = None,
+        on_order: "tuple[int, datetime] | None" = None,
     ) -> "Filament":
         """Create a new Pydantic filament object from a database filament object.
 
@@ -497,6 +617,7 @@ class Filament(BaseModel):
             label_printed_at=item.label_printed_at,
             spool_count=spool_count,
             remaining_weight=remaining_weight,
+            on_order=OnOrderInfo(order_id=on_order[0], ordered_at=on_order[1]) if on_order is not None else None,
             extra={field.key: field.value for field in item.extra},
         )
 
@@ -779,6 +900,20 @@ class VendorEvent(Event):
 
     payload: Vendor = Field(description="Updated vendor.")
     resource: Literal["vendor"] = Field(description="Resource type.")
+
+
+class ShopEvent(Event):
+    """Event."""
+
+    payload: Shop = Field(description="Updated shop.")
+    resource: Literal["shop"] = Field(description="Resource type.")
+
+
+class OrderEvent(Event):
+    """Event."""
+
+    payload: Order = Field(description="Updated order.")
+    resource: Literal["order"] = Field(description="Resource type.")
 
 
 class LocationEvent(Event):

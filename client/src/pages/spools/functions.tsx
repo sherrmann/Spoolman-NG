@@ -164,6 +164,10 @@ interface SelectOption {
   is_internal: boolean;
   // Colour swatch data for the dropdown (#126); undefined when the filament has no colour.
   colorObj?: FilamentColor;
+  // The oldest open order for this filament (#298), carried through from IFilament so the
+  // spool-create page's "on order" banner (onOrderBanner.tsx) can offer to complete it. Only
+  // internal filaments can have this — external (SpoolmanDB) filaments aren't in the database yet.
+  on_order?: { order_id: number; ordered_at: string };
 }
 
 export function useGetFilamentSelectOptions() {
@@ -196,6 +200,7 @@ export function useGetFilamentSelectOptions() {
             item.multi_color_hexes ? item.multi_color_hexes.split(",") : undefined,
             item.multi_color_direction,
           ),
+          on_order: item.on_order,
         };
       }) ?? [];
     data.sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }));

@@ -90,3 +90,9 @@ register_setting("locations_spoolorders", SettingType.OBJECT, json.dumps({}))
 # grams/millimeters in the list and detail views (#85). Default off preserves the current display and
 # is purely a client-side presentation choice — stored values and the API stay in grams/millimeters.
 register_setting("unit_scaling", SettingType.BOOLEAN, json.dumps(obj=False))
+
+# Global fallback low-stock threshold in absolute grams (#298 low-stock redesign). The merged
+# per-filament Low Stock view flags a filament with no explicit low_stock_threshold once its aggregate
+# remaining weight drops to/below this. Ships at 200 g so Low Stock is truthful out of the box (US5);
+# set to 0 to disable the fallback (only explicit thresholds flag).
+register_setting("low_stock_fallback_g", SettingType.NUMBER, json.dumps(200))

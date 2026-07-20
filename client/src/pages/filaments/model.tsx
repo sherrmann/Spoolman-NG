@@ -38,6 +38,9 @@ export interface IFilament {
   // Server-computed aggregates, only present on the filament list/detail endpoints (#49 / #53).
   spool_count?: number;
   remaining_weight?: number;
+  // The oldest open order containing this filament (#298). Present only on list/detail; absent when
+  // nothing is outstanding. The client's on-order pill / shopping-list state reads this.
+  on_order?: { order_id: number; ordered_at: string };
   extra: { [key: string]: string };
 }
 

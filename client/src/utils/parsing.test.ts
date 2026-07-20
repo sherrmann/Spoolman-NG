@@ -3,6 +3,7 @@ import {
   formatLength,
   formatNumberWithSpaceSeparator,
   formatWeight,
+  formatWeightCompact,
   scaleUnitValue,
   numberFormatter,
   numberParser,
@@ -130,6 +131,34 @@ describe("formatWeight", () => {
     expect(formatWeight(1234, 3)).toBe("1.234 kg");
     // Default precision is 2, so 1234 g rounds to 1.23 kg.
     expect(formatWeight(1234)).toBe("1.23 kg");
+  });
+});
+
+describe("formatWeightCompact", () => {
+  // Gate-feedback (#298): the Low Stock "N left" text on both surfaces (dashboard tab, Low
+  // Stock page) needs whole grams below 1000 g but a single decimal place once it rolls over
+  // into kilograms — a fixed precision (as plain formatWeight takes) can't give both branches
+  // their own precision, so this thin wrapper picks the precision per branch instead.
+  it("shows whole grams (no decimal) below 1000 g", () => {
+    expect(formatWeightCompact(100)).toBe("100 g");
+    expect(formatWeightCompact(999)).toBe("999 g");
+    expect(formatWeightCompact(0)).toBe("0 g");
+  });
+
+  it("rounds fractional sub-kilogram grams to the nearest whole gram", () => {
+    expect(formatWeightCompact(99.6)).toBe("100 g");
+    expect(formatWeightCompact(99.4)).toBe("99 g");
+  });
+
+  it("shows kilograms with exactly one decimal place at and above 1000 g", () => {
+    expect(formatWeightCompact(1000)).toBe("1 kg");
+    expect(formatWeightCompact(1500)).toBe("1.5 kg");
+    expect(formatWeightCompact(2000)).toBe("2 kg");
+  });
+
+  it("rounds sub-hectogram kilogram fractions to one decimal place", () => {
+    expect(formatWeightCompact(1240)).toBe("1.2 kg");
+    expect(formatWeightCompact(1260)).toBe("1.3 kg");
   });
 });
 

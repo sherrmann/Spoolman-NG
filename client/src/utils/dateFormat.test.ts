@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 import "dayjs/locale/de";
 import "dayjs/locale/en";
 import { afterAll, describe, expect, it } from "vitest";
-import { DATE_TIME_FORMAT, DATE_TIME_FORMAT_SHORT } from "./dateFormat";
+import { DATE_FORMAT, DATE_TIME_FORMAT, DATE_TIME_FORMAT_SHORT } from "./dateFormat";
 
 // A dayjs instance captures the active locale at creation time, and the app sets dayjs.locale() to the
 // UI language before any date is rendered — so build the instant AFTER selecting the locale, exactly
@@ -30,5 +30,12 @@ describe("locale-aware date formats (#87)", () => {
     expect(dayjs(ISO).format(DATE_TIME_FORMAT_SHORT)).toBe("08.07.2026 14:30");
     dayjs.locale("en");
     expect(dayjs(ISO).format(DATE_TIME_FORMAT_SHORT)).toBe("07/08/2026 14:30");
+  });
+
+  it("drops the time entirely in the date-only form", () => {
+    dayjs.locale("de");
+    expect(dayjs(ISO).format(DATE_FORMAT)).toBe("08.07.2026");
+    dayjs.locale("en");
+    expect(dayjs(ISO).format(DATE_FORMAT)).toBe("07/08/2026");
   });
 });

@@ -4,16 +4,16 @@ import { IFilament } from "../filaments/model";
 import { ISpool } from "../spools/model";
 import { IVendor } from "../vendors/model";
 import {
+  computeLowStock,
   DEFAULT_TOTAL_WEIGHT,
   distinctMaterialCount,
   getColorHex,
   getFilamentName,
   getSpoolName,
   getWeightPct,
+  lowStockNotOnOrderCount,
   staleSpools,
   locationBreakdown,
-  lowStockFilaments,
-  lowStockSpools,
   materialBreakdown,
   recentSpools,
   registeredWithinDays,
@@ -160,99 +160,84 @@ describe("distinctMaterialCount", () => {
   });
 });
 
-describe("lowStockSpools", () => {
-  it("uses a strict threshold: exactly 15% is NOT low stock", () => {
-    const at15 = spool({ initial_weight: 1000, remaining_weight: 150 });
-    const below = spool({ initial_weight: 1000, remaining_weight: 149 });
-    const result = lowStockSpools([at15, below]);
-    expect(result).toEqual([below]);
-  });
+describe("computeLowStock", () => {
+  const F = 200; // fallback grams
 
-  it("orders results most-depleted first", () => {
-    const a = spool({ initial_weight: 1000, remaining_weight: 100 }); // 10%
-    const b = spool({ initial_weight: 1000, remaining_weight: 20 }); //  2%
-    const c = spool({ initial_weight: 1000, remaining_weight: 140 }); // 14%
-    const result = lowStockSpools([a, b, c]);
-    expect(result.map((s) => s.remaining_weight)).toEqual([20, 100, 140]);
-  });
-
-  it("does not flag a spool that has no weight information at all", () => {
-    // total falls back to DEFAULT_TOTAL_WEIGHT and remaining defaults to total → ratio 1.0.
-    expect(lowStockSpools([spool({ filament: filament() })])).toEqual([]);
-  });
-
-  it("excludes a spool whose total resolves to 0 (ratio is NaN/Infinity, never < threshold)", () => {
-    // Documents the current edge behaviour for initial_weight === 0.
-    expect(lowStockSpools([spool({ initial_weight: 0, remaining_weight: 0 })])).toEqual([]);
-  });
-
-  it("falls back to filament.weight for the total when initial_weight is absent", () => {
-    // No initial_weight → the total must come from filament.weight (800g), not the
-    // nominal DEFAULT_TOTAL_WEIGHT. 130/800 = 16.25% is NOT low; if the fallback were
-    // wrong and used 1000, 130/1000 = 13% would (incorrectly) flag it as low stock.
-    const notLow = spool({ remaining_weight: 130, filament: filament({ weight: 800 }) });
-    expect(lowStockSpools([notLow])).toEqual([]);
-    // Below 15% of its own 800g total → genuinely low stock.
-    const low = spool({ remaining_weight: 100, filament: filament({ weight: 800 }) }); // 12.5%
-    expect(lowStockSpools([low])).toEqual([low]);
-  });
-
-  it("ranks by depletion ratio using the per-spool filament.weight fallback denominator", () => {
-    // Neither spool has initial_weight, so each total comes from its own filament.weight.
-    // Ordering must apply that fallback per spool: 5% is more depleted than 10%.
-    const big = spool({ remaining_weight: 100, filament: filament({ weight: 2000 }) }); //  5%
-    const small = spool({ remaining_weight: 100, filament: filament({ weight: 1000 }) }); // 10%
-    expect(lowStockSpools([small, big])).toEqual([big, small]);
-  });
-
-  it("ranks three fallback-total spools strictly by ratio (both comparator operands use the fallback)", () => {
-    // Three spools, all relying on the filament.weight fallback for their total. Fed in
-    // reverse of the expected order so the comparator must recompute *both* operands'
-    // denominators from filament.weight — not just the first one — to sort correctly.
-    const s1 = spool({ remaining_weight: 100, filament: filament({ weight: 4000 }) }); // 2.5%
-    const s2 = spool({ remaining_weight: 100, filament: filament({ weight: 2000 }) }); // 5%
-    const s3 = spool({ remaining_weight: 100, filament: filament({ weight: 1000 }) }); // 10%
-    expect(lowStockSpools([s3, s2, s1])).toEqual([s1, s2, s3]);
-  });
-
-  it("returns only spools from the input (subset invariant)", () => {
-    const spools = [
-      spool({ initial_weight: 1000, remaining_weight: 10 }),
-      spool({ initial_weight: 1000, remaining_weight: 900 }),
-    ];
-    const result = lowStockSpools(spools);
-    result.forEach((s) => expect(spools).toContain(s));
-  });
-});
-
-describe("lowStockFilaments", () => {
-  it("flags a filament whose aggregate remaining weight is at or below its threshold", () => {
+  it("flags a filament at or below its explicit threshold, not one strictly above", () => {
     const below = filament({ id: 1, low_stock_threshold: 500, remaining_weight: 400 });
-    const atThreshold = filament({ id: 2, low_stock_threshold: 500, remaining_weight: 500 });
+    const at = filament({ id: 2, low_stock_threshold: 500, remaining_weight: 500 });
     const above = filament({ id: 3, low_stock_threshold: 500, remaining_weight: 600 });
-    const ids = lowStockFilaments([below, atThreshold, above]).map((f) => f.filament.id);
-    // <= threshold flags; strictly-above does not.
-    expect(ids).toContain(1);
-    expect(ids).toContain(2);
-    expect(ids).not.toContain(3);
+    const { explicit, count } = computeLowStock([below, at, above], F);
+    expect(explicit.map((r) => r.filament.id)).toEqual([1, 2]);
+    expect(count).toBe(2);
   });
 
-  it("never flags a filament without a threshold set", () => {
-    const noThreshold = filament({ remaining_weight: 10 });
-    expect(lowStockFilaments([noThreshold])).toEqual([]);
+  it("uses the gram fallback for filaments without an explicit threshold", () => {
+    const caught = filament({ id: 1, remaining_weight: 150 }); // <= 200 fallback
+    const fine = filament({ id: 2, remaining_weight: 250 }); // > 200 fallback
+    const { explicit, fallback } = computeLowStock([caught, fine], F);
+    expect(explicit).toEqual([]);
+    expect(fallback.map((r) => r.filament.id)).toEqual([1]);
+    expect(fallback[0].reason).toBe("fallback");
+  });
+
+  it("disables the fallback when fallbackG <= 0 (only explicit thresholds flag)", () => {
+    const noThreshold = filament({ id: 1, remaining_weight: 10 });
+    const explicitLow = filament({ id: 2, low_stock_threshold: 100, remaining_weight: 50 });
+    const { explicit, fallback } = computeLowStock([noThreshold, explicitLow], 0);
+    expect(fallback).toEqual([]);
+    expect(explicit.map((r) => r.filament.id)).toEqual([2]);
   });
 
   it("never flags a filament whose aggregate remaining weight is not populated", () => {
-    // e.g. a nested payload where the server left the aggregate null.
-    const noAggregate = filament({ low_stock_threshold: 500 });
-    expect(lowStockFilaments([noAggregate])).toEqual([]);
+    expect(computeLowStock([filament({ low_stock_threshold: 500 })], F).count).toBe(0);
   });
 
-  it("orders results by largest shortfall first", () => {
+  it("orders each section by largest shortfall first", () => {
     const small = filament({ id: 1, low_stock_threshold: 500, remaining_weight: 450 }); // short 50
     const large = filament({ id: 2, low_stock_threshold: 1000, remaining_weight: 100 }); // short 900
     const mid = filament({ id: 3, low_stock_threshold: 800, remaining_weight: 500 }); // short 300
-    expect(lowStockFilaments([small, large, mid]).map((f) => f.filament.id)).toEqual([2, 3, 1]);
+    expect(computeLowStock([small, large, mid], F).explicit.map((r) => r.filament.id)).toEqual([2, 3, 1]);
+  });
+
+  it("sinks on-order filaments to the bottom of their section", () => {
+    const plain = filament({ id: 1, low_stock_threshold: 500, remaining_weight: 400 }); // short 100, not ordered
+    const ordered = filament({
+      id: 2,
+      low_stock_threshold: 1000,
+      remaining_weight: 100, // short 900, but on order -> sinks below the smaller shortfall
+      on_order: { order_id: 7, ordered_at: "2026-07-10T00:00:00Z" },
+    });
+    expect(computeLowStock([ordered, plain], F).explicit.map((r) => r.filament.id)).toEqual([1, 2]);
+  });
+});
+
+// The always-visible Low Stock nav item's red badge (#298 gate tweak) counts flagged filaments
+// that are NOT already on order — an on-order row is being handled, so it shouldn't nag.
+describe("lowStockNotOnOrderCount", () => {
+  const F = 200;
+
+  it("counts flagged rows across both sections, excluding on-order ones", () => {
+    const plain = filament({ id: 1, low_stock_threshold: 500, remaining_weight: 400 });
+    const ordered = filament({
+      id: 2,
+      remaining_weight: 150, // caught by the fallback
+      on_order: { order_id: 7, ordered_at: "2026-07-10T00:00:00Z" },
+    });
+    const plainFallback = filament({ id: 3, remaining_weight: 100 });
+    const sections = computeLowStock([plain, ordered, plainFallback], F);
+    expect(lowStockNotOnOrderCount(sections)).toBe(2);
+  });
+
+  it("is zero when nothing is flagged, or everything flagged is already on order", () => {
+    expect(lowStockNotOnOrderCount(computeLowStock([], F))).toBe(0);
+    const allOrdered = filament({
+      id: 1,
+      low_stock_threshold: 500,
+      remaining_weight: 400,
+      on_order: { order_id: 1, ordered_at: "2026-07-10T00:00:00Z" },
+    });
+    expect(lowStockNotOnOrderCount(computeLowStock([allOrdered], F))).toBe(0);
   });
 });
 

@@ -223,6 +223,29 @@ async def get_aggregates(db: AsyncSession, filament_ids: list[int]) -> dict[int,
     return {fid: found.get(fid, (0, 0.0)) for fid in filament_ids}
 
 
+async def get_on_order(db: AsyncSession, filament_ids: list[int]) -> dict[int, tuple[int, datetime]]:
+    """Return {filament_id: (order_id, ordered_at)} for the OLDEST open order containing each filament.
+
+    "Open" for a filament means the order has an un-arrived (arrived_at IS NULL) line for it. Filaments
+    with nothing outstanding are omitted. Oldest is by ordered_at, tie-broken by order id. One query
+    keeps the list read path free of an N+1 pattern (mirrors get_aggregates).
+    """
+    if not filament_ids:
+        return {}
+    stmt = (
+        select(models.OrderLine.filament_id, models.Order.id, models.Order.ordered_at)
+        .join(models.Order, models.Order.id == models.OrderLine.order_id)
+        .where(models.OrderLine.arrived_at.is_(None), models.OrderLine.filament_id.in_(filament_ids))
+        .order_by(models.OrderLine.filament_id, models.Order.ordered_at.asc(), models.Order.id.asc())
+    )
+    rows = (await db.execute(stmt)).all()
+    result: dict[int, tuple[int, datetime]] = {}
+    for fid, oid, ordered_at in rows:
+        if int(fid) not in result:  # first row per filament is the oldest (ordered_at asc)
+            result[int(fid)] = (int(oid), ordered_at)
+    return result
+
+
 async def find(  # noqa: C901
     *,
     db: AsyncSession,
@@ -356,8 +379,17 @@ async def update(
 
 
 async def delete(db: AsyncSession, filament_id: int) -> None:
-    """Delete a filament object."""
+    """Delete a filament object.
+
+    Restricted while any order line references the filament (#298). FKs are not enforced on SQLite in
+    this codebase, so the reference is checked explicitly rather than via a DB IntegrityError.
+    """
     filament = await get_by_id(db, filament_id)
+    line_count = await db.scalar(
+        select(func.count(models.OrderLine.id)).where(models.OrderLine.filament_id == filament_id),
+    )
+    if line_count:
+        raise ItemDeleteError(f"Cannot delete filament {filament_id}: {line_count} order line(s) reference it.")
     await db.delete(filament)
     try:
         await db.commit()  # Flush immediately so any errors are propagated in this request.

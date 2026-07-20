@@ -29,6 +29,77 @@ class Vendor(Base):
     )
 
 
+class Shop(Base):
+    """A shop where filament is (re)ordered (#298). Distinct from Vendor (the manufacturer).
+
+    ``ships_to`` is a comma-separated list of free-form region strings (e.g. ``"CH,EU,DE"``), stored
+    in a Text column because the schema has no JSON/list columns; it is serialized to/from a JSON
+    array at the API edge. ``name`` is unique so inline shop autocomplete can dedupe.
+    """
+
+    __tablename__ = "shop"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    registered: Mapped[datetime] = mapped_column()
+    name: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    homepage: Mapped[str | None] = mapped_column(String(1024))
+    ships_to: Mapped[str | None] = mapped_column(
+        Text(),
+        comment="Comma-separated free-form region codes this shop ships to (e.g. 'CH,EU,DE'). "
+        "Serialized to/from a JSON array at the API edge. Null means unspecified.",
+    )
+    comment: Mapped[str | None] = mapped_column(String(1024))
+    orders: Mapped[list["Order"]] = relationship(back_populates="shop")
+
+
+class Order(Base):
+    """A grouped (bulk) reorder (#298).
+
+    Table name ``purchase_order`` because ``order`` is a reserved SQL word (ORDER BY) in
+    PostgreSQL/MySQL/CockroachDB — same reasoning as User -> ``user_account`` (#52). State
+    (open/arrived) is DERIVED from the lines, never stored: open while any line is un-arrived.
+    """
+
+    __tablename__ = "purchase_order"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    registered: Mapped[datetime] = mapped_column()
+    shop_id: Mapped[int | None] = mapped_column(ForeignKey("shop.id"))
+    shop: Mapped[Optional["Shop"]] = relationship(back_populates="orders")
+    ordered_at: Mapped[datetime] = mapped_column(comment="When the order was placed. Defaults to creation time.")
+    order_number: Mapped[str | None] = mapped_column(String(256))
+    url: Mapped[str | None] = mapped_column(String(1024))
+    comment: Mapped[str | None] = mapped_column(String(1024))
+    lines: Mapped[list["OrderLine"]] = relationship(
+        back_populates="order",
+        cascade="save-update, merge, delete, delete-orphan",
+        lazy="joined",
+    )
+
+
+class OrderLine(Base):
+    """One filament line within an Order (#298).
+
+    Arrival is tracked PER LINE (``arrived_at``) to support split shipments. No unique constraint on
+    (order_id, filament_id): the same filament may appear twice — including as the arrived and
+    still-outstanding halves of a split line. The filament FK has no cascade so deleting a filament
+    referenced by a line is restricted (enforced in the application layer; see filament.delete).
+    """
+
+    __tablename__ = "order_line"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    order_id: Mapped[int] = mapped_column(ForeignKey("purchase_order.id", ondelete="CASCADE"), index=True)
+    order: Mapped["Order"] = relationship(back_populates="lines")
+    filament_id: Mapped[int] = mapped_column(ForeignKey("filament.id"))
+    filament: Mapped["Filament"] = relationship()
+    quantity: Mapped[int] = mapped_column(comment="Number of spools ordered on this line. Always >= 1.")
+    price_per_unit: Mapped[float | None] = mapped_column()
+    arrived_at: Mapped[datetime | None] = mapped_column(
+        comment="When this line arrived (#298). Null means still outstanding; per-line to support split shipments.",
+    )
+
+
 class Filament(Base):
     __tablename__ = "filament"
 

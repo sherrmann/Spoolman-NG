@@ -1,0 +1,130 @@
+/* Low Stock full page (#298 redesign) — the same merged list as the dashboard tab, in a wider,
+   full-page layout instead of a narrow tab pane. Row surfaces are plain antd Cards so background/
+   hover/dark-mode colors come from the antd theme instead of being hand-rolled here. */
+
+.lowstock-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.lowstock-loading {
+  display: flex;
+  justify-content: center;
+  padding: 48px 0;
+}
+
+.lowstock-section-subhead {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.5;
+  margin-bottom: 12px;
+}
+
+.lowstock-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lowstock-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.lowstock-row-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+  flex: 1;
+}
+
+/* Reserves the checkbox's width whether or not a checkbox actually renders (on-order rows have
+   none — they can't be re-selected into another order), so the dot/name that follows always
+   lands at the same x position across every row (gate-feedback item #1). */
+.lowstock-checkbox-slot {
+  width: 16px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lowstock-color-dot {
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.lowstock-info {
+  min-width: 0;
+}
+
+.lowstock-material {
+  font-size: 12px;
+  opacity: 0.5;
+  margin-top: 2px;
+}
+
+.lowstock-row-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+  margin-left: 16px;
+  text-align: right;
+}
+
+/* The action (Mark as ordered / Ordered pill) and threshold-button columns get a shared min-width
+   so the "Remaining" column header (lowstock-columns-header below) lines up above the actual
+   weight number regardless of which variant (button vs. pill, bare vs. valued button) renders in
+   the neighboring columns. */
+.lowstock-action-col,
+.lowstock-threshold-col {
+  min-width: 156px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.lowstock-weight {
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  min-width: 56px;
+  text-align: right;
+}
+
+/* Red/grey coloring semantics (gate-feedback item #2): red while the row still needs action,
+   muted grey once it's already on order. */
+.lowstock-weight.actionable {
+  color: #d7383b;
+}
+
+.lowstock-weight.on-order {
+  opacity: 0.55;
+}
+
+.lowstock-columns-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  margin: 0 0 8px;
+  padding-right: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.45;
+}
+
+.lowstock-columns-header-weight {
+  min-width: 56px;
+  text-align: right;
+}

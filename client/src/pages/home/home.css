@@ -247,6 +247,20 @@ a.kpi-card:focus-visible {
 }
 
 /* Low Stock */
+/* Section label separating explicit-threshold rows from gram-fallback rows (#298), so the
+   *reason* a filament is listed stays visible without another column. */
+.dash-section-subhead {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 16px 0 8px;
+}
+
+.dash-section-subhead:first-child {
+  margin-top: 0;
+}
+
 .low-stock-list {
   display: flex;
   flex-direction: column;
@@ -302,6 +316,9 @@ a.kpi-card:focus-visible {
 }
 
 .low-stock-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   text-align: right;
   flex-shrink: 0;
   margin-left: 16px;
@@ -312,9 +329,15 @@ a.kpi-card:focus-visible {
   font-weight: 700;
 }
 
-.low-stock-weight .total {
-  font-weight: 400;
-  opacity: 0.4;
+/* Red/grey coloring semantics (gate-feedback round): red while the row still needs action,
+   muted grey once it's already on order — mirrors lowstock.css's identically-named classes so
+   both surfaces (this dashboard tab, the full Low Stock page) render the same way. */
+.low-stock-weight.actionable {
+  color: #d7383b;
+}
+
+.low-stock-weight.on-order {
+  opacity: 0.55;
 }
 
 .low-stock-bar {

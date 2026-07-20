@@ -27,9 +27,11 @@ from . import (
     location,
     models,
     nfc,
+    order,
     other,
     printer,
     setting,
+    shop,
     spool,
     stats,
     vendor,
@@ -126,6 +128,8 @@ app.include_router(calibration.router)
 app.include_router(filament.router)
 app.include_router(spool.router)
 app.include_router(vendor.router)
+app.include_router(shop.router)
+app.include_router(order.router)
 app.include_router(location.router)
 app.include_router(printer.router)
 app.include_router(setting.router)

@@ -15,26 +15,28 @@ import { Button, Result, Space, Tabs, theme, Tooltip } from "antd";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import utc from "dayjs/plugin/utc";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { Trans } from "react-i18next";
 import { Link, useNavigate } from "react-router";
 import SpoolIcon from "../../components/spoolIcon";
 import { ColorModeContext } from "../../contexts/color-mode";
-import { formatWeight } from "../../utils/parsing";
+import { formatWeight, formatWeightCompact } from "../../utils/parsing";
 import { getSpoolEffectiveColor } from "../../utils/spoolColor";
-import { useCurrencyFormatter } from "../../utils/settings";
+import { useCurrencyFormatter, useLowStockFallbackG } from "../../utils/settings";
 import { IFilament } from "../filaments/model";
 import { ISpool } from "../spools/model";
 import { IVendor } from "../vendors/model";
+import { IOrder } from "../orders/model";
+import { openOrdersByFilament } from "../lowstock/openOrders";
+import { MarkOrderedDialog } from "../orders/markOrderedDialog";
+import { OrderedPill } from "../orders/orderPill";
+import { ThresholdEdit } from "../lowstock/thresholdEdit";
 import {
+  computeLowStock,
   distinctMaterialCount,
-  getColorHex,
   getFilamentName,
   getSpoolName,
-  getWeightPct,
   locationBreakdown,
-  lowStockFilaments as computeLowStockFilaments,
-  lowStockSpools as computeLowStockSpools,
   materialBreakdown,
   recentSpools as computeRecentSpools,
   STALE_ALERT_DAYS,
@@ -66,6 +68,9 @@ export const Home = () => {
   const navigate = useNavigate();
   const { showUrl } = useNavigation();
   const currencyFormatter = useCurrencyFormatter();
+  // US1 "Mark as ordered" (#298 Task 10) — the dialog is only mounted while a filament is picked,
+  // so its data hooks (useShops' useQuery, refine's useCreate) never run on a plain dashboard view.
+  const [markOrderedFilament, setMarkOrderedFilament] = useState<IFilament | undefined>();
 
   const spoolsAll = useList<ISpool>({
     resource: "spool",
@@ -96,10 +101,11 @@ export const Home = () => {
   // --- Calculations (pure logic lives in ./analytics, unit-tested there) ---
   const totalRemainingWeight = computeTotalRemainingWeight(allSpools);
   const totalValue = computeTotalValue(allSpools);
-  const lowStockSpools = computeLowStockSpools(allSpools);
-  const hasLowStock = lowStockSpools.length > 0;
-  const lowStockFilamentsData = computeLowStockFilaments(allFilaments);
-  const hasShoppingList = lowStockFilamentsData.length > 0;
+  const fallbackG = useLowStockFallbackG();
+  const lowStock = computeLowStock(allFilaments, fallbackG);
+  const hasLowStock = lowStock.count > 0;
+  const openOrders = useList<IOrder>({ resource: "order", pagination: { mode: "off" } });
+  const orderMap = openOrdersByFilament(openOrders.result?.data ?? []);
   const recentSpools = computeRecentSpools(allSpools);
   const staleList = staleSpools(allSpools);
   const materialBreakdownData = materialBreakdown(allSpools);
@@ -243,13 +249,13 @@ export const Home = () => {
           <div
             className="kpi-footer"
             style={{
-              color: lowStockSpools.length > 0 ? "#ff716c" : undefined,
-              opacity: lowStockSpools.length > 0 ? 1 : 0.4,
+              color: lowStock.count > 0 ? "#ff716c" : undefined,
+              opacity: lowStock.count > 0 ? 1 : 0.4,
             }}
           >
-            {lowStockSpools.length > 0 ? (
+            {lowStock.count > 0 ? (
               <>
-                <WarningOutlined /> {lowStockSpools.length} {t("home.low_stock").toUpperCase()}
+                <WarningOutlined /> {lowStock.count} {t("home.low_stock").toUpperCase()}
               </>
             ) : (
               <span>
@@ -275,58 +281,75 @@ export const Home = () => {
               ),
               children: (
                 <div className="dash-section" style={{ background: S.low }}>
-                  {lowStockSpools.length === 0 ? (
+                  {lowStock.count === 0 ? (
                     <div className="dash-empty">{t("home.all_stocked")}</div>
                   ) : (
-                    <div className="low-stock-list">
-                      {lowStockSpools.map((spool) => {
-                        const pct = getWeightPct(spool);
-                        const remaining = spool.remaining_weight ?? 0;
-                        const total = spool.initial_weight ?? spool.filament.weight ?? 1000;
-                        const barColor = pct <= 5 ? "#ff716c" : "#d7383b";
-                        const hex = getColorHex(spool);
-
-                        return (
-                          <div
-                            key={spool.id}
-                            className="low-stock-item"
-                            style={{ background: S.lowest }}
-                            onClick={() => navigate(showUrl("spool", spool.id))}
-                          >
-                            <div className="low-stock-left">
-                              <div
-                                className="low-stock-color-dot"
-                                style={{
-                                  backgroundColor: hex,
-                                  boxShadow: isDark ? `0 0 14px ${hex}50` : `0 1px 3px rgba(0,0,0,0.12)`,
-                                }}
-                              />
-                              <div className="low-stock-info">
-                                <h4>{getSpoolName(spool)}</h4>
-                                <p>
-                                  {t("spool.fields.material")}: {spool.filament.material ?? "?"}
-                                </p>
+                    <>
+                      {[["explicit", lowStock.explicit] as const, ["fallback", lowStock.fallback] as const].map(
+                        ([reason, rows]) =>
+                          rows.length === 0 ? null : (
+                            <div key={reason}>
+                              <div className="dash-section-subhead" style={{ opacity: 0.5 }}>
+                                {reason === "explicit"
+                                  ? t("lowstock.section.explicit")
+                                  : t("lowstock.section.fallback", { grams: fallbackG })}
+                              </div>
+                              <div className="low-stock-list">
+                                {rows.map(({ filament, remaining, onOrder }) => {
+                                  const hex = "#" + (filament.color_hex ?? "555555").replace("#", "");
+                                  const order = onOrder ? orderMap.get(filament.id) : undefined;
+                                  return (
+                                    <div
+                                      key={filament.id}
+                                      className="low-stock-item"
+                                      style={{ background: S.lowest }}
+                                      onClick={() => navigate(showUrl("filament", filament.id))}
+                                    >
+                                      <div className="low-stock-left">
+                                        <div
+                                          className="low-stock-color-dot"
+                                          style={{
+                                            backgroundColor: hex,
+                                            boxShadow: isDark ? `0 0 14px ${hex}50` : `0 1px 3px rgba(0,0,0,0.12)`,
+                                          }}
+                                        />
+                                        <div className="low-stock-info">
+                                          <h4>{getFilamentName(filament)}</h4>
+                                          <p>
+                                            {t("spool.fields.material")}: {filament.material ?? "?"}
+                                          </p>
+                                        </div>
+                                      </div>
+                                      <div className="low-stock-right" onClick={(e) => e.stopPropagation()}>
+                                        {onOrder ? (
+                                          <OrderedPill
+                                            onOrder={onOrder}
+                                            shopName={order?.shop_name}
+                                            orderHref={`/orders?highlight=${onOrder.order_id}`}
+                                          />
+                                        ) : (
+                                          <Button size="small" onClick={() => setMarkOrderedFilament(filament)}>
+                                            {t("lowstock.mark_ordered")}
+                                          </Button>
+                                        )}
+                                        {/* Remaining only, rendered as "<amount> left" (gate-feedback
+                                            round: parity with the Low Stock page — dropped the
+                                            "/ threshold" suffix and the previously-hardcoded red).
+                                            Red while actionable, grey once on order — same
+                                            .actionable/.on-order semantics as lowstock.css. */}
+                                        <div className={`low-stock-weight ${onOrder ? "on-order" : "actionable"}`}>
+                                          {t("lowstock.remaining_left", { amount: formatWeightCompact(remaining) })}
+                                        </div>
+                                        <ThresholdEdit filamentId={filament.id} value={filament.low_stock_threshold} />
+                                      </div>
+                                    </div>
+                                  );
+                                })}
                               </div>
                             </div>
-                            <div className="low-stock-right">
-                              <div className="low-stock-weight" style={{ color: barColor }}>
-                                {formatWeight(remaining, 0)} <span className="total">/ {formatWeight(total, 0)}</span>
-                              </div>
-                              <div className="low-stock-bar" style={{ background: S.highest }}>
-                                <div
-                                  className="low-stock-bar-fill"
-                                  style={{
-                                    width: `${Math.max(pct, 1)}%`,
-                                    backgroundColor: barColor,
-                                    boxShadow: isDark ? `0 0 8px ${barColor}80` : "none",
-                                  }}
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
+                          ),
+                      )}
+                    </>
                   )}
                 </div>
               ),
@@ -449,60 +472,6 @@ export const Home = () => {
               children: (
                 <div className="dash-section" style={{ background: S.low }}>
                   <UsageChart barColor={token.colorPrimary} trackColor={S.highest} />
-                </div>
-              ),
-            },
-            {
-              key: "shopping",
-              label: (
-                <span>
-                  {hasShoppingList && <ShoppingOutlined style={{ color: "#ff716c" }} />} {t("home.shopping_list")}
-                </span>
-              ),
-              children: (
-                <div className="dash-section" style={{ background: S.low }}>
-                  {lowStockFilamentsData.length === 0 ? (
-                    <div className="dash-empty">{t("home.shopping_list_empty")}</div>
-                  ) : (
-                    <div className="low-stock-list">
-                      {lowStockFilamentsData.map(({ filament, remaining, threshold }) => {
-                        const hex = "#" + (filament.color_hex ?? "555555").replace("#", "");
-                        return (
-                          <div
-                            key={filament.id}
-                            className="low-stock-item"
-                            style={{ background: S.lowest }}
-                            onClick={() => navigate(showUrl("filament", filament.id))}
-                          >
-                            <div className="low-stock-left">
-                              <div
-                                className="low-stock-color-dot"
-                                style={{
-                                  backgroundColor: hex,
-                                  boxShadow: isDark ? `0 0 14px ${hex}50` : `0 1px 3px rgba(0,0,0,0.12)`,
-                                }}
-                              />
-                              <div className="low-stock-info">
-                                <h4>{getFilamentName(filament)}</h4>
-                                <p>
-                                  {t("spool.fields.material")}: {filament.material ?? "?"}
-                                  {filament.reserve_count
-                                    ? ` · ${filament.reserve_count} ${t("filament.fields.reserve_count").toLowerCase()}`
-                                    : ""}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="low-stock-right">
-                              <div className="low-stock-weight" style={{ color: "#d7383b" }}>
-                                {formatWeight(remaining, 0)}{" "}
-                                <span className="total">/ {formatWeight(threshold, 0)}</span>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
                 </div>
               ),
             },
@@ -631,6 +600,18 @@ export const Home = () => {
           </div>
         </div>
       </div>
+      {/* Mounted only while a filament is picked (not always-mounted-but-closed): its data hooks
+          (useShops' react-query useQuery, refine's useCreate) would otherwise run on every plain
+          dashboard render, which the boundary tests in index.test.tsx don't provide for (no
+          QueryClient, and @refinedev/core is mocked without useCreate there). */}
+      {markOrderedFilament && (
+        <MarkOrderedDialog
+          open
+          filament={markOrderedFilament}
+          onClose={() => setMarkOrderedFilament(undefined)}
+          onSuccess={() => setMarkOrderedFilament(undefined)}
+        />
+      )}
     </div>
   );
 };

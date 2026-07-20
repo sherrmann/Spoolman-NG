@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getBasePath } from "./url";
+import { getBasePath, safeHttpUrl } from "./url";
 
 // Regression tests for the sub-path service-worker / deep-link fixes (PRs #26/#29):
 // the SW URL, manifest scope and print links are all built by prefixing getBasePath().
@@ -31,5 +31,34 @@ describe("getBasePath", () => {
     // The bug resolved a relative "./sw.js" to "/spool/sw.js" on deep links → 404.
     expect(`${getBasePath()}/sw.js`).toBe("/spoolman/sw.js");
     expect(`${getBasePath()}/`).toBe("/spoolman/");
+  });
+});
+
+// Guards against stored-XSS via user-supplied order/shop URLs (e.g. orders.url) rendered as
+// `<a href>`: React does not sanitize hrefs, so a `javascript:` or `data:` scheme would otherwise
+// become a clickable script. Oracle: only http/https URLs that survive `new URL()` parsing pass.
+describe("safeHttpUrl", () => {
+  it("passes through a valid https URL", () => {
+    expect(safeHttpUrl("https://example.com/order/123")).toBe("https://example.com/order/123");
+  });
+
+  it("passes through a valid http URL", () => {
+    expect(safeHttpUrl("http://example.com/order/123")).toBe("http://example.com/order/123");
+  });
+
+  it("rejects a javascript: URL", () => {
+    expect(safeHttpUrl("javascript:alert(1)")).toBeUndefined();
+  });
+
+  it("rejects a data: URL", () => {
+    expect(safeHttpUrl("data:text/html,<script>alert(1)</script>")).toBeUndefined();
+  });
+
+  it("rejects a garbage/unparseable string", () => {
+    expect(safeHttpUrl("not a url")).toBeUndefined();
+  });
+
+  it("passes through undefined unchanged", () => {
+    expect(safeHttpUrl(undefined)).toBeUndefined();
   });
 });

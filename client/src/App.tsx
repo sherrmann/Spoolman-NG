@@ -10,9 +10,11 @@ import {
   HighlightOutlined,
   HomeOutlined,
   QuestionOutlined,
+  ShoppingCartOutlined,
   TableOutlined,
   ToolOutlined,
   UserOutlined,
+  WarningOutlined,
 } from "@ant-design/icons";
 import loadable from "@loadable/component";
 import routerBindings, { DocumentTitleHandler, UnsavedChangesNotifier } from "@refinedev/react-router";
@@ -154,6 +156,32 @@ function App() {
                     },
                   },
                   {
+                    // Always visible (US5 amended — supersedes the old conditional-nav rule): the
+                    // reorder/shopping destination, and the future home of the #299 purchase links.
+                    name: "lowstock",
+                    list: "/lowstock",
+                    meta: {
+                      canDelete: false,
+                      label: t("lowstock.title"),
+                      // The red "needs attention" count is injected onto this icon by SpoolmanLayout
+                      // (components/layout.tsx), which renders inside <Refine> and so can fetch it;
+                      // this array is built by App() itself, above the Refine tree.
+                      icon: <WarningOutlined />,
+                    },
+                  },
+                  {
+                    // Always visible (US5 amended). name "order" maps to the /order API via the
+                    // dataProvider (matches useList<IOrder>({ resource: "order" })); its menu entry
+                    // links to the /orders page.
+                    name: "order",
+                    list: "/orders",
+                    meta: {
+                      canDelete: false,
+                      label: t("orders.title"),
+                      icon: <ShoppingCartOutlined />,
+                    },
+                  },
+                  {
                     name: "settings",
                     list: "/settings",
                     meta: {
@@ -229,6 +257,8 @@ function App() {
                     <Route path="/settings/*" element={<LoadablePage name="settings" />} />
                     <Route path="/help" element={<LoadablePage name="help" />} />
                     <Route path="/locations" element={<LoadablePage name="locations" />} />
+                    <Route path="/lowstock" element={<LoadablePage name="lowstock" />} />
+                    <Route path="/orders" element={<LoadablePage name="orders" />} />
                     {/* Location detail (#90): the target a scanned location QR resolves to. */}
                     <Route
                       path="/location/show/:id"
