@@ -3,10 +3,11 @@ import { List } from "@refinedev/antd";
 import { useList, useTranslate } from "@refinedev/core";
 import { Button, Empty, Table, Tag, Tooltip } from "antd";
 import dayjs from "dayjs";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { DATE_FORMAT } from "../../utils/dateFormat";
 import { getFilamentName } from "../home/analytics";
 import { IFilament } from "../filaments/model";
+import { ArriveModal } from "./arriveModal";
 import { IOrder, IOrderLine } from "./model";
 import { summarizeLines } from "./ordersState";
 import "./orders.css";
@@ -31,8 +32,9 @@ function OrderLinesDetail({ lines, filamentsById }: { lines: IOrderLine[]; filam
 
 /**
  * Orders list page (#298): order #, shop, ordered date, a lines summary with arrived counts, and
- * the derived state pill. The "New order" button and the per-row "Arrived…" action are stubs —
- * wired to the Task 10 create-order modal and the Task 11 arrive modal, respectively.
+ * the derived state pill. The per-row "Arrived…" action opens the Task 11 arrive dialog
+ * (arriveModal.tsx). The "New order" button remains a stub — the Task 10 create-order flow isn't
+ * wired to this page yet (it's reachable from the Low Stock page instead).
  */
 export const OrdersPage = () => {
   const t = useTranslate();
@@ -47,6 +49,11 @@ export const OrdersPage = () => {
     () => new Map((filaments.result?.data ?? []).map((f) => [f.id, f])),
     [filaments.result?.data],
   );
+
+  // The Task 11 arrive dialog (US3), opened per-row from the "Arrived…" action below. Mounted
+  // only while an order is actually being arrived, matching the mark-ordered/bulk dialogs'
+  // conditional-mount convention.
+  const [arrivingOrder, setArrivingOrder] = useState<IOrder | undefined>();
 
   return (
     <List
@@ -130,15 +137,20 @@ export const OrdersPage = () => {
               key: "actions",
               render: (_, record) =>
                 record.state === "open" ? (
-                  // Opens the Task 11 arrive modal — the handler is a marked stub in this task.
-                  <Tooltip title={t("orders.coming_soon")}>
-                    <Button size="small" disabled>
-                      {t("orders.arrived_action")}
-                    </Button>
-                  </Tooltip>
+                  <Button size="small" onClick={() => setArrivingOrder(record)}>
+                    {t("orders.arrived_action")}
+                  </Button>
                 ) : null,
             },
           ]}
+        />
+      )}
+      {arrivingOrder && (
+        <ArriveModal
+          open
+          order={arrivingOrder}
+          onClose={() => setArrivingOrder(undefined)}
+          onSuccess={() => setArrivingOrder(undefined)}
         />
       )}
     </List>

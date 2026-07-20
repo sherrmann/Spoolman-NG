@@ -711,7 +711,17 @@
     "price_per_unit": "Price / spool (opt.)",
     "order_number_field": "Order number (opt.)",
     "url": "Order link (opt.)",
-    "selected_count": "{{count}} selected"
+    "selected_count": "{{count}} selected",
+    "arrive_title": "What arrived from order #{{number}}?",
+    "arrive_subtitle": "Partial deliveries split the line — the rest stays on order.",
+    "arrive_error": "Couldn't mark the order arrived. Please try again.",
+    "arrived_check": "Arrived",
+    "n_of_m": "{{delivered}} of {{outstanding}} outstanding",
+    "split_preview": "{{delivered}} will arrive, {{rest}} stay on order",
+    "create_spools": "Create spools for the delivered items",
+    "location": "Location",
+    "banner": "This filament is on order (order #{{id}}) — mark its line arrived?",
+    "mark_arrived": "Mark arrived"
   },
   "help": {
     "help": "Help",

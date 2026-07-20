@@ -17,3 +17,60 @@
   flex-direction: column;
   gap: 4px;
 }
+
+/* US3 arrival dialog (#298) — one row per order line: checkbox, filament name, quantity input
+   (outstanding lines) or a disabled ✓ (already-arrived lines). */
+.arrive-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.arrive-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.arrive-line-disabled {
+  opacity: 0.55;
+}
+
+.arrive-line-name {
+  flex: 1 1 auto;
+}
+
+.arrive-line-check {
+  color: #52c41a;
+}
+
+.arrive-line-outstanding {
+  white-space: nowrap;
+}
+
+.arrive-split-preview {
+  flex: 1 0 100%;
+  font-size: 0.85em;
+  opacity: 0.75;
+}
+
+.arrive-create-spools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.arrive-location {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.arrive-loading {
+  display: flex;
+  justify-content: center;
+  padding: 24px 0;
+}

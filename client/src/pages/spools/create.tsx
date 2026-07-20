@@ -31,6 +31,7 @@ import { EntityType, useGetFields } from "../../utils/queryFields";
 import { useGetPrinters } from "../../utils/queryPrinters";
 import { getCurrencySymbol, useCurrency } from "../../utils/settings";
 import { createFilamentFromExternal } from "../filaments/functions";
+import { OnOrderBanner } from "../orders/onOrderBanner";
 import { FilamentColor, useGetFilamentSelectOptions } from "./functions";
 import { ISpool, ISpoolParsedExtras, WeightToEnter } from "./model";
 import { correctOverweight, displayForMode, usedWeightFromEntered } from "./weightCalc";
@@ -367,6 +368,9 @@ export const SpoolCreate = (props: IResourceComponentsProps & CreateOrCloneProps
             )}
           />
         </Form.Item>
+        {/* #298 US3: the chosen filament has an outstanding order line — offer to complete it
+            without leaving the spool-create form. */}
+        {selectedFilament?.on_order && <OnOrderBanner filament={selectedFilament} />}
         {selectedFilament?.is_internal === false && (
           <Alert message={t("spool.fields_help.external_filament")} type="info" />
         )}
