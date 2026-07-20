@@ -191,4 +191,52 @@ test.describe("orders and low-stock journeys", () => {
     await page.goto(`${APP_BASE_URL}/spool/create?filament_id=${filamentId}`);
     await expect(page.getByText(`This filament is on order (order ${numberLabel})`)).toBeVisible();
   });
+
+  test("order details modal (gate-feedback item #5): the row expander is gone, clicking the order # opens an editable modal, and editing a line's quantity updates the lines summary; delete is API-asserted", async ({
+    page,
+    request,
+  }) => {
+    const ts = Date.now();
+    const nameA = `DetailsA ${ts}`;
+    const nameB = `DetailsB ${ts}`;
+    const filA = await seedFilament(request, nameA);
+    const filB = await seedFilament(request, nameB);
+    const order = await seedOrder(request, [
+      { filament_id: filA, quantity: 2 },
+      { filament_id: filB, quantity: 3 },
+    ]);
+    const numberLabel = `#${order.id}`;
+
+    await page.goto(`${APP_BASE_URL}/orders`);
+    const orderRow = page.locator("tr.ant-table-row").filter({ has: page.getByText(numberLabel, { exact: true }) });
+    // Gate-feedback item #4: the antd Table "+" row expander is gone entirely.
+    await expect(orderRow.locator(".ant-table-row-expand-icon")).toHaveCount(0);
+    await expect(orderRow.getByText("0 of 5 arrived")).toBeVisible();
+
+    // Clicking the order # (rather than a dedicated button) opens the details modal — the row is
+    // clickable everywhere, but this exercises the "or its order# link" half of the spec too.
+    await orderRow.getByText(numberLabel, { exact: true }).click();
+
+    const modal = page.locator(".ant-modal-content").last();
+    const dialogTitle = `Order ${numberLabel}`;
+    await expect(modal.getByText(dialogTitle)).toBeVisible();
+
+    // Both lines are still outstanding, so both show editable quantity/price inputs. Bump the
+    // first line's (nameA, quantity 2) delivered count up to 6 — the arrived line case is covered
+    // by the split-arrival test above (buildEditedLines's read-only path is unit-tested directly).
+    await modal.locator(".order-details-line", { hasText: nameA }).getByRole("spinbutton").first().fill("6");
+    await modal.getByRole("button", { name: "Save" }).click();
+    await expect(page.getByText(dialogTitle)).toBeHidden();
+
+    // 6 (edited) + 3 (untouched) = 9 total, still nothing arrived.
+    const refreshedRow = page.locator("tr.ant-table-row").filter({ has: page.getByText(numberLabel, { exact: true }) });
+    await expect(refreshedRow.getByText("0 of 9 arrived")).toBeVisible();
+
+    // Delete + its lines-cascade is asserted directly against the API rather than through the
+    // confirm-dialog UI, per the gate feedback.
+    const deleteResp = await request.delete(`${APP_BASE_URL}/api/v1/order/${order.id}`);
+    expect(deleteResp.ok()).toBeTruthy();
+    const remainingOrders: { id: number }[] = await (await request.get(`${APP_BASE_URL}/api/v1/order`)).json();
+    expect(remainingOrders.some((o) => o.id === order.id)).toBe(false);
+  });
 });

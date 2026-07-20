@@ -6,42 +6,27 @@ import dayjs from "dayjs";
 import { useMemo, useState } from "react";
 import { DATE_FORMAT } from "../../utils/dateFormat";
 import { safeHttpUrl } from "../../utils/url";
-import { getFilamentName } from "../home/analytics";
 import { IFilament } from "../filaments/model";
 import { ArriveModal } from "./arriveModal";
-import { IOrder, IOrderLine } from "./model";
+import { IOrder } from "./model";
+import { OrderDetailsModal } from "./orderDetailsModal";
 import { summarizeLines } from "./ordersState";
 import "./orders.css";
 
-/** Per-line detail shown when an order row is expanded: filament name + arrived state (✓ / outstanding). */
-function OrderLinesDetail({ lines, filamentsById }: { lines: IOrderLine[]; filamentsById: Map<number, IFilament> }) {
-  const t = useTranslate();
-  return (
-    <ul className="orders-lines-detail">
-      {lines.map((line) => {
-        const filament = filamentsById.get(line.filament_id);
-        const label = filament ? getFilamentName(filament) : `#${line.filament_id}`;
-        return (
-          <li key={line.id} className={line.arrived_at ? "orders-line-arrived" : undefined}>
-            {label} × {line.quantity} — {line.arrived_at ? `✓ ${t("orders.state.arrived")}` : t("orders.outstanding")}
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
-
 /**
- * Orders list page (#298): order #, shop, ordered date, a lines summary with arrived counts, and
- * the derived state pill. The per-row "Arrived…" action opens the Task 11 arrive dialog
- * (arriveModal.tsx). The "New order" button remains a stub — the Task 10 create-order flow isn't
- * wired to this page yet (it's reachable from the Low Stock page instead).
+ * Orders list page (#298; gate-feedback items #4/#5): order #, shop, ordered date, a lines
+ * summary with arrived counts, and the derived state pill. Every row is clickable (and so is the
+ * order # link) and opens the read/edit details modal (orderDetailsModal.tsx) — the old antd
+ * Table row-expander is gone in favor of that modal. The per-row "Arrived…" action still opens
+ * the Task 11 arrive dialog (arriveModal.tsx) directly, without going through the details modal.
+ * The "New order" button remains a stub — the Task 10 create-order flow isn't wired to this page
+ * yet (it's reachable from the Low Stock page instead).
  */
 export const OrdersPage = () => {
   const t = useTranslate();
 
   const orders = useList<IOrder>({ resource: "order", pagination: { mode: "off" } });
-  // Lines only carry filament_id (#298 API) — hydrate names client-side for the expanded detail.
+  // Lines only carry filament_id (#298 API) — hydrate names client-side for the details modal.
   const filaments = useList<IFilament>({ resource: "filament", pagination: { mode: "off" } });
 
   const allOrders = orders.result?.data ?? [];
@@ -55,6 +40,8 @@ export const OrdersPage = () => {
   // only while an order is actually being arrived, matching the mark-ordered/bulk dialogs'
   // conditional-mount convention.
   const [arrivingOrder, setArrivingOrder] = useState<IOrder | undefined>();
+  // The details/edit modal (gate-feedback item #5), opened by clicking anywhere on a row.
+  const [detailsOrder, setDetailsOrder] = useState<IOrder | undefined>();
 
   return (
     <List
@@ -77,11 +64,8 @@ export const OrdersPage = () => {
           dataSource={allOrders}
           loading={isLoading}
           pagination={false}
-          rowClassName={(record) => (record.state === "arrived" ? "orders-row-arrived" : "")}
-          expandable={{
-            expandedRowRender: (record) => <OrderLinesDetail lines={record.lines} filamentsById={filamentsById} />,
-            rowExpandable: (record) => record.lines.length > 0,
-          }}
+          rowClassName={(record) => `orders-row-clickable${record.state === "arrived" ? " orders-row-arrived" : ""}`}
+          onRow={(record) => ({ onClick: () => setDetailsOrder(record) })}
           columns={[
             {
               title: t("orders.order_number"),
@@ -141,7 +125,15 @@ export const OrdersPage = () => {
               key: "actions",
               render: (_, record) =>
                 record.state === "open" ? (
-                  <Button size="small" onClick={() => setArrivingOrder(record)}>
+                  <Button
+                    size="small"
+                    onClick={(e) => {
+                      // The row itself is now clickable (opens the details modal below) — this
+                      // action must not also trigger that when clicked.
+                      e.stopPropagation();
+                      setArrivingOrder(record);
+                    }}
+                  >
                     {t("orders.arrived_action")}
                   </Button>
                 ) : null,
@@ -155,6 +147,15 @@ export const OrdersPage = () => {
           order={arrivingOrder}
           onClose={() => setArrivingOrder(undefined)}
           onSuccess={() => setArrivingOrder(undefined)}
+        />
+      )}
+      {detailsOrder && (
+        <OrderDetailsModal
+          open
+          order={detailsOrder}
+          filamentsById={filamentsById}
+          onClose={() => setDetailsOrder(undefined)}
+          onSuccess={() => setDetailsOrder(undefined)}
         />
       )}
     </List>

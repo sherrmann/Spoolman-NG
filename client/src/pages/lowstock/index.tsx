@@ -37,7 +37,7 @@ function LowStockRowItem({
   t: Translate;
   navigate: (path: string) => void;
 }) {
-  const { filament, remaining, threshold, onOrder } = row;
+  const { filament, remaining, onOrder } = row;
   const hex = "#" + (filament.color_hex ?? "555555").replace("#", "");
   const order = onOrder ? orderMap.get(filament.id) : undefined;
 
@@ -45,15 +45,19 @@ function LowStockRowItem({
     <Card size="small" hoverable onClick={() => navigate(`/filament/show/${filament.id}`)}>
       <div className="lowstock-row">
         <div className="lowstock-row-left">
-          {/* US2 bulk multi-select: an already-ordered row can't be added to another order. */}
-          {!onOrder && (
-            <Checkbox
-              checked={selected}
-              onClick={(e) => e.stopPropagation()}
-              onChange={() => onToggleSelect(filament.id)}
-              aria-label={getFilamentName(filament)}
-            />
-          )}
+          {/* Slot always renders (even empty) so the dot/name lines up the same whether or not a
+              checkbox is present — an already-ordered row can't be added to another order, so it
+              has none (gate-feedback item #1). */}
+          <div className="lowstock-checkbox-slot">
+            {!onOrder && (
+              <Checkbox
+                checked={selected}
+                onClick={(e) => e.stopPropagation()}
+                onChange={() => onToggleSelect(filament.id)}
+                aria-label={getFilamentName(filament)}
+              />
+            )}
+          </div>
           <div className="lowstock-color-dot" style={{ backgroundColor: hex }} />
           <div className="lowstock-info">
             <Text strong>{getFilamentName(filament)}</Text>
@@ -61,21 +65,25 @@ function LowStockRowItem({
           </div>
         </div>
         <div className="lowstock-row-right" onClick={(e) => e.stopPropagation()}>
-          {onOrder ? (
-            <OrderedPill
-              onOrder={onOrder}
-              shopName={order?.shop_name}
-              orderHref={`/orders?highlight=${onOrder.order_id}`}
-            />
-          ) : (
-            <Button size="small" onClick={() => onMarkOrdered(filament)}>
-              {t("lowstock.mark_ordered")}
-            </Button>
-          )}
-          <div className="lowstock-weight">
-            {formatWeight(remaining, 0)} <span className="total">/ {formatWeight(threshold, 0)}</span>
+          <div className="lowstock-action-col">
+            {onOrder ? (
+              <OrderedPill
+                onOrder={onOrder}
+                shopName={order?.shop_name}
+                orderHref={`/orders?highlight=${onOrder.order_id}`}
+              />
+            ) : (
+              <Button size="small" onClick={() => onMarkOrdered(filament)}>
+                {t("lowstock.mark_ordered")}
+              </Button>
+            )}
           </div>
-          <ThresholdEdit filamentId={filament.id} value={filament.low_stock_threshold} />
+          {/* Remaining weight only — the threshold now lives on the "Adjust threshold" button
+              instead (gate-feedback item #2/#3). Red while actionable, grey once on order. */}
+          <div className={`lowstock-weight ${onOrder ? "on-order" : "actionable"}`}>{formatWeight(remaining, 0)}</div>
+          <div className="lowstock-threshold-col">
+            <ThresholdEdit filamentId={filament.id} value={filament.low_stock_threshold} />
+          </div>
         </div>
       </div>
     </Card>
@@ -105,6 +113,14 @@ function LowStockSection({
   return (
     <div>
       <div className="lowstock-section-subhead">{subhead}</div>
+      {/* Labels the weight number below as "Remaining" now that the threshold moved onto the
+          "Adjust threshold" button, so the bare number stays self-explanatory (gate-feedback
+          item #2). Mirrors the row's right-side columns so it lines up above the weight. */}
+      <div className="lowstock-columns-header">
+        <div className="lowstock-action-col" />
+        <span className="lowstock-columns-header-weight">{t("lowstock.remaining_header")}</span>
+        <div className="lowstock-threshold-col" />
+      </div>
       <div className="lowstock-list">
         {rows.map((row) => (
           <LowStockRowItem

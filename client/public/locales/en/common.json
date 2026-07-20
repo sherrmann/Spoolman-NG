@@ -670,7 +670,9 @@
   },
   "lowstock": {
     "title": "Low Stock",
-    "edit_threshold": "Set alert threshold",
+    "remaining_header": "Remaining",
+    "threshold_button": "Adjust threshold",
+    "threshold_button_value": "Threshold: {{value}}",
     "section": {
       "explicit": "Below your set threshold",
       "fallback": "Below the {{grams}} g default"
@@ -721,7 +723,12 @@
     "create_spools": "Create spools for the delivered items",
     "location": "Location",
     "banner": "This filament is on order (order #{{id}}) — mark its line arrived?",
-    "mark_arrived": "Mark arrived"
+    "mark_arrived": "Mark arrived",
+    "details_title": "Order {{number}}",
+    "comment": "Comment",
+    "update_error": "Couldn't update the order. Please try again.",
+    "delete_error": "Couldn't delete the order. Please try again.",
+    "delete_confirm": "Delete this order? Its lines will be deleted too."
   },
   "help": {
     "help": "Help",

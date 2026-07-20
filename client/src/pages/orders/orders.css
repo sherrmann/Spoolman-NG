@@ -1,21 +1,54 @@
 /* Orders list page (#298) — arrived orders are done; grey them out so the eye goes to what's
    still open. */
 
+/* Every row opens the details modal on click (gate-feedback item #5) — the expander is gone. */
+.orders-row-clickable {
+  cursor: pointer;
+}
+
 .orders-row-arrived {
   opacity: 0.55;
 }
 
-.orders-line-arrived {
+/* Order details/edit modal (gate-feedback item #5). */
+.order-details-link {
+  margin: -8px 0 12px;
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.order-details-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.order-details-lines-header {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.5;
+}
+
+.order-details-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.order-details-line-arrived {
   opacity: 0.55;
 }
 
-.orders-lines-detail {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+.order-details-line-name {
+  flex: 1 1 auto;
+}
+
+.order-details-line-state {
+  white-space: nowrap;
 }
 
 /* US3 arrival dialog (#298) — one row per order line: checkbox, filament name, quantity input
