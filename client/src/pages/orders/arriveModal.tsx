@@ -132,7 +132,9 @@ export function ArriveModal({ open, order: orderProp, orderId, onClose, onSucces
     });
   }, [open, order]);
 
-  const orderLabel = order ? (order.order_number ?? `#${order.id}`) : "";
+  // The i18n template ("What arrived from order #{{number}}?") already supplies the "#" — the
+  // fallback here must not add a second one (was rendering "##5" for a numberless order).
+  const orderLabel = order ? (order.order_number ?? `${order.id}`) : "";
 
   const lineInputs: ArriveLineInput[] = order
     ? order.lines
