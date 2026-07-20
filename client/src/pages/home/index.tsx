@@ -15,7 +15,7 @@ import { Button, Result, Space, Tabs, theme, Tooltip } from "antd";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import utc from "dayjs/plugin/utc";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { Trans } from "react-i18next";
 import { Link, useNavigate } from "react-router";
 import SpoolIcon from "../../components/spoolIcon";
@@ -28,6 +28,7 @@ import { ISpool } from "../spools/model";
 import { IVendor } from "../vendors/model";
 import { IOrder } from "../orders/model";
 import { openOrdersByFilament } from "../lowstock/openOrders";
+import { MarkOrderedDialog } from "../orders/markOrderedDialog";
 import { OrderedPill } from "../orders/orderPill";
 import { ThresholdEdit } from "../lowstock/thresholdEdit";
 import {
@@ -67,6 +68,9 @@ export const Home = () => {
   const navigate = useNavigate();
   const { showUrl } = useNavigation();
   const currencyFormatter = useCurrencyFormatter();
+  // US1 "Mark as ordered" (#298 Task 10) — the dialog is only mounted while a filament is picked,
+  // so its data hooks (useShops' useQuery, refine's useCreate) never run on a plain dashboard view.
+  const [markOrderedFilament, setMarkOrderedFilament] = useState<IFilament | undefined>();
 
   const spoolsAll = useList<ISpool>({
     resource: "spool",
@@ -323,7 +327,11 @@ export const Home = () => {
                                             shopName={order?.shop_name}
                                             orderHref={`/orders?highlight=${onOrder.order_id}`}
                                           />
-                                        ) : null}
+                                        ) : (
+                                          <Button size="small" onClick={() => setMarkOrderedFilament(filament)}>
+                                            {t("lowstock.mark_ordered")}
+                                          </Button>
+                                        )}
                                         <div className="low-stock-weight" style={{ color: "#d7383b" }}>
                                           {formatWeight(remaining, 0)}{" "}
                                           <span className="total">/ {formatWeight(threshold, 0)}</span>
@@ -588,6 +596,18 @@ export const Home = () => {
           </div>
         </div>
       </div>
+      {/* Mounted only while a filament is picked (not always-mounted-but-closed): its data hooks
+          (useShops' react-query useQuery, refine's useCreate) would otherwise run on every plain
+          dashboard render, which the boundary tests in index.test.tsx don't provide for (no
+          QueryClient, and @refinedev/core is mocked without useCreate there). */}
+      {markOrderedFilament && (
+        <MarkOrderedDialog
+          open
+          filament={markOrderedFilament}
+          onClose={() => setMarkOrderedFilament(undefined)}
+          onSuccess={() => setMarkOrderedFilament(undefined)}
+        />
+      )}
     </div>
   );
 };

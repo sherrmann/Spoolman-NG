@@ -1,12 +1,15 @@
 import { useList, useTranslate } from "@refinedev/core";
 import { List } from "@refinedev/antd";
-import { Button, Card, Empty, Spin, Tooltip, Typography } from "antd";
+import { Button, Card, Checkbox, Empty, Space, Spin, Typography } from "antd";
+import { useState } from "react";
 import { useNavigate } from "react-router";
 import { useLowStockFallbackG } from "../../utils/settings";
 import { formatWeight } from "../../utils/parsing";
 import { computeLowStock, getFilamentName, LowStockRow } from "../home/analytics";
 import { IFilament } from "../filaments/model";
 import { IOrder } from "../orders/model";
+import { CreateOrderModal } from "../orders/createOrderModal";
+import { MarkOrderedDialog } from "../orders/markOrderedDialog";
 import { OrderedPill } from "../orders/orderPill";
 import { openOrdersByFilament } from "./openOrders";
 import { ThresholdEdit } from "./thresholdEdit";
@@ -20,11 +23,17 @@ type Translate = ReturnType<typeof useTranslate>;
 function LowStockRowItem({
   row,
   orderMap,
+  selected,
+  onToggleSelect,
+  onMarkOrdered,
   t,
   navigate,
 }: {
   row: LowStockRow;
   orderMap: OpenOrderMap;
+  selected: boolean;
+  onToggleSelect: (filamentId: number) => void;
+  onMarkOrdered: (filament: IFilament) => void;
   t: Translate;
   navigate: (path: string) => void;
 }) {
@@ -36,6 +45,15 @@ function LowStockRowItem({
     <Card size="small" hoverable onClick={() => navigate(`/filament/show/${filament.id}`)}>
       <div className="lowstock-row">
         <div className="lowstock-row-left">
+          {/* US2 bulk multi-select: an already-ordered row can't be added to another order. */}
+          {!onOrder && (
+            <Checkbox
+              checked={selected}
+              onClick={(e) => e.stopPropagation()}
+              onChange={() => onToggleSelect(filament.id)}
+              aria-label={getFilamentName(filament)}
+            />
+          )}
           <div className="lowstock-color-dot" style={{ backgroundColor: hex }} />
           <div className="lowstock-info">
             <Text strong>{getFilamentName(filament)}</Text>
@@ -50,13 +68,9 @@ function LowStockRowItem({
               orderHref={`/orders?highlight=${onOrder.order_id}`}
             />
           ) : (
-            // US1 "Mark as ordered" per-row action — wired in Task 10. Disabled here so this
-            // read-only page doesn't promise functionality that doesn't exist yet.
-            <Tooltip title={t("lowstock.coming_soon")}>
-              <Button size="small" disabled>
-                {t("lowstock.mark_ordered")}
-              </Button>
-            </Tooltip>
+            <Button size="small" onClick={() => onMarkOrdered(filament)}>
+              {t("lowstock.mark_ordered")}
+            </Button>
           )}
           <div className="lowstock-weight">
             {formatWeight(remaining, 0)} <span className="total">/ {formatWeight(threshold, 0)}</span>
@@ -72,12 +86,18 @@ function LowStockSection({
   rows,
   subhead,
   orderMap,
+  selected,
+  onToggleSelect,
+  onMarkOrdered,
   t,
   navigate,
 }: {
   rows: LowStockRow[];
   subhead: string;
   orderMap: OpenOrderMap;
+  selected: Set<number>;
+  onToggleSelect: (filamentId: number) => void;
+  onMarkOrdered: (filament: IFilament) => void;
   t: Translate;
   navigate: (path: string) => void;
 }) {
@@ -87,7 +107,16 @@ function LowStockSection({
       <div className="lowstock-section-subhead">{subhead}</div>
       <div className="lowstock-list">
         {rows.map((row) => (
-          <LowStockRowItem key={row.filament.id} row={row} orderMap={orderMap} t={t} navigate={navigate} />
+          <LowStockRowItem
+            key={row.filament.id}
+            row={row}
+            orderMap={orderMap}
+            selected={selected.has(row.filament.id)}
+            onToggleSelect={onToggleSelect}
+            onMarkOrdered={onMarkOrdered}
+            t={t}
+            navigate={navigate}
+          />
         ))}
       </div>
     </div>
@@ -97,8 +126,8 @@ function LowStockSection({
 /**
  * Low Stock full page (#298 redesign) — the same merged per-filament list as the dashboard tab
  * (home/index.tsx), in a larger full-page layout with sections, inline threshold edit, and the
- * Ordered pill. Also hosts the placeholder region for the US1 "Mark as ordered" per-row action
- * and the US2 multi-select "Create order" button, both wired in Task 10.
+ * Ordered pill. Also hosts the US1 "Mark as ordered" per-row action and the US2 multi-select
+ * "Create order" button (Task 10).
  */
 export const LowStockPage = () => {
   const t = useTranslate();
@@ -113,15 +142,38 @@ export const LowStockPage = () => {
   const orderMap = openOrdersByFilament(orders.result?.data ?? []);
   const isLoading = filaments.query.isLoading;
 
+  // US1: the single-filament dialog. US2: the bulk multi-select selection set + its modal. Both
+  // dialogs are mounted only while actually open, so their data hooks (useShops' react-query
+  // useQuery, refine's useCreate) don't run on a plain read of this page.
+  const [markOrderedFilament, setMarkOrderedFilament] = useState<IFilament | undefined>();
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [bulkOpen, setBulkOpen] = useState(false);
+
+  const toggleSelect = (filamentId: number) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(filamentId)) next.delete(filamentId);
+      else next.add(filamentId);
+      return next;
+    });
+
+  // A row that's already on order can't be (re)selected — filtering here also drops any id
+  // that was selected and then moved on-order (e.g. via the per-row action) out of the set.
+  const selectableRows = [...lowStock.explicit, ...lowStock.fallback].filter((r) => !r.onOrder);
+  const selectedRows = selectableRows.filter((r) => selected.has(r.filament.id));
+
   return (
     <List
       title={t("lowstock.title")}
       headerButtons={() => (
-        // US2 multi-select "Create order" — wired in Task 10. Disabled here (no row-selection UI
-        // exists yet) so this read-only page doesn't promise functionality that doesn't exist yet.
-        <Tooltip title={t("lowstock.coming_soon")}>
-          <Button disabled>{t("lowstock.create_order")}</Button>
-        </Tooltip>
+        <Space>
+          {selectedRows.length > 0 && (
+            <Text type="secondary">{t("orders.selected_count", { count: selectedRows.length })}</Text>
+          )}
+          <Button disabled={selectedRows.length === 0} onClick={() => setBulkOpen(true)}>
+            {t("lowstock.create_order")}
+          </Button>
+        </Space>
       )}
     >
       {isLoading ? (
@@ -137,6 +189,9 @@ export const LowStockPage = () => {
             rows={lowStock.explicit}
             subhead={t("lowstock.section.explicit")}
             orderMap={orderMap}
+            selected={selected}
+            onToggleSelect={toggleSelect}
+            onMarkOrdered={setMarkOrderedFilament}
             t={t}
             navigate={navigate}
           />
@@ -144,10 +199,32 @@ export const LowStockPage = () => {
             rows={lowStock.fallback}
             subhead={t("lowstock.section.fallback", { grams: fallbackG })}
             orderMap={orderMap}
+            selected={selected}
+            onToggleSelect={toggleSelect}
+            onMarkOrdered={setMarkOrderedFilament}
             t={t}
             navigate={navigate}
           />
         </div>
+      )}
+      {markOrderedFilament && (
+        <MarkOrderedDialog
+          open
+          filament={markOrderedFilament}
+          onClose={() => setMarkOrderedFilament(undefined)}
+          onSuccess={() => setMarkOrderedFilament(undefined)}
+        />
+      )}
+      {bulkOpen && (
+        <CreateOrderModal
+          open
+          rows={selectedRows}
+          onClose={() => setBulkOpen(false)}
+          onSuccess={() => {
+            setBulkOpen(false);
+            setSelected(new Set());
+          }}
+        />
       )}
     </List>
   );
