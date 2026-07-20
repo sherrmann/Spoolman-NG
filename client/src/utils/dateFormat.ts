@@ -13,6 +13,9 @@ import localizedFormat from "dayjs/plugin/localizedFormat";
 dayjs.extend(localizedFormat);
 dayjs.extend(customParseFormat);
 
+/** Locale date only, no time, e.g. "08.07.2026" (de) or "07/08/2026" (en). */
+export const DATE_FORMAT = "L";
+
 /** Locale date + 24h time with seconds, e.g. "08.07.2026 14:30:00" (de) or "07/08/2026 14:30:00" (en). */
 export const DATE_TIME_FORMAT = "L HH:mm:ss";
 

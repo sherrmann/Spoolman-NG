@@ -687,11 +687,19 @@
     "order_number": "Order #",
     "shop": "Shop",
     "ordered_at": "Ordered",
-    "lines_summary": "{{arrived}} of {{total}} arrived · {{filaments}} filaments",
+    "lines_summary": "{{arrived}} of {{total}} arrived",
+    "lines_summary_title": "Lines",
+    "state_title": "State",
+    "filaments_count_one": "{{count}} filament",
+    "filaments_count_other": "{{count}} filaments",
     "arrived_action": "Arrived…",
     "outstanding": "Outstanding",
     "coming_soon": "Coming soon",
-    "state": { "open": "Open", "arrived": "Arrived" }
+    "state": {
+      "open_one": "Open — {{count}} outstanding",
+      "open_other": "Open — {{count}} outstanding",
+      "arrived": "Arrived"
+    }
   },
   "help": {
     "help": "Help",

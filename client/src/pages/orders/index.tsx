@@ -4,7 +4,7 @@ import { useList, useTranslate } from "@refinedev/core";
 import { Button, Empty, Table, Tag, Tooltip } from "antd";
 import dayjs from "dayjs";
 import { useMemo } from "react";
-import { DATE_TIME_FORMAT_SHORT } from "../../utils/dateFormat";
+import { DATE_FORMAT } from "../../utils/dateFormat";
 import { getFilamentName } from "../home/analytics";
 import { IFilament } from "../filaments/model";
 import { IOrder, IOrderLine } from "./model";
@@ -98,22 +98,33 @@ export const OrdersPage = () => {
             {
               title: t("orders.ordered_at"),
               key: "ordered_at",
-              render: (_, record) => dayjs(record.ordered_at).format(DATE_TIME_FORMAT_SHORT),
+              // Date-only per the approved mock — the ordered date doesn't need a time-of-day.
+              render: (_, record) => dayjs(record.ordered_at).format(DATE_FORMAT),
             },
             {
-              title: t("orders.lines_summary_title", "Lines"),
+              title: t("orders.lines_summary_title"),
               key: "lines_summary",
               render: (_, record) => {
                 const s = summarizeLines(record);
-                return t("orders.lines_summary", { arrived: s.arrived, total: s.total, filaments: s.filaments });
+                return `${t("orders.lines_summary", { arrived: s.arrived, total: s.total })} · ${t(
+                  "orders.filaments_count",
+                  { count: s.filaments },
+                )}`;
               },
             },
             {
-              title: t("orders.state_title", "State"),
+              title: t("orders.state_title"),
               key: "state",
-              render: (_, record) => (
-                <Tag color={record.state === "open" ? "blue" : "green"}>{t(`orders.state.${record.state}`)}</Tag>
-              ),
+              render: (_, record) => {
+                const s = summarizeLines(record);
+                return (
+                  <Tag color={record.state === "open" ? "blue" : "green"}>
+                    {record.state === "open"
+                      ? t("orders.state.open", { count: s.outstanding })
+                      : t("orders.state.arrived")}
+                  </Tag>
+                );
+              },
             },
             {
               key: "actions",

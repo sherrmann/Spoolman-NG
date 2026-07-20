@@ -1,6 +1,6 @@
 import { useList, useTranslate } from "@refinedev/core";
 import { List } from "@refinedev/antd";
-import { Button, Card, Empty, Tooltip, Typography } from "antd";
+import { Button, Card, Empty, Spin, Tooltip, Typography } from "antd";
 import { useNavigate } from "react-router";
 import { useLowStockFallbackG } from "../../utils/settings";
 import { formatWeight } from "../../utils/parsing";
@@ -124,7 +124,12 @@ export const LowStockPage = () => {
         </Tooltip>
       )}
     >
-      {!isLoading && lowStock.count === 0 ? (
+      {isLoading ? (
+        // Avoid flashing empty sections while the filament list is still loading.
+        <div className="lowstock-loading">
+          <Spin size="large" />
+        </div>
+      ) : lowStock.count === 0 ? (
         <Empty description={t("lowstock.empty")} />
       ) : (
         <div className="lowstock-page">
