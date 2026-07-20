@@ -1,7 +1,7 @@
 import { useList, useTranslate } from "@refinedev/core";
 import { List } from "@refinedev/antd";
 import { Button, Card, Checkbox, Empty, Space, Spin, Typography } from "antd";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { useLowStockFallbackG } from "../../utils/settings";
 import { formatWeight } from "../../utils/parsing";
@@ -138,7 +138,12 @@ export const LowStockPage = () => {
   const orders = useList<IOrder>({ resource: "order", pagination: { mode: "off" } });
 
   const allFilaments = filaments.result?.data ?? [];
-  const lowStock = computeLowStock(allFilaments, fallbackG);
+  // Memoized so `lowStock` (and everything derived from it below) keeps its identity across a
+  // background refetch that leaves the filament data unchanged — react-query's structural
+  // sharing keeps `allFilaments` itself referentially stable in that case, but computeLowStock
+  // rebuilds fresh arrays every call, so without this the CreateOrderModal's `rows` prop would
+  // get a new (but equal) array on every re-render while the bulk modal is open (#298 review).
+  const lowStock = useMemo(() => computeLowStock(allFilaments, fallbackG), [allFilaments, fallbackG]);
   const orderMap = openOrdersByFilament(orders.result?.data ?? []);
   const isLoading = filaments.query.isLoading;
 
@@ -159,8 +164,16 @@ export const LowStockPage = () => {
 
   // A row that's already on order can't be (re)selected — filtering here also drops any id
   // that was selected and then moved on-order (e.g. via the per-row action) out of the set.
-  const selectableRows = [...lowStock.explicit, ...lowStock.fallback].filter((r) => !r.onOrder);
-  const selectedRows = selectableRows.filter((r) => selected.has(r.filament.id));
+  const selectableRows = useMemo(
+    () => [...lowStock.explicit, ...lowStock.fallback].filter((r) => !r.onOrder),
+    [lowStock],
+  );
+  // Memoized on [selection, sections] so the array passed to CreateOrderModal as `rows` keeps a
+  // stable identity across unrelated re-renders while the modal is open (#298 review finding).
+  const selectedRows = useMemo(
+    () => selectableRows.filter((r) => selected.has(r.filament.id)),
+    [selectableRows, selected],
+  );
 
   return (
     <List

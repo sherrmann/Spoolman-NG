@@ -1,5 +1,5 @@
 import { useCreate, useInvalidate, useTranslate } from "@refinedev/core";
-import { AutoComplete, DatePicker, Form, Input, InputNumber, message, Modal } from "antd";
+import { AutoComplete, Col, DatePicker, Form, Input, InputNumber, message, Modal, Row } from "antd";
 import { useForm } from "antd/es/form/Form";
 import dayjs, { Dayjs } from "dayjs";
 import utc from "dayjs/plugin/utc";
@@ -108,18 +108,30 @@ export function MarkOrderedDialog({ open, filament, onClose, onSuccess }: Props)
             placeholder={t("orders.shop_placeholder")}
           />
         </Form.Item>
-        <Form.Item name="ordered_at" label={t("orders.order_date")} rules={[{ required: true }]}>
-          <DatePicker style={{ width: "100%" }} format={DATE_FORMAT} allowClear={false} />
-        </Form.Item>
-        <Form.Item name="quantity" label={t("orders.quantity")} rules={[{ required: true }]}>
-          <InputNumber min={1} style={{ width: "100%" }} />
-        </Form.Item>
-        <Form.Item name="price_per_unit" label={t("orders.price_per_unit")}>
-          <InputNumber min={0} style={{ width: "100%" }} />
-        </Form.Item>
-        <Form.Item name="order_number" label={t("orders.order_number_field")}>
-          <Input maxLength={256} />
-        </Form.Item>
+        <Row gutter={16}>
+          <Col xs={24} md={12}>
+            <Form.Item name="ordered_at" label={t("orders.order_date")} rules={[{ required: true }]}>
+              <DatePicker style={{ width: "100%" }} format={DATE_FORMAT} allowClear={false} />
+            </Form.Item>
+          </Col>
+          <Col xs={24} md={12}>
+            <Form.Item name="quantity" label={t("orders.quantity")} rules={[{ required: true }]}>
+              <InputNumber min={1} style={{ width: "100%" }} />
+            </Form.Item>
+          </Col>
+        </Row>
+        <Row gutter={16}>
+          <Col xs={24} md={12}>
+            <Form.Item name="price_per_unit" label={t("orders.price_per_unit")}>
+              <InputNumber min={0} style={{ width: "100%" }} placeholder="21.90" />
+            </Form.Item>
+          </Col>
+          <Col xs={24} md={12}>
+            <Form.Item name="order_number" label={t("orders.order_number_field")}>
+              <Input maxLength={256} placeholder="e.g. 3DJ-84302" />
+            </Form.Item>
+          </Col>
+        </Row>
         <Form.Item name="url" label={t("orders.url")}>
           <Input placeholder="https://..." maxLength={1024} />
         </Form.Item>

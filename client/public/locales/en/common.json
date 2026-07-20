@@ -708,9 +708,9 @@
     "shop_placeholder": "Type a shop name (creates it if new)",
     "order_date": "Order date",
     "quantity": "Quantity",
-    "price_per_unit": "Price / spool",
-    "order_number_field": "Order number",
-    "url": "Order link",
+    "price_per_unit": "Price / spool (opt.)",
+    "order_number_field": "Order number (opt.)",
+    "url": "Order link (opt.)",
     "selected_count": "{{count}} selected"
   },
   "help": {

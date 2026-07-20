@@ -3,7 +3,7 @@ import { AutoComplete, DatePicker, Form, InputNumber, message, Modal, Table } fr
 import { useForm } from "antd/es/form/Form";
 import dayjs, { Dayjs } from "dayjs";
 import utc from "dayjs/plugin/utc";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { DATE_FORMAT } from "../../utils/dateFormat";
 import { getFilamentName, LowStockRow } from "../home/analytics";
 import { buildBulkOrderBody, OrderLineInput } from "./orderBody";
@@ -37,13 +37,20 @@ export function CreateOrderModal({ open, rows, onClose, onSuccess }: Props) {
   const invalidate = useInvalidate();
   const [submitting, setSubmitting] = useState(false);
   const [quantities, setQuantities] = useState<Record<number, number>>({});
+  // Guards initialization to the open:false→true transition only. `rows` is a dependency
+  // (its identity legitimately changes when the caller's selection changes), but a background
+  // refetch elsewhere (e.g. the filament list re-fetching while this modal is open) also
+  // produces a new `rows` array with the same content — without this guard that re-triggers
+  // form.resetFields()/setQuantities() and silently wipes whatever the user has already typed.
+  const wasOpenRef = useRef(false);
 
   useEffect(() => {
-    if (open) {
+    if (open && !wasOpenRef.current) {
       form.resetFields();
       form.setFieldsValue({ ordered_at: dayjs() });
       setQuantities(Object.fromEntries(rows.map((r) => [r.filament.id, 1])));
     }
+    wasOpenRef.current = open;
   }, [open, rows, form]);
 
   const shopOptions = shops.map((s) => ({ value: s.name }));
@@ -109,7 +116,7 @@ export function CreateOrderModal({ open, rows, onClose, onSuccess }: Props) {
         pagination={false}
         size="small"
         columns={[
-          { title: t("filament.filament"), key: "name", render: (_, r) => getFilamentName(r.filament) },
+          { title: t("spool.fields.filament"), key: "name", render: (_, r) => getFilamentName(r.filament) },
           {
             title: t("orders.quantity"),
             key: "quantity",
