@@ -671,6 +671,7 @@
   "lowstock": {
     "title": "Low Stock",
     "remaining_header": "Remaining",
+    "remaining_left": "{{amount}} left",
     "threshold_button": "Adjust threshold",
     "threshold_button_value": "Threshold: {{value}}",
     "section": {

@@ -329,9 +329,15 @@ a.kpi-card:focus-visible {
   font-weight: 700;
 }
 
-.low-stock-weight .total {
-  font-weight: 400;
-  opacity: 0.4;
+/* Red/grey coloring semantics (gate-feedback round): red while the row still needs action,
+   muted grey once it's already on order — mirrors lowstock.css's identically-named classes so
+   both surfaces (this dashboard tab, the full Low Stock page) render the same way. */
+.low-stock-weight.actionable {
+  color: #d7383b;
+}
+
+.low-stock-weight.on-order {
+  opacity: 0.55;
 }
 
 .low-stock-bar {

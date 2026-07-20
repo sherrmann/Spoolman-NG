@@ -20,7 +20,7 @@ import { Trans } from "react-i18next";
 import { Link, useNavigate } from "react-router";
 import SpoolIcon from "../../components/spoolIcon";
 import { ColorModeContext } from "../../contexts/color-mode";
-import { formatWeight } from "../../utils/parsing";
+import { formatWeight, formatWeightCompact } from "../../utils/parsing";
 import { getSpoolEffectiveColor } from "../../utils/spoolColor";
 import { useCurrencyFormatter, useLowStockFallbackG } from "../../utils/settings";
 import { IFilament } from "../filaments/model";
@@ -295,7 +295,7 @@ export const Home = () => {
                                   : t("lowstock.section.fallback", { grams: fallbackG })}
                               </div>
                               <div className="low-stock-list">
-                                {rows.map(({ filament, remaining, threshold, onOrder }) => {
+                                {rows.map(({ filament, remaining, onOrder }) => {
                                   const hex = "#" + (filament.color_hex ?? "555555").replace("#", "");
                                   const order = onOrder ? orderMap.get(filament.id) : undefined;
                                   return (
@@ -332,9 +332,13 @@ export const Home = () => {
                                             {t("lowstock.mark_ordered")}
                                           </Button>
                                         )}
-                                        <div className="low-stock-weight" style={{ color: "#d7383b" }}>
-                                          {formatWeight(remaining, 0)}{" "}
-                                          <span className="total">/ {formatWeight(threshold, 0)}</span>
+                                        {/* Remaining only, rendered as "<amount> left" (gate-feedback
+                                            round: parity with the Low Stock page — dropped the
+                                            "/ threshold" suffix and the previously-hardcoded red).
+                                            Red while actionable, grey once on order — same
+                                            .actionable/.on-order semantics as lowstock.css. */}
+                                        <div className={`low-stock-weight ${onOrder ? "on-order" : "actionable"}`}>
+                                          {t("lowstock.remaining_left", { amount: formatWeightCompact(remaining) })}
                                         </div>
                                         <ThresholdEdit filamentId={filament.id} value={filament.low_stock_threshold} />
                                       </div>

@@ -4,7 +4,7 @@ import { Button, Card, Checkbox, Empty, Space, Spin, Typography } from "antd";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { useLowStockFallbackG } from "../../utils/settings";
-import { formatWeight } from "../../utils/parsing";
+import { formatWeightCompact } from "../../utils/parsing";
 import { computeLowStock, getFilamentName, LowStockRow } from "../home/analytics";
 import { IFilament } from "../filaments/model";
 import { IOrder } from "../orders/model";
@@ -79,8 +79,12 @@ function LowStockRowItem({
             )}
           </div>
           {/* Remaining weight only — the threshold now lives on the "Adjust threshold" button
-              instead (gate-feedback item #2/#3). Red while actionable, grey once on order. */}
-          <div className={`lowstock-weight ${onOrder ? "on-order" : "actionable"}`}>{formatWeight(remaining, 0)}</div>
+              instead (gate-feedback item #2/#3). Rendered as "<amount> left" (gate-feedback
+              round: i18n `lowstock.remaining_left`) with the amount human-formatted via
+              formatWeightCompact. Red while actionable, grey once on order. */}
+          <div className={`lowstock-weight ${onOrder ? "on-order" : "actionable"}`}>
+            {t("lowstock.remaining_left", { amount: formatWeightCompact(remaining) })}
+          </div>
           <div className="lowstock-threshold-col">
             <ThresholdEdit filamentId={filament.id} value={filament.low_stock_threshold} />
           </div>
