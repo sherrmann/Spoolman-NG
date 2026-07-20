@@ -56,9 +56,12 @@ def test_migration_chain_upgrades_downgrades_and_re_upgrades(tmp_path: Path):
     _run_alembic(tmp_path, "upgrade", "head")
     _assert_schema_matches_metadata(tmp_path)
 
-    # The newest migration is reversible: step down one revision and back up, then re-check that the
-    # schema still matches the models (i.e. the down+up round-trip restored everything).
-    _run_alembic(tmp_path, "downgrade", "-1")
+    # The newest migrations are reversible. A relative "-1" step is ambiguous at a merge point
+    # (the graph gained a diamond when the Orders chain and the #317 edge-recovery chain were
+    # merged), so round-trip down to the last revision below the diamond and back up, then
+    # re-check that the schema still matches the models. This exercises the downgrades of every
+    # revision above the anchor, both branches included.
+    _run_alembic(tmp_path, "downgrade", "d4e7a1b9c6f2")
     _run_alembic(tmp_path, "upgrade", "head")
     _assert_schema_matches_metadata(tmp_path)
 
