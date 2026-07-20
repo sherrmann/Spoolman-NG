@@ -5,6 +5,7 @@ import { Button, Empty, Table, Tag, Tooltip } from "antd";
 import dayjs from "dayjs";
 import { useMemo, useState } from "react";
 import { DATE_FORMAT } from "../../utils/dateFormat";
+import { safeHttpUrl } from "../../utils/url";
 import { getFilamentName } from "../home/analytics";
 import { IFilament } from "../filaments/model";
 import { ArriveModal } from "./arriveModal";
@@ -88,8 +89,11 @@ export const OrdersPage = () => {
               key: "order_number",
               render: (_, record) => {
                 const label = record.order_number ?? `#${record.id}`;
-                return record.url ? (
-                  <a href={record.url} target="_blank" rel="noreferrer noopener">
+                // Only http(s) URLs are linked — see safeHttpUrl's docstring for why an
+                // unvalidated href would be a stored-XSS vector.
+                const href = safeHttpUrl(record.url);
+                return href ? (
+                  <a href={href} target="_blank" rel="noreferrer noopener">
                     {label}
                   </a>
                 ) : (

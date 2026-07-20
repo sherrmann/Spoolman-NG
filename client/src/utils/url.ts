@@ -33,3 +33,22 @@ export function getAPIURL(): string {
   }
   return getBasePath() + import.meta.env.VITE_APIURL;
 }
+
+/**
+ * Guards against rendering a user-supplied URL (e.g. an order or shop URL) as a clickable
+ * `<a href>`. React does not sanitize hrefs, so passing an unvalidated string through lets a
+ * `javascript:` (or other non-http(s)) scheme execute when clicked — a stored-XSS vector.
+ *
+ * @param url The candidate URL, or undefined.
+ * @return {string | undefined} `url` unchanged if it parses as an absolute `http:` or `https:`
+ * URL; otherwise `undefined` (including when `url` itself is undefined or unparseable).
+ */
+export function safeHttpUrl(url: string | undefined): string | undefined {
+  if (!url) return undefined;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "http:" || parsed.protocol === "https:" ? url : undefined;
+  } catch {
+    return undefined;
+  }
+}
