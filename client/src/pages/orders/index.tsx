@@ -5,7 +5,6 @@ import { Button, Empty, Table, Tag, Tooltip } from "antd";
 import dayjs from "dayjs";
 import { useMemo, useState } from "react";
 import { DATE_FORMAT } from "../../utils/dateFormat";
-import { safeHttpUrl } from "../../utils/url";
 import { IFilament } from "../filaments/model";
 import { ArriveModal } from "./arriveModal";
 import { IOrder } from "./model";
@@ -15,10 +14,13 @@ import "./orders.css";
 
 /**
  * Orders list page (#298; gate-feedback items #4/#5): order #, shop, ordered date, a lines
- * summary with arrived counts, and the derived state pill. Every row is clickable (and so is the
- * order # link) and opens the read/edit details modal (orderDetailsModal.tsx) — the old antd
- * Table row-expander is gone in favor of that modal. The per-row "Arrived…" action still opens
- * the Task 11 arrive dialog (arriveModal.tsx) directly, without going through the details modal.
+ * summary with arrived counts, and the derived state pill. Every row is clickable and opens the
+ * read/edit details modal (orderDetailsModal.tsx) — the old antd Table row-expander is gone in
+ * favor of that modal. The order # cell is plain text (gate-feedback: it used to also be an
+ * external link when the order had a URL, which meant clicking it opened a new tab *and* the
+ * modal at once) — the modal itself renders the URL as its own link, so the cell doesn't need to.
+ * The per-row "Arrived…" action still opens the Task 11 arrive dialog (arriveModal.tsx) directly,
+ * without going through the details modal.
  * The "New order" button remains a stub — the Task 10 create-order flow isn't wired to this page
  * yet (it's reachable from the Low Stock page instead).
  */
@@ -71,19 +73,10 @@ export const OrdersPage = () => {
               title: t("orders.order_number"),
               dataIndex: "order_number",
               key: "order_number",
-              render: (_, record) => {
-                const label = record.order_number ?? `#${record.id}`;
-                // Only http(s) URLs are linked — see safeHttpUrl's docstring for why an
-                // unvalidated href would be a stored-XSS vector.
-                const href = safeHttpUrl(record.url);
-                return href ? (
-                  <a href={href} target="_blank" rel="noreferrer noopener">
-                    {label}
-                  </a>
-                ) : (
-                  label
-                );
-              },
+              // Plain text, not a link (gate-feedback): the row's onClick already opens the
+              // details modal, which shows the order's URL as its own link — a link here too
+              // meant clicking the order # both opened a new tab *and* the modal.
+              render: (_, record) => record.order_number ?? `#${record.id}`,
             },
             {
               title: t("orders.shop"),

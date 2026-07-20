@@ -38,8 +38,9 @@ async function seedSpool(request: APIRequestContext, filamentId: number, usedWei
 async function seedOrder(
   request: APIRequestContext,
   lines: { filament_id: number; quantity: number }[],
+  extra: Record<string, unknown> = {},
 ): Promise<{ id: number; lines: { id: number; quantity: number }[] }> {
-  return await (await request.post(`${APP_BASE_URL}/api/v1/order`, { data: { lines } })).json();
+  return await (await request.post(`${APP_BASE_URL}/api/v1/order`, { data: { lines, ...extra } })).json();
 }
 
 test.describe("orders and low-stock journeys", () => {
@@ -192,7 +193,7 @@ test.describe("orders and low-stock journeys", () => {
     await expect(page.getByText(`This filament is on order (order ${numberLabel})`)).toBeVisible();
   });
 
-  test("order details modal (gate-feedback item #5): the row expander is gone, clicking the order # opens an editable modal, and editing a line's quantity updates the lines summary; delete is API-asserted", async ({
+  test("order details modal (gate-feedback item #5): the row expander is gone, clicking the order # opens an editable modal (not a new tab), and editing a line's quantity updates the lines summary; delete is API-asserted", async ({
     page,
     request,
   }) => {
@@ -201,11 +202,18 @@ test.describe("orders and low-stock journeys", () => {
     const nameB = `DetailsB ${ts}`;
     const filA = await seedFilament(request, nameA);
     const filB = await seedFilament(request, nameB);
-    const order = await seedOrder(request, [
-      { filament_id: filA, quantity: 2 },
-      { filament_id: filB, quantity: 3 },
-    ]);
-    const numberLabel = `#${order.id}`;
+    const orderUrl = "https://example.com/orders/4711";
+    const order = await seedOrder(
+      request,
+      [
+        { filament_id: filA, quantity: 2 },
+        { filament_id: filB, quantity: 3 },
+      ],
+      { order_number: "4711", url: orderUrl },
+    );
+    // The seeded order has its own order_number, so the cell shows that instead of the "#id"
+    // fallback (that fallback is exercised by the split-arrival test above).
+    const numberLabel = "4711";
 
     await page.goto(`${APP_BASE_URL}/orders`);
     const orderRow = page.locator("tr.ant-table-row").filter({ has: page.getByText(numberLabel, { exact: true }) });
@@ -213,13 +221,21 @@ test.describe("orders and low-stock journeys", () => {
     await expect(orderRow.locator(".ant-table-row-expand-icon")).toHaveCount(0);
     await expect(orderRow.getByText("0 of 5 arrived")).toBeVisible();
 
-    // Clicking the order # (rather than a dedicated button) opens the details modal — the row is
-    // clickable everywhere, but this exercises the "or its order# link" half of the spec too.
+    // Gate-feedback (order-link click conflict): the order # cell used to also be an
+    // `<a target="_blank">` when the order carried a URL, so clicking it opened a new tab *and*
+    // the details modal. It's plain text now — clicking it opens only the modal, and no second
+    // page/tab appears in the browser context.
     await orderRow.getByText(numberLabel, { exact: true }).click();
+    expect(page.context().pages()).toHaveLength(1);
 
     const modal = page.locator(".ant-modal-content").last();
     const dialogTitle = `Order ${numberLabel}`;
     await expect(modal.getByText(dialogTitle)).toBeVisible();
+
+    // The modal is the one place the order's URL is a link now.
+    const modalLink = modal.locator(".order-details-link a");
+    await expect(modalLink).toHaveAttribute("href", orderUrl);
+    await expect(modalLink).toHaveText(orderUrl);
 
     // Both lines are still outstanding, so both show editable quantity/price inputs. Bump the
     // first line's (nameA, quantity 2) delivered count up to 6 — the arrived line case is covered
