@@ -26,32 +26,35 @@ import { WIZARD_COPY } from "./wizardCopy";
 
 const { Text } = Typography;
 
-const STEP_TYPE_OPTIONS: { value: CalibrationStepType; label: string }[] = [
-  { value: "temperature", label: "Temperature" },
-  { value: "volumetric_speed", label: "Volumetric Speed" },
-  { value: "pressure_advance", label: "Pressure Advance" },
-  { value: "flow_rate", label: "Flow Rate" },
-  { value: "retraction", label: "Retraction" },
-  { value: "tolerance", label: "Tolerance" },
-  { value: "cornering", label: "Cornering" },
-  { value: "input_shaping", label: "Input Shaping" },
-  { value: "vfa", label: "VFA" },
+const STEP_TYPE_VALUES: CalibrationStepType[] = [
+  "temperature",
+  "volumetric_speed",
+  "pressure_advance",
+  "flow_rate",
+  "retraction",
+  "tolerance",
+  "cornering",
+  "input_shaping",
+  "vfa",
 ];
 
-const CONFIDENCE_OPTIONS = [
-  { value: "high", label: "High" },
-  { value: "medium", label: "Medium" },
-  { value: "low", label: "Low" },
-];
+const CONFIDENCE_VALUES = ["high", "medium", "low"] as const;
 
 // ---------------------------------------------------------------------------
 // Shared sub-components (mirrors CalibrationWizard)
 // ---------------------------------------------------------------------------
 
 function FieldItem({ field, namePrefix }: { field: StepField; namePrefix: string }) {
+  const t = useTranslate();
   const control =
     field.type === "select" ? (
-      <Select options={field.options} style={{ width: "100%" }} />
+      <Select
+        options={field.options?.map((o) => ({
+          value: o.value,
+          label: t(`calibration.field_labels.options.${o.value}`),
+        }))}
+        style={{ width: "100%" }}
+      />
     ) : (
       <InputNumber
         min={field.min}
@@ -63,7 +66,7 @@ function FieldItem({ field, namePrefix }: { field: StepField; namePrefix: string
       />
     );
   return (
-    <Form.Item name={[namePrefix, field.key]} label={field.label}>
+    <Form.Item name={[namePrefix, field.key]} label={t(`calibration.field_labels.${field.section}.${field.key}`)}>
       {control}
     </Form.Item>
   );
@@ -298,9 +301,13 @@ export const StepResultDrawer = ({ open, sessionId, step, onSuccess, onClose }: 
         <Form.Item
           name="step_type"
           label={t("calibration.fields.step_type")}
-          rules={[{ required: true, message: "Please select a calibration step." }]}
+          rules={[{ required: true, message: t("calibration.select_step.required") }]}
         >
-          <Select options={STEP_TYPE_OPTIONS} disabled={isEditing} placeholder="Select a calibration step" />
+          <Select
+            options={STEP_TYPE_VALUES.map((s) => ({ value: s, label: t(`calibration.step_types.${s}`) }))}
+            disabled={isEditing}
+            placeholder={t("calibration.select_step.placeholder")}
+          />
         </Form.Item>
 
         {config && copy && (
@@ -308,10 +315,10 @@ export const StepResultDrawer = ({ open, sessionId, step, onSuccess, onClose }: 
             {/* Step description + wiki link */}
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
               <Text type="secondary" style={{ fontSize: 13, flex: 1, lineHeight: 1.5 }}>
-                {copy.description.split(". ")[0] + "."}
+                {t(`calibration.step_copy.${stepType}.description`).split(". ")[0] + "."}
               </Text>
               {copy.wikiUrl && (
-                <Tooltip title="Open OrcaSlicer wiki for this step">
+                <Tooltip title={t("calibration.wiki.tooltip")}>
                   <a
                     href={copy.wikiUrl}
                     target="_blank"
@@ -331,7 +338,7 @@ export const StepResultDrawer = ({ open, sessionId, step, onSuccess, onClose }: 
                     }}
                   >
                     <BookOutlined style={{ fontSize: 12 }} />
-                    Wiki
+                    {t("calibration.wiki.link")}
                   </a>
                 </Tooltip>
               )}
@@ -344,13 +351,11 @@ export const StepResultDrawer = ({ open, sessionId, step, onSuccess, onClose }: 
                 showIcon
                 icon={<ThunderboltOutlined />}
                 style={{ marginBottom: 20 }}
-                message={<strong>Got a modern printer? You might not need this.</strong>}
+                message={<strong>{t("calibration.input_shaping_advisory.title")}</strong>}
                 description={
                   <div>
                     <span style={{ fontSize: 13, lineHeight: 1.55 }}>
-                      Most modern CoreXY printers running Klipper with an accelerometer (ADXL345) or any Bambu Lab
-                      printer already handle input shaping automatically — and way more accurately than a manual test
-                      tower ever could. If this applies to you, just close this drawer without saving.
+                      {t("calibration.input_shaping_advisory.desc_drawer")}
                     </span>
                   </div>
                 }
@@ -391,7 +396,7 @@ export const StepResultDrawer = ({ open, sessionId, step, onSuccess, onClose }: 
                       transition: "color 0.2s",
                     }}
                   >
-                    Pass Result Calculator
+                    {t("calibration.flow_calc.title")}
                   </Text>
                   {flowCalcPhase !== "idle" &&
                     (flowCalcMethod === "yolo" ? (
@@ -429,7 +434,7 @@ export const StepResultDrawer = ({ open, sessionId, step, onSuccess, onClose }: 
                               color: flowCalcPhase === "pass1" ? token.colorPrimaryText : token.colorTextSecondary,
                             }}
                           >
-                            Pass 1
+                            {t("calibration.flow_calc.pass1")}
                           </Text>
                           {flowCalcPhase === "pass2" && pass1Result !== null && (
                             <Tag style={{ margin: 0, fontSize: 11, lineHeight: "18px" }}>{pass1Result}</Tag>
@@ -464,7 +469,7 @@ export const StepResultDrawer = ({ open, sessionId, step, onSuccess, onClose }: 
                               color: flowCalcPhase === "pass2" ? token.colorPrimaryText : token.colorTextTertiary,
                             }}
                           >
-                            Pass 2
+                            {t("calibration.flow_calc.pass2")}
                           </Text>
                         </div>
                       </div>
@@ -479,8 +484,8 @@ export const StepResultDrawer = ({ open, sessionId, step, onSuccess, onClose }: 
                       <div style={{ marginBottom: 12 }}>
                         <Segmented
                           options={[
-                            { label: "YOLO (Recommended)", value: "yolo" },
-                            { label: "Legacy (2-Pass)", value: "legacy" },
+                            { label: t("calibration.flow_calc.method_yolo"), value: "yolo" },
+                            { label: t("calibration.flow_calc.method_legacy"), value: "legacy" },
                           ]}
                           value={flowCalcMethod}
                           onChange={handleFlowMethodChange}
@@ -492,8 +497,8 @@ export const StepResultDrawer = ({ open, sessionId, step, onSuccess, onClose }: 
                       >
                         <Text type="secondary" style={{ fontSize: 13, lineHeight: 1.55, flex: 1 }}>
                           {flowCalcMethod === "yolo"
-                            ? "Single-pass calibration using the Archimedean Chords pattern (OrcaSlicer ≥ 2.3.0). Enter your current flow ratio and the correction value observed on the print."
-                            : "Two-pass calibration. Step through your first and second pass results to calculate your final flow ratio."}
+                            ? t("calibration.flow_calc.yolo_desc")
+                            : t("calibration.flow_calc.legacy_desc")}
                         </Text>
                         <Button
                           type="primary"
@@ -502,7 +507,7 @@ export const StepResultDrawer = ({ open, sessionId, step, onSuccess, onClose }: 
                           onClick={() => setFlowCalcPhase("pass1")}
                           style={{ flexShrink: 0, whiteSpace: "nowrap" }}
                         >
-                          Start →
+                          {t("calibration.flow_calc.start")}
                         </Button>
                       </div>
                     </div>
@@ -515,12 +520,11 @@ export const StepResultDrawer = ({ open, sessionId, step, onSuccess, onClose }: 
                         type="secondary"
                         style={{ fontSize: 13, lineHeight: 1.55, display: "block", marginBottom: 14 }}
                       >
-                        Print the Archimedean Chords test model. Enter your current flow ratio and the correction value
-                        shown on the print.
+                        {t("calibration.flow_calc.yolo_pass1_desc")}
                       </Text>
                       <Row gutter={[10, 0]} align="bottom">
                         <Col span={8}>
-                          <Form.Item label="Current Flow Ratio" style={{ marginBottom: 8 }}>
+                          <Form.Item label={t("calibration.flow_calc.current_flow_ratio")} style={{ marginBottom: 8 }}>
                             <InputNumber
                               value={yoloFlowRatioOld}
                               onChange={(v) => setYoloFlowRatioOld(v)}
@@ -533,7 +537,7 @@ export const StepResultDrawer = ({ open, sessionId, step, onSuccess, onClose }: 
                           </Form.Item>
                         </Col>
                         <Col span={8}>
-                          <Form.Item label="Modifier" style={{ marginBottom: 8 }}>
+                          <Form.Item label={t("calibration.flow_calc.modifier")} style={{ marginBottom: 8 }}>
                             <InputNumber
                               value={yoloModifier}
                               onChange={(v) => setYoloModifier(v)}
@@ -551,7 +555,7 @@ export const StepResultDrawer = ({ open, sessionId, step, onSuccess, onClose }: 
                               <span
                                 style={{ color: yoloResult !== null ? token.colorPrimary : undefined, fontWeight: 500 }}
                               >
-                                New Flow Ratio
+                                {t("calibration.flow_calc.new_flow_ratio")}
                               </span>
                             }
                             style={{ marginBottom: 8 }}
@@ -576,10 +580,10 @@ export const StepResultDrawer = ({ open, sessionId, step, onSuccess, onClose }: 
                           }}
                           style={{ color: token.colorTextTertiary }}
                         >
-                          Cancel
+                          {t("calibration.flow_calc.cancel")}
                         </Button>
                         <Button size="small" type="primary" disabled={yoloResult === null} onClick={applyFlowCalc}>
-                          Apply to Form ✓
+                          {t("calibration.flow_calc.apply")}
                         </Button>
                       </div>
                     </div>
@@ -592,12 +596,11 @@ export const StepResultDrawer = ({ open, sessionId, step, onSuccess, onClose }: 
                         type="secondary"
                         style={{ fontSize: 13, lineHeight: 1.55, display: "block", marginBottom: 14 }}
                       >
-                        Print your first pass test model. Enter your starting flow ratio and the correction percentage
-                        observed on the print.
+                        {t("calibration.flow_calc.legacy_pass1_desc")}
                       </Text>
                       <Row gutter={[10, 0]} align="bottom">
                         <Col span={8}>
-                          <Form.Item label="Flow Ratio" style={{ marginBottom: 8 }}>
+                          <Form.Item label={t("calibration.flow_calc.flow_ratio")} style={{ marginBottom: 8 }}>
                             <InputNumber
                               value={pass1FlowRatio}
                               onChange={(v) => setPass1FlowRatio(v)}
@@ -610,7 +613,7 @@ export const StepResultDrawer = ({ open, sessionId, step, onSuccess, onClose }: 
                           </Form.Item>
                         </Col>
                         <Col span={8}>
-                          <Form.Item label="Modifier" style={{ marginBottom: 8 }}>
+                          <Form.Item label={t("calibration.flow_calc.modifier")} style={{ marginBottom: 8 }}>
                             <InputNumber
                               value={pass1Modifier}
                               onChange={(v) => setPass1Modifier(v)}
@@ -632,7 +635,7 @@ export const StepResultDrawer = ({ open, sessionId, step, onSuccess, onClose }: 
                                   fontWeight: 500,
                                 }}
                               >
-                                Result
+                                {t("calibration.flow_calc.result")}
                               </span>
                             }
                             style={{ marginBottom: 8 }}
@@ -657,7 +660,7 @@ export const StepResultDrawer = ({ open, sessionId, step, onSuccess, onClose }: 
                           }}
                           style={{ color: token.colorTextTertiary }}
                         >
-                          Cancel
+                          {t("calibration.flow_calc.cancel")}
                         </Button>
                         <Button
                           size="small"
@@ -668,7 +671,7 @@ export const StepResultDrawer = ({ open, sessionId, step, onSuccess, onClose }: 
                             setFlowCalcPhase("pass2");
                           }}
                         >
-                          Next: Pass 2 →
+                          {t("calibration.flow_calc.next_pass2")}
                         </Button>
                       </div>
                     </div>
@@ -681,12 +684,11 @@ export const StepResultDrawer = ({ open, sessionId, step, onSuccess, onClose }: 
                         type="secondary"
                         style={{ fontSize: 13, lineHeight: 1.55, display: "block", marginBottom: 14 }}
                       >
-                        Set your slicer flow ratio to the Pass 1 result, reprint the test model, then enter the new
-                        correction percentage.
+                        {t("calibration.flow_calc.pass2_desc")}
                       </Text>
                       <Row gutter={[10, 0]} align="bottom">
                         <Col span={8}>
-                          <Form.Item label="Flow Ratio" style={{ marginBottom: 8 }}>
+                          <Form.Item label={t("calibration.flow_calc.flow_ratio")} style={{ marginBottom: 8 }}>
                             <InputNumber
                               value={pass2FlowRatio}
                               onChange={(v) => setPass2FlowRatio(v)}
@@ -699,7 +701,7 @@ export const StepResultDrawer = ({ open, sessionId, step, onSuccess, onClose }: 
                           </Form.Item>
                         </Col>
                         <Col span={8}>
-                          <Form.Item label="Modifier" style={{ marginBottom: 8 }}>
+                          <Form.Item label={t("calibration.flow_calc.modifier")} style={{ marginBottom: 8 }}>
                             <InputNumber
                               value={pass2Modifier}
                               onChange={(v) => setPass2Modifier(v)}
@@ -721,7 +723,7 @@ export const StepResultDrawer = ({ open, sessionId, step, onSuccess, onClose }: 
                                   fontWeight: 500,
                                 }}
                               >
-                                Result
+                                {t("calibration.flow_calc.result")}
                               </span>
                             }
                             style={{ marginBottom: 8 }}
@@ -743,10 +745,10 @@ export const StepResultDrawer = ({ open, sessionId, step, onSuccess, onClose }: 
                             setPass2Modifier(null);
                           }}
                         >
-                          ← Back
+                          {t("calibration.flow_calc.back")}
                         </Button>
                         <Button size="small" type="primary" disabled={pass2Result === null} onClick={applyFlowCalc}>
-                          Apply to Form ✓
+                          {t("calibration.flow_calc.apply")}
                         </Button>
                       </div>
                     </div>
@@ -758,12 +760,12 @@ export const StepResultDrawer = ({ open, sessionId, step, onSuccess, onClose }: 
             {/* Pressure Advance: method selector */}
             {stepType === "pressure_advance" && (
               <div style={{ marginBottom: 20 }}>
-                <SectionLabel>Test Method</SectionLabel>
+                <SectionLabel>{t("calibration.sections.test_method")}</SectionLabel>
                 <div style={{ display: "flex", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
                   <Segmented
                     options={[
-                      { label: "Tower (Recommended)", value: "tower" },
-                      { label: "Pattern / Line", value: "pattern" },
+                      { label: t("calibration.pa.method_tower"), value: "tower" },
+                      { label: t("calibration.pa.method_pattern"), value: "pattern" },
                     ]}
                     value={paMethod}
                     onChange={handlePaMethodChange}
@@ -771,9 +773,7 @@ export const StepResultDrawer = ({ open, sessionId, step, onSuccess, onClose }: 
                     style={{ flexShrink: 0 }}
                   />
                   <Text type="secondary" style={{ fontSize: 13, lineHeight: 1.55 }}>
-                    {paMethod === "tower"
-                      ? "Print the PA tower test. Enter your extruder type, the PA step value (A), and the measured height (B) at the best-looking layer. PA is auto-calculated as A × B."
-                      : "Print the PA pattern or line test. Identify the optimal line and enter its PA value directly below."}
+                    {paMethod === "tower" ? t("calibration.pa.tower_desc") : t("calibration.pa.pattern_desc")}
                   </Text>
                 </div>
               </div>
@@ -782,7 +782,7 @@ export const StepResultDrawer = ({ open, sessionId, step, onSuccess, onClose }: 
             {/* Test Setup */}
             {config.inputFields.length > 0 && !(stepType === "pressure_advance" && paMethod === "pattern") && (
               <div style={{ marginBottom: 20 }}>
-                <SectionLabel>Test Setup</SectionLabel>
+                <SectionLabel>{t("calibration.sections.test_setup")}</SectionLabel>
                 <Row gutter={[16, 0]}>
                   {config.inputFields.map((f) => (
                     <Col key={f.key} span={f.colSpan ?? (f.type === "select" ? 24 : 12)}>
@@ -796,10 +796,9 @@ export const StepResultDrawer = ({ open, sessionId, step, onSuccess, onClose }: 
             {/* VFA: Artifact speeds table */}
             {stepType === "vfa" && (
               <div style={{ marginBottom: 20 }}>
-                <SectionLabel>Artifact Speeds</SectionLabel>
+                <SectionLabel>{t("calibration.vfa.artifact_speeds")}</SectionLabel>
                 <Text type="secondary" style={{ fontSize: 13, lineHeight: 1.5, display: "block", marginBottom: 12 }}>
-                  Print the VFA test tower and mark each speed where you observe VFA artifacts. Min and Max Avoidance
-                  Speed are auto-computed from this list.
+                  {t("calibration.vfa.artifact_speeds_desc")}
                 </Text>
                 {artifactSpeeds.length > 0 && (
                   <div style={{ marginBottom: 10 }}>
@@ -837,7 +836,7 @@ export const StepResultDrawer = ({ open, sessionId, step, onSuccess, onClose }: 
                       min={0}
                       precision={0}
                       addonAfter="mm/s"
-                      placeholder="Speed"
+                      placeholder={t("calibration.vfa.speed_placeholder")}
                       style={{ width: "100%" }}
                       onPressEnter={addArtifactSpeed}
                     />
@@ -849,7 +848,7 @@ export const StepResultDrawer = ({ open, sessionId, step, onSuccess, onClose }: 
                       onClick={addArtifactSpeed}
                       disabled={newArtifactSpeed === null}
                     >
-                      Add Speed
+                      {t("calibration.vfa.add_speed")}
                     </Button>
                   </Col>
                 </Row>
@@ -867,7 +866,7 @@ export const StepResultDrawer = ({ open, sessionId, step, onSuccess, onClose }: 
               }}
             >
               <SectionLabel color={token.colorPrimary}>
-                Your Result
+                {t("calibration.sections.your_result")}
                 {((config.autoCompute && !(stepType === "pressure_advance" && paMethod === "pattern")) ||
                   stepType === "vfa") && (
                   <span
@@ -880,7 +879,7 @@ export const StepResultDrawer = ({ open, sessionId, step, onSuccess, onClose }: 
                       opacity: 0.75,
                     }}
                   >
-                    · auto-computed
+                    {t("calibration.sections.auto_computed")}
                   </span>
                 )}
               </SectionLabel>
@@ -902,7 +901,11 @@ export const StepResultDrawer = ({ open, sessionId, step, onSuccess, onClose }: 
 
         <Space direction="vertical" style={{ width: "100%" }} size={0}>
           <Form.Item name="confidence" label={t("calibration.fields.confidence")}>
-            <Select options={CONFIDENCE_OPTIONS} allowClear placeholder="Optional" />
+            <Select
+              options={CONFIDENCE_VALUES.map((c) => ({ value: c, label: t(`calibration.confidence.${c}`) }))}
+              allowClear
+              placeholder={t("calibration.optional")}
+            />
           </Form.Item>
           <Form.Item name="notes" label={t("calibration.fields.notes")}>
             <Input.TextArea rows={3} maxLength={1024} />

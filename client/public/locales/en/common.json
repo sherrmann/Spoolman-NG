@@ -923,6 +923,7 @@
     "no_locations_help": "This page lets you organize your spools in locations, add some spools to get started!",
     "error_empty": "Name cannot be empty",
     "error_exists": "Location already exists",
+    "load_error": "Failed to load spools",
     "fields": {
       "button": "Custom fields",
       "title": "Custom fields — {{name}}",
@@ -1023,7 +1024,165 @@
         "cancel": "Cancel"
       },
       "skip_finish_confirm": "Mark this session as complete without saving this step?",
-      "session_complete": "Calibration session marked as complete."
+      "session_complete": "Calibration session marked as complete.",
+      "revisiting": "Revisiting"
+    },
+    "wiki": {
+      "link": "Wiki",
+      "tooltip": "Open OrcaSlicer wiki for this step",
+      "tooltip_short": "OrcaSlicer wiki"
+    },
+    "sections": {
+      "test_method": "Test Method",
+      "test_setup": "Test Setup",
+      "your_result": "Your Result",
+      "auto_computed": "· auto-computed"
+    },
+    "step_status": {
+      "skipped": "Skipped",
+      "done": "✓ Done",
+      "incomplete": "Incomplete"
+    },
+    "confidence_display": "{{level}} confidence",
+    "confirm_delete": {
+      "tooltip": "Delete",
+      "confirming": "Click again to confirm",
+      "short": "Sure?"
+    },
+    "select_step": {
+      "placeholder": "Select a calibration step",
+      "required": "Please select a calibration step."
+    },
+    "optional": "Optional",
+    "optional_notes": "Optional notes…",
+    "printer_name_placeholder": "e.g. Bambu X1C, Ender 3",
+    "flow_calc": {
+      "title": "Pass Result Calculator",
+      "pass1": "Pass 1",
+      "pass2": "Pass 2",
+      "method_yolo": "YOLO (Recommended)",
+      "method_legacy": "Legacy (2-Pass)",
+      "yolo_desc": "Single-pass calibration using the Archimedean Chords pattern (OrcaSlicer ≥ 2.3.0). Enter your current flow ratio and the correction value observed on the print.",
+      "legacy_desc": "Two-pass calibration. Step through your first and second pass results to calculate your final flow ratio.",
+      "start": "Start →",
+      "yolo_pass1_desc": "Print the Archimedean Chords test model. Enter your current flow ratio and the correction value shown on the print. The new flow ratio is calculated automatically.",
+      "legacy_pass1_desc": "Print your first pass test model. Enter your starting flow ratio and the correction percentage observed on the print.",
+      "pass2_desc": "Set your slicer flow ratio to the Pass 1 result, reprint the test model, then enter the new correction percentage.",
+      "current_flow_ratio": "Current Flow Ratio",
+      "modifier": "Modifier",
+      "new_flow_ratio": "New Flow Ratio",
+      "flow_ratio": "Flow Ratio",
+      "result": "Result",
+      "cancel": "Cancel",
+      "apply": "Apply to Form ✓",
+      "next_pass2": "Next: Pass 2 →",
+      "back": "← Back"
+    },
+    "pa": {
+      "method_tower": "Tower (Recommended)",
+      "method_pattern": "Pattern / Line",
+      "tower_desc": "Print the PA tower test. Enter your extruder type, the PA step value (A), and the measured height (B) at the best-looking layer. PA is auto-calculated as A × B.",
+      "pattern_desc": "Print the PA pattern or line test. Identify the optimal line and enter its PA value directly below."
+    },
+    "input_shaping_advisory": {
+      "title": "Got a modern printer? You might not need this.",
+      "desc_wizard": "Most modern CoreXY printers running Klipper with an accelerometer (ADXL345) or any Bambu Lab printer already handle input shaping automatically — and way more accurately than a manual test tower ever could. If this applies to you, skip this step and save yourself the hassle.",
+      "desc_drawer": "Most modern CoreXY printers running Klipper with an accelerometer (ADXL345) or any Bambu Lab printer already handle input shaping automatically — and way more accurately than a manual test tower ever could. If this applies to you, just close this drawer without saving.",
+      "skip": "My printer handles this — skip it →"
+    },
+    "vfa": {
+      "artifact_speeds": "Artifact Speeds",
+      "artifact_speeds_desc": "Print the VFA test tower and mark each speed where you observe VFA artifacts. Min and Max Avoidance Speed are auto-computed from this list.",
+      "speed_placeholder": "Speed",
+      "add_speed": "Add Speed"
+    },
+    "step_copy": {
+      "temperature": {
+        "title": "Temperature",
+        "description": "Find the optimal printing temperature for this filament. Print a temperature tower and look for the layer that gives the best balance of layer adhesion, surface quality, and minimal stringing. Hotter improves bonding; cooler reduces ooze and stringing."
+      },
+      "volumetric_speed": {
+        "title": "Volumetric Speed",
+        "description": "Determine the maximum volumetric flow rate your hotend can sustain with this filament before under-extrusion appears. Print a flow-rate ramp test or a series of single-wall cubes at increasing speeds, and note the speed just before quality degrades."
+      },
+      "pressure_advance": {
+        "title": "Pressure Advance",
+        "description": "Tune Pressure Advance (Klipper / Bambu) or Linear Advance (Marlin) to eliminate corner bulging and improve sharp-corner quality. Print a PA test pattern and dial in the value that gives the cleanest, sharpest corners. Enable Adaptive PA if supported by your firmware."
+      },
+      "flow_rate": {
+        "title": "Flow Rate",
+        "description": "Fine-tune the extrusion multiplier so that the actual amount of plastic deposited matches the slicer's expectation. Print two calibration cubes (one at 98%, one at 100%) and measure their walls with calipers to calculate the correct flow ratio."
+      },
+      "retraction": {
+        "title": "Retraction",
+        "description": "Find the minimum retraction length and speed that eliminates stringing without grinding the filament or causing clogs. Print a retraction distance tower and pick the lowest setting that produces clean travel moves."
+      },
+      "tolerance": {
+        "title": "Tolerance",
+        "description": "Measure how accurately your printer reproduces feature sizes. Print a tolerance test model, measure the target features with calipers, and record the offset. Apply the result in your slicer's dimensional accuracy / xy compensation settings."
+      },
+      "cornering": {
+        "title": "Cornering",
+        "description": "Tune cornering behavior to balance print speed against ringing and artifacts at direction changes. Use Junction Deviation (Marlin 2.x / RepRapFirmware), classic Jerk (older Marlin), or Square Corner Velocity (Klipper). Print a cornering test pattern and reduce the value until ringing disappears."
+      },
+      "input_shaping": {
+        "title": "Input Shaping",
+        "description": "Reduce ghosting and ringing by applying resonance compensation. Measure the resonance frequency of your printer (accelerometer recommended, or use a visual ringing tower). Select the shaper type and frequencies that minimise artifacts, then enter them below."
+      },
+      "vfa": {
+        "title": "VFA (Vertical Fine Artifacts)",
+        "description": "Find the maximum print speed before vertical surface artifacts (VFA / ribbing) become visible. Print a speed-ramp test on a smooth-walled object and note the speed just before regular ribbing appears on the surface."
+      }
+    },
+    "field_labels": {
+      "inputs": {
+        "start_temp": "Start Temp",
+        "end_temp": "End Temp",
+        "step_size": "Step Size",
+        "start_speed": "Start Speed",
+        "end_speed": "End Speed",
+        "measured_height": "Measured Height",
+        "extruder_type": "Extruder Type",
+        "pa_step_a": "PA Step (A)",
+        "measured_height_b": "Measured Height (B)",
+        "start_retract": "Start Retraction",
+        "factor": "Factor",
+        "test_size": "Test Feature Size",
+        "measured_size": "Measured Size",
+        "firmware_type": "Firmware / Feature",
+        "start_value": "Start Value",
+        "end_value": "End Value",
+        "shaper_type": "Shaper Type",
+        "frequency_x": "Resonance Freq X",
+        "frequency_y": "Resonance Freq Y"
+      },
+      "outputs": {
+        "temperature": "Optimal Temp",
+        "max_volumetric_speed": "Max Volumetric Speed",
+        "pressure_advance": "PA Value",
+        "flow_ratio": "Flow Ratio",
+        "retraction_length": "Recommended Retraction",
+        "tolerance_offset": "Tolerance Offset",
+        "cornering_value": "Recommended Value",
+        "shaper_type_x": "X Recommended Shaper",
+        "frequency_x": "Tuned Freq X",
+        "shaper_type_y": "Y Recommended Shaper",
+        "frequency_y": "Tuned Freq Y",
+        "min_avoidance_speed": "Min Avoidance Speed",
+        "max_avoidance_speed": "Max Avoidance Speed"
+      },
+      "options": {
+        "direct_drive": "Direct Drive",
+        "bowden": "Bowden",
+        "junction_deviation": "Junction Deviation (Marlin 2.x / RepRapFirmware)",
+        "jerk": "Jerk (Classic Marlin)",
+        "square_corner_velocity": "Square Corner Velocity (Klipper)",
+        "mzv": "MZV",
+        "ei": "EI",
+        "zv": "ZV",
+        "2hump_ei": "2HUMP_EI",
+        "3hump_ei": "3HUMP_EI"
+      }
     }
   },
   "external": {
