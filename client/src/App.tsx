@@ -16,7 +16,7 @@ import {
   UserOutlined,
   WarningOutlined,
 } from "@ant-design/icons";
-import loadable from "@loadable/component";
+import loadable, { type DefaultComponent } from "@loadable/component";
 import routerBindings, { DocumentTitleHandler, UnsavedChangesNotifier } from "@refinedev/react-router";
 import { ConfigProvider } from "antd";
 import { Locale } from "antd/es/locale";
@@ -40,8 +40,20 @@ interface ResourcePageProps {
   mode?: "create" | "clone";
 }
 
+// Pages are resolved through an explicit glob rather than `import(`./pages/${...}`)`
+// template literals: the bundler emits a chunk for every file a template import could
+// reach, which used to ship *.test.tsx — vitest runtime included, ~311 kB — into dist
+// and the PWA precache (#170).
+const pageModules = import.meta.glob(["./pages/*/*.tsx", "!**/*.test.*"]);
+
+function importPage<Props>(path: string): Promise<DefaultComponent<Props>> {
+  const importer = pageModules[path];
+  if (!importer) return Promise.reject(new Error(`Unknown page module: ${path}`));
+  return importer() as Promise<DefaultComponent<Props>>;
+}
+
 const LoadableResourcePage = loadable(
-  (props: ResourcePageProps) => import(`./pages/${props.resource}/${props.page}.tsx`),
+  (props: ResourcePageProps) => importPage<ResourcePageProps>(`./pages/${props.resource}/${props.page}.tsx`),
   {
     fallback: <div>Page is Loading...</div>,
     cacheKey: (props: ResourcePageProps) => `${props.resource}-${props.page}-${props.mode ?? ""}`,
@@ -52,10 +64,13 @@ interface LoadablePageProps {
   name: string;
 }
 
-const LoadablePage = loadable((props: LoadablePageProps) => import(`./pages/${props.name}/index.tsx`), {
-  fallback: <div>Page is Loading...</div>,
-  cacheKey: (props: LoadablePageProps) => `page-${props.name}`,
-});
+const LoadablePage = loadable(
+  (props: LoadablePageProps) => importPage<LoadablePageProps>(`./pages/${props.name}/index.tsx`),
+  {
+    fallback: <div>Page is Loading...</div>,
+    cacheKey: (props: LoadablePageProps) => `page-${props.name}`,
+  },
+);
 
 function App() {
   const { t, i18n } = useTranslation();
@@ -66,14 +81,11 @@ function App() {
     getLocale: () => i18n.language,
   };
 
-  // Fetch the antd locale using dynamic imports
+  // Fetch the antd locale using the per-language loader from i18n.ts
   const [antdLocale, setAntdLocale] = useState<Locale | undefined>();
   useEffect(() => {
     const fetchLocale = async () => {
-      const locale = await import(
-        `./../node_modules/antd/es/locale/${languages[i18n.language].fullCode.replace("-", "_")}.js`
-      );
-      setAntdLocale(locale.default);
+      setAntdLocale(await languages[i18n.language].antd());
     };
     fetchLocale().catch(console.error);
   }, [i18n.language]);
