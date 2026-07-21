@@ -150,24 +150,6 @@ test.describe("spool journey", () => {
     expect((await got.json()).diameter).toBe(1.73);
   });
 
-  test("per-spool color override wins over the filament color in the swatch (#74)", async ({ page, request }) => {
-    // Green filament, but this spool overrides to red.
-    const name = `Color ${Date.now()}`;
-    const fil = await (
-      await request.post(`${APP_BASE_URL}/api/v1/filament`, {
-        data: { name, density: 1.24, diameter: 1.75, weight: 1000, color_hex: "00FF00" },
-      })
-    ).json();
-    const spool = await (
-      await request.post(`${APP_BASE_URL}/api/v1/spool`, { data: { filament_id: fil.id, color_hex: "FF0000" } })
-    ).json();
-
-    await page.goto(`${APP_BASE_URL}/spool/show/${spool.id}`);
-    // The swatch shows the spool's red override, not the filament's green.
-    const segment = page.locator(".spool-icon > div").first();
-    await expect(segment).toHaveCSS("background-color", "rgb(255, 0, 0)");
-  });
-
   test("filament dropdown shows a colour swatch per option (#126)", async ({ page, request }) => {
     // Seed a coloured filament so its dropdown option renders a swatch.
     const name = `Swatch ${Date.now()}`;

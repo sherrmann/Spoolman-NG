@@ -699,28 +699,6 @@ class Spool(BaseModel):
         ),
         examples=[1.73],
     )
-    color_hex: str | None = Field(
-        None,
-        description=(
-            "Per-spool color override in hexadecimal RGBA (#74). Null means the filament's color is used. "
-            "This is the raw override; clients fall back to the filament color when it is null. If it's a "
-            "multi-color override, the multi_color_hexes field is used instead."
-        ),
-        examples=["FF0000"],
-    )
-    multi_color_hexes: str | None = Field(
-        None,
-        description=(
-            "Per-spool multi-color override: comma-separated hexadecimal RGBA colors (#74). Null means the "
-            "filament's color is used."
-        ),
-        examples=["FF0000,00FF00,0000FF"],
-    )
-    multi_color_direction: MultiColorDirection | None = Field(
-        None,
-        description="Type of multi-color override. Only set if the spool's multi_color_hexes field is set.",
-        examples=["coaxial"],
-    )
     location: str | None = Field(
         None,
         max_length=64,
@@ -797,13 +775,6 @@ class Spool(BaseModel):
             used_weight=item.used_weight,
             used_length=used_length,
             diameter=item.diameter,
-            # #74: emit the raw per-spool color override (null when unset); clients fall back to the
-            # filament color. Normalized the same way the filament color is on the way out.
-            color_hex=_normalize_stored_color_hex(item.color_hex),
-            multi_color_hexes=_normalize_stored_multi_color_hexes(item.multi_color_hexes),
-            multi_color_direction=(
-                MultiColorDirection(item.multi_color_direction) if item.multi_color_direction is not None else None
-            ),
             remaining_weight=remaining_weight,
             remaining_length=remaining_length,
             location=item.location,

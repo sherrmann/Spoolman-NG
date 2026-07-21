@@ -186,7 +186,7 @@ export function registeredWithinDays(spools: ISpool[], days: number, now: dayjs.
 /** "#rrggbb" swatch for a spool, preferring its own colour override (#74), then the filament colour,
  * defaulting to a mid-grey when none is set. Multi-colour is out of scope for this single-swatch chart. */
 export function getColorHex(spool: ISpool): string {
-  return "#" + (spool.color_hex ?? spool.filament.color_hex ?? "555555").replace("#", "");
+  return "#" + (spool.filament.color_hex ?? "555555").replace("#", "");
 }
 
 /** Human label for a spool: "Vendor - Name", falling back to the filament name or id. */

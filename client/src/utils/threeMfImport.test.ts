@@ -98,9 +98,9 @@ describe("autoMatchSpoolId", () => {
     expect(autoMatchSpoolId({ key: "1", type: "PLA", colorHex: "#123456", usedWeight: 5 }, spools)).toBeUndefined();
   });
 
-  it("honours a per-spool colour override over the filament colour", () => {
-    const overridden = [spool(9, { color_hex: "00FF00", filament: { material: "PLA", color_hex: "FF0000" } })];
-    expect(spoolPrimaryHex(overridden[0])).toBe("#00FF00");
-    expect(autoMatchSpoolId({ key: "1", type: "PLA", colorHex: "#00FF00", usedWeight: 5 }, overridden)).toBe(9);
+  it("matches on the filament colour", () => {
+    const reds = [spool(9, { filament: { material: "PLA", color_hex: "FF0000" } })];
+    expect(spoolPrimaryHex(reds[0])).toBe("#FF0000");
+    expect(autoMatchSpoolId({ key: "1", type: "PLA", colorHex: "#FF0000", usedWeight: 5 }, reds)).toBe(9);
   });
 });

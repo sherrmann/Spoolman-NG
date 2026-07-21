@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import contains_eager, joinedload
 from sqlalchemy.sql.functions import coalesce
 
-from spoolman.api.v1.models import EventType, MultiColorDirection, Spool, SpoolEvent
+from spoolman.api.v1.models import EventType, Spool, SpoolEvent
 from spoolman.database import filament, models, printer
 from spoolman.database.extra_field_query import apply_extra_field_filters_and_sort
 from spoolman.database.utils import (
@@ -49,9 +49,6 @@ async def create(
     comment: str | None = None,
     archived: bool = False,
     diameter: float | None = None,
-    color_hex: str | None = None,
-    multi_color_hexes: str | None = None,
-    multi_color_direction: MultiColorDirection | None = None,
     extra: dict[str, str] | None = None,
 ) -> models.Spool:
     """Add a new spool to the database. Leave weight empty to assume full spool."""
@@ -102,9 +99,6 @@ async def create(
         archived=archived,
         diameter=diameter,
         printer=printer_item,
-        color_hex=color_hex,
-        multi_color_hexes=multi_color_hexes,
-        multi_color_direction=multi_color_direction.value if multi_color_direction is not None else None,
         extra=[models.SpoolField(key=k, value=v) for k, v in (extra or {}).items()],
     )
     db.add(spool)
@@ -305,7 +299,7 @@ async def find(  # noqa: C901, PLR0912
     return result, total_count
 
 
-async def update(  # noqa: C901
+async def update(
     *,
     db: AsyncSession,
     spool_id: int,
@@ -327,9 +321,6 @@ async def update(  # noqa: C901
             spool.used_weight = max(spool.initial_weight - v, 0)
         elif isinstance(v, datetime):
             setattr(spool, k, utc_timezone_naive(v))
-        elif k == "multi_color_direction":
-            # Store the enum's string value, not the enum member (#74; mirrors filament.update).
-            spool.multi_color_direction = v.value if v is not None else None
         elif k == "extra":
             # Merge semantics (#233): keys present are replaced, a None value deletes the
             # key, keys not mentioned stay. Unlike the other entities, which replace all.

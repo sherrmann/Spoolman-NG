@@ -22,10 +22,6 @@ export interface ISpool {
   used_length: number;
   // Per-spool measured diameter override (#101). Undefined ⇒ the filament's diameter is used.
   diameter?: number;
-  // Per-spool color override (#74). Undefined ⇒ the filament's color is used.
-  color_hex?: string;
-  multi_color_hexes?: string;
-  multi_color_direction?: string;
   location?: string;
   // Assigned printer (#75). Nested object present only when assigned; printer_id is the write field.
   printer?: IPrinter;
