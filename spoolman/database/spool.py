@@ -32,7 +32,7 @@ from spoolman.ws import websocket_manager
 logger = logging.getLogger(__name__)
 
 
-async def create(
+async def build(
     *,
     db: AsyncSession,
     filament_id: int,
@@ -51,7 +51,14 @@ async def create(
     diameter: float | None = None,
     extra: dict[str, str] | None = None,
 ) -> models.Spool:
-    """Add a new spool to the database. Leave weight empty to assume full spool."""
+    """Build a spool and stage it in the session, WITHOUT committing or notifying.
+
+    This is the object-construction half of :func:`create`: it validates the filament (and optional
+    printer) FKs, derives the weights and adds the row to the session. The caller owns the commit and
+    the ADDED websocket event. :func:`create` does both for the single-spool case; the order arrival
+    flow (#322) stages several spools together with the order-line mutations and commits them as one
+    transaction, so a mid-way failure can't leave lines arrived with only some of their spools.
+    """
     filament_item = await filament.get_by_id(db, filament_id)
 
     # #75: validate the optional printer assignment (no DB-level FK), so a bad id is a clean 404.
@@ -102,6 +109,47 @@ async def create(
         extra=[models.SpoolField(key=k, value=v) for k, v in (extra or {}).items()],
     )
     db.add(spool)
+    return spool
+
+
+async def create(
+    *,
+    db: AsyncSession,
+    filament_id: int,
+    remaining_weight: float | None = None,
+    initial_weight: float | None = None,
+    spool_weight: float | None = None,
+    used_weight: float | None = None,
+    first_used: datetime | None = None,
+    last_used: datetime | None = None,
+    price: float | None = None,
+    location: str | None = None,
+    printer_id: int | None = None,
+    lot_nr: str | None = None,
+    comment: str | None = None,
+    archived: bool = False,
+    diameter: float | None = None,
+    extra: dict[str, str] | None = None,
+) -> models.Spool:
+    """Add a new spool to the database. Leave weight empty to assume full spool."""
+    spool = await build(
+        db=db,
+        filament_id=filament_id,
+        remaining_weight=remaining_weight,
+        initial_weight=initial_weight,
+        spool_weight=spool_weight,
+        used_weight=used_weight,
+        first_used=first_used,
+        last_used=last_used,
+        price=price,
+        location=location,
+        printer_id=printer_id,
+        lot_nr=lot_nr,
+        comment=comment,
+        archived=archived,
+        diameter=diameter,
+        extra=extra,
+    )
     await db.commit()
     await spool_changed(spool, EventType.ADDED)
     return spool
