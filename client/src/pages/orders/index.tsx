@@ -1,13 +1,14 @@
 import { PlusOutlined } from "@ant-design/icons";
 import { List } from "@refinedev/antd";
 import { useList, useTranslate } from "@refinedev/core";
-import { Button, Empty, Table, Tag, Tooltip } from "antd";
+import { Button, Empty, Table, Tag } from "antd";
 import dayjs from "dayjs";
 import { useMemo, useState } from "react";
 import { DATE_FORMAT } from "../../utils/dateFormat";
 import { IFilament } from "../filaments/model";
 import { ArriveModal } from "./arriveModal";
 import { IOrder } from "./model";
+import { NewOrderModal } from "./newOrderModal";
 import { OrderDetailsModal } from "./orderDetailsModal";
 import { summarizeLines } from "./ordersState";
 import "./orders.css";
@@ -21,8 +22,9 @@ import "./orders.css";
  * modal at once) — the modal itself renders the URL as its own link, so the cell doesn't need to.
  * The per-row "Arrived…" action still opens the Task 11 arrive dialog (arriveModal.tsx) directly,
  * without going through the details modal.
- * The "New order" button remains a stub — the Task 10 create-order flow isn't wired to this page
- * yet (it's reachable from the Low Stock page instead).
+ * The "New order" button opens the from-scratch builder (#324, newOrderModal.tsx) — a filament
+ * picker + lines editor over the same header surface as the details modal. Orders can also still be
+ * born from the Low Stock flows (mark-as-ordered / bulk create).
  */
 export const OrdersPage = () => {
   const t = useTranslate();
@@ -44,18 +46,18 @@ export const OrdersPage = () => {
   const [arrivingOrder, setArrivingOrder] = useState<IOrder | undefined>();
   // The details/edit modal (gate-feedback item #5), opened by clicking anywhere on a row.
   const [detailsOrder, setDetailsOrder] = useState<IOrder | undefined>();
+  // The from-scratch "New order" builder (#324), opened by the header button below.
+  const [creating, setCreating] = useState(false);
 
   return (
     <List
       title={t("orders.title")}
       headerButtons={() => (
-        // Opens the create-order flow — wired to the Task 10 modal. Disabled here so this
-        // read-only page doesn't promise functionality that doesn't exist yet.
-        <Tooltip title={t("orders.coming_soon")}>
-          <Button type="primary" icon={<PlusOutlined />} disabled>
-            {t("orders.new_order")}
-          </Button>
-        </Tooltip>
+        // Opens the from-scratch order builder (#324). Filaments are already loaded on this page for
+        // the details modal, so hand them straight to the builder's picker.
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreating(true)}>
+          {t("orders.new_order")}
+        </Button>
       )}
     >
       {!isLoading && allOrders.length === 0 ? (
@@ -149,6 +151,14 @@ export const OrdersPage = () => {
           filamentsById={filamentsById}
           onClose={() => setDetailsOrder(undefined)}
           onSuccess={() => setDetailsOrder(undefined)}
+        />
+      )}
+      {creating && (
+        <NewOrderModal
+          open
+          filaments={filaments.result?.data ?? []}
+          onClose={() => setCreating(false)}
+          onSuccess={() => setCreating(false)}
         />
       )}
     </List>

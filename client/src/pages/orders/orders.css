@@ -47,6 +47,13 @@
   flex: 1 1 auto;
 }
 
+/* From-scratch New order builder (#324): the per-line filament picker takes the free space so its
+   long labels stay readable next to the fixed-width quantity/price inputs. */
+.new-order-line-filament {
+  flex: 1 1 200px;
+  min-width: 160px;
+}
+
 .order-details-line-state {
   white-space: nowrap;
 }
