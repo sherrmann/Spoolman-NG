@@ -1,0 +1,21 @@
+# Submission-ready compose entry for the BigBear app catalogs (BigBearUniversal
+# Apps / big-bear-casaos), following their big-bear-* naming and /DATA/AppData
+# volume conventions. Functionally identical to the compose example in
+# docs/installation.md — only the names and the appdata path differ.
+name: big-bear-spoolman-ng
+services:
+  big-bear-spoolman-ng:
+    image: ghcr.io/sherrmann/spoolman-ng:latest
+    container_name: big-bear-spoolman-ng
+    restart: unless-stopped
+    volumes:
+      # SQLite database + automatic nightly backups. On a plain Docker host,
+      # replace with any writable path, e.g. ./data
+      - /DATA/AppData/big-bear-spoolman-ng/data:/home/app/.local/share/spoolman
+    ports:
+      # Host port 7912 (Spoolman's conventional port) -> container port 8000
+      - "7912:8000"
+    environment:
+      - TZ=UTC
+    # The image ships its own HEALTHCHECK against /api/v1/health — no
+    # compose-level healthcheck needed.

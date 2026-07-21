@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>Spoolman-NG</Name>
+  <Repository>ghcr.io/sherrmann/spoolman-ng:latest</Repository>
+  <Registry>https://github.com/sherrmann/Spoolman-NG/pkgs/container/spoolman-ng</Registry>
+  <Network>bridge</Network>
+  <Shell>sh</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/sherrmann/Spoolman-NG/issues</Support>
+  <Project>https://github.com/sherrmann/Spoolman-NG</Project>
+  <Overview>Spoolman NG keeps track of your inventory of 3D-printer filament spools. It integrates with OctoPrint and Klipper/Moonraker, updating spool weights automatically as printing progresses, and includes QR-code label printing, NFC spool identification, a community filament catalog, and a REST API. Community-maintained, drop-in-compatible continuation of the original Spoolman by Donkie: point it at an existing Spoolman data directory and it migrates automatically on first start (back it up first). All configuration is via SPOOLMAN_* environment variables, documented at https://github.com/sherrmann/Spoolman-NG/blob/master/docs/installation.md</Overview>
+  <Category>Tools: Productivity: Status:Stable</Category>
+  <WebUI>http://[IP]:[PORT:8000]/</WebUI>
+  <TemplateURL>https://raw.githubusercontent.com/sherrmann/Spoolman-NG/master/integrations/unraid/spoolman-ng.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/sherrmann/Spoolman-NG/master/client/public/pwa-512x512.png</Icon>
+  <ExtraParams/>
+  <PostArgs/>
+  <DonateText/>
+  <DonateLink/>
+  <Requires/>
+  <Config Name="Web UI port" Target="8000" Default="7912" Mode="tcp" Description="Host port for the web UI and API. Point Moonraker's [spoolman] server setting at http://[unraid-ip]:[this port]." Type="Port" Display="always" Required="true" Mask="false">7912</Config>
+  <Config Name="Data directory" Target="/home/app/.local/share/spoolman" Default="/mnt/user/appdata/spoolman-ng" Mode="rw" Description="Where the SQLite database and its automatic backups live. Migrating from upstream Spoolman? Point this at a copy of your existing data directory." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/spoolman-ng</Config>
+  <Config Name="TZ" Target="TZ" Default="UTC" Mode="" Description="Timezone (e.g. Europe/Stockholm), used for timestamps in the UI/API." Type="Variable" Display="always" Required="false" Mask="false">UTC</Config>
+  <Config Name="PUID" Target="PUID" Default="99" Mode="" Description="UID that owns the data directory (Unraid default: 99 = nobody)." Type="Variable" Display="advanced" Required="false" Mask="false">99</Config>
+  <Config Name="PGID" Target="PGID" Default="100" Mode="" Description="GID that owns the data directory (Unraid default: 100 = users)." Type="Variable" Display="advanced" Required="false" Mask="false">100</Config>
+</Container>
