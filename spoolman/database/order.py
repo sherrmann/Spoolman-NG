@@ -3,7 +3,7 @@
 import logging
 from datetime import datetime
 
-from sqlalchemy import func, select
+from sqlalchemy import Select, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
@@ -82,28 +82,43 @@ async def find(
     limit: int | None = None,
     offset: int = 0,
 ) -> tuple[list[models.Order], int]:
-    """Find a list of order objects. Returns (items, total count of matching items)."""
-    stmt = select(models.Order).options(joinedload("*"))
-    stmt = add_where_clause_int_opt(stmt, models.Order.shop_id, shop_id)
+    """Find a list of order objects. Returns (items, total count of matching items).
 
-    total_count = None
-    if sort_by is not None:
-        for fieldstr, order in sort_by.items():
-            field = getattr(models.Order, fieldstr)
-            stmt = stmt.order_by(order_by_expression(field, order))
+    An order's lines are a one-to-many collection eager-loaded via ``joinedload`` (lazy=joined),
+    so the SELECT that fetches an order fans out to one row per line. Applying SQL LIMIT/OFFSET to
+    that fanned-out query windows the joined rows, not distinct orders, which would truncate a
+    boundary order's line set or return fewer than ``limit`` orders. So when paginating we resolve
+    the page on distinct order ids first — a query over the orders table alone, where LIMIT/OFFSET
+    are unambiguous — and only then load those orders' full object graph (#319).
+    """
+
+    def _apply_sort(statement: Select) -> Select:
+        if sort_by is not None:
+            for fieldstr, order in sort_by.items():
+                statement = statement.order_by(order_by_expression(getattr(models.Order, fieldstr), order))
+        return statement
 
     if limit is not None:
-        total_count_stmt = stmt.with_only_columns(
-            func.count(models.Order.id.distinct()), maintain_column_froms=True
-        ).order_by(None)
-        total_count = (await db.execute(total_count_stmt)).scalar()
-        stmt = stmt.offset(offset).limit(limit)
+        count_stmt = add_where_clause_int_opt(select(func.count(models.Order.id)), models.Order.shop_id, shop_id)
+        total_count = (await db.execute(count_stmt)).scalar() or 0
 
+        # The page of order ids, ordered and windowed over the orders table alone (no line join).
+        id_stmt = add_where_clause_int_opt(select(models.Order.id), models.Order.shop_id, shop_id)
+        id_stmt = _apply_sort(id_stmt).offset(offset).limit(limit)
+        page_ids = list((await db.execute(id_stmt)).scalars().all())
+        if not page_ids:
+            return [], total_count
+
+        # Load the full graph (shop + lines + ...) for just this page, re-ordered to match it.
+        stmt = _apply_sort(select(models.Order).options(joinedload("*")).where(models.Order.id.in_(page_ids)))
+        rows = await db.execute(stmt, execution_options={"populate_existing": True})
+        return list(rows.unique().scalars().all()), total_count
+
+    stmt = add_where_clause_int_opt(select(models.Order).options(joinedload("*")), models.Order.shop_id, shop_id)
+    stmt = _apply_sort(stmt)
     rows = await db.execute(stmt, execution_options={"populate_existing": True})
     result = list(rows.unique().scalars().all())
-    if total_count is None:
-        total_count = len(result)
-    return result, total_count
+    return result, len(result)
 
 
 async def update(*, db: AsyncSession, order_id: int, data: dict, replace_lines: bool) -> models.Order:
