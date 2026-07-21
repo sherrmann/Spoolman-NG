@@ -17,7 +17,13 @@ import { ReactElement } from "react";
 import { code128Bars } from "../../utils/barcode";
 import { formatNumberOnUserInput, numberParser } from "../../utils/parsing";
 import { getBasePath } from "../../utils/url";
-import { DEFAULT_QR_SIZE_MM, MIN_SCANNABLE_QR_MM, qrContainerBasis } from "./labelLayout";
+import {
+  DEFAULT_QR_SIZE_MM,
+  MIN_SCANNABLE_QR_MM,
+  labelCellSize,
+  qrContainerBasis,
+  renderedQrSize,
+} from "./labelLayout";
 import { QRCodePrintSettings } from "./printing";
 import PrintingDialog from "./printingDialog";
 
@@ -177,7 +183,20 @@ const QRCodePrintingDialog = ({
   // column-reverse = below. The container basis becomes a vertical split for the stacked layouts.
   const itemFlexDirection = qrPlacement === "top" ? "column" : qrPlacement === "bottom" ? "column-reverse" : "row";
   const containerBasis = qrContainerBasis({ showSide, qrSize, qrPadding });
-  const qrTooSmall = qrSize !== undefined && qrSize < MIN_SCANNABLE_QR_MM && showQRCodeMode !== "no";
+
+  // #296: an oversized QR is clamped to the label cell (min() basis + object-fit), never drawn
+  // overflowing — correct on paper, but the input keeps claiming the requested size. Recompute
+  // the printed square from the same geometry the page renderer uses and say so next to the
+  // control. Scannability is judged on what prints, not what was typed: a clamped 20mm request
+  // can land under the floor while the typed value looks fine.
+  const cell = labelCellSize(printSettings?.printSettings);
+  const renderedQr =
+    qrSize !== undefined
+      ? renderedQrSize({ qrSize, qrPadding, cellWidth: cell.width, cellHeight: cell.height })
+      : undefined;
+  const qrWarningsApply = qrSize !== undefined && renderedQr !== undefined && showQRCodeMode !== "no";
+  const qrClamped = qrWarningsApply && renderedQr < qrSize;
+  const qrTooSmall = qrWarningsApply && renderedQr < MIN_SCANNABLE_QR_MM;
 
   return (
     <PrintingDialog
@@ -357,8 +376,18 @@ const QRCodePrintingDialog = ({
           <Form.Item
             label={t("printing.qrcode.qrSize.label")}
             tooltip={t("printing.qrcode.qrSize.tooltip")}
-            validateStatus={qrTooSmall ? "warning" : undefined}
-            help={qrTooSmall ? t("printing.qrcode.qrSize.tooSmall", { mm: MIN_SCANNABLE_QR_MM }) : undefined}
+            validateStatus={qrClamped || qrTooSmall ? "warning" : undefined}
+            help={
+              qrClamped
+                ? t(qrTooSmall ? "printing.qrcode.qrSize.clampedTooSmall" : "printing.qrcode.qrSize.clamped", {
+                    rendered: renderedQr,
+                    requested: qrSize,
+                    mm: MIN_SCANNABLE_QR_MM,
+                  })
+                : qrTooSmall
+                  ? t("printing.qrcode.qrSize.tooSmall", { mm: MIN_SCANNABLE_QR_MM })
+                  : undefined
+            }
           >
             <Radio.Group
               disabled={showQRCodeMode === "no"}

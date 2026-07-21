@@ -22,6 +22,7 @@ import { useReactToPrint } from "react-to-print";
 import { formatNumberOnUserInput, numberParser } from "../../utils/parsing";
 import { useSavedState } from "../../utils/saveload";
 import { bitmapToZpl } from "../../utils/zpl";
+import { labelCellSize, paperDimensions, resolvePaperSize } from "./labelLayout";
 import PrePrintChecklistModal from "./prePrintChecklistModal";
 import { PrintSettings } from "./printing";
 
@@ -61,60 +62,6 @@ interface PrintingDialogProps {
   onPrinted?: () => void;
 }
 
-interface PaperDimensions {
-  width: number;
-  height: number;
-}
-
-const paperDimensions: { [key: string]: PaperDimensions } = {
-  A3: {
-    width: 297,
-    height: 420,
-  },
-  A4: {
-    width: 210,
-    height: 297,
-  },
-  A5: {
-    width: 148,
-    height: 210,
-  },
-  Letter: {
-    width: 216,
-    height: 279,
-  },
-  Legal: {
-    width: 216,
-    height: 356,
-  },
-  Tabloid: {
-    width: 279,
-    height: 432,
-  },
-  // Curated single-label sizes for thermal/roll label printers (#141). Selecting one and setting
-  // columns/rows to 1 (plus "Match label" page size, #71) prints a single label at true geometry.
-  "Label 89×36 mm": {
-    width: 89,
-    height: 36,
-  },
-  "Label 62×29 mm": {
-    width: 62,
-    height: 29,
-  },
-  "Label 57×32 mm": {
-    width: 57,
-    height: 32,
-  },
-  "Label 50×30 mm": {
-    width: 50,
-    height: 30,
-  },
-  "Label 40×30 mm": {
-    width: 40,
-    height: 30,
-  },
-};
-
 const PrintingDialog = ({
   items,
   printSettings,
@@ -145,8 +92,7 @@ const PrintingDialog = ({
   const customPaperSize = printSettings?.customPaperSize || { width: 210, height: 297 };
   const borderShowMode = printSettings?.borderShowMode || "grid";
 
-  const paperWidth = paperSize === "custom" ? customPaperSize.width : paperDimensions[paperSize].width;
-  const paperHeight = paperSize === "custom" ? customPaperSize.height : paperDimensions[paperSize].height;
+  const { width: paperWidth, height: paperHeight } = resolvePaperSize(printSettings);
 
   // #71: emit an explicit @page size only when the user opts in; "auto" keeps the previous behavior.
   const pageSizeMode = printSettings?.pageSizeMode || "auto";
@@ -157,8 +103,8 @@ const PrintingDialog = ({
   // labels printed and stamp label_printed_at (#93).
   const reactToPrintFn = useReactToPrint({ contentRef, onAfterPrint: onPrinted });
 
-  const itemWidth = (paperWidth - margin.left - margin.right - spacing.horizontal) / paperColumns - spacing.horizontal;
-  const itemHeight = (paperHeight - margin.top - margin.bottom - spacing.vertical) / paperRows - spacing.vertical;
+  // Shared with the QR dialog's rendered-size readout (#296), so the two can't disagree.
+  const { width: itemWidth, height: itemHeight } = labelCellSize(printSettings);
 
   // Impossible geometry: margins + spacing leave no room for a label cell at all. Detected from
   // pure state so the error shows even before anything renders.
