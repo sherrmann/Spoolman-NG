@@ -221,3 +221,6 @@ mutants/
 .e2e-data/
 **/coverage-e2e/
 **/.coverage-raw/
+
+# Scenario harness: running-stack registry (host-local, ephemeral)
+tests_scenarios/.state/

@@ -115,6 +115,10 @@ help = "Start Spoolman."
 cmd = "python tests_integration/run.py"
 help = "Builds Spoolman and runs integration tests on the backend against all supported databases."
 
+[tool.poe.tasks.scenario]
+cmd = "python -m tests_scenarios"
+help = "Local deployment-scenario harness: list/up/down/test/ps/logs."
+
 [tool.ruff]
 line-length = 120
 target-version = "py310"

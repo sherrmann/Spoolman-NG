@@ -38,13 +38,22 @@ def _compose_cmd(project: str, compose_file: Path, *args: str) -> list[str]:
 
 
 def bring_up(scenario: Scenario) -> ScenarioStack:
-    """Render the compose file for `scenario` and bring the stack up in the background."""
+    """Render the compose file for `scenario` and bring the stack up in the background.
+
+    Self-cleaning on failure: if `up -d` fails partway through (e.g. one service starts
+    but another fails), tear the partial project down and remove the temp compose file
+    before re-raising, so callers never have to clean up a stack they never got back.
+    """
     host_port = free_port()
     project = project_name(scenario.name)
     compose_file = compose.render(scenario, host_port=host_port, project=project)
     url = f"http://localhost:{host_port}" + (f"/{scenario.subpath}" if scenario.subpath else "")
     stack = ScenarioStack(scenario, project, host_port, url, compose_file)
-    subprocess.run(_compose_cmd(project, compose_file, "up", "-d"), check=True)
+    try:
+        subprocess.run(_compose_cmd(project, compose_file, "up", "-d"), check=True)
+    except subprocess.CalledProcessError:
+        tear_down(stack)
+        raise
     return stack
 
 
