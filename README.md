@@ -54,6 +54,23 @@ Spoolman NG is a self-hosted web service designed to help you efficiently manage
   * [Home Assistant](https://github.com/Disane87/spoolman-homeassistant)
   * [MCP Server](https://github.com/Disane87/spoolman-mcp) - Manage your filament inventory through AI assistants like Claude using the Model Context Protocol
 
+#### Raspberry Pi Imager 3D-printing appliances
+
+Flashing an OS from the Raspberry Pi Imager **3D printing** menu? Here is how each appliance in that catalog works with Spoolman:
+
+| Appliance (RPi Imager) | Stack | Spoolman support | How |
+|---|---|---|---|
+| OctoPi | OctoPrint | ✅ | [OctoPrint-Spoolman plugin](https://github.com/mdziekon/octoprint-spoolman) |
+| OctoKlipperPi | OctoPrint → Klipper | ✅ | [OctoPrint-Spoolman plugin](https://github.com/mdziekon/octoprint-spoolman) |
+| Mainsail OS | Klipper/Moonraker | ✅ first-class | Moonraker [`[spoolman]`](https://moonraker.readthedocs.io/en/latest/configuration/#spoolman) + Mainsail/Fluidd/KlipperScreen panels |
+| PrintWatch OS | OctoPrint | ✅ | [OctoPrint-Spoolman plugin](https://github.com/mdziekon/octoprint-spoolman) (PrintWatch adds failure detection only) |
+| SimplyPrint | Cloud (OctoPrint/Bambu) | ⚠️ one-way import | Export → SimplyPrint Filament Manager (see #312) |
+| DuetPi | RepRapFirmware/DWC | ❌ none | Proposed DWC plugin (see #313) |
+| Repetier-Server | Repetier | ❌ none | Has its own filament manager (see #314) |
+| 3DPrinterOS | Cloud (commercial) | ❌ out of scope | Closed ecosystem |
+
+**Adjacent tools** that work with Spoolman but aren't Imager images: [Fluidd](https://docs.fluidd.xyz/), [KlipperScreen](https://klipperscreen.readthedocs.io/), [Home Assistant](https://github.com/Disane87/spoolman-homeassistant), and [OctoEverywhere](https://octoeverywhere.com/spoolman?source=github_spoolman).
+
 **Web client preview:**
 ![Spoolman web client preview](assets/spoolman-screenshot.png)
 
