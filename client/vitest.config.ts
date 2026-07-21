@@ -16,6 +16,12 @@ export default defineConfig({
     setupFiles: ["./src/test/setup.ts"],
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
     css: false,
+    // The default 5s per-test timeout is too tight for the antd-Modal interaction tests
+    // (e.g. createOrderModal / newOrderModal) when the `test:coverage` job runs the whole
+    // suite in parallel under v8 instrumentation: CPU contention + coverage overhead push a
+    // handful of userEvent-driven tests past 5s on CI even though they finish in ~1-2s locally.
+    // A roomier timeout removes that environment-dependent flakiness without masking real hangs.
+    testTimeout: 20000,
     coverage: {
       provider: "v8",
       reporter: ["text", "text-summary", "html", "lcov"],
