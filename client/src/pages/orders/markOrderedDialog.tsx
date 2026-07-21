@@ -92,7 +92,7 @@ export function MarkOrderedDialog({ open, filament, onClose, onSuccess }: Props)
 
   return (
     <Modal
-      title={t("lowstock.mark_ordered_title", { name: getFilamentName(filament) })}
+      title={t("orders.mark_ordered_title", { name: getFilamentName(filament) })}
       open={open}
       onCancel={onClose}
       onOk={form.submit}
