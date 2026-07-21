@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -50,7 +51,7 @@ def cmd_up(args: argparse.Namespace) -> None:
     try:
         runner.wait_healthy(stack)
         runner.provision_users(stack)
-    except TimeoutError:
+    except Exception:
         runner.tear_down(stack)
         raise
     STATE.parent.mkdir(parents=True, exist_ok=True)
@@ -101,6 +102,107 @@ def cmd_test(args: argparse.Namespace) -> None:
     finally:
         if stack is not None and not args.keep:
             runner.tear_down(stack)
+
+
+def _parse_enum_list(value: str | None, enum_cls: type) -> list | None:
+    """Parse a comma-separated `--flag` value into enum members, or None if the flag was omitted."""
+    if not value:
+        return None
+    try:
+        return [enum_cls(v.strip()) for v in value.split(",")]
+    except ValueError as e:
+        raise SystemExit(f"invalid filter value: {e}") from e
+
+
+def _select_scenarios(args: argparse.Namespace) -> list[Scenario]:
+    """Filter CORE down to scenarios matching every given `--tags/--db/--auth/--proxy/--arch` flag.
+
+    An axis with no flag keeps every scenario on that axis; `--tags` keeps scenarios that have
+    *any* of the listed tags. No filters at all means the full CORE set.
+    """
+    from tests_scenarios.catalog import Arch, Auth, Db, Proxy  # noqa: PLC0415
+
+    scenarios = list(CORE)
+    if args.tags:
+        wanted_tags = set(args.tags.split(","))
+        scenarios = [s for s in scenarios if wanted_tags & set(s.tags)]
+    for flag_value, enum_cls, attr in (
+        (args.db, Db, "db"),
+        (args.auth, Auth, "auth"),
+        (args.proxy, Proxy, "proxy"),
+        (args.arch, Arch, "arch"),
+    ):
+        wanted = _parse_enum_list(flag_value, enum_cls)
+        if wanted is not None:
+            scenarios = [s for s in scenarios if getattr(s, attr) in wanted]
+    return scenarios
+
+
+def _run_scenario(scenario: Scenario, *, quick: bool) -> tuple[bool, str]:
+    """Bring `scenario` up, assert against it, and always tear it down; never raises.
+
+    Owns the stack's full lifecycle itself (bring_up -> wait_healthy -> provision_users ->
+    assertions -> tear_down) rather than touching the `.state` registry -- that registry is
+    for manually-managed `up`/`down`, not this fire-and-forget parallel sweep.
+    """
+    from tests_scenarios import runner  # noqa: PLC0415 -- keep `list`/`ps` free of docker imports
+    from tests_scenarios.assertions import contract, e2e, integration  # noqa: PLC0415
+
+    stack: ScenarioStack | None = None
+    try:
+        stack = runner.bring_up(scenario)
+        runner.wait_healthy(stack)
+        runner.provision_users(stack)
+        contract.run(stack)
+        if not quick:
+            integration.run(stack)
+            e2e.run(stack)
+    except Exception as e:  # noqa: BLE001 -- turned into a per-scenario Result, never propagates
+        return False, repr(e)
+    else:
+        return True, "passed"
+    finally:
+        if stack is not None:
+            runner.tear_down(stack)
+
+
+def _print_results_table(results: list, budget: int) -> bool:
+    """Print a pass/fail table for a `test-all` run; return True if any scenario failed."""
+    print("\n" + "=" * 60)
+    print(f"{'SCENARIO':40} RESULT")
+    print("-" * 60)
+    failed = 0
+    for r in results:
+        if r.ok:
+            print(f"{r.scenario.name:40} ok")
+        else:
+            failed += 1
+            print(f"{r.scenario.name:40} FAIL  {r.detail}")
+    print("=" * 60)
+    print(f"{len(results) - failed}/{len(results)} passed (budget={budget})")
+    return failed > 0
+
+
+def cmd_test_all(args: argparse.Namespace) -> None:
+    """Run every scenario matching the filters in parallel; print a pass/fail table and exit non-zero on failure."""
+    import asyncio  # noqa: PLC0415 -- keep `list`/`ps` free of docker/async imports
+
+    from tests_scenarios.scheduler import run_many  # noqa: PLC0415
+
+    scenarios = _select_scenarios(args)
+    if not scenarios:
+        raise SystemExit("no scenarios matched the given filters")
+
+    budget = args.jobs if args.jobs else (os.cpu_count() or 1)
+
+    async def run_one(scenario: Scenario) -> tuple[bool, str]:
+        # Offload the blocking docker/httpx/subprocess calls to a thread so scenarios genuinely
+        # overlap on the event loop instead of serializing behind a single-threaded coroutine.
+        return await asyncio.to_thread(_run_scenario, scenario, quick=args.quick)
+
+    results = asyncio.run(run_many(scenarios, concurrency_budget=budget, run_one=run_one))
+    if _print_results_table(results, budget):
+        raise SystemExit(1)
 
 
 def cmd_ps(_args: argparse.Namespace) -> None:
@@ -162,6 +264,18 @@ def build_parser() -> argparse.ArgumentParser:
     ts.add_argument("name")
     ts.add_argument("--keep", action="store_true")
     ts.set_defaults(func=cmd_test)
+
+    ta = sub.add_parser("test-all")
+    ta.add_argument("--tags", help="comma-separated tags; keep scenarios with any of them")
+    ta.add_argument("--db", help="comma-separated db values (sqlite,postgres,mariadb,cockroachdb)")
+    ta.add_argument("--auth", help="comma-separated auth values (none,token,users)")
+    ta.add_argument("--proxy", help="comma-separated proxy values (none,nginx,traefik,caddy)")
+    ta.add_argument("--arch", help="comma-separated arch values (amd64,arm64,armv7)")
+    ta.add_argument("-j", "--jobs", type=int, help="concurrency budget (default: os.cpu_count())")
+    mode = ta.add_mutually_exclusive_group()
+    mode.add_argument("--full", action="store_true", help="contract + integration + e2e (default)")
+    mode.add_argument("--quick", action="store_true", help="contract only")
+    ta.set_defaults(func=cmd_test_all)
 
     sub.add_parser("ps").set_defaults(func=cmd_ps)
 
