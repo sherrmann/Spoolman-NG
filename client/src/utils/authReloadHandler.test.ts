@@ -69,6 +69,23 @@ describe("reloadOnAuthFailure", () => {
     expect(unregister).toHaveBeenCalledTimes(1);
     expect(reloadSpy).toHaveBeenCalledOnce();
   });
+
+  it("does NOT touch service workers under HA ingress (they can only be foreign)", async () => {
+    // The ingress panel iframe is same-origin with the Home Assistant frontend, and
+    // getRegistrations() is origin-wide — Spoolman never registers a SW under ingress
+    // (#211), so unregistering here would destroy HA's own service worker.
+    const unregister = vi.fn().mockResolvedValue(true);
+    const getRegistrations = vi.fn().mockResolvedValue([{ unregister }]);
+    Object.defineProperty(navigator, "serviceWorker", {
+      configurable: true,
+      value: { getRegistrations },
+    });
+    window.SPOOLMAN_HA_INGRESS = true;
+    await reloadOnAuthFailure();
+    expect(getRegistrations).not.toHaveBeenCalled();
+    expect(unregister).not.toHaveBeenCalled();
+    expect(reloadSpy).toHaveBeenCalledOnce(); // the reload itself still happens
+  });
 });
 
 describe("handleAuthResponseError", () => {

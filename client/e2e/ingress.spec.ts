@@ -58,6 +58,28 @@ test.describe("HA ingress panel (#211)", () => {
     expect(res.headers()["cache-control"]).toBe("no-store");
   });
 
+  test("all three per-session responses are uncacheable, config.js included", async ({ request }) => {
+    // index.html, the manifest and /config.js embed the rotating session base; a cached
+    // copy would pin a dead token after rotation. This hits the REAL main.py routes.
+    for (const path of ["/", "/manifest.webmanifest", "/config.js"]) {
+      const res = await request.get(`${INGRESS_BASE_URL}${BASE_A}${path}`);
+      expect(res.ok(), path).toBeTruthy();
+      expect(res.headers()["cache-control"], path).toBe("no-store");
+    }
+
+    // config.js body is per-request: the session base + ingress flag under the prefix…
+    const ingressConfig = await (await request.get(`${INGRESS_BASE_URL}${BASE_A}/config.js`)).text();
+    expect(ingressConfig).toContain(`window.SPOOLMAN_BASE_PATH = "${BASE_A}";`);
+    expect(ingressConfig).toContain("window.SPOOLMAN_HA_INGRESS = true;");
+
+    // …and on direct access the legacy body (no flag), still uncacheable.
+    const directRes = await request.get(`${INGRESS_BASE_URL}/config.js`);
+    expect(directRes.headers()["cache-control"]).toBe("no-store");
+    const directConfig = await directRes.text();
+    expect(directConfig).toContain('window.SPOOLMAN_BASE_PATH = "";');
+    expect(directConfig).not.toContain("SPOOLMAN_HA_INGRESS");
+  });
+
   test("registers no service worker under ingress", async ({ page }) => {
     await page.goto(`${INGRESS_BASE_URL}${BASE_A}/`);
     await page.waitForLoadState("load");

@@ -1,5 +1,6 @@
 import { axiosInstance } from "@refinedev/simple-rest";
 import { apiAuthHeader, getApiToken, useApiTokenModal } from "./apiToken";
+import { isHaIngress } from "./url";
 
 const RELOAD_FLAG_KEY = "spoolmanAuthReloadedAt";
 const RELOAD_COOLDOWN_MS = 30_000;
@@ -9,6 +10,12 @@ const RELOAD_COOLDOWN_MS = 30_000;
  * login portal and back. Cooldown bounds reload loops if recovery fails. The
  * PWA service worker's NavigationRoute would otherwise serve the precached
  * index.html and prevent the reload from reaching the proxy, so unregister it.
+ *
+ * Under HA ingress the unregister step must be skipped: Spoolman never registers
+ * a service worker there (see index.tsx), so getRegistrations() — which is
+ * origin-wide — could only ever return foreign registrations, and the panel
+ * iframe is same-origin with the Home Assistant frontend, whose own service
+ * worker this would silently destroy (#211).
  */
 export async function reloadOnAuthFailure(): Promise<void> {
   let last = 0;
@@ -23,7 +30,7 @@ export async function reloadOnAuthFailure(): Promise<void> {
   } catch {
     /* storage unavailable */
   }
-  if ("serviceWorker" in navigator) {
+  if ("serviceWorker" in navigator && !isHaIngress()) {
     try {
       const registrations = await navigator.serviceWorker.getRegistrations();
       await Promise.all(registrations.map((r) => r.unregister()));
