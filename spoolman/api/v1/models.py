@@ -856,6 +856,28 @@ class Info(BaseModel):
     db_type: str = Field(examples=["sqlite"])
     git_commit: str | None = Field(None, examples=["a1b2c3d"])
     build_date: SpoolmanDateTime | None = Field(None, examples=["2021-01-01T00:00:00Z"])
+    # Release-update check (#293). Additive fields; all default to a "no update / not
+    # known yet" state so existing /info consumers stay wire-compatible.
+    update_check_enabled: bool = Field(
+        default=True,
+        description="Whether the server periodically checks GitHub for a newer release.",
+        examples=[True],
+    )
+    latest_version: str | None = Field(
+        default=None,
+        description="Newest release version known to the server, or null if not checked yet.",
+        examples=["2026.7.20"],
+    )
+    update_available: bool = Field(
+        default=False,
+        description="Whether a newer release than the running version is available.",
+        examples=[False],
+    )
+    release_url: str | None = Field(
+        default=None,
+        description="Link to the latest release's page (for release notes).",
+        examples=["https://github.com/sherrmann/Spoolman-NG/releases/latest"],
+    )
 
 
 class HealthCheck(BaseModel):

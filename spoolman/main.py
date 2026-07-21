@@ -13,7 +13,7 @@ from fastapi.responses import PlainTextResponse, RedirectResponse, Response
 from prometheus_client import generate_latest
 from scheduler.asyncio.scheduler import Scheduler
 
-from spoolman import env, externaldb, tigertagdb
+from spoolman import env, externaldb, tigertagdb, updatecheck
 from spoolman.api.v1.router import app as v1_app
 from spoolman.assetlinks import register_assetlinks_route
 from spoolman.auth import auth_state, initialize_auth_state
@@ -219,6 +219,7 @@ async def startup() -> None:
     database.schedule_tasks(schedule)
     externaldb.schedule_tasks(schedule)
     tigertagdb.schedule_tasks(schedule)
+    updatecheck.schedule_tasks(schedule)
 
     # Initialize NFC service if enabled
     if env.is_nfc_enabled():
