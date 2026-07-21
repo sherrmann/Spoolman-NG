@@ -6,7 +6,10 @@ created, carrying the line's price_per_unit (and an optional location by id). Li
 still-outstanding line.
 """
 
+import pytest
 from httpx import AsyncClient
+
+from spoolman.database import models, spool
 
 ORDER = "/api/v1/order"
 FIL = "/api/v1/filament"
@@ -113,6 +116,49 @@ async def test_arrive_quantity_exceeding_line_is_rejected(client: AsyncClient):
     assert line["quantity"] == 4
     assert line.get("arrived_at") is None
     assert (await client.get(SPOOL)).headers["x-total-count"] == "0"
+
+
+async def test_spool_creation_failure_rolls_back_line_arrival(client: AsyncClient, monkeypatch: pytest.MonkeyPatch):
+    """A failure while creating spools must not strand lines as arrived (#322).
+
+    Line arrival and spool creation are one transaction. If spool creation blows up part-way, the
+    whole arrival rolls back: the order stays fully outstanding, no spools linger, and a retry
+    arrives it cleanly. (Before the fix, the lines committed first and re-arrive would reject them.)
+    """
+    white = await _filament(client, "White")
+    order = (
+        await client.post(ORDER, json={"lines": [{"filament_id": white, "quantity": 3, "price_per_unit": 20.0}]})
+    ).json()
+
+    real_build = spool.build
+    calls = {"n": 0}
+
+    async def flaky_build(**kwargs: object) -> models.Spool:
+        calls["n"] += 1
+        if calls["n"] == 2:  # fail mid-loop, after the first spool has already been staged
+            raise RuntimeError("boom: simulated mid-loop spool failure")
+        return await real_build(**kwargs)
+
+    monkeypatch.setattr(spool, "build", flaky_build)
+
+    with pytest.raises(RuntimeError, match="boom"):
+        await client.post(f"{ORDER}/{order['id']}/arrive", json={"create_spools": True})
+
+    monkeypatch.undo()
+
+    # Nothing was half-committed: the line is still fully outstanding and no spool survived.
+    got = (await client.get(f"{ORDER}/{order['id']}")).json()
+    assert got["state"] == "open"
+    assert all(line.get("arrived_at") is None for line in got["lines"])
+    assert (await client.get(SPOOL)).headers["x-total-count"] == "0"
+
+    # The order arrives cleanly on retry — the earlier failure left no residue to block it.
+    resp = await client.post(f"{ORDER}/{order['id']}/arrive", json={"create_spools": True})
+    assert resp.status_code == 200, resp.text
+    assert len(resp.json()["spools"]) == 3
+    got = (await client.get(f"{ORDER}/{order['id']}")).json()
+    assert got["state"] == "arrived"
+    assert (await client.get(SPOOL)).headers["x-total-count"] == "3"
 
 
 async def test_canonical_mixed_arrival_then_second_arrival(client: AsyncClient):

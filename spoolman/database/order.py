@@ -221,16 +221,23 @@ async def arrive(
     for line, qty in requests:
         arriving.extend(_apply_arrival(order, line, qty, now))
 
-    await db.commit()
-    order = await get_by_id(db, order_id)
-    await order_changed(order, EventType.UPDATED)
-
+    # Stage the spools alongside the line mutations so both persist in a single commit (#322).
+    # Committing the lines first and then creating spools one-by-one (each its own commit) could
+    # leave lines arrived with only some of their spools if the loop failed part-way, with no retry
+    # path (re-arrive rejects already-arrived lines). spool.build stages without committing.
     created: list[models.Spool] = []
     if create_spools:
         for filament_id, price in arriving:
             created.append(
-                await spool.create(db=db, filament_id=filament_id, price=price, location=location_name),
+                await spool.build(db=db, filament_id=filament_id, price=price, location=location_name),
             )
+
+    await db.commit()
+
+    order = await get_by_id(db, order_id)
+    await order_changed(order, EventType.UPDATED)
+    for created_spool in created:
+        await spool.spool_changed(created_spool, EventType.ADDED)
     return created
 
 
