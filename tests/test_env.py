@@ -16,16 +16,17 @@ import pytest
 
 from spoolman import env
 
-# --- Boolean helpers: is_nfc_enabled / is_tigertag_enabled ------------------
+# --- Boolean helpers: is_nfc_enabled / is_tigertag_enabled / is_ha_ingress --
 #
-# Both share the identical contract: default FALSE when unset, {FALSE,0} -> False,
+# All share the identical contract: default FALSE when unset, {FALSE,0} -> False,
 # {TRUE,1} -> True, case-insensitive (the code uppercases), anything else raises
-# ValueError. Parametrizing over (helper, env-var) keeps the two truth tables in
+# ValueError. Parametrizing over (helper, env-var) keeps the truth tables in
 # lockstep without duplicating them.
 
 _BOOL_HELPERS: list[tuple[Callable[[], bool], str]] = [
     (env.is_nfc_enabled, "SPOOLMAN_NFC_ENABLED"),
     (env.is_tigertag_enabled, "SPOOLMAN_TIGERTAG_ENABLED"),
+    (env.is_ha_ingress, "SPOOLMAN_HA_INGRESS"),
 ]
 
 

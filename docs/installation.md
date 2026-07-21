@@ -350,6 +350,7 @@ database types.
 | `SPOOLMAN_HOST` | `0.0.0.0` | Interface to listen on. |
 | `SPOOLMAN_PORT` | `8000` | Port to listen on. Note: the Docker image listens on 8000 (map it with `ports:`), while the native installer's generated `.env` sets 7912. |
 | `SPOOLMAN_BASE_PATH` | — | Serve Spoolman under a sub-path, e.g. `/spoolman` for `myhost.com/spoolman`. The web client, PWA manifest, and service worker are all base-path aware. |
+| `SPOOLMAN_HA_INGRESS` | `FALSE` | Home Assistant add-on only — set by the add-on's run script, leave unset everywhere else. Renders the web UI per-request for HA's rotating ingress session path (taken from the validated `X-Ingress-Path` header) so the UI works embedded in the HA sidebar. Requests without the header (the direct host port) are served exactly as without the flag; the service worker/PWA stays on the direct origin only, since no SW scope can follow a rotating path. Ingress users who print QR labels should set the `base_url` web setting to a direct URL — the ingress path is per-session and useless on a printed label. |
 | `SPOOLMAN_DIR_DATA` | `~/.local/share/spoolman` | Data directory (SQLite DB lives here). |
 | `SPOOLMAN_DIR_BACKUPS` | `<data dir>/backups` | Where SQLite backups are written. |
 | `SPOOLMAN_DIR_LOGS` | `<data dir>` | Log directory. |

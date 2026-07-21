@@ -6,7 +6,7 @@ from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import PlainTextResponse, RedirectResponse, Response
@@ -17,7 +17,12 @@ from spoolman import env, externaldb, tigertagdb, updatecheck
 from spoolman.api.v1.router import app as v1_app
 from spoolman.assetlinks import register_assetlinks_route
 from spoolman.auth import auth_state, initialize_auth_state
-from spoolman.client import SinglePageApplication
+from spoolman.client import (
+    CONFIG_CACHE_HEADERS,
+    SinglePageApplication,
+    build_configjs,
+    get_ingress_base_path,
+)
 from spoolman.database import database
 from spoolman.prometheus.metrics import BUILD_INFO, registry
 
@@ -74,6 +79,9 @@ def get_metrics() -> bytes:
 
 
 base_path = env.get_base_path()
+ha_ingress = env.is_ha_ingress()
+if ha_ingress:
+    logger.info("Home Assistant ingress support is enabled.")
 if base_path != "":
     logger.info("Base path is: %s", base_path)
 
@@ -87,17 +95,17 @@ if base_path != "":
 
 # Return a dynamic js config file
 # This is so that the client side can access the base path variable.
+# Under HA ingress mode the base is resolved per-request from the validated
+# X-Ingress-Path header (HA's rotating per-session prefix); without the header
+# the output is byte-identical to the static one (#211).
 @app.get(env.get_base_path() + "/config.js")
-def get_configjs() -> Response:
+def get_configjs(request: Request) -> Response:
     """Return a dynamic js config file."""
-    if '"' in base_path:
-        raise ValueError("Base path contains quotes, which are not allowed.")
-
+    ingress_base = get_ingress_base_path(request.headers) if ha_ingress else None
     return Response(
-        content=f"""
-window.SPOOLMAN_BASE_PATH = "{base_path}";
-""",
+        content=build_configjs(base_path, ingress_base),
         media_type="text/javascript",
+        headers=CONFIG_CACHE_HEADERS,
     )
 
 
@@ -107,7 +115,10 @@ window.SPOOLMAN_BASE_PATH = "{base_path}";
 register_assetlinks_route(app)
 
 # Mount the client side app
-app.mount(base_path, app=SinglePageApplication(directory="client/dist", base_path=env.get_base_path()))
+app.mount(
+    base_path,
+    app=SinglePageApplication(directory="client/dist", base_path=env.get_base_path(), ha_ingress=ha_ingress),
+)
 
 
 def add_cors_middleware() -> None:

@@ -223,6 +223,7 @@ mutants/
 **/.playwright/
 # e2e real-backend temp DB + client coverage output
 .e2e-data/
+.e2e-data-ingress/
 **/coverage-e2e/
 **/.coverage-raw/
 

@@ -34,7 +34,12 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
 from spoolman import env  # noqa: E402  (needs sys.path tweak first)
-from spoolman.client import SinglePageApplication  # noqa: E402
+from spoolman.client import (  # noqa: E402
+    CONFIG_CACHE_HEADERS,
+    SinglePageApplication,
+    build_configjs,
+    get_ingress_base_path,
+)
 
 DIST_DIR = REPO_ROOT / "client" / "dist"
 
@@ -44,18 +49,20 @@ def build_app() -> Starlette:
     # Reuse the real backend normalisation of SPOOLMAN_BASE_PATH so this harness can't
     # drift from the app (leading "/", no trailing "/", "" at the root).
     base_path = env.get_base_path()
+    ha_ingress = env.is_ha_ingress()
 
     if not DIST_DIR.is_dir():
         msg = f"client build not found at {DIST_DIR}; run `npm run build` first"
         raise RuntimeError(msg)
 
-    async def config_js(_request: Request) -> Response:
-        # Mirrors main.py.get_configjs: emit window.SPOOLMAN_BASE_PATH.
-        if '"' in base_path:
-            raise ValueError("Base path contains quotes, which are not allowed.")
+    async def config_js(request: Request) -> Response:
+        # Mirrors main.py.get_configjs: emit window.SPOOLMAN_BASE_PATH (and, for a request
+        # arriving through HA ingress, the per-session base + window.SPOOLMAN_HA_INGRESS).
+        ingress_base = get_ingress_base_path(request.headers) if ha_ingress else None
         return Response(
-            content=f'\nwindow.SPOOLMAN_BASE_PATH = "{base_path}";\n',
+            content=build_configjs(base_path, ingress_base),
             media_type="text/javascript",
+            headers=CONFIG_CACHE_HEADERS,
         )
 
     async def root_redirect(_request: Request) -> Response:
@@ -66,7 +73,10 @@ def build_app() -> Starlette:
         # Match main.py: redirect the bare "/base" to "/base/".
         routes.append(Route(base_path, root_redirect))
     routes.append(
-        Mount(base_path or "/", app=SinglePageApplication(directory=str(DIST_DIR), base_path=base_path)),
+        Mount(
+            base_path or "/",
+            app=SinglePageApplication(directory=str(DIST_DIR), base_path=base_path, ha_ingress=ha_ingress),
+        ),
     )
     return Starlette(routes=routes)
 

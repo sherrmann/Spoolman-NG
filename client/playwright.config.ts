@@ -2,14 +2,19 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig, devices } from "@playwright/test";
-import { APP_BASE_URL, ROOT_BASE_URL, SUBPATH, SUBPATH_BASE_URL } from "./e2e/constants";
+import { APP_BASE_URL, INGRESS_BASE_URL, ROOT_BASE_URL, SUBPATH, SUBPATH_BASE_URL } from "./e2e/constants";
 
 // The e2e suite runs the *built* client (so `npm run build` must have run) against
-// three servers:
+// four servers:
 //   root    → http://127.0.0.1:30011/           static harness, root deploy (PWA tests)
 //   subpath → http://127.0.0.1:30012/spoolman/  static harness, sub-path deploy (PWA tests)
 //   app     → http://127.0.0.1:30013/           REAL backend (API + client + temp SQLite),
 //                                                driven by the whole-app journey tests
+//   ingress → http://127.0.0.1:30014/           REAL backend behind a simulated Home
+//                                                Assistant ingress gateway (#211): requests
+//                                                under /api/hassio_ingress/<token>/ arrive
+//                                                prefix-stripped with X-Ingress-Path set,
+//                                                everything else passes through directly
 // When E2E_COVERAGE=1 the build carries inline source maps and a global teardown
 // aggregates each test's V8 coverage back onto client/src (see e2e/coverage-*.ts).
 
@@ -103,6 +108,27 @@ export default defineConfig(
               EXTERNAL_3DFP_URL: APP_BASE_URL,
             },
             url: `${APP_BASE_URL}/api/v1/health`,
+            reuseExistingServer: !process.env.CI,
+            timeout: 120_000,
+          },
+          {
+            // Real backend behind the simulated HA ingress gateway; own scratch SQLite.
+            command:
+              "rm -rf .e2e-data-ingress && mkdir -p .e2e-data-ingress && uv run python client/e2e/ingress_gateway.py",
+            cwd: repoRoot,
+            env: {
+              SPOOLMAN_DB_TYPE: "sqlite",
+              SPOOLMAN_DIR_DATA: path.join(repoRoot, ".e2e-data-ingress"),
+              SPOOLMAN_LOGGING_LEVEL: "WARNING",
+              SPOOLMAN_HA_INGRESS: "1",
+              PORT: "30014",
+              // Hermetic, like the app server above: no external filament-DB or 3DFP calls.
+              EXTERNAL_DB_URL: "",
+              EXTERNAL_3DFP_URL: INGRESS_BASE_URL,
+            },
+            // The direct (prefix-less) path must work on the same process — probing health
+            // through it asserts the pass-through half of the gateway at startup.
+            url: `${INGRESS_BASE_URL}/api/v1/health`,
             reuseExistingServer: !process.env.CI,
             timeout: 120_000,
           },
