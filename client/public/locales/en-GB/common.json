@@ -471,6 +471,7 @@
       "coaxial": "Coextruded",
       "longitudinal": "Longitudinal",
       "external_id": "External ID",
+      "image": "Photo",
       "spool_type": "Spool Type",
       "finish": "Finish",
       "pattern": "Pattern",
@@ -492,6 +493,7 @@
       "sparkle": "Sparkle"
     },
     "fields_help": {
+      "image": "A photo to recognise this filament by — e.g. the spool or the shop listing. Downscaled in the browser before upload; metadata such as GPS location is stripped.",
       "name": "Filament name, to distinguish this filament type among others from the same manufacturer. Should contain the colour for example.",
       "material": "E.g. PLA, ABS, PETG, etc.",
       "price": "Price of a full spool.",
@@ -543,6 +545,16 @@
       "new_vendor_prompt": "Add a new manufacturer",
       "vendor_created": "Manufacturer created",
       "vendor_create_error": "Failed to create manufacturer"
+    },
+    "image": {
+      "upload": "Upload photo",
+      "replace": "Replace photo",
+      "remove": "Remove photo",
+      "uploaded": "Photo saved",
+      "upload_error": "Could not save the photo",
+      "removed": "Photo removed",
+      "remove_error": "Could not remove the photo",
+      "prepare_error": "Could not read that image file"
     },
     "buttons": {
       "add_spool": "Add Spool",

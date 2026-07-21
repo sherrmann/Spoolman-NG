@@ -3,13 +3,36 @@
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import ForeignKey, Integer, String, Text
+from sqlalchemy import ForeignKey, Integer, LargeBinary, String, Text
+from sqlalchemy.dialects.mysql import LONGBLOB
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
 class Base(AsyncAttrs, DeclarativeBase):
     pass
+
+
+class Image(Base):
+    """A user-uploaded reference photo, stored as a database blob (#88).
+
+    The bytes live in their own table (rather than a column on the owning entity) so list/find
+    queries never load them, and so vendor/spool photos can reuse the table later. Deliberately has
+    NO ORM relationship from the owning entities: filament.get_by_id loads with joinedload("*"),
+    which would otherwise drag the blob into every detail read and websocket payload. Rows are
+    addressed directly via ``Filament.image_id`` and their lifecycle (replace, delete, owner-delete
+    cleanup) is managed explicitly in the application layer. The LONGBLOB variant is required on
+    MySQL/MariaDB, where plain LargeBinary maps to a 64 KB BLOB.
+    """
+
+    __tablename__ = "image"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    registered: Mapped[datetime] = mapped_column()
+    content_type: Mapped[str] = mapped_column(String(32))
+    size: Mapped[int] = mapped_column(comment="Size of data in bytes.")
+    etag: Mapped[str] = mapped_column(String(64), comment="SHA-256 hex digest of data, served as the HTTP ETag.")
+    data: Mapped[bytes] = mapped_column(LargeBinary().with_variant(LONGBLOB(), "mysql"))
 
 
 class Vendor(Base):
@@ -153,6 +176,12 @@ class Filament(Base):
     )
     label_printed_at: Mapped[datetime | None] = mapped_column(
         comment="When a label was last printed for this filament (#93). Null means never printed.",
+    )
+    image_id: Mapped[int | None] = mapped_column(
+        ForeignKey("image.id"),
+        comment="Optional reference photo (#88). Null means no photo. A replace writes a new image "
+        "row and deletes the old one, so the pointer changes with the content. Not a DB-level "
+        "constraint; the image row lifecycle is managed in the application layer (see Image).",
     )
     extra: Mapped[list["FilamentField"]] = relationship(
         back_populates="filament",

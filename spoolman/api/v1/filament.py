@@ -5,7 +5,7 @@ import logging
 from datetime import datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, Request, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, Query, Request, Response, WebSocket, WebSocketDisconnect
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -663,3 +663,109 @@ async def delete(  # noqa: ANN201
             content={"message": "Failed to delete filament, see server logs for more information."},
         )
     return Message(message="Success!")
+
+
+# Reference photos (#88). Raw request/response bodies on purpose: no multipart dependency and no
+# server-side image processing (Pillow ships no 32-bit ARM wheels) — the client downscales before
+# uploading, and the server only enforces the type allowlist and the size cap.
+IMAGE_MAX_BYTES = 2 * 1024 * 1024
+IMAGE_CONTENT_TYPES = frozenset({"image/jpeg", "image/png", "image/webp"})
+
+
+@router.get(
+    "/{filament_id}/image",
+    name="Get filament image",
+    description=(
+        "Get the reference photo of a filament as a raw image body. "
+        "Supports conditional requests via ETag / If-None-Match."
+    ),
+    response_class=Response,
+    responses={
+        200: {"content": {"image/*": {}}, "description": "The image bytes."},
+        304: {"description": "Not modified."},
+        404: {"model": Message},
+    },
+)
+async def get_image(
+    request: Request,
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+    filament_id: int,
+) -> Response:
+    db_image = await filament.get_image(db, filament_id)
+    # private: photos must not land in shared proxy caches on auth-enabled instances; no-cache: the
+    # browser revalidates with If-None-Match on every use, so a replaced photo shows up without a
+    # reload while unchanged ones cost only a 304.
+    headers = {"ETag": f'"{db_image.etag}"', "Cache-Control": "private, no-cache"}
+    if_none_match = request.headers.get("if-none-match") or ""
+    if if_none_match.strip() == "*" or db_image.etag in if_none_match:
+        return Response(status_code=304, headers=headers)
+    return Response(content=db_image.data, media_type=db_image.content_type, headers=headers)
+
+
+@router.put(
+    "/{filament_id}/image",
+    name="Set filament image",
+    description=(
+        "Attach a reference photo to a filament, replacing any existing one. Send the raw image bytes "
+        "as the request body with a matching Content-Type header (image/jpeg, image/png or image/webp). "
+        f"Bodies over {IMAGE_MAX_BYTES // (1024 * 1024)} MB are rejected — downscale before uploading. "
+        "Returns the updated filament."
+    ),
+    response_model_exclude_none=True,
+    response_model=Filament,
+    responses={
+        400: {"model": Message},
+        404: {"model": Message},
+        413: {"model": Message},
+        415: {"model": Message},
+    },
+    openapi_extra={
+        "requestBody": {
+            "required": True,
+            "content": {ct: {"schema": {"type": "string", "format": "binary"}} for ct in sorted(IMAGE_CONTENT_TYPES)},
+        },
+    },
+)
+async def set_image(  # noqa: ANN201
+    request: Request,
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+    filament_id: int,
+):
+    content_type = (request.headers.get("content-type") or "").split(";")[0].strip().lower()
+    if content_type not in IMAGE_CONTENT_TYPES:
+        allowed = ", ".join(sorted(IMAGE_CONTENT_TYPES))
+        return JSONResponse(
+            status_code=415,
+            content=Message(message=f"Unsupported image type '{content_type}'; use one of: {allowed}.").dict(),
+        )
+    too_large = JSONResponse(
+        status_code=413,
+        content=Message(message=f"Image is larger than the {IMAGE_MAX_BYTES // (1024 * 1024)} MB limit.").dict(),
+    )
+    # Reject by the declared length first so an oversized upload fails without buffering the body...
+    content_length = request.headers.get("content-length")
+    if content_length is not None and content_length.isdigit() and int(content_length) > IMAGE_MAX_BYTES:
+        return too_large
+    body = await request.body()
+    # ...and re-check the real length, since the header is client-supplied.
+    if len(body) > IMAGE_MAX_BYTES:
+        return too_large
+    if len(body) == 0:
+        return JSONResponse(status_code=400, content=Message(message="Request body is empty.").dict())
+    db_item = await filament.set_image(db, filament_id, data=body, content_type=content_type)
+    return Filament.from_db(db_item)
+
+
+@router.delete(
+    "/{filament_id}/image",
+    name="Delete filament image",
+    description="Remove the reference photo of a filament.",
+    status_code=204,
+    responses={404: {"model": Message}},
+)
+async def delete_image(
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+    filament_id: int,
+) -> Response:
+    await filament.delete_image(db, filament_id)
+    return Response(status_code=204)

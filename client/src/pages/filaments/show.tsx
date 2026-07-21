@@ -3,12 +3,13 @@ import { DateField, NumberField, Show, TextField } from "@refinedev/antd";
 import { useShow, useTranslate } from "@refinedev/core";
 import { DownOutlined, ExportOutlined, IdcardOutlined, PrinterOutlined, ToolOutlined } from "@ant-design/icons";
 import { CalibrationSection } from "../calibration/CalibrationSection";
-import { Button, Descriptions, Dropdown, Space, Tabs, Typography, message } from "antd";
+import { Button, Descriptions, Dropdown, Image, Space, Tabs, Typography, message } from "antd";
 import type { MenuProps } from "antd";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
+import { filamentImageUrl, useEntityImage } from "../../components/entityImage";
 import { ExtraFieldDisplay } from "../../components/extraFields";
 import SwatchDownloadModal from "../../components/swatchDownloadModal";
 import { NumberFieldUnit } from "../../components/numberField";
@@ -38,6 +39,9 @@ export const FilamentShow = () => {
 
   const [swatchOpen, setSwatchOpen] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
+
+  // Reference photo (#88): fetched with auth headers into an object URL; null when there is none.
+  const photoSrc = useEntityImage(record?.has_image && record.id ? filamentImageUrl(record.id) : null);
 
   const downloadSlicer = async (slicer: SlicerFormat) => {
     if (!record?.id) return;
@@ -112,6 +116,15 @@ export const FilamentShow = () => {
 
   const detailsContent = (
     <>
+      {photoSrc && (
+        <div style={{ marginBottom: 16 }}>
+          <Image
+            src={photoSrc}
+            alt={record?.name ?? t("filament.fields.image")}
+            style={{ maxWidth: 320, maxHeight: 240, borderRadius: 8, objectFit: "contain" }}
+          />
+        </div>
+      )}
       <Title level={5}>{t("filament.fields.id")}</Title>
       <NumberField value={record?.id ?? ""} />
       <Descriptions column={1} bordered size="small">
