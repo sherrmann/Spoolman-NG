@@ -22,10 +22,12 @@ copy its appdata directory to `/mnt/user/appdata/spoolman-ng` (or point this
 template's data path at the existing directory), start — the schema migrates
 automatically on first start. Back up the directory first.
 
-## Using the template before it's in Community Apps
+## Installing the template
 
-Unraid reads user templates from the flash share. Copy the XML there and it
-appears in the template dropdown:
+A Community Apps listing (install from the **Apps** tab) is tracked in
+[#336](https://github.com/sherrmann/Spoolman-NG/issues/336). Until then, the
+template installs manually: Unraid reads user templates from the flash share,
+so copy the XML there and it appears in the template dropdown:
 
 ```bash
 # from any machine that can reach the Unraid share, or via the flash share in SMB
@@ -34,21 +36,5 @@ curl -fsSL https://raw.githubusercontent.com/sherrmann/Spoolman-NG/master/integr
 ```
 
 Then **Docker → Add Container** and pick `Spoolman-NG` under *Select a
-template*.
-
-## Community Apps listing (maintainers)
-
-Community Applications (CA) indexes templates from **registered template
-repositories**. Getting listed is a one-time manual step by a template
-maintainer:
-
-1. Keep the template in a GitHub repository CA can scan (this file is the
-   source of truth; CA scanning conventions may require mirroring it into a
-   dedicated `unraid-templates` repository).
-2. Request inclusion in the CA appfeed via the Unraid forums' template
-   repository submission process (the *Community Applications* support thread
-   points at the current procedure), providing the repository URL.
-3. After acceptance, CA picks up template changes from the repository
-   automatically; `<TemplateURL>` keeps installs self-updating.
-
-Once listed, installing becomes: **Apps** tab → search "Spoolman NG" → Install.
+template*. `<TemplateURL>` points at the raw XML on `master`, so installed
+containers keep picking up template fixes.

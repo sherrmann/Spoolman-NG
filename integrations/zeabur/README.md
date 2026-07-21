@@ -32,25 +32,14 @@ npx zeabur@latest template deploy -f template.yaml
 (Log in when the CLI asks, pick a project/region, done. Use
 `-f template-postgres.yaml` for the PostgreSQL variant.)
 
-## Publishing / updating the marketplace template (maintainers)
+## Marketplace listing
 
-The same command publishes a template to the marketplace, which assigns it a
-short **template code** (the `XXXXXX` in `https://zeabur.com/templates/XXXXXX`).
-Later edits to the YAML are pushed with:
-
-```bash
-npx zeabur@latest template update -c <template-code> -f template.yaml
-```
-
-Notes:
-
-- Template updates do **not** touch already-deployed projects; users redeploy
-  to pick up changes. The image tag is `latest`, so a plain service restart on
-  Zeabur also pulls the newest release.
-- Keep the two variants as separate marketplace entries (separate codes) — a
-  Zeabur template has no conditional services.
-- Once published, add the `https://zeabur.com/templates/<code>` link to the
-  installation guide's one-click catalog list.
+Publishing these templates to the Zeabur marketplace (one-click from
+`zeabur.com/templates`, like upstream's) is tracked in
+[#335](https://github.com/sherrmann/Spoolman-NG/issues/335). Template updates
+never touch already-deployed projects, and the image tag is `latest` — so a
+plain service restart on Zeabur pulls the newest release regardless of how the
+template was deployed.
 
 ## Upgrades & data
 

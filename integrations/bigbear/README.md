@@ -18,18 +18,5 @@ Spoolman NG entry, pre-adapted to their conventions:
 The file also works stand-alone on any Docker host (`docker compose up -d`) —
 adjust the volume's host path if you're not on a `/DATA/AppData` system.
 
-## Submitting (maintainers)
-
-BigBear takes catalog additions as community submissions — via their
-[community](https://community.bigbeartechworld.com/) (now bridged to Discord)
-or a pull request against the relevant catalog repository, using this compose
-file as the entry. Catalog metadata beyond the compose file (description,
-icon, screenshots) can be lifted from the repository README; a 512×512 icon is
-served at
-`https://raw.githubusercontent.com/sherrmann/Spoolman-NG/master/client/public/pwa-512x512.png`.
-
-Since upstream Spoolman already has an entry, an alternative to a new entry is
-proposing an NG variant alongside it — the only functional difference is the
-image (`ghcr.io/sherrmann/spoolman-ng`), everything else (port, volume target,
-env vars) is drop-in identical, and an existing upstream data directory is
-migrated automatically on first start.
+The catalog submission itself is tracked in
+[#337](https://github.com/sherrmann/Spoolman-NG/issues/337).
