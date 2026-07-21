@@ -76,6 +76,13 @@ Flashing an OS from the Raspberry Pi Imager **3D printing** menu? Here is how ea
 
 ## Installation
 
+**Start with the [interactive setup guide](https://sherrmann.github.io/Spoolman-NG/install/)**: answer a
+few questions (platform, database, Klipper, reverse proxy) and get your exact steps with ready-to-paste
+config files — including the conditional gotchas a generic guide can't flag, like the API-token/Moonraker
+incompatibility. It also covers updates, migrating from upstream Spoolman, and switching between native
+and Docker. The sections below stay as at-a-glance quick starts; the full reference is
+[docs/installation.md](docs/installation.md).
+
 Spoolman NG ships Docker images for `amd64`, `arm64`, and `armv7`. `amd64` and
 `arm64` are the recommended targets for new installs; `armv7` (32-bit ARM) is
 best-effort — see [Deployment & Hardware](#deployment--hardware) for the honest

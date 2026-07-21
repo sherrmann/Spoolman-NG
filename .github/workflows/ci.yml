@@ -166,6 +166,74 @@ jobs:
           cd mobile
           npm test
   #
+  # Interactive install guide (guide/, deployed to Pages at /install/ — see #297):
+  # lint, typecheck, unit + drift tests, build, then validate the generated
+  # artifacts with the real tools — `docker compose config` on every generated
+  # compose file and `helm template` (against the repo chart) on every generated
+  # values.yaml. Runs unconditionally rather than path-filtered: the drift tests
+  # exist to fail when docs/installation.md, README.md, docker-compose.yml,
+  # .env.example or charts/ change without guide/fragments/ following, and a
+  # guide/** filter would skip exactly those PRs.
+  #
+  guide-tests:
+    needs: [meta]
+    if: ${{ needs.meta.outputs.skip_build != 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install node
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: '22'
+
+      - name: Install guide dependencies
+        run: |
+          cd guide
+          npm ci
+
+      - name: Lint, typecheck, and test the guide
+        run: |
+          cd guide
+          npx eslint .
+          npx prettier --check .
+          npx tsc --noEmit
+          npm test
+
+      - name: Build the guide
+        run: |
+          cd guide
+          npm run build
+
+      - name: Render the preset matrix
+        run: |
+          cd guide
+          npm run render-matrix -- --out ../.guide-matrix
+
+      - name: Validate generated compose files (docker compose config)
+        run: |
+          set -eu
+          for f in .guide-matrix/*/docker-compose.yml; do
+            echo "::group::$f"
+            docker compose -f "$f" config > /dev/null
+            echo "::endgroup::"
+          done
+
+      - name: Validate generated Helm values against the chart (helm template)
+        run: |
+          set -eu
+          for f in .guide-matrix/*/values.yaml; do
+            echo "::group::$f"
+            helm template charts/spoolman-ng -f "$f" > /dev/null
+            echo "::endgroup::"
+          done
+
+      - name: Assert the sub-path pairing renders into the probes
+        run: |
+          helm template charts/spoolman-ng -f .guide-matrix/helm-postgres-subpath/values.yaml \
+            | grep -q "path: /spoolman/api/v1/health"
+  #
   # Browser e2e for the PWA service-worker / manifest base-path flows (#93, #95).
   # Serves the built client through the real backend SinglePageApplication
   # (client/e2e/serve.py) and drives it with Playwright/Chromium at both a root

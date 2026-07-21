@@ -1,0 +1,274 @@
+:root {
+  --bg: #f7f7f8;
+  --panel: #ffffff;
+  --text: #1c1e21;
+  --muted: #5c616b;
+  --border: #d9dce1;
+  --accent: #2f6fed;
+  --accent-soft: #e8effd;
+  --code-bg: #14161a;
+  --code-text: #e6e8ec;
+  --warning-bg: #fdf3e0;
+  --warning-border: #e8b64c;
+  --info-bg: #e9f2fd;
+  --info-border: #7ba7ee;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121417;
+    --panel: #1b1e23;
+    --text: #e6e8ec;
+    --muted: #9aa1ac;
+    --border: #31353c;
+    --accent: #6f9cf5;
+    --accent-soft: #22314f;
+    --warning-bg: #37301d;
+    --warning-border: #a8842f;
+    --info-bg: #1d2a3f;
+    --info-border: #4a6da8;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    sans-serif;
+  line-height: 1.55;
+}
+
+.app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+.app-header h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.7rem;
+}
+
+.app-header p {
+  margin: 0 0 1.5rem;
+  color: var(--muted);
+  max-width: 60rem;
+}
+
+.app-columns {
+  display: grid;
+  grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .app-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.app-form {
+  position: sticky;
+  top: 1rem;
+}
+
+@media (max-width: 900px) {
+  .app-form {
+    position: static;
+  }
+}
+
+.app-plan h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.25rem;
+}
+
+fieldset {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin: 0 0 0.9rem;
+  padding: 0.7rem 0.9rem 0.9rem;
+}
+
+legend {
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0 0.3rem;
+}
+
+.radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.radio,
+.checkbox {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.25rem 0.4rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.radio.selected {
+  background: var(--accent-soft);
+}
+
+.radio:hover,
+.checkbox:hover {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.text-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.text-field input {
+  font: inherit;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.35rem 0.5rem;
+}
+
+.id-fields {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.id-fields .text-field {
+  flex: 1;
+}
+
+.steps {
+  margin: 0;
+  padding-left: 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.step {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.9rem 1.1rem;
+}
+
+.step h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+}
+
+.step-body {
+  margin: 0 0 0.6rem;
+  color: var(--muted);
+}
+
+.code-block {
+  margin: 0.6rem 0;
+}
+
+.code-block figcaption {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+}
+
+.code-filename {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.code-body {
+  position: relative;
+}
+
+.code-body pre {
+  background: var(--code-bg);
+  color: var(--code-text);
+  border-radius: 8px;
+  padding: 0.8rem 1rem;
+  overflow-x: auto;
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.copy-button {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.45rem;
+  font: inherit;
+  font-size: 0.75rem;
+  color: var(--code-text);
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 6px;
+  padding: 0.2rem 0.55rem;
+  cursor: pointer;
+}
+
+.copy-button:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.note {
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
+  border-radius: 8px;
+  padding: 0.55rem 0.75rem;
+  margin: 0.6rem 0;
+  font-size: 0.9rem;
+}
+
+.note-warning {
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-border);
+}
+
+.note-info {
+  background: var(--info-bg);
+  border: 1px solid var(--info-border);
+}
+
+.note-icon {
+  flex-shrink: 0;
+}
+
+.app-footer {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+a {
+  color: var(--accent);
+}

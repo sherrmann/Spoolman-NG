@@ -1,0 +1,11 @@
+# dependencies
+/node_modules
+
+# build output (also matched by the root dist/ rule; kept explicit here)
+/dist
+
+# local render-matrix output (CI writes to ../.guide-matrix)
+/.matrix
+
+npm-debug.log*
+.vite

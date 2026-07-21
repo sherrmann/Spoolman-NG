@@ -4,6 +4,11 @@ This is the fork-maintained installation guide for **Spoolman NG**. It covers th
 Docker and native installs, every supported environment variable, database
 options, backups, and Moonraker-managed updates.
 
+> **Prefer the [interactive setup guide](https://sherrmann.github.io/Spoolman-NG/install/)?** Answer a few
+> questions and it assembles your exact steps and config files for your platform, database, proxy and
+> Klipper setup. This page is the complete reference behind it — the snippets the guide generates are
+> single-sourced with the blocks below (`guide/fragments/`, enforced by CI drift tests).
+
 > Migrating from original Spoolman (Donkie/Spoolman ≤ 0.23.1)? Spoolman NG is a
 > drop-in replacement: point it at your existing database (or data directory)
 > and it will migrate the schema automatically on startup. **Back up your
