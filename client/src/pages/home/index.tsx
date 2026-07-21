@@ -142,7 +142,7 @@ export const Home = () => {
   if (isLoading) {
     return (
       <div className="dashboard" style={{ paddingTop: 64, textAlign: "center", opacity: 0.3 }}>
-        Loading...
+        {t("loading")}
       </div>
     );
   }

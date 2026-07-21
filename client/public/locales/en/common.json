@@ -266,6 +266,7 @@
     "filamentSelect": {
       "title": "Select Filaments",
       "description": "Select filaments to print labels for.",
+      "searchPlaceholder": "Search by filament ID, vendor, name, or material",
       "hidePrinted": "Hide Already Printed",
       "reprintConfirmTitle": "Reprint labels?",
       "reprintConfirmContent_one": "{{count}} selected filament already has a printed label. Print it again?",
@@ -627,6 +628,8 @@
   },
   "home": {
     "home": "Home",
+    "load_error_title": "Failed to load spools",
+    "load_error_desc": "There was a problem loading your spools. Please try again.",
     "welcome": "Welcome to your Spoolman instance!",
     "description": "It looks like you haven't added any spools yet. See the <helpPageLink>Help page</helpPageLink> for help getting started.",
     "total_weight": "Total Stock",

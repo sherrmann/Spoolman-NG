@@ -1,4 +1,5 @@
 import { DATE_TIME_FORMAT } from "../utils/dateFormat";
+import { useTranslate } from "@refinedev/core";
 import { DateField, TextField } from "@refinedev/antd";
 import { Checkbox, Form, Input, InputNumber, Select, Typography } from "antd";
 import { FormItemProps, Rule } from "antd/es/form";
@@ -22,6 +23,7 @@ const { Title } = Typography;
  */
 export function ExtraFieldDisplay(props: { field: Field; value: string | undefined }) {
   const { field, value } = props;
+  const t = useTranslate();
 
   let item;
   if (value !== undefined) {
@@ -84,7 +86,7 @@ export function ExtraFieldDisplay(props: { field: Field; value: string | undefin
         />
       );
     } else if (field.field_type === FieldType.boolean) {
-      item = <TextField value={parsedValue ? "Yes" : "No"} />;
+      item = <TextField value={parsedValue ? t("yes") : t("no")} />;
     } else if (field.field_type === FieldType.choice && !field.multi_choice) {
       item = <TextField value={parsedValue} />;
     } else if (field.field_type === FieldType.choice && field.multi_choice) {
