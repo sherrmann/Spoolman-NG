@@ -210,7 +210,9 @@
         "tooltip": "Printed size of the QR code square in mm. Auto keeps the historical behavior: the QR fills half the label (all of it if nothing else prints). QR Padding is added around the chosen size as a quiet zone.",
         "auto": "Auto",
         "custom": "Custom",
-        "tooSmall": "QR codes smaller than {{mm}} mm can be hard to scan with a phone camera."
+        "tooSmall": "QR codes smaller than {{mm}} mm can be hard to scan with a phone camera.",
+        "clamped": "This label only fits ≈ {{rendered}} mm — smaller than the {{requested}} mm you set.",
+        "clampedTooSmall": "This label only fits ≈ {{rendered}} mm ({{requested}} mm set) — below the {{mm}} mm phone-camera minimum."
       },
       "showContent": "Print Label",
       "customPayload": {
