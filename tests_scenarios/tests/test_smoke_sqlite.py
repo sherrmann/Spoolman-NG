@@ -20,3 +20,16 @@ def test_sqlite_bare_up_contract_down():
         contract.run(stack)  # health + one CRUD round-trip
     finally:
         runner.tear_down(stack)
+
+
+def test_sqlite_bare_full_integration_suite():
+    # local import isolates the RED-phase ImportError to this test alone
+    from tests_scenarios.assertions import integration  # noqa: PLC0415
+
+    scenario = Scenario("sqlite-bare-itest", Db.SQLITE)
+    stack = runner.bring_up(scenario)
+    try:
+        runner.wait_healthy(stack)
+        integration.run(stack, extra_pytest_args=("-k", "vendor"))  # subset keeps the self-test fast
+    finally:
+        runner.tear_down(stack)
