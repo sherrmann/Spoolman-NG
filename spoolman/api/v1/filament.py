@@ -1,7 +1,6 @@
 """Filament related endpoints."""
 
 import asyncio
-import logging
 from datetime import datetime
 from typing import Annotated
 
@@ -26,8 +25,6 @@ from spoolman.database.utils import parse_sort
 from spoolman.exceptions import ItemDeleteError
 from spoolman.extra_fields import EXTRA_FIELD_PREFIX, EntityType, get_extra_fields, validate_extra_field_dict
 from spoolman.ws import websocket_manager
-
-logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/filament",
@@ -643,11 +640,11 @@ async def update(  # noqa: ANN201
 @router.delete(
     "/{filament_id}",
     name="Delete filament",
-    description="Delete a filament.",
+    description="Delete a filament. Rejected with 409 while any order line references it.",
     response_model=Message,
     responses={
-        403: {"model": Message},
         404: {"model": Message},
+        409: {"model": Message},
     },
 )
 async def delete(  # noqa: ANN201
@@ -656,12 +653,9 @@ async def delete(  # noqa: ANN201
 ):
     try:
         await filament.delete(db, filament_id)
-    except ItemDeleteError:
-        logger.exception("Failed to delete filament.")
-        return JSONResponse(
-            status_code=403,
-            content={"message": "Failed to delete filament, see server logs for more information."},
-        )
+    except ItemDeleteError as e:
+        # 409, matching shop delete — the analogous referenced-cannot-delete case (#320).
+        return JSONResponse(status_code=409, content=Message(message=str(e)).model_dump())
     return Message(message="Success!")
 
 
