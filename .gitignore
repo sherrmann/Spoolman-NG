@@ -73,6 +73,10 @@ instance/
 # Generated API docs (poe generate-docs); the committed guides in docs/*.md are tracked
 docs/_build/
 docs/index.html
+# Built interactive install guide (guide/ → docs-site.yml stages it into the Pages tree)
+docs/install/
+# CI render-matrix output (guide-tests job in ci.yml)
+.guide-matrix/
 
 # PyBuilder
 .pybuilder/

@@ -1,7 +1,11 @@
-name: Generate and deploy API documentation
+name: Build and deploy docs site
 
+# One Pages site, one deploy: the ReDoc API reference (docs/index.html, generated
+# by `poe generate-docs`), the committed docs/*.md guides, and the interactive
+# install guide (guide/ → docs/install/, see #297) all ship in a single artifact,
+# so every deploy rebuilds everything and no trigger can drop part of the site.
 on:
-  # Deploy on master pushes that can change the rendered API docs. Two dead ends inform
+  # Deploy on master pushes that can change the rendered site. Two dead ends inform
   # this trigger: `release: published` never fires because ci.yml creates the release with
   # the default GITHUB_TOKEN (whose events don't trigger workflows), and a `push: tags`
   # trigger is rejected by the github-pages environment's protection rules, which only
@@ -14,7 +18,9 @@ on:
     paths:
       - "spoolman/api/**"
       - "pyproject.toml"
-      - ".github/workflows/apidocs.yml"
+      - "guide/**"
+      - "docs/**"
+      - ".github/workflows/docs-site.yml"
   workflow_dispatch:
 
 permissions:
@@ -50,6 +56,20 @@ jobs:
         run: uv tool install poethepoet
       - run: uv sync
       - run: poe generate-docs
+      - name: Install node
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: "22"
+      - name: Build the interactive install guide
+        run: |
+          cd guide
+          npm ci
+          npm run build
+      - name: Stage the install guide into the Pages tree
+        # docs/install/ is gitignored (like docs/index.html) — generated, never committed.
+        run: |
+          mkdir -p docs/install
+          cp -r guide/dist/. docs/install/
       - name: Setup Pages
         uses: actions/configure-pages@v6.0.0
       - name: Upload artifact
