@@ -34,7 +34,9 @@ const FILAMENTS = [
 
 describe("NewOrderModal (#324)", () => {
   it("keeps the create button disabled until a filament line is complete, then POSTs that line", async () => {
-    const user = userEvent.setup();
+    // delay:null drops userEvent's artificial inter-event delay, keeping this dropdown-driven
+    // flow fast and steady under the coverage job's load (see vitest.config.ts testTimeout note).
+    const user = userEvent.setup({ delay: null });
     createMock.mockClear();
     render(<NewOrderModal open filaments={FILAMENTS} onClose={() => {}} onSuccess={() => {}} />);
 
@@ -57,7 +59,7 @@ describe("NewOrderModal (#324)", () => {
   });
 
   it("adds a line when 'Add filament' is clicked", async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     createMock.mockClear();
     render(<NewOrderModal open filaments={FILAMENTS} onClose={() => {}} onSuccess={() => {}} />);
 
