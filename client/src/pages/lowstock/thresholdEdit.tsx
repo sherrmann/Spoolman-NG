@@ -28,8 +28,8 @@ export function ThresholdEdit({ filamentId, value }: { filamentId: number; value
 
   const label =
     value != null
-      ? t("lowstock.threshold_button_value", { value: formatWeight(value, 0) })
-      : t("lowstock.threshold_button");
+      ? t("low_stock.threshold_button_value", { value: formatWeight(value, 0) })
+      : t("low_stock.threshold_button");
 
   return (
     <Popover

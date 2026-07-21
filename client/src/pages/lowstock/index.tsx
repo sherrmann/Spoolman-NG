@@ -74,16 +74,16 @@ function LowStockRowItem({
               />
             ) : (
               <Button size="small" onClick={() => onMarkOrdered(filament)}>
-                {t("lowstock.mark_ordered")}
+                {t("orders.mark_ordered")}
               </Button>
             )}
           </div>
           {/* Remaining weight only — the threshold now lives on the "Adjust threshold" button
               instead (gate-feedback item #2/#3). Rendered as "<amount> left" (gate-feedback
-              round: i18n `lowstock.remaining_left`) with the amount human-formatted via
+              round: i18n `low_stock.remaining_left`) with the amount human-formatted via
               formatWeightCompact. Red while actionable, grey once on order. */}
           <div className={`lowstock-weight ${onOrder ? "on-order" : "actionable"}`}>
-            {t("lowstock.remaining_left", { amount: formatWeightCompact(remaining) })}
+            {t("low_stock.remaining_left", { amount: formatWeightCompact(remaining) })}
           </div>
           <div className="lowstock-threshold-col">
             <ThresholdEdit filamentId={filament.id} value={filament.low_stock_threshold} />
@@ -122,7 +122,7 @@ function LowStockSection({
           item #2). Mirrors the row's right-side columns so it lines up above the weight. */}
       <div className="lowstock-columns-header">
         <div className="lowstock-action-col" />
-        <span className="lowstock-columns-header-weight">{t("lowstock.remaining_header")}</span>
+        <span className="lowstock-columns-header-weight">{t("low_stock.remaining_header")}</span>
         <div className="lowstock-threshold-col" />
       </div>
       <div className="lowstock-list">
@@ -197,14 +197,14 @@ export const LowStockPage = () => {
 
   return (
     <List
-      title={t("lowstock.title")}
+      title={t("low_stock.title")}
       headerButtons={() => (
         <Space>
           {selectedRows.length > 0 && (
             <Text type="secondary">{t("orders.selected_count", { count: selectedRows.length })}</Text>
           )}
           <Button disabled={selectedRows.length === 0} onClick={() => setBulkOpen(true)}>
-            {t("lowstock.create_order")}
+            {t("orders.create_order")}
           </Button>
         </Space>
       )}
@@ -215,12 +215,12 @@ export const LowStockPage = () => {
           <Spin size="large" />
         </div>
       ) : lowStock.count === 0 ? (
-        <Empty description={t("lowstock.empty")} />
+        <Empty description={t("low_stock.empty")} />
       ) : (
         <div className="lowstock-page">
           <LowStockSection
             rows={lowStock.explicit}
-            subhead={t("lowstock.section.explicit")}
+            subhead={t("low_stock.section.explicit")}
             orderMap={orderMap}
             selected={selected}
             onToggleSelect={toggleSelect}
@@ -230,7 +230,7 @@ export const LowStockPage = () => {
           />
           <LowStockSection
             rows={lowStock.fallback}
-            subhead={t("lowstock.section.fallback", { grams: fallbackG })}
+            subhead={t("low_stock.section.fallback", { grams: fallbackG })}
             orderMap={orderMap}
             selected={selected}
             onToggleSelect={toggleSelect}

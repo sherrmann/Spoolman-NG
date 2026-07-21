@@ -162,7 +162,7 @@ function App() {
                     list: "/lowstock",
                     meta: {
                       canDelete: false,
-                      label: t("lowstock.title"),
+                      label: t("low_stock.title"),
                       // The red "needs attention" count is injected onto this icon by SpoolmanLayout
                       // (components/layout.tsx), which renders inside <Refine> and so can fetch it;
                       // this array is built by App() itself, above the Refine tree.

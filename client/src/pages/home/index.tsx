@@ -291,8 +291,8 @@ export const Home = () => {
                             <div key={reason}>
                               <div className="dash-section-subhead" style={{ opacity: 0.5 }}>
                                 {reason === "explicit"
-                                  ? t("lowstock.section.explicit")
-                                  : t("lowstock.section.fallback", { grams: fallbackG })}
+                                  ? t("low_stock.section.explicit")
+                                  : t("low_stock.section.fallback", { grams: fallbackG })}
                               </div>
                               <div className="low-stock-list">
                                 {rows.map(({ filament, remaining, onOrder }) => {
@@ -329,7 +329,7 @@ export const Home = () => {
                                           />
                                         ) : (
                                           <Button size="small" onClick={() => setMarkOrderedFilament(filament)}>
-                                            {t("lowstock.mark_ordered")}
+                                            {t("orders.mark_ordered")}
                                           </Button>
                                         )}
                                         {/* Remaining only, rendered as "<amount> left" (gate-feedback
@@ -338,7 +338,7 @@ export const Home = () => {
                                             Red while actionable, grey once on order — same
                                             .actionable/.on-order semantics as lowstock.css. */}
                                         <div className={`low-stock-weight ${onOrder ? "on-order" : "actionable"}`}>
-                                          {t("lowstock.remaining_left", { amount: formatWeightCompact(remaining) })}
+                                          {t("low_stock.remaining_left", { amount: formatWeightCompact(remaining) })}
                                         </div>
                                         <ThresholdEdit filamentId={filament.id} value={filament.low_stock_threshold} />
                                       </div>

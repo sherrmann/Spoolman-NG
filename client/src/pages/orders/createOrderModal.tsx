@@ -89,7 +89,7 @@ export function CreateOrderModal({ open, rows, onClose, onSuccess }: Props) {
 
   return (
     <Modal
-      title={t("lowstock.create_order_title", { count: rows.length })}
+      title={t("orders.create_order_title", { count: rows.length })}
       open={open}
       onCancel={onClose}
       onOk={form.submit}

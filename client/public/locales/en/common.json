@@ -668,7 +668,7 @@
       "materials_other": "{{count}} materials"
     }
   },
-  "lowstock": {
+  "low_stock": {
     "title": "Low Stock",
     "remaining_header": "Remaining",
     "remaining_left": "{{amount}} left",
@@ -678,12 +678,7 @@
       "explicit": "Below your set threshold",
       "fallback": "Below the {{grams}} g default"
     },
-    "empty": "Nothing to reorder — you're well stocked.",
-    "mark_ordered": "Mark as ordered",
-    "mark_ordered_title": "Mark \"{{name}}\" as ordered",
-    "create_order": "Create order",
-    "create_order_title": "Create order — {{count}} selected",
-    "coming_soon": "Coming soon"
+    "empty": "Nothing to reorder — you're well stocked."
   },
   "orders": {
     "title": "Orders",
@@ -702,12 +697,13 @@
     "coming_soon": "Coming soon",
     "create_error": "Couldn't create the order. Please try again.",
     "state": {
-      "open_one": "Open — {{count}} outstanding",
-      "open_other": "Open — {{count}} outstanding",
+      "open": "Open — {{count}} outstanding",
       "arrived": "Arrived"
     },
     "mark_ordered": "Mark as ordered",
+    "mark_ordered_title": "Mark \"{{name}}\" as ordered",
     "create_order": "Create order",
+    "create_order_title": "Create order — {{count}} selected",
     "shop_placeholder": "Type a shop name (creates it if new)",
     "order_date": "Order date",
     "quantity": "Quantity",
