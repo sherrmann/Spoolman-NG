@@ -9,7 +9,15 @@ export default defineConfig({
   // Playwright's V8 coverage can be mapped back to the TypeScript sources at report
   // time (inline = the map travels inside each bundle's source, so monocart resolves
   // it without a running server). Production builds stay map-free.
-  build: { sourcemap: process.env.E2E_COVERAGE === "1" ? "inline" : false },
+  build: {
+    sourcemap: process.env.E2E_COVERAGE === "1" ? "inline" : false,
+    // The default 500 kB warning cannot be satisfied honestly: antd alone puts ~300 kB
+    // in the entry chunk (gzip ~440 kB total) and ~930 kB in the lazily loaded
+    // create/edit-pages chunk, and vendor-splitting was measured not to shrink the
+    // eager payload (#170). Keep the warning as a guard against real regressions by
+    // raising it just above today's largest chunk instead of silencing it.
+    chunkSizeWarningLimit: 1400,
+  },
   plugins: [
     react(),
     svgr(),
