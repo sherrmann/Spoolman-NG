@@ -87,7 +87,7 @@ def cmd_down(args: argparse.Namespace) -> None:
 def cmd_test(args: argparse.Namespace) -> None:
     """Bring a scenario up, run the assertion suites against it, then tear down (unless --keep)."""
     from tests_scenarios import runner  # noqa: PLC0415 -- keep `list`/`ps` free of docker imports
-    from tests_scenarios.assertions import contract, integration  # noqa: PLC0415
+    from tests_scenarios.assertions import contract, e2e, integration  # noqa: PLC0415
 
     stack: ScenarioStack | None = None
     try:
@@ -95,7 +95,7 @@ def cmd_test(args: argparse.Namespace) -> None:
         runner.wait_healthy(stack)
         contract.run(stack)
         integration.run(stack)
-        # e2e engine is wired in by Task 8
+        e2e.run(stack)
     finally:
         if stack is not None and not args.keep:
             runner.tear_down(stack)
