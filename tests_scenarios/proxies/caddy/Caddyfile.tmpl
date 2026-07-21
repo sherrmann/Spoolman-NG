@@ -1,0 +1,6 @@
+:80 {
+  redir /{{SUBPATH}} /{{SUBPATH}}/ 308
+  handle /{{SUBPATH}}/* {
+    reverse_proxy spoolman:8000
+  }
+}

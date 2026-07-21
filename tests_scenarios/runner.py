@@ -3,7 +3,9 @@ from __future__ import annotations
 
 import os
 import subprocess
+import tempfile
 import time
+from pathlib import Path
 from typing import TYPE_CHECKING, NamedTuple
 
 import httpx
@@ -14,8 +16,6 @@ from tests_scenarios.compose import REPO
 from tests_scenarios.naming import free_port, project_name
 
 if TYPE_CHECKING:
-    from pathlib import Path
-
     from tests_scenarios.catalog import Scenario
 
 __all__ = ["REPO", "ScenarioStack", "bring_up", "provision_users", "tear_down", "wait_healthy"]
@@ -97,6 +97,10 @@ def provision_users(stack: ScenarioStack) -> None:
 
 
 def tear_down(stack: ScenarioStack) -> None:
-    """Bring the stack down (volumes included) and remove its temp compose file."""
+    """Bring the stack down (volumes included) and remove its temp compose + proxy config files."""
     subprocess.run(_compose_cmd(stack.project, stack.compose_file, "down", "-v"), check=False)
     stack.compose_file.unlink(missing_ok=True)
+    # compose.render (for proxy scenarios) writes "<project>-proxy.conf" alongside the compose
+    # file; clean it up too, keyed off the project name since ScenarioStack doesn't track it.
+    proxy_config = Path(tempfile.gettempdir()) / f"{stack.project}-proxy.conf"
+    proxy_config.unlink(missing_ok=True)
