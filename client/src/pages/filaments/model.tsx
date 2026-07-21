@@ -35,6 +35,9 @@ export interface IFilament {
   reserve_count?: number;
   // When a label was last printed for this filament (#93). Absent means never printed.
   label_printed_at?: string;
+  // True when a reference photo is attached (#88); the bytes come from GET /filament/{id}/image.
+  // Absent means no photo.
+  has_image?: boolean;
   // Server-computed aggregates, only present on the filament list/detail endpoints (#49 / #53).
   spool_count?: number;
   remaining_weight?: number;

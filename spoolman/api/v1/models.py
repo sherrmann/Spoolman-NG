@@ -539,6 +539,14 @@ class Filament(BaseModel):
         None,
         description="When a label was last printed for this filament type. Null means never printed. UTC Timezone.",
     )
+    has_image: bool | None = Field(
+        None,
+        description=(
+            "True when a reference photo is attached to this filament; the bytes are served by "
+            "GET /filament/{id}/image. Omitted when there is no photo."
+        ),
+        examples=[True],
+    )
     spool_count: int | None = Field(
         None,
         description=(
@@ -615,6 +623,7 @@ class Filament(BaseModel):
             low_stock_threshold=item.low_stock_threshold,
             reserve_count=item.reserve_count,
             label_printed_at=item.label_printed_at,
+            has_image=True if item.image_id is not None else None,
             spool_count=spool_count,
             remaining_weight=remaining_weight,
             on_order=OnOrderInfo(order_id=on_order[0], ordered_at=on_order[1]) if on_order is not None else None,

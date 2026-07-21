@@ -19,6 +19,7 @@ import TextArea from "antd/es/input/TextArea";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { ExtraFieldFormItem, ParsedExtras, StringifiedExtras } from "../../components/extraFields";
+import { FilamentImageSection } from "../../components/filamentImageUpload";
 import { MultiColorPicker } from "../../components/multiColorPicker";
 import { formatNumberOnUserInput, numberParser, numberParserAllowEmpty } from "../../utils/parsing";
 import { EntityType, useGetFields } from "../../utils/queryFields";
@@ -284,6 +285,14 @@ export const FilamentEdit = () => {
             <MultiColorPicker min={2} max={14} />
           </Form.Item>
         )}
+        {/* The photo (#88) is not a form value — it uploads/deletes immediately via its own
+            endpoints — so this Form.Item is label-and-layout only (no name). */}
+        <Form.Item label={t("filament.fields.image")} help={t("filament.fields_help.image")}>
+          <FilamentImageSection
+            filamentId={formProps.initialValues?.id}
+            hasImage={formProps.initialValues?.has_image}
+          />
+        </Form.Item>
         <Form.Item
           label={t("filament.fields.material")}
           help={t("filament.fields_help.material")}

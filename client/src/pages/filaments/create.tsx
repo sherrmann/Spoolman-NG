@@ -19,11 +19,13 @@ import utc from "dayjs/plugin/utc";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
 import { ExtraFieldFormItem, ParsedExtras, StringifiedExtras } from "../../components/extraFields";
+import { FilamentImagePicker, uploadFilamentImage } from "../../components/filamentImageUpload";
 import { FilamentImportModal } from "../../components/filamentImportModal";
 import { FilamentCatalogFields } from "./catalogFields";
 import { MultiColorPicker } from "../../components/multiColorPicker";
 import { StickyFooterBar } from "../../components/stickyFooterBar";
 import { suggestDensityForMaterial } from "../../utils/materialDensities";
+import { PreparedImage } from "../../utils/imageTransform";
 import { formatNumberOnUserInput, numberParser, numberParserAllowEmpty } from "../../utils/parsing";
 import { ExternalFilament, fetchExternalProfile } from "../../utils/queryExternalDB";
 import { EntityType, useGetFields } from "../../utils/queryFields";
@@ -56,6 +58,9 @@ export const FilamentCreate = (props: IResourceComponentsProps & CreateOrClonePr
   // #97b: when a scanned retail barcode matched no filament, the scanner routes here with the code
   // as ?article_number= so the new filament remembers it and the next scan resolves.
   const [searchParams] = useSearchParams();
+  // #88: the reference photo is staged locally (already downscaled) because there is no filament id
+  // to PUT it to until the POST in handleSubmit has succeeded.
+  const [stagedImage, setStagedImage] = useState<PreparedImage | null>(null);
 
   const { form, formProps, formLoading, onFinish, redirect } = useForm<
     IFilament,
@@ -85,7 +90,19 @@ export const FilamentCreate = (props: IResourceComponentsProps & CreateOrClonePr
 
   const handleSubmit = async (redirectTo: "list" | "create") => {
     const values = StringifiedExtras(await form.validateFields());
-    await onFinish(values);
+    const response = await onFinish(values);
+    // A staged photo (#88) can only be attached after the POST has produced an id, so PUT it
+    // before redirecting. A failed photo upload keeps the created filament and just reports.
+    const createdId = response && "data" in response ? response.data?.id : undefined;
+    if (createdId !== undefined && stagedImage) {
+      try {
+        await uploadFilamentImage(createdId, stagedImage);
+        setStagedImage(null);
+      } catch (err) {
+        console.error(err);
+        message.error(t("filament.image.upload_error"));
+      }
+    }
     redirect(redirectTo);
   };
 
@@ -341,6 +358,11 @@ export const FilamentCreate = (props: IResourceComponentsProps & CreateOrClonePr
             <MultiColorPicker min={2} max={14} />
           </Form.Item>
         )}
+        {/* The photo (#88) is not a form value — it is staged here and PUT after the POST in
+            handleSubmit — so this Form.Item is label-and-layout only (no name). */}
+        <Form.Item label={t("filament.fields.image")} help={t("filament.fields_help.image")}>
+          <FilamentImagePicker value={stagedImage} onChange={setStagedImage} />
+        </Form.Item>
         <Form.Item
           label={t("filament.fields.material")}
           help={t("filament.fields_help.material")}

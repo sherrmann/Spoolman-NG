@@ -1,5 +1,6 @@
 """Helper functions for interacting with filament database objects."""
 
+import hashlib
 import logging
 from collections.abc import Sequence
 from datetime import datetime
@@ -390,6 +391,12 @@ async def delete(db: AsyncSession, filament_id: int) -> None:
     )
     if line_count:
         raise ItemDeleteError(f"Cannot delete filament {filament_id}: {line_count} order line(s) reference it.")
+    # The reference photo (#88) has no ORM relationship (see models.Image), so its row is cleaned up
+    # explicitly here; a failed commit rolls both deletes back together.
+    if filament.image_id is not None:
+        image = await db.get(models.Image, filament.image_id)
+        if image is not None:
+            await db.delete(image)
     await db.delete(filament)
     try:
         await db.commit()  # Flush immediately so any errors are propagated in this request.
@@ -397,6 +404,68 @@ async def delete(db: AsyncSession, filament_id: int) -> None:
     except IntegrityError as exc:
         await db.rollback()
         raise ItemDeleteError("Failed to delete filament.") from exc
+
+
+async def get_image(db: AsyncSession, filament_id: int) -> models.Image:
+    """Get the reference photo of a filament (#88).
+
+    Loads the filament without its relationships — the image read path serves raw bytes and never
+    needs vendor/spools/extra — then addresses the image row directly by the pointer.
+    """
+    filament = await db.get(models.Filament, filament_id)
+    if filament is None:
+        raise ItemNotFoundError(f"No filament with ID {filament_id} found.")
+    image = await db.get(models.Image, filament.image_id) if filament.image_id is not None else None
+    if image is None:
+        raise ItemNotFoundError(f"Filament with ID {filament_id} has no image.")
+    return image
+
+
+async def set_image(db: AsyncSession, filament_id: int, *, data: bytes, content_type: str) -> models.Filament:
+    """Attach or replace the reference photo of a filament (#88).
+
+    A replace writes a NEW image row and deletes the old one rather than updating in place, so the
+    pointer changes together with the content and a concurrent reader never sees half-replaced
+    bytes. Notifies filament (and embedded-filament spool) subscribers so lists refresh live.
+    """
+    filament = await get_by_id(db, filament_id)
+    old_image_id = filament.image_id
+    image = models.Image(
+        registered=datetime.utcnow().replace(microsecond=0),
+        content_type=content_type,
+        size=len(data),
+        etag=hashlib.sha256(data).hexdigest(),
+        data=data,
+    )
+    db.add(image)
+    await db.flush()  # Assigns image.id so the pointer can move to it in the same transaction.
+    filament.image_id = image.id
+    if old_image_id is not None:
+        old_image = await db.get(models.Image, old_image_id)
+        if old_image is not None:
+            await db.delete(old_image)
+    await db.commit()
+    await filament_changed(filament, EventType.UPDATED)
+    from spoolman.database import spool  # noqa: PLC0415 — spool.py imports this module
+
+    await spool.notify_spools_of_filament_change(db, filament.id)
+    return filament
+
+
+async def delete_image(db: AsyncSession, filament_id: int) -> None:
+    """Remove the reference photo of a filament (#88)."""
+    filament = await get_by_id(db, filament_id)
+    if filament.image_id is None:
+        raise ItemNotFoundError(f"Filament with ID {filament_id} has no image.")
+    image = await db.get(models.Image, filament.image_id)
+    filament.image_id = None
+    if image is not None:
+        await db.delete(image)
+    await db.commit()
+    await filament_changed(filament, EventType.UPDATED)
+    from spoolman.database import spool  # noqa: PLC0415 — spool.py imports this module
+
+    await spool.notify_spools_of_filament_change(db, filament.id)
 
 
 async def clear_extra_field(db: AsyncSession, key: str) -> None:
