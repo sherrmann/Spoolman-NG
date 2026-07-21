@@ -95,7 +95,11 @@ export const Home = () => {
   const allSpools = spoolsAll.result?.data ?? [];
   const allFilaments = filamentsAll.result?.data ?? [];
   const hasSpools = allSpools.length > 0;
-  const isLoading = spoolsAll.query.isLoading;
+  // Gate the dashboard on BOTH the spool and the (all-)filament query. hasLowStock — and the
+  // Tabs' uncontrolled defaultActiveKey that reads it — derives from the filament query, so
+  // gating on the spool query alone let the Tabs mount with allFilaments still empty on slow
+  // loads, locking in the wrong default tab (#323).
+  const isLoading = spoolsAll.query.isLoading || filamentsAll.query.isLoading;
   const isError = spoolsAll.query.isError;
 
   // --- Calculations (pure logic lives in ./analytics, unit-tested there) ---

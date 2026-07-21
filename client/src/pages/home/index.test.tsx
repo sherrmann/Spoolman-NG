@@ -68,6 +68,9 @@ interface SpoolQueryState {
   // Drives the merged per-filament Low Stock tab (#298); defaults to none so plain spool-only
   // tests see no low-stock filaments regardless of the spools' own weights.
   filaments?: IFilament[];
+  // Drives the filament query's own loading state. hasLowStock (and the Tabs' default) derives
+  // from this query, so the dashboard must gate on it too (#323) — defaults to loaded.
+  filamentsLoading?: boolean;
 }
 
 function setSpoolQuery({
@@ -76,6 +79,7 @@ function setSpoolQuery({
   isError = false,
   refetch = vi.fn(),
   filaments = [],
+  filamentsLoading = false,
 }: SpoolQueryState) {
   // useList is called for "spool", "filament", "vendor" and "order"; only the spool query drives
   // the render-state branches. filament supplies both the KPI total and (via its aggregate
@@ -89,7 +93,7 @@ function setSpoolQuery({
     if (opts?.resource === "filament") {
       return {
         result: { data: filaments, total: filaments.length },
-        query: { isLoading: false, isError: false },
+        query: { isLoading: filamentsLoading, isError: false },
       } as unknown as ReturnType<typeof useList>;
     }
     return { result: { total: 0 }, query: { isLoading: false, isError: false } } as unknown as ReturnType<
@@ -118,6 +122,17 @@ describe("Home render states", () => {
     setSpoolQuery({ isLoading: true });
     renderHome();
     expect(screen.getByText("loading")).toBeInTheDocument();
+  });
+
+  // #323: the Tabs' uncontrolled defaultActiveKey reads hasLowStock, which derives from the
+  // filament query. If the dashboard mounted once spools finished but filaments were still
+  // loading, the tabs would lock in the wrong default. Keep loading until filaments arrive too.
+  it("keeps loading while the filament query is still loading, even if spools are ready", () => {
+    setSpoolQuery({ data: [spool(), spool()], filamentsLoading: true });
+    renderHome();
+    expect(screen.getByText("loading")).toBeInTheDocument();
+    // The tabs must not have mounted yet — otherwise the uncontrolled default is already locked in.
+    expect(screen.queryByRole("tab", { name: /home\.by_material/ })).not.toBeInTheDocument();
   });
 
   it("shows the error state (not onboarding) and refetches on refresh", async () => {
