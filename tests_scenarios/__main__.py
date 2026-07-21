@@ -49,6 +49,7 @@ def cmd_up(args: argparse.Namespace) -> None:
     stack = runner.bring_up(_by_name(args.name))
     try:
         runner.wait_healthy(stack)
+        runner.provision_users(stack)
     except TimeoutError:
         runner.tear_down(stack)
         raise
@@ -93,6 +94,7 @@ def cmd_test(args: argparse.Namespace) -> None:
     try:
         stack = runner.bring_up(_by_name(args.name))
         runner.wait_healthy(stack)
+        runner.provision_users(stack)
         contract.run(stack)
         integration.run(stack)
         e2e.run(stack)

@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, NamedTuple
 import httpx
 
 from tests_scenarios import compose
+from tests_scenarios.catalog import Auth
 from tests_scenarios.compose import REPO
 from tests_scenarios.naming import free_port, project_name
 
@@ -17,7 +18,7 @@ if TYPE_CHECKING:
 
     from tests_scenarios.catalog import Scenario
 
-__all__ = ["REPO", "ScenarioStack", "bring_up", "tear_down", "wait_healthy"]
+__all__ = ["REPO", "ScenarioStack", "bring_up", "provision_users", "tear_down", "wait_healthy"]
 
 ENGINE = os.environ.get("SPOOLMAN_CONTAINER_ENGINE", "docker")
 COMPOSE = [ENGINE + "-compose"] if ENGINE == "docker" else [ENGINE, "compose"]
@@ -71,6 +72,28 @@ def wait_healthy(stack: ScenarioStack, timeout: int = 180) -> None:
             last = str(e)
         time.sleep(1)
     raise TimeoutError(f"{stack.scenario.name} not healthy in {timeout}s: {last}")
+
+
+def provision_users(stack: ScenarioStack) -> None:
+    """Bootstrap the scenario's login-flow admin account (no-op unless auth is ``Auth.USERS``).
+
+    With ``SPOOLMAN_AUTH_SECRET`` set but zero user accounts, ``auth_required()`` is False (see
+    ``spoolman/auth.py``), so requests -- including this one -- run as anonymous admin. That is
+    what lets the very first account be created via an unauthenticated ``POST /auth/users``; every
+    subsequent request requires real credentials. Idempotent: a 409 (user already exists) is
+    treated as success, so callers can call this unconditionally after ``wait_healthy``.
+    """
+    if stack.scenario.auth is not Auth.USERS:
+        return
+    login = stack.scenario.test_env()["SPOOLMAN_TEST_LOGIN"]
+    user, _, password = login.partition(":")
+    resp = httpx.post(
+        f"{stack.url}/api/v1/auth/users",
+        json={"username": user, "password": password},
+        timeout=10,
+    )
+    if resp.status_code != httpx.codes.CONFLICT:
+        resp.raise_for_status()
 
 
 def tear_down(stack: ScenarioStack) -> None:

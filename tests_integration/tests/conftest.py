@@ -20,6 +20,10 @@ URL = os.environ.get(
 
 _AUTH_INSTALLED = False
 _WRAPPED_HTTPX_FUNCS = ("get", "post", "put", "patch", "delete", "request")
+# The bearer token install_auth() resolved (from SPOOLMAN_TEST_TOKEN or the login flow), so
+# ws_url() can carry the same credential -- websocket tests build their own URLs and never
+# go through the wrapped httpx functions above. None when no auth is configured.
+_RESOLVED_TOKEN: str | None = None
 
 
 def _resolve_token() -> str | None:
@@ -55,10 +59,11 @@ def install_auth() -> None:
     (the suite then runs exactly as it did before this seam existed). Idempotent: safe to
     call more than once without double-wrapping.
     """
-    global _AUTH_INSTALLED  # noqa: PLW0603
+    global _AUTH_INSTALLED, _RESOLVED_TOKEN  # noqa: PLW0603
     if _AUTH_INSTALLED:
         return
     token = _resolve_token()
+    _RESOLVED_TOKEN = token
     if not token:
         return
     header = {"Authorization": f"Bearer {token}"}
@@ -78,9 +83,14 @@ def install_auth() -> None:
 
 
 def ws_url(path: str) -> str:
-    """Build a websocket URL for ``path``, appending ``?token=`` when auth is configured."""
+    """Build a websocket URL for ``path``, appending ``?token=`` when auth is configured.
+
+    Prefers the token ``install_auth()`` already resolved (covers both ``SPOOLMAN_TEST_TOKEN``
+    and the ``SPOOLMAN_TEST_LOGIN`` login flow), falling back to the raw env var so this still
+    works if called before ``install_auth()`` has run.
+    """
     base = URL.replace("http://", "ws://").replace("https://", "wss://") + path
-    token = os.environ.get("SPOOLMAN_TEST_TOKEN")
+    token = _RESOLVED_TOKEN or os.environ.get("SPOOLMAN_TEST_TOKEN")
     return f"{base}?token={token}" if token else base
 
 
