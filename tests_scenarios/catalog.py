@@ -53,6 +53,15 @@ _ARCH_WEIGHT = {Arch.AMD64: 1, Arch.ARM64: 4, Arch.ARMV7: 6}
 _PLATFORM = {Arch.AMD64: "linux/amd64", Arch.ARM64: "linux/arm64", Arch.ARMV7: "linux/arm/v7"}
 
 
+def platform_for(arch: Arch) -> str:
+    """Docker `--platform` string for `arch` (module-level twin of `Scenario.platform()`).
+
+    Used by `runner.ensure_image`, which only has an `Arch` in hand (not a full `Scenario`), to
+    keep a single source of truth for the arch->platform mapping.
+    """
+    return _PLATFORM[arch]
+
+
 @dataclass(frozen=True)
 class Scenario:
     """A single deployment configuration to bring up and test."""
@@ -68,7 +77,7 @@ class Scenario:
 
     def platform(self) -> str:
         """Docker `--platform` string for this scenario's architecture."""
-        return _PLATFORM[self.arch]
+        return platform_for(self.arch)
 
     def weight(self) -> int:
         """Relative scheduling cost (heavier archs run fewer-at-a-time)."""

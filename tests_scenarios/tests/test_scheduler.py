@@ -71,6 +71,26 @@ def test_run_one_exception_becomes_a_failing_result_without_propagating():
     assert by_name["fine"].ok is True
 
 
+def test_run_many_admits_a_single_overweight_scenario_under_a_smaller_budget():
+    """A lone weight-6 (armv7) scenario under concurrency_budget=4 must still complete.
+
+    Guards the "admit when in_flight == 0 even if weight > budget" clause in `run_many`'s
+    worker -- without it, a single armv7 scenario on a <6-core box (budget below 6) would
+    `wait_for` forever, since `in_flight + weight <= concurrency_budget` (2 <= 4... wait, 6 <= 4)
+    never holds. This is what `test-all` relies on to make progress on armv7 hardware with
+    fewer than 6 cores.
+    """
+
+    async def run_one(_s: Scenario) -> tuple[bool, str]:
+        await asyncio.sleep(0.01)
+        return True, "ok"
+
+    scenarios = [Scenario("armv7-solo", Db.SQLITE, arch=Arch.ARMV7)]  # weight 6
+    results = asyncio.run(run_many(scenarios, concurrency_budget=4, run_one=run_one))
+    assert len(results) == 1
+    assert results[0].ok is True
+
+
 @pytest.mark.parametrize("weight", [1, 4, 6])
 def test_single_scenario_always_succeeds_regardless_of_weight(weight: int):
     """Sanity check across every arch weight: a lone scenario runs and reports ok."""

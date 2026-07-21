@@ -74,6 +74,9 @@ dev = [
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 testpaths = ["tests"]
+markers = [
+    "slow: builds/boots a real container image (e.g. armv7 under QEMU) -- opt in with -m slow",
+]
 
 [tool.mutmut]
 # Mutation testing over the crown-jewel NFC codecs — the highest logic-density code,

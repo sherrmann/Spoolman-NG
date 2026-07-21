@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 import yaml
 
-from tests_scenarios.catalog import Proxy
+from tests_scenarios.catalog import Arch, Proxy
 
 if TYPE_CHECKING:
     from tests_scenarios.catalog import Scenario
@@ -67,16 +67,25 @@ def _build_proxy_service(scenario: Scenario, *, host_port: int, config_path: Pat
     return service
 
 
-def render(scenario: Scenario, *, host_port: int, project: str) -> Path:
+def render(scenario: Scenario, *, host_port: int, project: str, image: str = "spoolman:test") -> Path:
     """Write a temp compose file for `scenario`, publishing the server on `host_port`.
 
     With no proxy, `spoolman` itself publishes `host_port:8000`. With a proxy, `spoolman` stays
     internal (no published port) and a `proxy` service publishes `host_port:80`, forwarding to
     `spoolman:8000` per the scenario's sub-path (or root) via a rendered, bind-mounted config.
+
+    `image` sets the `spoolman` service's image (defaults to the standing `spoolman:test`, the
+    amd64-only path used by every scenario before the arch axis existed). For non-amd64 arches, a
+    `platform:` key pinning `scenario.platform()` is also set on `spoolman` -- and only `spoolman`;
+    the db and proxy services stay on their published (amd64) images regardless of the scenario's
+    arch. The amd64 path is otherwise untouched, so existing scenarios render byte-identical output.
     """
     base = yaml.safe_load((BASE / f"docker-compose-{scenario.db}.yml").read_text())
     services = base["services"]
     spoolman = services["spoolman"]
+    spoolman["image"] = image
+    if scenario.arch is not Arch.AMD64:
+        spoolman["platform"] = scenario.platform()
     spoolman.setdefault("environment", {})
     if isinstance(spoolman["environment"], list):  # normalize KEY=VAL list -> dict
         spoolman["environment"] = dict(kv.split("=", 1) for kv in spoolman["environment"])
