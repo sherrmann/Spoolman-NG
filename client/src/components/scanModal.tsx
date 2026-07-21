@@ -1,11 +1,28 @@
 import { CameraOutlined, ScanOutlined, WifiOutlined } from "@ant-design/icons";
+import loadable from "@loadable/component";
 import { useTranslate } from "@refinedev/core";
-import { FloatButton, Modal, Segmented, Space, Typography } from "antd";
+import { FloatButton, Modal, Segmented, Space, Spin, Typography } from "antd";
 import { useEffect, useState } from "react";
 import { NfcScannerPanel, useNfcAvailability } from "./nfcScannerModal";
-import { QRScannerPanel } from "./qrCodeScanner";
 
 const { Text } = Typography;
+
+// The camera scanner stack behind QRScannerPanel (@yudiel/react-qr-scanner →
+// barcode-detector, webrtc-adapter, sdp) is ~135 kB minified and is only needed once
+// the scan modal is actually opened, so it must not be imported statically: this file
+// sits in the always-loaded header chrome, and a static import would drag the whole
+// stack into the eager entry chunk (#170). Loaded on first open, cached after that.
+const QRScannerPanel = loadable<{ onClose?: () => void }, typeof import("./qrCodeScanner")>(
+  () => import("./qrCodeScanner"),
+  {
+    resolveComponent: (mod) => mod.QRScannerPanel,
+    fallback: (
+      <div style={{ textAlign: "center", padding: 24 }}>
+        <Spin />
+      </div>
+    ),
+  },
+);
 
 /**
  * Unified "Scan" affordance for the global chrome. A single floating button opens
