@@ -73,6 +73,26 @@ add it with `uv sync --extra nfc`. For reader hardware, USB pass-through, udev
 rules, the `SPOOLMAN_NFC_*` variables, and the browser Web NFC (HTTPS/Android)
 requirements, see the [NFC guide](nfc.md).
 
+### Install via KIAUH (Klipper users)
+
+If you set up your printer with [KIAUH](https://github.com/dw-0/kiauh) v6, you
+can install Spoolman NG from its menu instead of running the one-liner
+yourself. KIAUH v5's built-in Spoolman installer became a community-extension
+slot in v6 — our extension fills it. One line adds it to a KIAUH clone at
+`~/kiauh`:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/sherrmann/Spoolman-NG/master/integrations/kiauh/install-extension.sh | bash
+```
+
+Then start KIAUH and pick **[E]xtensions → Spoolman NG (native install)**. The
+extension performs exactly the native install described above (same
+`~/Spoolman` directory, same `Spoolman` service) and additionally offers to
+register the Moonraker `[update_manager Spoolman]` recipe below, the
+`[spoolman]` filament-tracking section, and the `moonraker.asvc` entry — so a
+fresh Klipper setup needs no manual config edits at all. Details and update or
+remove options: [integrations/kiauh](../integrations/kiauh/README.md).
+
 ### Updating a native install
 
 ```bash

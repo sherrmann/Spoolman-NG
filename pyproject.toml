@@ -153,6 +153,12 @@ ignore = [
 # scripts/ holds standalone maintenance scripts (run directly, not imported as a
 # package), same rationale as client/e2e above.
 "scripts/*.py" = ["INP001"]
+# The KIAUH community extension runs inside KIAUH (dw-0/kiauh), not inside
+# Spoolman: the unused **kwargs come from KIAUH's BaseExtension interface, the
+# broad excepts follow its TUI error model (log + return to the menu instead of
+# crashing it), and bash/the bundled scripts are launched from PATH on the
+# stock Debian hosts KIAUH targets.
+"integrations/kiauh/**/*.py" = ["ARG002", "BLE001", "S607"]
 # The triage-table fixture mirrors real markdown table rows verbatim (one row
 # per line, matching docs/upstream-triage.md), so lines run long.
 "tests/test_upstream_ledger.py" = ["E501"]
