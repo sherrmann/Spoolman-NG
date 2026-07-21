@@ -58,6 +58,15 @@
   "loading": "Loading",
   "version": "Version",
   "unknown": "Unknown",
+  "update": {
+    "available": "update available",
+    "tooltip": "Version {{version}} is available",
+    "notification": {
+      "title": "A new version of Spoolman is available",
+      "description": "Version {{version}} has been released. See what's new and how to update.",
+      "viewRelease": "View release notes"
+    }
+  },
   "errorBoundary": {
     "title": "Something went wrong",
     "subTitle": "This page failed to render. If it started after changing or sharing view settings, resetting them usually fixes it.",

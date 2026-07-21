@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse
 from starlette.requests import Request
 from starlette.responses import Response
 
-from spoolman import env
+from spoolman import env, updatecheck
 from spoolman.auth import install_auth
 from spoolman.database.database import backup_global_db
 from spoolman.exceptions import ItemNotFoundError
@@ -67,6 +67,7 @@ async def itemnotfounderror_exception_handler(_request: Request, exc: ItemNotFou
 @app.get("/info")
 async def info() -> models.Info:
     """Return general info about the API."""
+    update_status = updatecheck.get_status()
     return models.Info(
         version=env.get_version(),
         debug_mode=env.is_debug_mode(),
@@ -77,6 +78,10 @@ async def info() -> models.Info:
         db_type=str(env.get_database_type() or "sqlite"),
         git_commit=env.get_commit_hash(),
         build_date=env.get_build_date(),
+        update_check_enabled=env.is_update_check_enabled(),
+        latest_version=update_status.latest_version,
+        update_available=update_status.update_available,
+        release_url=update_status.release_url,
     )
 
 

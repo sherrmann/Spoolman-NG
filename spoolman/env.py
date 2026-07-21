@@ -517,6 +517,27 @@ def is_metrics_enabled() -> bool:
     )
 
 
+def is_update_check_enabled() -> bool:
+    """Get whether the daily "newer release available" check is enabled.
+
+    Returns True if no environment variable was set - the check is opt-out. The only
+    outbound call it makes is a single daily request to api.github.com; set
+    ``SPOOLMAN_UPDATE_CHECK=FALSE`` to disable it entirely (see docs/privacy note).
+
+    Returns:
+        bool: Whether the update check is enabled.
+
+    """
+    enabled = os.getenv("SPOOLMAN_UPDATE_CHECK", "TRUE").upper()
+    if enabled in {"FALSE", "0"}:
+        return False
+    if enabled in {"TRUE", "1"}:
+        return True
+    raise ValueError(
+        f"Failed to parse SPOOLMAN_UPDATE_CHECK variable: Unknown value '{enabled}'.",
+    )
+
+
 def is_tigertag_enabled() -> bool:
     """Get whether TigerTag external database integration is enabled.
 
