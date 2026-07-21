@@ -1,7 +1,7 @@
 import { DATE_TIME_FORMAT } from "../../utils/dateFormat";
 import { Edit, useForm } from "@refinedev/antd";
 import { HttpError, useTranslate } from "@refinedev/core";
-import { Alert, ColorPicker, DatePicker, Divider, Form, Input, InputNumber, Radio, Select, Typography } from "antd";
+import { Alert, DatePicker, Divider, Form, Input, InputNumber, Radio, Select, Typography } from "antd";
 import TextArea from "antd/es/input/TextArea";
 import { message } from "antd/lib";
 import dayjs from "dayjs";
@@ -517,16 +517,6 @@ export const SpoolEdit = () => {
             formatter={formatNumberOnUserInput}
             parser={numberParserAllowEmpty}
           />
-        </Form.Item>
-        <Form.Item
-          label={t("spool.fields.color_hex")}
-          help={t("spool.fields_help.color_hex")}
-          name={"color_hex"}
-          rules={[{ required: false }]}
-          getValueFromEvent={(e) => e?.toHex()}
-        >
-          {/* #74: optional single-color override; clear to fall back to the filament color. */}
-          <ColorPicker format="hex" allowClear />
         </Form.Item>
         <Form.Item
           label={t("spool.fields.comment")}

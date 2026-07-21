@@ -367,7 +367,6 @@
       "printer": "Printer",
       "lot_nr": "Lot Nr",
       "diameter": "Diameter",
-      "color_hex": "Colour",
       "first_used": "First Used",
       "last_used": "Last Used",
       "registered": "Registered",
@@ -386,7 +385,6 @@
       "printer": "The printer this spool is currently loaded on. Manage your printers in Settings.",
       "lot_nr": "Manufacturer's lot number. Can be used to ensure a print has consistent colour if multiple spools are used.",
       "diameter": "Measured filament diameter for this specific spool, used in length calculations. Leave empty to use the filament's diameter.",
-      "color_hex": "Optional colour for this specific spool, overriding the filament's colour. Clear to use the filament's colour.",
       "external_filament": "You have selected a filament from the external database. A filament object (and possibly a manufacturer object) will be created automatically when you create this spool. This can create duplicate filament objects if you have already created a filament object for this filament."
     },
     "titles": {

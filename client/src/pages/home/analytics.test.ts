@@ -392,8 +392,6 @@ describe("presentation helpers", () => {
     expect(getColorHex(spool({ filament: filament({ color_hex: "ff8800" }) }))).toBe("#ff8800");
     expect(getColorHex(spool({ filament: filament({ color_hex: "#ff8800" }) }))).toBe("#ff8800");
     expect(getColorHex(spool({ filament: filament() }))).toBe("#555555");
-    // #74: the spool's own colour override wins over the filament colour.
-    expect(getColorHex(spool({ color_hex: "00ff00", filament: filament({ color_hex: "ff8800" }) }))).toBe("#00ff00");
   });
 
   it("getSpoolName combines vendor and name, falling back to name then id", () => {

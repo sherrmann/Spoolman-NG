@@ -72,13 +72,9 @@ export function parseThreeMf(bytes: Uint8Array): ThreeMfFilament[] {
   return parseSliceInfo(strFromU8(entry));
 }
 
-/** A spool's primary colour hex for matching: its own override, else its filament's colour. */
+/** A spool's primary colour hex for matching: its filament's colour. */
 export function spoolPrimaryHex(spool: ISpool): string | undefined {
-  const raw =
-    spool.color_hex ??
-    spool.multi_color_hexes?.split(",")[0] ??
-    spool.filament.color_hex ??
-    spool.filament.multi_color_hexes?.split(",")[0];
+  const raw = spool.filament.color_hex ?? spool.filament.multi_color_hexes?.split(",")[0];
   return normalizeHex(raw);
 }
 
