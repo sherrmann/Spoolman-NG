@@ -34,6 +34,23 @@ Image tags: `:latest` (newest release), `:YYYY.M.PATCH` (pinned release,
 e.g. `:2026.6.1`), `:edge` (latest master build), `:sha-<commit>`. Architectures:
 `amd64`, `arm64`, `armv7` — all with NFC support included.
 
+### One-click catalogs (Zeabur, Unraid, CasaOS/BigBear)
+
+The same image is packaged for one-click installs; each template is maintained
+in this repository:
+
+- **Zeabur** — a deployable template (SQLite default, plus a PostgreSQL
+  variant): [integrations/zeabur](../integrations/zeabur/README.md).
+- **Unraid** — a Docker-manager template with Unraid-appropriate defaults
+  (appdata path, `PUID`/`PGID` 99/100):
+  [integrations/unraid](../integrations/unraid/README.md).
+- **CasaOS / BigBear catalogs** — a compose entry following their conventions:
+  [integrations/bigbear](../integrations/bigbear/README.md).
+
+All of them run the compose defaults above (port 8000 in-container, data under
+`/home/app/.local/share/spoolman`), so everything in this guide applies
+unchanged.
+
 ### Rootless Podman (Fedora / SELinux)
 
 Under **rootless Podman**, the bind-mounted data directory is remapped through
@@ -186,9 +203,19 @@ persistence:
 ```
 
 For sub-path serving behind a shared ingress, set `env.SPOOLMAN_BASE_PATH` and
-`probes.path` together (e.g. `/spoolman` and `/spoolman/api/v1/health`). Using
-TrueCharts or another third-party chart instead? They work too — just override
-the image repository to `ghcr.io/sherrmann/spoolman-ng`.
+`probes.path` together (e.g. `/spoolman` and `/spoolman/api/v1/health`).
+
+### Third-party charts & NAS catalogs (TrueCharts, TrueNAS SCALE, …)
+
+Deploying from a catalog whose chart pins the upstream image — the TrueCharts
+Spoolman chart on TrueNAS SCALE, or any Helm-style app store entry? Spoolman NG
+is image-drop-in: override the **image repository** to
+`ghcr.io/sherrmann/spoolman-ng` (tag `latest`, or a pinned `YYYY.M.PATCH`
+release) and keep everything else unchanged — container port 8000, the
+`/home/app/.local/share/spoolman` data volume, the `SPOOLMAN_*` environment
+variables, and the `/api/v1/health` probe all match upstream. An existing
+upstream database is migrated automatically on the first start (back it up
+first).
 
 ## Reverse proxies & networking
 

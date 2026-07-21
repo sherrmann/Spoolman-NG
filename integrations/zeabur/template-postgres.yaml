@@ -1,0 +1,102 @@
+# Zeabur one-click template for Spoolman NG — PostgreSQL variant.
+# The default (SQLite) variant in template.yaml is the right choice for almost
+# everyone; use this one to keep the database in PostgreSQL instead.
+# Deploy/update with the Zeabur CLI, see README.md in this directory.
+apiVersion: zeabur.com/v1
+kind: Template
+metadata:
+  name: Spoolman NG (PostgreSQL)
+spec:
+  description: Keep track of your inventory of 3D-printer filament spools, backed by PostgreSQL.
+  icon: https://raw.githubusercontent.com/sherrmann/Spoolman-NG/master/client/public/pwa-512x512.png
+  tags:
+    - Tool
+  variables:
+    - key: SPOOLMAN_DOMAIN
+      type: DOMAIN
+      name: Domain
+      description: The domain your Spoolman NG instance is served on.
+  readme: |-
+    # Spoolman NG (PostgreSQL)
+
+    Spoolman NG is a self-hosted web service that keeps track of your inventory
+    of 3D-printer filament spools. It integrates with OctoPrint and
+    Klipper/Moonraker, updating spool weights automatically as printing
+    progresses. It is a community-maintained, drop-in-compatible continuation
+    of the original Spoolman by Donkie.
+
+    This variant stores the database in a bundled PostgreSQL service (with its
+    own persistent volume) instead of the default SQLite file. The connection
+    is wired up automatically; a generated password is used.
+
+    - All configuration is via `SPOOLMAN_*` environment variables — see the
+      [installation guide](https://github.com/sherrmann/Spoolman-NG/blob/master/docs/installation.md).
+    - Exposing the instance to the internet? Set `SPOOLMAN_API_TOKEN` and read
+      the [Security & exposure](https://github.com/sherrmann/Spoolman-NG#security--exposure)
+      notes first.
+    - Point your printers' Moonraker `[spoolman]` section at the public URL.
+  services:
+    - name: PostgreSQL
+      icon: https://raw.githubusercontent.com/zeabur/service-icons/main/marketplace/postgresql.svg
+      template: PREBUILT
+      spec:
+        source:
+          image: postgres:17
+        ports:
+          - id: database
+            port: 5432
+            type: TCP
+        volumes:
+          - id: data
+            dir: /var/lib/postgresql/data
+        env:
+          POSTGRES_DB:
+            default: spoolman
+            expose: true
+          POSTGRES_USER:
+            default: spoolman
+            expose: true
+          POSTGRES_PASSWORD:
+            default: ${PASSWORD}
+            expose: true
+          POSTGRES_HOST:
+            default: ${CONTAINER_HOSTNAME}
+            expose: true
+          POSTGRES_PORT:
+            default: ${DATABASE_PORT}
+            expose: true
+    - name: spoolman-ng
+      icon: https://raw.githubusercontent.com/sherrmann/Spoolman-NG/master/client/public/pwa-512x512.png
+      template: PREBUILT
+      domainKey: SPOOLMAN_DOMAIN
+      dependencies:
+        - PostgreSQL
+      spec:
+        source:
+          image: ghcr.io/sherrmann/spoolman-ng:latest
+        ports:
+          - id: web
+            port: 8000
+            type: HTTP
+        env:
+          TZ:
+            default: UTC
+          SPOOLMAN_DB_TYPE:
+            default: postgres
+          SPOOLMAN_DB_HOST:
+            default: ${POSTGRES_HOST}
+          SPOOLMAN_DB_PORT:
+            default: ${POSTGRES_PORT}
+          SPOOLMAN_DB_NAME:
+            default: ${POSTGRES_DB}
+          SPOOLMAN_DB_USERNAME:
+            default: ${POSTGRES_USER}
+          SPOOLMAN_DB_PASSWORD:
+            default: ${POSTGRES_PASSWORD}
+        instructions:
+          - type: URL
+            title: Open Spoolman NG
+            content: ${ZEABUR_WEB_URL}
+          - type: TEXT
+            title: Moonraker server URL for your printers' [spoolman] section
+            content: ${ZEABUR_WEB_URL}

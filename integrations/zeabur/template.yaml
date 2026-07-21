@@ -1,0 +1,61 @@
+# Zeabur one-click template for Spoolman NG — SQLite (default) variant.
+# Deploy/update with the Zeabur CLI, see README.md in this directory.
+apiVersion: zeabur.com/v1
+kind: Template
+metadata:
+  name: Spoolman NG
+spec:
+  description: Keep track of your inventory of 3D-printer filament spools.
+  icon: https://raw.githubusercontent.com/sherrmann/Spoolman-NG/master/client/public/pwa-512x512.png
+  tags:
+    - Tool
+  variables:
+    - key: SPOOLMAN_DOMAIN
+      type: DOMAIN
+      name: Domain
+      description: The domain your Spoolman NG instance is served on.
+  readme: |-
+    # Spoolman NG
+
+    Spoolman NG is a self-hosted web service that keeps track of your inventory
+    of 3D-printer filament spools. It integrates with OctoPrint and
+    Klipper/Moonraker, updating spool weights automatically as printing
+    progresses. It is a community-maintained, drop-in-compatible continuation
+    of the original Spoolman by Donkie.
+
+    This template runs a single service with the bundled SQLite database on a
+    persistent volume — the right choice for almost everyone. A variant backed
+    by PostgreSQL is also available in the
+    [Spoolman NG repository](https://github.com/sherrmann/Spoolman-NG/tree/master/integrations/zeabur).
+
+    - All configuration is via `SPOOLMAN_*` environment variables — see the
+      [installation guide](https://github.com/sherrmann/Spoolman-NG/blob/master/docs/installation.md).
+    - Exposing the instance to the internet? Set `SPOOLMAN_API_TOKEN` and read
+      the [Security & exposure](https://github.com/sherrmann/Spoolman-NG#security--exposure)
+      notes first.
+    - Point your printers' Moonraker `[spoolman]` section at the public URL.
+  services:
+    - name: spoolman-ng
+      icon: https://raw.githubusercontent.com/sherrmann/Spoolman-NG/master/client/public/pwa-512x512.png
+      template: PREBUILT
+      domainKey: SPOOLMAN_DOMAIN
+      spec:
+        source:
+          image: ghcr.io/sherrmann/spoolman-ng:latest
+        ports:
+          - id: web
+            port: 8000
+            type: HTTP
+        volumes:
+          - id: data
+            dir: /home/app/.local/share/spoolman
+        env:
+          TZ:
+            default: UTC
+        instructions:
+          - type: URL
+            title: Open Spoolman NG
+            content: ${ZEABUR_WEB_URL}
+          - type: TEXT
+            title: Moonraker server URL for your printers' [spoolman] section
+            content: ${ZEABUR_WEB_URL}
