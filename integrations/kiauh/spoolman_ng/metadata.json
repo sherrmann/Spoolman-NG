@@ -1,0 +1,19 @@
+{
+  "metadata": {
+    "index": 30,
+    "module": "spoolman_ng_extension",
+    "maintained_by": "sherrmann",
+    "display_name": "Spoolman NG (native install)",
+    "description": [
+      "Filament manager for 3D printing — the community-maintained continuation of Spoolman.",
+      "- Track filament inventory, usage, vendors and spools",
+      "- Native install (no Docker) from the official release zip",
+      "- Runs as a 'Spoolman' systemd service",
+      "- One-click updates from Mainsail/Fluidd via Moonraker's update manager",
+      "- Wires Klipper filament tracking into Moonraker ([spoolman] section)"
+    ],
+    "website": "https://github.com/sherrmann/Spoolman-NG#readme",
+    "repo": "https://github.com/sherrmann/Spoolman-NG",
+    "updates": true
+  }
+}

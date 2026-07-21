@@ -133,6 +133,8 @@ The UI then runs on `http://<host>:7912` (configurable via `.env`). Your databas
 
 > The native install omits the optional **NFC** feature by default; add it on any platform with `uv sync --extra nfc`.
 
+**Using [KIAUH](https://github.com/dw-0/kiauh)?** A [community extension](integrations/kiauh/README.md) for KIAUH v6 performs this install (plus all the Moonraker wiring below) from KIAUH's Extensions menu — install, update, and remove without touching a config file.
+
 ### One-click updates from Moonraker (Klipper users)
 
 If you run Klipper, you can update Spoolman NG straight from Mainsail/Fluidd. Add this to your `moonraker.conf` (adjust `path` to your install directory) and add `Spoolman` on its own line to `~/printer_data/moonraker.asvc` so Moonraker may restart the service:
