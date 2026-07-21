@@ -14,6 +14,7 @@ runs for real; only the transport is swapped.
 """
 
 import importlib
+import json
 from collections.abc import Iterator
 from types import ModuleType
 
@@ -101,6 +102,35 @@ def test_install_auth_preserves_caller_supplied_headers(monkeypatch: pytest.Monk
     sent = route.calls.last.request.headers
     assert sent["Authorization"] == "Bearer sk_test_abc"
     assert sent["X-Custom"] == "1"
+
+
+@respx.mock
+def test_install_auth_resolves_token_via_login(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Log in via POST /api/v1/auth/login when only SPOOLMAN_TEST_LOGIN is set.
+
+    Uses the response's ``access_token`` (per spoolman/api/v1/auth.py's ``LoginResponse``
+    -- NOT ``token``) as the bearer token.
+    """
+    monkeypatch.delenv("SPOOLMAN_TEST_TOKEN", raising=False)
+    monkeypatch.setenv("SPOOLMAN_TEST_LOGIN", "tester:pw")
+    mod = _reload_conftest()
+
+    login_route = respx.post(f"{mod.URL}/api/v1/auth/login").mock(
+        return_value=httpx.Response(200, json={"access_token": "tok_login_123", "token_type": "bearer"}),
+    )
+    health_route = respx.get(f"{mod.URL}/api/v1/health").mock(return_value=httpx.Response(200))
+
+    mod.install_auth()
+
+    assert login_route.called
+    assert json.loads(login_route.calls.last.request.content) == {"username": "tester", "password": "pw"}
+
+    # This is exactly how the ~20 integration test files call httpx: a bare module-level
+    # call, no client, no explicit headers.
+    httpx.get(f"{mod.URL}/api/v1/health")
+
+    assert health_route.called
+    assert health_route.calls.last.request.headers["Authorization"] == "Bearer tok_login_123"
 
 
 def test_install_auth_is_idempotent(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -27,8 +27,8 @@ def _resolve_token() -> str | None:
 
     ``SPOOLMAN_TEST_TOKEN`` (a static token, e.g. the admin ``SPOOLMAN_API_TOKEN``) takes
     precedence. Otherwise, if ``SPOOLMAN_TEST_LOGIN`` (``user:pass``) is set, log in via
-    ``POST /auth/login`` to obtain one. Returns ``None`` when neither is configured, meaning
-    the suite should run unauthenticated exactly like it always has.
+    ``POST /api/v1/auth/login`` to obtain one. Returns ``None`` when neither is configured,
+    meaning the suite should run unauthenticated exactly like it always has.
     """
     token = os.environ.get("SPOOLMAN_TEST_TOKEN")
     if token:
@@ -36,9 +36,13 @@ def _resolve_token() -> str | None:
     login = os.environ.get("SPOOLMAN_TEST_LOGIN")
     if login and ":" in login:
         user, _, pw = login.partition(":")
-        resp = httpx.post(f"{URL}/auth/login", json={"username": user, "password": pw}, timeout=10)
+        # /api/v1/auth/login (not bare /auth/login -- the auth router is mounted under
+        # /api/v1, see spoolman/main.py's app.mount(.../api/v1, v1_app)). Response field is
+        # access_token, per spoolman/api/v1/auth.py's LoginResponse (also what
+        # client/src/utils/auth.ts reads: data.access_token).
+        resp = httpx.post(f"{URL}/api/v1/auth/login", json={"username": user, "password": pw}, timeout=10)
         resp.raise_for_status()
-        return resp.json()["token"]
+        return resp.json()["access_token"]
     return None
 
 
