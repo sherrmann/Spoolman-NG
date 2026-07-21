@@ -3,7 +3,7 @@
 import math
 import os
 import time
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from contextlib import contextmanager
 from enum import StrEnum
 from typing import Any
@@ -13,7 +13,71 @@ import pytest
 
 TIMEOUT = 30
 
-URL = "http://spoolman:" + os.environ.get("SPOOLMAN_PORT", "8000")
+URL = os.environ.get(
+    "SPOOLMAN_TEST_URL",
+    "http://spoolman:" + os.environ.get("SPOOLMAN_PORT", "8000"),
+).rstrip("/")
+
+_AUTH_INSTALLED = False
+_WRAPPED_HTTPX_FUNCS = ("get", "post", "put", "patch", "delete", "request")
+
+
+def _resolve_token() -> str | None:
+    """Resolve the bearer token to inject, if any.
+
+    ``SPOOLMAN_TEST_TOKEN`` (a static token, e.g. the admin ``SPOOLMAN_API_TOKEN``) takes
+    precedence. Otherwise, if ``SPOOLMAN_TEST_LOGIN`` (``user:pass``) is set, log in via
+    ``POST /auth/login`` to obtain one. Returns ``None`` when neither is configured, meaning
+    the suite should run unauthenticated exactly like it always has.
+    """
+    token = os.environ.get("SPOOLMAN_TEST_TOKEN")
+    if token:
+        return token
+    login = os.environ.get("SPOOLMAN_TEST_LOGIN")
+    if login and ":" in login:
+        user, _, pw = login.partition(":")
+        resp = httpx.post(f"{URL}/auth/login", json={"username": user, "password": pw}, timeout=10)
+        resp.raise_for_status()
+        return resp.json()["token"]
+    return None
+
+
+def install_auth() -> None:
+    """Inject ``Authorization: Bearer <token>`` into every module-level httpx call.
+
+    The integration tests call ``httpx.get/post/put/patch/delete`` directly (not through a
+    shared client), so wrapping those module-level functions is how a token gets attached to
+    every call site without editing any of the test files. No-op when no token is configured
+    (the suite then runs exactly as it did before this seam existed). Idempotent: safe to
+    call more than once without double-wrapping.
+    """
+    global _AUTH_INSTALLED  # noqa: PLW0603
+    if _AUTH_INSTALLED:
+        return
+    token = _resolve_token()
+    if not token:
+        return
+    header = {"Authorization": f"Bearer {token}"}
+    for name in _WRAPPED_HTTPX_FUNCS:
+        original: Callable[..., httpx.Response] = getattr(httpx, name)
+
+        def wrapper(
+            *args: Any,  # noqa: ANN401
+            __orig: Callable[..., httpx.Response] = original,
+            **kwargs: Any,  # noqa: ANN401
+        ) -> httpx.Response:
+            headers = {**header, **(kwargs.pop("headers", None) or {})}
+            return __orig(*args, headers=headers, **kwargs)
+
+        setattr(httpx, name, wrapper)
+    _AUTH_INSTALLED = True
+
+
+def ws_url(path: str) -> str:
+    """Build a websocket URL for ``path``, appending ``?token=`` when auth is configured."""
+    base = URL.replace("http://", "ws://").replace("https://", "wss://") + path
+    token = os.environ.get("SPOOLMAN_TEST_TOKEN")
+    return f"{base}?token={token}" if token else base
 
 
 class DbType(StrEnum):
@@ -38,12 +102,15 @@ def get_db_type() -> DbType:
 
 
 def pytest_sessionstart(session):  # noqa: ARG001, ANN001
-    """Wait for the server to start up."""
+    """Install auth (if configured) and wait for the server to start up."""
+    install_auth()
     start_time = time.time()
     while True:
         try:
             print("pytest: Waiting for spoolman to be available...")  # noqa: T201
-            response = httpx.get(URL, timeout=1)
+            # /api/v1/health is always unauthenticated, so this works whether or not
+            # install_auth() attached a bearer token above.
+            response = httpx.get(f"{URL}/api/v1/health", timeout=1)
             response.raise_for_status()
             print("pytest: Spoolman now seems to be up!")  # noqa: T201
         except httpx.HTTPError:  # noqa: PERF203
