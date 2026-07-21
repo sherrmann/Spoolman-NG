@@ -117,7 +117,7 @@ describe("Home render states", () => {
   it("shows the loading state while spools are loading", () => {
     setSpoolQuery({ isLoading: true });
     renderHome();
-    expect(screen.getByText("Loading...")).toBeInTheDocument();
+    expect(screen.getByText("loading")).toBeInTheDocument();
   });
 
   it("shows the error state (not onboarding) and refetches on refresh", async () => {
@@ -148,7 +148,7 @@ describe("Home render states", () => {
     expect(screen.getByText("buttons.create")).toBeInTheDocument();
     expect(screen.queryByText("home.home")).not.toBeInTheDocument();
     expect(screen.queryByText("home.welcome")).not.toBeInTheDocument();
-    expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
+    expect(screen.queryByText("loading")).not.toBeInTheDocument();
   });
 });
 

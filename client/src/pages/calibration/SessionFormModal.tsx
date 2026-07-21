@@ -13,12 +13,7 @@ interface Props {
   onClose: () => void;
 }
 
-const STATUS_OPTIONS: { label: string; value: CalibrationStatus }[] = [
-  { label: "Planned", value: "planned" },
-  { label: "In Progress", value: "in_progress" },
-  { label: "Complete", value: "complete" },
-  { label: "Archived", value: "archived" },
-];
+const STATUS_VALUES: CalibrationStatus[] = ["planned", "in_progress", "complete", "archived"];
 
 export const SessionFormModal = ({ open, mode, filamentId, initialValues, onSuccess, onClose }: Props) => {
   const t = useTranslate();
@@ -87,10 +82,10 @@ export const SessionFormModal = ({ open, mode, filamentId, initialValues, onSucc
     >
       <Form form={form} layout="vertical" onFinish={onFinish} initialValues={{ status: "planned" }}>
         <Form.Item name="status" label={t("calibration.fields.status")}>
-          <Select options={STATUS_OPTIONS} />
+          <Select options={STATUS_VALUES.map((s) => ({ value: s, label: t(`calibration.status.${s}`) }))} />
         </Form.Item>
         <Form.Item name="printer_name" label={t("calibration.fields.printer_name")}>
-          <Input maxLength={256} placeholder="e.g. Bambu X1C, Ender 3" />
+          <Input maxLength={256} placeholder={t("calibration.printer_name_placeholder")} />
         </Form.Item>
         <Form.Item name="nozzle_diameter" label={t("calibration.fields.nozzle_diameter")}>
           <InputNumber min={0.1} max={2.0} step={0.1} precision={2} addonAfter="mm" style={{ width: "100%" }} />

@@ -32,17 +32,8 @@ const STATUS_COLORS: Record<CalibrationStatus, string> = {
   archived: "default",
 };
 
-const STEP_LABELS: Record<string, string> = {
-  temperature: "Temperature",
-  volumetric_speed: "Volumetric Speed",
-  pressure_advance: "Pressure Advance",
-  flow_rate: "Flow Rate",
-  retraction: "Retraction",
-  tolerance: "Tolerance",
-  cornering: "Cornering",
-  input_shaping: "Input Shaping",
-  vfa: "VFA",
-};
+// Step-type display labels live in the shared calibration.step_types.* catalog keys,
+// resolved via t(`calibration.step_types.${stepType}`) at each render site.
 
 // ---- Inline confirm-delete button ----------------------------------------
 
@@ -52,6 +43,7 @@ interface ConfirmDeleteButtonProps {
 }
 
 function ConfirmDeleteButton({ onConfirm, size = "small" }: ConfirmDeleteButtonProps) {
+  const t = useTranslate();
   const [confirming, setConfirming] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -74,7 +66,7 @@ function ConfirmDeleteButton({ onConfirm, size = "small" }: ConfirmDeleteButtonP
   }, []);
 
   return (
-    <Tooltip title={confirming ? "Click again to confirm" : "Delete"}>
+    <Tooltip title={confirming ? t("calibration.confirm_delete.confirming") : t("calibration.confirm_delete.tooltip")}>
       <Button
         size={size}
         danger
@@ -83,7 +75,7 @@ function ConfirmDeleteButton({ onConfirm, size = "small" }: ConfirmDeleteButtonP
         onClick={handleClick}
         style={{ transition: "all 0.2s", minWidth: confirming ? 80 : undefined }}
       >
-        {confirming ? "Sure?" : undefined}
+        {confirming ? t("calibration.confirm_delete.short") : undefined}
       </Button>
     </Tooltip>
   );
@@ -116,7 +108,7 @@ function RecommendedSummary({ sessions }: { sessions: ICalibrationSession[] }) {
     if (!field) return String(value);
     if (field.type === "select" && field.options) {
       const opt = field.options.find((o) => o.value === value);
-      if (opt) return opt.label;
+      if (opt) return t(`calibration.field_labels.options.${value}`);
     }
     const unit = field.unit ? ` ${field.unit}` : "";
     return `${value}${unit}`;
@@ -141,7 +133,7 @@ function RecommendedSummary({ sessions }: { sessions: ICalibrationSession[] }) {
             .filter((k) => step.selected_values?.[k] !== undefined && step.selected_values?.[k] !== null)
             .map((k) => ({
               key: k,
-              label: config.outputFields.find((f) => f.key === k)?.label ?? k,
+              label: t(`calibration.field_labels.outputs.${k}`),
               value: resolveValue(stepType, k, step.selected_values![k]),
             }));
           if (vals.length === 0) return null;
@@ -230,7 +222,7 @@ function RecommendedSummary({ sessions }: { sessions: ICalibrationSession[] }) {
                   opacity: 0.5,
                 }}
               >
-                {STEP_LABELS[stepType] ?? stepType}
+                {t(`calibration.step_types.${stepType}`)}
               </Text>
               {content}
             </div>
@@ -275,9 +267,9 @@ function StepList({ session, onEditStep, onDeleteStep }: StepListProps) {
             }}
           >
             <span style={{ display: "inline-flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
-              <Tag style={{ margin: 0 }}>{STEP_LABELS[step.step_type] ?? step.step_type}</Tag>
+              <Tag style={{ margin: 0 }}>{t(`calibration.step_types.${step.step_type}`)}</Tag>
               {WIZARD_COPY[step.step_type as keyof typeof WIZARD_COPY]?.wikiUrl && (
-                <Tooltip title="OrcaSlicer wiki">
+                <Tooltip title={t("calibration.wiki.tooltip_short")}>
                   <a
                     href={WIZARD_COPY[step.step_type as keyof typeof WIZARD_COPY].wikiUrl}
                     target="_blank"
@@ -289,20 +281,20 @@ function StepList({ session, onEditStep, onDeleteStep }: StepListProps) {
                   </a>
                 </Tooltip>
               )}
-              {isSkipped && <Tag style={{ fontSize: 11, margin: 0 }}>Skipped</Tag>}
+              {isSkipped && <Tag style={{ fontSize: 11, margin: 0 }}>{t("calibration.step_status.skipped")}</Tag>}
               {hasRecommended && (
                 <Tag color="success" style={{ fontSize: 11, margin: 0 }}>
-                  ✓ Done
+                  {t("calibration.step_status.done")}
                 </Tag>
               )}
               {isIncomplete && (
                 <Tag color="warning" icon={<ExclamationCircleOutlined />} style={{ fontSize: 11, margin: 0 }}>
-                  Incomplete
+                  {t("calibration.step_status.incomplete")}
                 </Tag>
               )}
               {step.confidence && (
                 <Text type="secondary" style={{ fontSize: 11 }}>
-                  {step.confidence} confidence
+                  {t("calibration.confidence_display", { level: t(`calibration.confidence.${step.confidence}`) })}
                 </Text>
               )}
             </span>

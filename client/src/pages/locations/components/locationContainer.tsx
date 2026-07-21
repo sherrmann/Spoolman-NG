@@ -177,7 +177,7 @@ export function LocationContainer({ modalOpen, setModalOpen }: LocationContainer
   }
 
   if (isError) {
-    return <div>Failed to load spools</div>;
+    return <div>{t("locations.load_error")}</div>;
   }
 
   const addNewLocation = () => {

@@ -1,3 +1,4 @@
+import { useTranslate } from "@refinedev/core";
 import { useQuery } from "@tanstack/react-query";
 import { Spin, Typography } from "antd";
 import { apiFetch } from "../utils/authReloadHandler";
@@ -17,6 +18,7 @@ interface IInfo {
 }
 
 export const Version = () => {
+  const t = useTranslate();
   const infoResult = useQuery<IInfo>({
     queryKey: ["info"],
     queryFn: async () => {
@@ -33,7 +35,7 @@ export const Version = () => {
   }
 
   if (infoResult.isError || !infoResult.data) {
-    return <span>Unknown</span>;
+    return <span>{t("unknown")}</span>;
   }
 
   const info = infoResult.data;
