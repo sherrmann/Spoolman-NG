@@ -103,4 +103,6 @@ async def test_delete_filament_restricted_while_order_line_references_it(client:
     fid = await _filament(client)
     await client.post(ORDER, json={"lines": [{"filament_id": fid, "quantity": 1}]})
     blocked = await client.delete(f"{FIL}/{fid}")
-    assert blocked.status_code == 403, blocked.text
+    # 409, unified with shop delete's referenced-cannot-delete status (#320).
+    assert blocked.status_code == 409, blocked.text
+    assert "order line" in blocked.json()["message"]
