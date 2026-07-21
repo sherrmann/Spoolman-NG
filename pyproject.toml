@@ -61,6 +61,7 @@ dev = [
     "pytest-cov~=7.0",
     "httpx~=0.28.1",
     "poethepoet>=0.40.0",
+    "pyyaml>=6.0",  # render docker-compose overlays in tests_scenarios
     # Behavioral-testing toolkit (see TESTING_STRATEGY.md):
     "hypothesis~=6.100",   # property-based tests for codecs/parsers
     "time-machine~=2.14",  # freeze the clock for CalVer / date logic
