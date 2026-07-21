@@ -11,12 +11,10 @@ export default defineConfig({
   // it without a running server). Production builds stay map-free.
   build: {
     sourcemap: process.env.E2E_COVERAGE === "1" ? "inline" : false,
-    // The default 500 kB warning cannot be satisfied honestly: antd alone puts ~300 kB
-    // in the entry chunk (gzip ~440 kB total) and ~930 kB in the lazily loaded
-    // create/edit-pages chunk, and vendor-splitting was measured not to shrink the
-    // eager payload (#170). Keep the warning as a guard against real regressions by
-    // raising it just above today's largest chunk instead of silencing it.
-    chunkSizeWarningLimit: 1400,
+    // chunkSizeWarningLimit stays at the 500 kB default on purpose: the warning it
+    // prints for the entry and the create/edit-pages chunk is known and accepted as
+    // informational — antd alone makes both irreducibly >500 kB, and vendor-splitting
+    // was measured not to shrink the eager payload (#170). Don't raise the limit.
   },
   plugins: [
     react(),
