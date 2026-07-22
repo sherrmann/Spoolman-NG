@@ -29,6 +29,11 @@ DOCKER_LABEL = "spoolman-deploy-test"
 GITHUB_API = "https://api.github.com"
 
 
+def keep_resources() -> bool:
+    """Report whether SPOOLMAN_DEPLOY_KEEP asks the harness to leave containers/volumes for post-mortem."""
+    return bool(os.environ.get("SPOOLMAN_DEPLOY_KEEP"))
+
+
 def _tool(name: str) -> str:
     path = shutil.which(name)
     if path is None:
@@ -211,7 +216,7 @@ class Container:
 
     def remove(self) -> None:
         """Force-remove the container (kept alive when SPOOLMAN_DEPLOY_KEEP is set)."""
-        if os.environ.get("SPOOLMAN_DEPLOY_KEEP"):
+        if keep_resources():
             return  # leave the container around for post-mortem debugging
         run([_tool("docker"), "rm", "-f", self.name], check=False)
 
@@ -234,7 +239,7 @@ def docker_network(name: str) -> str:
 
 def remove_docker_network(name: str) -> None:
     """Remove a docker network (best-effort; kept with SPOOLMAN_DEPLOY_KEEP)."""
-    if os.environ.get("SPOOLMAN_DEPLOY_KEEP"):
+    if keep_resources():
         return
     run([_tool("docker"), "network", "rm", name], check=False)
 

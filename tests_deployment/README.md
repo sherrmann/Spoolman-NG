@@ -19,10 +19,13 @@ tests_deployment/run.sh helm         # chart install into a throwaway k3d cluste
 tests_deployment/run.sh octoprint    # OctoPrint-Spoolman plugin against token-protected NG
 tests_deployment/run.sh hacs         # Home Assistant Core loads the HACS integration
 tests_deployment/run.sh upgrade      # data survives previous-image -> latest on the same volume
+tests_deployment/run.sh guide        # wizard-generated Postgres/MariaDB sidecar compose files actually boot
 ```
 
 Requirements: `uv` (repo dev env), Docker for everything except `zip`, network access,
-~2 GB of image pulls on the first run.
+~2 GB of image pulls on the first run. `guide` additionally renders the wizard presets
+with Node (the `guide/` npm project), or reuses a pre-rendered matrix via
+`SPOOLMAN_GUIDE_MATRIX`; it skips when neither is available.
 
 ## Configuration (environment variables)
 
@@ -30,7 +33,8 @@ Requirements: `uv` (repo dev env), Docker for everything except `zip`, network a
 |---|---|---|
 | `SPOOLMAN_RELEASE_TAG` | latest release | Which published release to test |
 | `SPOOLMAN_ZIP_PATH` | unset | Test a locally built zip instead of a published release (GitHub-release-metadata tests skip) — used to verify fixes before they ship |
-| `SPOOLMAN_IMAGE` | `ghcr.io/sherrmann/spoolman-ng:latest` | Server image the add-on wraps |
+| `SPOOLMAN_IMAGE` | `ghcr.io/sherrmann/spoolman-ng:latest` | Server image the add-on wraps (and the `guide` compose stacks boot) |
+| `SPOOLMAN_GUIDE_MATRIX` | unset | Pre-rendered guide preset matrix for the `guide` suite; skips the Node render step |
 | `SPOOLMAN_ADDON_REPO_PATH` | sibling checkout or fresh clone | Path to `spoolman-ng-addons` |
 | `GITHUB_TOKEN` | `gh auth token` if available | Raises GitHub API rate limits |
 | `SPOOLMAN_DEPLOY_KEEP` | unset | Keep containers after a run for debugging |
@@ -58,7 +62,10 @@ the latest (or pinned) release.
 
 This directory holds the channel contracts plus the virtual-printer runtime e2e
 (`test_moonraker_runtime.py`, built on [playground/](playground/) — it skips unless
-the simulavr MCU image has been built once via `playground/up.sh`). Planned
+the simulavr MCU image has been built once via `playground/up.sh`) and the install
+guide's database-sidecar boot test (`test_guide_compose.py`, #341 — it brings the
+wizard's Postgres/MariaDB compose presets up for real, beyond the `docker compose
+config` syntax check the `guide-tests` PR job already does). Planned
 additions (tracked as tiers in #277, but organised here by what they test): the
 OctoPrint plugin, HA Core + the HACS integration, and k3d + Helm; the heavyweight
 appliance checks (HAOS Supervisor install, nested Proxmox, NixOS module) stay
