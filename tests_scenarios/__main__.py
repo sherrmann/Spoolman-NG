@@ -45,12 +45,15 @@ def cmd_list(_args: argparse.Namespace) -> None:
 def cmd_up(args: argparse.Namespace) -> None:
     """Bring a scenario up, wait for it to be healthy, and register it for ps/down/logs."""
     from tests_scenarios import runner  # noqa: PLC0415 -- keep `list`/`ps` free of docker imports
+    from tests_scenarios.seed import seed_sample  # noqa: PLC0415
 
-    # seeding is wired in by Task 14
     stack = runner.bring_up(_by_name(args.name))
+    seed_counts: dict[str, int] | None = None
     try:
         runner.wait_healthy(stack)
         runner.provision_users(stack)
+        if stack.scenario.seed:
+            seed_counts = seed_sample(stack)
     except Exception:
         runner.tear_down(stack)
         raise
@@ -63,7 +66,7 @@ def cmd_up(args: argparse.Namespace) -> None:
         "compose_file": str(stack.compose_file),
     }
     STATE.write_text(json.dumps(reg, indent=2))
-    _print_summary(stack)
+    _print_summary(stack, seed_counts)
 
 
 def cmd_down(args: argparse.Namespace) -> None:
@@ -229,7 +232,7 @@ def _raise(name: str) -> NoReturn:
     raise SystemExit(f"{name} is not running (see `poe scenario ps`)")
 
 
-def _print_summary(stack: ScenarioStack) -> None:
+def _print_summary(stack: ScenarioStack, seed_counts: dict[str, int] | None = None) -> None:
     """Print a human-friendly summary of a freshly brought-up stack."""
     tenv = stack.scenario.test_env()
     print("\n" + "=" * 60)
@@ -240,6 +243,9 @@ def _print_summary(stack: ScenarioStack) -> None:
     if "SPOOLMAN_TEST_LOGIN" in tenv:
         print(f"Login:     {tenv['SPOOLMAN_TEST_LOGIN']}  (POST /auth/login)")
     print(f"DB:        {stack.scenario.db} (project {stack.project})")
+    if seed_counts is not None:
+        counts = ", ".join(f"{n} {k}" for k, n in seed_counts.items())
+        print(f"Seeded:    {counts}")
     print(f"Stop:      poe scenario down {stack.scenario.name}")
     print("=" * 60)
 
