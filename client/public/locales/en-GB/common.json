@@ -132,7 +132,7 @@
       "dimensions": "Dimensions",
       "pageSizeMode": {
         "label": "Page Size",
-        "tooltip": "\"Automatic\" lets the printer/browser choose the page geometry (default). \"Match label size\" emits an explicit @page size from the paper dimensions above — use this for roll/label printers (e.g. Brother QL) so labels print at the right size and orientation. Best supported in Chrome.",
+        "tooltip": "\"Automatic\" lets the printer/browser choose the page geometry (default). \"Match label size\" emits an explicit @page size from the paper dimensions above \u2014 use this for roll/label printers (e.g. Brother QL) so labels print at the right size and orientation. Best supported in Chrome.",
         "auto": "Automatic (printer default)",
         "matchLabel": "Match label size"
       },
@@ -169,15 +169,15 @@
       "saveAsImage": "Save as Image",
       "saveAsZpl": "Download ZPL",
       "invalidGeometry": "The label grid does not fit on the paper",
-      "invalidGeometryHelp": "Margins and spacing leave no room for the labels. Reduce the margins, spacing, columns or rows — or pick a larger paper size.",
+      "invalidGeometryHelp": "Margins and spacing leave no room for the labels. Reduce the margins, spacing, columns or rows \u2014 or pick a larger paper size.",
       "contentClipped": "Some label content is cut off",
-      "contentClippedHelp": "At least one label’s content does not fit inside its label and will be clipped when printed. Reduce the text size, shorten the template, or use fewer columns/rows so each label is larger."
+      "contentClippedHelp": "At least one label\u2019s content does not fit inside its label and will be clipped when printed. Reduce the text size, shorten the template, or use fewer columns/rows so each label is larger."
     },
     "qrcode": {
       "button": "Print Labels",
       "title": "Label Printing",
       "template": "Label Template",
-      "templateHelp": "Use {} to insert values of the spool object as text. For example, {id} will be replaced with the spool id, or {filament.material} will be replaced with the material of the spool. if a value is missing it will be replaced with \"?\". A second set of {} can be used to remove this. In addition, any text between the sets of {} will be removed if the value is missing. For example, {Lot Nr: {lot_nr}} will only show the label if the spool has a lot number. Enclose text with double asterix ** to make it bold. Add a format after a colon: numbers like {remaining_weight:0.0} round to that many decimals, and dates like {registered:YYYY-MM-DD HH:mm} format the date/time in your local time zone. Start a line with {size:1.5} to scale that whole line (here 1.5×). Click the button to view a list of all available tags.",
+      "templateHelp": "Use {} to insert values of the spool object as text. For example, {id} will be replaced with the spool id, or {filament.material} will be replaced with the material of the spool. if a value is missing it will be replaced with \"?\". A second set of {} can be used to remove this. In addition, any text between the sets of {} will be removed if the value is missing. For example, {Lot Nr: {lot_nr}} will only show the label if the spool has a lot number. Enclose text with double asterix ** to make it bold. Add a format after a colon: numbers like {remaining_weight:0.0} round to that many decimals, and dates like {registered:YYYY-MM-DD HH:mm} format the date/time in your local time zone. Start a line with {size:1.5} to scale that whole line (here 1.5\u00d7). Click the button to view a list of all available tags.",
       "textSize": "Label Text Size",
       "textColumns": {
         "label": "Text Columns",
@@ -331,7 +331,7 @@
       "title": "Weigh Spools",
       "help": "Find a spool, enter its measurement, then Save & Next to weigh the next one without closing.",
       "spool": "Spool",
-      "search_placeholder": "Search by ID, filament, lot number…",
+      "search_placeholder": "Search by ID, filament, lot number\u2026",
       "save_next": "Save & Next",
       "done": "Done",
       "updated": "Updated {{name}}",
@@ -430,7 +430,7 @@
     "weight_history": {
       "title": "Weight history",
       "chart_label": "Measured weight over time",
-      "idle_gain": "Measured weight rose by {{grams}} g between measurements — the spool may have absorbed moisture. (Experimental)"
+      "idle_gain": "Measured weight rose by {{grams}} g between measurements \u2014 the spool may have absorbed moisture. (Experimental)"
     },
     "formats": {
       "last_used": "Last used {{date}}"
@@ -491,7 +491,7 @@
       "sparkle": "Sparkle"
     },
     "fields_help": {
-      "image": "A photo to recognise this filament by — e.g. the spool or the shop listing. Downscaled in the browser before upload; metadata such as GPS location is stripped.",
+      "image": "A photo to recognise this filament by \u2014 e.g. the spool or the shop listing. Downscaled in the browser before upload; metadata such as GPS location is stripped.",
       "name": "Filament name, to distinguish this filament type among others from the same manufacturer. Should contain the colour for example.",
       "material": "E.g. PLA, ABS, PETG, etc.",
       "price": "Price of a full spool.",
@@ -501,8 +501,8 @@
       "reserve_count": "Number of unopened spare spools you keep on hand, tracked without creating a spool for each one.",
       "article_number": "E.g. EAN, UPC, etc.",
       "multi_color_direction": "Filaments can have multiple colours in two ways: either through coextrusion, like dual-colour filaments with consistent multi-colours, or through longitudinal colour changes, like gradient filaments that shift colours along the spool.",
-      "settings_extruder_temp_range": "Manufacturer's recommended extruder temperature range (min–max). Optional, leave blank if you only have a single value.",
-      "settings_bed_temp_range": "Manufacturer's recommended bed temperature range (min–max). Optional, leave blank if you only have a single value."
+      "settings_extruder_temp_range": "Manufacturer's recommended extruder temperature range (min\u2013max). Optional, leave blank if you only have a single value.",
+      "settings_bed_temp_range": "Manufacturer's recommended bed temperature range (min\u2013max). Optional, leave blank if you only have a single value."
     },
     "titles": {
       "create": "Create Filament",
@@ -562,7 +562,7 @@
     },
     "swatch": {
       "title": "3D-printable swatch",
-      "description": "Download a {{width}} × {{height}} mm printable sample card carrying this filament's label info. The card body is printed in the filament itself; the text and QR code form a raised one-layer marking in {{color}}, picked for contrast against the filament colour.",
+      "description": "Download a {{width}} \u00d7 {{height}} mm printable sample card carrying this filament's label info. The card body is printed in the filament itself; the text and QR code form a raised one-layer marking in {{color}}, picked for contrast against the filament colour.",
       "print_hint": "Print the whole card in this filament with a filament change to {{color}} at the last layer, or import the embedded colours in a multi-colour slicer (e.g. Bambu Studio). The QR code stays scannable either way.",
       "marking_black": "black",
       "marking_white": "white",
@@ -711,7 +711,7 @@
         "label": "Default swatch style",
         "tooltip": "The style preselected when downloading a 3D-printable filament swatch. New styles can be contributed to Spoolman in client/src/utils/swatch/styles.ts."
       },
-      "preview_description": "Preview with two example filaments — the text and QR code are automatically printed in black or white, whichever contrasts best with the filament colour:"
+      "preview_description": "Preview with two example filaments \u2014 the text and QR code are automatically printed in black or white, whichever contrasts best with the filament colour:"
     },
     "import_export": {
       "tab": "Import / Export",
@@ -733,7 +733,7 @@
         "skip_existing": "Skip existing"
       },
       "dry_run": "Dry run",
-      "dry_run_prefix": "Dry run —",
+      "dry_run_prefix": "Dry run \u2014",
       "choose_file": "Choose file",
       "validate": "Validate",
       "import_button": "Import",
@@ -746,7 +746,7 @@
         "help": "Upload a sliced .3mf from Bambu Studio or OrcaSlicer to read how much of each filament the print used, match it to your spools, and subtract the usage in one step.",
         "choose_file": "Choose .3mf file",
         "no_filaments": "No filament usage was found in this 3MF.",
-        "no_match": "No matching spool — pick one",
+        "no_match": "No matching spool \u2014 pick one",
         "col_filament": "Print filament",
         "col_used": "Used",
         "col_spool": "Spool to adjust",
@@ -766,7 +766,7 @@
       "sidebar_tab": "Sidebar Links",
       "spool_tab": "Spool Actions",
       "sidebar_description": "<p>Add your own links to the left sidebar, e.g. to your printer's Mainsail or Fluidd page. They open in a new tab.</p>",
-      "spool_description": "<p>Add custom action buttons to each spool. The URL can include the spool's fields in curly braces — {id}, {filament_id}, {location}, {lot_nr}, {comment} — which are filled in per spool, so tools like nfc2klipper or Moonraker's active-spool endpoint are one click away.</p>",
+      "spool_description": "<p>Add custom action buttons to each spool. The URL can include the spool's fields in curly braces \u2014 {id}, {filament_id}, {location}, {lot_nr}, {comment} \u2014 which are filled in per spool, so tools like nfc2klipper or Moonraker's active-spool endpoint are one click away.</p>",
       "name": "Name",
       "url": "URL",
       "url_template": "URL Template",
@@ -777,7 +777,7 @@
     },
     "extra_fields": {
       "tab": "Extra Fields",
-      "description": "<p>Here you can add extra custom fields to your entities.</p><p>Once a field is added, you can not change its key or type, and for choice type fields you can not remove choices or change the multi choice state. If you remove a field, the associated data for all entities will be deleted.</p><p>The key is what other programs read/write the data as, so if your custom field is supposed to integrate with a third-party program, make sure to set it correctly. Default value is only applied to new items.</p><p>Extra fields can be shown and sorted in the table views. Choice and boolean fields expose filter options there as well, and all extra field types support filtering for empty values.</p><p>For spool fields, enable \"Copy from Filament\" to have a new spool inherit the value from a filament field with the same key at creation time (unless the spool sets its own).</p><p>A \"Link\" field stores a short value per item (e.g. an article number) and turns it into a clickable link using the Link URL template — put {} where the value goes, e.g. https://www.amazon.com/dp/{}.</p>",
+      "description": "<p>Here you can add extra custom fields to your entities.</p><p>Once a field is added, you can not change its key or type, and for choice type fields you can not remove choices or change the multi choice state. If you remove a field, the associated data for all entities will be deleted.</p><p>The key is what other programs read/write the data as, so if your custom field is supposed to integrate with a third-party program, make sure to set it correctly. Default value is only applied to new items.</p><p>Extra fields can be shown and sorted in the table views. Choice and boolean fields expose filter options there as well, and all extra field types support filtering for empty values.</p><p>For spool fields, enable \"Copy from Filament\" to have a new spool inherit the value from a filament field with the same key at creation time (unless the spool sets its own).</p><p>A \"Link\" field stores a short value per item (e.g. an article number) and turns it into a clickable link using the Link URL template \u2014 put {} where the value goes, e.g. https://www.amazon.com/dp/{}.</p>",
       "params": {
         "key": "Key",
         "name": "Name",
@@ -808,6 +808,37 @@
       "key_not_changed": "Please change the key to something else.",
       "delete_confirm": "Delete field {{name}}?",
       "delete_confirm_description": "This will delete the field and all associated data for all entities."
+    },
+    "update": {
+      "tab": "Update",
+      "title": "Software Update",
+      "install_type": {
+        "label": "Installation Type",
+        "native": "Native",
+        "docker": "Docker",
+        "ha_addon": "Home Assistant Add-on",
+        "unknown": "Unknown"
+      },
+      "current_version": {
+        "label": "Current Version",
+        "value": "Loading..."
+      },
+      "latest_version": {
+        "label": "Latest Version"
+      },
+      "available": "A newer version is available!",
+      "update_button": "Update Now",
+      "admin_required": "Admin privileges required to update.",
+      "instructions": {
+        "label": "Update Instructions"
+      },
+      "button_disabled": {
+        "title": "Update Button Disabled",
+        "description": "Update button is disabled. Set SPOOLMAN_ALLOW_UI_UPDATE=TRUE to enable when no authentication is configured."
+      },
+      "error_title": "Error Loading Update Info",
+      "unavailable_title": "Update Info Unavailable",
+      "unavailable_description": "Could not retrieve update information."
     }
   },
   "documentTitle": {
@@ -854,7 +885,7 @@
     "error_exists": "Location already exists",
     "fields": {
       "button": "Custom fields",
-      "title": "Custom fields — {{name}}",
+      "title": "Custom fields \u2014 {{name}}",
       "saved": "Location fields saved",
       "save_error": "Failed to save location fields",
       "load_error": "Failed to load location"
