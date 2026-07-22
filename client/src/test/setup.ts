@@ -57,6 +57,7 @@ afterEach(async () => {
   cleanup();
   localStorage.clear();
   delete (window as Partial<Window>).SPOOLMAN_BASE_PATH;
+  delete (window as Partial<Window>).SPOOLMAN_HA_INGRESS;
   for (let round = 0; round < 2; round++) {
     await Promise.resolve();
     await new Promise((resolve) => setTimeout(resolve, 0));

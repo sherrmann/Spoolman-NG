@@ -1,6 +1,7 @@
 declare global {
   interface Window {
     SPOOLMAN_BASE_PATH: string;
+    SPOOLMAN_HA_INGRESS?: boolean;
   }
 }
 
@@ -19,6 +20,21 @@ export function getBasePath(): string {
   } else {
     return "";
   }
+}
+
+/**
+ * Whether this page was served through Home Assistant ingress.
+ *
+ * Set by the backend's /config.js when it resolves the base path from HA's per-session
+ * X-Ingress-Path header. Under ingress the base path carries a rotating session token, so
+ * anything that needs a *stable* path — service-worker registration in particular — must be
+ * skipped; everything else (router, API, websocket, i18n) just follows getBasePath().
+ *
+ * @return {boolean} True only under HA ingress; false everywhere else (direct-port access
+ * to an ingress-enabled add-on included).
+ */
+export function isHaIngress(): boolean {
+  return window.SPOOLMAN_HA_INGRESS === true;
 }
 
 /**

@@ -618,6 +618,32 @@ def get_nfc_device_path() -> str | None:
     return os.getenv("SPOOLMAN_NFC_DEVICE")
 
 
+def is_ha_ingress() -> bool:
+    """Get whether Home Assistant ingress support is enabled.
+
+    Only the HA add-on's run script should set this (issue #211). When enabled, the three
+    client-facing path-dependent responses (index.html, the PWA manifest and /config.js) are
+    rendered per-request for the ingress session prefix that HA passes in the X-Ingress-Path
+    header (see spoolman/client.py). Requests without that header — direct host-port access —
+    are byte-identical to today, and non-HA deployments must leave this unset so the header is
+    never reflected at all.
+
+    Returns False if no environment variable was set.
+
+    Returns:
+        bool: Whether HA ingress support is enabled.
+
+    """
+    enabled = os.getenv("SPOOLMAN_HA_INGRESS", "FALSE").upper()
+    if enabled in {"FALSE", "0"}:
+        return False
+    if enabled in {"TRUE", "1"}:
+        return True
+    raise ValueError(
+        f"Failed to parse SPOOLMAN_HA_INGRESS variable: Unknown value '{enabled}'.",
+    )
+
+
 def get_base_path() -> str:
     """Get the base path.
 
