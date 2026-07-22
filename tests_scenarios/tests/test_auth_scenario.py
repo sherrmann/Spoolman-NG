@@ -6,6 +6,7 @@ websocket tests through ``conftest.ws_url()`` so they carry ``?token=`` -- the s
 websocket-event tests too (previously they built their URLs inline and would have been
 rejected under token auth).
 """
+
 from __future__ import annotations
 
 import shutil

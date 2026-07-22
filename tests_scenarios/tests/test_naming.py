@@ -1,4 +1,5 @@
 """Tests for the naming module (free_port and project_name helpers)."""
+
 import re
 
 from tests_scenarios.naming import free_port, project_name

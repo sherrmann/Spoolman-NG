@@ -18,6 +18,7 @@ by hand: four weight-6 scenarios under budget 6 hang indefinitely with that appr
 `Condition.wait_for` below reserves a scenario's whole weight atomically in one step, which
 sidesteps that fragmentation entirely.
 """
+
 from __future__ import annotations
 
 import asyncio

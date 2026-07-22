@@ -1,4 +1,5 @@
 """Fast, no-docker unit tests for the Playwright e2e env-building helper."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -26,7 +27,10 @@ def test_build_env_no_proxy_no_auth() -> None:
 
 def test_build_env_subpath_token_auth() -> None:
     scenario = Scenario(
-        "postgres-auth-nginx-subpath-e2e-unittest", Db.POSTGRES, Auth.TOKEN, subpath="spoolman",
+        "postgres-auth-nginx-subpath-e2e-unittest",
+        Db.POSTGRES,
+        Auth.TOKEN,
+        subpath="spoolman",
     )
     stack = _dummy_stack(scenario, host_port=23456)
     env = _build_env(stack)

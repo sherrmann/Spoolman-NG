@@ -1,4 +1,5 @@
 """Render a temporary docker-compose file for a scenario (v1 syntax)."""
+
 from __future__ import annotations
 
 import tempfile
@@ -111,7 +112,6 @@ def render(scenario: Scenario, *, host_port: int, project: str, image: str = "sp
         config_path.write_text(config_text)
         out["services"]["proxy"] = _build_proxy_service(scenario, host_port=host_port, config_path=config_path)
 
-    with tempfile.NamedTemporaryFile(
-            prefix=f"{project}-", suffix=".yml", delete=False, mode="w", dir=tmp_dir) as fd:
+    with tempfile.NamedTemporaryFile(prefix=f"{project}-", suffix=".yml", delete=False, mode="w", dir=tmp_dir) as fd:
         fd.write(yaml.safe_dump(out))
     return Path(fd.name)

@@ -6,6 +6,7 @@ sidecar. `wait_healthy` hits the health endpoint *through the proxy*, at the sce
 (Spoolman mounts everything under `SPOOLMAN_BASE_PATH` and expects to receive that prefix, so a
 prefix-stripping proxy config would 404).
 """
+
 from __future__ import annotations
 
 import shutil

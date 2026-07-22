@@ -1,4 +1,5 @@
 """Lifecycle for a single scenario stack (docker-compose v1)."""
+
 from __future__ import annotations
 
 import os
@@ -38,8 +39,15 @@ def ensure_image(arch: Arch) -> str:
     if arch is Arch.AMD64:
         return AMD64_IMAGE
     tag = f"spoolman:scn-{arch}"
-    if subprocess.run(["docker", "image", "inspect", tag], check=False,  # noqa: S607
-                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0:
+    if (
+        subprocess.run(
+            ["docker", "image", "inspect", tag],  # noqa: S607
+            check=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        ).returncode
+        == 0
+    ):
         return tag
     subprocess.run(
         ["docker", "run", "--privileged", "--rm", "tonistiigi/binfmt", "--install", "all"],  # noqa: S607

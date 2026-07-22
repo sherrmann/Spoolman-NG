@@ -1,4 +1,5 @@
 """Lean deployment contract: health + one CRUD round-trip + (if auth) reject-without-token."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -41,8 +42,7 @@ def run(stack: ScenarioStack) -> None:
         if anon.status_code not in (401, 403):
             raise AssertionError(f"auth not enforced: anon vendor list => {anon.status_code}")
 
-    created = httpx.post(f"{stack.url}/api/v1/vendor", json={"name": "contract-vendor"},
-                          headers=headers, timeout=10)
+    created = httpx.post(f"{stack.url}/api/v1/vendor", json={"name": "contract-vendor"}, headers=headers, timeout=10)
     created.raise_for_status()
     vid = created.json()["id"]
     got = httpx.get(f"{stack.url}/api/v1/vendor/{vid}", headers=headers, timeout=10)

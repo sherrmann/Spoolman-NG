@@ -6,6 +6,7 @@ account unauthenticated (zero users => anonymous-admin per ``spoolman/auth.py``)
 integration suite's vendor subset plus the websocket tests (which now carry the login-resolved
 token via ``conftest.ws_url()``) all pass under real per-user login auth.
 """
+
 from __future__ import annotations
 
 import shutil

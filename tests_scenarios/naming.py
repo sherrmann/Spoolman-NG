@@ -1,4 +1,5 @@
 """Pure, docker-free helpers: free ports and unique compose project names."""
+
 from __future__ import annotations
 
 import secrets

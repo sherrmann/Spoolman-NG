@@ -1,4 +1,5 @@
 """Tests for the `poe scenario` CLI (host-only: no docker, no network)."""
+
 from __future__ import annotations
 
 import pytest

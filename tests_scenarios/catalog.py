@@ -1,4 +1,5 @@
 """Scenario definitions: the axes, the curated core set, and expansion."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -106,11 +107,24 @@ class Scenario:
 
 CORE: list[Scenario] = [
     Scenario("sqlite-bare", Db.SQLITE, tags=("core",)),
-    Scenario("postgres-auth-nginx-subpath", Db.POSTGRES, Auth.TOKEN, Proxy.NGINX,
-             subpath="spoolman", seed=True, tags=("core", "auth", "proxy")),
+    Scenario(
+        "postgres-auth-nginx-subpath",
+        Db.POSTGRES,
+        Auth.TOKEN,
+        Proxy.NGINX,
+        subpath="spoolman",
+        seed=True,
+        tags=("core", "auth", "proxy"),
+    ),
     Scenario("mariadb-traefik-root", Db.MARIADB, Auth.NONE, Proxy.TRAEFIK, tags=("core", "proxy")),
-    Scenario("cockroach-users-caddy-subpath", Db.COCKROACH, Auth.USERS, Proxy.CADDY,
-             subpath="spoolman", tags=("core", "auth", "proxy")),
+    Scenario(
+        "cockroach-users-caddy-subpath",
+        Db.COCKROACH,
+        Auth.USERS,
+        Proxy.CADDY,
+        subpath="spoolman",
+        tags=("core", "auth", "proxy"),
+    ),
     Scenario("armv7-sqlite", Db.SQLITE, arch=Arch.ARMV7, tags=("core", "arch")),
 ]
 
@@ -135,6 +149,5 @@ def expand(
                 for arch in arches:
                     sub = "spoolman" if proxy is not Proxy.NONE else ""
                     name = f"{db}-{auth}-{proxy}-{arch}"
-                    out.append(Scenario(name, db, auth, proxy, subpath=sub, arch=arch,
-                                        tags=tuple(tags or ())))
+                    out.append(Scenario(name, db, auth, proxy, subpath=sub, arch=arch, tags=tuple(tags or ())))
     return out

@@ -4,6 +4,7 @@
 the scenario requires) so `poe scenario up <name>` for a `seed=True` scenario leaves behind a
 stack with realistic-looking data instead of an empty database.
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

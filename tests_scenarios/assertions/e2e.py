@@ -1,4 +1,5 @@
 """Drive Playwright's target-external mode against a live scenario stack."""
+
 from __future__ import annotations
 
 import os

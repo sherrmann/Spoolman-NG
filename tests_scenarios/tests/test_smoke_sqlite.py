@@ -1,4 +1,5 @@
 """End-to-end smoke test: bring up sqlite-bare, run the contract, tear down."""
+
 from __future__ import annotations
 
 import shutil

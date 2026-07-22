@@ -1,4 +1,5 @@
 """Tests for tests_scenarios.catalog: enums, Scenario, CORE, and expand()."""
+
 from tests_scenarios.catalog import CORE, Arch, Auth, Db, Proxy, Scenario, expand
 
 

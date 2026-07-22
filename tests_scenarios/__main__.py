@@ -83,7 +83,11 @@ def cmd_down(args: argparse.Namespace) -> None:
         if not info:
             continue
         stack = runner.ScenarioStack(
-            Scenario(name, Db.SQLITE), info["project"], info["port"], info["url"], Path(info["compose_file"]),
+            Scenario(name, Db.SQLITE),
+            info["project"],
+            info["port"],
+            info["url"],
+            Path(info["compose_file"]),
         )
         runner.tear_down(stack)
         reg.pop(name, None)

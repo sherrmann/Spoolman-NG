@@ -1,4 +1,5 @@
 """Tests for tests_scenarios.scheduler.run_many (pure -- no docker, no network)."""
+
 from __future__ import annotations
 
 import asyncio
