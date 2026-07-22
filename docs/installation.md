@@ -127,6 +127,28 @@ local `uv/` toolchain are preserved), re-syncs Python dependencies (keeping the
 NFC extra if present), and restarts the `Spoolman` systemd service when one is
 installed. Klipper users can have Moonraker do this automatically instead:
 
+#### From the web UI
+
+When the daily update check finds a newer release, the version indicator in the
+header shows **update available** — clicking it (or the button on the update
+notification) opens a dialog with a one-click **Update now** button on native
+installs. It runs the same `scripts/update.sh` in the background; under systemd
+the service restarts itself, otherwise restart Spoolman manually once it
+finishes.
+
+Because triggering the updater from a browser is remote code execution by
+design, it is off by default on an open instance:
+
+- With authentication configured (`SPOOLMAN_API_TOKEN` or user accounts), the
+  button is **admin-only**.
+- With **no** authentication configured, the button stays disabled unless you
+  set `SPOOLMAN_ALLOW_UI_UPDATE=TRUE` — an open LAN instance must not expose a
+  code-swap endpoint out of the box.
+
+Docker and Home Assistant add-on installs don't get a self-update button (they
+update through their own tooling); the dialog shows the right steps for each
+instead.
+
 ### One-click updates from Moonraker (Klipper users)
 
 Two steps. First allow Moonraker to restart the service by adding `Spoolman` on

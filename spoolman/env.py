@@ -538,6 +538,43 @@ def is_update_check_enabled() -> bool:
     )
 
 
+def is_ui_update_allowed() -> bool:
+    """Get whether the UI is allowed to trigger a native self-update (#294).
+
+    Triggering ``scripts/update.sh`` from the web is remote code execution by design, so it
+    is *never* exposed by default on an open (no-auth) instance. The action is admin-gated
+    whenever accounts or a machine token exist; when no authentication is configured at all,
+    it stays disabled unless this variable is explicitly set to ``TRUE`` — an open LAN
+    instance must not offer a code-swap endpoint out of the box.
+
+    Returns False if no environment variable was set (opt-in). Accepts TRUE/1 or FALSE/0.
+
+    Returns:
+        bool: Whether the UI self-update action may run without configured authentication.
+
+    """
+    allowed = os.getenv("SPOOLMAN_ALLOW_UI_UPDATE", "FALSE").upper()
+    if allowed in {"FALSE", "0"}:
+        return False
+    if allowed in {"TRUE", "1"}:
+        return True
+    raise ValueError(
+        f"Failed to parse SPOOLMAN_ALLOW_UI_UPDATE variable: Unknown value '{allowed}'.",
+    )
+
+
+def is_ha_addon() -> bool:
+    """Check if we are running as a Home Assistant add-on.
+
+    The Supervisor injects ``SUPERVISOR_TOKEN`` into every managed add-on container, so its
+    presence is the canonical marker (HA add-ons also run under Docker, so this must be
+    checked *before* :func:`is_docker` when deciding the install type — see
+    ``spoolman.updateaction``).
+    """
+    token = os.getenv("SUPERVISOR_TOKEN")
+    return token is not None and token.strip() != ""
+
+
 def is_tigertag_enabled() -> bool:
     """Get whether TigerTag external database integration is enabled.
 

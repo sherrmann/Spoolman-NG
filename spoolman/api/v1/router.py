@@ -4,16 +4,18 @@
 
 import asyncio
 import logging
+from typing import Annotated
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import Depends, FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse
 from starlette.requests import Request
 from starlette.responses import Response
 
-from spoolman import env, updatecheck
-from spoolman.auth import install_auth
+from spoolman import env, updateaction, updatecheck
+from spoolman.auth import Principal, install_auth
 from spoolman.database.database import backup_global_db
 from spoolman.exceptions import ItemNotFoundError
+from spoolman.updateaction import InstallType
 from spoolman.ws import websocket_manager
 
 from . import (
@@ -68,6 +70,7 @@ async def itemnotfounderror_exception_handler(_request: Request, exc: ItemNotFou
 async def info() -> models.Info:
     """Return general info about the API."""
     update_status = updatecheck.get_status()
+    gate = updateaction.evaluate_gate()
     return models.Info(
         version=env.get_version(),
         debug_mode=env.is_debug_mode(),
@@ -82,6 +85,8 @@ async def info() -> models.Info:
         latest_version=update_status.latest_version,
         update_available=update_status.update_available,
         release_url=update_status.release_url,
+        install_type=gate.install_type.value,
+        update_action_available=gate.action_available,
     )
 
 
@@ -108,6 +113,58 @@ async def backup():  # noqa: ANN201
             content={"message": "Backup failed. See server logs for more information."},
         )
     return models.BackupResponse(path=str(path))
+
+
+# Trigger a native self-update (#294). This runs bundled code (scripts/update.sh), so it is
+# admin-gated (require_admin) *and* refused on an open, no-auth instance unless
+# SPOOLMAN_ALLOW_UI_UPDATE=TRUE — see spoolman/updateaction.py for the full security rationale.
+# Only native installs expose it; Docker/HA callers get a 409 pointing at their own tooling.
+@app.post(
+    "/update",
+    status_code=202,
+    description=(
+        "Trigger the bundled native updater (scripts/update.sh). Admin-only; only available on native "
+        "installs, and disabled on an open (no-auth) instance unless SPOOLMAN_ALLOW_UI_UPDATE=TRUE."
+    ),
+    response_model=models.UpdateResponse,
+    responses={403: {"model": models.Message}, 409: {"model": models.Message}},
+)
+async def trigger_update(
+    body: models.UpdateRequest,
+    _admin: Annotated[Principal, Depends(auth.require_admin)],
+) -> models.UpdateResponse:
+    """Launch the native updater in the background (see spoolman/updateaction.py)."""
+    gate = updateaction.evaluate_gate()
+
+    if gate.install_type is not InstallType.NATIVE:
+        # No bundled updater to run; the client shows the right instructions per install type.
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"Self-update from the UI is not available for a '{gate.install_type.value}' install. "
+                "Update via your platform's own tooling instead."
+            ),
+        )
+    if not gate.gate_open:
+        raise HTTPException(
+            status_code=403,
+            detail=(
+                "UI-triggered updates are disabled on this instance. Configure authentication, or set "
+                "SPOOLMAN_ALLOW_UI_UPDATE=TRUE to enable the update action on an open instance."
+            ),
+        )
+
+    try:
+        updateaction.trigger_update(body.tag)
+    except ValueError as exc:
+        # Belt-and-braces: the request model already rejects a malformed tag with 422.
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    return models.UpdateResponse(
+        status="started",
+        target=body.tag,
+        restart_managed=updateaction.restart_is_managed(),
+    )
 
 
 @app.websocket(

@@ -1,6 +1,7 @@
 import { useTranslate } from "@refinedev/core";
 import { Button, notification } from "antd";
 import { useEffect, useRef } from "react";
+import { useUpdateModal } from "../utils/updateAction";
 import { useInfo } from "../utils/useInfo";
 
 // Remembers the newest version the user was already told about, so the toast fires at
@@ -16,6 +17,7 @@ const NOTIFICATION_KEY = "spoolman-update-available";
 export const UpdateNotification = () => {
   const t = useTranslate();
   const { data: info } = useInfo();
+  const showUpdateModal = useUpdateModal((s) => s.show);
   // Guard against re-opening on every render while the same version is current.
   const shownFor = useRef<string | null>(null);
 
@@ -47,29 +49,41 @@ export const UpdateNotification = () => {
       }
     };
 
+    // Native installs (with the action gated on) get an "Update" affordance; every other
+    // install type gets "How to update". Both open the per-install-type dialog (#294).
+    const actionLabel =
+      info.install_type === "native" && info.update_action_available
+        ? t("update.action.open")
+        : t("update.action.howTo");
+
     notification.open({
       key: NOTIFICATION_KEY,
       message: t("update.notification.title"),
       description: t("update.notification.description", { version }),
       duration: 0,
       onClose: remember,
-      btn: info.release_url ? (
+      btn: (
         <Button
           type="primary"
           size="small"
-          href={info.release_url}
-          target="_blank"
-          rel="noopener noreferrer"
           onClick={() => {
             remember();
             notification.destroy(NOTIFICATION_KEY);
+            showUpdateModal();
           }}
         >
-          {t("update.notification.viewRelease")}
+          {actionLabel}
         </Button>
-      ) : undefined,
+      ),
     });
-  }, [info?.update_available, info?.latest_version, info?.release_url, t]);
+  }, [
+    info?.update_available,
+    info?.latest_version,
+    info?.install_type,
+    info?.update_action_available,
+    showUpdateModal,
+    t,
+  ]);
 
   return null;
 };
