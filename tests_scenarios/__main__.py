@@ -74,6 +74,8 @@ def cmd_down(args: argparse.Namespace) -> None:
     from tests_scenarios import runner  # noqa: PLC0415 -- keep `list`/`ps` free of docker imports
     from tests_scenarios.catalog import Db, Scenario  # noqa: PLC0415
 
+    if not args.all and not args.name:
+        raise SystemExit("specify a scenario name or --all (see `poe scenario ps`)")
     reg = _registry()
     names = list(reg) if args.all else [args.name]
     for name in names:

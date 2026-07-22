@@ -170,7 +170,7 @@ uv run pytest tests_scenarios/ -m slow          # just the armv7 self-test
 ```
 
 Tests that need Docker (`test_smoke_sqlite.py`, `test_auth_scenario.py`,
-`test_proxy_scenarios.py`, `test_users_scenario.py`, `test_arch_scenario.py`) each
+`test_proxy_scenarios.py`, `test_users_scenario.py`, `test_seed.py`, `test_arch_scenario.py`) each
 `skipif` themselves when `docker` isn't on `PATH`, so the no-docker unit tests
 (`test_cli.py`, `test_catalog.py`, `test_naming.py`, `test_scheduler.py`, and the env-builder
 unit tests in `test_integration_engine.py`/`test_e2e_engine.py`) still run on a machine
