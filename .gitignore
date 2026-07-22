@@ -224,3 +224,6 @@ mutants/
 
 # Scenario harness: running-stack registry (host-local, ephemeral)
 tests_scenarios/.state/
+
+# Superpowers process artifacts (specs/plans) are personal workflow docs, not repo content
+docs/superpowers/

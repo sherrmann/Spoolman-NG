@@ -1,6 +1,5 @@
 """Weekly upstream watch: report new Donkie/Spoolman commits/issues/PRs since the watermark.
 
-Design: docs/superpowers/specs/2026-07-15-org-process-layer-design.md (section B).
 IMPORTANT: generated bodies must backtick upstream refs — listings must not cross-link upstream.
 """
 

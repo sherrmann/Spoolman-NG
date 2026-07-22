@@ -1,6 +1,6 @@
 # Org migration Phase 0 — trial findings
 
-**Status:** IN PROGRESS (Stages A–C running; pilot transfer not started) · **Trial org:** `spoolman-ng-trial` · **Started:** 2026-07-16 · **Design:** `docs/superpowers/specs/2026-07-15-org-process-layer-design.md` §D · **Raw evidence:** `~/spoolman/phase0-evidence/` (local, not committed)
+**Status:** IN PROGRESS (Stages A–C running; pilot transfer not started) · **Trial org:** `spoolman-ng-trial` · **Started:** 2026-07-16 · **Raw evidence:** `~/spoolman/phase0-evidence/` (local, not committed)
 
 This doc is the input to the Phase 0→1 review gate. Nothing in Phases 1–2 (real org, SpoolmanDB, main repo) starts until this is reviewed.
 
