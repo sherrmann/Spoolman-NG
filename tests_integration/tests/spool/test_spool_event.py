@@ -8,7 +8,7 @@ import httpx
 import pytest
 import websockets
 
-from ..conftest import URL
+from ..conftest import URL, ws_url
 
 
 @pytest.mark.asyncio
@@ -22,11 +22,11 @@ async def test_use_weight_websocket_has_weight_delta(random_filament: dict[str, 
     result.raise_for_status()
     spool = result.json()
     spool_id = spool["id"]
-    ws_url = URL.replace("http://", "ws://").replace("https://", "wss://") + f"/api/v1/spool/{spool_id}"
+    endpoint = ws_url(f"/api/v1/spool/{spool_id}")
     use_weight = 6.9
 
     try:
-        async with websockets.connect(ws_url) as ws:
+        async with websockets.connect(endpoint) as ws:
             # keep the socket loop healthy before triggering update
             await ws.send("ping")
             check = json.loads(await asyncio.wait_for(ws.recv(), timeout=2))
@@ -66,9 +66,9 @@ async def test_use_weight_websocket_delta_is_clamped(random_filament: dict[str, 
     spool_id = spool["id"]
     httpx.put(f"{URL}/api/v1/spool/{spool_id}/use", json={"use_weight": 10}).raise_for_status()
 
-    ws_url = URL.replace("http://", "ws://").replace("https://", "wss://") + f"/api/v1/spool/{spool_id}"
+    endpoint = ws_url(f"/api/v1/spool/{spool_id}")
     try:
-        async with websockets.connect(ws_url) as ws:
+        async with websockets.connect(endpoint) as ws:
             await ws.send("ping")
             check = json.loads(await asyncio.wait_for(ws.recv(), timeout=2))
             assert check["status"] == "healthy"

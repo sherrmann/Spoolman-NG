@@ -1,6 +1,5 @@
 """Regenerate docs/upstream/SOLVED.md + ledger.json from the triage doc and live GitHub state.
 
-Design: docs/superpowers/specs/2026-07-15-org-process-layer-design.md (section A).
 Stdlib-only; external I/O goes through `git` and `gh` subprocesses (GitHubClient below).
 """
 

@@ -1,0 +1,11 @@
+http:
+  routers:
+    spoolman:
+      rule: "PathPrefix(`/{{ROUTE}}`)"
+      entryPoints: [web]
+      service: spoolman
+  services:
+    spoolman:
+      loadBalancer:
+        servers:
+          - url: "http://spoolman:8000"

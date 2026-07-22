@@ -13,11 +13,11 @@ import httpx
 import pytest
 import websockets
 
-from ..conftest import URL
+from ..conftest import URL, ws_url
 
 
 def _spool_ws_url(spool_id: int) -> str:
-    return URL.replace("http://", "ws://").replace("https://", "wss://") + f"/api/v1/spool/{spool_id}"
+    return ws_url(f"/api/v1/spool/{spool_id}")
 
 
 async def _await_healthy(ws: Any) -> None:  # noqa: ANN401

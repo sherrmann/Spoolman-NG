@@ -1,0 +1,14 @@
+server {
+  listen 80;
+  location = /{{SUBPATH}} { return 301 /{{SUBPATH}}/; }
+  location /{{SUBPATH}}/ {
+    proxy_pass http://spoolman:8000;          # NO trailing slash -> full URI passed through
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-Host $host;
+    proxy_set_header X-Forwarded-Prefix /{{SUBPATH}};
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+  }
+}

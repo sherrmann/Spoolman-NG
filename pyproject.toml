@@ -61,6 +61,7 @@ dev = [
     "pytest-cov~=7.0",
     "httpx~=0.28.1",
     "poethepoet>=0.40.0",
+    "pyyaml>=6.0",  # render docker-compose overlays in tests_scenarios
     # Behavioral-testing toolkit (see TESTING_STRATEGY.md):
     "hypothesis~=6.100",   # property-based tests for codecs/parsers
     "time-machine~=2.14",  # freeze the clock for CalVer / date logic
@@ -73,6 +74,9 @@ dev = [
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 testpaths = ["tests"]
+markers = [
+    "slow: builds/boots a real container image (e.g. armv7 under QEMU) -- opt in with -m slow",
+]
 
 [tool.mutmut]
 # Mutation testing over the crown-jewel NFC codecs — the highest logic-density code,
@@ -113,6 +117,10 @@ help = "Start Spoolman."
 [tool.poe.tasks.itest]
 cmd = "python tests_integration/run.py"
 help = "Builds Spoolman and runs integration tests on the backend against all supported databases."
+
+[tool.poe.tasks.scenario]
+cmd = "python -m tests_scenarios"
+help = "Local deployment-scenario harness: list/up/down/test/ps/logs."
 
 [tool.ruff]
 line-length = 120
