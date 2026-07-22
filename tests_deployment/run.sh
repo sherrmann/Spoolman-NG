@@ -10,6 +10,7 @@
 #   tests_deployment/run.sh octoprint    # OctoPrint-Spoolman plugin against token-protected NG
 #   tests_deployment/run.sh hacs         # Home Assistant Core loads the HACS integration
 #   tests_deployment/run.sh upgrade      # data survives previous-image -> latest on the same volume
+#   tests_deployment/run.sh guide        # wizard-generated Postgres/MariaDB sidecar compose files boot (needs node)
 # Extra arguments go to pytest, e.g.:  tests_deployment/run.sh native -k debian
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -28,6 +29,7 @@ case "$target" in
   octoprint) paths=(tests_deployment/test_octoprint_plugin.py) ;;
   hacs)      paths=(tests_deployment/test_ha_integration.py) ;;
   upgrade)   paths=(tests_deployment/test_image_upgrade.py) ;;
+  guide)     paths=(tests_deployment/test_guide_compose.py) ;;
   *)         paths=("$target") ;;
 esac
 
