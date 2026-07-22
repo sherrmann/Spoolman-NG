@@ -24,6 +24,17 @@ pre-commit:
             run: ./node_modules/.bin/prettier --write .
             stage_fixed: true
 
+# Fast test gate before anything leaves the machine. Skips the slow (QEMU) marker;
+# the full matrix/e2e still run in CI and via poe itest / poe scenario.
+pre-push:
+  parallel: true
+  jobs:
+    - name: Backend fast suite
+      run: uv run pytest tests/ -x -q -m "not slow"
+    - name: Client unit tests
+      root: "client/"
+      run: ./node_modules/.bin/vitest run # Hardcoded path because Windows messes up if we use npx
+
 # Same as pre-commit but no fixes
 ci:
   parallel: true
