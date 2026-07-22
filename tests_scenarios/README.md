@@ -23,6 +23,7 @@ hood).
 | `down [name]` | `--all` | Tear down one registered scenario, or every registered scenario |
 | `test <name>` | `--keep` | Bring a scenario up, run contract + integration + e2e against it, tear down (unless `--keep`) |
 | `chaos <name>` | `--keep` | Bring a scenario up, SIGKILL the app mid-write (and the DB, if any), assert acknowledged writes survived and the app recovers; tear down (unless `--keep`) |
+| `load <name>` | `--users` `--seconds` `--p95-ms` `--keep` | Bring a scenario up and run a concurrent load smoke (read-heavy mix + periodic `/use` writes): zero errors allowed, p95 latency under budget |
 | `test-all` | `--tags` `--db` `--auth` `--proxy` `--arch` `-j/--jobs` `--full`/`--quick` | Run every CORE scenario matching the filters, in parallel, print a pass/fail table |
 | `ps` | — | List currently-registered (i.e. `up`'d) running scenarios |
 | `logs <name>` | — | Stream `docker-compose logs -f` for a running scenario |
