@@ -55,8 +55,7 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Drop the order_line and purchase_order tables."""
-    op.drop_index(op.f("ix_order_line_order_id"), table_name="order_line")
-    op.drop_index(op.f("ix_order_line_id"), table_name="order_line")
+    # No explicit drop_index: MySQL/MariaDB refuse to drop an index a foreign key still
+    # needs (errno 1553), so let DROP TABLE remove the indexes on every backend.
     op.drop_table("order_line")
-    op.drop_index(op.f("ix_purchase_order_id"), table_name="purchase_order")
     op.drop_table("purchase_order")

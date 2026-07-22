@@ -13,7 +13,7 @@ from pathlib import Path
 
 import sqlalchemy
 
-from spoolman.database.models import Base
+from tests.migration_checks import assert_schema_matches_metadata
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
@@ -27,27 +27,12 @@ def _engine(data_dir: Path) -> sqlalchemy.Engine:
     return sqlalchemy.create_engine(f"sqlite:///{data_dir / 'spoolman.db'}")
 
 
-def _tables(data_dir: Path) -> set[str]:
-    engine = _engine(data_dir)
-    try:
-        return set(sqlalchemy.inspect(engine).get_table_names())
-    finally:
-        engine.dispose()
-
-
 def _assert_schema_matches_metadata(data_dir: Path) -> None:
     """Every table and column declared on Base.metadata must exist in the migrated database."""
     engine = _engine(data_dir)
     try:
-        inspector = sqlalchemy.inspect(engine)
-        existing_tables = set(inspector.get_table_names())
-        for table_name, table in Base.metadata.tables.items():
-            assert table_name in existing_tables, f"table '{table_name}' is missing after 'upgrade head'"
-            existing_columns = {col["name"] for col in inspector.get_columns(table_name)}
-            for column in table.columns:
-                assert column.name in existing_columns, (
-                    f"column '{table_name}.{column.name}' is missing after 'upgrade head'"
-                )
+        with engine.connect() as conn:
+            assert_schema_matches_metadata(conn)
     finally:
         engine.dispose()
 
