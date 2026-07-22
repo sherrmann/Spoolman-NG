@@ -113,6 +113,24 @@ def cmd_test(args: argparse.Namespace) -> None:
             runner.tear_down(stack)
 
 
+def cmd_chaos(args: argparse.Namespace) -> None:
+    """Bring a scenario up, run the chaos contracts against it, then tear down (unless --keep)."""
+    from tests_scenarios import runner  # noqa: PLC0415 -- keep `list`/`ps` free of docker imports
+    from tests_scenarios.assertions import chaos  # noqa: PLC0415
+
+    stack: ScenarioStack | None = None
+    try:
+        stack = runner.bring_up(_by_name(args.name))
+        runner.wait_healthy(stack)
+        runner.provision_users(stack)
+        results = chaos.run(stack)
+        for phase, summary in results.items():
+            print(f"{phase:12} {summary}")
+    finally:
+        if stack is not None and not args.keep:
+            runner.tear_down(stack)
+
+
 def _parse_enum_list(value: str | None, enum_cls: type) -> list | None:
     """Parse a comma-separated `--flag` value into enum members, or None if the flag was omitted."""
     if not value:
@@ -276,6 +294,11 @@ def build_parser() -> argparse.ArgumentParser:
     ts.add_argument("name")
     ts.add_argument("--keep", action="store_true")
     ts.set_defaults(func=cmd_test)
+
+    ch = sub.add_parser("chaos")
+    ch.add_argument("name")
+    ch.add_argument("--keep", action="store_true")
+    ch.set_defaults(func=cmd_chaos)
 
     ta = sub.add_parser("test-all")
     ta.add_argument("--tags", help="comma-separated tags; keep scenarios with any of them")

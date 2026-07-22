@@ -22,6 +22,7 @@ hood).
 | `up <name>` | — | Bring a scenario up, wait for health, provision auth, seed data if configured, print a summary, and leave it running |
 | `down [name]` | `--all` | Tear down one registered scenario, or every registered scenario |
 | `test <name>` | `--keep` | Bring a scenario up, run contract + integration + e2e against it, tear down (unless `--keep`) |
+| `chaos <name>` | `--keep` | Bring a scenario up, SIGKILL the app mid-write (and the DB, if any), assert acknowledged writes survived and the app recovers; tear down (unless `--keep`) |
 | `test-all` | `--tags` `--db` `--auth` `--proxy` `--arch` `-j/--jobs` `--full`/`--quick` | Run every CORE scenario matching the filters, in parallel, print a pass/fail table |
 | `ps` | — | List currently-registered (i.e. `up`'d) running scenarios |
 | `logs <name>` | — | Stream `docker-compose logs -f` for a running scenario |
@@ -105,6 +106,18 @@ Every scenario is asserted against with up to three engines, run in this order:
 `test-all --quick` (and `_run_scenario(..., quick=True)`) runs **contract only**, skipping
 integration and e2e — a fast sanity sweep instead of the full ~3-engine run. Plain
 `test-all` / `--full` runs all three.
+
+### Chaos contract (`chaos` verb, `assertions/chaos.py`)
+
+Two recovery contracts CI can't exercise:
+
+1. **Acknowledged-write durability** — a writer thread hammers `POST /vendor` while the
+   `spoolman` container gets `SIGKILL`ed; after `up -d` + healthy, every id the API
+   acknowledged with a 2xx must still be readable. A 200 that vanishes on kill -9 is a
+   fsync/transaction bug.
+2. **DB-outage recovery** (non-sqlite scenarios) — the `db` container gets `SIGKILL`ed and
+   restarted; the app must serve successful writes again within 60s *without being
+   restarted itself* (connection-pool recovery).
 
 ## Machine prerequisites
 
