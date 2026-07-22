@@ -159,15 +159,13 @@ test.describe("HA ingress panel (#211)", () => {
 
     await page.goto(`${INGRESS_BASE_URL}/spool`);
     await expect(page.getByRole("heading", { name: "Spools" })).toBeVisible();
-    const [basePath, ingressFlag] = await page.evaluate(() => [
-      window.SPOOLMAN_BASE_PATH,
-      window.SPOOLMAN_HA_INGRESS,
-    ]);
+    const [basePath, ingressFlag] = await page.evaluate(() => [window.SPOOLMAN_BASE_PATH, window.SPOOLMAN_HA_INGRESS]);
     expect(basePath).toBe("");
     expect(ingressFlag, "the ingress flag must not leak onto direct access").toBeUndefined();
 
     // The service worker still registers at the root scope — the PWA stays fully alive.
-    await page.waitForFunction(async () => Boolean((await navigator.serviceWorker?.getRegistration())?.active),
+    await page.waitForFunction(
+      async () => Boolean((await navigator.serviceWorker?.getRegistration())?.active),
       undefined,
       { timeout: 20_000 },
     );
