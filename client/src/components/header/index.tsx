@@ -9,6 +9,7 @@ import { Version } from "../version";
 
 import { languages } from "../../i18n";
 import ScanModal from "../scanModal";
+import { UpdateModal } from "../updateModal";
 import { UpdateNotification } from "../updateNotification";
 
 const { useToken } = theme;
@@ -54,6 +55,7 @@ export const Header = ({ sticky }: RefineThemedLayoutHeaderProps) => {
   return (
     <AntdLayout.Header style={headerStyles}>
       <UpdateNotification />
+      <UpdateModal />
       <Space size="small" style={{ marginRight: "auto", opacity: 0.85, fontSize: 12, marginLeft: isMobile ? 48 : 0 }}>
         {isMobile ? (
           <Version />

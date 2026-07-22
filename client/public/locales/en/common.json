@@ -65,6 +65,42 @@
       "title": "A new version of Spoolman is available",
       "description": "Version {{version}} has been released. See what's new and how to update.",
       "viewRelease": "View release notes"
+    },
+    "action": {
+      "open": "Update",
+      "howTo": "How to update",
+      "modalTitle": "Update Spoolman",
+      "currentVersion": "Installed: {{version}}",
+      "latestVersion": "latest: {{version}}",
+      "viewReleaseNotes": "View release notes",
+      "close": "Close",
+      "updateNow": "Update now",
+      "updateToVersion": "Update to {{version}}",
+      "native": {
+        "description": "This is a native install, so Spoolman can update itself to the latest release.",
+        "restartNotice": "The service will restart automatically after the update. If Spoolman is not managed by systemd, restart it manually once the update finishes.",
+        "adminRequired": "An administrator must be signed in to run the update from here.",
+        "disabled": "UI-triggered updates are disabled on this instance. Configure authentication, or set SPOOLMAN_ALLOW_UI_UPDATE=TRUE to enable the button. You can also update from a shell:"
+      },
+      "docker": {
+        "description": "This instance runs in Docker. Update by pulling the new image and recreating the container:",
+        "tagReminder": "If your compose file pins a specific image tag, bump it to the new version (e.g. ghcr.io/sherrmann/spoolman-ng:{{version}}) before pulling."
+      },
+      "haAddon": {
+        "description": "This instance runs as a Home Assistant add-on. Update it from Home Assistant, which offers the new version automatically:",
+        "steps": "Settings → Add-ons → Spoolman → Update"
+      },
+      "unknown": {
+        "description": "Update by installing the latest release the same way you originally installed Spoolman. See the release notes for details."
+      },
+      "started": {
+        "title": "Update started",
+        "descriptionManaged": "Spoolman is updating and will restart automatically. This page will reconnect once it is back.",
+        "descriptionManual": "Spoolman is updating. Restart Spoolman manually once the update finishes."
+      },
+      "failed": {
+        "title": "Update failed"
+      }
     }
   },
   "errorBoundary": {

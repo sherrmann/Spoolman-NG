@@ -1,12 +1,14 @@
 import { useTranslate } from "@refinedev/core";
-import { Spin, Tooltip, Typography } from "antd";
+import { Button, Spin, Tooltip, Typography } from "antd";
+import { useUpdateModal } from "../utils/updateAction";
 import { useInfo } from "../utils/useInfo";
 
-const { Text, Link } = Typography;
+const { Text } = Typography;
 
 export const Version = () => {
   const t = useTranslate();
   const infoResult = useInfo();
+  const showUpdateModal = useUpdateModal((s) => s.show);
 
   if (infoResult.isLoading) {
     return <Spin />;
@@ -19,19 +21,14 @@ export const Version = () => {
   const info = infoResult.data;
   const commit_suffix = info.git_commit ? <Text type="secondary">{` (${info.git_commit})`}</Text> : <></>;
 
-  // Subtle "update available" hint (#293): only when the server's daily check found a
-  // newer release. Links to the release notes when we have a URL.
+  // Subtle "update available" hint (#293): only when the server's daily check found a newer
+  // release. Clicking it opens the per-install-type update dialog (#294) — a real update button
+  // on native installs, tailored instructions elsewhere, plus the release-notes link.
   const updateHint = info.update_available ? (
     <Tooltip title={info.latest_version ? t("update.tooltip", { version: info.latest_version }) : undefined}>
-      {info.release_url ? (
-        <Link href={info.release_url} target="_blank" rel="noopener noreferrer" style={{ marginLeft: 4 }}>
-          {t("update.available")}
-        </Link>
-      ) : (
-        <Text type="warning" style={{ marginLeft: 4 }}>
-          {t("update.available")}
-        </Text>
-      )}
+      <Button type="link" size="small" onClick={showUpdateModal} style={{ padding: 0, height: "auto", fontSize: 12 }}>
+        {t("update.available")}
+      </Button>
     </Tooltip>
   ) : null;
 

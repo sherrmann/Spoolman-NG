@@ -849,10 +849,64 @@ class Info(BaseModel):
         description="Link to the latest release's page (for release notes).",
         examples=["https://github.com/sherrmann/Spoolman-NG/releases/latest"],
     )
+    # Per-install-type update action (#294). Additive; lets the UI choose between a real
+    # update button (native) and tailored instructions (Docker / HA add-on).
+    install_type: str = Field(
+        default="unknown",
+        description=(
+            "How this instance was installed: 'native' (release zip + scripts/update.sh), "
+            "'docker', 'ha_addon' (Home Assistant), or 'unknown' (dev checkout / other). "
+            "The UI tailors the update action to this."
+        ),
+        examples=["native"],
+    )
+    update_action_available: bool = Field(
+        default=False,
+        description=(
+            "Whether the server can run a self-update from the UI on this install. True only for "
+            "a native install whose security gate is open (auth configured, or "
+            "SPOOLMAN_ALLOW_UI_UPDATE=TRUE on an open instance). Triggering it still requires an "
+            "admin principal."
+        ),
+        examples=[False],
+    )
 
 
 class HealthCheck(BaseModel):
     status: str = Field(examples=["healthy"])
+
+
+class UpdateRequest(BaseModel):
+    """Body for POST /update: trigger the bundled native updater (#294)."""
+
+    tag: str | None = Field(
+        default=None,
+        max_length=32,
+        pattern=r"^v[0-9.]+$",
+        description="Optional release tag to update or roll back to (e.g. 'v2026.7.20'). Omit for the latest release.",
+        examples=["v2026.7.20"],
+    )
+
+
+class UpdateResponse(BaseModel):
+    """Result of a POST /update: the updater was launched (it runs detached)."""
+
+    status: str = Field(
+        description="Always 'started' — the updater runs in the background.",
+        examples=["started"],
+    )
+    target: str | None = Field(
+        default=None,
+        description="The requested release tag, or null when updating to the latest release.",
+        examples=["v2026.7.20"],
+    )
+    restart_managed: bool = Field(
+        description=(
+            "Whether a Spoolman systemd service was detected. When true the service restarts itself "
+            "after the update; when false the user must restart Spoolman manually."
+        ),
+        examples=[True],
+    )
 
 
 class BackupResponse(BaseModel):

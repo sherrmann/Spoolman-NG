@@ -17,6 +17,9 @@ export interface IInfo {
   latest_version?: string | null;
   update_available?: boolean;
   release_url?: string | null;
+  /** Per-install-type update action (#294). Optional so an older server still type-checks. */
+  install_type?: "native" | "docker" | "ha_addon" | "unknown";
+  update_action_available?: boolean;
 }
 
 /** Shared query for server info. The `["info"]` key dedupes across every consumer
