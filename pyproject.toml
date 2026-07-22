@@ -78,6 +78,10 @@ markers = [
     "slow: builds/boots a real container image (e.g. armv7 under QEMU) -- opt in with -m slow",
 ]
 
+[tool.coverage.run]
+# Flush coverage data when the instrumented server (scripts/coverage_all.py) gets SIGTERM.
+sigterm = true
+
 [tool.mutmut]
 # Mutation testing over the crown-jewel NFC codecs — the highest logic-density code,
 # where a passing suite must actually catch injected bugs (TESTING_STRATEGY.md §4).
@@ -121,6 +125,10 @@ help = "Builds Spoolman and runs integration tests on the backend against all su
 [tool.poe.tasks.scenario]
 cmd = "python -m tests_scenarios"
 help = "Local deployment-scenario harness: list/up/down/test/ps/logs."
+
+[tool.poe.tasks.coverage-all]
+cmd = "python scripts/coverage_all.py"
+help = "Combined backend coverage: fast suite + tests_integration against an instrumented local server."
 
 [tool.ruff]
 line-length = 120
