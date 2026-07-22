@@ -434,6 +434,38 @@ toward 100% is an ongoing effort. Some paths are not reachable by headless e2e a
 hardware, the native print dialog, the 25 locale bundles, WebSocket live-update races), so 100%
 app-wide is approached, not a literal target; the journey set is expanded incrementally.
 
+**Also done — local testing hardening (2026-07-22, all local-only unless noted):**
+
+- **Combined backend coverage with a ratchet** (`poe coverage-all`, `scripts/coverage_all.py`):
+  runs the fast suite *and* the full `tests_integration/tests` suite against a
+  coverage-instrumented local uvicorn (via the `SPOOLMAN_TEST_URL` seam), combines the data,
+  and fails under **68%**. First combined number: **70%** (the fast suite alone measures 63% —
+  the instrumented-server phase adds the API/DB layer the Docker matrix exercises unmeasured).
+- **Query-count guards** (`tests/integration/test_query_budget.py`, runs in the fast suite/CI):
+  the spool and filament list endpoints must execute the *same* number of SQL statements for
+  3 rows as for 25 (N+1 guard), under generous absolute caps (observed: spool 2, filament 4).
+- **Cross-dialect migration tests** (`tests_scenarios/tests/test_migration_dialects.py`):
+  alembic chain up → anchor round-trip → re-upgrade with a data-preservation check on real
+  Postgres, MariaDB and CockroachDB containers. Immediately caught and fixed a real bug: the
+  `order_tables` downgrade dropped `ix_order_line_order_id` while the FK still needed it,
+  which MariaDB rejects (errno 1553).
+- **Chaos verb** (`poe scenario chaos <name>`): SIGKILLs the app mid-write-storm and asserts
+  every 2xx-acknowledged write survives the restart; on DB-backed scenarios also SIGKILLs the
+  DB and asserts the app serves writes again within 60s without its own restart.
+- **Load verb** (`poe scenario load <name>`): N async users, read-heavy mix + periodic `/use`
+  writes through the scenario's proxy/auth; zero errors allowed, p95 under budget
+  (sqlite-bare baseline: ~270 req/s, p95 38ms at 5 users).
+- **Axe accessibility spec** (`client/e2e/journeys/a11y.spec.ts`, runs with the e2e suite):
+  serious/critical WCAG A/AA gate over home, spool list, create form, settings, help.
+  Fixed the one violation in our own markup (resize handle now `role="separator"`);
+  pre-existing antd-shell/theme debt is baselined in `KNOWN_ISSUES` with reasons, so any
+  *new* rule failing fails the run.
+- **Visual regression** (`npm run test:visual`, env-gated via `E2E_VISUAL=1`, never in CI):
+  full-page screenshots of the data-independent screens (help, settings, the three create
+  forms) against committed per-host baselines; rebaseline with `--update-snapshots`.
+- **lefthook pre-push gate**: backend fast suite + client vitest run in parallel (~3.5 min)
+  before anything leaves the machine.
+
 **Remaining (follow-up):**
 
 - Higher-coverage long-tail journeys: the calibration wizard (multi-step session flow),
