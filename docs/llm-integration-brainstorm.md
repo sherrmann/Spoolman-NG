@@ -320,7 +320,7 @@ The recommendation optimizes for: unique value first, shared plumbing reuse, loc
 |---|---|---|---|
 | 0 | **Provider foundation** (env/settings, `/api/v1/ai/status`, capability probe, mock-provider test fixture) | [#359](https://github.com/sherrmann/Spoolman-NG/issues/359) | Prerequisite for everything; small. |
 | 1 | **C1 built-in MCP** + the curated tool layer | [#360](https://github.com/sherrmann/Spoolman-NG/issues/360) | Cheapest headline feature; forces the tool design that B1 reuses; instantly useful with Claude; gives voice via claude.ai for free. Needs no LLM provider at all. |
-| 2 | **A1 Scan-to-Spool** (+ A3 slicer screenshot as a follow-up issue) | [#361](https://github.com/sherrmann/Spoolman-NG/issues/361) | The flagship. Unique in open source; leverages SpoolmanDB + mobile camera. |
+| 2 | **A1 Scan-to-Spool** (+ **A3 slicer screenshot** as follow-up: [#365](https://github.com/sherrmann/Spoolman-NG/issues/365)) | [#361](https://github.com/sherrmann/Spoolman-NG/issues/361) | The flagship. Unique in open source; leverages SpoolmanDB + mobile camera. |
 | 3 | **B1 chat panel** + **B2 NL search** | [#362](https://github.com/sherrmann/Spoolman-NG/issues/362) | Umbrella UX on top of the phase-1 tool layer. |
 | 4 | **D1 voice input** on the chat panel | [#363](https://github.com/sherrmann/Spoolman-NG/issues/363) | Thin layer once B1 exists. |
 | — | **F1–F3 assisted local setup** (wizard sidecar, managed model pull, native option) | [#364](https://github.com/sherrmann/Spoolman-NG/issues/364) | Independent of the feature phases; pairs naturally with phase 0. |
