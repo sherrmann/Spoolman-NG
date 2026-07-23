@@ -1,0 +1,56 @@
+# Forgejo Actions CI — runs on the self-hosted mirror (git.sherrmann.ch/sam/spoolman-ng).
+# This directory takes precedence over .github/workflows on Forgejo, so the mirror runs
+# ONLY these jobs; GitHub ignores .forgejo/ entirely. Unit tests only — the full pipeline
+# (e2e, multi-arch builds, publish, deploy) stays in .github/workflows/ci.yml on GitHub.
+name: Tests
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  backend-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # ci.yml resolves ">=3.10" via setup-python to latest CPython; pin here for
+      # reproducible runs on the self-hosted runner.
+      UV_PYTHON: "3.13"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        # Same uv version ci.yml pins via astral-sh/setup-uv.
+        run: |
+          curl -LsSf https://astral.sh/uv/0.11.26/install.sh | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Install Python
+        run: uv python install "$UV_PYTHON"
+
+      - name: Run unit tests
+        # Mirrors ci.yml unit-tests; SQLite/no-DB, no services required.
+        run: uv run pytest tests/ --cov=spoolman --cov-branch --cov-report=term-missing
+
+  client-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install client dependencies
+        working-directory: client
+        run: npm ci
+
+      - name: Run client unit tests
+        working-directory: client
+        run: npm run test:coverage
