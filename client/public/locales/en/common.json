@@ -1396,5 +1396,36 @@
       "article_number": "Article nr",
       "confidence": "Confidence"
     }
+  },
+  "chat": {
+    "title": "Assistant",
+    "empty": "Ask about your inventory - how much is left, what is running low, where a spool lives. Changes are always confirmed with you first.",
+    "placeholder": "Ask about your inventory",
+    "thinking": "Working...",
+    "clear": "New conversation",
+    "pending_title": "Confirm this action",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "action_confirmed": "Action confirmed.",
+    "action_declined": "Action declined. Nothing was changed.",
+    "step_budget": "Stopped after several tool steps. Send a message to continue.",
+    "tools": {
+      "find_spools": "Searched spools",
+      "find_filaments": "Searched filaments",
+      "get_inventory_stats": "Read inventory statistics",
+      "get_low_stock": "Checked low stock",
+      "use_spool_filament": "Log filament use",
+      "measure_spool": "Record a weight measurement",
+      "create_spool": "Create a spool",
+      "archive_spool": "Archive or unarchive a spool"
+    }
+  },
+  "aisearch": {
+    "button": "AI",
+    "tooltip": "Describe what you are looking for",
+    "placeholder": "e.g. matte black PLA in shelf B",
+    "apply": "Apply",
+    "hint": "Turns your description into the regular list filters, which stay editable.",
+    "dropped": "Not expressible as filters: {{parts}}"
   }
 }

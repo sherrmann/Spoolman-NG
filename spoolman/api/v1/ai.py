@@ -22,8 +22,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from spoolman import ai, spoolintake
-from spoolman.api.v1.auth import require_admin
+from spoolman import ai, aichat, aisearch, spoolintake
+from spoolman.api.v1.auth import current_principal, require_admin
 from spoolman.api.v1.models import Message
 from spoolman.auth import Principal
 from spoolman.database.database import get_db_session
@@ -211,11 +211,23 @@ class SpoolIntakeResponse(BaseModel):
     )
 
 
-async def _require_scan_feature(db: AsyncSession) -> None:
-    """Reject with 404 while the feature is disabled - the endpoints stay invisible."""
+async def _require_feature(db: AsyncSession, feature: str, label: str) -> None:
+    """Reject with 404 while a feature toggle is off - the endpoints stay invisible."""
     flags = await ai.get_feature_flags(db)
-    if not flags.get("scan_to_spool"):
-        raise HTTPException(status_code=404, detail="Scan-to-Spool is not enabled.")
+    if not flags.get(feature):
+        raise HTTPException(status_code=404, detail=f"{label} is not enabled.")
+
+
+async def _require_scan_feature(db: AsyncSession) -> None:
+    await _require_feature(db, "scan_to_spool", "Scan-to-Spool")
+
+
+async def _require_configured(db: AsyncSession) -> ai.AIConfig:
+    """Return the resolved provider config, or 409 when no endpoint/model is set up."""
+    config = await ai.resolve_config(db)
+    if not config.configured:
+        raise HTTPException(status_code=409, detail="No AI endpoint and model are configured.")
+    return config
 
 
 @router.post(
@@ -242,9 +254,7 @@ async def spool_intake_extract(
     except binascii.Error as exc:
         raise HTTPException(status_code=400, detail="image_base64 is not valid base64.") from exc
 
-    config = await ai.resolve_config(db)
-    if not config.configured:
-        raise HTTPException(status_code=409, detail="No AI endpoint and model are configured.")
+    config = await _require_configured(db)
     try:
         extraction = await spoolintake.extract(config, body.image_base64, body.mime)
     except ai.AIRequestError as exc:
@@ -275,3 +285,156 @@ async def spool_intake_match(
     extraction = spoolintake.normalize_extraction(body.model_dump())
     matches = await spoolintake.build_matches(db, extraction)
     return SpoolIntakeResponse(extraction=AIExtraction(**extraction), matches=matches)
+
+
+# --- Chat assistant (#362) ----------------------------------------------------------
+
+
+class AIChatContext(BaseModel):
+    """Optional client context stitched into the system prompt."""
+
+    page: str | None = Field(default=None, max_length=200, description="Current page path, e.g. /spool.")
+    locale: str | None = Field(default=None, max_length=20, description="UI locale; the model replies in it.")
+
+
+class AIChatResolve(BaseModel):
+    """Resolution of a pending action returned by an earlier /ai/chat response."""
+
+    id: str = Field(description="The pending tool call id being resolved.")
+    approved: bool = Field(description="True to execute the action, false to decline it.")
+
+
+class AIChatRequest(BaseModel):
+    messages: list[dict] = Field(
+        description=(
+            "The whole conversation transcript in OpenAI chat format (user/assistant/tool "
+            "roles only - the server owns the system prompt). The response returns the "
+            "updated transcript to send back on the next turn; the server stores nothing."
+        ),
+    )
+    context: AIChatContext | None = None
+    resolve: AIChatResolve | None = None
+
+
+class AIChatEvent(BaseModel):
+    tool: str = Field(description="Name of the tool that was executed.")
+    detail: str | None = Field(default=None, description="Short language-neutral detail, e.g. 'returned=3'.")
+
+
+class AIChatPending(BaseModel):
+    id: str = Field(description="Tool call id; echo it in 'resolve' to confirm or decline.")
+    tool: str = Field(description="The mutating tool the model wants to run. Nothing has been executed.")
+    arguments: dict = Field(description="The exact arguments the tool would run with.")
+
+
+class AIChatResponse(BaseModel):
+    messages: list[dict] = Field(description="Updated transcript; send it back verbatim on the next turn.")
+    reply: str | None = Field(default=None, description="Assistant text for this turn, when the loop finished.")
+    events: list[AIChatEvent] = Field(default_factory=list, description="Tools executed during this request.")
+    pending: AIChatPending | None = Field(
+        default=None,
+        description="A mutating action awaiting user confirmation; resolve it with the next request.",
+    )
+    stopped_reason: str | None = Field(
+        default=None,
+        description="Set to 'step_budget' when the loop hit its round-trip cap; continuing is safe.",
+    )
+
+
+@router.post(
+    "/chat",
+    name="Chat with the Spoolman assistant",
+    description=(
+        "Run one turn of the in-app assistant. The agent answers from the same curated tool "
+        "layer as the MCP server; read-only tools execute during the request, mutating tools "
+        "are returned as a pending action that must be explicitly confirmed - writes never "
+        "happen silently. The server stores no conversation state."
+    ),
+    responses={400: {"model": Message}, 404: {"model": Message}, 409: {"model": Message}, 502: {"model": Message}},
+)
+async def chat(
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+    principal: Annotated[Principal, Depends(current_principal)],
+    body: AIChatRequest,
+) -> AIChatResponse:
+    await _require_feature(db, "chat", "The chat assistant")
+    config = await _require_configured(db)
+    try:
+        outcome = await aichat.run_chat(
+            db,
+            config,
+            messages=body.messages,
+            role=principal.role,
+            locale=body.context.locale if body.context else None,
+            page=body.context.page if body.context else None,
+            resolve_id=body.resolve.id if body.resolve else None,
+            resolve_approved=body.resolve.approved if body.resolve else False,
+        )
+    except aichat.ChatProtocolError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except ai.AIRequestError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    return AIChatResponse(
+        messages=outcome.messages,
+        reply=outcome.reply,
+        events=[AIChatEvent(tool=event.tool, detail=event.detail) for event in outcome.events],
+        pending=(
+            AIChatPending(id=outcome.pending.id, tool=outcome.pending.tool, arguments=outcome.pending.arguments)
+            if outcome.pending
+            else None
+        ),
+        stopped_reason=outcome.stopped_reason,
+    )
+
+
+# --- Natural-language search (#362) -------------------------------------------------
+
+
+class AISearchRequest(BaseModel):
+    entity: aisearch.SearchEntity = Field(description="Which list is being filtered: spool or filament.")
+    query: str = Field(min_length=1, max_length=aisearch.MAX_QUERY_CHARS, description="The free-text request.")
+
+
+class AISearchResponse(BaseModel):
+    filters: dict = Field(
+        description=(
+            "Validated filters in the existing filter model. List values are guaranteed to "
+            "exist in this install; hallucinated values are dropped, never applied."
+        ),
+    )
+    dropped: list[str] = Field(
+        default_factory=list,
+        description="Parts of the request that could not be expressed as filters (shown to the user).",
+    )
+
+
+@router.post(
+    "/search",
+    name="Translate a search request into filters",
+    description=(
+        "Translate free text into the existing list filters (materials, vendors, locations, "
+        "lot numbers, free-text search, color similarity). The reply is validated against the "
+        "install's real values; anything the model invents is dropped and reported."
+    ),
+    responses={404: {"model": Message}, 409: {"model": Message}, 502: {"model": Message}},
+)
+async def nl_search(
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+    body: AISearchRequest,
+) -> AISearchResponse:
+    await _require_feature(db, "nl_search", "Natural-language search")
+    config = await _require_configured(db)
+    vocab = await aisearch.vocabulary(db, body.entity)
+    try:
+        reply_text = await ai.chat_completion(
+            config,
+            aisearch.build_messages(body.query, body.entity, vocab),
+            max_tokens=500,
+        )
+        reply = spoolintake.parse_json_block(reply_text)
+    except ai.AIRequestError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    except spoolintake.ExtractionParseError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    filters, dropped = aisearch.sanitize(reply, body.entity, vocab)
+    return AISearchResponse(filters=filters, dropped=dropped)

@@ -8,6 +8,7 @@ import { getBasePath } from "../../utils/url";
 import { Version } from "../version";
 
 import { languages } from "../../i18n";
+import ChatDrawer from "../chatDrawer";
 import ScanModal from "../scanModal";
 import { UpdateModal } from "../updateModal";
 import { UpdateNotification } from "../updateNotification";
@@ -97,6 +98,7 @@ export const Header = ({ sticky }: RefineThemedLayoutHeaderProps) => {
           onChange={(value) => setPreference(value as ThemePreference)}
         />
         <ScanModal />
+        <ChatDrawer />
       </Space>
     </AntdLayout.Header>
   );

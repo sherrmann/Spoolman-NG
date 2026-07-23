@@ -1,8 +1,9 @@
 """Curated AI tool layer (#360).
 
 One tool surface, two consumers: the built-in MCP server (spoolman/mcp.py) exposes
-these to external assistants today, and the in-app chat agent (#362) will call the
-same implementations. Deliberately curated rather than 1:1 CRUD: each tool is a
+these to external assistants, and the in-app chat agent (spoolman/aichat.py, #362)
+calls the same implementations. Deliberately curated rather than 1:1 CRUD: each tool
+is a
 task-shaped operation with a compact, model-readable result, and carries a
 ``read_only`` flag that callers use for role gating — a readonly principal must
 never even see the mutating tools.
@@ -509,6 +510,14 @@ def tools_for_role(role: str) -> list[Tool]:
     return list(TOOLS)
 
 
+def visible_tool(name: str, role: str) -> Tool | None:
+    """Look up a tool as visible to this role: None when unknown *or* hidden by role gating."""
+    tool = _TOOLS_BY_NAME.get(name)
+    if tool is None or (role == ROLE_READONLY and not tool.read_only):
+        return None
+    return tool
+
+
 async def call_tool(db: AsyncSession, name: str, arguments: dict, role: str) -> dict:
     """Execute a tool for a principal.
 
@@ -516,8 +525,8 @@ async def call_tool(db: AsyncSession, name: str, arguments: dict, role: str) -> 
     a readonly caller must not be able to distinguish the two. Raises ToolError for
     argument/entity problems (safe to surface to the model verbatim).
     """
-    tool = _TOOLS_BY_NAME.get(name)
-    if tool is None or (role == ROLE_READONLY and not tool.read_only):
+    tool = visible_tool(name, role)
+    if tool is None:
         raise ToolNotFoundError(f"Unknown tool: {name}")
     if not isinstance(arguments, dict):
         raise ToolError("Tool arguments must be an object.")

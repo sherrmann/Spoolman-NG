@@ -10,7 +10,7 @@ import {
   UnorderedListOutlined,
 } from "@ant-design/icons";
 import { List, useTable } from "@refinedev/antd";
-import { useInvalidate, useNavigation, useTranslate } from "@refinedev/core";
+import { LogicalFilter, useInvalidate, useNavigation, useTranslate } from "@refinedev/core";
 import { Button, Grid, Input, message, Pagination, Space, Table, Tooltip } from "antd";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
@@ -25,8 +25,9 @@ import {
   SortedColumn,
   SpoolIconColumn,
 } from "../../components/column";
+import { AISearchButton } from "../../components/aiSearchButton";
 import { ColumnManager } from "../../components/columnManager";
-import { ColorSimilarityFilter, ColorSimilarityValue } from "../../components/colorSimilarityFilter";
+import { ColorSimilarityFilter, ColorSimilarityValue, DEFAULT_THRESHOLD } from "../../components/colorSimilarityFilter";
 import { EditableNumberCell, EditableSelectCell, EditableTextCell } from "../../components/inlineEdit";
 import { carryForwardFields, useLiveify } from "../../components/liveify";
 import { ResizableHeaderCell } from "../../components/resizableHeaderCell";
@@ -42,6 +43,7 @@ import {
 import { columnIdOf, computeEffectiveOrder, moveInOrder, orderColumns } from "../../utils/columnOrder";
 import { removeUndefined } from "../../utils/filtering";
 import { enrichText } from "../../utils/parsing";
+import { AISearchFilters } from "../../utils/queryAI";
 import { EntityType, useGetFields } from "../../utils/queryFields";
 import { TableState, useInitialTableState, useSavedState, useStoreInitialState } from "../../utils/saveload";
 import { getCurrencySymbol, useCurrency, useCurrencyFormatter, useUnitScaling } from "../../utils/settings";
@@ -252,6 +254,23 @@ export const FilamentList = () => {
   }, [invalidate]);
   const { openBulkEdit, bulkEditModal } = useFilamentBulkEditModal(messageApi, onBulkApplied);
 
+  // Natural-language search (#362): the reply lands in the exact same state the user
+  // could have set by hand, so every applied filter stays visible and editable.
+  const applyAISearch = (aiFilters: AISearchFilters, dropped: string[]) => {
+    const next: LogicalFilter[] = [];
+    if (aiFilters.materials) next.push({ field: "material", operator: "in", value: aiFilters.materials });
+    if (aiFilters.vendors) next.push({ field: "vendor.name", operator: "in", value: aiFilters.vendors });
+    if (aiFilters.article_numbers)
+      next.push({ field: "article_number", operator: "in", value: aiFilters.article_numbers });
+    setFilters(next, "replace");
+    setSearch(aiFilters.search ?? "");
+    setColorFilter(aiFilters.color_hex ? { colorHex: aiFilters.color_hex, threshold: DEFAULT_THRESHOLD } : undefined);
+    setCurrentPage(1);
+    if (dropped.length > 0) {
+      messageApi.info(t("aisearch.dropped", { parts: dropped.join(", ") }));
+    }
+  };
+
   // Store state in local storage
   const tableState: TableState = {
     sorters,
@@ -312,6 +331,9 @@ export const FilamentList = () => {
           <Input.Search
             placeholder={t("buttons.search")}
             allowClear
+            // Remount when the search state is set programmatically (AI search), so the
+            // box always shows the text that is actually filtering the list.
+            key={`search-${search}`}
             defaultValue={search}
             onSearch={(value) => {
               setSearch(value);
@@ -325,6 +347,7 @@ export const FilamentList = () => {
             }}
             style={{ width: 200 }}
           />
+          <AISearchButton entity="filament" onApply={applyAISearch} />
           <ColorSimilarityFilter
             value={colorFilter}
             onChange={(v) => {

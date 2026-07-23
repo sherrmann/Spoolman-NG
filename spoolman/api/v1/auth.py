@@ -61,6 +61,11 @@ def _principal(request: Request) -> Principal:
     return getattr(request.state, "principal", None) or Principal(name="anonymous")
 
 
+def current_principal(request: Request) -> Principal:
+    """Dependency: the caller's principal (the anonymous admin when auth is not configured)."""
+    return _principal(request)
+
+
 def require_admin(request: Request) -> Principal:
     """Dependency: allow only an admin principal (the default when no accounts exist yet)."""
     principal = _principal(request)

@@ -12,7 +12,7 @@ import {
   UnorderedListOutlined,
 } from "@ant-design/icons";
 import { List, TextField, useTable } from "@refinedev/antd";
-import { useInvalidate, useNavigation, useTranslate } from "@refinedev/core";
+import { LogicalFilter, useInvalidate, useNavigation, useTranslate } from "@refinedev/core";
 import { Button, Grid, Input, message, Modal, Pagination, Space, Table, Tooltip } from "antd";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
@@ -28,8 +28,10 @@ import {
   SortedColumn,
   SpoolIconColumn,
 } from "../../components/column";
+import { AISearchButton } from "../../components/aiSearchButton";
 import { ColumnManager } from "../../components/columnManager";
-import { ColorSimilarityFilter, ColorSimilarityValue } from "../../components/colorSimilarityFilter";
+import { ColorSimilarityFilter, ColorSimilarityValue, DEFAULT_THRESHOLD } from "../../components/colorSimilarityFilter";
+import { AISearchFilters } from "../../utils/queryAI";
 import { useLiveify } from "../../components/liveify";
 import { NumberFieldUnit } from "../../components/numberField";
 import {
@@ -266,6 +268,25 @@ export const SpoolList = () => {
         },
       },
     });
+
+  // Natural-language search (#362): the reply lands in the exact same state the user
+  // could have set by hand - column filters, search box, color chip, archived view -
+  // so every applied filter stays visible and editable through the normal controls.
+  const applyAISearch = (aiFilters: AISearchFilters, dropped: string[]) => {
+    const next: LogicalFilter[] = [];
+    if (aiFilters.materials) next.push({ field: "filament.material", operator: "in", value: aiFilters.materials });
+    if (aiFilters.vendors) next.push({ field: "filament.vendor.name", operator: "in", value: aiFilters.vendors });
+    if (aiFilters.locations) next.push({ field: "location", operator: "in", value: aiFilters.locations });
+    if (aiFilters.lot_numbers) next.push({ field: "lot_nr", operator: "in", value: aiFilters.lot_numbers });
+    setFilters(next, "replace");
+    setSearch(aiFilters.search ?? "");
+    setColorFilter(aiFilters.color_hex ? { colorHex: aiFilters.color_hex, threshold: DEFAULT_THRESHOLD } : undefined);
+    setShowArchived(aiFilters.archived === true);
+    setCurrentPage(1);
+    if (dropped.length > 0) {
+      messageApi.info(t("aisearch.dropped", { parts: dropped.join(", ") }));
+    }
+  };
 
   // Create state for the columns to show
   const [showColumns, setShowColumns] = useState<string[]>(initialState.showColumns ?? defaultColumns);
@@ -510,6 +531,9 @@ export const SpoolList = () => {
           <Input.Search
             placeholder={t("buttons.search")}
             allowClear
+            // Remount when the search state is set programmatically (AI search), so the
+            // box always shows the text that is actually filtering the list.
+            key={`search-${search}`}
             defaultValue={search}
             onSearch={(value) => {
               setSearch(value);
@@ -524,6 +548,7 @@ export const SpoolList = () => {
             }}
             style={{ width: 200 }}
           />
+          <AISearchButton entity="spool" onApply={applyAISearch} />
           <ColorSimilarityFilter
             value={colorFilter}
             onChange={(v) => {

@@ -119,6 +119,82 @@ export function useSpoolIntakeExtract() {
   });
 }
 
+export interface AIChatEvent {
+  tool: string;
+  detail: string | null;
+}
+
+export interface AIChatPending {
+  id: string;
+  tool: string;
+  arguments: Record<string, unknown>;
+}
+
+export interface AIChatResponse {
+  /** Opaque wire transcript; hold it and send it back verbatim on the next turn. */
+  messages: unknown[];
+  reply: string | null;
+  events: AIChatEvent[];
+  pending: AIChatPending | null;
+  stopped_reason: string | null;
+}
+
+export interface AIChatRequest {
+  messages: unknown[];
+  context?: { page?: string; locale?: string };
+  resolve?: { id: string; approved: boolean };
+}
+
+export function useAIChat() {
+  return useMutation<AIChatResponse, Error, AIChatRequest>({
+    mutationFn: async (body) => {
+      const response = await apiFetch(`${getAPIURL()}/ai/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload.detail ?? payload.message ?? `HTTP ${response.status}`);
+      }
+      return response.json();
+    },
+  });
+}
+
+export interface AISearchFilters {
+  search?: string;
+  materials?: string[];
+  vendors?: string[];
+  locations?: string[];
+  lot_numbers?: string[];
+  article_numbers?: string[];
+  color_hex?: string;
+  archived?: boolean;
+}
+
+export interface AISearchResult {
+  filters: AISearchFilters;
+  dropped: string[];
+}
+
+export function useAISearch() {
+  return useMutation<AISearchResult, Error, { entity: "spool" | "filament"; query: string }>({
+    mutationFn: async (body) => {
+      const response = await apiFetch(`${getAPIURL()}/ai/search`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload.detail ?? payload.message ?? `HTTP ${response.status}`);
+      }
+      return response.json();
+    },
+  });
+}
+
 export function useSetAIKey() {
   const queryClient = useQueryClient();
   return useMutation<{ api_key_set: boolean; env_locked: boolean }, Error, string | null>({

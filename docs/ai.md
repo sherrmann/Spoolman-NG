@@ -100,6 +100,44 @@ Extraction and matching are separate API steps (`/ai/spool-intake/extract` and
 attached, so a future mobile app that runs a vision model on the device itself can
 use the same matching without any photo leaving the phone.
 
+## The assistant (chat)
+
+Turn on **Assistant** under Settings → AI and a chat button appears above the scan
+button, on every page. The assistant answers from your actual inventory — "how much
+black PETG is left?", "what should I reorder?" — using the same curated tools as
+the [MCP server](mcp.md), so what it reads and does is exactly what the web UI
+would read and do.
+
+Rules the assistant operates under:
+
+- **Writes never happen silently.** When it wants to change something (log filament
+  use, create or archive a spool, record a measurement), the exact action and its
+  values are shown as a card in the chat and nothing runs until you press Confirm.
+  Cancel leaves everything untouched.
+- **Read-only accounts get a read-only assistant.** With user accounts enabled, a
+  readonly user's assistant does not have the mutating tools at all — not hidden,
+  absent.
+- **No server-side conversation storage.** The conversation lives in your browser
+  tab and is sent along with each message; the server keeps nothing between
+  requests.
+- It replies in the interface language, and it is instructed never to invent
+  inventory data — a small tool-capable model (for example an 8B-class model on
+  Ollama) works well because the answers come from tool results, not memory.
+
+## Natural-language search
+
+Turn on **Natural-language search** and an **AI** button appears beside the search
+box on the spool and filament lists. Describe what you're looking for — "matte
+black under 500 g in shelf B", in any language — and it is translated into the
+regular list filters: the same column filters, search box, color chip and
+archived toggle you could have set by hand, still visible and still editable.
+
+There is no black box: the translation may only pick from your install's real
+materials, vendors, locations and lot numbers (anything the model invents is
+dropped, never applied), and parts of the request the filters cannot express —
+like a weight limit — are reported instead of being silently ignored. This
+feature works well with small local models.
+
 ## Privacy
 
 - With a **local endpoint** (Ollama, LM Studio, llama.cpp, vLLM on your own

@@ -9,7 +9,7 @@ export interface ColorSimilarityValue {
   threshold: number;
 }
 
-const DEFAULT_THRESHOLD = 20;
+export const DEFAULT_THRESHOLD = 20;
 
 // A hand-picked palette of common filament colours. One tap + the default tolerance is
 // enough for most searches; the full picker stays available behind "Advanced".

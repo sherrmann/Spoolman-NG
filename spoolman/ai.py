@@ -413,20 +413,22 @@ def _remember(result: ProbeResult) -> ProbeResult:
 # --- Chat completions --------------------------------------------------------------
 
 
-async def chat_completion(
+async def chat_completion_message(
     config: AIConfig,
     messages: list[dict],
     *,
+    tools: list[dict] | None = None,
     use_vision_model: bool = False,
     max_tokens: int = 2000,
     timeout: float = _CHAT_TIMEOUT,
-) -> str:
-    """Run one chat completion against the configured endpoint and return the reply text.
+) -> dict:
+    """Run one chat completion and return the raw assistant message dict.
 
-    Raises AIRequestError with a user-safe message on any failure (unconfigured,
-    unreachable, HTTP error, unexpected response shape). No response_format is sent —
-    not every OpenAI-compatible server accepts it, so callers that need JSON instruct
-    the model in the prompt and parse defensively.
+    The message may carry "content", "tool_calls", or both — callers that only need
+    text should use chat_completion(). Raises AIRequestError with a user-safe message
+    on any failure (unconfigured, unreachable, HTTP error, unexpected response shape).
+    No response_format is sent — not every OpenAI-compatible server accepts it, so
+    callers that need JSON instruct the model in the prompt and parse defensively.
     """
     if not config.base_url:
         raise AIRequestError("No AI endpoint is configured.")
@@ -435,7 +437,9 @@ async def chat_completion(
         raise AIRequestError("No model is configured.")
 
     headers = {"Authorization": f"Bearer {config.api_key}"} if config.api_key else {}
-    payload = {"model": model, "messages": messages, "max_tokens": max_tokens}
+    payload: dict = {"model": model, "messages": messages, "max_tokens": max_tokens}
+    if tools:
+        payload["tools"] = tools
     async with httpx.AsyncClient(timeout=timeout, headers=headers) as client:
         try:
             response = await client.post(f"{config.base_url}/chat/completions", json=payload)
@@ -444,6 +448,18 @@ async def chat_completion(
         except httpx.HTTPError as exc:
             raise AIRequestError(f"The AI endpoint is unreachable: {exc.__class__.__name__}.") from exc
 
+    _raise_for_chat_status(response)
+    try:
+        message = response.json()["choices"][0]["message"]
+    except (json.JSONDecodeError, KeyError, IndexError, TypeError) as exc:
+        raise AIRequestError("The AI endpoint returned an unexpected response shape.") from exc
+    if not isinstance(message, dict):
+        raise AIRequestError("The AI endpoint returned an unexpected response shape.")
+    return message
+
+
+def _raise_for_chat_status(response: httpx.Response) -> None:
+    """Map non-OK chat-completion statuses to user-safe AIRequestErrors."""
     if response.status_code == httpx.codes.UNAUTHORIZED:
         raise AIRequestError("The AI endpoint rejected the API key (HTTP 401).")
     if response.status_code != httpx.codes.OK:
@@ -454,10 +470,28 @@ async def chat_completion(
             detail = response.text[:200]
         raise AIRequestError(f"The AI endpoint returned HTTP {response.status_code}. {detail}".strip())
 
-    try:
-        content = response.json()["choices"][0]["message"]["content"]
-    except (json.JSONDecodeError, KeyError, IndexError, TypeError) as exc:
-        raise AIRequestError("The AI endpoint returned an unexpected response shape.") from exc
-    if not isinstance(content, str):
+
+async def chat_completion(
+    config: AIConfig,
+    messages: list[dict],
+    *,
+    use_vision_model: bool = False,
+    max_tokens: int = 2000,
+    timeout: float = _CHAT_TIMEOUT,
+) -> str:
+    """Run one chat completion against the configured endpoint and return the reply text.
+
+    A convenience wrapper over chat_completion_message() for callers that expect plain
+    text (no tools). Raises AIRequestError when the reply carries no text content.
+    """
+    message = await chat_completion_message(
+        config,
+        messages,
+        use_vision_model=use_vision_model,
+        max_tokens=max_tokens,
+        timeout=timeout,
+    )
+    content = message.get("content")
+    if not isinstance(content, str) or not content:
         raise AIRequestError("The AI endpoint returned no text content.")
     return content
