@@ -43,11 +43,18 @@ ENV_BASE_URL = "SPOOLMAN_AI_BASE_URL"
 ENV_API_KEY = "SPOOLMAN_AI_API_KEY"
 ENV_MODEL = "SPOOLMAN_AI_MODEL"
 ENV_VISION_MODEL = "SPOOLMAN_AI_VISION_MODEL"
+# Speech-to-text (#363). A separate endpoint because the chat provider often has no
+# STT (Ollama); left unset it rides on the main endpoint (OpenAI/Groq serve both).
+ENV_STT_BASE_URL = "SPOOLMAN_AI_STT_BASE_URL"
+ENV_STT_MODEL = "SPOOLMAN_AI_STT_MODEL"
+ENV_STT_API_KEY = "SPOOLMAN_AI_STT_API_KEY"
 
 # Registered (non-secret) DB settings — see the registrations in spoolman/settings.py.
 SETTING_BASE_URL = "ai_base_url"
 SETTING_MODEL = "ai_model"
 SETTING_VISION_MODEL = "ai_vision_model"
+SETTING_STT_BASE_URL = "ai_stt_base_url"
+SETTING_STT_MODEL = "ai_stt_model"
 
 #: Feature-toggle setting key -> feature name as reported by /ai/status. All default off:
 #: AI must be invisible unless explicitly enabled (brainstorm decision #7).
@@ -58,13 +65,16 @@ FEATURE_SETTINGS = {
     "ai_feature_voice": "voice",
 }
 
-#: Unregistered settings-table key for the write-only API key. Kept out of the settings
-#: registry on purpose; tests/test_ai.py asserts it never gets registered.
+#: Unregistered settings-table keys for the write-only API keys. Kept out of the
+#: settings registry on purpose; tests/test_ai.py asserts they never get registered.
 API_KEY_DB_KEY = "ai_api_key"
+STT_API_KEY_DB_KEY = "ai_stt_api_key"
 
 _PROBE_TIMEOUT = 10.0
 #: Vision inference on local hardware is legitimately slow; give it room.
 _CHAT_TIMEOUT = 120.0
+#: Push-to-talk clips are seconds long; whisper on modest hardware still needs slack.
+_TRANSCRIBE_TIMEOUT = 60.0
 
 TriState = Literal["yes", "no", "unknown"]
 
@@ -81,6 +91,9 @@ class AIConfig:
     api_key: str | None = None
     model: str | None = None
     vision_model: str | None = None
+    stt_base_url: str | None = None
+    stt_model: str | None = None
+    stt_api_key: str | None = None
     #: field name -> "env" | "db" for every field that has a value.
     sources: dict[str, str] = field(default_factory=dict)
 
@@ -88,6 +101,25 @@ class AIConfig:
     def configured(self) -> bool:
         """Whether the minimum viable configuration (endpoint + chat model) is present."""
         return bool(self.base_url and self.model)
+
+    def stt_endpoint(self) -> tuple[str, str | None] | None:
+        """Resolve the effective transcription endpoint as (base_url, api_key).
+
+        With no dedicated STT base URL, transcription rides on the main endpoint and
+        its key (providers like OpenAI or Groq serve chat and audio from one URL). A
+        dedicated STT endpoint uses ONLY the dedicated STT key — the main key must
+        never be sent to a different host.
+        """
+        if self.stt_base_url:
+            return self.stt_base_url, self.stt_api_key
+        if self.base_url:
+            return self.base_url, self.stt_api_key or self.api_key
+        return None
+
+    @property
+    def stt_configured(self) -> bool:
+        """Whether transcription is set up: an STT model plus some endpoint to send it to."""
+        return bool(self.stt_model and self.stt_endpoint() is not None)
 
 
 @dataclass
@@ -168,16 +200,16 @@ async def get_feature_flags(db: AsyncSession) -> dict[str, bool]:
 # --- Write-only API-key storage ---------------------------------------------------
 
 
-async def get_stored_api_key(db: AsyncSession) -> str | None:
-    """Read the stored API key (raw, not JSON-encoded). None when unset."""
-    row = await db.get(models.Setting, API_KEY_DB_KEY)
+async def get_stored_api_key(db: AsyncSession, db_key: str = API_KEY_DB_KEY) -> str | None:
+    """Read a stored API key (raw, not JSON-encoded). None when unset."""
+    row = await db.get(models.Setting, db_key)
     if row is None:
         return None
     return row.value or None
 
 
-async def set_stored_api_key(db: AsyncSession, value: str | None) -> None:
-    """Set or clear the stored API key.
+async def set_stored_api_key(db: AsyncSession, value: str | None, db_key: str = API_KEY_DB_KEY) -> None:
+    """Set or clear a stored API key (the main one, or the STT one via db_key).
 
     Deliberately does NOT go through spoolman.database.setting.update: that helper
     broadcasts the new value to websocket subscribers, which must never happen for
@@ -186,17 +218,17 @@ async def set_stored_api_key(db: AsyncSession, value: str | None) -> None:
     if value:
         await db.merge(
             models.Setting(
-                key=API_KEY_DB_KEY,
+                key=db_key,
                 value=value,
                 last_updated=datetime.utcnow().replace(microsecond=0),
             ),
         )
     else:
-        row = await db.get(models.Setting, API_KEY_DB_KEY)
+        row = await db.get(models.Setting, db_key)
         if row is not None:
             await db.delete(row)
     await db.commit()
-    logger.info("AI API key has been %s.", "updated" if value else "cleared")
+    logger.info("AI API key (%s) has been %s.", db_key, "updated" if value else "cleared")
 
 
 # --- Config resolution -------------------------------------------------------------
@@ -216,6 +248,8 @@ async def resolve_config(db: AsyncSession) -> AIConfig:
         ("base_url", ENV_BASE_URL, SETTING_BASE_URL),
         ("model", ENV_MODEL, SETTING_MODEL),
         ("vision_model", ENV_VISION_MODEL, SETTING_VISION_MODEL),
+        ("stt_base_url", ENV_STT_BASE_URL, SETTING_STT_BASE_URL),
+        ("stt_model", ENV_STT_MODEL, SETTING_STT_MODEL),
     ):
         env_value = _env(env_name)
         if env_value is not None:
@@ -227,17 +261,22 @@ async def resolve_config(db: AsyncSession) -> AIConfig:
                 setattr(config, attr, db_value)
                 config.sources[attr] = "db"
 
-    env_key = _env(ENV_API_KEY)
-    if env_key is not None:
-        config.api_key = env_key
-        config.sources["api_key"] = "env"
-    else:
-        stored = await get_stored_api_key(db)
-        if stored is not None:
-            config.api_key = stored
-            config.sources["api_key"] = "db"
+    for attr, env_name, db_key in (
+        ("api_key", ENV_API_KEY, API_KEY_DB_KEY),
+        ("stt_api_key", ENV_STT_API_KEY, STT_API_KEY_DB_KEY),
+    ):
+        env_key = _env(env_name)
+        if env_key is not None:
+            setattr(config, attr, env_key)
+            config.sources[attr] = "env"
+        else:
+            stored = await get_stored_api_key(db, db_key)
+            if stored is not None:
+                setattr(config, attr, stored)
+                config.sources[attr] = "db"
 
     config.base_url = normalize_base_url(config.base_url)
+    config.stt_base_url = normalize_base_url(config.stt_base_url)
     return config
 
 
@@ -458,17 +497,17 @@ async def chat_completion_message(
     return message
 
 
-def _raise_for_chat_status(response: httpx.Response) -> None:
-    """Map non-OK chat-completion statuses to user-safe AIRequestErrors."""
+def _raise_for_chat_status(response: httpx.Response, what: str = "The AI endpoint") -> None:
+    """Map non-OK OpenAI-compatible statuses to user-safe AIRequestErrors."""
     if response.status_code == httpx.codes.UNAUTHORIZED:
-        raise AIRequestError("The AI endpoint rejected the API key (HTTP 401).")
+        raise AIRequestError(f"{what} rejected the API key (HTTP 401).")
     if response.status_code != httpx.codes.OK:
         detail = ""
         try:
             detail = str(response.json().get("error", {}).get("message", ""))[:200]
         except (json.JSONDecodeError, AttributeError):
             detail = response.text[:200]
-        raise AIRequestError(f"The AI endpoint returned HTTP {response.status_code}. {detail}".strip())
+        raise AIRequestError(f"{what} returned HTTP {response.status_code}. {detail}".strip())
 
 
 async def chat_completion(
@@ -495,3 +534,69 @@ async def chat_completion(
     if not isinstance(content, str) or not content:
         raise AIRequestError("The AI endpoint returned no text content.")
     return content
+
+
+# --- Speech to text ----------------------------------------------------------------
+
+#: MIME (parameters stripped) -> upload filename. Several whisper servers sniff the
+#: container from the filename extension, so it must match the actual bytes.
+_AUDIO_FILENAMES = {
+    "audio/webm": "clip.webm",
+    "audio/ogg": "clip.ogg",
+    "audio/mp4": "clip.m4a",
+    "audio/mpeg": "clip.mp3",
+    "audio/mp3": "clip.mp3",
+    "audio/wav": "clip.wav",
+    "audio/x-wav": "clip.wav",
+    "audio/flac": "clip.flac",
+}
+
+
+def audio_filename(mime: str) -> str | None:
+    """Map an audio MIME type (codec parameters tolerated) to an upload filename."""
+    return _AUDIO_FILENAMES.get(mime.split(";")[0].strip().lower())
+
+
+async def transcribe_audio(
+    config: AIConfig,
+    audio: bytes,
+    mime: str,
+    *,
+    language: str | None = None,
+    timeout: float = _TRANSCRIBE_TIMEOUT,
+) -> str:
+    """Transcribe one audio clip via the OpenAI-compatible /audio/transcriptions API.
+
+    Targets whisper-family servers (OpenAI, Groq, Speaches, whisper.cpp's server).
+    The clip exists in memory for the duration of the request only. Raises
+    AIRequestError with a user-safe message on any failure.
+    """
+    endpoint = config.stt_endpoint()
+    if endpoint is None or not config.stt_model:
+        raise AIRequestError("No transcription endpoint and model are configured.")
+    filename = audio_filename(mime)
+    if filename is None:
+        raise AIRequestError(f"Unsupported audio type '{mime}'.")
+
+    base_url, api_key = endpoint
+    headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
+    data = {"model": config.stt_model, "response_format": "json"}
+    if language:
+        data["language"] = language
+    files = {"file": (filename, audio, mime.split(";")[0].strip())}
+    async with httpx.AsyncClient(timeout=timeout, headers=headers) as client:
+        try:
+            response = await client.post(f"{base_url}/audio/transcriptions", data=data, files=files)
+        except httpx.TimeoutException as exc:
+            raise AIRequestError(f"The transcription endpoint timed out after {int(timeout)} s.") from exc
+        except httpx.HTTPError as exc:
+            raise AIRequestError(f"The transcription endpoint is unreachable: {exc.__class__.__name__}.") from exc
+
+    _raise_for_chat_status(response, what="The transcription endpoint")
+    try:
+        text = response.json()["text"]
+    except (json.JSONDecodeError, KeyError, TypeError) as exc:
+        raise AIRequestError("The transcription endpoint returned an unexpected response shape.") from exc
+    if not isinstance(text, str):
+        raise AIRequestError("The transcription endpoint returned no text.")
+    return text.strip()

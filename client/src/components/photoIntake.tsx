@@ -35,7 +35,7 @@ export async function fileToJpegBase64(file: File): Promise<{ base64: string; pr
   }
 }
 
-async function blobToBase64(blob: Blob): Promise<string> {
+export async function blobToBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve((reader.result as string).split(",", 2)[1]);

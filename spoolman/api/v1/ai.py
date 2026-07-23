@@ -71,6 +71,19 @@ class AIStatus(BaseModel):
     model: str | None = Field(default=None, description="Effective chat/tool model.")
     vision_model: str | None = Field(default=None, description="Effective vision model (falls back to the chat model).")
     api_key_set: bool = Field(description="Whether an API key is configured. The key itself is never returned.")
+    stt_base_url: str | None = Field(
+        default=None,
+        description="Dedicated speech-to-text endpoint; null means transcription rides on base_url.",
+    )
+    stt_model: str | None = Field(default=None, description="Transcription model, e.g. whisper-1.")
+    stt_api_key_set: bool = Field(
+        default=False,
+        description="Whether a dedicated STT API key is configured. Never returned, only reported set/unset.",
+    )
+    stt_configured: bool = Field(
+        default=False,
+        description="Whether voice transcription can work: an STT model plus an endpoint to send audio to.",
+    )
     env_locked: list[str] = Field(
         default_factory=list,
         description="Fields set via SPOOLMAN_AI_* env vars; the UI disables these inputs.",
@@ -95,12 +108,20 @@ class AIProbeRequest(BaseModel):
 
 
 class AIKeyRequest(BaseModel):
-    api_key: str | None = Field(description="The API key to store, or null to clear the stored key.")
+    """Write-only key updates. Only fields present in the request are applied; null clears."""
+
+    api_key: str | None = Field(default=None, description="The API key to store, or null to clear the stored key.")
+    stt_api_key: str | None = Field(
+        default=None,
+        description="The dedicated speech-to-text API key to store, or null to clear it.",
+    )
 
 
 class AIKeyResponse(BaseModel):
     api_key_set: bool = Field(description="Whether an API key is now in effect (env or stored).")
     env_locked: bool = Field(description="True when SPOOLMAN_AI_API_KEY is set, which overrides the stored key.")
+    stt_api_key_set: bool = Field(default=False, description="Whether an STT API key is now in effect.")
+    stt_env_locked: bool = Field(default=False, description="True when SPOOLMAN_AI_STT_API_KEY overrides the store.")
 
 
 @router.get(
@@ -122,6 +143,10 @@ async def status(
         model=config.model,
         vision_model=config.vision_model,
         api_key_set=config.api_key is not None,
+        stt_base_url=config.stt_base_url,
+        stt_model=config.stt_model,
+        stt_api_key_set=config.stt_api_key is not None,
+        stt_configured=config.stt_configured,
         env_locked=sorted(attr for attr, source in config.sources.items() if source == "env"),
         features=await ai.get_feature_flags(db),
         capabilities=AIProbeResult.from_result(cached) if cached is not None else None,
@@ -165,11 +190,18 @@ async def set_key(
     _admin: Annotated[Principal, Depends(require_admin)],
     body: AIKeyRequest,
 ) -> AIKeyResponse:
-    await ai.set_stored_api_key(db, body.api_key.strip() if body.api_key else None)
+    # Only fields present in the request body are applied, so setting one key never
+    # touches the other; an explicit null clears.
+    if "api_key" in body.model_fields_set:
+        await ai.set_stored_api_key(db, body.api_key.strip() if body.api_key else None)
+    if "stt_api_key" in body.model_fields_set:
+        await ai.set_stored_api_key(db, body.stt_api_key.strip() if body.stt_api_key else None, ai.STT_API_KEY_DB_KEY)
     config = await ai.resolve_config(db)
     return AIKeyResponse(
         api_key_set=config.api_key is not None,
         env_locked=config.sources.get("api_key") == "env",
+        stt_api_key_set=config.stt_api_key is not None,
+        stt_env_locked=config.sources.get("stt_api_key") == "env",
     )
 
 
@@ -438,3 +470,58 @@ async def nl_search(
         raise HTTPException(status_code=502, detail=str(exc)) from exc
     filters, dropped = aisearch.sanitize(reply, body.entity, vocab)
     return AISearchResponse(filters=filters, dropped=dropped)
+
+
+# --- Voice transcription (#363) -----------------------------------------------------
+
+#: ~11 MB of audio after base64 decoding; push-to-talk clips are a few hundred KB.
+_MAX_AUDIO_B64_CHARS = 15 * 1024 * 1024
+
+
+class AITranscribeRequest(BaseModel):
+    audio_base64: str = Field(description="The audio clip, base64-encoded. Held in memory only, never persisted.")
+    mime: str = Field(default="audio/webm", description="Audio MIME type as produced by MediaRecorder.")
+    language: str | None = Field(
+        default=None,
+        max_length=20,
+        description="Optional language hint (UI locale); region subtags are stripped for whisper.",
+    )
+
+
+class AITranscribeResponse(BaseModel):
+    text: str = Field(description="The transcript. The client places it in the input box for review.")
+
+
+@router.post(
+    "/transcribe",
+    name="Transcribe a voice clip",
+    description=(
+        "Send a push-to-talk audio clip to the configured OpenAI-compatible transcription "
+        "endpoint (/audio/transcriptions) and get the transcript back. The clip exists in "
+        "memory for the duration of the request only - it is never persisted or logged."
+    ),
+    responses={400: {"model": Message}, 404: {"model": Message}, 409: {"model": Message}, 502: {"model": Message}},
+)
+async def transcribe(
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+    body: AITranscribeRequest,
+) -> AITranscribeResponse:
+    await _require_feature(db, "voice", "Voice input")
+    config = await ai.resolve_config(db)
+    if not config.stt_configured:
+        raise HTTPException(status_code=409, detail="No transcription endpoint and model are configured.")
+    if ai.audio_filename(body.mime) is None:
+        raise HTTPException(status_code=400, detail=f"Unsupported audio type '{body.mime}'.")
+    if len(body.audio_base64) > _MAX_AUDIO_B64_CHARS:
+        raise HTTPException(status_code=413, detail="Audio clip too large.")
+    try:
+        audio = base64.b64decode(body.audio_base64, validate=True)
+    except binascii.Error as exc:
+        raise HTTPException(status_code=400, detail="audio_base64 is not valid base64.") from exc
+
+    language = body.language.split("-")[0].strip().lower() or None if body.language else None
+    try:
+        text = await ai.transcribe_audio(config, audio, body.mime, language=language)
+    except ai.AIRequestError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    return AITranscribeResponse(text=text)

@@ -890,7 +890,8 @@
         "voice": "Voice input",
         "requires_config": "Configure and save an endpoint and chat model first.",
         "requires_vision": "The connection test reports no vision support for the configured model.",
-        "voice_unavailable": "Not available yet - this arrives with the voice input feature."
+        "requires_stt": "Configure a transcription model below first (Voice section).",
+        "voice_auto_send": "Send transcribed speech immediately, without review"
       },
       "mcp": {
         "title": "MCP server",
@@ -899,6 +900,16 @@
         "copy_config": "Copy config",
         "copied": "Client configuration copied to the clipboard.",
         "auth_note": "Authentication is enabled: replace YOUR_SPOOLMAN_TOKEN in the copied config with your API token or a login token."
+      },
+      "stt": {
+        "title": "Voice (speech-to-text)",
+        "base_url_label": "STT endpoint",
+        "base_url_tooltip": "OpenAI-compatible /audio/transcriptions endpoint (whisper.cpp server, Speaches, Groq, OpenAI). Leave empty to use the endpoint above - note Ollama has no speech-to-text.",
+        "base_url_placeholder": "Same as the endpoint above",
+        "model_label": "STT model",
+        "model_tooltip": "Transcription model, e.g. whisper-1 (OpenAI/Groq) or a faster-whisper model name.",
+        "api_key_label": "STT API key",
+        "api_key_tooltip": "Only needed when the STT endpoint differs from the main one and requires its own key. Write-only, like the main key."
       }
     },
     "swatch": {
@@ -1418,6 +1429,14 @@
       "measure_spool": "Record a weight measurement",
       "create_spool": "Create a spool",
       "archive_spool": "Archive or unarchive a spool"
+    },
+    "voice": {
+      "hold_to_talk": "Hold to talk",
+      "recording": "Recording",
+      "release_hint": "Release to transcribe - slide away to cancel",
+      "transcribing": "Transcribing...",
+      "speak_replies": "Speak replies",
+      "mic_error": "Microphone unavailable. Check the browser permission."
     }
   },
   "aisearch": {

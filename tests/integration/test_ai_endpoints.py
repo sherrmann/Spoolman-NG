@@ -86,7 +86,12 @@ async def test_api_key_is_write_only(client: AsyncClient) -> None:
 
     set_response = await client.post("/api/v1/ai/config", json={"api_key": secret})
     assert set_response.status_code == 200
-    assert set_response.json() == {"api_key_set": True, "env_locked": False}
+    assert set_response.json() == {
+        "api_key_set": True,
+        "env_locked": False,
+        "stt_api_key_set": False,
+        "stt_env_locked": False,
+    }
     assert secret not in set_response.text
 
     status_response = await client.get("/api/v1/ai/status")
@@ -102,7 +107,12 @@ async def test_api_key_is_write_only(client: AsyncClient) -> None:
 
     # Clearing works and is idempotent.
     clear_response = await client.post("/api/v1/ai/config", json={"api_key": None})
-    assert clear_response.json() == {"api_key_set": False, "env_locked": False}
+    assert clear_response.json() == {
+        "api_key_set": False,
+        "env_locked": False,
+        "stt_api_key_set": False,
+        "stt_env_locked": False,
+    }
     assert (await client.get("/api/v1/ai/status")).json()["api_key_set"] is False
 
 
@@ -113,7 +123,12 @@ async def test_env_api_key_wins_over_stored(
     monkeypatch.setenv(ai.ENV_API_KEY, "sk-from-env")
     response = await client.post("/api/v1/ai/config", json={"api_key": None})
     # The stored key was cleared, but the env key is still in effect and locks the field.
-    assert response.json() == {"api_key_set": True, "env_locked": True}
+    assert response.json() == {
+        "api_key_set": True,
+        "env_locked": True,
+        "stt_api_key_set": False,
+        "stt_env_locked": False,
+    }
     status = (await client.get("/api/v1/ai/status")).json()
     assert status["api_key_set"] is True
     assert "api_key" in status["env_locked"]

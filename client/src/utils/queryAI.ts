@@ -25,6 +25,10 @@ export interface AIStatus {
   model: string | null;
   vision_model: string | null;
   api_key_set: boolean;
+  stt_base_url: string | null;
+  stt_model: string | null;
+  stt_api_key_set: boolean;
+  stt_configured: boolean;
   env_locked: string[];
   features: Record<string, boolean>;
   capabilities: AIProbeResult | null;
@@ -195,14 +199,27 @@ export function useAISearch() {
   });
 }
 
+export interface AIKeyUpdate {
+  /** Only fields present are applied server-side; null clears the stored key. */
+  api_key?: string | null;
+  stt_api_key?: string | null;
+}
+
+export interface AIKeyResult {
+  api_key_set: boolean;
+  env_locked: boolean;
+  stt_api_key_set: boolean;
+  stt_env_locked: boolean;
+}
+
 export function useSetAIKey() {
   const queryClient = useQueryClient();
-  return useMutation<{ api_key_set: boolean; env_locked: boolean }, Error, string | null>({
-    mutationFn: async (apiKey) => {
+  return useMutation<AIKeyResult, Error, AIKeyUpdate>({
+    mutationFn: async (update) => {
       const response = await apiFetch(`${getAPIURL()}/ai/config`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ api_key: apiKey }),
+        body: JSON.stringify(update),
       });
       if (!response.ok) {
         throw new Error((await response.json()).message ?? `HTTP ${response.status}`);
@@ -211,6 +228,23 @@ export function useSetAIKey() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ai-status"] });
+    },
+  });
+}
+
+export function useTranscribe() {
+  return useMutation<{ text: string }, Error, { audio_base64: string; mime: string; language?: string }>({
+    mutationFn: async (body) => {
+      const response = await apiFetch(`${getAPIURL()}/ai/transcribe`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload.detail ?? payload.message ?? `HTTP ${response.status}`);
+      }
+      return response.json();
     },
   });
 }

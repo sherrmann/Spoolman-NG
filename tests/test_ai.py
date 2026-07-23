@@ -31,12 +31,13 @@ def _reset_module_state(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_api_key_storage_key_is_never_a_registered_setting() -> None:
-    """The write-only key must stay invisible to the generic /setting API.
+    """The write-only keys must stay invisible to the generic /setting API.
 
     The generic endpoints return every *registered* key's value and broadcast changes
-    over websockets; registering the API-key storage key would leak the secret.
+    over websockets; registering an API-key storage key would leak the secret.
     """
     assert ai.API_KEY_DB_KEY not in SETTINGS
+    assert ai.STT_API_KEY_DB_KEY not in SETTINGS
 
 
 def test_all_feature_toggles_are_registered_settings() -> None:
@@ -45,8 +46,57 @@ def test_all_feature_toggles_are_registered_settings() -> None:
 
 
 def test_provider_settings_are_registered() -> None:
-    for key in (ai.SETTING_BASE_URL, ai.SETTING_MODEL, ai.SETTING_VISION_MODEL):
+    for key in (
+        ai.SETTING_BASE_URL,
+        ai.SETTING_MODEL,
+        ai.SETTING_VISION_MODEL,
+        ai.SETTING_STT_BASE_URL,
+        ai.SETTING_STT_MODEL,
+    ):
         assert key in SETTINGS
+
+
+# --- STT endpoint resolution (#363) ------------------------------------------------
+
+
+def test_stt_rides_on_the_main_endpoint_with_the_main_key() -> None:
+    config = ai.AIConfig(base_url="http://main:11434/v1", api_key="main-key", stt_model="whisper-1")
+    assert config.stt_endpoint() == ("http://main:11434/v1", "main-key")
+    assert config.stt_configured is True
+
+
+def test_dedicated_stt_endpoint_never_receives_the_main_key() -> None:
+    config = ai.AIConfig(
+        base_url="http://main:11434/v1",
+        api_key="main-key",
+        stt_base_url="http://whisper:8000/v1",
+        stt_model="whisper-1",
+    )
+    # No dedicated key configured: send none, rather than leaking main-key to another host.
+    assert config.stt_endpoint() == ("http://whisper:8000/v1", None)
+    config.stt_api_key = "stt-key"
+    assert config.stt_endpoint() == ("http://whisper:8000/v1", "stt-key")
+
+
+def test_stt_unconfigured_without_model_or_any_endpoint() -> None:
+    assert ai.AIConfig(base_url="http://main/v1").stt_configured is False
+    assert ai.AIConfig(stt_model="whisper-1").stt_configured is False
+    assert ai.AIConfig(stt_base_url="http://whisper:8000/v1", stt_model="whisper-1").stt_configured is True
+
+
+@pytest.mark.parametrize(
+    ("mime", "expected"),
+    [
+        ("audio/webm;codecs=opus", "clip.webm"),
+        ("audio/webm", "clip.webm"),
+        ("audio/mp4", "clip.m4a"),
+        ("audio/ogg", "clip.ogg"),
+        ("video/webm", None),
+        ("text/plain", None),
+    ],
+)
+def test_audio_filename_mapping(mime: str, expected: str | None) -> None:
+    assert ai.audio_filename(mime) == expected
 
 
 # --- URL helpers -------------------------------------------------------------------

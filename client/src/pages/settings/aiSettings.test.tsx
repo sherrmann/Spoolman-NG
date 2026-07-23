@@ -41,6 +41,10 @@ const baseStatus: AIStatus = {
   model: null,
   vision_model: null,
   api_key_set: false,
+  stt_base_url: null,
+  stt_model: null,
+  stt_api_key_set: false,
+  stt_configured: false,
   env_locked: [],
   features: { chat: false, scan_to_spool: false, nl_search: false, voice: false },
   capabilities: null,
@@ -59,9 +63,44 @@ describe("AISettings (#359)", () => {
     for (const feature of ["chat", "scan_to_spool", "nl_search", "voice"]) {
       expect(screen.getByTestId(`toggle-${feature}`)).toBeDisabled();
     }
-    // Three features wait on configuration; voice waits on its own feature shipping.
-    expect(screen.getAllByText("settings.ai.features.requires_config")).toHaveLength(3);
-    expect(screen.getByText("settings.ai.features.voice_unavailable")).toBeInTheDocument();
+    expect(screen.getAllByText("settings.ai.features.requires_config")).toHaveLength(4);
+  });
+
+  it("blocks Voice with an inline reason until an STT model is configured (#363)", () => {
+    statusMock.mockReturnValue({ ...baseStatus, configured: true, base_url: "http://o:11434/v1", model: "m" });
+    render(<AISettings />);
+    expect(screen.getByTestId("toggle-voice")).toBeDisabled();
+    expect(screen.getByText("settings.ai.features.requires_stt")).toBeInTheDocument();
+  });
+
+  it("lets Voice be enabled once STT is configured and offers the auto-send opt-in", async () => {
+    statusMock.mockReturnValue({
+      ...baseStatus,
+      configured: true,
+      base_url: "http://o:11434/v1",
+      model: "m",
+      stt_model: "whisper-1",
+      stt_configured: true,
+    });
+    settingsMock.mockReturnValue({ ai_feature_voice: { value: "true" } });
+    const user = userEvent.setup();
+    render(<AISettings />);
+
+    expect(screen.getByTestId("toggle-voice")).toBeEnabled();
+    // Auto-send is the explicit opt-in sub-toggle, off by default.
+    const autoSend = screen.getByTestId("toggle-voice-auto-send") as HTMLInputElement;
+    expect(autoSend).not.toBeChecked();
+    await user.click(autoSend);
+    expect(setSettingMutate).toHaveBeenCalledWith("ai_voice_auto_send", true);
+  });
+
+  it("keeps the STT key write-only with its own clear affordance", async () => {
+    statusMock.mockReturnValue({ ...baseStatus, stt_api_key_set: true });
+    const user = userEvent.setup();
+    render(<AISettings />);
+
+    await user.click(screen.getByTestId("stt-key-clear"));
+    expect(setKeyMutate).toHaveBeenCalledWith({ stt_api_key: null });
   });
 
   it("lets features be enabled once configured, persisting the matching setting", async () => {
@@ -132,7 +171,7 @@ describe("AISettings (#359)", () => {
     expect(keyInput.value).toBe("");
 
     await user.click(screen.getByRole("button", { name: "settings.ai.api_key.clear" }));
-    expect(setKeyMutate).toHaveBeenCalledWith(null);
+    expect(setKeyMutate).toHaveBeenCalledWith({ api_key: null });
   });
 
   it("disables env-locked fields and says why", () => {

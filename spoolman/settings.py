@@ -106,10 +106,17 @@ register_setting("low_stock_fallback_g", SettingType.NUMBER, json.dumps(200))
 register_setting("ai_base_url", SettingType.STRING, json.dumps(""))
 register_setting("ai_model", SettingType.STRING, json.dumps(""))
 register_setting("ai_vision_model", SettingType.STRING, json.dumps(""))
+# Speech-to-text (#363): separate endpoint because chat providers often lack STT
+# (Ollama); unset means it rides on ai_base_url. The STT API key is unregistered
+# (write-only), like the main one.
+register_setting("ai_stt_base_url", SettingType.STRING, json.dumps(""))
+register_setting("ai_stt_model", SettingType.STRING, json.dumps(""))
 register_setting("ai_feature_chat", SettingType.BOOLEAN, json.dumps(obj=False))
 register_setting("ai_feature_scan_to_spool", SettingType.BOOLEAN, json.dumps(obj=False))
 register_setting("ai_feature_nl_search", SettingType.BOOLEAN, json.dumps(obj=False))
 register_setting("ai_feature_voice", SettingType.BOOLEAN, json.dumps(obj=False))
+# Voice sends the transcript for review by default; auto-send is an explicit opt-in.
+register_setting("ai_voice_auto_send", SettingType.BOOLEAN, json.dumps(obj=False))
 
 # Built-in MCP server (#360): serves the curated AI tool layer at /mcp when enabled.
 # Off by default — the endpoint answers 404 until switched on in Settings -> AI.

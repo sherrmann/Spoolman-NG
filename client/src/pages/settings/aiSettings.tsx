@@ -18,7 +18,7 @@ const FEATURE_ROWS: {
   statusKey: string;
   labelKey: string;
   requiresVision?: boolean;
-  unavailable?: boolean;
+  requiresSTT?: boolean;
 }[] = [
   { settingKey: "ai_feature_chat", statusKey: "chat", labelKey: "settings.ai.features.chat" },
   {
@@ -28,7 +28,12 @@ const FEATURE_ROWS: {
     requiresVision: true,
   },
   { settingKey: "ai_feature_nl_search", statusKey: "nl_search", labelKey: "settings.ai.features.nl_search" },
-  { settingKey: "ai_feature_voice", statusKey: "voice", labelKey: "settings.ai.features.voice", unavailable: true },
+  {
+    settingKey: "ai_feature_voice",
+    statusKey: "voice",
+    labelKey: "settings.ai.features.voice",
+    requiresSTT: true,
+  },
 ];
 
 function TriStateRow(props: { labelKey: string; value: AITriState }) {
@@ -58,6 +63,9 @@ export function AISettings() {
   const setBaseUrl = useSetSetting<string>("ai_base_url");
   const setModel = useSetSetting<string>("ai_model");
   const setVisionModel = useSetSetting<string>("ai_vision_model");
+  const setSttBaseUrl = useSetSetting<string>("ai_stt_base_url");
+  const setSttModel = useSetSetting<string>("ai_stt_model");
+  const setVoiceAutoSend = useSetSetting<boolean>("ai_voice_auto_send");
   const featureMutations = {
     ai_feature_chat: useSetSetting<boolean>("ai_feature_chat"),
     ai_feature_scan_to_spool: useSetSetting<boolean>("ai_feature_scan_to_spool"),
@@ -79,9 +87,11 @@ export function AISettings() {
         base_url: status.data.base_url ?? "",
         model: status.data.model ?? "",
         vision_model: status.data.vision_model ?? "",
+        stt_base_url: status.data.stt_base_url ?? "",
+        stt_model: status.data.stt_model ?? "",
       });
     }
-    // The api_key field is deliberately never populated: the server never returns it.
+    // The api_key fields are deliberately never populated: the server never returns them.
   }, [status.data, form]);
 
   const applyPreset = (key: string) => {
@@ -102,14 +112,28 @@ export function AISettings() {
     probe.mutate(overrides, { onSuccess: setProbeResult });
   };
 
-  const onFinish = async (values: { base_url?: string; model?: string; vision_model?: string; api_key?: string }) => {
+  const onFinish = async (values: {
+    base_url?: string;
+    model?: string;
+    vision_model?: string;
+    api_key?: string;
+    stt_base_url?: string;
+    stt_model?: string;
+    stt_api_key?: string;
+  }) => {
     try {
       if (!envLocked.has("base_url")) await setBaseUrl.mutateAsync(values.base_url ?? "");
       if (!envLocked.has("model")) await setModel.mutateAsync(values.model ?? "");
       if (!envLocked.has("vision_model")) await setVisionModel.mutateAsync(values.vision_model ?? "");
+      if (!envLocked.has("stt_base_url")) await setSttBaseUrl.mutateAsync(values.stt_base_url ?? "");
+      if (!envLocked.has("stt_model")) await setSttModel.mutateAsync(values.stt_model ?? "");
       if (values.api_key) {
-        await setKey.mutateAsync(values.api_key);
+        await setKey.mutateAsync({ api_key: values.api_key });
         form.setFieldValue("api_key", "");
+      }
+      if (values.stt_api_key) {
+        await setKey.mutateAsync({ stt_api_key: values.stt_api_key });
+        form.setFieldValue("stt_api_key", "");
       }
       messageApi.success(t("notifications.saveSuccessful"));
     } catch (error) {
@@ -177,7 +201,7 @@ export function AISettings() {
         </Form.Item>
         {status.data?.api_key_set && !envLocked.has("api_key") && (
           <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
-            <Button size="small" loading={setKey.isPending} onClick={() => setKey.mutate(null)}>
+            <Button size="small" loading={setKey.isPending} onClick={() => setKey.mutate({ api_key: null })}>
               {t("settings.ai.api_key.clear")}
             </Button>
           </Form.Item>
@@ -198,6 +222,56 @@ export function AISettings() {
         >
           <AutoComplete options={modelOptions} disabled={envLocked.has("vision_model")} />
         </Form.Item>
+        {/* Speech-to-text (#363): a separate endpoint because the chat provider often
+            has no STT (Ollama). Left empty it rides on the endpoint above. */}
+        <Divider orientation="left" plain>
+          {t("settings.ai.stt.title")}
+        </Divider>
+        <Form.Item
+          label={t("settings.ai.stt.base_url_label")}
+          name="stt_base_url"
+          extra={envLockedHint("stt_base_url")}
+          tooltip={t("settings.ai.stt.base_url_tooltip")}
+          rules={[{ pattern: /^https?:\/\/.+$/, message: t("settings.ai.base_url.invalid") }]}
+        >
+          <Input placeholder={t("settings.ai.stt.base_url_placeholder")} disabled={envLocked.has("stt_base_url")} />
+        </Form.Item>
+        <Form.Item
+          label={t("settings.ai.stt.model_label")}
+          name="stt_model"
+          extra={envLockedHint("stt_model")}
+          tooltip={t("settings.ai.stt.model_tooltip")}
+        >
+          <Input placeholder="whisper-1" disabled={envLocked.has("stt_model")} />
+        </Form.Item>
+        <Form.Item
+          label={t("settings.ai.stt.api_key_label")}
+          name="stt_api_key"
+          extra={envLockedHint("stt_api_key")}
+          tooltip={t("settings.ai.stt.api_key_tooltip")}
+        >
+          <Input.Password
+            placeholder={
+              status.data?.stt_api_key_set
+                ? t("settings.ai.api_key.placeholder_set")
+                : t("settings.ai.api_key.placeholder_unset")
+            }
+            disabled={envLocked.has("stt_api_key")}
+            autoComplete="off"
+          />
+        </Form.Item>
+        {status.data?.stt_api_key_set && !envLocked.has("stt_api_key") && (
+          <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
+            <Button
+              size="small"
+              loading={setKey.isPending}
+              onClick={() => setKey.mutate({ stt_api_key: null })}
+              data-testid="stt-key-clear"
+            >
+              {t("settings.ai.api_key.clear")}
+            </Button>
+          </Form.Item>
+        )}
         <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
           <Space>
             <Button type="primary" htmlType="submit" loading={setBaseUrl.isPending || setKey.isPending}>
@@ -244,15 +318,17 @@ export function AISettings() {
           const rawValue = settings.data?.[row.settingKey]?.value;
           const enabled = rawValue !== undefined ? JSON.parse(rawValue) === true : false;
           let reasonKey: string | null = null;
-          if (row.unavailable) {
-            reasonKey = "settings.ai.features.voice_unavailable";
-          } else if (!status.data?.configured) {
+          if (!status.data?.configured) {
             reasonKey = "settings.ai.features.requires_config";
           } else if (row.requiresVision && capabilities?.vision === "no") {
             reasonKey = "settings.ai.features.requires_vision";
+          } else if (row.requiresSTT && !status.data?.stt_configured) {
+            reasonKey = "settings.ai.features.requires_stt";
           }
           // A blocked toggle can always be turned OFF, never ON.
           const disabled = reasonKey !== null && !enabled;
+          const autoSendRaw = settings.data?.ai_voice_auto_send?.value;
+          const autoSendEnabled = autoSendRaw !== undefined ? JSON.parse(autoSendRaw) === true : false;
           return (
             <div key={row.settingKey}>
               <Checkbox
@@ -268,6 +344,17 @@ export function AISettings() {
                   <Text type="secondary" style={{ marginLeft: 24 }}>
                     {t(reasonKey)}
                   </Text>
+                </div>
+              )}
+              {row.settingKey === "ai_feature_voice" && enabled && (
+                <div style={{ marginLeft: 24 }}>
+                  <Checkbox
+                    checked={autoSendEnabled}
+                    onChange={(event) => setVoiceAutoSend.mutate(event.target.checked)}
+                    data-testid="toggle-voice-auto-send"
+                  >
+                    {t("settings.ai.features.voice_auto_send")}
+                  </Checkbox>
                 </div>
               )}
             </div>

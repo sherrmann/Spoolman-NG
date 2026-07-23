@@ -138,6 +138,36 @@ dropped, never applied), and parts of the request the filters cannot express —
 like a weight limit — are reported instead of being silently ignored. This
 feature works well with small local models.
 
+## Voice input
+
+The genuine use case: dirty hands at the printer — hold the mic, say "log twenty
+grams on the orange Prusament", release.
+
+Voice needs a **speech-to-text endpoint**, configured in the Voice section of
+Settings → AI. Anything speaking the OpenAI `/audio/transcriptions` API works:
+a local [Speaches](https://speaches.ai/) or whisper.cpp server, or Groq/OpenAI
+whisper in the cloud. Note that **Ollama has no speech-to-text**, which is why
+this is a separate endpoint field — leave it empty only when your main endpoint
+also serves audio. A dedicated STT endpoint gets its own (write-only) API key;
+your main key is never sent to a different host.
+
+Once an STT model is configured and the **Voice** feature is enabled, the chat
+drawer gains a mic button:
+
+- **Hold to talk, release to transcribe, slide away to cancel.** The clip is sent
+  to your STT endpoint and discarded — like photos, nothing is stored.
+- **The transcript lands in the input box for review before sending** — speech
+  recognition reliably mangles vendor names ("Sunlu" becomes "sun blue"), so you
+  get to fix it first. Auto-send is an explicit opt-in in Settings → AI.
+- Sending goes through the normal chat flow, including confirm cards for any
+  changes.
+- **Speak replies** (toggle in the drawer) reads answers aloud using the
+  browser's own speech synthesis — no server or provider involved.
+
+Full-duplex realtime voice is out of scope by design; if you want a hands-free
+conversation today, the [MCP server](mcp.md) plugged into claude.ai's voice mode
+already provides it.
+
 ## Privacy
 
 - With a **local endpoint** (Ollama, LM Studio, llama.cpp, vLLM on your own
