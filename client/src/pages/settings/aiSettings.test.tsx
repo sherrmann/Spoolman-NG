@@ -1,0 +1,157 @@
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { AIStatus } from "../../utils/queryAI";
+
+// The panel is exercised hermetically: every server interaction is behind the two
+// query modules, mocked here. What we pin down is the #359 contract visible to the
+// user — invisible-unless-enabled gating with inline reasons, the write-only key
+// affordance, env-locking, and honest tri-state capability reporting.
+
+const statusMock = vi.fn<() => AIStatus | undefined>();
+const settingsMock = vi.fn<() => Record<string, { value: string }> | undefined>();
+const probeMutate = vi.fn();
+const setKeyMutate = vi.fn();
+const setSettingMutate = vi.fn();
+
+vi.mock("@refinedev/core", () => ({ useTranslate: () => (key: string) => key }));
+vi.mock("@tanstack/react-query", () => ({ useQueryClient: () => ({ invalidateQueries: vi.fn() }) }));
+vi.mock("../../utils/queryAI", () => ({
+  useAIStatus: () => ({ data: statusMock() }),
+  useAIProbe: () => ({ mutate: probeMutate, isPending: false, isError: false, error: null }),
+  useSetAIKey: () => ({ mutate: setKeyMutate, mutateAsync: vi.fn(), isPending: false }),
+}));
+vi.mock("../../utils/querySettings", () => ({
+  useGetSettings: () => ({ data: settingsMock() }),
+  useSetSetting: (key: string) => ({
+    mutate: (value: unknown) => setSettingMutate(key, value),
+    mutateAsync: vi.fn(),
+    isPending: false,
+  }),
+}));
+
+import { AISettings } from "./aiSettings";
+
+const baseStatus: AIStatus = {
+  configured: false,
+  base_url: null,
+  model: null,
+  vision_model: null,
+  api_key_set: false,
+  env_locked: [],
+  features: { chat: false, scan_to_spool: false, nl_search: false, voice: false },
+  capabilities: null,
+};
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  statusMock.mockReturnValue(baseStatus);
+  settingsMock.mockReturnValue({});
+});
+
+describe("AISettings (#359)", () => {
+  it("keeps every feature toggle disabled with a reason while unconfigured", () => {
+    render(<AISettings />);
+    for (const feature of ["chat", "scan_to_spool", "nl_search", "voice"]) {
+      expect(screen.getByTestId(`toggle-${feature}`)).toBeDisabled();
+    }
+    // Three features wait on configuration; voice waits on its own feature shipping.
+    expect(screen.getAllByText("settings.ai.features.requires_config")).toHaveLength(3);
+    expect(screen.getByText("settings.ai.features.voice_unavailable")).toBeInTheDocument();
+  });
+
+  it("lets features be enabled once configured, persisting the matching setting", async () => {
+    statusMock.mockReturnValue({ ...baseStatus, configured: true, base_url: "http://o:11434/v1", model: "m" });
+    const user = userEvent.setup();
+    render(<AISettings />);
+
+    const chatInput = screen.getByTestId("toggle-chat") as HTMLInputElement;
+    expect(chatInput).toBeEnabled();
+    await user.click(chatInput);
+    expect(setSettingMutate).toHaveBeenCalledWith("ai_feature_chat", true);
+  });
+
+  it("blocks enabling Scan-to-Spool with an inline reason when the probe reports no vision", () => {
+    statusMock.mockReturnValue({
+      ...baseStatus,
+      configured: true,
+      base_url: "http://o:11434/v1",
+      model: "m",
+      capabilities: {
+        ok: true,
+        error: null,
+        latency_ms: 12,
+        models: ["m"],
+        chat: "yes",
+        tools: "yes",
+        vision: "no",
+        is_ollama: true,
+        checked_at: null,
+      },
+    });
+    render(<AISettings />);
+
+    expect(screen.getByTestId("toggle-scan_to_spool")).toBeDisabled();
+    expect(screen.getByText("settings.ai.features.requires_vision")).toBeInTheDocument();
+    // The other configurable features stay enabled.
+    expect(screen.getByTestId("toggle-chat")).toBeEnabled();
+  });
+
+  it("renders the cached probe with honest tri-state wording", () => {
+    statusMock.mockReturnValue({
+      ...baseStatus,
+      configured: true,
+      capabilities: {
+        ok: true,
+        error: null,
+        latency_ms: 142,
+        models: ["a", "b"],
+        chat: "yes",
+        tools: "unknown",
+        vision: "unknown",
+        is_ollama: false,
+        checked_at: null,
+      },
+    });
+    render(<AISettings />);
+
+    expect(screen.getByText("settings.ai.probe.reachable")).toBeInTheDocument();
+    expect(screen.getAllByText(/settings\.ai\.probe\.unknown/)).toHaveLength(2);
+  });
+
+  it("never shows a stored key, offers replace-and-clear instead", async () => {
+    statusMock.mockReturnValue({ ...baseStatus, api_key_set: true });
+    const user = userEvent.setup();
+    render(<AISettings />);
+
+    const keyInput = screen.getByPlaceholderText("settings.ai.api_key.placeholder_set") as HTMLInputElement;
+    expect(keyInput.value).toBe("");
+
+    await user.click(screen.getByRole("button", { name: "settings.ai.api_key.clear" }));
+    expect(setKeyMutate).toHaveBeenCalledWith(null);
+  });
+
+  it("disables env-locked fields and says why", () => {
+    statusMock.mockReturnValue({
+      ...baseStatus,
+      base_url: "http://env:11434/v1",
+      env_locked: ["base_url"],
+    });
+    render(<AISettings />);
+
+    expect(screen.getByPlaceholderText("http://localhost:11434/v1")).toBeDisabled();
+    expect(screen.getByText("settings.ai.env_locked")).toBeInTheDocument();
+  });
+
+  it("sends unsaved form values with the connection test, omitting an untyped key", async () => {
+    statusMock.mockReturnValue({ ...baseStatus, base_url: "http://o:11434/v1", model: "m" });
+    const user = userEvent.setup();
+    render(<AISettings />);
+
+    await user.click(screen.getByRole("button", { name: "settings.ai.test" }));
+    expect(probeMutate).toHaveBeenCalledTimes(1);
+    const [overrides] = probeMutate.mock.calls[0];
+    expect(overrides).toMatchObject({ base_url: "http://o:11434/v1", model: "m" });
+    expect(overrides).not.toHaveProperty("api_key");
+  });
+});
