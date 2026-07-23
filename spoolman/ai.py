@@ -63,8 +63,14 @@ FEATURE_SETTINGS = {
 API_KEY_DB_KEY = "ai_api_key"
 
 _PROBE_TIMEOUT = 10.0
+#: Vision inference on local hardware is legitimately slow; give it room.
+_CHAT_TIMEOUT = 120.0
 
 TriState = Literal["yes", "no", "unknown"]
+
+
+class AIRequestError(Exception):
+    """A chat-completion request failed; the message is safe to surface to the user."""
 
 
 @dataclass
@@ -402,3 +408,56 @@ def _remember(result: ProbeResult) -> ProbeResult:
     """Cache the probe result for /ai/status and return it."""
     _state.last_probe = result
     return result
+
+
+# --- Chat completions --------------------------------------------------------------
+
+
+async def chat_completion(
+    config: AIConfig,
+    messages: list[dict],
+    *,
+    use_vision_model: bool = False,
+    max_tokens: int = 2000,
+    timeout: float = _CHAT_TIMEOUT,
+) -> str:
+    """Run one chat completion against the configured endpoint and return the reply text.
+
+    Raises AIRequestError with a user-safe message on any failure (unconfigured,
+    unreachable, HTTP error, unexpected response shape). No response_format is sent —
+    not every OpenAI-compatible server accepts it, so callers that need JSON instruct
+    the model in the prompt and parse defensively.
+    """
+    if not config.base_url:
+        raise AIRequestError("No AI endpoint is configured.")
+    model = (config.vision_model or config.model) if use_vision_model else config.model
+    if not model:
+        raise AIRequestError("No model is configured.")
+
+    headers = {"Authorization": f"Bearer {config.api_key}"} if config.api_key else {}
+    payload = {"model": model, "messages": messages, "max_tokens": max_tokens}
+    async with httpx.AsyncClient(timeout=timeout, headers=headers) as client:
+        try:
+            response = await client.post(f"{config.base_url}/chat/completions", json=payload)
+        except httpx.TimeoutException as exc:
+            raise AIRequestError(f"The AI endpoint timed out after {int(timeout)} s.") from exc
+        except httpx.HTTPError as exc:
+            raise AIRequestError(f"The AI endpoint is unreachable: {exc.__class__.__name__}.") from exc
+
+    if response.status_code == httpx.codes.UNAUTHORIZED:
+        raise AIRequestError("The AI endpoint rejected the API key (HTTP 401).")
+    if response.status_code != httpx.codes.OK:
+        detail = ""
+        try:
+            detail = str(response.json().get("error", {}).get("message", ""))[:200]
+        except (json.JSONDecodeError, AttributeError):
+            detail = response.text[:200]
+        raise AIRequestError(f"The AI endpoint returned HTTP {response.status_code}. {detail}".strip())
+
+    try:
+        content = response.json()["choices"][0]["message"]["content"]
+    except (json.JSONDecodeError, KeyError, IndexError, TypeError) as exc:
+        raise AIRequestError("The AI endpoint returned an unexpected response shape.") from exc
+    if not isinstance(content, str):
+        raise AIRequestError("The AI endpoint returned no text content.")
+    return content

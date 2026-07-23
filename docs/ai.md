@@ -68,13 +68,45 @@ A feature that definitely cannot work with the configured endpoint (for example
 Scan-to-Spool with a model that has no vision support) cannot be enabled, with the
 reason shown inline.
 
+## Scan-to-Spool
+
+Turn on **Scan-to-Spool** under Settings → AI (it needs a vision-capable model —
+`qwen2.5-vl`, `llama3.2-vision`, `gpt-4o-mini`, Claude, ... — set as the vision or
+chat model). The scan dialog on the Spools page then gains a **Photo** tab next to
+QR and barcode scanning.
+
+The flow:
+
+1. **Photograph the label** (or the box). On phones this opens the camera
+   directly. The photo is downscaled in your browser before upload.
+2. **The model reads the label** and returns the structured fields it could see:
+   vendor, name, material, weight, diameter, temperatures, lot number, article
+   number — never guessing at what it can't.
+3. **Spoolman matches, your library first.** If the filament already exists in
+   your library, the top suggestion just adds a spool to it. Otherwise close
+   matches from the [SpoolmanDB](https://github.com/Donkie/SpoolmanDB) catalog are
+   offered — picking one creates the filament and the spool in a single save. The
+   raw extracted values are always available as a fallback that prefills a blank
+   filament form.
+4. **Review and continue.** Nothing is created until you land on the normal
+   create form, prefilled, with every value still editable.
+
+The photo is processed in memory and discarded after extraction — it is not
+saved on the server or in the browser. The lot number, if the label has one,
+is carried onto the spool so the physical label stays scannable later.
+
+Extraction and matching are separate API steps (`/ai/spool-intake/extract` and
+`/ai/spool-intake/match`): the match stage accepts extraction JSON with no image
+attached, so a future mobile app that runs a vision model on the device itself can
+use the same matching without any photo leaving the phone.
+
 ## Privacy
 
 - With a **local endpoint** (Ollama, LM Studio, llama.cpp, vLLM on your own
   hardware), nothing ever leaves your network.
 - With a **cloud provider**, whatever a feature sends (chat messages, photos for
-  Scan-to-Spool once it ships) goes to that provider under their terms. You chose
-  the endpoint; Spoolman adds no telemetry and no middleman.
+  Scan-to-Spool) goes to that provider under their terms. You chose the endpoint;
+  Spoolman adds no telemetry and no middleman.
 - Feature toggles are all **off by default** and independent, so you can, for
   example, enable natural-language search against a local model and leave photo
   features off entirely.

@@ -349,7 +349,8 @@
       "unknown_content": "No filament has the barcode {{code}}. Create a filament and remember this barcode?",
       "create_filament": "Create filament",
       "lookup_error": "Could not look up that barcode."
-    }
+    },
+    "photo": "Photo"
   },
   "scanner": {
     "title": "QR Code Scanner",
@@ -1371,5 +1372,29 @@
     "tag_material": "Material",
     "tag_material_type": "Material Type",
     "qidi_write_info": "Qidi tags store only material and color. The tag will be written with the closest matching Qidi material and color codes."
+  },
+  "intake": {
+    "hint": "Photograph the spool's label or box, or pick an existing photo.",
+    "select_photo": "Select or take a photo",
+    "extracting": "Reading the label...",
+    "in_library": "in your library, adds a spool",
+    "from_catalog": "SpoolmanDB, creates filament and spool",
+    "use_raw": "Use the raw extraction (new filament)",
+    "continue": "Continue",
+    "back": "Back",
+    "photo_discarded": "The photo was analyzed in memory and is not stored.",
+    "prefilled_banner": "Prefilled from a label photo - review the values before saving.",
+    "fields": {
+      "vendor": "Vendor",
+      "name": "Name",
+      "material": "Material",
+      "weight_g": "Weight (g)",
+      "diameter_mm": "Diameter (mm)",
+      "extruder_temp_c": "Nozzle (C)",
+      "bed_temp_c": "Bed (C)",
+      "lot_nr": "Lot",
+      "article_number": "Article nr",
+      "confidence": "Confidence"
+    }
   }
 }
