@@ -227,3 +227,16 @@ Authentication is **opt-in** (choose either or both):
 * Don't run with `SPOOLMAN_DEBUG_MODE=TRUE` in production — it relaxes CORS to allow all origins.
 
 To report a security vulnerability, see [SECURITY.md](SECURITY.md).
+
+## Source mirror & CI
+
+Development happens here on GitHub — issues and pull requests stay on this repository. The code is
+additionally mirrored to the maintainer's self-hosted Forgejo at
+**<https://git.sherrmann.ch/sam/spoolman-ng>**, which pulls from GitHub every 8 hours and runs an
+independent CI pass (backend + client unit tests, defined in
+[`.forgejo/workflows/tests.yml`](.forgejo/workflows/tests.yml) — Forgejo ignores
+`.github/workflows/`, so the GitHub pipeline never runs there).
+
+Note the mirror is maintainer infrastructure, not a public service: it requires an account on that
+instance and is reachable from Switzerland/EU only. Everything hosted there is already available
+on GitHub.
