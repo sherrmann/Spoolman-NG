@@ -6,6 +6,7 @@ import {
   ImportOutlined,
   LinkOutlined,
   PrinterOutlined,
+  SyncOutlined,
   TeamOutlined,
   ThunderboltOutlined,
   ToolOutlined,
@@ -25,6 +26,7 @@ import { CustomLinksSettings } from "./customLinksSettings";
 import { ImportExportSettings } from "./importExportSettings";
 import { PrinterSettings } from "./printerSettings";
 import { SwatchSettings } from "./swatchSettings";
+import { UpdateSettings } from "./updateSettings";
 import { UsersSettings } from "./usersSettings";
 import "./settings.css";
 
@@ -60,6 +62,7 @@ const panels: Record<string, React.ReactNode> = {
   "extra-vendor": <ExtraFieldsSettings entityType={EntityType.vendor} />,
   "extra-location": <ExtraFieldsSettings entityType={EntityType.location} />,
   "extra-printer": <ExtraFieldsSettings entityType={EntityType.printer} />,
+  update: <UpdateSettings />,
 };
 
 // Map between menu keys and the URL path under /settings.
@@ -76,6 +79,7 @@ const keyToPath: Record<string, string> = {
   "extra-vendor": "/settings/extra/vendor",
   "extra-location": "/settings/extra/location",
   "extra-printer": "/settings/extra/printer",
+  update: "/settings/update",
 };
 
 const getActiveKey = (pathname: string): string => {
@@ -91,6 +95,7 @@ const getActiveKey = (pathname: string): string => {
   if (sub.startsWith("extra/location")) return "extra-location";
   if (sub.startsWith("extra/printer")) return "extra-printer";
   if (sub.startsWith("printers")) return "printers";
+  if (sub.startsWith("update")) return "update";
   return "general";
 };
 
@@ -159,6 +164,12 @@ export const Settings = () => {
                 key: "spool-links",
                 icon: <ThunderboltOutlined />,
                 label: t("settings.custom_links.spool_tab"),
+              },
+              { type: "divider" },
+              {
+                key: "update",
+                icon: <SyncOutlined />,
+                label: t("settings.update.tab"),
               },
               { type: "divider" },
               {
