@@ -40,7 +40,9 @@ const ScanModal = () => {
 
   const { available: nfcAvailable } = useNfcAvailability();
   // Scan-to-Spool (#361): the Photo tab exists only while the feature is enabled —
-  // invisible-unless-enabled, and no extra request (the settings query is app-wide).
+  // invisible-unless-enabled. The settings query is shared app-wide via react-query
+  // (this header-mounted modal is its one always-on consumer), so it fetches once
+  // per session, not per page.
   const settings = useGetSettings();
   const photoAvailable = settings.data?.ai_feature_scan_to_spool?.value === "true";
 

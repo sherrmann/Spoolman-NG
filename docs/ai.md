@@ -1,7 +1,8 @@
 # AI features — provider setup
 
 Spoolman NG's AI features (in progress — see the
-[LLM integration plan](llm-integration-brainstorm.md)) all talk to a single
+[LLM integration plan](https://github.com/sherrmann/Spoolman-NG/blob/claude/llm-integration-brainstorm-qmjmhn/docs/llm-integration-brainstorm.md))
+all talk to a single
 **OpenAI-compatible endpoint that you configure**. Spoolman never runs models
 itself and ships none: it is only ever an HTTP client of an endpoint you point it
 at — an Ollama server on your network, or a cloud provider of your choice.
