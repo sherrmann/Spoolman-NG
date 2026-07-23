@@ -47,12 +47,14 @@ inside the module to work, that is a design smell — add a seam (see §5), don'
 
 ---
 
-## 1. Infrastructure to stand up
+## 1. Infrastructure
 
-### 1a. Backend (pytest) — mostly present, small additions
+**In place — see §8 for what landed.** Kept as the record of what the suites are built on.
 
-Already have: `pytest~=9.0`, `pytest-asyncio~=1.3` (`asyncio_mode=auto`), `pytest-cov~=7.0`,
-`httpx`, integration harness in `tests_integration/`. Add to the `dev` dependency-group:
+### 1a. Backend (pytest)
+
+Base: `pytest~=9.0`, `pytest-asyncio~=1.3` (`asyncio_mode=auto`), `pytest-cov~=7.0`,
+`httpx`, integration harness in `tests_integration/`. Added to the `dev` dependency-group:
 
 - **`hypothesis`** — property-based tests for the codecs/parsers (the highest-leverage add).
 - **`time-machine`** (or `freezegun`) — freeze the clock for `bump.py` CalVer and any date logic.
@@ -81,9 +83,9 @@ tests_integration/tests/       # real DB + running server (existing harness)
 Note: Ruff runs `select = ["ALL"]` on everything; the `tests*/*` per-file-ignores already relax
 `S101` (assert), `PLR2004` (magic numbers), `ANN201`, `D103`, etc., so idiomatic pytest is fine.
 
-### 1b. Frontend (Vitest) — greenfield, must be created
+### 1b. Frontend (Vitest)
 
-No runner exists. Target stack (all compatible with Vite 8 / React 19 / TS 6):
+The stack, on Vite 8 / React 19 / TS 6:
 
 - **`vitest`** (v3.x) with the `@vitejs/plugin-react` already present.
 - **`jsdom`** (or `happy-dom`) environment.
@@ -92,7 +94,7 @@ No runner exists. Target stack (all compatible with Vite 8 / React 19 / TS 6):
 - **`msw`** (v2) — mock `axios`/`fetch` at the network boundary instead of hand-stubbing.
 - **`@vitest/coverage-v8`**.
 
-Wire-up:
+Wiring, as built:
 
 - Add a `test` block to `vite.config.ts` (`environment: 'jsdom'`, `setupFiles`, `globals: true`).
 - `client/src/test/setup.ts`: import `@testing-library/jest-dom`, install `localStorage` +
@@ -102,8 +104,8 @@ Wire-up:
 
 ### 1c. CI
 
-- New `frontend-tests` job: `npm ci && npm run test:coverage` (fast, no browser).
-- Existing backend job: add a `pytest tests/ --cov=spoolman --cov-branch` unit step (fast) ahead of
+- `client-tests` job: `npm ci && npm run test:coverage` (fast, no browser).
+- Backend `unit-tests` job: `pytest tests/ --cov=spoolman --cov-branch` (fast) ahead of
   the DB integration matrix.
 - Coverage upload + threshold gate (§6). Keep `npm audit` / `check-i18n` as they are.
 - **e2e** (Playwright, Chromium already provisioned) as a separate per-PR job for the
@@ -255,7 +257,7 @@ no refactor needed, only fixtures.
 
 ---
 
-## 6. Tooling summary (what to add)
+## 6. Tooling summary
 
 Per-stack dependency lists are in §1a (backend) and §1b (frontend). On top of those:
 `--cov-branch` on the backend, fast unit jobs (py + ts) gated on coverage with the
@@ -264,7 +266,7 @@ modules) as mutation runners on a **scheduled — not per-PR** job so PRs stay f
 
 ---
 
-## 7. First concrete steps (Phase 0)
+## 7. First concrete steps (Phase 0) *(Done — see §8.)*
 
 1. Add the frontend test toolchain + `vite.config.ts` test block + `src/test/setup.ts`; land
    `saveload.test.ts` as the reference behavioral test (pre-seed poisoned storage → assert healed).

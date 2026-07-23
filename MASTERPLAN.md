@@ -1,7 +1,12 @@
 # Spoolman NG — Masterplan
 
-**Date:** 2026-07-02 · **State snapshot:** master = fork foundation merged (#37); PR #38
-(review follow-ups, hermetic e2e, CI signal gates, race/flake fixes) fully green.
+**Date:** 2026-07-02 · **Status re-checked:** 2026-07-23 against master at v2026.7.14.
+**Original state snapshot:** master = fork foundation merged (#37); PR #38 (review
+follow-ups, hermetic e2e, CI signal gates, race/flake fixes) fully green.
+
+The assessment prose below is the 2026-07-02 snapshot and has not been rewritten; only the
+work-item checkboxes have been re-verified against the code. Items still unticked were
+confirmed open (or could not be verified from this repo — noted inline).
 
 An honest assessment of where the fork stands, dimension by dimension, followed by
 issue-ready work items. Each item has a suggested issue title, priority, and rough
@@ -33,9 +38,8 @@ And master's default `EXTERNAL_DB_URL` change means unreleased code points at th
 fork's SpoolmanDB while every released artifact still points at the abandoned
 upstream's Pages.
 
-- [ ] **Cut release 2026.7.0 after #38 merges** — P0, ~15 min. Run the Release
-  Trigger workflow. Acceptance: GHCR/Docker Hub images tagged, Moonraker updates
-  offered, release notes generated.
+- [x] **Cut release 2026.7.0 after #38 merges** — P0, ~15 min. **Done** — the release
+  cadence has been running since; master is at v2026.7.14.
 - [ ] **Write a fork announcement in the release notes** — P1, ~1 h. 2026.7.0 is the
   first release where the fork is fully self-contained; say so explicitly (new
   SpoolmanDB source, 28 languages, security guidance).
@@ -53,10 +57,9 @@ translation dropping `{{count}}` or a `<tag>` would ship silently today; the mer
 tooling validated this once, but nothing guards future edits. The Python mutation
 baseline (~39% on qidi_codec) is honest but low.
 
-- [ ] **CI check: locale placeholder integrity** — P1, ~2 h. Extend
-  `client/scripts/check-i18n.js` to verify every `{{var}}`/`{tag}`/component tag in an
-  English value appears in each translation of that key; fail CI on mismatch.
-  Acceptance: seeded regression (broken placeholder in a locale) turns CI red.
+- [x] **CI check: locale placeholder integrity** — P1, ~2 h. **Done** —
+  `client/scripts/check-i18n.js` validates that every translation keeps its
+  `{{variable}}` and `<tag>` placeholders, and runs in the `style` job.
 - [ ] **Watch the new e2e gates for a week and burn down any flakes they surface** —
   P2, reactive. Treat each pass-on-retry failure as a bug report (test or app).
 - [ ] **Raise the Python mutation baseline for codecs** — P3, ~1 day. Target the
@@ -76,9 +79,8 @@ client that renders "Missing API URL" under the e2e harness because the required
 `VITE_APIURL=/api/v1` env is only set inside the CI workflow. Both cost real
 debugging time and both will hit every new contributor.
 
-- [ ] **Add lefthook to the dev dependency group** — P1, ~15 min. `uv add --dev
-  lefthook`, remove the ad-hoc install from ci.yml. Acceptance: fresh clone +
-  `uv sync` + `uv run lefthook install` works.
+- [x] **Add lefthook to the dev dependency group** — P1, ~15 min. **Done** —
+  `lefthook>=2.1.9` is in the dev group; CI runs `uv run lefthook run ci`.
 - [ ] **Make the e2e build config self-contained** — P1, ~1 h. Either commit a
   `client/.env.production` equivalent for the e2e path, have the Playwright config
   fail fast with a clear message when the build lacks an API URL, or document the
@@ -107,18 +109,16 @@ psycopg2 from source (slow, fragile against dependency bumps); 32-bit ARM is a
 shrinking platform that upstream Debian/Python will deprioritize — fine today, worth
 a stated support policy.
 
-- [ ] **Document NFC hardware setup end-to-end** — P0 (it's a headline feature), ~1
-  day. docs/nfc.md: supported/tested USB readers, `docker run --device` /
-  compose `devices:` examples, udev rule for non-root access, `SPOOLMAN_NFC_*` env
-  reference, and the Web NFC HTTPS/Chrome-on-Android constraint with a reverse-proxy
-  TLS recipe. Acceptance: a Pi + PN532/ACR122U user can go from zero to scanning
-  using only this page.
+- [x] **Document NFC hardware setup end-to-end** — P0 (it's a headline feature), ~1
+  day. **Done** — [`docs/nfc.md`](docs/nfc.md) covers reader models, device
+  pass-through, udev rules, the `SPOOLMAN_NFC_*` env reference and the Web NFC
+  HTTPS/Chrome-on-Android constraint.
 - [ ] **Surface the Web NFC availability reason in the UI** — P1, ~half day. When Web
   NFC is unavailable, the client should say *why* (not Chrome/Android, or not a
   secure context) instead of hiding/failing the affordance.
-- [ ] **State an armv7 support policy** — P2, ~30 min. README note: supported for the
-  foreseeable future, best-effort as ecosystem support decays; arm64 recommended for
-  new installs.
+- [x] **State an armv7 support policy** — P2, ~30 min. **Done** — README states
+  best-effort armv7 support with arm64 recommended for new installs, plus a
+  per-arch verification table.
 - [ ] **Add a migration step to the QEMU smoke tests** — P3, ~1 h. The smoke test
   hits `/health`; asserting the alembic upgrade log reached head on both ARM images
   would catch arch-specific DB driver issues.
@@ -151,7 +151,9 @@ has proofread them.
   working; document cache refresh mechanics and their failure mode.
 - [ ] **Set up the Spoolman NG Weblate project** — P2 (was deferred deliberately),
   ~half day + ongoing. Hosted Weblate libre project pointed at the fork; replaces
-  PR-based translation flow; wire commit integration.
+  PR-based translation flow; wire commit integration. Still open — the README now
+  documents the interim PR-based flow and notes that upstream's Weblate project feeds
+  the original repo, not this fork.
 
 ## 6. SpoolmanDB (the filament catalog fork)
 
@@ -166,13 +168,12 @@ invisible to Spoolman NG users, and vice versa. There is also no contribution
 guidance on the fork: a user wanting to add their filament brand today has no
 documented path, and the repo's README is upstream's.
 
-- [ ] **Automated upstream-sync for SpoolmanDB** — P0, ~half day. Scheduled workflow
-  on sherrmann/SpoolmanDB that fetches upstream's default branch, opens a PR when it
-  has new commits (or fast-forwards when clean). Acceptance: an upstream filament
-  addition lands in the fork within a week without manual work.
-- [ ] **Fork identity + contribution docs for SpoolmanDB** — P1, ~2 h. README note
-  (continuation, where to contribute), PR template pointing at the JSON/YAML schema
-  validation, link from Spoolman NG's README/CONTRIBUTING.
+- [x] **Automated upstream-sync for SpoolmanDB** — P0, ~half day. **Done** —
+  `upstream-sync.yml` exists on sherrmann/SpoolmanDB and runs weekly.
+- [ ] **Fork identity + contribution docs for SpoolmanDB** — P1, ~2 h. *Mostly done:*
+  the SpoolmanDB README declares the fork and where to contribute, and both this
+  README and CONTRIBUTING link to it. Remaining: the PR template pointing at the
+  JSON/YAML schema validation (that repo has no `PULL_REQUEST_TEMPLATE`).
 - [ ] **Uptime/staleness guard** — P3, ~1 h. A scheduled workflow in the Spoolman
   repo that curls the Pages URL and opens an issue if it 404s or its data is older
   than N weeks (Pages of a personal repo can silently break).
@@ -190,12 +191,10 @@ one port-forward away from a writable inventory and a physical-tag-writing endpo
 The auto-create lock is per-process only (documented; fine for the shipped
 single-worker deployment, not for replicas).
 
-- [ ] **Optional built-in auth (opt-in bearer token)** — P1, ~2–3 days. A single
-  `SPOOLMAN_API_TOKEN` env var; when set, all mutating endpoints (or all endpoints)
-  require `Authorization: Bearer`. Zero change for LAN users, one env var for exposed
-  installs, no user management. Must stay compatible with Moonraker/OctoPrint
-  integrations (both support configurable headers). Acceptance: token-gated write
-  paths, integration docs updated, e2e covers both modes.
+- [x] **Optional built-in auth (opt-in bearer token)** — P1, ~2–3 days. **Done** —
+  `SPOOLMAN_API_TOKEN` in `spoolman/auth.py`; user accounts and passkeys were added on
+  top later. Note the integration caveat recorded since: the OctoPrint plugin supports a
+  key header, Moonraker's `[spoolman]` component does not (see #268).
 - [ ] **Rate-limit the NFC lookup/auto-create endpoint** — P3, ~half day. Cheap
   in-process limiter; mostly defense-in-depth once auth exists.
 
@@ -214,7 +213,8 @@ unswept for adoptable fixes. No Discussions, no announcement, and the ecosystem
 links to the abandoned upstream.
 
 - [ ] **Enable GitHub Discussions + write the fork announcement** — P1, ~2 h.
-  Announce on r/klippers etc.; pin a "state of the fork" discussion.
+  *Half done:* Discussions are enabled on the repo. The announcement and the pinned
+  "state of the fork" post are still outstanding.
 - [x] **Upstream backlog sweep** — P1, ~1–2 days. **Done** (2026-07-06, PR #142) —
   see [`docs/upstream-triage.md`](docs/upstream-triage.md). One-time triage of all 265
   open Donkie/Spoolman issues (PRs excluded): 24 FIX · 108 IMPLEMENT · 133 SKIP → 98
@@ -225,8 +225,11 @@ links to the abandoned upstream.
 - [ ] **Reduce single-maintainer risk** — P2, decision + ~2 h. GitHub org for the
   repos, org/second-owner on Docker Hub (or GHCR-only), branch protection on master,
   document the release credentials (PAT, REMOTE_REGISTRY_PASSWORD) recovery path.
-- [ ] **Decide the funding story** — P2, ~30 min. Fill FUNDING.yml (or explicitly
-  decide "no funding"); align the in-app Ko-fi link with that decision.
+  Investigated but not executed — see
+  [`docs/org-migration-phase0-findings.md`](docs/org-migration-phase0-findings.md).
+- [ ] **Decide the funding story** — P2, ~30 min. *Half done:* FUNDING.yml now declares
+  `github: [sherrmann]`, but the in-app link in `client/src/components/header/index.tsx`
+  still points at `ko-fi.com/donkie`, so the app still funds upstream. Align the two.
 
 ---
 
