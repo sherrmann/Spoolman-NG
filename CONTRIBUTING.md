@@ -41,6 +41,16 @@ cd client && npm test         # client unit/component tests (Vitest)
 cd client && npm run test:e2e # browser e2e (Playwright)
 ```
 
+Local-only extras (never run in CI — see `TESTING_STRATEGY.md` §8 for details):
+
+```bash
+uv run poe coverage-all             # combined backend coverage (unit + integration), 68% ratchet
+uv run poe scenario test-all        # realistic deployments: DB×auth×proxy×arch (needs Docker)
+uv run poe scenario chaos <name>    # kill -9 durability + DB-outage recovery contracts
+uv run poe scenario load <name>     # concurrent load smoke with a p95 latency budget
+cd client && npm run test:visual    # visual regression against committed local baselines
+```
+
 CI runs all of the above plus lint (`ruff`, `eslint`, `prettier`, `tsc`),
 CodeQL, hadolint, multi-arch Docker builds, and a weekly mutation-testing run
 (Stryker enforces a ≥90% mutation score on crown-jewel client modules).
