@@ -45,9 +45,12 @@ mature space with dedicated ML products. Spoolman should not point cameras at pr
 
 These come from the codebase and deployment reality, not taste:
 
-1. **Host hardware is Pi-class** (README/MASTERPLAN: happily runs on a Pi 3/4 next to
-   Klipper). **No on-host inference, ever.** All AI is HTTP calls out — to an Ollama
-   box on the LAN, or to a cloud gateway. Spoolman is only ever an HTTP *client*.
+1. **Host hardware ranges from Pi 3 to homelab x86** (README/MASTERPLAN: happily runs
+   on a Pi 3/4 next to Klipper; Unraid/TrueNAS/BigBear integrations show a real
+   NAS/homelab cohort). **No inference inside the Spoolman process or image, ever** —
+   Spoolman is only ever an HTTP *client*. A co-located model server (sidecar
+   container, native service) on capable hosts is fair game and can even be
+   provisioned by our tooling — see Cluster F — but the runtime is never ours.
 2. **No-auth-by-default security model.** Provider API keys are secrets; the DB-backed
    settings API is world-readable on a default install. Keys must be env-vars first
    (`SPOOLMAN_AI_*`), or write-only settings that are never echoed back, masked in UI,
@@ -229,6 +232,60 @@ review-and-apply list, never auto-applied. Effort: **M**. Later.
 **E3. Translation review aid (dev-side).** Locales are AI-seeded and unproofread
 (MASTERPLAN §5); an LLM second-pass review workflow in CI tooling. Dev tooling, not
 product. Separate track.
+
+### Cluster F — Zero-config local models: provision, don't embed *(proposed 2026-07-23, not yet agreed)*
+
+The biggest onboarding cliff for every idea above is "step one: already have an LLM
+endpoint." The fix is **not** bundling inference into Spoolman (image size, the
+armv7/arm64/amd64 matrix, GPU drivers — and a Pi 3 will never run a vision model
+regardless of packaging). It is automating two things around the existing
+HTTP-client design: standing the endpoint up *next to* Spoolman, and putting the
+right models *on* it.
+
+**F1. Install-wizard AI sidecar (Docker).** The interactive setup wizard already
+generates compose files with DB sidecars, and CI boots wizard-generated composes
+(#341/#356). Add an "AI features?" step: asks arch/RAM/GPU → emits an `ollama`
+service block (arm64/amd64 only), volume, and `SPOOLMAN_AI_BASE_URL=http://ollama:11434/v1`,
+plus honest expectation copy (what runs on this hardware, disk needs). The same
+pattern later emits a whisper-compatible STT sidecar (Speaches) for D1. Effort: M.
+
+**F2. Managed model pull from the settings UI.** Ollama exposes a streaming pull API
+(`POST /api/pull`). Once *any* Ollama is reachable — sidecar or gaming PC — Spoolman
+can list installed models, compare against a maintained recommendation table (per
+feature × hardware tier; data, not code, like the provider presets) and offer
+"[ Pull recommended models ]" with progress. The genuinely automatic piece that is
+safe to own: we manage models, never the runtime. Effort: S–M on top of #359.
+
+**F3. Native-install option.** `scripts/install.sh --with-ai` and a KIAUH extension
+menu entry: run Ollama's installer, enable the systemd unit, preconfigure the env.
+Hard-gated on arm64/x86_64 plus a RAM threshold; refuses on armv7. Effort: S.
+
+**F4. In-browser models (WebLLM / transformers.js on WebGPU) — later/experimental.**
+0.5–2B models can run client-side; plausibly covers **B2 NL search only** (tiny
+model, structured output) as a zero-endpoint default. Costs: ~0.5–1 GB first-run
+download, WebGPU device variance, and a second inference path to test — and phones,
+where Scan-to-Spool actually happens, are the weakest platform for it. Park until
+B2 ships and demand shows.
+
+**F5. On-device mobile (Apple Foundation Models on iOS 26+, Gemini Nano) — far
+later.** Free, no-setup on-device text inference is genuinely interesting for
+voice/NL on phones, but the companion app is a WebView POC; revisit when it grows
+native surface.
+
+**Non-goals, explicitly:** Spoolman never spawns or supervises containers
+(mounting `docker.sock` into a default-unauthenticated app is a host-takeover
+primitive one LAN port away — a non-starter), and never ships model weights or an
+inference engine in its own image. "Managed" ends at generating config and driving
+a reachable Ollama's own API.
+
+**Hardware honesty** (ships as wizard/docs copy, and gates F1/F3):
+
+| Host | Text (NL search, chat) | Vision (Scan-to-Spool) | Verdict |
+|---|---|---|---|
+| Pi 3 / armv7 | no | no | Cloud gateway or another LAN box only |
+| Pi 4/5, 4–8 GB (arm64) | small models (~0.5–3B), seconds per answer | marginal at best — benchmark before promising anything | Text-only tier |
+| x86 NAS / homelab (Unraid, TrueNAS) | yes | yes (3–7B VLMs; GPU nice, not required) | Sweet spot. Unraid users may already run Ollama from Community Apps — then F1 reduces to a docs paragraph |
+| Gaming PC elsewhere on LAN | yes | yes | Today's blessed path (plain #359 preset) |
 
 ---
 
