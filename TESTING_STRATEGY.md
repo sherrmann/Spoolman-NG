@@ -463,8 +463,10 @@ app-wide is approached, not a literal target; the journey set is expanded increm
 - **Visual regression** (`npm run test:visual`, env-gated via `E2E_VISUAL=1`, never in CI):
   full-page screenshots of the data-independent screens (help, settings, the three create
   forms) against committed per-host baselines; rebaseline with `--update-snapshots`.
-- **lefthook pre-push gate**: backend fast suite + client vitest run in parallel (~3.5 min)
-  before anything leaves the machine.
+- **No pre-push test gate** (tried, then deliberately removed — issue #357 has the history):
+  a full-suite gate cost ~3.5 min per push; a pytest-testmon variant got the common case to
+  ~4 s but still duplicated what CI runs on every PR. Decision: CI is the single test gate;
+  local pushes stay instant. The pre-commit lint/format hooks remain.
 
 **Remaining (follow-up):**
 
