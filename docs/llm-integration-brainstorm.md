@@ -3,7 +3,7 @@
 > **Status: agreed and on the tracker — no code yet.** This document collects the
 > idea space, prior art, constraints, and the agreed direction. The shortlist and UI
 > direction were agreed on 2026-07-23 (see §5), ASCII mockups live in §6, and the
-> phases are filed as issues #359–#363 (see the table in §4). The competitive
+> phases are filed as issues #359–#364 (see the table in §4). The competitive
 > teardown of Filametrics / 3D Spool Tracker is tracked in #358.
 
 ---
@@ -237,7 +237,7 @@ review-and-apply list, never auto-applied. Effort: **M**. Later.
 (MASTERPLAN §5); an LLM second-pass review workflow in CI tooling. Dev tooling, not
 product. Separate track.
 
-### Cluster F — Zero-config local models: provision, don't embed *(proposed 2026-07-23, not yet agreed)*
+### Cluster F — Zero-config local models: provision, don't embed *(agreed 2026-07-23 — F1–F3 tracked in #364; F4/F5 later-bucket)*
 
 The biggest onboarding cliff for every idea above is "step one: already have an LLM
 endpoint." The fix is **not** bundling inference into Spoolman (image size, the
@@ -323,6 +323,7 @@ The recommendation optimizes for: unique value first, shared plumbing reuse, loc
 | 2 | **A1 Scan-to-Spool** (+ A3 slicer screenshot as a follow-up issue) | [#361](https://github.com/sherrmann/Spoolman-NG/issues/361) | The flagship. Unique in open source; leverages SpoolmanDB + mobile camera. |
 | 3 | **B1 chat panel** + **B2 NL search** | [#362](https://github.com/sherrmann/Spoolman-NG/issues/362) | Umbrella UX on top of the phase-1 tool layer. |
 | 4 | **D1 voice input** on the chat panel | [#363](https://github.com/sherrmann/Spoolman-NG/issues/363) | Thin layer once B1 exists. |
+| — | **F1–F3 assisted local setup** (wizard sidecar, managed model pull, native option) | [#364](https://github.com/sherrmann/Spoolman-NG/issues/364) | Independent of the feature phases; pairs naturally with phase 0. |
 | — | E1 import fallback | file when picked up | Slot in anywhere; independent. |
 | Later | A2 color-match, B3 insights, A4/A5, E2 | — | Park until the above proves out. |
 
@@ -360,6 +361,19 @@ review screen).
 10. **Match order: own library first** — extraction matches the user's existing
     filaments before SpoolmanDB, so a known filament gains a spool instead of a
     duplicate filament record.
+
+### Round 3 refinements (2026-07-23)
+
+11. **Cluster F agreed — provision, don't embed.** F1 (wizard AI sidecar) + F2
+    (managed model pull via Ollama's own API) + F3 (native `--with-ai`) are tracked
+    in [#364](https://github.com/sherrmann/Spoolman-NG/issues/364). Spoolman never
+    spawns containers and never bundles inference; "managed" ends at generated
+    config and driving a reachable Ollama's API.
+12. **F5 acknowledged as the eventual zero-config flagship path** — Gemma 3n-class
+    on-device models via LiteRT-LM in the companion app, maintainer-confirmed
+    comfortable on budget Android. Gated on the companion app growing native
+    surface, not on models. The A1 extraction/matching JSON contract (mirrored
+    into #361) keeps this path open; F4 (in-browser) stays experimental/later.
 
 ---
 
