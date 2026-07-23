@@ -1,7 +1,7 @@
 import { PictureOutlined } from "@ant-design/icons";
 import { useTranslate } from "@refinedev/core";
 import { Alert, Button, Descriptions, Radio, Space, Spin, Typography } from "antd";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { SpoolIntakeExtraction, SpoolIntakeResult, useSpoolIntakeExtract } from "../utils/queryAI";
 
@@ -14,10 +14,11 @@ const { Text } = Typography;
 
 const MAX_EDGE = 1568;
 const JPEG_QUALITY = 0.85;
+const THUMB_EDGE = 120;
 
-// The preview is returned as a Blob, not an object URL: the caller mints the blob: URL
-// itself, so the FileReader-derived base64 string and the string that ends up in the
-// <img src> never share a dataflow path (flagged by CodeQL js/xss-through-dom otherwise).
+// The preview is returned as a Blob and rendered by drawing onto a <canvas>: no string
+// derived from the user-selected file ever reaches a DOM attribute, which is what CodeQL
+// js/xss-through-dom flags (it taints even URL.createObjectURL output via the File).
 export async function fileToJpegBase64(file: File): Promise<{ base64: string; previewBlob: Blob }> {
   try {
     const bitmap = await createImageBitmap(file);
@@ -86,9 +87,35 @@ const EXTRACTION_ROWS: { key: keyof SpoolIntakeExtraction; labelKey: string }[] 
   { key: "confidence", labelKey: "intake.fields.confidence" },
 ];
 
+/** Photo thumbnail drawn onto a canvas. Decorative: stays collapsed (0 x 0) when the
+ * browser lacks createImageBitmap or decoding fails, and the review works without it. */
+function PreviewThumb(props: { blob: Blob }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const bitmap = await createImageBitmap(props.blob);
+        const canvas = canvasRef.current;
+        if (!canvas || cancelled) return;
+        const scale = Math.min(1, THUMB_EDGE / Math.max(bitmap.width, bitmap.height));
+        canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+        canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+        canvas.getContext("2d")?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      } catch {
+        // No preview, no problem — the extraction fields are the content that matters.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [props.blob]);
+  return <canvas ref={canvasRef} width={0} height={0} style={{ borderRadius: 4 }} data-testid="intake-preview" />;
+}
+
 export function IntakeReview(props: {
   result: SpoolIntakeResult;
-  previewUrl: string | null;
+  previewBlob: Blob | null;
   onNavigate: (url: string) => void;
   onBack: () => void;
 }) {
@@ -114,9 +141,7 @@ export function IntakeReview(props: {
   return (
     <Space direction="vertical" size="middle" style={{ width: "100%" }} data-testid="intake-review">
       <Space align="start" size="middle">
-        {props.previewUrl && (
-          <img src={props.previewUrl} alt="" style={{ maxWidth: 120, maxHeight: 120, borderRadius: 4 }} />
-        )}
+        {props.previewBlob && <PreviewThumb blob={props.previewBlob} />}
         <Descriptions size="small" column={1} style={{ maxWidth: 360 }}>
           {EXTRACTION_ROWS.filter((row) => extraction[row.key] !== null).map((row) => (
             <Descriptions.Item key={row.key} label={t(row.labelKey)}>
@@ -154,15 +179,15 @@ export function PhotoIntakePanel(props: { onClose: () => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [phase, setPhase] = useState<"pick" | "extracting" | "review">("pick");
   const [error, setError] = useState<string | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewBlob, setPreviewBlob] = useState<Blob | null>(null);
   const [result, setResult] = useState<SpoolIntakeResult | null>(null);
 
   const onFile = async (file: File) => {
     setError(null);
     setPhase("extracting");
     try {
-      const { base64, previewBlob } = await fileToJpegBase64(file);
-      setPreviewUrl(URL.createObjectURL(previewBlob));
+      const { base64, previewBlob: preview } = await fileToJpegBase64(file);
+      setPreviewBlob(preview);
       const extracted = await extract.mutateAsync({ image_base64: base64, mime: "image/jpeg" });
       setResult(extracted);
       setPhase("review");
@@ -214,7 +239,7 @@ export function PhotoIntakePanel(props: { onClose: () => void }) {
       {phase === "review" && result && (
         <IntakeReview
           result={result}
-          previewUrl={previewUrl}
+          previewBlob={previewBlob}
           onBack={() => setPhase("pick")}
           onNavigate={(url) => {
             props.onClose();

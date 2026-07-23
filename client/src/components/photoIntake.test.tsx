@@ -91,7 +91,7 @@ describe("IntakeReview (#361)", () => {
   it("defaults to the top library match and navigates to the spool form", async () => {
     const onNavigate = vi.fn();
     const user = userEvent.setup();
-    render(<IntakeReview result={result} previewUrl={null} onNavigate={onNavigate} onBack={vi.fn()} />);
+    render(<IntakeReview result={result} previewBlob={null} onNavigate={onNavigate} onBack={vi.fn()} />);
 
     // Library first, then catalog, then the raw fallback.
     const radios = screen.getAllByRole("radio");
@@ -103,7 +103,7 @@ describe("IntakeReview (#361)", () => {
   });
 
   it("shows only non-null extraction fields", () => {
-    render(<IntakeReview result={result} previewUrl={null} onNavigate={vi.fn()} onBack={vi.fn()} />);
+    render(<IntakeReview result={result} previewBlob={null} onNavigate={vi.fn()} onBack={vi.fn()} />);
     expect(screen.getByText("intake.fields.vendor")).toBeInTheDocument();
     expect(screen.queryByText("intake.fields.bed_temp_c")).not.toBeInTheDocument();
   });
@@ -114,7 +114,7 @@ describe("IntakeReview (#361)", () => {
     render(
       <IntakeReview
         result={{ extraction, matches: { library: [], catalog: [] } }}
-        previewUrl={null}
+        previewBlob={null}
         onNavigate={onNavigate}
         onBack={vi.fn()}
       />,
