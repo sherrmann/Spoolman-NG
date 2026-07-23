@@ -136,6 +136,10 @@ reason to keep the image).
 - Hooks that already exist: `filamentImportModal.tsx` (import UX pattern),
   `externaldb.py` (catalog in memory), `scanModal.tsx` + mobile app native camera
   (capture path).
+- Design note: keep extraction and matching as separate steps with a JSON contract
+  between them. Matching is plain fuzzy search (no LLM), so the extraction step can
+  later move **on-device** in the companion app (Cluster F5) and reuse the same
+  match endpoint and review flow — Scan-to-Spool with no configured endpoint at all.
 - Effort: **M**. Value: **highest** — weekly-frequency pain (user story #1–3), matches
   what commercial apps advertise, works one-handed at the shelf via the companion app.
 
@@ -263,14 +267,32 @@ Hard-gated on arm64/x86_64 plus a RAM threshold; refuses on armv7. Effort: S.
 **F4. In-browser models (WebLLM / transformers.js on WebGPU) — later/experimental.**
 0.5–2B models can run client-side; plausibly covers **B2 NL search only** (tiny
 model, structured output) as a zero-endpoint default. Costs: ~0.5–1 GB first-run
-download, WebGPU device variance, and a second inference path to test — and phones,
-where Scan-to-Spool actually happens, are the weakest platform for it. Park until
-B2 ships and demand shows.
+download, WebGPU device variance, and a second inference path to test. Park until
+B2 ships and demand shows. If picked up, note that `.litertlm` models also run on
+Web via the Google AI Edge stack — a second candidate runtime besides WebLLM. (For
+phones, F5's native on-device path supersedes the in-browser one.)
 
-**F5. On-device mobile (Apple Foundation Models on iOS 26+, Gemini Nano) — far
-later.** Free, no-setup on-device text inference is genuinely interesting for
-voice/NL on phones, but the companion app is a WebView POC; revisit when it grows
-native surface.
+**F5. On-device models in the companion app (Gemma 3n via LiteRT-LM) — upgraded
+from "far later" to a credible path (2026-07-23).** The 2025/26 on-device wave
+changed this picture: Google's AI Edge Gallery runs Gemma 3n-class multimodal
+models (text + image + audio input) comfortably on budget Android hardware —
+confirmed first-hand on this project's maintainer's phone — and is on Google Play
+and, since April 2026, on iOS. The embeddable runtime is the LiteRT-LM Kotlin API
+(MediaPipe LLM Inference is maintenance-only); `.litertlm` builds of Gemma 3n
+E2B/E4B are downloaded on first use (~3–4.5 GB — never shipped in the APK).
+
+The architecturally sweet variant: **on-device extraction + server-side non-LLM
+matching**. The A1 match pipeline (own library → SpoolmanDB → raw) is fuzzy
+search, not inference — so a phone that extracts the label locally and POSTs
+structured JSON to the match endpoint delivers the flagship feature with *zero
+configured endpoint anywhere*. The same models' audio input could eventually cover
+on-device voice capture too.
+
+What gates this is no longer the models but the companion app: it is a WebView POC
+today, and embedding LiteRT-LM is real native work (P1+ of its roadmap). Once the
+app grows native surface, this becomes the strongest zero-config story in this
+document. iOS parity: LiteRT on iOS, or Apple's Foundation Models framework for
+text-only tasks.
 
 **Non-goals, explicitly:** Spoolman never spawns or supervises containers
 (mounting `docker.sock` into a default-unauthenticated app is a host-takeover
@@ -286,6 +308,7 @@ a reachable Ollama's own API.
 | Pi 4/5, 4–8 GB (arm64) | small models (~0.5–3B), seconds per answer | marginal at best — benchmark before promising anything | Text-only tier |
 | x86 NAS / homelab (Unraid, TrueNAS) | yes | yes (3–7B VLMs; GPU nice, not required) | Sweet spot. Unraid users may already run Ollama from Community Apps — then F1 reduces to a docs paragraph |
 | Gaming PC elsewhere on LAN | yes | yes | Today's blessed path (plain #359 preset) |
+| Budget–midrange phone (companion app, F5) | yes (Gemma 3n E2B class) | yes — comfortable on budget Android per first-hand testing; scan-and-review latency is fine | Gated on companion-app native work, not on models |
 
 ---
 
