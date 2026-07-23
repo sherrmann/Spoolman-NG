@@ -51,16 +51,24 @@ These come from the codebase and deployment reality, not taste:
    settings API is world-readable on a default install. Keys must be env-vars first
    (`SPOOLMAN_AI_*`), or write-only settings that are never echoed back, masked in UI,
    admin-gated once user accounts exist.
-3. **Privacy is a feature.** This community self-hosts *on principle*. Cloud providers
-   must be opt-in with a clear "this photo/text leaves your network" affordance.
-   Local-first (Ollama) should be the blessed path.
-4. **Everything optional.** AI features hidden until configured; zero behavior change
-   when off. The fork's promise is drop-in compatibility — an unconfigured install must
-   look exactly like today.
-5. **CI culture.** ~470 behavioral tests, mutation gates, hermetic e2e. AI endpoints
+3. **Privacy is a feature — stated in docs, not in the UI.** This community
+   self-hosts *on principle*, so cloud providers are strictly opt-in and the docs say
+   plainly which features send what to the configured endpoint. The UI itself carries
+   no privacy copy: no "stays on your LAN" badges or inline notes — the user
+   configured the endpoint and knows where it points.
+4. **Invisible unless enabled.** Zero behavior *and zero UI* change when
+   unconfigured: no chat button, no Photo tab in the scan modal, no AI search
+   affordance, no mic — none of it renders until the corresponding feature is
+   switched on in Settings. The AI settings tab is the single discovery point. The
+   fork's promise is drop-in compatibility — a stock install must look exactly like
+   today.
+5. **No emoji in the product UI.** Buttons, labels, hints, and AI-generated
+   responses use plain text and the existing icon set — no sparkles, no emoji
+   flourishes (the system prompt instructs the model accordingly).
+6. **CI culture.** ~470 behavioral tests, mutation gates, hermetic e2e. AI endpoints
    need a **mock provider fixture** (recorded responses) so e2e stays hermetic and
    deterministic. A flaky LLM must never flake CI.
-6. **i18n.** 30 locales. Chat/summaries should answer in the UI language (cheap: pass
+7. **i18n.** 30 locales. Chat/summaries should answer in the UI language (cheap: pass
    locale in the system prompt).
 
 ### The provider abstraction (shared plumbing for every idea below)
@@ -71,10 +79,16 @@ relevant speaks the **OpenAI-compatible Chat Completions API**:
 | Provider | Base URL | Notes |
 |---|---|---|
 | [Ollama](https://ollama.com/) | `http://<lan-host>:11434/v1` | Local, free, private. Vision via qwen2.5-vl / llama3.2-vision / moondream. |
-| [OpenRouter](https://openrouter.ai/) | `https://openrouter.ai/api/v1` | 400+ models, free tiers, one key. |
-| [Requesty](https://www.requesty.ai/) | `https://router.requesty.ai/v1` | Gateway/router, failover, EU residency. |
-| LM Studio / llama.cpp / vLLM / LocalAI | `http://<host>:<port>/v1` | All OpenAI-compatible. |
-| OpenAI / Groq / Mistral / Gemini (compat) | vendor URLs | Same shape. |
+| LM Studio / llama.cpp / vLLM / LocalAI | `http://<host>:<port>/v1` | Local servers, all OpenAI-compatible. |
+| [OpenAI](https://platform.openai.com/) | `https://api.openai.com/v1` | First-party API. |
+| [Anthropic](https://platform.claude.com/docs/en/api/openai-sdk) | `https://api.anthropic.com/v1/` | Official OpenAI-SDK compatibility layer over the Claude API — chat, streaming, tool calls, and `image_url` vision input all work through it. Anthropic positions it as an evaluation layer (the native API has more features: prompt caching, strict schemas), but it covers everything Spoolman's chat-completions client needs. |
+| [OpenRouter](https://openrouter.ai/) | `https://openrouter.ai/api/v1` | 400+ models behind one key, free tiers. |
+| [Requesty](https://www.requesty.ai/) | `https://router.requesty.ai/v1` | Gateway/router, failover, EU data residency. |
+| [Groq](https://groq.com/) | `https://api.groq.com/openai/v1` | Fast inference; also serves OpenAI-compatible Whisper STT (relevant for D1). |
+| Mistral / Gemini / xAI / Azure OpenAI / … | vendor compat URLs | e.g. Gemini at `…/v1beta/openai/`; the pattern generalizes. |
+
+Presets are **data, not code** — supporting another provider means adding a row
+(name, base URL, docs link) to the preset list, never a new client implementation.
 
 So the config is just: **base URL + API key + model name(s)** — no per-provider SDKs,
 no provider enum to maintain. Provider "support" becomes documentation + presets in the
@@ -101,18 +115,23 @@ knows what to show.
 Grouped in clusters; each with value / effort / dependencies. Effort is T-shirt-sized
 relative to this codebase (S ≈ days, M ≈ 1–2 weeks, L ≈ multi-week).
 
-### Cluster A — Vision: "Scan-to-Spool" photo intake ⭐
+### Cluster A — Vision: "Scan-to-Spool" photo intake
 
 **A1. Label/box photo → prefilled spool.** Take a photo of a spool box or label →
-vision model extracts vendor, material, color name, weight, diameter, temps →
-**match against SpoolmanDB** (6,957 filaments already synced locally) → user confirms
-one of the candidate matches (or raw extraction) → create-filament/spool form arrives
-prefilled. The SpoolmanDB match step is the differentiator: instead of trusting OCR,
-the LLM output becomes a *search query* against canonical catalog data — clean records,
-not typo'd ones. Falls back to raw extraction for unknown brands.
+vision model extracts vendor, material, color name, weight, diameter, temps → match
+in two stages: first against **the user's own filament library** (they may already
+have this filament defined — then the flow simply adds a spool to it, avoiding
+duplicate filament records), then against **SpoolmanDB** (6,957 filaments already
+synced locally) for canonical catalog data → user confirms a candidate (or raw
+extraction) → the normal create form arrives prefilled. The match step is the
+differentiator: instead of trusting OCR, the LLM output becomes a *search query*
+against known-good data. Falls back to raw extraction for unknown brands. **The
+photo is ephemeral** — held in memory for extraction and the review screen, never
+persisted server-side (users will typically photograph the label; there is no
+reason to keep the image).
 - Hooks that already exist: `filamentImportModal.tsx` (import UX pattern),
   `externaldb.py` (catalog in memory), `scanModal.tsx` + mobile app native camera
-  (capture path), filament `picture` support (store the photo on the record).
+  (capture path).
 - Effort: **M**. Value: **highest** — weekly-frequency pain (user story #1–3), matches
   what commercial apps advertise, works one-handed at the shelf via the companion app.
 
@@ -161,7 +180,7 @@ Effort: **S**. Possibly the best value-per-effort in this document.
 Optionally a monthly digest. LLM only phrases; math stays in SQL (testable).
 Effort: **S–M**. Nice-to-have; low risk.
 
-### Cluster C — Built-in MCP server ⭐
+### Cluster C — Built-in MCP server
 
 **C1. Mount an MCP endpoint inside Spoolman NG** (streamable-HTTP at `/mcp`, e.g. via
 the official Python SDK / FastMCP mounted into the existing FastAPI app). Users point
@@ -238,6 +257,24 @@ The recommendation optimizes for: unique value first, shared plumbing reuse, loc
 4. **Key handling** — env vars are authoritative (`SPOOLMAN_AI_*`); the UI offers a
    write-only, masked field that is never echoed back by the API.
 
+### Round 2 refinements (2026-07-23)
+
+5. **Provider presets expanded** — OpenAI and Anthropic join the presets (Anthropic
+   via its official OpenAI-SDK compatibility endpoint `https://api.anthropic.com/v1/`),
+   alongside Groq, Mistral, Gemini, xAI, and any other OpenAI-compatible URL.
+   Presets are data, not code.
+6. **No emoji in the product UI** — buttons, labels, hints, and model responses use
+   plain text and the existing icon set.
+7. **AI is invisible unless enabled** — zero affordances anywhere until a feature is
+   switched on; the Settings tab is the only discovery point.
+8. **No privacy copy in the UI** — "stays on your LAN"-style inline notes dropped;
+   the privacy posture lives in the docs.
+9. **Scan-to-Spool photos are ephemeral** — analyzed in memory, shown once on the
+   review screen, never persisted (users typically photograph the label).
+10. **Match order: own library first** — extraction matches the user's existing
+    filaments before SpoolmanDB, so a known filament gains a spool instead of a
+    duplicate filament record.
+
 ---
 
 ## 6. ASCII UI mockups
@@ -245,7 +282,9 @@ The recommendation optimizes for: unique value first, shared plumbing reuse, loc
 Visual language: these reuse the existing chrome — Ant Design + Refine layout, the
 sidebar (Home / Spools / Filaments / Vendors / Locations / Low stock / Orders /
 Settings / Help), the global scan `FloatButton`, the `Segmented` control in the scan
-modal, and ordinary filter chips. New surfaces are marked ✨.
+modal, and ordinary filter chips. No emoji anywhere. Per the invisibility principle,
+every affordance below (chat button, AI search button, Photo tab, mic) renders only
+when its feature is enabled in Settings — a stock install shows none of it.
 
 ### 6.1 Settings → AI (C1 foundation — provider config, capabilities, features, MCP)
 
@@ -253,17 +292,18 @@ A new tab next to General / Extra fields / Import & Export / Printers / Users:
 
 ```text
 ┌─ Settings ─────────────────────────────────────────────────────────────────┐
-│  General │ Extra fields │ Import & Export │ Printers │ Users │ ✨ AI       │
+│  General │ Extra fields │ Import & Export │ Printers │ Users │ AI          │
 ├────────────────────────────────────────────────────────────────────────────┤
 │                                                                            │
 │  PROVIDER                                                                  │
-│  Presets:  ( Ollama )  ( OpenRouter )  ( Requesty )  ( LM Studio ) (Custom)│
-│                                                                            │
-│  Base URL      [ http://gaming-pc:11434/v1                   ]  🏠 local   │
-│  API key       [ ●●●●●●●●●●●●  (write-only, never shown)     ]  [clear]    │
-│                ⓘ env vars win if set: SPOOLMAN_AI_BASE_URL / _API_KEY      │
-│  Chat model    [ qwen3:8b            ▾ ]   ← fetched live from /v1/models  │
-│  Vision model  [ qwen2.5-vl:7b       ▾ ]   empty = use chat model          │
+│  Preset  [ Ollama              v ]    Ollama · LM Studio · OpenAI ·        │
+│                                       Anthropic · OpenRouter · Requesty ·  │
+│                                       Groq · Mistral · Gemini · Custom     │
+│  Base URL      [ http://gaming-pc:11434/v1                    ]            │
+│  API key       [ ************  (write-only, never shown)      ]  [ clear ] │
+│                Env vars win when set: SPOOLMAN_AI_BASE_URL / _API_KEY      │
+│  Chat model    [ qwen3:8b            v ]   fetched live from /v1/models    │
+│  Vision model  [ qwen2.5-vl:7b       v ]   empty = use chat model          │
 │                                                                            │
 │  [ Test connection ]                                                       │
 │  ┌────────────────────────────────────────────────────────────────┐        │
@@ -271,27 +311,27 @@ A new tab next to General / Extra fields / Import & Export / Printers / Users:
 │  │ ✗ Transcription — add an STT endpoint below to enable Voice    │        │
 │  └────────────────────────────────────────────────────────────────┘        │
 │                                                                            │
-│  FEATURES                                     data leaves your network?    │
-│  [x] Chat assistant ("Ask Spoolman")           no — local endpoint 🏠      │
-│  [x] Scan-to-Spool photo intake                no — local endpoint 🏠      │
-│  [x] Natural-language search                   no — local endpoint 🏠      │
+│  FEATURES   (all off by default; nothing appears in the UI until enabled)  │
+│  [x] Chat assistant ("Ask Spoolman")                                       │
+│  [x] Scan-to-Spool photo intake                                            │
+│  [x] Natural-language search                                               │
 │  [ ] Voice input (push-to-talk)                                            │
 │      STT endpoint [ http://gaming-pc:8971/v1  (whisper-compatible) ]       │
 │                                                                            │
-│  MCP SERVER — use Spoolman from Claude / other assistants                  │
+│  MCP SERVER — use Spoolman from Claude and other assistants                │
 │  [x] Enable MCP endpoint at /mcp   (streamable HTTP)                       │
-│      auth: reuses SPOOLMAN_API_TOKEN when set                              │
-│      connector URL  [ http://spoolman.local:7912/mcp ]  [ Copy config ⧉ ]  │
+│      Auth reuses SPOOLMAN_API_TOKEN when set                               │
+│      Connector URL  [ http://spoolman.local:7912/mcp ]  [ Copy config ]    │
 └────────────────────────────────────────────────────────────────────────────┘
 ```
 
-- The 🏠 local / ☁ cloud badge is derived from the base URL (private-range host →
-  "stays on your network"); every AI feature row repeats it so the privacy posture is
-  always visible where it matters.
+- Picking a preset fills the base URL (and a docs link for getting a key/model);
+  the Anthropic preset points at `https://api.anthropic.com/v1/`, its official
+  OpenAI-compatibility endpoint. Custom accepts any OpenAI-compatible URL.
 - Capability probe drives feature availability: no vision model → Scan-to-Spool row is
   greyed with the reason inline (same pattern as the planned Web-NFC "why unavailable"
   work).
-- "Copy config ⧉" copies a ready Claude Desktop `mcpServers` JSON block, e.g.:
+- "Copy config" copies a ready Claude Desktop `mcpServers` JSON block, e.g.:
 
 ```json
 { "mcpServers": { "spoolman": {
@@ -303,82 +343,86 @@ A new tab next to General / Extra fields / Import & Export / Printers / Users:
 ### 6.2 A1 Scan-to-Spool — capture → review/match → prefilled form
 
 **Step 1 — capture.** The existing global scan modal gains a third `Segmented` tab
-(camera on phone via companion app, file upload on desktop):
+(camera on phone via companion app, file upload on desktop). The tab exists only
+while Scan-to-Spool is enabled:
 
 ```text
             ┌─ Scan ──────────────────────────────┐
-            │    ( QR )   ( NFC )   (● Photo ✨)  │
+            │    ( QR )   ( NFC )   ( * Photo )   │
             │  ┌───────────────────────────────┐  │
             │  │                               │  │
             │  │       [ camera preview ]      │  │
             │  │    frame the label or box     │  │
             │  │                               │  │
             │  └───────────────────────────────┘  │
-            │  ⓘ photo is analyzed by Ollama @    │
-            │    gaming-pc — stays on your LAN    │
             │                                     │
-            │       ( ⬤ shutter )   [ 📁 upload ] │
+            │       ( Shutter )     [ Upload ]    │
             └─────────────────────────────────────┘
 ```
 
-**Step 2 — review & match.** Vision extraction on the left; the extraction is used as
-a *query* against the locally-synced SpoolmanDB catalog on the right — canonical data
-beats OCR:
+**Step 2 — review & match.** Vision extraction on the left; the extraction is used
+as a *query*, matched first against the user's own filament library, then against
+the locally-synced SpoolmanDB catalog — known data beats OCR. The photo is held in
+memory only and discarded after this step:
 
 ```text
 ┌─ Scan-to-Spool — review ───────────────────────────────────────────────────┐
-│  ┌──────────┐   EXTRACTED FROM PHOTO        SPOOLMANDB MATCHES             │
-│  │  [photo] │   vendor    Prusa Polymers    ◉ Prusament PETG               │
-│  │   thumb  │   material  PETG                Prusa Orange · 1 kg     97 % │
-│  │          │   color     Prusa Orange      ○ Prusament PETG               │
-│  └──────────┘   weight    1000 g              Orange "ombre" · 2 kg   61 % │
-│  confidence     diameter  1.75 mm           ○ use raw extraction only      │
-│  high ✓         temps     240 / 85 °C         (no catalog entry)           │
-│                 lot nr    A123-04                                          │
+│  ┌──────────┐  EXTRACTED FROM PHOTO      MATCHES (best first)              │
+│  │  photo   │  vendor    Prusa Polymers                                    │
+│  │ preview  │  material  PETG            your filaments                    │
+│  │(not kept)│  color     Prusa Orange    (*) #7 Prusament PETG             │
+│  └──────────┘  weight    1000 g              Prusa Orange — in library;    │
+│  confidence:   diameter  1.75 mm             just adds a spool to it       │
+│  high          temps     240 / 85 °C                                       │
+│                lot nr    A123-04         SpoolmanDB catalog                │
+│                                          ( ) Prusament PETG Orange · 1 kg │
+│                                              creates filament + spool     │
+│                                          ( ) use raw extraction as typed  │
 │                                                                            │
-│  will create: filament "Prusament PETG Prusa Orange" (new) + 1 spool       │
-│  photo & lot attach to the spool · everything editable on the next screen  │
-│                                                   [ Cancel ] [ Continue →] │
+│  Selected: add 1 spool to existing filament #7 · lot A123-04               │
+│  Photo is discarded after this step; fields stay editable on the next      │
+│  screen.                                    [ Cancel ]   [ Continue ]      │
 └────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Step 3 — handoff to the normal create form**, nothing new to learn:
+**Step 3 — handoff to the normal create form**, nothing new to learn (`*` marks the
+prefilled fields, rendered as a subtle highlight in the real UI):
 
 ```text
 ┌─ New spool ────────────────────────────────────────────────────────────────┐
-│  ✨ 7 fields prefilled from photo — review the highlighted ones            │
+│  7 fields prefilled from photo — review the highlighted ones               │
 │                                                                            │
-│  Filament   [ Prusament PETG Prusa Orange   ▾ ]✨    Price  [ 29.99 ]✨    │
-│  Weight     [ 1000 g ]✨   Lot nr [ A123-04 ]✨   Location [ Shelf B ▾ ]   │
-│  …                                                                         │
+│  Filament   [ Prusament PETG Prusa Orange   v ]*    Price  [ 29.99 ]*      │
+│  Weight     [ 1000 g ]*   Lot nr [ A123-04 ]*   Location [ Shelf B   v ]   │
+│  ...                                                                       │
 │                                              [ Cancel ]  [ Create spool ]  │
 └────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### 6.3 B1 "Ask Spoolman" — FAB + right drawer with confirm-cards
 
-The ✨ button stacks above the existing scan FloatButton; the drawer overlays any
-page and receives that page as context:
+A second FloatButton stacks above the existing scan one (both only when their
+feature is on); the drawer overlays any page and receives that page as context:
 
 ```text
 ┌──────────┬───────────────────────────────────┬─────────────────────────────┐
-│ Spoolman │  Spools                           │ ✨ Ask Spoolman       ⟲  ✕ │
-│──────────│  [ search… 🔍✨ ]  [ + Add spool ]│ qwen3:8b @ gaming-pc · 🔊off│
-│ ⌂ Home   │ ┌──┬──────────┬──────┬─────────┐  ├─────────────────────────────┤
-│ ◉ Spools │ │id│ filament │ left │ location│  │ ▸ context: Spools list      │
-│ ◇ Filam. │ ├──┼──────────┼──────┼─────────┤  │                             │
-│ ◇ Vendors│ │12│ PETG ora…│ 622 g│ Shelf B │  │ you: how much black PETG    │
-│ ◇ Locat. │ │17│ PLA blac…│ 143 g│ Shelf A │  │      do I have left?        │
-│ ◇ Low st.│ │23│ ASA whit…│ 891 g│ Drybox 1│  │                             │
-│ ◇ Orders │ └──┴──────────┴──────┴─────────┘  │ ai:  3 spools, 1 462 g:     │
-│ ⚙ Settings                                   │      · #17 Prusament  143 g │
-│ ? Help   │                                   │      · #31 Sunlu      498 g │
+│ Spoolman │  Spools                           │ Ask Spoolman  [clear] [ x ] │
+│──────────│  [ search…     ][ AI ] [ + Add ]  │ qwen3:8b · speak replies:off│
+│  Home    │ ┌──┬──────────┬──────┬─────────┐  ├─────────────────────────────┤
+│▸ Spools  │ │id│ filament │ left │ location│  │ context: Spools list        │
+│  Filam.  │ ├──┼──────────┼──────┼─────────┤  │                             │
+│  Vendors │ │12│ PETG ora…│ 622 g│ Shelf B │  │ you: how much black PETG    │
+│  Locat.  │ │17│ PLA blac…│ 143 g│ Shelf A │  │      do I have left?        │
+│  Low st. │ │23│ ASA whit…│ 891 g│ Drybox 1│  │                             │
+│  Orders  │ └──┴──────────┴──────┴─────────┘  │ ai:  3 spools, 1 462 g:     │
+│  Settings│                                   │      · #17 Prusament  143 g │
+│  Help    │                                   │      · #31 Sunlu      498 g │
 │          │                                   │      · #44 eSun       821 g │
 │          │                                   │      #17 is under your low- │
 │          │                                   │      stock threshold.       │
-│          │                          ✨ ← new │      [ show in list → ]     │
-│          │                          ⌗  ← scan│                             │
-│          │                                   │ [ 🎤 ] [ type a message… ]  │
+│          │                     ( AI )  new   │      [ show in list ]       │
+│          │                     (scan)  as-is │                             │
+│          │                                   │ [ mic ] [ type a message… ] │
 └──────────┴───────────────────────────────────┴─────────────────────────────┘
 ```
 
@@ -390,43 +434,45 @@ inside the stream (read-only users simply never get them):
 │                                                                            │
 │ ai:  ┌─ CONFIRM WRITE ────────────────────────────┐                        │
 │      │ Use filament — spool #31 Sunlu PETG Black  │                        │
-│      │ remaining:  498 g  →  475 g   (−23 g)      │                        │
-│      │        [ ✓ Confirm ]   [ ✕ Cancel ]        │                        │
+│      │ remaining:  498 g  ->  475 g   (-23 g)     │                        │
+│      │         [ Confirm ]    [ Cancel ]          │                        │
 │      └────────────────────────────────────────────┘                        │
 │ ai:  Done — spool #31 is now at 475 g.  (undo)                             │
 ```
 
 ### 6.4 B2 Natural-language search → ordinary filter chips
 
+The [ AI ] button next to the search box (present only while the feature is on):
+
 ```text
 ┌─ Spools ───────────────────────────────────────────────────────────────────┐
-│  [ matte black under 500 g in shelf B                            ] [ ✨ ]  │
-│  ⟳ parsing with qwen3:8b …                                                 │
+│  [ matte black under 500 g in shelf B                            ] [ AI ]  │
+│  parsing with qwen3:8b …                                                   │
 │                                                                            │
 │  result is plain, editable filter chips — transparent, no black box:       │
-│  [ color ≈ ⬛ black ✕ ][ finish: matte ✕ ][ remaining < 500 g ✕ ]          │
-│  [ location: Shelf B ✕ ]                                      clear all    │
+│  [ color ~ black  x ][ finish: matte  x ][ remaining < 500 g  x ]          │
+│  [ location: Shelf B  x ]                                     clear all    │
 │  ┌──┬──────────────────────┬────────┬──────────┐                           │
 │  │id│ filament             │ left   │ location │      3 results            │
 └────────────────────────────────────────────────────────────────────────────┘
 ```
 
-Unparseable input degrades to the existing free-text search — the ✨ button never
+Unparseable input degrades to the existing free-text search — the AI button never
 blocks the normal path.
 
 ### 6.5 D1 Voice input — states of the chat input strip
 
 ```text
-idle         │ [ 🎤 ]  [ type a message…                          ] [ send ] │
-hold-to-talk │ [ ⏺ 0:03  ▁▂▅▂▇▅▂▁   release to transcribe · slide ✕ cancel ]│
-transcribing │ [ ⟳ transcribing on gaming-pc… ]                              │
-review       │ [ 🎤 ]  [ log 23 grams on the sunlu black petg    ] [ send ]  │
-             │         └ transcript lands editable in the box, then send     │
-             │           (opt-in auto-send toggle in Settings → AI)          │
-replies      │ drawer header 🔊 on → replies read aloud via browser          │
+idle         │ [ mic ]  [ type a message…                         ] [ send ] │
+hold-to-talk │ [ rec 0:03  ▁▂▅▂▇▅▂▁  release to transcribe · slide to cancel]│
+transcribing │ [ transcribing on gaming-pc… ]                                │
+review       │ [ mic ]  [ log 23 grams on the sunlu black petg   ] [ send ]  │
+             │          transcript lands editable in the box, then send      │
+             │          (opt-in auto-send toggle in Settings -> AI)          │
+replies      │ header "speak replies: on" reads answers aloud via browser    │
              │ speechSynthesis (no backend); server TTS optional later       │
 ```
 
 Transcribe-then-review is the default because STT mistakes on vendor names are
-likely ("Sunlu" → "sun blue"); auto-send stays an explicit opt-in.
+likely ("Sunlu" -> "sun blue"); auto-send stays an explicit opt-in.
 
