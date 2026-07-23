@@ -24,6 +24,22 @@ pre-commit:
             run: ./node_modules/.bin/prettier --write .
             stage_fixed: true
 
+# Fast test gate before anything leaves the machine. Skips the slow (QEMU) marker;
+# the full matrix/e2e still run in CI and via poe itest / poe scenario.
+# The backend job uses pytest-testmon: the first push on a machine seeds .testmondata by
+# running the whole fast suite (~3.5 min); after that only tests impacted by changed
+# files run (usually seconds). Delete .testmondata to force a full re-seed.
+# No `-m "not slow"` here: a -m filter deactivates testmon's selection, and the slow
+# marker is only used under tests_scenarios/ anyway (never in tests/).
+pre-push:
+  parallel: true
+  jobs:
+    - name: Backend impacted tests (testmon)
+      run: uv run pytest tests/ -x -q --testmon
+    - name: Client unit tests
+      root: "client/"
+      run: ./node_modules/.bin/vitest run # Hardcoded path because Windows messes up if we use npx
+
 # Same as pre-commit but no fixes
 ci:
   parallel: true

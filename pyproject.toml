@@ -68,6 +68,7 @@ dev = [
     "respx~=0.22",         # mock httpx at the transport boundary (externaldb / 3DFP)
     "cbor2>=5.4",          # exercise the OpenPrintTag codec in unit tests
     "lefthook>=2.1.9",
+    "pytest-testmon>=2.2.0",
 ]
 
 [tool.pytest.ini_options]
@@ -77,6 +78,10 @@ testpaths = ["tests"]
 markers = [
     "slow: builds/boots a real container image (e.g. armv7 under QEMU) -- opt in with -m slow",
 ]
+
+[tool.coverage.run]
+# Flush coverage data when the instrumented server (scripts/coverage_all.py) gets SIGTERM.
+sigterm = true
 
 [tool.mutmut]
 # Mutation testing over the crown-jewel NFC codecs — the highest logic-density code,
@@ -121,6 +126,10 @@ help = "Builds Spoolman and runs integration tests on the backend against all su
 [tool.poe.tasks.scenario]
 cmd = "python -m tests_scenarios"
 help = "Local deployment-scenario harness: list/up/down/test/ps/logs."
+
+[tool.poe.tasks.coverage-all]
+cmd = "python scripts/coverage_all.py"
+help = "Combined backend coverage: fast suite + tests_integration against an instrumented local server."
 
 [tool.ruff]
 line-length = 120

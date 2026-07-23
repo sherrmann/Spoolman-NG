@@ -12,6 +12,7 @@ from pathlib import Path
 import pytest_asyncio
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
+from sqlalchemy import event
 from sqlalchemy.engine import URL
 from sqlalchemy.ext.asyncio import create_async_engine
 
@@ -84,3 +85,39 @@ async def client(tmp_path: Path) -> AsyncIterator[AsyncClient]:
     app_db = getattr(db_module, "__db", None)
     if app_db is not None and app_db.engine is not None:
         await app_db.engine.dispose()
+
+
+class QueryCounter:
+    """Counts SQL statements executed by the app engine while a test runs."""
+
+    def __init__(self) -> None:
+        """Start at zero with no recorded statements."""
+        self.count = 0
+        self.statements: list[str] = []
+
+    def reset(self) -> None:
+        """Zero the counter and forget recorded statements."""
+        self.count = 0
+        self.statements.clear()
+
+    def record(self, statement: str) -> None:
+        """Record one executed SQL statement."""
+        self.count += 1
+        self.statements.append(statement)
+
+
+@pytest_asyncio.fixture
+async def query_counter(client: AsyncClient) -> AsyncIterator[QueryCounter]:  # noqa: ARG001 -- client orders setup
+    """Count every SQL statement the app engine executes (N+1 guard)."""
+    app_db = getattr(db_module, "__db", None)
+    assert app_db is not None
+    assert app_db.engine is not None
+    sync_engine = app_db.engine.sync_engine
+    counter = QueryCounter()
+
+    def _record(_conn, _cursor, statement, _parameters, _context, _executemany) -> None:  # noqa: ANN001
+        counter.record(statement)
+
+    event.listen(sync_engine, "before_cursor_execute", _record)
+    yield counter
+    event.remove(sync_engine, "before_cursor_execute", _record)

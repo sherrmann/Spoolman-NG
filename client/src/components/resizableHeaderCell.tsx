@@ -46,6 +46,9 @@ export function ResizableHeaderCell({ columnId, onResize, children, ...thProps }
       <div style={{ display: "flex", alignItems: "center" }}>
         <div style={{ flex: "1 1 auto", minWidth: 0 }}>{children}</div>
         <span
+          // separator is the ARIA role for a resize handle and (unlike a bare span) permits aria-label
+          role="separator"
+          aria-orientation="vertical"
           aria-label="resize-column"
           onMouseDown={startResize}
           onClick={(e) => e.stopPropagation()}

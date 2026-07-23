@@ -44,6 +44,8 @@ htmlcov/
 .nox/
 .coverage
 .coverage.*
+# pytest-testmon impacted-tests database (host-local, seeded on first pre-push run)
+.testmondata*
 .cache
 nosetests.xml
 coverage.xml

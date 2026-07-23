@@ -38,6 +38,7 @@
     "zustand": "^5.0.9"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
     "@eslint/js": "^9.39.2",
     "@playwright/test": "^1.61.1",
     "@refinedev/cli": "^2.16.50",
@@ -85,6 +86,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
+    "test:visual": "E2E_VISUAL=1 playwright test e2e/journeys/visual.spec.ts",
     "mutation": "stryker run",
     "check-i18n": "node scripts/check-i18n.js",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
