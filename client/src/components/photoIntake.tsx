@@ -15,7 +15,10 @@ const { Text } = Typography;
 const MAX_EDGE = 1568;
 const JPEG_QUALITY = 0.85;
 
-export async function fileToJpegBase64(file: File): Promise<{ base64: string; previewUrl: string }> {
+// The preview is returned as a Blob, not an object URL: the caller mints the blob: URL
+// itself, so the FileReader-derived base64 string and the string that ends up in the
+// <img src> never share a dataflow path (flagged by CodeQL js/xss-through-dom otherwise).
+export async function fileToJpegBase64(file: File): Promise<{ base64: string; previewBlob: Blob }> {
   try {
     const bitmap = await createImageBitmap(file);
     const scale = Math.min(1, MAX_EDGE / Math.max(bitmap.width, bitmap.height));
@@ -28,10 +31,10 @@ export async function fileToJpegBase64(file: File): Promise<{ base64: string; pr
     const blob: Blob = await new Promise((resolve, reject) =>
       canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("encode failed"))), "image/jpeg", JPEG_QUALITY),
     );
-    return { base64: await blobToBase64(blob), previewUrl: URL.createObjectURL(blob) };
+    return { base64: await blobToBase64(blob), previewBlob: blob };
   } catch {
     // Downscaling is an optimization; fall back to sending the original file.
-    return { base64: await blobToBase64(file), previewUrl: URL.createObjectURL(file) };
+    return { base64: await blobToBase64(file), previewBlob: file };
   }
 }
 
@@ -158,8 +161,8 @@ export function PhotoIntakePanel(props: { onClose: () => void }) {
     setError(null);
     setPhase("extracting");
     try {
-      const { base64, previewUrl: preview } = await fileToJpegBase64(file);
-      setPreviewUrl(preview);
+      const { base64, previewBlob } = await fileToJpegBase64(file);
+      setPreviewUrl(URL.createObjectURL(previewBlob));
       const extracted = await extract.mutateAsync({ image_base64: base64, mime: "image/jpeg" });
       setResult(extracted);
       setPhase("review");
