@@ -35,7 +35,6 @@ const USER_MESSAGE_SIZE = 28;
 /** User message offset in the 144-byte payload. */
 const USER_MESSAGE_OFFSET = 58;
 
-/** Emoji offset. */
 const EMOJI_OFFSET = 54;
 
 /** Bed temp offset (2 × uint8 after the 36-byte header). */
@@ -307,7 +306,6 @@ export function mapSpoolToTigerTag(spool: ISpool, userMessage: string = ""): Tig
     data.id_product = spool.id;
   }
 
-  // Diameter
   if (filament.diameter) {
     if (Math.abs(filament.diameter - 1.75) < 0.1) {
       data.id_diameter = 1;
@@ -316,7 +314,6 @@ export function mapSpoolToTigerTag(spool: ISpool, userMessage: string = ""): Tig
     }
   }
 
-  // Color
   if (filament.color_hex) {
     const hex = filament.color_hex.replace(/^#/, "");
     if (hex.length >= 6) {
@@ -336,7 +333,6 @@ export function mapSpoolToTigerTag(spool: ISpool, userMessage: string = ""): Tig
     data.weight = Math.trunc(filament.weight);
   }
 
-  // Temperatures
   if (filament.settings_extruder_temp) {
     data.nozzle_temp = filament.settings_extruder_temp;
   }

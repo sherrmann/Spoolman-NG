@@ -31,11 +31,6 @@ router = APIRouter(
 # ruff: noqa: D103
 
 
-# ---------------------------------------------------------------------------
-# Request bodies
-# ---------------------------------------------------------------------------
-
-
 class CalibrationSessionParameters(BaseModel):
     filament_id: int = Field(description="The ID of the filament this session belongs to.")
     status: CalibrationStatus = Field(
@@ -80,11 +75,6 @@ class CalibrationStepResultUpdateParameters(BaseModel):
     notes: str | None = Field(None, max_length=1024, description="Free-text notes.")
     confidence: str | None = Field(None, max_length=32, description="Confidence level.")
     recorded_at: datetime | None = Field(None, description="When this result was recorded.")
-
-
-# ---------------------------------------------------------------------------
-# Session endpoints
-# ---------------------------------------------------------------------------
 
 
 @router.get(
@@ -196,11 +186,6 @@ async def delete_session(
 ) -> Message:
     await calibration.delete_session(db, session_id)
     return Message(message="Success!")
-
-
-# ---------------------------------------------------------------------------
-# Step result endpoints
-# ---------------------------------------------------------------------------
 
 
 @router.post(

@@ -9,7 +9,6 @@ from ..conftest import URL, assert_dicts_compatible, assert_httpx_code
 
 
 def test_create_session(random_filament: dict[str, Any]):
-    """Create a calibration session and verify the response."""
     result = httpx.post(
         f"{URL}/api/v1/calibration/session",
         json={
@@ -37,12 +36,10 @@ def test_create_session(random_filament: dict[str, Any]):
     assert "registered" in session
     assert session["steps"] == []
 
-    # Cleanup
     httpx.delete(f"{URL}/api/v1/calibration/session/{session['id']}").raise_for_status()
 
 
 def test_create_session_minimal(random_filament: dict[str, Any]):
-    """Create a session with only required fields."""
     result = httpx.post(
         f"{URL}/api/v1/calibration/session",
         json={"filament_id": random_filament["id"]},
@@ -57,7 +54,6 @@ def test_create_session_minimal(random_filament: dict[str, Any]):
 
 
 def test_create_session_unknown_filament():
-    """Creating a session for a non-existent filament returns 404."""
     result = httpx.post(
         f"{URL}/api/v1/calibration/session",
         json={"filament_id": 999999},
@@ -66,7 +62,6 @@ def test_create_session_unknown_filament():
 
 
 def test_get_session(random_session: dict[str, Any]):
-    """Get a session by ID."""
     session_id = random_session["id"]
     result = httpx.get(f"{URL}/api/v1/calibration/session/{session_id}")
     result.raise_for_status()
@@ -74,14 +69,11 @@ def test_get_session(random_session: dict[str, Any]):
 
 
 def test_get_session_not_found():
-    """Getting a non-existent session returns 404."""
     result = httpx.get(f"{URL}/api/v1/calibration/session/999999")
     assert_httpx_code(result, 404)
 
 
 def test_list_sessions_by_filament(random_filament: dict[str, Any]):
-    """List sessions filtered by filament_id."""
-    # Create two sessions
     s1 = httpx.post(
         f"{URL}/api/v1/calibration/session",
         json={"filament_id": random_filament["id"], "status": "planned"},
@@ -100,7 +92,6 @@ def test_list_sessions_by_filament(random_filament: dict[str, Any]):
     assert "x-total-count" in result.headers
     assert int(result.headers["x-total-count"]) >= 2
 
-    # Cleanup
     httpx.delete(f"{URL}/api/v1/calibration/session/{s1['id']}").raise_for_status()
     httpx.delete(f"{URL}/api/v1/calibration/session/{s2['id']}").raise_for_status()
 
@@ -136,13 +127,11 @@ def test_list_sessions_pagination_with_steps(random_filament: dict[str, Any]):
     assert len(page) == 2
     assert all(len(s["steps"]) == 2 for s in page)
 
-    # Cleanup
     for session_id in session_ids:
         httpx.delete(f"{URL}/api/v1/calibration/session/{session_id}").raise_for_status()
 
 
 def test_update_session(random_session: dict[str, Any]):
-    """Update a session's status and printer name."""
     session_id = random_session["id"]
     result = httpx.patch(
         f"{URL}/api/v1/calibration/session/{session_id}",
@@ -155,7 +144,6 @@ def test_update_session(random_session: dict[str, Any]):
 
 
 def test_update_session_not_found():
-    """Updating a non-existent session returns 404."""
     result = httpx.patch(
         f"{URL}/api/v1/calibration/session/999999",
         json={"status": "complete"},
@@ -164,7 +152,6 @@ def test_update_session_not_found():
 
 
 def test_delete_session(random_filament: dict[str, Any]):
-    """Delete a session."""
     session = httpx.post(
         f"{URL}/api/v1/calibration/session",
         json={"filament_id": random_filament["id"]},
@@ -174,12 +161,10 @@ def test_delete_session(random_filament: dict[str, Any]):
     result = httpx.delete(f"{URL}/api/v1/calibration/session/{session_id}")
     result.raise_for_status()
 
-    # Confirm it's gone
     assert_httpx_code(httpx.get(f"{URL}/api/v1/calibration/session/{session_id}"), 404)
 
 
 def test_delete_filament_cascades_to_sessions():
-    """Deleting a filament cascades to its calibration sessions."""
     filament = httpx.post(
         f"{URL}/api/v1/filament",
         json={
@@ -197,8 +182,6 @@ def test_delete_filament_cascades_to_sessions():
     ).json()
     session_id = session["id"]
 
-    # Delete the filament
     httpx.delete(f"{URL}/api/v1/filament/{filament_id}").raise_for_status()
 
-    # Session should be gone too
     assert_httpx_code(httpx.get(f"{URL}/api/v1/calibration/session/{session_id}"), 404)

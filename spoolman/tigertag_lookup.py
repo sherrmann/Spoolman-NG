@@ -1,10 +1,4 @@
-"""TigerTag to Spoolman spool matching and reverse mapping.
-
-Provides functions to:
-- Find a Spoolman spool from decoded TigerTag data
-- Map a Spoolman spool/filament to TigerTag binary format
-- Bind a spool to a specific TigerTag via (id_product, timestamp) pair
-"""
+"""TigerTag to Spoolman spool matching and reverse mapping."""
 
 import logging
 import time
@@ -44,7 +38,6 @@ async def bind_spool_to_tigertag(db: AsyncSession, spool: Spool, tag_data: Tiger
     if nfc_tag_id is None:
         return False
 
-    # Check if this spool already has a nfc_tag_id binding
     for field in spool.extra:
         if field.key == "nfc_tag_id":
             if field.value == nfc_tag_id:
@@ -53,7 +46,6 @@ async def bind_spool_to_tigertag(db: AsyncSession, spool: Spool, tag_data: Tiger
             logger.debug("Spool %d already bound to %s, not rebinding to %s", spool.id, field.value, nfc_tag_id)
             return False
 
-    # Create the binding
     db.add(SpoolField(spool_id=spool.id, key="nfc_tag_id", value=nfc_tag_id))
     await db.flush()
     logger.info("Bound spool %d to TigerTag %s", spool.id, nfc_tag_id)
@@ -187,7 +179,6 @@ def map_spool_to_tigertag(
     else:
         data.id_product = spool.id
 
-    # Brand ID lookup
     if brand_map and filament.vendor and filament.vendor.name:
         vendor_name = filament.vendor.name.lower()
         for name, brand_id in brand_map.items():
@@ -195,7 +186,6 @@ def map_spool_to_tigertag(
                 data.id_brand = brand_id
                 break
 
-    # Material ID lookup
     if material_map and filament.material:
         material_name = filament.material.lower()
         for name, material_id in material_map.items():
@@ -203,22 +193,18 @@ def map_spool_to_tigertag(
                 data.id_material = material_id
                 break
 
-    # Diameter
     if filament.diameter:
         if abs(filament.diameter - 1.75) < 0.1:
             data.id_diameter = 1
         elif abs(filament.diameter - 2.85) < 0.1:
             data.id_diameter = 2
 
-    # Color
     if filament.color_hex:
         data.color_hex = filament.color_hex
 
-    # Weight
     if filament.weight:
         data.weight = int(filament.weight)
 
-    # Temperatures
     if filament.settings_extruder_temp:
         data.nozzle_temp = filament.settings_extruder_temp
     if filament.settings_bed_temp:

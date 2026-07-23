@@ -1,9 +1,5 @@
 # Installation & Configuration
 
-This is the fork-maintained installation guide for **Spoolman NG**. It covers the
-Docker and native installs, every supported environment variable, database
-options, backups, and Moonraker-managed updates.
-
 > **Prefer the [interactive setup guide](https://sherrmann.github.io/Spoolman-NG/install/)?** Answer a few
 > questions and it assembles your exact steps and config files for your platform, database, proxy and
 > Klipper setup. This page is the complete reference behind it — the snippets the guide generates are

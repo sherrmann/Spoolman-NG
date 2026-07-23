@@ -1,9 +1,4 @@
-"""OpenPrintTag to Spoolman spool matching and auto-creation.
-
-Provides functions to:
-- Find a Spoolman spool from decoded OpenPrintTag data
-- Auto-create a filament and spool from OpenPrintTag data on first scan
-"""
+"""OpenPrintTag to Spoolman spool matching and auto-creation."""
 
 import logging
 
@@ -31,14 +26,12 @@ async def find_spool_by_openprinttag(db: AsyncSession, tag_data: OpenPrintTagDat
     """
     instance_uuid = tag_data.effective_instance_uuid
 
-    # Strategy 1: Match by instance UUID (specific physical spool)
     if instance_uuid:
         external_id = f"opt_{instance_uuid}"
         spool = await _find_spool_by_filament_external_id(db, external_id)
         if spool is not None:
             return spool
 
-    # Strategy 2: Match by package UUID (same product)
     if tag_data.package_uuid:
         external_id = f"opt_pkg_{tag_data.package_uuid}"
         spool = await _find_spool_by_filament_external_id(db, external_id)
@@ -66,12 +59,10 @@ async def create_spool_from_openprinttag(db: AsyncSession, tag_data: OpenPrintTa
             # Filament exists but no spool — create spool only
             return await _create_spool_for_filament(db, existing.id, tag_data)
 
-    # Find or create vendor
     vendor_id = None
     if tag_data.brand_name:
         vendor_id = await _find_or_create_vendor(db, tag_data.brand_name)
 
-    # Build filament name
     if tag_data.material_name:
         name = tag_data.material_name
     elif tag_data.material_type and tag_data.brand_name:

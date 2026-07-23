@@ -30,13 +30,11 @@ def random_session_impl(filament_id: int):
 
 @pytest.fixture
 def random_filament():
-    """Return a random filament."""
     with random_filament_impl() as f:
         yield f
 
 
 @pytest.fixture
 def random_session(random_filament: dict[str, Any]):
-    """Return a random calibration session."""
     with random_session_impl(random_filament["id"]) as session:
         yield session

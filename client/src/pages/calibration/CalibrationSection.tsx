@@ -35,8 +35,6 @@ const STATUS_COLORS: Record<CalibrationStatus, string> = {
 // Step-type display labels live in the shared calibration.step_types.* catalog keys,
 // resolved via t(`calibration.step_types.${stepType}`) at each render site.
 
-// ---- Inline confirm-delete button ----------------------------------------
-
 interface ConfirmDeleteButtonProps {
   onConfirm: () => void;
   size?: "small" | "middle" | "large";
@@ -80,8 +78,6 @@ function ConfirmDeleteButton({ onConfirm, size = "small" }: ConfirmDeleteButtonP
     </Tooltip>
   );
 }
-
-// ---- Recommended settings summary ----------------------------------------
 
 function RecommendedSummary({ sessions }: { sessions: ICalibrationSession[] }) {
   const t = useTranslate();
@@ -233,8 +229,6 @@ function RecommendedSummary({ sessions }: { sessions: ICalibrationSession[] }) {
   );
 }
 
-// ---- Step list inside a session ------------------------------------------
-
 interface StepListProps {
   session: ICalibrationSession;
   onEditStep: (step: ICalibrationStepResult) => void;
@@ -310,8 +304,6 @@ function StepList({ session, onEditStep, onDeleteStep }: StepListProps) {
     </Space>
   );
 }
-
-// ---- Main section --------------------------------------------------------
 
 interface Props {
   filamentId: number | undefined;

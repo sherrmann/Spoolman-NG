@@ -47,7 +47,6 @@ export function SwatchSettings() {
   const [messageApi, contextHolder] = message.useMessage();
   const t = useTranslate();
 
-  // Set initial form values
   useEffect(() => {
     if (settings.data) {
       form.setFieldsValue({
@@ -56,7 +55,6 @@ export function SwatchSettings() {
     }
   }, [settings.data, form]);
 
-  // Popup message if setSetting is successful
   useEffect(() => {
     if (setSwatchStyle.isSuccess) {
       messageApi.success(t("notifications.saveSuccessful"));

@@ -24,7 +24,7 @@ depends_on = None
 
 
 def upgrade() -> None:
-    """Perform the upgrade."""
+    """Add the extruder/bed temperature range columns to filament."""
     op.add_column("filament", sa.Column("settings_extruder_temp_min", sa.Integer(), nullable=True))
     op.add_column("filament", sa.Column("settings_extruder_temp_max", sa.Integer(), nullable=True))
     op.add_column("filament", sa.Column("settings_bed_temp_min", sa.Integer(), nullable=True))
@@ -32,7 +32,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    """Perform the downgrade."""
+    """Drop the extruder/bed temperature range columns from filament."""
     op.drop_column("filament", "settings_bed_temp_max")
     op.drop_column("filament", "settings_bed_temp_min")
     op.drop_column("filament", "settings_extruder_temp_max")

@@ -25,7 +25,7 @@ depends_on = None
 
 
 def upgrade() -> None:
-    """Perform the upgrade."""
+    """Add the spool_type, finish, pattern, translucent and glow columns to filament."""
     op.add_column("filament", sa.Column("spool_type", sa.String(length=16), nullable=True))
     op.add_column("filament", sa.Column("finish", sa.String(length=16), nullable=True))
     op.add_column("filament", sa.Column("pattern", sa.String(length=16), nullable=True))
@@ -34,7 +34,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    """Perform the downgrade."""
+    """Drop the spool_type, finish, pattern, translucent and glow columns from filament."""
     op.drop_column("filament", "glow")
     op.drop_column("filament", "translucent")
     op.drop_column("filament", "pattern")

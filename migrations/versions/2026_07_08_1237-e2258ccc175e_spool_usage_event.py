@@ -16,7 +16,7 @@ depends_on = None
 
 
 def upgrade() -> None:
-    """Perform the upgrade."""
+    """Create the spool_usage_event table and its indexes."""
     op.create_table(
         "spool_usage_event",
         sa.Column("id", sa.Integer(), nullable=False),
@@ -51,7 +51,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    """Perform the downgrade."""
+    """Drop the spool_usage_event table and its indexes."""
     op.drop_index("uq_spool_usage_event_idempotency", table_name="spool_usage_event")
     op.drop_index("ix_spool_usage_event_spool_time", table_name="spool_usage_event")
     op.drop_index(op.f("ix_spool_usage_event_time"), table_name="spool_usage_event")

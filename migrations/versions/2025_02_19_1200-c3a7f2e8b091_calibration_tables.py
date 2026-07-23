@@ -16,7 +16,7 @@ depends_on = None
 
 
 def upgrade() -> None:
-    """Perform the upgrade."""
+    """Create the calibration_session and calibration_step_result tables."""
     op.create_table(
         "calibration_session",
         sa.Column("id", sa.Integer(), nullable=False),
@@ -51,7 +51,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    """Perform the downgrade."""
+    """Drop the calibration_step_result and calibration_session tables."""
     op.drop_index(op.f("ix_calibration_step_result_id"), table_name="calibration_step_result")
     op.drop_table("calibration_step_result")
     op.drop_index(op.f("ix_calibration_session_id"), table_name="calibration_session")

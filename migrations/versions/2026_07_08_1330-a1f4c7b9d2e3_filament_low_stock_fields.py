@@ -23,12 +23,12 @@ depends_on = None
 
 
 def upgrade() -> None:
-    """Perform the upgrade."""
+    """Add low_stock_threshold and reserve_count columns to filament."""
     op.add_column("filament", sa.Column("low_stock_threshold", sa.Float(), nullable=True))
     op.add_column("filament", sa.Column("reserve_count", sa.Integer(), nullable=True))
 
 
 def downgrade() -> None:
-    """Perform the downgrade."""
+    """Drop the low_stock_threshold and reserve_count columns from filament."""
     op.drop_column("filament", "reserve_count")
     op.drop_column("filament", "low_stock_threshold")

@@ -47,7 +47,6 @@ def _create_entity(entity_type: str, extra: dict[str, str], random_filament: dic
 @pytest.mark.asyncio
 @pytest.mark.parametrize("entity_type", ["spool", "filament", "vendor"])
 async def test_integer_filter_and_sort(entity_type: str, random_filament: dict[str, Any]) -> None:
-    """Test filter and sort by a custom integer field for all entity types."""
     field_key = "test_int_field"
     httpx.post(
         f"{URL}/api/v1/field/{entity_type}/{field_key}",
@@ -108,7 +107,6 @@ async def test_integer_filter_and_sort(entity_type: str, random_filament: dict[s
 @pytest.mark.asyncio
 @pytest.mark.parametrize("entity_type", ["spool", "filament", "vendor"])
 async def test_float_filter_and_sort(entity_type: str, random_filament: dict[str, Any]) -> None:
-    """Test filter and sort by a custom float field for all entity types."""
     field_key = "test_float_field"
     httpx.post(
         f"{URL}/api/v1/field/{entity_type}/{field_key}",
@@ -209,7 +207,6 @@ async def test_float_filter_whole_number(entity_type: str, random_filament: dict
 @pytest.mark.asyncio
 @pytest.mark.parametrize("entity_type", ["spool", "filament", "vendor"])
 async def test_integer_range_filter_and_sort(entity_type: str, random_filament: dict[str, Any]) -> None:
-    """Test filter and sort by a custom integer_range field for all entity types."""
     field_key = "test_int_range_field"
     httpx.post(
         f"{URL}/api/v1/field/{entity_type}/{field_key}",
@@ -264,7 +261,6 @@ async def test_integer_range_filter_and_sort(entity_type: str, random_filament: 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("entity_type", ["spool", "filament", "vendor"])
 async def test_float_range_filter_and_sort(entity_type: str, random_filament: dict[str, Any]) -> None:
-    """Test filter and sort by a custom float_range field for all entity types."""
     field_key = "test_float_range_field"
     httpx.post(
         f"{URL}/api/v1/field/{entity_type}/{field_key}",
@@ -324,7 +320,6 @@ async def test_float_range_filter_and_sort(entity_type: str, random_filament: di
 @pytest.mark.asyncio
 @pytest.mark.parametrize("entity_type", ["spool", "filament", "vendor"])
 async def test_datetime_filter_and_sort(entity_type: str, random_filament: dict[str, Any]) -> None:
-    """Test filter and sort by a custom datetime field for all entity types."""
     field_key = "test_dt_field"
     httpx.post(
         f"{URL}/api/v1/field/{entity_type}/{field_key}",
@@ -395,7 +390,6 @@ async def test_datetime_filter_and_sort(entity_type: str, random_filament: dict[
 @pytest.mark.asyncio
 @pytest.mark.parametrize("entity_type", ["spool", "filament", "vendor"])
 async def test_text_filter_and_sort(entity_type: str, random_filament: dict[str, Any]) -> None:
-    """Test filter and sort by a custom text field for all entity types."""
     field_key = "test_text_field"
     httpx.post(
         f"{URL}/api/v1/field/{entity_type}/{field_key}",
@@ -450,7 +444,6 @@ async def test_text_filter_and_sort(entity_type: str, random_filament: dict[str,
 @pytest.mark.asyncio
 @pytest.mark.parametrize("entity_type", ["spool", "filament", "vendor"])
 async def test_boolean_filter_and_sort(entity_type: str, random_filament: dict[str, Any]) -> None:
-    """Test filter and sort by a custom boolean field for all entity types."""
     field_key = "test_bool_field"
     httpx.post(
         f"{URL}/api/v1/field/{entity_type}/{field_key}",
@@ -497,7 +490,6 @@ async def test_boolean_filter_and_sort(entity_type: str, random_filament: dict[s
 @pytest.mark.asyncio
 @pytest.mark.parametrize("entity_type", ["spool", "filament", "vendor"])
 async def test_single_choice_filter_and_sort(entity_type: str, random_filament: dict[str, Any]) -> None:
-    """Test filter and sort by a single-choice custom field for all entity types."""
     field_key = "test_choice_field"
     httpx.post(
         f"{URL}/api/v1/field/{entity_type}/{field_key}",
@@ -549,7 +541,6 @@ async def test_single_choice_filter_and_sort(entity_type: str, random_filament: 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("entity_type", ["spool", "filament", "vendor"])
 async def test_multi_choice_filter(entity_type: str, random_filament: dict[str, Any]) -> None:
-    """Test filter by a multi-choice custom field for all entity types."""
     field_key = "test_multi_field"
     httpx.post(
         f"{URL}/api/v1/field/{entity_type}/{field_key}",
@@ -629,7 +620,6 @@ async def test_empty_filter(entity_type: str, random_filament: dict[str, Any]) -
 @pytest.mark.asyncio
 @pytest.mark.parametrize("entity_type", ["spool", "filament", "vendor"])
 async def test_invalid_integer_filter_returns_400(entity_type: str) -> None:
-    """Invalid integer custom-field filters should fail with a 400 error."""
     field_key = "int_field_400"
     httpx.post(
         f"{URL}/api/v1/field/{entity_type}/{field_key}",
@@ -646,7 +636,6 @@ async def test_invalid_integer_filter_returns_400(entity_type: str) -> None:
 @pytest.mark.asyncio
 @pytest.mark.parametrize("entity_type", ["spool", "filament", "vendor"])
 async def test_invalid_boolean_filter_returns_400(entity_type: str) -> None:
-    """Invalid boolean custom-field filters should fail with a 400 error."""
     field_key = "bool_field_400"
     httpx.post(
         f"{URL}/api/v1/field/{entity_type}/{field_key}",
@@ -667,7 +656,6 @@ async def test_invalid_boolean_filter_returns_400(entity_type: str) -> None:
 @pytest.mark.asyncio
 @pytest.mark.parametrize("entity_type", ["spool", "filament", "vendor"])
 async def test_invalid_float_filter_returns_400(entity_type: str) -> None:
-    """Invalid float custom-field filters should fail with a 400 error."""
     field_key = "float_field_400"
     httpx.post(
         f"{URL}/api/v1/field/{entity_type}/{field_key}",
@@ -684,7 +672,6 @@ async def test_invalid_float_filter_returns_400(entity_type: str) -> None:
 @pytest.mark.asyncio
 @pytest.mark.parametrize("entity_type", ["spool", "filament", "vendor"])
 async def test_invalid_integer_range_filter_returns_400(entity_type: str) -> None:
-    """Invalid integer_range custom-field filters should fail with a 400 error."""
     field_key = "int_range_400"
     httpx.post(
         f"{URL}/api/v1/field/{entity_type}/{field_key}",
@@ -707,7 +694,6 @@ async def test_invalid_integer_range_filter_returns_400(entity_type: str) -> Non
 @pytest.mark.asyncio
 @pytest.mark.parametrize("entity_type", ["spool", "filament", "vendor"])
 async def test_invalid_float_range_filter_returns_400(entity_type: str) -> None:
-    """Invalid float_range custom-field filters should fail with a 400 error."""
     field_key = "float_range_400"
     httpx.post(
         f"{URL}/api/v1/field/{entity_type}/{field_key}",

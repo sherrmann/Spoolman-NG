@@ -216,11 +216,9 @@ export const NfcScannerPanel: React.FC<NfcScannerPanelProps> = ({ active, onClos
             try {
               const tagData = decodeTigerTag(record.data.buffer as ArrayBuffer);
               if (isTigerTag(tagData.id_tigertag) && tagData.id_product > 0) {
-                // Convert RGBA to hex string
                 const colorHex = [tagData.color_r, tagData.color_g, tagData.color_b]
                   .map((c) => c.toString(16).padStart(2, "0"))
                   .join("");
-                // Derive diameter from id_diameter
                 const diameterMm = tagData.id_diameter === 1 ? 1.75 : tagData.id_diameter === 2 ? 2.85 : 0;
 
                 setUnmatchedTagData({

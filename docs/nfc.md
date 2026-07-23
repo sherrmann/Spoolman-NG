@@ -2,10 +2,8 @@
 
 Spoolman NG can read (and, for some standards, write) NFC filament tags to
 identify a spool instantly, look it up in your inventory, and — for an
-unrecognized tag — offer to create the spool from the tag's data. This guide
-covers the supported tag standards, the two ways tags are read (an in-browser
-scanner and an optional server-side USB reader), the hardware and configuration
-each path needs, and troubleshooting.
+unrecognized tag — offer to create the spool from the tag's data. Tags are read
+either by an in-browser scanner or by an optional server-side USB reader.
 
 > **Security note:** the NFC lookup/auto-create endpoint (`POST /api/v1/nfc/lookup`)
 > creates spools from scanned data, and `POST /api/v1/nfc/write` writes physical
@@ -42,8 +40,6 @@ Notes on the matrix (all derived from the current code):
 - **Qidi is USB-only in practice.** MIFARE Classic tags are not NDEF and are not
   exposed through the browser's Web NFC API, so Qidi tags are read through the USB
   reader, not the in-browser scanner.
-- **Writing** is supported for TigerTag (NTAG213) and Qidi (MIFARE Classic 1K)
-  only; there is no OpenPrintTag write endpoint.
 
 ## Browser scanning (Web NFC) — requirements
 

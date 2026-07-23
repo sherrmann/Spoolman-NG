@@ -28,14 +28,14 @@ depends_on = None
 
 
 def upgrade() -> None:
-    """Perform the upgrade."""
+    """Drop the ordered_at, order_url and order_note columns from filament."""
     op.drop_column("filament", "order_note")
     op.drop_column("filament", "order_url")
     op.drop_column("filament", "ordered_at")
 
 
 def downgrade() -> None:
-    """Perform the downgrade."""
+    """Re-add the ordered_at, order_url and order_note columns to filament."""
     op.add_column("filament", sa.Column("ordered_at", sa.DateTime(), nullable=True))
     op.add_column("filament", sa.Column("order_url", sa.String(length=1024), nullable=True))
     op.add_column("filament", sa.Column("order_note", sa.String(length=1024), nullable=True))

@@ -294,7 +294,6 @@ const NfcBindModal: React.FC<NfcBindModalProps> = ({ spool, visible, onClose, on
           }}
         />
 
-        {/* Step 1: Scan */}
         {!hasScannedTag && (
           <>
             {mode === "server" && (
@@ -323,7 +322,6 @@ const NfcBindModal: React.FC<NfcBindModalProps> = ({ spool, visible, onClose, on
           </>
         )}
 
-        {/* Step 2: Confirm binding */}
         {hasScannedTag && (
           <Space direction="vertical" style={{ width: "100%" }} size="middle">
             <Alert type="info" message={t("nfc.bind_confirm_description")} showIcon />
