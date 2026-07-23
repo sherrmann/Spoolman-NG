@@ -1,5 +1,66 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`plan snapshots > compose-ai-armv7-refused 1`] = `
+{
+  "artifacts": [
+    {
+      "content": "services:
+  spoolman:
+    image: ghcr.io/sherrmann/spoolman-ng:latest # Also on Docker Hub: cookiemonster95/spoolman-ng:latest
+    restart: unless-stopped
+    volumes:
+      # Keeps your database outside the container lifecycle. Do NOT modify the target path.
+      - ./data:/home/app/.local/share/spoolman
+    ports:
+      - "7912:8000"
+",
+      "filename": "docker-compose.yml",
+      "id": "compose",
+      "language": "yaml",
+      "title": "docker-compose.yml",
+    },
+  ],
+  "steps": [
+    {
+      "artifactIds": [
+        "compose",
+      ],
+      "body": "Create an empty directory (e.g. ~/spoolman) and save this file in it as docker-compose.yml.",
+      "id": "compose-file",
+      "notes": undefined,
+      "title": "Create a folder and save docker-compose.yml",
+    },
+    {
+      "body": "Then open http://<host>:7912.",
+      "commands": [
+        "docker compose up -d",
+      ],
+      "id": "start",
+      "notes": [
+        {
+          "id": "armv7-best-effort",
+          "level": "info",
+          "text": "On 32-bit ARM (armv7, e.g. older Raspberry Pi OS) support is best-effort — amd64 and arm64 are the recommended targets. A 64-bit OS is worth it on Pi 3B+/4 hardware.",
+        },
+      ],
+      "title": "Start it",
+    },
+    {
+      "body": "After the first start, open Settings → AI: pick a preset (Ollama on another machine, OpenAI, Anthropic, OpenRouter, ...), enter the endpoint URL and key, and run Test connection. Every AI feature stays invisible until you enable it there. Details: https://github.com/sherrmann/Spoolman-NG/blob/master/docs/ai.md.",
+      "id": "ai-remote",
+      "title": "Connect your AI endpoint",
+    },
+  ],
+  "warnings": [
+    {
+      "id": "ai-sidecar-refused-armv7",
+      "level": "warning",
+      "text": "Local AI skipped: Ollama has no 32-bit ARM (armv7) build, and this class of hardware cannot hold a useful model in memory. Spoolman itself runs fine here — point Settings → AI at an Ollama running on another machine on your network (a desktop PC or NAS is one URL away), or at a cloud provider. See docs/ai.md.",
+    },
+  ],
+}
+`;
+
 exports[`plan snapshots > compose-migrate-upstream-postgres 1`] = `
 {
   "artifacts": [],
@@ -274,6 +335,82 @@ server: http://<spoolman-host>:7912
       "text": "API token omitted: Moonraker's [spoolman] component cannot send a token, so setting SPOOLMAN_API_TOKEN would silently break Klipper filament tracking (#268). Keep this instance token-free on the trusted LAN — use user accounts for the web UI, or gate external access at a reverse proxy/VPN with an unauthenticated path for printer traffic.",
     },
   ],
+}
+`;
+
+exports[`plan snapshots > compose-sqlite-ai-sidecar 1`] = `
+{
+  "artifacts": [
+    {
+      "content": "services:
+  spoolman:
+    image: ghcr.io/sherrmann/spoolman-ng:latest # Also on Docker Hub: cookiemonster95/spoolman-ng:latest
+    restart: unless-stopped
+    volumes:
+      # Keeps your database outside the container lifecycle. Do NOT modify the target path.
+      - ./data:/home/app/.local/share/spoolman
+    ports:
+      - "7912:8000"
+    environment:
+      - SPOOLMAN_AI_BASE_URL=http://ollama:11434/v1 # the AI sidecar below — see docs/ai.md
+
+  # Local AI runtime for Spoolman's AI features (Settings -> AI). Reachable from
+  # the spoolman service only - no host port is published. Models are pulled from
+  # Settings -> AI and live in the named volume. See docs/ai.md.
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    volumes:
+      - ollama-models:/root/.ollama
+
+volumes:
+  ollama-models:
+",
+      "filename": "docker-compose.yml",
+      "id": "compose",
+      "language": "yaml",
+      "title": "docker-compose.yml",
+    },
+  ],
+  "steps": [
+    {
+      "artifactIds": [
+        "compose",
+      ],
+      "body": "Create an empty directory (e.g. ~/spoolman) and save this file in it as docker-compose.yml.",
+      "id": "compose-file",
+      "notes": undefined,
+      "title": "Create a folder and save docker-compose.yml",
+    },
+    {
+      "body": "Then open http://<host>:7912.",
+      "commands": [
+        "docker compose up -d",
+      ],
+      "id": "start",
+      "notes": [
+        {
+          "id": "armv7-best-effort",
+          "level": "info",
+          "text": "On 32-bit ARM (armv7, e.g. older Raspberry Pi OS) support is best-effort — amd64 and arm64 are the recommended targets. A 64-bit OS is worth it on Pi 3B+/4 hardware.",
+        },
+      ],
+      "title": "Start it",
+    },
+    {
+      "body": "Your compose file already includes an ollama service, and SPOOLMAN_AI_BASE_URL points Spoolman at it - nothing to install. After the first start, open Settings → AI, run Test connection, and pull the recommended models from there (sizes are shown before downloading; models land in the ollama-models volume). The sidecar publishes no host port - only Spoolman reaches it.",
+      "id": "ai-sidecar",
+      "notes": [
+        {
+          "id": "ai-hardware-expectations",
+          "level": "info",
+          "text": "An x86 machine runs the full tier: chat, search and vision models (2-6 GB each). CPU-only works; an NVIDIA GPU speeds it up considerably (see Ollama's Docker GPU docs).",
+        },
+      ],
+      "title": "Local AI sidecar",
+    },
+  ],
+  "warnings": [],
 }
 `;
 
@@ -655,6 +792,73 @@ env: {}
       "body": "No Ingress configured — reach it with kubectl port-forward against the service the chart created (kubectl get svc), or add ingress: to values.yaml later.",
       "id": "access",
       "title": "Open the UI",
+    },
+  ],
+  "warnings": [],
+}
+`;
+
+exports[`plan snapshots > native-fresh-ai-local 1`] = `
+{
+  "artifacts": [
+    {
+      "content": "# Spoolman-NG configuration (native install).
+# Full reference: .env.example and docs/installation.md → "Environment variable reference".
+
+# Interface and port the server listens on (the installer's default port is 7912).
+SPOOLMAN_HOST=0.0.0.0
+SPOOLMAN_PORT=7912
+
+# Local AI runtime installed by scripts/install-ai.sh (Ollama on this machine).
+# Pick and pull models in Settings → AI. See docs/ai.md.
+SPOOLMAN_AI_BASE_URL=http://localhost:11434/v1
+",
+      "filename": ".env",
+      "id": "env",
+      "language": "dotenv",
+      "title": ".env (in ~/Spoolman)",
+    },
+  ],
+  "steps": [
+    {
+      "body": "Fetches the latest release and runs the installer: it sets up uv, the Python environment, and an optional systemd service (named Spoolman). The UI then runs on http://<host>:7912.",
+      "commands": [
+        "curl -fsSL https://github.com/sherrmann/Spoolman-NG/releases/latest/download/spoolman.zip -o spoolman.zip \\",
+        "  && unzip spoolman.zip -d ~/Spoolman && cd ~/Spoolman && bash ./scripts/install.sh",
+      ],
+      "id": "install",
+      "notes": [
+        {
+          "id": "armv7-best-effort",
+          "level": "info",
+          "text": "On 32-bit ARM (armv7, e.g. older Raspberry Pi OS) support is best-effort — amd64 and arm64 are the recommended targets. A 64-bit OS is worth it on Pi 3B+/4 hardware.",
+        },
+      ],
+      "title": "Install with one line",
+    },
+    {
+      "artifactIds": [
+        "env",
+      ],
+      "body": "The installer creates .env from .env.example. Replace it with this (or merge the lines you need), then restart: sudo systemctl restart Spoolman.",
+      "id": "configure-env",
+      "notes": undefined,
+      "title": "Configure .env",
+    },
+    {
+      "body": "Installs Ollama with its official installer, enables its service, and points SPOOLMAN_AI_BASE_URL in .env at it (the same line is already in the .env above). The script refuses unsupported hardware (32-bit ARM, low RAM) with remote-endpoint guidance instead. You can also pass --with-ai to install.sh in step 1 to do both at once.",
+      "commands": [
+        "cd ~/Spoolman && bash ./scripts/install-ai.sh",
+      ],
+      "id": "ai-native",
+      "notes": [
+        {
+          "id": "ai-hardware-expectations",
+          "level": "info",
+          "text": "Pi 4/5-class hardware handles small text models (2-3 GB each) for chat and search at a relaxed pace. Vision models (Scan-to-Spool) are a stretch here - test before relying on them, or point the vision model at a bigger machine or a cloud provider later.",
+        },
+      ],
+      "title": "Local AI on this machine",
     },
   ],
   "warnings": [],

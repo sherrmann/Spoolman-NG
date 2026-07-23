@@ -1,4 +1,4 @@
-import { defaultConfig, type Extras, type WizardConfig } from "./config";
+import { defaultConfig, type AIOptions, type Extras, type WizardConfig } from "./config";
 
 export interface Preset {
   id: string;
@@ -6,7 +6,10 @@ export interface Preset {
   config: WizardConfig;
 }
 
-type PresetOverrides = Omit<Partial<WizardConfig>, "extras"> & { extras?: Partial<Extras> };
+type PresetOverrides = Omit<Partial<WizardConfig>, "extras" | "ai"> & {
+  extras?: Partial<Extras>;
+  ai?: Partial<AIOptions>;
+};
 
 function preset(id: string, label: string, overrides: PresetOverrides): Preset {
   return {
@@ -15,6 +18,7 @@ function preset(id: string, label: string, overrides: PresetOverrides): Preset {
     config: {
       ...defaultConfig,
       ...overrides,
+      ai: { ...defaultConfig.ai, ...(overrides.ai ?? {}) },
       extras: { ...defaultConfig.extras, ...(overrides.extras ?? {}) },
     },
   };
@@ -85,5 +89,17 @@ export const presets: Preset[] = [
     database: "postgres",
     proxy: "nginx",
     extras: { nfc: true },
+  }),
+  // AI provisioning (#364): the sidecar compose is booted by the deployment suite;
+  // the armv7 preset pins the refusal path (warning, no ollama service emitted).
+  preset("compose-sqlite-ai-sidecar", "Compose + local AI sidecar (Ollama, x86)", {
+    ai: { choice: "local", arch: "amd64" },
+  }),
+  preset("compose-ai-armv7-refused", "Compose asking for local AI on 32-bit ARM (refused)", {
+    ai: { choice: "local", arch: "arm32" },
+  }),
+  preset("native-fresh-ai-local", "Fresh native install + local AI (Pi 5)", {
+    platform: "native",
+    ai: { choice: "local", arch: "arm64" },
   }),
 ];

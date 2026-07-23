@@ -19,6 +19,7 @@ from datetime import datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -470,6 +471,41 @@ async def nl_search(
         raise HTTPException(status_code=502, detail=str(exc)) from exc
     filters, dropped = aisearch.sanitize(reply, body.entity, vocab)
     return AISearchResponse(filters=filters, dropped=dropped)
+
+
+# --- Managed model pull (#364 F2) ---------------------------------------------------
+
+
+class AIPullRequest(BaseModel):
+    model: str = Field(
+        min_length=1,
+        max_length=120,
+        pattern=r"^[A-Za-z0-9._/-]+(:[A-Za-z0-9._-]+)?$",
+        description="Ollama model tag to pull, e.g. qwen3:8b.",
+    )
+
+
+@router.post(
+    "/models/pull",
+    name="Pull a model onto the Ollama endpoint",
+    description=(
+        "Drive the configured Ollama server's own pull API and relay its progress as an "
+        "NDJSON stream (status/total/completed lines; failures appear as an 'error' line). "
+        "Spoolman manages models only, never the runtime - this exists so a fresh sidecar "
+        "can be stocked from Settings -> AI without shelling into a container."
+    ),
+    responses={409: {"model": Message}},
+)
+async def pull_model(
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+    _admin: Annotated[Principal, Depends(require_admin)],
+    body: AIPullRequest,
+) -> StreamingResponse:
+    config = await ai.resolve_config(db)
+    origin = ai.ollama_origin(config.base_url)
+    if origin is None:
+        raise HTTPException(status_code=409, detail="The configured endpoint is not an Ollama server.")
+    return StreamingResponse(ai.stream_model_pull(origin, body.model), media_type="application/x-ndjson")
 
 
 # --- Voice transcription (#363) -----------------------------------------------------

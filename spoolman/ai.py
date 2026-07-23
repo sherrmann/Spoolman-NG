@@ -25,6 +25,7 @@ import json
 import logging
 import os
 import time
+from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Literal
@@ -534,6 +535,42 @@ async def chat_completion(
     if not isinstance(content, str) or not content:
         raise AIRequestError("The AI endpoint returned no text content.")
     return content
+
+
+# --- Managed model pull (#364 F2) ---------------------------------------------------
+
+#: We manage models, never the runtime: the only "management" is driving a reachable
+#: Ollama's own pull API and relaying its progress stream.
+
+
+def ollama_origin(base_url: str | None) -> str | None:
+    """Derive the Ollama server origin from an OpenAI-compat base URL (None when n/a)."""
+    if not base_url:
+        return None
+    return _ollama_origin(base_url)
+
+
+async def stream_model_pull(origin: str, model: str) -> AsyncIterator[str]:
+    """Proxy Ollama's streaming pull API as NDJSON lines.
+
+    Failures never raise mid-stream — they surface as an ``{"error": ...}`` line so
+    the client shows them next to the progress bar instead of a broken transfer.
+    """
+    timeout = httpx.Timeout(10.0, read=None)  # model downloads take as long as they take
+    try:
+        async with (
+            httpx.AsyncClient(timeout=timeout) as client,
+            client.stream("POST", f"{origin}/api/pull", json={"model": model}) as response,
+        ):
+            if response.status_code != httpx.codes.OK:
+                detail = (await response.aread())[:200].decode(errors="replace")
+                yield json.dumps({"error": f"Ollama returned HTTP {response.status_code}. {detail}".strip()}) + "\n"
+                return
+            async for line in response.aiter_lines():
+                if line.strip():
+                    yield line + "\n"
+    except httpx.HTTPError as exc:
+        yield json.dumps({"error": f"The Ollama endpoint is unreachable: {exc.__class__.__name__}."}) + "\n"
 
 
 # --- Speech to text ----------------------------------------------------------------

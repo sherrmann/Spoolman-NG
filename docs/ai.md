@@ -53,6 +53,37 @@ preset dropdown fills in the base URL for common choices:
 Local-first works well: the Spoolman host itself is often a Raspberry Pi, but an
 Ollama on any machine on your network (a desktop PC, a NAS) is one URL away.
 
+## No endpoint yet? Assisted local setup
+
+Spoolman can help you get a local endpoint, under one principle: **provision,
+don't embed**. Spoolman never runs inference in-process, ships no engine or
+weights in its image, and never spawns or supervises containers — "managed" ends
+at generating configuration and driving a reachable Ollama's own API.
+
+- **Docker Compose**: the [install wizard](https://sherrmann.github.io/Spoolman-NG/install/)
+  has an "AI features" step. Answering "run models locally" adds an `ollama`
+  service to your generated compose file — models in a named volume, no host
+  port (only Spoolman reaches it), and `SPOOLMAN_AI_BASE_URL` prewired.
+- **Native installs**: run `bash scripts/install-ai.sh` in your Spoolman
+  directory (or pass `--with-ai` to the installer, or say yes to the KIAUH
+  extension's prompt). It runs Ollama's official installer, enables its
+  service, and prefills `.env`.
+- **Pulling models**: when the configured endpoint is an Ollama, Settings → AI
+  shows a short list of recommended models — what each is for, whether it is
+  already installed, and the approximate download size — and pulls them for you
+  with live progress, using Ollama's own pull API.
+
+Hardware honesty, enforced by the tooling rather than footnoted:
+
+| Hardware | Local AI |
+|---|---|
+| Pi 3 / any 32-bit ARM | Refused (no Ollama build, not enough memory) — use an endpoint on another machine or a cloud provider |
+| Pi 4/5 (arm64, 4 GB+) | Small text models for chat and search; vision is a stretch |
+| x86 PC / NAS | Full tier including vision; a GPU helps but is not required |
+
+Already running Ollama elsewhere (Unraid Community Apps, a gaming PC)? Then none
+of this applies — paste its URL into Settings → AI and you are done.
+
 ## The connection test
 
 **Test connection** checks the endpoint and reports per capability:

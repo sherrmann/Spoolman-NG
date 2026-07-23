@@ -4,6 +4,17 @@ export type Platform = "compose" | "native" | "ha-addon" | "helm" | "third-party
 export type Database = "sqlite" | "postgres" | "mysql";
 export type Proxy = "none" | "caddy" | "nginx" | "traefik";
 
+/** AI features (#364): none, a local Ollama provisioned alongside, or a remote endpoint. */
+export type AIChoice = "none" | "local" | "remote";
+/** CPU architecture of the machine that would run the local AI runtime. */
+export type AIArch = "amd64" | "arm64" | "arm32";
+
+export interface AIOptions {
+  choice: AIChoice;
+  /** Only meaningful when choice === "local"; drives hardware gating and expectation copy. */
+  arch: AIArch;
+}
+
 export interface Extras {
   /** Server-side USB NFC reader (docs/nfc.md). */
   nfc: boolean;
@@ -27,6 +38,7 @@ export interface WizardConfig {
   subPath: string | null;
   /** Native install set up before 2026-07-19 (release_info.json fix, docs/installation.md). */
   installedBefore20260719: boolean;
+  ai: AIOptions;
   extras: Extras;
 }
 
@@ -39,6 +51,7 @@ export const defaultConfig: WizardConfig = {
   proxy: "none",
   subPath: null,
   installedBefore20260719: false,
+  ai: { choice: "none", arch: "amd64" },
   extras: { nfc: false, apiToken: false, tz: null, puidPgid: null },
 };
 
@@ -68,6 +81,7 @@ export type QuestionId =
   | "proxy"
   | "subPath"
   | "installedBefore20260719"
+  | "ai"
   | "extras";
 
 /**
@@ -87,6 +101,11 @@ export function relevantQuestions(config: WizardConfig): Set<QuestionId> {
     case "switch":
       relevant.add("database");
       relevant.add("extras");
+      // AI provisioning (#364) applies where the wizard controls the runtime: Compose
+      // (sidecar) and native (install.sh --with-ai). Helm/add-on users bring their own.
+      if (platform === "compose" || platform === "native") {
+        relevant.add("ai");
+      }
       if (platform !== "ha-addon" && config.goal !== "switch") {
         relevant.add("proxy");
         relevant.add("subPath");

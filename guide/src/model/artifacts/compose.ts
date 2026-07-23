@@ -58,6 +58,7 @@ export function buildCompose(cfg: WizardConfig): string {
     '      - "7912:8000"',
   ];
 
+  const aiSidecar = cfg.ai.choice === "local";
   const env: string[] = [];
   if (cfg.extras.tz) env.push(`TZ=${cfg.extras.tz} # timezone, used for timestamps in the UI/API`);
   if (cfg.extras.puidPgid) {
@@ -77,6 +78,7 @@ export function buildCompose(cfg: WizardConfig): string {
     env.push(`SPOOLMAN_API_TOKEN=${API_TOKEN_PLACEHOLDER} # generate one: openssl rand -hex 32`);
   }
   if (cfg.extras.nfc) env.push("SPOOLMAN_NFC_ENABLED=TRUE # server-side USB NFC reader — see docs/nfc.md");
+  if (aiSidecar) env.push("SPOOLMAN_AI_BASE_URL=http://ollama:11434/v1 # the AI sidecar below — see docs/ai.md");
   if (env.length > 0) {
     lines.push("    environment:");
     for (const entry of env) lines.push(`      - ${entry}`);
@@ -105,9 +107,25 @@ export function buildCompose(cfg: WizardConfig): string {
     lines.push("        condition: service_healthy");
     lines.push("");
     lines.push(...dbServiceLines(cfg.database as "postgres" | "mysql"));
+  }
+
+  if (aiSidecar) {
+    lines.push("");
+    lines.push("  # Local AI runtime for Spoolman's AI features (Settings -> AI). Reachable from");
+    lines.push("  # the spoolman service only - no host port is published. Models are pulled from");
+    lines.push("  # Settings -> AI and live in the named volume. See docs/ai.md.");
+    lines.push("  ollama:");
+    lines.push("    image: ollama/ollama:latest");
+    lines.push("    restart: unless-stopped");
+    lines.push("    volumes:");
+    lines.push("      - ollama-models:/root/.ollama");
+  }
+
+  const namedVolumes = [...(externalDb ? ["db-data"] : []), ...(aiSidecar ? ["ollama-models"] : [])];
+  if (namedVolumes.length > 0) {
     lines.push("");
     lines.push("volumes:");
-    lines.push("  db-data:");
+    for (const volume of namedVolumes) lines.push(`  ${volume}:`);
   }
 
   return `${lines.join("\n")}\n`;

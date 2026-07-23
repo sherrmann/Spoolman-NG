@@ -61,6 +61,15 @@ export function buildEnv(cfg: WizardConfig): string {
     );
   }
 
+  if (cfg.ai.choice === "local") {
+    lines.push(
+      "",
+      "# Local AI runtime installed by scripts/install-ai.sh (Ollama on this machine).",
+      "# Pick and pull models in Settings → AI. See docs/ai.md.",
+      "SPOOLMAN_AI_BASE_URL=http://localhost:11434/v1",
+    );
+  }
+
   return `${lines.join("\n")}\n`;
 }
 

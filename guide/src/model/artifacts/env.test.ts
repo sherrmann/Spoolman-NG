@@ -46,3 +46,17 @@ describe(".env generator (native)", () => {
     expect(buildEnv(cfg({ goal: "migrate-upstream" }))).toContain("drop-in replacement");
   });
 });
+
+describe("AI endpoint prefill (#364)", () => {
+  it("points SPOOLMAN_AI_BASE_URL at the local Ollama for the local choice", () => {
+    const vars = assignments(buildEnv(cfg({ ai: { choice: "local", arch: "arm64" } })));
+    expect(vars.SPOOLMAN_AI_BASE_URL).toBe("http://localhost:11434/v1");
+  });
+
+  it("emits nothing AI-related for remote and none choices", () => {
+    for (const choice of ["remote", "none"] as const) {
+      const vars = assignments(buildEnv(cfg({ ai: { choice, arch: "amd64" } })));
+      expect(vars.SPOOLMAN_AI_BASE_URL).toBeUndefined();
+    }
+  });
+});

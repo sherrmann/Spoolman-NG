@@ -157,3 +157,35 @@ describe("plan invariants across every preset", () => {
     }
   });
 });
+
+describe("AI setup steps (#364)", () => {
+  it("fresh compose with the sidecar ends on the ai-sidecar step", () => {
+    const plan = buildPlan(cfg({ ai: { choice: "local", arch: "amd64" } }));
+    expect(plan.steps.map((s) => s.id)).toEqual(["compose-file", "start", "ai-sidecar"]);
+    expect(plan.warnings).toEqual([]);
+  });
+
+  it("fresh native with local AI runs the dedicated script", () => {
+    const plan = buildPlan(cfg({ platform: "native", ai: { choice: "local", arch: "arm64" } }));
+    const aiStep = plan.steps.find((s) => s.id === "ai-native");
+    expect(aiStep?.commands?.[0]).toContain("scripts/install-ai.sh");
+  });
+
+  it("an armv7 answer set gets the refusal warning and the remote-endpoint step instead", () => {
+    const plan = buildPlan(cfg({ ai: { choice: "local", arch: "arm32" } }));
+    expect(plan.warnings.map((w) => w.id)).toContain("ai-sidecar-refused-armv7");
+    const ids = plan.steps.map((s) => s.id);
+    expect(ids).not.toContain("ai-sidecar");
+    expect(ids).toContain("ai-remote");
+    // ...and no ollama service was emitted.
+    const compose = plan.artifacts.find((a) => a.id === "compose");
+    expect(compose?.content).not.toContain("ollama");
+  });
+
+  it("the remote choice adds the connect-your-endpoint step on compose and native", () => {
+    for (const platform of ["compose", "native"] as const) {
+      const ids = buildPlan(cfg({ platform, ai: { choice: "remote", arch: "amd64" } })).steps.map((s) => s.id);
+      expect(ids).toContain("ai-remote");
+    }
+  });
+});

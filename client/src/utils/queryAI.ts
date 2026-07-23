@@ -212,6 +212,51 @@ export interface AIKeyResult {
   stt_env_locked: boolean;
 }
 
+export interface PullProgress {
+  status: string;
+  total?: number;
+  completed?: number;
+  error?: string;
+}
+
+/**
+ * Drive the managed model pull (#364): POST /ai/models/pull streams Ollama's own
+ * progress as NDJSON. Resolves when the pull finishes; throws on HTTP errors and
+ * on server-relayed {"error": ...} lines.
+ */
+export async function pullOllamaModel(model: string, onProgress: (progress: PullProgress) => void): Promise<void> {
+  const response = await apiFetch(`${getAPIURL()}/ai/models/pull`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ model }),
+  });
+  if (!response.ok || !response.body) {
+    const payload = await response.json().catch(() => ({}));
+    throw new Error(payload.detail ?? payload.message ?? `HTTP ${response.status}`);
+  }
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      let event: PullProgress;
+      try {
+        event = JSON.parse(line);
+      } catch {
+        continue;
+      }
+      if (event.error) throw new Error(event.error);
+      onProgress(event);
+    }
+  }
+}
+
 export function useSetAIKey() {
   const queryClient = useQueryClient();
   return useMutation<AIKeyResult, Error, AIKeyUpdate>({

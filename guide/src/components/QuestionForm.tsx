@@ -1,4 +1,4 @@
-import type { Database, Goal, Platform, Proxy, SwitchDirection, WizardConfig } from "../model/config";
+import type { AIArch, AIChoice, Database, Goal, Platform, Proxy, SwitchDirection, WizardConfig } from "../model/config";
 import { relevantQuestions } from "../model/config";
 
 interface Props {
@@ -52,6 +52,18 @@ const HELM_EXPOSURE: Array<[ProxyChoice, string]> = [
   ["none", "None (port-forward / in-cluster)"],
   ["nginx", "Ingress (own hostname)"],
   ["subpath-only", "Sub-path behind a shared ingress"],
+];
+
+const AI_CHOICES: Array<[AIChoice, string]> = [
+  ["none", "No AI features (default — nothing AI-related appears anywhere)"],
+  ["local", "Run models locally on this machine (Ollama)"],
+  ["remote", "I have an endpoint already (another machine, or a cloud provider)"],
+];
+
+const AI_ARCHS: Array<[AIArch, string]> = [
+  ["amd64", "x86 PC / NAS / homelab"],
+  ["arm64", "Raspberry Pi 4/5 or other 64-bit ARM"],
+  ["arm32", "Raspberry Pi 3 or other 32-bit ARM"],
 ];
 
 function Radios<T extends string>(props: {
@@ -193,6 +205,29 @@ export function QuestionForm({ config, onChange }: Props) {
               onChange={(e) => set({ subPath: e.target.value || null })}
             />
           </label>
+        </fieldset>
+      )}
+
+      {relevant.has("ai") && (
+        <fieldset>
+          <legend>AI features</legend>
+          <Radios
+            name="ai-choice"
+            value={config.ai.choice}
+            options={AI_CHOICES}
+            onSelect={(choice) => set({ ai: { ...config.ai, choice } })}
+          />
+          {config.ai.choice === "local" && (
+            <>
+              <p className="hint">What hardware would run the models?</p>
+              <Radios
+                name="ai-arch"
+                value={config.ai.arch}
+                options={AI_ARCHS}
+                onSelect={(arch) => set({ ai: { ...config.ai, arch } })}
+              />
+            </>
+          )}
         </fieldset>
       )}
 

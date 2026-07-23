@@ -153,7 +153,16 @@ chmod +x scripts/*.sh
 #
 # Install systemd service
 #
-systemd_option=$1
+# Args can arrive in any order: -systemd=yes|no answers the service prompt,
+# --with-ai (#364) chains scripts/install-ai.sh after a successful install.
+systemd_option=""
+with_ai="no"
+for arg in "$@"; do
+    case "$arg" in
+        -systemd=*) systemd_option="$arg" ;;
+        --with-ai) with_ai="yes" ;;
+    esac
+done
 if [ "$systemd_option" == "-systemd=no" ]; then
    choice="n"
 elif [ "$systemd_option" == "-systemd=yes" ]; then
@@ -242,3 +251,11 @@ fi
 
 echo -e "${GREEN}Spoolman has been installed successfully!${NC}"
 echo -e "${GREEN}If you want to connect to an external database, you can edit the .env file and restart the service.${NC}"
+
+#
+# Optional local AI runtime (#364): provision Ollama and prefill the .env.
+# All hardware gating and the actual work live in scripts/install-ai.sh.
+#
+if [ "$with_ai" == "yes" ]; then
+    bash scripts/install-ai.sh || true
+fi

@@ -93,3 +93,24 @@ describe("rule 4 — helm sub-path pairing comes from one code path", () => {
     });
   });
 });
+
+describe("rule - #364 AI hardware gate", () => {
+  it("refuses the local sidecar on 32-bit ARM and steers to a remote endpoint", () => {
+    const { effective, warnings } = normalizeConfig(cfg({ ai: { choice: "local", arch: "arm32" } }));
+    expect(effective.ai.choice).toBe("remote");
+    expect(warnings.map((w) => w.id)).toContain("ai-sidecar-refused-armv7");
+  });
+
+  it("keeps the sidecar on 64-bit hardware without a warning", () => {
+    const { effective, warnings } = normalizeConfig(cfg({ ai: { choice: "local", arch: "arm64" } }));
+    expect(effective.ai.choice).toBe("local");
+    expect(warnings.map((w) => w.id)).not.toContain("ai-sidecar-refused-armv7");
+  });
+
+  it("forces AI to none where the wizard does not control the runtime", () => {
+    const helm = normalizeConfig(cfg({ platform: "helm", ai: { choice: "local", arch: "amd64" } }));
+    expect(helm.effective.ai.choice).toBe("none");
+    const update = normalizeConfig(cfg({ goal: "update", ai: { choice: "local", arch: "amd64" } }));
+    expect(update.effective.ai.choice).toBe("none");
+  });
+});

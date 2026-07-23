@@ -7,6 +7,7 @@ import { useAuthStatus } from "../../utils/auth";
 import { AIProbeResult, AITriState, useAIProbe, useAIStatus, useSetAIKey } from "../../utils/queryAI";
 import { useGetSettings, useSetSetting } from "../../utils/querySettings";
 import { getBasePath } from "../../utils/url";
+import { OllamaModelsSection } from "./aiModelsSection";
 import { AI_PRESETS } from "./aiPresets";
 
 const { Text, Paragraph } = Typography;
@@ -307,6 +308,11 @@ export function AISettings() {
             <Alert type="warning" showIcon message={capabilities.error ?? t("settings.ai.probe.failed")} />
           )}
         </div>
+      )}
+
+      {/* Managed model pull (#364): only Ollama can list and pull models via its API. */}
+      {capabilities?.ok && capabilities.is_ollama && (
+        <OllamaModelsSection capabilities={capabilities} onPulled={runProbe} />
       )}
 
       <Divider orientation="left">{t("settings.ai.features.title")}</Divider>

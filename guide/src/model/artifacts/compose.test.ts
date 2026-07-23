@@ -94,3 +94,29 @@ describe("compose generator", () => {
     expect(plan.warnings.map((w) => w.id)).toContain("token-dropped-for-klipper");
   });
 });
+
+describe("AI sidecar (#364)", () => {
+  it("emits an ollama service, a models volume, and the base-URL wiring", () => {
+    const doc = parsed(cfg({ ai: { choice: "local", arch: "amd64" } }));
+    expect(Object.keys(doc.services)).toEqual(["spoolman", "ollama"]);
+    expect(doc.services.ollama.image).toBe("ollama/ollama:latest");
+    // Deliberately not published on the host: only Spoolman reaches it.
+    expect(doc.services.ollama.ports).toBeUndefined();
+    expect(doc.services.ollama.volumes).toEqual(["ollama-models:/root/.ollama"]);
+    expect(doc.volumes).toEqual({ "ollama-models": null });
+    const env: string[] = doc.services.spoolman.environment;
+    expect(env.some((entry) => entry.startsWith("SPOOLMAN_AI_BASE_URL=http://ollama:11434/v1"))).toBe(true);
+  });
+
+  it("combines with a database sidecar - both named volumes are declared", () => {
+    const doc = parsed(cfg({ database: "postgres", ai: { choice: "local", arch: "amd64" } }));
+    expect(Object.keys(doc.services)).toEqual(["spoolman", "db", "ollama"]);
+    expect(doc.volumes).toEqual({ "db-data": null, "ollama-models": null });
+  });
+
+  it("remote choice leaves the compose file untouched", () => {
+    const doc = parsed(cfg({ ai: { choice: "remote", arch: "amd64" } }));
+    expect(Object.keys(doc.services)).toEqual(["spoolman"]);
+    expect(doc.services.spoolman.environment).toBeUndefined();
+  });
+});

@@ -910,6 +910,17 @@
         "model_tooltip": "Transcription model, e.g. whisper-1 (OpenAI/Groq) or a faster-whisper model name.",
         "api_key_label": "STT API key",
         "api_key_tooltip": "Only needed when the STT endpoint differs from the main one and requires its own key. Write-only, like the main key."
+      },
+      "models": {
+        "title": "Recommended models",
+        "hint": "This endpoint is an Ollama server, so Spoolman can pull models onto it for you. Sizes are approximate downloads; models are stored by Ollama, not by Spoolman.",
+        "size": "approx. {{size}} GB",
+        "installed": "Installed",
+        "pull": "Pull",
+        "purpose_chat_small": "Chat, search and tools on Pi-class hardware",
+        "purpose_chat": "Chat, search and tools",
+        "purpose_vision_small": "Scan-to-Spool photos on Pi-class hardware",
+        "purpose_vision": "Scan-to-Spool photos"
       }
     },
     "swatch": {

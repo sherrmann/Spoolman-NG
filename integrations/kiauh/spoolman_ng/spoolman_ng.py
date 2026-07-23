@@ -115,6 +115,30 @@ def run_install_script() -> bool:
         return True
 
 
+def has_install_ai_script() -> bool:
+    """Whether the install ships scripts/install-ai.sh (releases with #364)."""
+    return SPOOLMAN_NG_DIR.joinpath("scripts", "install-ai.sh").is_file()
+
+
+def run_install_ai_script() -> bool:
+    """Run the optional local-AI provisioner (Ollama install + .env prefill).
+
+    The script gates hardware itself (refuses 32-bit ARM and low RAM with
+    remote-endpoint guidance) and is idempotent.
+    """
+    try:
+        run(
+            ["bash", "scripts/install-ai.sh"],
+            cwd=SPOOLMAN_NG_DIR,
+            check=True,
+        )
+    except CalledProcessError as e:
+        Logger.print_error(f"Spoolman NG local-AI setup failed: {e}")
+        return False
+    else:
+        return True
+
+
 def run_update_script(*, force: bool = False) -> bool:
     """Run the bundled in-place updater; --force re-applies the current version."""
     cmd = ["bash", "scripts/update.sh"]

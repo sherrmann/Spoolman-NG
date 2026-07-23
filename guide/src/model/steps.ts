@@ -157,6 +157,64 @@ function nfcSteps(cfg: WizardConfig): Step[] {
   ];
 }
 
+const AI_DOCS_URL = "https://github.com/sherrmann/Spoolman-NG/blob/master/docs/ai.md";
+
+/** Honest hardware-tier expectation copy (#364) — promises scale with the machine. */
+function aiExpectationNote(cfg: WizardConfig): Note {
+  const text =
+    cfg.ai.arch === "arm64"
+      ? "Pi 4/5-class hardware handles small text models (2-3 GB each) for chat and search at a relaxed pace. " +
+        "Vision models (Scan-to-Spool) are a stretch here - test before relying on them, or point the vision " +
+        "model at a bigger machine or a cloud provider later."
+      : "An x86 machine runs the full tier: chat, search and vision models (2-6 GB each). CPU-only works; an " +
+        "NVIDIA GPU speeds it up considerably (see Ollama's Docker GPU docs).";
+  return { level: "info", id: "ai-hardware-expectations", text };
+}
+
+function aiSteps(cfg: WizardConfig): Step[] {
+  if (cfg.ai.choice === "none") return [];
+  if (cfg.ai.choice === "remote") {
+    return [
+      {
+        id: "ai-remote",
+        title: "Connect your AI endpoint",
+        body:
+          "After the first start, open Settings → AI: pick a preset (Ollama on another machine, OpenAI, " +
+          "Anthropic, OpenRouter, ...), enter the endpoint URL and key, and run Test connection. Every AI " +
+          `feature stays invisible until you enable it there. Details: ${AI_DOCS_URL}.`,
+      },
+    ];
+  }
+  if (cfg.platform === "compose") {
+    return [
+      {
+        id: "ai-sidecar",
+        title: "Local AI sidecar",
+        body:
+          "Your compose file already includes an ollama service, and SPOOLMAN_AI_BASE_URL points Spoolman at " +
+          "it - nothing to install. After the first start, open Settings → AI, run Test connection, and pull " +
+          "the recommended models from there (sizes are shown before downloading; models land in the " +
+          "ollama-models volume). The sidecar publishes no host port - only Spoolman reaches it.",
+        notes: [aiExpectationNote(cfg)],
+      },
+    ];
+  }
+  // Native: the AI runtime is provisioned by its own script (or install.sh --with-ai).
+  return [
+    {
+      id: "ai-native",
+      title: "Local AI on this machine",
+      body:
+        "Installs Ollama with its official installer, enables its service, and points SPOOLMAN_AI_BASE_URL in " +
+        ".env at it (the same line is already in the .env above). The script refuses unsupported hardware " +
+        "(32-bit ARM, low RAM) with remote-endpoint guidance instead. You can also pass --with-ai to " +
+        "install.sh in step 1 to do both at once.",
+      commands: ["cd ~/Spoolman && bash ./scripts/install-ai.sh"],
+      notes: [aiExpectationNote(cfg)],
+    },
+  ];
+}
+
 function freshSteps(cfg: WizardConfig): Step[] {
   const steps: Step[] = [];
   switch (cfg.platform) {
@@ -568,6 +626,10 @@ export function buildSteps(effective: WizardConfig, artifacts: Artifact[]): Step
         return switchSteps(effective);
     }
   })();
+
+  // AI setup (#364) comes last: it builds on a running install. normalizeConfig
+  // already forced choice "none" wherever it does not apply.
+  steps.push(...aiSteps(effective));
 
   // Never reference an artifact that wasn't generated (test-enforced invariant).
   const known = new Set(artifacts.map((a) => a.id));

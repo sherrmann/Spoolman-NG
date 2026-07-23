@@ -100,6 +100,7 @@ class SpoolmanNgExtension(BaseExtension):
             return
 
         self.__moonraker_integration(port)
+        self.__local_ai_option()
 
         Logger.print_dialog(
             DialogType.SUCCESS,
@@ -199,6 +200,26 @@ class SpoolmanNgExtension(BaseExtension):
             ["Spoolman NG successfully removed!"],
             center_content=True,
         )
+
+    def __local_ai_option(self) -> None:
+        """Offer the optional local AI runtime (#364): Ollama install + .env prefill."""
+        if not spoolman_ng.has_install_ai_script():
+            return
+        Logger.print_dialog(
+            DialogType.INFO,
+            [
+                "Spoolman NG's AI features (chat, photo intake, search) can run "
+                "against a local Ollama on this machine — models are pulled later "
+                "from Settings → AI.",
+                "This runs Ollama's official installer and points Spoolman's .env "
+                "at it. Unsupported hardware (32-bit ARM, low RAM) is refused with "
+                "guidance for using a remote endpoint instead.",
+            ],
+        )
+        if not get_confirm("Set up local AI (Ollama) as well?", default_choice=False):
+            Logger.print_info("Local AI setup skipped. You can run scripts/install-ai.sh any time.")
+            return
+        spoolman_ng.run_install_ai_script()
 
     def __moonraker_integration(self, port: int) -> None:
         Logger.print_dialog(

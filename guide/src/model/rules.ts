@@ -20,8 +20,33 @@ export function normalizeConfig(input: WizardConfig): NormalizedConfig {
     ...input,
     platform: effectivePlatform(input),
     subPath: normalizeSubPath(input.subPath),
+    ai: { ...input.ai },
     extras: { ...input.extras, puidPgid: input.extras.puidPgid ? { ...input.extras.puidPgid } : null },
   };
+
+  // AI provisioning (#364) only exists where the wizard controls the runtime.
+  const aiApplies =
+    (effective.goal === "fresh" || effective.goal === "switch") &&
+    (effective.platform === "compose" || effective.platform === "native");
+  if (!aiApplies) {
+    effective.ai.choice = "none";
+  }
+
+  // Hardware gate: there is no 32-bit ARM Ollama build, and Pi-3-class hardware
+  // cannot hold a useful model in RAM. Refuse the sidecar loudly and steer to a
+  // remote endpoint instead of shipping a compose file that cannot work.
+  if (effective.ai.choice === "local" && effective.ai.arch === "arm32") {
+    effective.ai.choice = "remote";
+    warnings.push({
+      level: "warning",
+      id: "ai-sidecar-refused-armv7",
+      text:
+        "Local AI skipped: Ollama has no 32-bit ARM (armv7) build, and this class of hardware cannot " +
+        "hold a useful model in memory. Spoolman itself runs fine here — point Settings → AI at an " +
+        "Ollama running on another machine on your network (a desktop PC or NAS is one URL away), or " +
+        "at a cloud provider. See docs/ai.md.",
+    });
+  }
 
   // #268: Moonraker's [spoolman] component has no auth option, so an API token
   // silently breaks Klipper filament tracking. Drop it and say so loudly.

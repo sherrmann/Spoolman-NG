@@ -15,6 +15,10 @@ chain, and asserts the server is really talking to the sidecar database: `/info`
 reports the right `db_type`, and a spool created through the API lands as a row in
 the Postgres/MariaDB container itself (not an accidental SQLite fallback).
 
+The AI-sidecar preset (#364) boots the same way: the wizard-generated ollama service
+comes up on the compose network and the server-side capability probe (Settings → AI's
+"Test connection") must reach it and identify it as an Ollama.
+
 Only deployment-environment specifics are overridden — the server image
 (`SPOOLMAN_IMAGE`, like the other suites), the fixed `7912` host port (rebound to an
 ephemeral loopback port so presets can't collide), the USB device passthrough of the
@@ -211,6 +215,49 @@ def _stack(request: pytest.FixtureRequest, guide_matrix: Path, tmp_path: Path) -
     finally:
         if not keep_resources():
             _compose(project, compose_file, "down", "-v", "--remove-orphans", timeout=120, check=False)
+
+
+#: The AI-sidecar preset (#364): Spoolman + an ollama service on the compose network,
+#: no host port on ollama, SPOOLMAN_AI_BASE_URL wired to it.
+AI_PRESET = ("compose-sqlite-ai-sidecar", "sqlite")
+
+
+@pytest.mark.parametrize("_stack", [AI_PRESET], ids=[AI_PRESET[0]], indirect=True)
+def test_ai_sidecar_stack_boots_and_probe_reaches_ollama(_stack: Stack) -> None:
+    """#364 acceptance: the AI-sidecar compose boots green and Test connection works.
+
+    The server-side probe (what Settings → AI's button calls) must reach the ollama
+    service over the compose network and identify it; no models are pulled, so the
+    model list is simply empty.
+    """
+    project, compose_file = _stack.project, _stack.compose_file
+
+    port = _compose(project, compose_file, "port", "spoolman", "8000").stdout.strip().splitlines()[0]
+    base = f"http://{port}"
+
+    wait_for(
+        lambda: http_get(f"{base}/api/v1/health", timeout=5)[0] == 200,
+        timeout=180,
+        what="the AI sidecar stack to serve",
+    )
+
+    # The wizard wired the endpoint via env: reported, and locked against UI edits.
+    status_code, status_body = http_get(f"{base}/api/v1/ai/status", timeout=10)
+    assert status_code == 200, f"/ai/status returned {status_code}: {status_body[:300]}"
+    ai_status = json.loads(status_body)
+    assert ai_status["base_url"] == "http://ollama:11434/v1"
+    assert "base_url" in ai_status["env_locked"]
+
+    # "Test connection": the probe runs server-side and must reach the sidecar. Ollama
+    # can take a moment to come up; the probe reports reachability in its body.
+    def probe_ok() -> bool:
+        code, body = http_request(f"{base}/api/v1/ai/probe", method="POST", json_body={})
+        return code == 200 and json.loads(body)["ok"] is True
+
+    wait_for(probe_ok, timeout=120, what="the server-side probe to reach the ollama sidecar")
+    _, probe_body = http_request(f"{base}/api/v1/ai/probe", method="POST", json_body={})
+    probe = json.loads(probe_body)
+    assert probe["is_ollama"] is True, f"probe did not identify the sidecar as Ollama: {probe_body[:300]}"
 
 
 @pytest.mark.parametrize("_stack", DB_PRESETS, ids=[p[0] for p in DB_PRESETS], indirect=True)
