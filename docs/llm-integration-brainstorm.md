@@ -1,9 +1,10 @@
 # LLM / AI Integration — Brainstorm
 
-> **Status: brainstorm — direction agreed, no code yet.** This document collects the
-> idea space, prior art, constraints, and a recommended shortlist. The shortlist and
-> UI direction were agreed on 2026-07-23 (see §5) and ASCII mockups for the agreed
-> ideas live in §6. Nothing here is committed roadmap until issues are filed.
+> **Status: agreed and on the tracker — no code yet.** This document collects the
+> idea space, prior art, constraints, and the agreed direction. The shortlist and UI
+> direction were agreed on 2026-07-23 (see §5), ASCII mockups live in §6, and the
+> phases are filed as issues #359–#363 (see the table in §4). The competitive
+> teardown of Filametrics / 3D Spool Tracker is tracked in #358.
 
 ---
 
@@ -235,15 +236,20 @@ product. Separate track.
 
 The recommendation optimizes for: unique value first, shared plumbing reuse, local-first.
 
-| Phase | What | Why first |
-|---|---|---|
-| 0 | **Provider foundation** (env/settings, `/api/v1/ai/status`, capability probe, mock-provider test fixture) | Prerequisite for everything; small. |
-| 1 | **C1 built-in MCP** + the curated tool layer | Cheapest headline feature; forces the tool design that B1 reuses; instantly useful with Claude; gives voice via claude.ai for free. |
-| 2 | **A1 Scan-to-Spool** (+ A3 slicer screenshot as a follow-up) | The flagship. Unique in open source; leverages SpoolmanDB + mobile camera. |
-| 3 | **B1 chat panel** + **B2 NL search** | Umbrella UX on top of the phase-1 tool layer. |
-| 4 | **D1 voice input** on the chat panel | Thin layer once B1 exists. |
-| — | E1 import fallback | Slot in anywhere; independent. |
-| Later | A2 color-match, B3 insights, A4/A5, E2 | Park until the above proves out. |
+| Phase | What | Issue | Why first |
+|---|---|---|---|
+| 0 | **Provider foundation** (env/settings, `/api/v1/ai/status`, capability probe, mock-provider test fixture) | [#359](https://github.com/sherrmann/Spoolman-NG/issues/359) | Prerequisite for everything; small. |
+| 1 | **C1 built-in MCP** + the curated tool layer | [#360](https://github.com/sherrmann/Spoolman-NG/issues/360) | Cheapest headline feature; forces the tool design that B1 reuses; instantly useful with Claude; gives voice via claude.ai for free. Needs no LLM provider at all. |
+| 2 | **A1 Scan-to-Spool** (+ A3 slicer screenshot as a follow-up issue) | [#361](https://github.com/sherrmann/Spoolman-NG/issues/361) | The flagship. Unique in open source; leverages SpoolmanDB + mobile camera. |
+| 3 | **B1 chat panel** + **B2 NL search** | [#362](https://github.com/sherrmann/Spoolman-NG/issues/362) | Umbrella UX on top of the phase-1 tool layer. |
+| 4 | **D1 voice input** on the chat panel | [#363](https://github.com/sherrmann/Spoolman-NG/issues/363) | Thin layer once B1 exists. |
+| — | E1 import fallback | file when picked up | Slot in anywhere; independent. |
+| Later | A2 color-match, B3 insights, A4/A5, E2 | — | Park until the above proves out. |
+
+Competitive teardown of Filametrics / 3D Spool Tracker:
+[#358](https://github.com/sherrmann/Spoolman-NG/issues/358) (analysis posted; hands-on
+pass with their free tiers still open, and worth doing before finalizing the A1
+review screen).
 
 ## 5. Decisions (agreed 2026-07-23)
 
