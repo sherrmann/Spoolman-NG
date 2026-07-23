@@ -890,6 +890,14 @@
         "requires_config": "Configure and save an endpoint and chat model first.",
         "requires_vision": "The connection test reports no vision support for the configured model.",
         "voice_unavailable": "Not available yet - this arrives with the voice input feature."
+      },
+      "mcp": {
+        "title": "MCP server",
+        "description": "Serve this inventory to AI assistants (Claude Desktop, claude.ai, Claude Code and other MCP clients) directly from Spoolman - no separate deployment, and no AI provider needed. Read-only accounts get read-only tools.",
+        "enable": "Enable the MCP endpoint at /mcp",
+        "copy_config": "Copy config",
+        "copied": "Client configuration copied to the clipboard.",
+        "auth_note": "Authentication is enabled: replace YOUR_SPOOLMAN_TOKEN in the copied config with your API token or a login token."
       }
     },
     "swatch": {

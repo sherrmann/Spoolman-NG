@@ -15,7 +15,7 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy.engine import URL
 from sqlalchemy.ext.asyncio import create_async_engine
 
-from spoolman import extra_field_registry
+from spoolman import extra_field_registry, mcp
 from spoolman.api.v1 import (
     ai,
     auth,
@@ -73,6 +73,8 @@ async def client(tmp_path: Path) -> AsyncIterator[AsyncClient]:
     app.include_router(stats.router, prefix="/api/v1")
     app.include_router(auth.router, prefix="/api/v1")
     app.include_router(ai.router, prefix="/api/v1")
+    # The MCP endpoint lives on the root app in production (spoolman/main.py); same here.
+    app.include_router(mcp.router)
     # other.router carries the byte-identical string /location endpoints, included so the
     # location-entity test can assert the two coexist without collision.
     app.include_router(other.router, prefix="/api/v1")

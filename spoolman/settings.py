@@ -110,3 +110,7 @@ register_setting("ai_feature_chat", SettingType.BOOLEAN, json.dumps(obj=False))
 register_setting("ai_feature_scan_to_spool", SettingType.BOOLEAN, json.dumps(obj=False))
 register_setting("ai_feature_nl_search", SettingType.BOOLEAN, json.dumps(obj=False))
 register_setting("ai_feature_voice", SettingType.BOOLEAN, json.dumps(obj=False))
+
+# Built-in MCP server (#360): serves the curated AI tool layer at /mcp when enabled.
+# Off by default — the endpoint answers 404 until switched on in Settings -> AI.
+register_setting("mcp_enabled", SettingType.BOOLEAN, json.dumps(obj=False))

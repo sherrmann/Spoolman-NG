@@ -78,3 +78,9 @@ reason shown inline.
 - Feature toggles are all **off by default** and independent, so you can, for
   example, enable natural-language search against a local model and leave photo
   features off entirely.
+
+## Related: the built-in MCP server
+
+The **MCP server** section of the same settings tab serves your inventory to AI
+assistants (Claude Desktop, claude.ai, Claude Code, ...) straight from Spoolman —
+it needs **no AI provider at all**. See [docs/mcp.md](mcp.md).

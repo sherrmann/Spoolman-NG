@@ -1,10 +1,12 @@
-import { CheckCircleOutlined, CloseCircleOutlined, QuestionCircleOutlined } from "@ant-design/icons";
+import { CheckCircleOutlined, CloseCircleOutlined, CopyOutlined, QuestionCircleOutlined } from "@ant-design/icons";
 import { useTranslate } from "@refinedev/core";
 import { useQueryClient } from "@tanstack/react-query";
 import { Alert, AutoComplete, Button, Checkbox, Divider, Form, Input, Select, Space, Typography, message } from "antd";
 import { useEffect, useState } from "react";
+import { useAuthStatus } from "../../utils/auth";
 import { AIProbeResult, AITriState, useAIProbe, useAIStatus, useSetAIKey } from "../../utils/queryAI";
 import { useGetSettings, useSetSetting } from "../../utils/querySettings";
+import { getBasePath } from "../../utils/url";
 import { AI_PRESETS } from "./aiPresets";
 
 const { Text, Paragraph } = Typography;
@@ -62,6 +64,8 @@ export function AISettings() {
     ai_feature_nl_search: useSetSetting<boolean>("ai_feature_nl_search"),
     ai_feature_voice: useSetSetting<boolean>("ai_feature_voice"),
   } as Record<string, ReturnType<typeof useSetSetting<boolean>>>;
+  const setMcpEnabled = useSetSetting<boolean>("mcp_enabled");
+  const authStatus = useAuthStatus();
   const [form] = Form.useForm();
   const [messageApi, contextHolder] = message.useMessage();
   // The most recent probe: either just run from this form, or the server-cached one.
@@ -118,6 +122,19 @@ export function AISettings() {
   const modelOptions = (capabilities?.models ?? []).map((id) => ({ value: id }));
   const envLockedHint = (field: string) =>
     envLocked.has(field) ? <Text type="secondary">{t("settings.ai.env_locked")}</Text> : undefined;
+
+  const mcpEnabledRaw = settings.data?.mcp_enabled?.value;
+  const mcpEnabled = mcpEnabledRaw !== undefined ? JSON.parse(mcpEnabledRaw) === true : false;
+  const mcpUrl = `${window.location.origin}${getBasePath()}/mcp`;
+  const copyMcpConfig = async () => {
+    const server: Record<string, unknown> = { type: "http", url: mcpUrl };
+    if (authStatus.data?.auth_required) {
+      // The MCP endpoint accepts the same bearer tokens as the API.
+      server.headers = { Authorization: "Bearer YOUR_SPOOLMAN_TOKEN" };
+    }
+    await navigator.clipboard.writeText(JSON.stringify({ mcpServers: { spoolman: server } }, null, 2));
+    messageApi.success(t("settings.ai.mcp.copied"));
+  };
 
   return (
     <>
@@ -256,6 +273,29 @@ export function AISettings() {
             </div>
           );
         })}
+      </Space>
+
+      <Divider orientation="left">{t("settings.ai.mcp.title")}</Divider>
+      <Paragraph type="secondary">{t("settings.ai.mcp.description")}</Paragraph>
+      <Space direction="vertical" size={8} style={{ width: "100%", maxWidth: 640 }}>
+        <Checkbox
+          checked={mcpEnabled}
+          onChange={(event) => setMcpEnabled.mutate(event.target.checked)}
+          data-testid="toggle-mcp"
+        >
+          {t("settings.ai.mcp.enable")}
+        </Checkbox>
+        {mcpEnabled && (
+          <>
+            <Space.Compact style={{ width: "100%" }}>
+              <Input readOnly value={mcpUrl} data-testid="mcp-url" />
+              <Button icon={<CopyOutlined />} onClick={copyMcpConfig} data-testid="mcp-copy">
+                {t("settings.ai.mcp.copy_config")}
+              </Button>
+            </Space.Compact>
+            {authStatus.data?.auth_required && <Text type="secondary">{t("settings.ai.mcp.auth_note")}</Text>}
+          </>
+        )}
       </Space>
     </>
   );

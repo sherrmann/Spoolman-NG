@@ -21,6 +21,9 @@ vi.mock("../../utils/queryAI", () => ({
   useAIProbe: () => ({ mutate: probeMutate, isPending: false, isError: false, error: null }),
   useSetAIKey: () => ({ mutate: setKeyMutate, mutateAsync: vi.fn(), isPending: false }),
 }));
+const authStatusMock = vi.fn();
+vi.mock("../../utils/auth", () => ({ useAuthStatus: () => ({ data: authStatusMock() }) }));
+vi.mock("../../utils/url", () => ({ getBasePath: () => "" }));
 vi.mock("../../utils/querySettings", () => ({
   useGetSettings: () => ({ data: settingsMock() }),
   useSetSetting: (key: string) => ({
@@ -47,6 +50,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   statusMock.mockReturnValue(baseStatus);
   settingsMock.mockReturnValue({});
+  authStatusMock.mockReturnValue({ auth_required: false });
 });
 
 describe("AISettings (#359)", () => {
@@ -141,6 +145,36 @@ describe("AISettings (#359)", () => {
 
     expect(screen.getByPlaceholderText("http://localhost:11434/v1")).toBeDisabled();
     expect(screen.getByText("settings.ai.env_locked")).toBeInTheDocument();
+  });
+
+  it("persists the MCP toggle and hides connection details while off", async () => {
+    settingsMock.mockReturnValue({ mcp_enabled: { value: "false" } });
+    const user = userEvent.setup();
+    render(<AISettings />);
+
+    expect(screen.queryByTestId("mcp-url")).not.toBeInTheDocument();
+    await user.click(screen.getByTestId("toggle-mcp"));
+    expect(setSettingMutate).toHaveBeenCalledWith("mcp_enabled", true);
+  });
+
+  it("shows the connector URL and copies a client config when MCP is on", async () => {
+    settingsMock.mockReturnValue({ mcp_enabled: { value: "true" } });
+    authStatusMock.mockReturnValue({ auth_required: true });
+    const user = userEvent.setup();
+    // Define the clipboard mock AFTER userEvent.setup(), which installs its own stub.
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
+    render(<AISettings />);
+
+    const url = (screen.getByTestId("mcp-url") as HTMLInputElement).value;
+    expect(url).toMatch(/\/mcp$/);
+    // Auth is enabled, so the copied config carries the bearer placeholder and the note shows.
+    expect(screen.getByText("settings.ai.mcp.auth_note")).toBeInTheDocument();
+
+    await user.click(screen.getByTestId("mcp-copy"));
+    const copied = JSON.parse(writeText.mock.calls[0][0]);
+    expect(copied.mcpServers.spoolman.url).toBe(url);
+    expect(copied.mcpServers.spoolman.headers.Authorization).toContain("YOUR_SPOOLMAN_TOKEN");
   });
 
   it("sends unsaved form values with the connection test, omitting an untyped key", async () => {

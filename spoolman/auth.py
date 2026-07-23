@@ -93,6 +93,18 @@ def _token_from_query(scope: Scope) -> str | None:
     return values[0] if values else None
 
 
+def resolve_principal_for_token(token: str | None) -> Principal | None:
+    """Resolve a bearer token under the current auth config, for routes outside the middleware.
+
+    Mirrors the middleware's behavior exactly (used by /mcp, which lives on the root app):
+    when auth is not required every caller is an anonymous admin; when it is required, a
+    missing or invalid token resolves to None and the caller must be rejected.
+    """
+    if not auth_state.auth_required():
+        return Principal(name="anonymous")
+    return _principal_for_token(auth_state, token)
+
+
 def _principal_for_token(state: AuthState, token: str | None) -> Principal | None:
     """Resolve a bearer token to a principal, or None when it is missing/invalid."""
     if token is None:

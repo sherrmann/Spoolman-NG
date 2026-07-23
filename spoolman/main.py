@@ -13,7 +13,7 @@ from fastapi.responses import PlainTextResponse, RedirectResponse, Response
 from prometheus_client import generate_latest
 from scheduler.asyncio.scheduler import Scheduler
 
-from spoolman import env, externaldb, tigertagdb, updatecheck
+from spoolman import env, externaldb, mcp, tigertagdb, updatecheck
 from spoolman.api.v1.router import app as v1_app
 from spoolman.assetlinks import register_assetlinks_route
 from spoolman.auth import auth_state, initialize_auth_state
@@ -62,6 +62,9 @@ app = FastAPI(
 )
 app.add_middleware(GZipMiddleware)
 app.mount(env.get_base_path() + "/api/v1", v1_app)
+# Built-in MCP server (#360). Lives on the root app (not /api/v1): it does its own
+# bearer handling via spoolman.auth and answers 404 until enabled in Settings -> AI.
+app.include_router(mcp.router, prefix=env.get_base_path())
 
 
 # WA for prometheus /metrics bind with SinglePageApp at root
