@@ -12,16 +12,19 @@ Three endpoints, all inert until the user configures an endpoint:
   never echoed back by any endpoint; responses only ever say whether one is set.
 """
 
+import base64
+import binascii
 import logging
 from datetime import datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from spoolman import ai
+from spoolman import ai, spoolintake
 from spoolman.api.v1.auth import require_admin
+from spoolman.api.v1.models import Message
 from spoolman.auth import Principal
 from spoolman.database.database import get_db_session
 
@@ -168,3 +171,107 @@ async def set_key(
         api_key_set=config.api_key is not None,
         env_locked=config.sources.get("api_key") == "env",
     )
+
+
+# --- Scan-to-Spool intake (#361) ---------------------------------------------------
+
+#: ~15 MB of image after base64 decoding; photos should be client-downscaled anyway.
+_MAX_IMAGE_B64_CHARS = 20 * 1024 * 1024
+_ALLOWED_IMAGE_MIMES = frozenset({"image/jpeg", "image/png", "image/webp"})
+
+
+class AIExtraction(BaseModel):
+    """The extraction JSON contract, shared with future on-device extractors (F5)."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    vendor: str | None = None
+    name: str | None = None
+    material: str | None = None
+    color_hex: str | None = None
+    weight_g: float | None = None
+    spool_weight_g: float | None = None
+    diameter_mm: float | None = None
+    extruder_temp_c: float | None = None
+    bed_temp_c: float | None = None
+    lot_nr: str | None = None
+    article_number: str | None = None
+    confidence: str | None = None
+
+
+class SpoolIntakeExtractRequest(BaseModel):
+    image_base64: str = Field(description="The photo, base64-encoded. Held in memory only, never persisted.")
+    mime: str = Field(default="image/jpeg", description="Image MIME type: image/jpeg, image/png or image/webp.")
+
+
+class SpoolIntakeResponse(BaseModel):
+    extraction: AIExtraction
+    matches: dict[str, list[dict]] = Field(
+        description="Ranked candidates: 'library' (the user's own filaments — preferred) and 'catalog' (SpoolmanDB).",
+    )
+
+
+async def _require_scan_feature(db: AsyncSession) -> None:
+    """Reject with 404 while the feature is disabled - the endpoints stay invisible."""
+    flags = await ai.get_feature_flags(db)
+    if not flags.get("scan_to_spool"):
+        raise HTTPException(status_code=404, detail="Scan-to-Spool is not enabled.")
+
+
+@router.post(
+    "/spool-intake/extract",
+    name="Extract spool data from a photo",
+    description=(
+        "Send a label/box photo to the configured vision model and get a structured extraction "
+        "plus ranked matches (own library first, then the SpoolmanDB catalog). The image exists "
+        "in memory for the duration of the request only — it is never persisted or logged."
+    ),
+    responses={404: {"model": Message}, 409: {"model": Message}, 502: {"model": Message}},
+)
+async def spool_intake_extract(
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+    body: SpoolIntakeExtractRequest,
+) -> SpoolIntakeResponse:
+    await _require_scan_feature(db)
+    if body.mime not in _ALLOWED_IMAGE_MIMES:
+        raise HTTPException(status_code=400, detail=f"Unsupported image type '{body.mime}'.")
+    if len(body.image_base64) > _MAX_IMAGE_B64_CHARS:
+        raise HTTPException(status_code=413, detail="Image too large - downscale it before uploading.")
+    try:
+        base64.b64decode(body.image_base64, validate=True)
+    except binascii.Error as exc:
+        raise HTTPException(status_code=400, detail="image_base64 is not valid base64.") from exc
+
+    config = await ai.resolve_config(db)
+    if not config.configured:
+        raise HTTPException(status_code=409, detail="No AI endpoint and model are configured.")
+    try:
+        extraction = await spoolintake.extract(config, body.image_base64, body.mime)
+    except ai.AIRequestError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    except spoolintake.ExtractionParseError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    matches = await spoolintake.build_matches(db, extraction)
+    return SpoolIntakeResponse(extraction=AIExtraction(**extraction), matches=matches)
+
+
+@router.post(
+    "/spool-intake/match",
+    name="Match an extraction against library and catalog",
+    description=(
+        "Run the matching stages over a client-supplied extraction (no image involved): the "
+        "user's own filament library first, then the locally-synced SpoolmanDB catalog. This is "
+        "the same second stage /spool-intake/extract runs, kept callable on its own so "
+        "extraction can happen elsewhere (e.g. on-device in the companion app)."
+    ),
+    responses={404: {"model": Message}},
+)
+async def spool_intake_match(
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+    body: AIExtraction,
+) -> SpoolIntakeResponse:
+    await _require_scan_feature(db)
+    extraction = spoolintake.normalize_extraction(body.model_dump())
+    matches = await spoolintake.build_matches(db, extraction)
+    return SpoolIntakeResponse(extraction=AIExtraction(**extraction), matches=matches)

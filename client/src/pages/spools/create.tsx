@@ -70,12 +70,24 @@ export const SpoolCreate = (props: IResourceComponentsProps & CreateOrCloneProps
     formProps.initialValues = ParsedExtras(formProps.initialValues);
   }
 
-  // If the query variable filament_id is set, set the filament_id field to that value
+  // If the query variable filament_id is set, set the filament_id field to that value.
+  // Numeric ids are internal filaments; a non-numeric id preselects an external
+  // (SpoolmanDB) filament, which this form creates together with the spool on save —
+  // the Scan-to-Spool catalog handoff uses that (#361).
   const query = new URLSearchParams(window.location.search);
   const filament_id = query.get("filament_id");
   if (filament_id) {
-    formProps.initialValues.filament_id = parseInt(filament_id);
+    const numeric = parseInt(filament_id);
+    formProps.initialValues.filament_id =
+      Number.isNaN(numeric) || String(numeric) !== filament_id ? filament_id : numeric;
   }
+
+  // Scan-to-Spool handoff (#361): optional prefills plus a review banner.
+  const scanLotNr = query.get("lot_nr");
+  if (scanLotNr && formProps.initialValues.lot_nr === undefined) {
+    formProps.initialValues.lot_nr = scanLotNr;
+  }
+  const fromScan = query.get("from_scan") === "1";
 
   //
   // Set up the filament selection options
@@ -300,6 +312,7 @@ export const SpoolCreate = (props: IResourceComponentsProps & CreateOrCloneProps
     >
       {/* onFinish → Save so pressing Enter in a field submits the form (#127). */}
       <Form {...formProps} layout="vertical" onFinish={() => handleSubmit("list")}>
+        {fromScan && <Alert type="info" showIcon style={{ marginBottom: 16 }} message={t("intake.prefilled_banner")} />}
         <Form.Item
           label={t("spool.fields.first_used")}
           name={["first_used"]}

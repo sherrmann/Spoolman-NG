@@ -68,6 +68,57 @@ export function useAIProbe() {
   });
 }
 
+export interface SpoolIntakeExtraction {
+  vendor: string | null;
+  name: string | null;
+  material: string | null;
+  color_hex: string | null;
+  weight_g: number | null;
+  spool_weight_g: number | null;
+  diameter_mm: number | null;
+  extruder_temp_c: number | null;
+  bed_temp_c: number | null;
+  lot_nr: string | null;
+  article_number: string | null;
+  confidence: string | null;
+}
+
+export interface SpoolIntakeMatch {
+  kind: "library" | "catalog";
+  filament_id?: number;
+  external_id?: string;
+  vendor: string | null;
+  name: string | null;
+  material: string | null;
+  weight_g?: number | null;
+  active_spool_count?: number;
+  remaining_weight_g?: number;
+  diameter_mm?: number | null;
+  match_percent: number;
+}
+
+export interface SpoolIntakeResult {
+  extraction: SpoolIntakeExtraction;
+  matches: { library: SpoolIntakeMatch[]; catalog: SpoolIntakeMatch[] };
+}
+
+export function useSpoolIntakeExtract() {
+  return useMutation<SpoolIntakeResult, Error, { image_base64: string; mime: string }>({
+    mutationFn: async (body) => {
+      const response = await apiFetch(`${getAPIURL()}/ai/spool-intake/extract`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload.detail ?? payload.message ?? `HTTP ${response.status}`);
+      }
+      return response.json();
+    },
+  });
+}
+
 export function useSetAIKey() {
   const queryClient = useQueryClient();
   return useMutation<{ api_key_set: boolean; env_locked: boolean }, Error, string | null>({
