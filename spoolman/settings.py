@@ -96,3 +96,17 @@ register_setting("unit_scaling", SettingType.BOOLEAN, json.dumps(obj=False))
 # remaining weight drops to/below this. Ships at 200 g so Low Stock is truthful out of the box (US5);
 # set to 0 to disable the fallback (only explicit thresholds flag).
 register_setting("low_stock_fallback_g", SettingType.NUMBER, json.dumps(200))
+
+# AI provider foundation (#359): non-secret provider config plus per-feature toggles.
+# Env vars (SPOOLMAN_AI_*) override these — see spoolman/ai.py for the resolution rules.
+# The API key is deliberately NOT registered here: the generic /setting API returns every
+# registered key's value and broadcasts changes over websockets, either of which would leak
+# a secret. It lives under an unregistered key managed only by spoolman/ai.py.
+# All feature toggles default off — AI must be invisible unless explicitly enabled.
+register_setting("ai_base_url", SettingType.STRING, json.dumps(""))
+register_setting("ai_model", SettingType.STRING, json.dumps(""))
+register_setting("ai_vision_model", SettingType.STRING, json.dumps(""))
+register_setting("ai_feature_chat", SettingType.BOOLEAN, json.dumps(obj=False))
+register_setting("ai_feature_scan_to_spool", SettingType.BOOLEAN, json.dumps(obj=False))
+register_setting("ai_feature_nl_search", SettingType.BOOLEAN, json.dumps(obj=False))
+register_setting("ai_feature_voice", SettingType.BOOLEAN, json.dumps(obj=False))

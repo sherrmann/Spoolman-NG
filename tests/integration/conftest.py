@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 
 from spoolman import extra_field_registry
 from spoolman.api.v1 import (
+    ai,
     auth,
     export,
     field,
@@ -72,6 +73,7 @@ async def client(tmp_path: Path) -> AsyncIterator[AsyncClient]:
     app.include_router(import_.router, prefix="/api/v1")
     app.include_router(stats.router, prefix="/api/v1")
     app.include_router(auth.router, prefix="/api/v1")
+    app.include_router(ai.router, prefix="/api/v1")
     # other.router carries the byte-identical string /location endpoints, included so the
     # location-entity test can assert the two coexist without collision.
     app.include_router(other.router, prefix="/api/v1")
