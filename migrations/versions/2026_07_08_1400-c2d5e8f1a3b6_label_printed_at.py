@@ -22,12 +22,12 @@ depends_on = None
 
 
 def upgrade() -> None:
-    """Perform the upgrade."""
+    """Add label_printed_at to spool and filament."""
     op.add_column("spool", sa.Column("label_printed_at", sa.DateTime(), nullable=True))
     op.add_column("filament", sa.Column("label_printed_at", sa.DateTime(), nullable=True))
 
 
 def downgrade() -> None:
-    """Perform the downgrade."""
+    """Drop label_printed_at from filament and spool."""
     op.drop_column("filament", "label_printed_at")
     op.drop_column("spool", "label_printed_at")

@@ -41,10 +41,6 @@ import { WIZARD_COPY, WIZARD_STEP_ORDER } from "./wizardCopy";
 
 const { Text, Title } = Typography;
 
-// ---------------------------------------------------------------------------
-// Sub-components
-// ---------------------------------------------------------------------------
-
 function FieldItem({ field, namePrefix }: { field: StepField; namePrefix: string }) {
   const t = useTranslate();
   const control =
@@ -92,10 +88,6 @@ function SectionLabel({ children, color }: { children: ReactNode; color?: string
   );
 }
 
-// ---------------------------------------------------------------------------
-// Step content
-// ---------------------------------------------------------------------------
-
 function StepContent({ stepType, onSkipStep }: { stepType: CalibrationStepType; onSkipStep?: () => void }) {
   const t = useTranslate();
   const config = STEP_CONFIGS[stepType];
@@ -126,7 +118,6 @@ function StepContent({ stepType, onSkipStep }: { stepType: CalibrationStepType; 
   // PA: method selector (only used for pressure_advance step)
   const [paMethod, setPaMethod] = useState<"tower" | "pattern">("tower");
 
-  // Reset all calculator state to idle
   const resetFlowCalcState = () => {
     setFlowCalcPhase("idle");
     setYoloFlowRatioOld(1.0);
@@ -151,7 +142,6 @@ function StepContent({ stepType, onSkipStep }: { stepType: CalibrationStepType; 
     resetFlowCalcState();
   };
 
-  // Computed results
   const yoloResult =
     yoloFlowRatioOld !== null && yoloModifier !== null && !isNaN(yoloFlowRatioOld) && !isNaN(yoloModifier)
       ? parseFloat((yoloFlowRatioOld + yoloModifier).toFixed(5))
@@ -815,10 +805,6 @@ function StepContent({ stepType, onSkipStep }: { stepType: CalibrationStepType; 
   );
 }
 
-// ---------------------------------------------------------------------------
-// Main wizard
-// ---------------------------------------------------------------------------
-
 interface Props {
   open: boolean;
   session: ICalibrationSession;
@@ -844,8 +830,6 @@ export const CalibrationWizard = ({ open, session, onClose, onComplete }: Props)
 
   const doneTypes = useRef(new Set(session.steps.map((s) => s.step_type as CalibrationStepType)));
   const savedValues = useRef<Partial<Record<CalibrationStepType, Record<string, unknown>>>>({});
-
-  // ---- Init / reset on open ---------------------------------------------
 
   useEffect(() => {
     if (!open) return;
@@ -874,8 +858,6 @@ export const CalibrationWizard = ({ open, session, onClose, onComplete }: Props)
     // session (resuming another one), re-initialise instead of showing the previous session's state.
   }, [open, session.id]);
 
-  // ---- Navigation -------------------------------------------------------
-
   const navigateTo = (newIdx: number) => {
     const stepType = WIZARD_STEP_ORDER[currentIdxRef.current];
     savedValues.current[stepType] = form.getFieldsValue(true);
@@ -891,8 +873,6 @@ export const CalibrationWizard = ({ open, session, onClose, onComplete }: Props)
   const isFirst = currentIdx === 0;
   const isLast = currentIdx === WIZARD_STEP_ORDER.length - 1;
   const isCurrentDone = doneTypes.current.has(currentStepType);
-
-  // ---- Save + complete --------------------------------------------------
 
   const saveCurrentStep = (onDone: () => void) => {
     const values = form.getFieldsValue(true);
@@ -925,8 +905,6 @@ export const CalibrationWizard = ({ open, session, onClose, onComplete }: Props)
       { onSuccess: onComplete },
     );
   };
-
-  // ---- Button handlers --------------------------------------------------
 
   const handleSkip = () => {
     if (isLast) {
@@ -976,8 +954,6 @@ export const CalibrationWizard = ({ open, session, onClose, onComplete }: Props)
       },
     );
   };
-
-  // ---- Render -----------------------------------------------------------
 
   return (
     <Modal

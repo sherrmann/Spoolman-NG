@@ -72,7 +72,6 @@ def _to_external_filament(product: TigerTagProduct) -> ExternalFilament:
     name = product.title or f"{manufacturer} {material}"
     weight = _parse_weight_from_measure(product.measure)
 
-    # Clean up color hex - remove leading # and alpha channel if present
     color_hex = None
     if product.color:
         hex_str = product.color.lstrip("#")
@@ -158,16 +157,10 @@ async def _sync_tigertag() -> None:
     base_url = get_tigertag_api_url()
 
     try:
-        # Fetch all filament products via paginated API
         products_list = await _fetch_all_products(base_url)
-
-        # Parse products
         products = [TigerTagProduct(**p) for p in products_list]
-
-        # Convert to ExternalFilament format
         filaments = [_to_external_filament(p) for p in products]
 
-        # Cache to local file
         filaments_json = json.dumps(
             [f.model_dump(exclude_none=True) for f in filaments],
             ensure_ascii=False,

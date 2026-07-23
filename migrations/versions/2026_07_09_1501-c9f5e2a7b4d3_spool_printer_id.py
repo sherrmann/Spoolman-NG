@@ -22,10 +22,10 @@ depends_on = None
 
 
 def upgrade() -> None:
-    """Perform the upgrade."""
+    """Add the printer_id column to spool."""
     op.add_column("spool", sa.Column("printer_id", sa.Integer(), nullable=True))
 
 
 def downgrade() -> None:
-    """Perform the downgrade."""
+    """Drop the printer_id column from spool."""
     op.drop_column("spool", "printer_id")

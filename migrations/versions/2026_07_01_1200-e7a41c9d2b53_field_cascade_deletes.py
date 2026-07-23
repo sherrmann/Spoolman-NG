@@ -63,10 +63,10 @@ def _recreate_fks(*, ondelete: str | None) -> None:
 
 
 def upgrade() -> None:
-    """Perform the upgrade."""
+    """Recreate the field-table foreign keys with ON DELETE CASCADE."""
     _recreate_fks(ondelete="CASCADE")
 
 
 def downgrade() -> None:
-    """Perform the downgrade."""
+    """Recreate the field-table foreign keys without ON DELETE CASCADE."""
     _recreate_fks(ondelete=None)

@@ -33,14 +33,14 @@ depends_on = None
 
 
 def upgrade() -> None:
-    """Perform the upgrade."""
+    """Drop the multi_color_direction, multi_color_hexes and color_hex columns from spool."""
     op.drop_column("spool", "multi_color_direction")
     op.drop_column("spool", "multi_color_hexes")
     op.drop_column("spool", "color_hex")
 
 
 def downgrade() -> None:
-    """Perform the downgrade."""
+    """Re-add the color_hex, multi_color_hexes and multi_color_direction columns to spool."""
     op.add_column("spool", sa.Column("color_hex", sa.String(length=8), nullable=True))
     op.add_column("spool", sa.Column("multi_color_hexes", sa.String(length=128), nullable=True))
     op.add_column("spool", sa.Column("multi_color_direction", sa.String(length=16), nullable=True))

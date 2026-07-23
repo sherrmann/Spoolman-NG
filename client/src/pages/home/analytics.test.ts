@@ -24,7 +24,7 @@ import {
   vendorBreakdown,
 } from "./analytics";
 
-// --- Fixtures ---------------------------------------------------------------
+// Fixtures
 
 function vendor(name: string): IVendor {
   return { id: 1, registered: "2024-01-01", name, extra: {} };
@@ -49,7 +49,7 @@ function spool(over: Partial<ISpool> = {}): ISpool {
   };
 }
 
-// --- spoolStockWeight: the fallback chain that already caused a bug ----------
+// spoolStockWeight: the fallback chain that already caused a bug
 
 describe("spoolStockWeight", () => {
   it("prefers remaining over initial over filament weight", () => {

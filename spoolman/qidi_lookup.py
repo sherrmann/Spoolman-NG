@@ -1,11 +1,4 @@
-"""Qidi tag to Spoolman spool matching, binding, and auto-creation.
-
-Provides functions to:
-- Find a Spoolman spool from decoded Qidi tag data + tag UID
-- Bind a spool to a specific Qidi tag via its hardware UID
-- Map a Spoolman spool to Qidi tag format for writing
-- Auto-create a filament and spool from Qidi tag data
-"""
+"""Qidi tag to Spoolman spool matching, binding, and auto-creation."""
 
 import logging
 
@@ -150,7 +143,6 @@ def map_spool_to_qidi(spool: Spool) -> QidiTagData:
     filament = spool.filament
     data = QidiTagData()
 
-    # Material code lookup
     if filament.material:
         # Try exact Qidi material name first (e.g. "PLA Silk")
         code = material_code_from_name(filament.material)
@@ -165,7 +157,6 @@ def map_spool_to_qidi(spool: Spool) -> QidiTagData:
                     data.material_code = c
                     break
 
-    # Color code lookup
     if filament.color_hex:
         code = color_code_from_hex(filament.color_hex)
         if code is not None:
@@ -184,13 +175,8 @@ async def create_spool_from_qidi_tag(
     Creates a Qidi vendor (if needed), filament with the tag's material/color,
     and a spool linked to it. Binds the tag UID if available.
     """
-    # Find or create Qidi vendor
     vendor_id = await _find_or_create_vendor(db, QIDI_VENDOR_NAME)
-
-    # Build filament name from material
     name = f"Qidi {tag_data.material_name}"
-
-    # Use the Qidi color as the filament color
     color_hex = tag_data.color_hex if tag_data.color_hex != "000000" else None
 
     # Default diameter 1.75mm (Qidi tags don't store diameter)
@@ -208,7 +194,6 @@ async def create_spool_from_qidi_tag(
 
     db_spool = await spool_db.create(db=db, filament_id=db_filament.id)
 
-    # Bind tag UID to spool
     if tag_uid_hex:
         nfc_tag_id = make_nfc_tag_id(tag_uid_hex)
         db.add(SpoolField(spool_id=db_spool.id, key="nfc_tag_id", value=nfc_tag_id))

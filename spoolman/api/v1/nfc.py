@@ -283,7 +283,6 @@ async def nfc_write(
         from spoolman.database.models import Filament, Spool
         from spoolman.nfc_service import nfc_service
 
-        # Fetch the spool
         stmt = (
             select(Spool)
             .options(selectinload(Spool.filament).selectinload(Filament.vendor))
@@ -357,7 +356,6 @@ async def nfc_encode(
         from spoolman.tigertag_codec import encode_ntag213
         from spoolman.tigertag_lookup import map_spool_to_tigertag
 
-        # Fetch the spool
         stmt = (
             select(Spool)
             .options(selectinload(Spool.filament).selectinload(Filament.vendor))
@@ -369,11 +367,8 @@ async def nfc_encode(
         if spool is None:
             return NfcEncodeResponse(success=False, message=f"Spool with ID {request.spool_id} not found.")
 
-        # Map spool to TigerTag data
         tag_data = map_spool_to_tigertag(spool)
         tag_data.user_message = request.user_message
-
-        # Encode to binary
         raw_data = encode_ntag213(tag_data)
 
         return NfcEncodeResponse(
@@ -522,7 +517,6 @@ async def _create_spool_from_tigertag(  # noqa: C901
 
     external_id = f"tigertag_{tag_data.id_product}" if tag_data.id_product > 0 else None
 
-    # Check for existing filament with this external_id
     existing_filament = None
     if external_id:
         existing_filament = await _find_filament_by_external_id(db, external_id)
@@ -599,10 +593,8 @@ async def _create_spool_from_tigertag(  # noqa: C901
             )
             filament_id = db_filament.id
 
-    # Create spool
     db_spool = await spool_db.create(db=db, filament_id=filament_id)
 
-    # Bind the TigerTag to the spool
     nfc_tag_id = make_nfc_tag_id(tag_data)
     if nfc_tag_id:
         db.add(SpoolField(spool_id=db_spool.id, key="nfc_tag_id", value=nfc_tag_id))
@@ -910,7 +902,6 @@ async def nfc_bind(
 
         from spoolman.database.models import Spool
 
-        # Fetch the spool with extra fields loaded
         stmt = (
             select(Spool)
             .options(
@@ -924,7 +915,6 @@ async def nfc_bind(
         if spool is None:
             return NfcBindResponse(success=False, message=f"Spool with ID {request.spool_id} not found.")
 
-        # Determine tag type
         tag_type = request.tag_type
         if tag_type == "qidi" or (
             tag_type is None and request.nfc_tag_uid and not request.raw_data_b64 and request.id_product == 0
@@ -1033,7 +1023,6 @@ async def _bind_qidi(db: AsyncSession, spool: "Spool", request: NfcBindRequest) 
             message=f"This tag is already bound to spool {existing_binding.spool_id}.",
         )
 
-    # Build Qidi response if raw data is provided
     qidi_response = None
     if request.raw_data_b64:
         try:

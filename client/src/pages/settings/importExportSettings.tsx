@@ -30,7 +30,7 @@ export function ImportExportSettings() {
   const [messageApi, contextHolder] = message.useMessage();
   const currencyFormatter = useCurrencyFormatter();
 
-  // --- Export -------------------------------------------------------------
+  // Export
   const handleDownload = async (entity: ExportEntity, fmt: DataFormat) => {
     try {
       await downloadExport(entity, fmt);
@@ -39,7 +39,7 @@ export function ImportExportSettings() {
     }
   };
 
-  // --- Import -------------------------------------------------------------
+  // Import
   const [importEntity, setImportEntity] = useState<ImportEntity>("spool");
   const [importFormat, setImportFormat] = useState<DataFormat>("json");
   const [importMode, setImportMode] = useState<ImportMode>("create");
@@ -75,7 +75,7 @@ export function ImportExportSettings() {
     }
   };
 
-  // --- Printable inventory report (#95) -----------------------------------
+  // Printable inventory report (#95)
   const spoolsQuery = useList<ISpool>({
     resource: "spool",
     pagination: { mode: "off" },

@@ -15,7 +15,6 @@ NC='\033[0m'
 
 REPO="sherrmann/Spoolman-NG"
 
-# CD to project root if we're in the scripts dir
 if [ "$(basename "$(pwd)")" = "scripts" ]; then
     cd ..
 fi

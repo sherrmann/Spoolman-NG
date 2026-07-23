@@ -22,10 +22,10 @@ depends_on = None
 
 
 def upgrade() -> None:
-    """Perform the upgrade."""
+    """Add the diameter column to spool."""
     op.add_column("spool", sa.Column("diameter", sa.Float(), nullable=True))
 
 
 def downgrade() -> None:
-    """Perform the downgrade."""
+    """Drop the diameter column from spool."""
     op.drop_column("spool", "diameter")

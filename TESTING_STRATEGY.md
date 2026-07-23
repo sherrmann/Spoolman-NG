@@ -2,9 +2,7 @@
 
 Goal: **complete, behavioral test coverage** for every change catalogued in
 [`TESTING_CANDIDATES.md`](./docs/archive/TESTING_CANDIDATES.md) (103 items across 6 clusters), written so the
-tests verify **observable contracts**, not the current implementation. This document defines the
-principles, the infrastructure to stand up, the per-cluster approach, the phased rollout, and the
-quality gates that let us claim "complete."
+tests verify **observable contracts**, not the current implementation.
 
 ---
 
@@ -259,12 +257,10 @@ no refactor needed, only fixtures.
 
 ## 6. Tooling summary (what to add)
 
-- **Backend:** `hypothesis`, `time-machine`, `respx`, `@vitest`… (n/a) — plus `--cov-branch` and a
-  mutation runner (`mutmut`).
-- **Frontend:** `vitest`, `@vitest/coverage-v8`, `jsdom`, `@testing-library/{react,user-event,jest-dom}`,
-  `msw`, and `@stryker-mutator/*` for the crown-jewel TS modules.
-- **CI:** fast unit jobs (py + ts) gated on coverage; integration matrix unchanged; optional
-  Playwright e2e job; scheduled (not per-PR) mutation-testing job to keep PRs fast.
+Per-stack dependency lists are in §1a (backend) and §1b (frontend). On top of those:
+`--cov-branch` on the backend, fast unit jobs (py + ts) gated on coverage with the
+integration matrix unchanged, and `mutmut` (Python) / `@stryker-mutator/*` (crown-jewel TS
+modules) as mutation runners on a **scheduled — not per-PR** job so PRs stay fast.
 
 ---
 
@@ -373,7 +369,7 @@ assertions coupled to representation quirks, which §0 forbids.
 
 With every crown-jewel module now clearing 90%, the break threshold is raised to **90** (high 95,
 low 90) and the scheduled `mutation.yml` job enforces it (no `|| true`), so a drop below 90% fails
-the run. This is the direct proof the suite catches injected bugs, not just executes lines.
+the run.
 
 **Also done — Python mutation baseline (`mutmut`) established (advisory):**
 

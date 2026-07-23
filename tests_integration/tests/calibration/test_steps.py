@@ -8,7 +8,6 @@ from ..conftest import URL, assert_dicts_compatible, assert_httpx_code
 
 
 def test_add_step_result(random_session: dict[str, Any]):
-    """Add a step result to a session."""
     session_id = random_session["id"]
     result = httpx.post(
         f"{URL}/api/v1/calibration/session/{session_id}/step",
@@ -39,12 +38,10 @@ def test_add_step_result(random_session: dict[str, Any]):
     assert "id" in step
     assert "recorded_at" in step
 
-    # Cleanup
     httpx.delete(f"{URL}/api/v1/calibration/step/{step['id']}").raise_for_status()
 
 
 def test_add_step_minimal(random_session: dict[str, Any]):
-    """Add a step result with only required fields."""
     session_id = random_session["id"]
     result = httpx.post(
         f"{URL}/api/v1/calibration/session/{session_id}/step",
@@ -59,7 +56,6 @@ def test_add_step_minimal(random_session: dict[str, Any]):
 
 
 def test_add_step_invalid_session():
-    """Adding a step to a non-existent session returns 404."""
     result = httpx.post(
         f"{URL}/api/v1/calibration/session/999999/step",
         json={"step_type": "temperature"},
@@ -90,17 +86,14 @@ def test_all_valid_step_types(random_session: dict[str, Any]):
         result.raise_for_status()
         created_ids.append(result.json()["id"])
 
-    # Verify session now has all steps
     session = httpx.get(f"{URL}/api/v1/calibration/session/{session_id}").json()
     assert len(session["steps"]) == len(valid_types)
 
-    # Cleanup
     for step_id in created_ids:
         httpx.delete(f"{URL}/api/v1/calibration/step/{step_id}").raise_for_status()
 
 
 def test_get_step(random_session: dict[str, Any]):
-    """Get a specific step result by ID."""
     session_id = random_session["id"]
     step = httpx.post(
         f"{URL}/api/v1/calibration/session/{session_id}/step",
@@ -116,13 +109,11 @@ def test_get_step(random_session: dict[str, Any]):
 
 
 def test_get_step_not_found():
-    """Getting a non-existent step returns 404."""
     result = httpx.get(f"{URL}/api/v1/calibration/step/999999")
     assert_httpx_code(result, 404)
 
 
 def test_update_step(random_session: dict[str, Any]):
-    """Update a step result."""
     session_id = random_session["id"]
     step = httpx.post(
         f"{URL}/api/v1/calibration/session/{session_id}/step",
@@ -148,7 +139,6 @@ def test_update_step(random_session: dict[str, Any]):
 
 
 def test_delete_step(random_session: dict[str, Any]):
-    """Delete a step result."""
     session_id = random_session["id"]
     step = httpx.post(
         f"{URL}/api/v1/calibration/session/{session_id}/step",
@@ -161,7 +151,6 @@ def test_delete_step(random_session: dict[str, Any]):
 
 
 def test_delete_session_cascades_to_steps(random_filament: dict[str, Any]):
-    """Deleting a session removes its step results."""
     session = httpx.post(
         f"{URL}/api/v1/calibration/session",
         json={"filament_id": random_filament["id"]},

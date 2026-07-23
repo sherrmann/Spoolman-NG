@@ -14,11 +14,6 @@ from spoolman.exceptions import ItemNotFoundError
 logger = logging.getLogger(__name__)
 
 
-# ---------------------------------------------------------------------------
-# CalibrationSession
-# ---------------------------------------------------------------------------
-
-
 async def create_session(
     *,
     db: AsyncSession,
@@ -113,11 +108,6 @@ async def delete_session(db: AsyncSession, session_id: int) -> None:
     db_item = await get_session(db, session_id)
     await db.delete(db_item)
     await db.commit()
-
-
-# ---------------------------------------------------------------------------
-# CalibrationStepResult
-# ---------------------------------------------------------------------------
 
 
 async def create_step_result(

@@ -27,30 +27,26 @@ async def _add_spool(client: AsyncClient, filament_id: int, **fields: object) ->
 
 
 async def test_location_crud_round_trip(client: AsyncClient):
-    # Create
     created = (await client.post(LOC, json={"name": "Dry Box 1", "comment": "top shelf"})).json()
     assert created["name"] == "Dry Box 1"
     assert created["comment"] == "top shelf"
     assert created["extra"] == {}
     loc_id = created["id"]
 
-    # Get
     got = await client.get(f"{LOC}/{loc_id}")
     assert got.status_code == 200
     assert got.json()["name"] == "Dry Box 1"
 
-    # List (with x-total-count)
     listed = await client.get(LOC)
     assert listed.status_code == 200
     assert listed.headers["x-total-count"] == "1"
     assert [item["name"] for item in listed.json()] == ["Dry Box 1"]
 
-    # Update
     patched = await client.patch(f"{LOC}/{loc_id}", json={"name": "Dry Box A"})
     assert patched.status_code == 200
     assert patched.json()["name"] == "Dry Box A"
 
-    # Delete — the registry no longer lists it. (The not-found GET → 404 mapping is a v1-sub-app
+    # After delete, the registry no longer lists it. (The not-found GET → 404 mapping is a v1-sub-app
     # exception handler that this router-only harness doesn't install, so assert via the list.)
     deleted = await client.delete(f"{LOC}/{loc_id}")
     assert deleted.status_code == 200

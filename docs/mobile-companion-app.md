@@ -4,9 +4,7 @@
 > roadmap below lives in [`mobile/`](../mobile/README.md): WebView shell +
 > token seeding, native camera scan → shared grammar → navigate, and NFC
 > (NDEF + raw NTAG213) → `/nfc/lookup` → navigate. Later phases (P1–P3) are
-> still design. This document records the feasibility assessment, the
-> recommended architecture, the pitfalls (there are real ones, especially on
-> iOS), and the phased roadmap.
+> still design.
 
 ## Why an app at all
 
@@ -396,17 +394,11 @@ front-loaded so Android users get value after about two weeks.
 
 ## Verdict
 
-**Go — as a React Native shell, Android first.** The hard part is already
-built and tested on the server: `/nfc/lookup`'s raw-dump auto-detection, bind,
-create-from-tag and encode were designed for external readers, and a phone is
-the best external reader this project will ever have. The genuinely new code
-is a thin, low-churn native layer (WebView + camera + NFC); the scan grammar
-and TigerTag codec are imported, not reimplemented. The payoff is categorical
+**Go — as a React Native shell, Android first.** The payoff is categorical
 rather than incremental: scanning works on default plain-HTTP deployments with
 zero TLS setup, iPhones get NFC for the first time (impossible via the web,
-ever), and phone-written tags become TigerTag-app-compatible. The costs are
-honest but bounded: no Qidi on iOS ever, Apple's fees and review friction argue
-for shipping iOS only once native value is unmistakable, and store upkeep is a
-permanent small tax with GitHub Releases/Obtainium as the Android escape hatch.
-Every layer degrades gracefully against older servers, and the plan can stop
-after any phase and still have shipped something strictly better than today.
+ever), and phone-written tags become TigerTag-app-compatible. The costs listed
+above are bounded, and Apple's fees and review friction argue for shipping iOS
+only once native value is unmistakable. Every layer degrades gracefully against
+older servers, and the plan can stop after any phase and still have shipped
+something strictly better than today.

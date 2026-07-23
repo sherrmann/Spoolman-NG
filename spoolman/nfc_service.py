@@ -434,5 +434,4 @@ class NfcService:
                 self._status = "closed"
 
 
-# Singleton instance
 nfc_service = NfcService()

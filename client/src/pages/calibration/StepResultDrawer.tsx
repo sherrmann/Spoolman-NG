@@ -40,9 +40,7 @@ const STEP_TYPE_VALUES: CalibrationStepType[] = [
 
 const CONFIDENCE_VALUES = ["high", "medium", "low"] as const;
 
-// ---------------------------------------------------------------------------
 // Shared sub-components (mirrors CalibrationWizard)
-// ---------------------------------------------------------------------------
 
 function FieldItem({ field, namePrefix }: { field: StepField; namePrefix: string }) {
   const t = useTranslate();
@@ -91,10 +89,6 @@ function SectionLabel({ children, color }: { children: ReactNode; color?: string
   );
 }
 
-// ---------------------------------------------------------------------------
-// Drawer
-// ---------------------------------------------------------------------------
-
 interface Props {
   open: boolean;
   sessionId: number;
@@ -117,7 +111,7 @@ export const StepResultDrawer = ({ open, sessionId, step, onSuccess, onClose }: 
   const config = stepType ? STEP_CONFIGS[stepType] : null;
   const copy = stepType ? WIZARD_COPY[stepType] : null;
 
-  // ---- Flow rate calculator state (mirrors CalibrationWizard) ----
+  // Flow rate calculator state (mirrors CalibrationWizard)
   type FlowCalcMethod = "yolo" | "legacy";
   type FlowCalcPhase = "idle" | "pass1" | "pass2";
   const [flowCalcMethod, setFlowCalcMethod] = useState<FlowCalcMethod>("yolo");
@@ -129,11 +123,11 @@ export const StepResultDrawer = ({ open, sessionId, step, onSuccess, onClose }: 
   const [pass2FlowRatio, setPass2FlowRatio] = useState<number | null>(null);
   const [pass2Modifier, setPass2Modifier] = useState<number | null>(null);
 
-  // ---- VFA artifact speeds state (mirrors CalibrationWizard) ----
+  // VFA artifact speeds state (mirrors CalibrationWizard)
   const [artifactSpeeds, setArtifactSpeeds] = useState<number[]>([]);
   const [newArtifactSpeed, setNewArtifactSpeed] = useState<number | null>(null);
 
-  // ---- PA method selector (mirrors CalibrationWizard) ----
+  // PA method selector (mirrors CalibrationWizard)
   const [paMethod, setPaMethod] = useState<"tower" | "pattern">("tower");
 
   const resetFlowCalcState = () => {
@@ -218,7 +212,6 @@ export const StepResultDrawer = ({ open, sessionId, step, onSuccess, onClose }: 
     form.setFieldValue("result", { ...current, min_avoidance_speed: min, max_avoidance_speed: max });
   }, [artifactSpeeds]);
 
-  // Computed flow results
   const yoloResult =
     yoloFlowRatioOld !== null && yoloModifier !== null && !isNaN(yoloFlowRatioOld) && !isNaN(yoloModifier)
       ? parseFloat((yoloFlowRatioOld + yoloModifier).toFixed(5))

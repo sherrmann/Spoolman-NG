@@ -24,10 +24,10 @@ depends_on = None
 
 
 def upgrade() -> None:
-    """Perform the upgrade."""
+    """Add the color_hue column to filament."""
     op.add_column("filament", sa.Column("color_hue", sa.Float(), nullable=True))
 
 
 def downgrade() -> None:
-    """Perform the downgrade."""
+    """Drop the color_hue column from filament."""
     op.drop_column("filament", "color_hue")

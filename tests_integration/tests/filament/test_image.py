@@ -18,7 +18,6 @@ def test_image_roundtrip(random_filament: dict[str, Any]):
     """Upload an image and read back the identical bytes, headers and filament flag."""
     filament_id = random_filament["id"]
 
-    # Execute
     result = httpx.put(
         f"{URL}/api/v1/filament/{filament_id}/image",
         content=LARGE_PAYLOAD,
@@ -26,7 +25,6 @@ def test_image_roundtrip(random_filament: dict[str, Any]):
     )
     result.raise_for_status()
 
-    # Verify: the PUT returns the updated filament with the flag set
     assert result.json()["has_image"] is True
 
     result = httpx.get(f"{URL}/api/v1/filament/{filament_id}/image")
