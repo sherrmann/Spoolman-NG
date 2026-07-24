@@ -1,6 +1,6 @@
-import { CommentOutlined, SendOutlined, UnorderedListOutlined } from "@ant-design/icons";
+import { AudioOutlined, CommentOutlined, SendOutlined, SoundOutlined, UnorderedListOutlined } from "@ant-design/icons";
 import { useGetLocale, useTranslate } from "@refinedev/core";
-import { Alert, Button, Drawer, FloatButton, Input, Space, Spin, Tag, Typography } from "antd";
+import { Alert, Button, Drawer, FloatButton, Input, Space, Spin, Switch, Tag, Tooltip, Typography } from "antd";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router";
 import {
@@ -10,7 +10,9 @@ import {
   ChatSpoolFilters,
   spoolListFilterLink,
   streamChat,
+  useAIStatus,
   useChatAction,
+  useTranscribe,
 } from "../utils/queryAI";
 import { useGetSettings } from "../utils/querySettings";
 
@@ -73,20 +75,36 @@ export function ChatDrawer() {
   const getLocale = useGetLocale();
   const location = useLocation();
   const settings = useGetSettings();
+  const status = useAIStatus();
   const enabled = settings.data?.ai_feature_chat?.value === "true";
   const chatAction = useChatAction();
+  const transcribe = useTranscribe();
 
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<ChatItem[]>([]);
   const [busy, setBusy] = useState(false);
   const [draft, setDraft] = useState("");
   const [undone, setUndone] = useState<Set<number>>(new Set());
+  // Voice input (#363): recording/transcribing state and the "speak replies" toggle.
+  const [recording, setRecording] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
+  const [speak, setSpeak] = useState(false);
+  const speakRef = useRef(false);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const cancelRecordingRef = useRef(false);
+  const wantStopRef = useRef(false);
   // The clean user/assistant transcript replayed to the server each turn (tool round-trips
   // stay server-side; a pending confirm carries its own full transcript instead).
   const transcript = useRef<ChatMessage[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const context = useMemo(() => pageContext(location.pathname), [location.pathname]);
+
+  const voiceEnabled = settings.data?.ai_feature_voice?.value === "true";
+  const micAvailable = voiceEnabled && status.data?.stt_configured === true;
+  const autosend = settings.data?.ai_voice_autosend?.value === "true";
+  const speechAvailable = typeof window !== "undefined" && "speechSynthesis" in window;
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -109,6 +127,7 @@ export function ChatDrawer() {
         } else if (event.event === "message") {
           push({ kind: "assistant", text: event.data.content, filters: pendingFilters });
           transcript.current.push({ role: "assistant", content: event.data.content });
+          speakReply(event.data.content);
           pendingFilters = undefined;
         } else if (event.event === "confirm") {
           push({ kind: "confirm", cards: event.data.cards, messages: event.data.messages });
@@ -125,13 +144,83 @@ export function ChatDrawer() {
     }
   };
 
-  const send = async () => {
-    const text = draft.trim();
+  const send = async (override?: string) => {
+    const text = (override ?? draft).trim();
     if (!text || busy) return;
     setDraft("");
     push({ kind: "user", text });
     transcript.current.push({ role: "user", content: text });
     await runTurn({ messages: [...transcript.current] });
+  };
+
+  // --- Voice input (#363) ----------------------------------------------------------
+
+  const speakReply = (text: string) => {
+    if (!speakRef.current || !speechAvailable || !text) return;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
+  };
+
+  const toggleSpeak = (on: boolean) => {
+    speakRef.current = on;
+    setSpeak(on);
+    if (!on && speechAvailable) window.speechSynthesis.cancel();
+  };
+
+  const handleTranscribe = async (audio: Blob) => {
+    setTranscribing(true);
+    try {
+      const { text } = await transcribe.mutateAsync(audio);
+      const clean = text.trim();
+      if (!clean) return;
+      // Transcribe-then-review by default (STT mangles vendor names); auto-send is opt-in.
+      if (autosend) await send(clean);
+      else setDraft((current) => (current ? `${current} ${clean}` : clean));
+    } catch (error) {
+      push({ kind: "error", text: String(error instanceof Error ? error.message : error) });
+    } finally {
+      setTranscribing(false);
+    }
+  };
+
+  const startRecording = async () => {
+    if (recording || transcribing || busy) return;
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+      push({ kind: "error", text: t("chat.voice.unsupported") });
+      return;
+    }
+    setRecording(true);
+    cancelRecordingRef.current = false;
+    wantStopRef.current = false;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      chunksRef.current = [];
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) chunksRef.current.push(event.data);
+      };
+      recorder.onstop = () => {
+        stream.getTracks().forEach((track) => track.stop());
+        setRecording(false);
+        if (cancelRecordingRef.current) return;
+        const blob = new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" });
+        if (blob.size > 0) void handleTranscribe(blob);
+      };
+      recorderRef.current = recorder;
+      recorder.start();
+      // The button may have been released before getUserMedia resolved — honour that stop.
+      if (wantStopRef.current) recorder.stop();
+    } catch {
+      setRecording(false);
+      push({ kind: "error", text: t("chat.voice.mic_error") });
+    }
+  };
+
+  const stopRecording = (cancel: boolean) => {
+    cancelRecordingRef.current = cancel;
+    const recorder = recorderRef.current;
+    if (recorder && recorder.state !== "inactive") recorder.stop();
+    else wantStopRef.current = true;
   };
 
   const resolveConfirm = async (item: Extract<ChatItem, { kind: "confirm" }>, decision: "confirm" | "cancel") => {
@@ -269,6 +358,23 @@ export function ChatDrawer() {
         open={open}
         onClose={() => setOpen(false)}
         width={420}
+        extra={
+          voiceEnabled && speechAvailable ? (
+            <Space size={4}>
+              <SoundOutlined />
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                {t("chat.voice.speak")}
+              </Text>
+              <Switch
+                size="small"
+                checked={speak}
+                onChange={toggleSpeak}
+                aria-label={t("chat.voice.speak")}
+                data-testid="chat-speak-toggle"
+              />
+            </Space>
+          ) : undefined
+        }
         styles={{ body: { display: "flex", flexDirection: "column", padding: 12 } }}
       >
         <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", paddingRight: 4 }}>
@@ -285,15 +391,36 @@ export function ChatDrawer() {
           )}
         </div>
         <Space.Compact style={{ marginTop: 8 }}>
+          {micAvailable && (
+            <Tooltip title={t("chat.voice.record")}>
+              <Button
+                icon={<AudioOutlined />}
+                danger={recording}
+                loading={transcribing}
+                disabled={busy}
+                onPointerDown={startRecording}
+                onPointerUp={() => stopRecording(false)}
+                onPointerLeave={() => recording && stopRecording(true)}
+                aria-label={t("chat.voice.record")}
+                data-testid="chat-mic"
+              />
+            </Tooltip>
+          )}
           <Input
             value={draft}
-            placeholder={t("chat.placeholder")}
+            placeholder={recording ? t("chat.voice.listening") : t("chat.placeholder")}
             disabled={busy}
             onChange={(e) => setDraft(e.target.value)}
-            onPressEnter={send}
+            onPressEnter={() => send()}
             data-testid="chat-input"
           />
-          <Button type="primary" icon={<SendOutlined />} loading={busy} onClick={send} aria-label={t("chat.send")} />
+          <Button
+            type="primary"
+            icon={<SendOutlined />}
+            loading={busy}
+            onClick={() => send()}
+            aria-label={t("chat.send")}
+          />
         </Space.Compact>
       </Drawer>
     </>

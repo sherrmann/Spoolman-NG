@@ -372,6 +372,13 @@
     "executed": {
       "undo": "Undo",
       "undone": "Change undone."
+    },
+    "voice": {
+      "record": "Hold to talk",
+      "listening": "Listening…",
+      "speak": "Speak replies",
+      "unsupported": "Voice recording is not supported in this browser.",
+      "mic_error": "Could not access the microphone."
     }
   },
   "scanner": {
@@ -898,6 +905,21 @@
         "label": "Vision model",
         "tooltip": "The model used for image features. Leave empty to use the chat model."
       },
+      "stt": {
+        "title": "Speech-to-text (voice input)",
+        "hint": "A separate OpenAI-compatible transcription endpoint for voice input - Ollama has no speech-to-text. For example a whisper.cpp server, Speaches, or Groq whisper.",
+        "base_url": {
+          "label": "STT base URL",
+          "tooltip": "The transcription endpoint, e.g. http://localhost:8000/v1"
+        },
+        "api_key": {
+          "label": "STT API key"
+        },
+        "model": {
+          "label": "STT model",
+          "tooltip": "The transcription model, e.g. whisper-1 or Systran/faster-whisper-base."
+        }
+      },
       "env_locked": "Set via environment variable and locked here",
       "test": "Test connection",
       "probe": {
@@ -921,6 +943,8 @@
         "voice": "Voice input",
         "requires_config": "Configure and save an endpoint and chat model first.",
         "requires_vision": "The connection test reports no vision support for the configured model.",
+        "requires_stt": "Configure and save a speech-to-text endpoint and model first.",
+        "voice_autosend": "Send voice transcripts automatically instead of reviewing them first",
         "voice_unavailable": "Not available yet - this arrives with the voice input feature."
       },
       "mcp": {

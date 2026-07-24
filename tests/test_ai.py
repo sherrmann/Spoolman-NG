@@ -39,13 +39,24 @@ def test_api_key_storage_key_is_never_a_registered_setting() -> None:
     assert ai.API_KEY_DB_KEY not in SETTINGS
 
 
+def test_stt_api_key_storage_key_is_never_a_registered_setting() -> None:
+    """The write-only speech-to-text key (#363) must also stay out of the settings registry."""
+    assert ai.STT_API_KEY_DB_KEY not in SETTINGS
+
+
 def test_all_feature_toggles_are_registered_settings() -> None:
     for key in ai.FEATURE_SETTINGS:
         assert key in SETTINGS, f"feature toggle {key} must be a registered setting"
 
 
 def test_provider_settings_are_registered() -> None:
-    for key in (ai.SETTING_BASE_URL, ai.SETTING_MODEL, ai.SETTING_VISION_MODEL):
+    for key in (
+        ai.SETTING_BASE_URL,
+        ai.SETTING_MODEL,
+        ai.SETTING_VISION_MODEL,
+        ai.SETTING_STT_BASE_URL,
+        ai.SETTING_STT_MODEL,
+    ):
         assert key in SETTINGS
 
 

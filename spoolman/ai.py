@@ -43,11 +43,19 @@ ENV_BASE_URL = "SPOOLMAN_AI_BASE_URL"
 ENV_API_KEY = "SPOOLMAN_AI_API_KEY"
 ENV_MODEL = "SPOOLMAN_AI_MODEL"
 ENV_VISION_MODEL = "SPOOLMAN_AI_VISION_MODEL"
+# Speech-to-text (#363) lives on its own endpoint: chat providers like Ollama have no STT,
+# so voice points at a separate OpenAI-compatible transcription server (whisper.cpp, Speaches,
+# Groq whisper, ...). Its own base URL, model and (write-only) key.
+ENV_STT_BASE_URL = "SPOOLMAN_AI_STT_BASE_URL"
+ENV_STT_API_KEY = "SPOOLMAN_AI_STT_API_KEY"
+ENV_STT_MODEL = "SPOOLMAN_AI_STT_MODEL"
 
 # Registered (non-secret) DB settings — see the registrations in spoolman/settings.py.
 SETTING_BASE_URL = "ai_base_url"
 SETTING_MODEL = "ai_model"
 SETTING_VISION_MODEL = "ai_vision_model"
+SETTING_STT_BASE_URL = "ai_stt_base_url"
+SETTING_STT_MODEL = "ai_stt_model"
 
 #: Feature-toggle setting key -> feature name as reported by /ai/status. All default off:
 #: AI must be invisible unless explicitly enabled (brainstorm decision #7).
@@ -59,9 +67,10 @@ FEATURE_SETTINGS = {
     "ai_feature_voice": "voice",
 }
 
-#: Unregistered settings-table key for the write-only API key. Kept out of the settings
-#: registry on purpose; tests/test_ai.py asserts it never gets registered.
+#: Unregistered settings-table keys for the write-only API keys. Kept out of the settings
+#: registry on purpose; tests/test_ai.py asserts they never get registered.
 API_KEY_DB_KEY = "ai_api_key"
+STT_API_KEY_DB_KEY = "ai_stt_api_key"
 
 _PROBE_TIMEOUT = 10.0
 #: Vision inference on local hardware is legitimately slow; give it room.
@@ -82,6 +91,10 @@ class AIConfig:
     api_key: str | None = None
     model: str | None = None
     vision_model: str | None = None
+    #: Speech-to-text endpoint (#363), independent of the chat endpoint above.
+    stt_base_url: str | None = None
+    stt_api_key: str | None = None
+    stt_model: str | None = None
     #: field name -> "env" | "db" for every field that has a value.
     sources: dict[str, str] = field(default_factory=dict)
 
@@ -89,6 +102,11 @@ class AIConfig:
     def configured(self) -> bool:
         """Whether the minimum viable configuration (endpoint + chat model) is present."""
         return bool(self.base_url and self.model)
+
+    @property
+    def stt_configured(self) -> bool:
+        """Whether a speech-to-text endpoint and model are present (voice input needs both)."""
+        return bool(self.stt_base_url and self.stt_model)
 
 
 @dataclass
@@ -169,16 +187,16 @@ async def get_feature_flags(db: AsyncSession) -> dict[str, bool]:
 # --- Write-only API-key storage ---------------------------------------------------
 
 
-async def get_stored_api_key(db: AsyncSession) -> str | None:
-    """Read the stored API key (raw, not JSON-encoded). None when unset."""
-    row = await db.get(models.Setting, API_KEY_DB_KEY)
+async def _get_stored_key(db: AsyncSession, db_key: str) -> str | None:
+    """Read a stored write-only key (raw, not JSON-encoded). None when unset."""
+    row = await db.get(models.Setting, db_key)
     if row is None:
         return None
     return row.value or None
 
 
-async def set_stored_api_key(db: AsyncSession, value: str | None) -> None:
-    """Set or clear the stored API key.
+async def _set_stored_key(db: AsyncSession, db_key: str, value: str | None, label: str) -> None:
+    """Set or clear a stored write-only key.
 
     Deliberately does NOT go through spoolman.database.setting.update: that helper
     broadcasts the new value to websocket subscribers, which must never happen for
@@ -187,17 +205,37 @@ async def set_stored_api_key(db: AsyncSession, value: str | None) -> None:
     if value:
         await db.merge(
             models.Setting(
-                key=API_KEY_DB_KEY,
+                key=db_key,
                 value=value,
                 last_updated=datetime.utcnow().replace(microsecond=0),
             ),
         )
     else:
-        row = await db.get(models.Setting, API_KEY_DB_KEY)
+        row = await db.get(models.Setting, db_key)
         if row is not None:
             await db.delete(row)
     await db.commit()
-    logger.info("AI API key has been %s.", "updated" if value else "cleared")
+    logger.info("%s has been %s.", label, "updated" if value else "cleared")
+
+
+async def get_stored_api_key(db: AsyncSession) -> str | None:
+    """Read the stored chat-provider API key. None when unset."""
+    return await _get_stored_key(db, API_KEY_DB_KEY)
+
+
+async def set_stored_api_key(db: AsyncSession, value: str | None) -> None:
+    """Set or clear the stored chat-provider API key."""
+    await _set_stored_key(db, API_KEY_DB_KEY, value, "AI API key")
+
+
+async def get_stored_stt_api_key(db: AsyncSession) -> str | None:
+    """Read the stored speech-to-text API key (#363). None when unset."""
+    return await _get_stored_key(db, STT_API_KEY_DB_KEY)
+
+
+async def set_stored_stt_api_key(db: AsyncSession, value: str | None) -> None:
+    """Set or clear the stored speech-to-text API key (#363)."""
+    await _set_stored_key(db, STT_API_KEY_DB_KEY, value, "AI speech-to-text API key")
 
 
 # --- Config resolution -------------------------------------------------------------
@@ -217,6 +255,8 @@ async def resolve_config(db: AsyncSession) -> AIConfig:
         ("base_url", ENV_BASE_URL, SETTING_BASE_URL),
         ("model", ENV_MODEL, SETTING_MODEL),
         ("vision_model", ENV_VISION_MODEL, SETTING_VISION_MODEL),
+        ("stt_base_url", ENV_STT_BASE_URL, SETTING_STT_BASE_URL),
+        ("stt_model", ENV_STT_MODEL, SETTING_STT_MODEL),
     ):
         env_value = _env(env_name)
         if env_value is not None:
@@ -228,17 +268,22 @@ async def resolve_config(db: AsyncSession) -> AIConfig:
                 setattr(config, attr, db_value)
                 config.sources[attr] = "db"
 
-    env_key = _env(ENV_API_KEY)
-    if env_key is not None:
-        config.api_key = env_key
-        config.sources["api_key"] = "env"
-    else:
-        stored = await get_stored_api_key(db)
-        if stored is not None:
-            config.api_key = stored
-            config.sources["api_key"] = "db"
+    for attr, env_name, getter in (
+        ("api_key", ENV_API_KEY, get_stored_api_key),
+        ("stt_api_key", ENV_STT_API_KEY, get_stored_stt_api_key),
+    ):
+        env_key = _env(env_name)
+        if env_key is not None:
+            setattr(config, attr, env_key)
+            config.sources[attr] = "env"
+        else:
+            stored = await getter(db)
+            if stored is not None:
+                setattr(config, attr, stored)
+                config.sources[attr] = "db"
 
     config.base_url = normalize_base_url(config.base_url)
+    config.stt_base_url = normalize_base_url(config.stt_base_url)
     return config
 
 

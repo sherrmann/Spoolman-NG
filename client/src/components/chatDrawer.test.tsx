@@ -1,6 +1,6 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ChatEvent, ChatTurnRequest } from "../utils/queryAI";
 
 // The drawer is exercised hermetically: the SSE stream is behind streamChat, mocked here so
@@ -9,7 +9,9 @@ import type { ChatEvent, ChatTurnRequest } from "../utils/queryAI";
 // decision="cancel" (so nothing is executed).
 
 const settingsMock = vi.fn<() => Record<string, { value: string }> | undefined>();
+const statusMock = vi.fn<() => { stt_configured: boolean } | undefined>();
 const streamChat = vi.fn<(body: ChatTurnRequest, onEvent: (e: ChatEvent) => void) => Promise<void>>();
+const transcribeMock = vi.fn<(audio: Blob) => Promise<{ text: string }>>();
 
 vi.mock("@refinedev/core", () => ({
   useTranslate: () => (key: string) => key,
@@ -20,6 +22,8 @@ vi.mock("../utils/querySettings", () => ({ useGetSettings: () => ({ data: settin
 vi.mock("../utils/queryAI", () => ({
   streamChat: (body: ChatTurnRequest, onEvent: (e: ChatEvent) => void) => streamChat(body, onEvent),
   useChatAction: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useAIStatus: () => ({ data: statusMock() }),
+  useTranscribe: () => ({ mutateAsync: transcribeMock, isPending: false }),
   spoolListFilterLink: () => "/spool#filters=%5B%5D",
 }));
 
@@ -28,6 +32,7 @@ import { ChatDrawer } from "./chatDrawer";
 beforeEach(() => {
   vi.clearAllMocks();
   settingsMock.mockReturnValue({ ai_feature_chat: { value: "true" } });
+  statusMock.mockReturnValue({ stt_configured: true });
 });
 
 describe("ChatDrawer (#362)", () => {
@@ -105,5 +110,89 @@ describe("ChatDrawer (#362)", () => {
       expect.objectContaining({ context: "Spools list", messages: [{ role: "user", content: "how much petg?" }] }),
       expect.any(Function),
     );
+  });
+});
+
+// Minimal browser-API stubs jsdom lacks, so the push-to-talk flow can be exercised.
+class MockMediaRecorder {
+  state = "inactive";
+  mimeType = "audio/webm";
+  ondataavailable: ((event: { data: Blob }) => void) | null = null;
+  onstop: (() => void) | null = null;
+  constructor(public stream: unknown) {}
+  start() {
+    this.state = "recording";
+  }
+  stop() {
+    this.state = "inactive";
+    this.ondataavailable?.({ data: new Blob(["audio"], { type: "audio/webm" }) });
+    this.onstop?.();
+  }
+}
+
+describe("ChatDrawer voice (#363)", () => {
+  beforeEach(() => {
+    settingsMock.mockReturnValue({ ai_feature_chat: { value: "true" }, ai_feature_voice: { value: "true" } });
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia: vi.fn().mockResolvedValue({ getTracks: () => [{ stop: vi.fn() }] }) },
+    });
+    (globalThis as unknown as { MediaRecorder: unknown }).MediaRecorder = MockMediaRecorder;
+    Object.defineProperty(window, "speechSynthesis", {
+      configurable: true,
+      value: { speak: vi.fn(), cancel: vi.fn() },
+    });
+    (globalThis as unknown as { SpeechSynthesisUtterance: unknown }).SpeechSynthesisUtterance = class {
+      constructor(public text: string) {}
+    };
+  });
+
+  afterEach(() => {
+    delete (globalThis as unknown as { MediaRecorder?: unknown }).MediaRecorder;
+  });
+
+  async function openDrawer() {
+    const user = userEvent.setup();
+    render(<ChatDrawer />);
+    await user.click(screen.getByLabelText("chat.open"));
+    return user;
+  }
+
+  it("hides the mic when voice is disabled", async () => {
+    settingsMock.mockReturnValue({ ai_feature_chat: { value: "true" } });
+    await openDrawer();
+    expect(screen.queryByTestId("chat-mic")).not.toBeInTheDocument();
+  });
+
+  it("hides the mic when no speech-to-text endpoint is configured", async () => {
+    statusMock.mockReturnValue({ stt_configured: false });
+    await openDrawer();
+    expect(screen.queryByTestId("chat-mic")).not.toBeInTheDocument();
+  });
+
+  it("shows the mic when voice is enabled and STT is configured", async () => {
+    await openDrawer();
+    expect(screen.getByTestId("chat-mic")).toBeInTheDocument();
+  });
+
+  it("shows a speak-replies toggle when speechSynthesis is available", async () => {
+    await openDrawer();
+    expect(screen.getByTestId("chat-speak-toggle")).toBeInTheDocument();
+  });
+
+  it("hold-to-talk transcribes and drops the text into the input to review", async () => {
+    transcribeMock.mockResolvedValue({ text: "log twenty grams on the orange Prusament" });
+    await openDrawer();
+
+    const mic = screen.getByTestId("chat-mic");
+    fireEvent.pointerDown(mic);
+    await waitFor(() => expect(navigator.mediaDevices.getUserMedia).toHaveBeenCalled());
+    fireEvent.pointerUp(mic);
+
+    // Transcribe-then-review: the recognised text lands editable in the input (not auto-sent).
+    await waitFor(() =>
+      expect(screen.getByTestId("chat-input")).toHaveValue("log twenty grams on the orange Prusament"),
+    );
+    expect(streamChat).not.toHaveBeenCalled();
   });
 });

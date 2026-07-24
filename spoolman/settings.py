@@ -106,6 +106,12 @@ register_setting("low_stock_fallback_g", SettingType.NUMBER, json.dumps(200))
 register_setting("ai_base_url", SettingType.STRING, json.dumps(""))
 register_setting("ai_model", SettingType.STRING, json.dumps(""))
 register_setting("ai_vision_model", SettingType.STRING, json.dumps(""))
+# Speech-to-text endpoint (#363), separate from the chat endpoint. The key is write-only
+# and lives outside the registry (see spoolman/ai.py), like the chat key.
+register_setting("ai_stt_base_url", SettingType.STRING, json.dumps(""))
+register_setting("ai_stt_model", SettingType.STRING, json.dumps(""))
+# Auto-send a voice transcript instead of dropping it into the box to review first.
+register_setting("ai_voice_autosend", SettingType.BOOLEAN, json.dumps(obj=False))
 register_setting("ai_feature_chat", SettingType.BOOLEAN, json.dumps(obj=False))
 register_setting("ai_feature_scan_to_spool", SettingType.BOOLEAN, json.dumps(obj=False))
 register_setting("ai_feature_nl_search", SettingType.BOOLEAN, json.dumps(obj=False))
