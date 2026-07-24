@@ -582,7 +582,11 @@ async def ollama_pull(
                     {"status": progress.get("status", ""), "total": total, "completed": completed, "percent": percent},
                 )
         except ai.AIRequestError as exc:
-            yield _sse_frame("error", {"message": str(exc)})
+            # Log the specific cause server-side; the streamed body carries a curated,
+            # non-exception-derived message so no internal detail can reach the client
+            # (this raw SSE body is a response sink, unlike HTTPException.detail).
+            logger.warning("Ollama model pull failed for %r: %s", model, exc)
+            yield _sse_frame("error", {"message": "The model pull failed. Check the Spoolman server logs for details."})
         yield _sse_frame("done", {})
 
     return StreamingResponse(
