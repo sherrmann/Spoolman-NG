@@ -55,6 +55,7 @@ FEATURE_SETTINGS = {
     "ai_feature_chat": "chat",
     "ai_feature_scan_to_spool": "scan_to_spool",
     "ai_feature_nl_search": "nl_search",
+    "ai_feature_mcp": "mcp",
     "ai_feature_voice": "voice",
 }
 

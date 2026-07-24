@@ -917,10 +917,18 @@
         "chat": "Chat assistant",
         "scan_to_spool": "Scan-to-Spool photo intake",
         "nl_search": "Natural-language search",
+        "mcp": "MCP server",
         "voice": "Voice input",
         "requires_config": "Configure and save an endpoint and chat model first.",
         "requires_vision": "The connection test reports no vision support for the configured model.",
         "voice_unavailable": "Not available yet - this arrives with the voice input feature."
+      },
+      "mcp": {
+        "title": "MCP server",
+        "hint": "Point an MCP client (Claude Desktop, claude.ai) at this Spoolman to query and update your inventory. No LLM provider needed - only this toggle.",
+        "copy": "Copy config",
+        "copied": "Configuration copied to the clipboard.",
+        "auth_note": "If this Spoolman requires an API token, add an \"Authorization\": \"Bearer <token>\" entry under \"headers\". Read-only accounts get query tools only."
       }
     },
     "swatch": {

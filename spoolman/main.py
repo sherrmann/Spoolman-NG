@@ -12,8 +12,9 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import PlainTextResponse, RedirectResponse, Response
 from prometheus_client import generate_latest
 from scheduler.asyncio.scheduler import Scheduler
+from starlette.routing import Route
 
-from spoolman import env, externaldb, tigertagdb, updatecheck
+from spoolman import env, externaldb, mcp_server, tigertagdb, updatecheck
 from spoolman.api.v1.router import app as v1_app
 from spoolman.assetlinks import register_assetlinks_route
 from spoolman.auth import auth_state, initialize_auth_state
@@ -113,6 +114,13 @@ def get_configjs(request: Request) -> Response:
 # must be registered before the SPA catch-all below; unlike every other route
 # it lives at the true domain root (Android ignores SPOOLMAN_BASE_PATH).
 register_assetlinks_route(app)
+
+# Built-in MCP server (#360): a single exact-path Route (not a Mount, which would 307-redirect
+# /mcp -> /mcp/ and break MCP clients). mcp_server.mcp_app is an ASGI class instance so Starlette
+# routes every method to it; the endpoint is gated per-request by the ai_feature_mcp toggle (404
+# until enabled) and reuses the API's token/role model. Registered before the SPA catch-all mount
+# below so it isn't swallowed by it.
+app.router.routes.append(Route(env.get_base_path() + "/mcp", endpoint=mcp_server.mcp_app))
 
 # Mount the client side app
 app.mount(
@@ -242,6 +250,10 @@ async def startup() -> None:
         except Exception:
             logger.exception("Failed to initialize NFC service")
 
+    # Start the MCP server's session-manager task group (#360). Always started; the /mcp
+    # endpoint stays 404 until the ai_feature_mcp toggle is on, so this is inert by default.
+    await mcp_server.start()
+
     logger.info("Startup complete.")
 
     if env.is_docker() and not env.is_data_dir_mounted():
@@ -259,6 +271,12 @@ async def startup() -> None:
         )
         logger.warning("!!!! WARNING !!!!")
         logger.warning("!!!! WARNING !!!!")
+
+
+@app.on_event("shutdown")
+async def shutdown() -> None:
+    """Tear down the MCP server's session-manager task group."""
+    await mcp_server.stop()
 
 
 if __name__ == "__main__":

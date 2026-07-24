@@ -1,10 +1,11 @@
-import { CheckCircleOutlined, CloseCircleOutlined, QuestionCircleOutlined } from "@ant-design/icons";
+import { CheckCircleOutlined, CloseCircleOutlined, CopyOutlined, QuestionCircleOutlined } from "@ant-design/icons";
 import { useTranslate } from "@refinedev/core";
 import { useQueryClient } from "@tanstack/react-query";
 import { Alert, AutoComplete, Button, Checkbox, Divider, Form, Input, Select, Space, Typography, message } from "antd";
 import { useEffect, useState } from "react";
 import { AIProbeResult, AITriState, useAIProbe, useAIStatus, useSetAIKey } from "../../utils/queryAI";
 import { useGetSettings, useSetSetting } from "../../utils/querySettings";
+import { getBasePath } from "../../utils/url";
 import { AI_PRESETS } from "./aiPresets";
 
 const { Text, Paragraph } = Typography;
@@ -16,6 +17,9 @@ const FEATURE_ROWS: {
   statusKey: string;
   labelKey: string;
   requiresVision?: boolean;
+  // Most features need a configured LLM endpoint; the MCP server (#360) does not — it only
+  // needs the toggle, so it stays enable-able even before an endpoint is set.
+  requiresProvider?: boolean;
   unavailable?: boolean;
 }[] = [
   { settingKey: "ai_feature_chat", statusKey: "chat", labelKey: "settings.ai.features.chat" },
@@ -26,6 +30,12 @@ const FEATURE_ROWS: {
     requiresVision: true,
   },
   { settingKey: "ai_feature_nl_search", statusKey: "nl_search", labelKey: "settings.ai.features.nl_search" },
+  {
+    settingKey: "ai_feature_mcp",
+    statusKey: "mcp",
+    labelKey: "settings.ai.features.mcp",
+    requiresProvider: false,
+  },
   { settingKey: "ai_feature_voice", statusKey: "voice", labelKey: "settings.ai.features.voice", unavailable: true },
 ];
 
@@ -60,6 +70,7 @@ export function AISettings() {
     ai_feature_chat: useSetSetting<boolean>("ai_feature_chat"),
     ai_feature_scan_to_spool: useSetSetting<boolean>("ai_feature_scan_to_spool"),
     ai_feature_nl_search: useSetSetting<boolean>("ai_feature_nl_search"),
+    ai_feature_mcp: useSetSetting<boolean>("ai_feature_mcp"),
     ai_feature_voice: useSetSetting<boolean>("ai_feature_voice"),
   } as Record<string, ReturnType<typeof useSetSetting<boolean>>>;
   const [form] = Form.useForm();
@@ -68,6 +79,16 @@ export function AISettings() {
   const [probeResult, setProbeResult] = useState<AIProbeResult | null>(null);
   const capabilities = probeResult ?? status.data?.capabilities ?? null;
   const envLocked = new Set(status.data?.env_locked ?? []);
+
+  // MCP server (#360): the copy-config block is shown once the feature is on. The endpoint
+  // lives at <origin><base path>/mcp; a token-less install needs no headers.
+  const mcpRaw = settings.data?.ai_feature_mcp?.value;
+  const mcpEnabled = mcpRaw !== undefined ? JSON.parse(mcpRaw) === true : false;
+  const mcpConfig = JSON.stringify(
+    { mcpServers: { spoolman: { url: `${window.location.origin}${getBasePath()}/mcp` } } },
+    null,
+    2,
+  );
 
   useEffect(() => {
     if (status.data) {
@@ -229,7 +250,7 @@ export function AISettings() {
           let reasonKey: string | null = null;
           if (row.unavailable) {
             reasonKey = "settings.ai.features.voice_unavailable";
-          } else if (!status.data?.configured) {
+          } else if (row.requiresProvider !== false && !status.data?.configured) {
             reasonKey = "settings.ai.features.requires_config";
           } else if (row.requiresVision && capabilities?.vision === "no") {
             reasonKey = "settings.ai.features.requires_vision";
@@ -257,6 +278,39 @@ export function AISettings() {
           );
         })}
       </Space>
+
+      {mcpEnabled && (
+        <>
+          <Divider orientation="left">{t("settings.ai.mcp.title")}</Divider>
+          <Paragraph type="secondary">{t("settings.ai.mcp.hint")}</Paragraph>
+          <pre
+            data-testid="mcp-config"
+            style={{
+              background: "rgba(140,140,140,0.12)",
+              padding: 12,
+              borderRadius: 6,
+              overflowX: "auto",
+              margin: 0,
+            }}
+          >
+            {mcpConfig}
+          </pre>
+          <Space style={{ marginTop: 8 }}>
+            <Button
+              icon={<CopyOutlined />}
+              onClick={() => {
+                navigator.clipboard?.writeText(mcpConfig);
+                messageApi.success(t("settings.ai.mcp.copied"));
+              }}
+            >
+              {t("settings.ai.mcp.copy")}
+            </Button>
+          </Space>
+          <Paragraph type="secondary" style={{ marginTop: 8 }}>
+            {t("settings.ai.mcp.auth_note")}
+          </Paragraph>
+        </>
+      )}
     </>
   );
 }
