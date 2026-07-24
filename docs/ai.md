@@ -142,6 +142,58 @@ it can't map to a real value is dropped rather than invented, and if a request c
 translated at all it falls back to the ordinary free-text search — the AI button never
 blocks the normal path. It works well with a small local model.
 
+## MCP server
+
+Turn on **MCP server** under Settings → AI. Spoolman then serves a
+[Model Context Protocol](https://modelcontextprotocol.io/) endpoint over streamable HTTP at
+**`/mcp`**, so any MCP client — Claude Desktop, claude.ai, ChatGPT — can query and update
+your inventory directly. Unlike the other features it needs **no LLM provider of its own**;
+the toggle is all it requires (the *client* brings the model), and the endpoint answers 404
+until you enable it.
+
+Settings → AI shows a ready-to-paste config once it's on:
+
+```json
+{
+  "mcpServers": {
+    "spoolman": {
+      "url": "https://your-spoolman-host/mcp"
+    }
+  }
+}
+```
+
+**Auth reuses your API token.** On a token-less install anyone with network access can
+connect (the same trust model as the rest of the API). When `SPOOLMAN_API_TOKEN` is set — or
+user accounts exist — the client must send it as a bearer token; add it under `headers`:
+
+```json
+"spoolman": {
+  "url": "https://your-spoolman-host/mcp",
+  "headers": { "Authorization": "Bearer <your token>" }
+}
+```
+
+A **read-only** account (or read-only user token) is offered the query tools only — no
+mutating tools appear at all.
+
+What the client gets:
+
+- **Tools** — the same curated set the in-app chat assistant uses (one tool surface, two
+  consumers): search spools, list filaments with low-stock/on-order status, and — for a
+  writer — create a spool, log usage, and edit/archive a spool. It is a curated layer, not
+  raw database access; deletes are not exposed over MCP.
+- A **low-stock resource** the client can read for the current reorder picture.
+- A **restock-advisor prompt** that turns that data into "what should I reorder?".
+
+This is the batteries-included, version-guaranteed path: the tools always match the running
+Spoolman. For full CRUD you can still point the external
+[Disane87/spoolman-mcp](https://github.com/Disane87/spoolman-mcp) at your instance — the two
+coexist.
+
+Voice and vision come for free here: talking to Spoolman through claude.ai or ChatGPT voice
+mode is an audio interface Spoolman never has to build.
+
 ## Privacy
 
 - With a **local endpoint** (Ollama, LM Studio, llama.cpp, vLLM on your own

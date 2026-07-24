@@ -154,4 +154,22 @@ describe("AISettings (#359)", () => {
     expect(overrides).toMatchObject({ base_url: "http://o:11434/v1", model: "m" });
     expect(overrides).not.toHaveProperty("api_key");
   });
+
+  it("lets the MCP server be enabled even while no provider is configured (#360)", () => {
+    // MCP needs no LLM endpoint — its toggle must stay enabled when the others are blocked.
+    render(<AISettings />);
+    expect(screen.getByTestId("toggle-mcp")).toBeEnabled();
+    expect(screen.getByTestId("toggle-chat")).toBeDisabled();
+  });
+
+  it("shows a copyable MCP config block only once MCP is enabled", () => {
+    const { rerender } = render(<AISettings />);
+    expect(screen.queryByTestId("mcp-config")).not.toBeInTheDocument();
+
+    settingsMock.mockReturnValue({ ai_feature_mcp: { value: "true" } });
+    rerender(<AISettings />);
+    const block = screen.getByTestId("mcp-config");
+    expect(block.textContent).toContain("mcpServers");
+    expect(block.textContent).toContain("/mcp");
+  });
 });
