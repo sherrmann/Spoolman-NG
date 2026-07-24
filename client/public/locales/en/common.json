@@ -349,7 +349,8 @@
       "unknown_content": "No filament has the barcode {{code}}. Create a filament and remember this barcode?",
       "create_filament": "Create filament",
       "lookup_error": "Could not look up that barcode."
-    }
+    },
+    "photo": "Photo"
   },
   "scanner": {
     "title": "QR Code Scanner",
@@ -840,6 +841,58 @@
         "tooltip": "Display large weights and lengths auto-scaled (e.g. 1.5 kg, 64.37 m) instead of raw grams/millimeters in the list and detail views. Stored values and the API are unaffected."
       }
     },
+    "ai": {
+      "tab": "AI",
+      "description": "Connect an OpenAI-compatible endpoint (Ollama, LM Studio, OpenAI, Anthropic, OpenRouter, Requesty, Groq, ...). Nothing is sent anywhere and no AI element appears in the interface until a feature below is enabled.",
+      "preset": {
+        "label": "Preset",
+        "placeholder": "Pick a provider to fill in the base URL"
+      },
+      "base_url": {
+        "label": "Base URL",
+        "tooltip": "The OpenAI-compatible endpoint to use, e.g. an Ollama server on your network.",
+        "invalid": "Must be an http:// or https:// URL"
+      },
+      "api_key": {
+        "label": "API key",
+        "tooltip": "Stored write-only: the server never sends it back to any client. Ollama and LM Studio need none.",
+        "placeholder_set": "A key is stored - enter a new value to replace it",
+        "placeholder_unset": "No key stored",
+        "clear": "Clear stored key"
+      },
+      "model": {
+        "label": "Chat model",
+        "tooltip": "The model used for chat and tool-calling features. Run a connection test to list the endpoint's models."
+      },
+      "vision_model": {
+        "label": "Vision model",
+        "tooltip": "The model used for image features. Leave empty to use the chat model."
+      },
+      "env_locked": "Set via environment variable and locked here",
+      "test": "Test connection",
+      "probe": {
+        "reachable": "Endpoint reachable",
+        "models_listed": "models listed",
+        "failed": "The connection test failed.",
+        "chat": "Chat",
+        "tools": "Tool calls",
+        "vision": "Vision",
+        "yes": "supported",
+        "no": "not supported",
+        "unknown": "not verified - this endpoint does not report capabilities"
+      },
+      "features": {
+        "title": "Features",
+        "hint": "All features are off by default. Nothing AI-related appears anywhere in the interface until it is enabled here.",
+        "chat": "Chat assistant",
+        "scan_to_spool": "Scan-to-Spool photo intake",
+        "nl_search": "Natural-language search",
+        "voice": "Voice input",
+        "requires_config": "Configure and save an endpoint and chat model first.",
+        "requires_vision": "The connection test reports no vision support for the configured model.",
+        "voice_unavailable": "Not available yet - this arrives with the voice input feature."
+      }
+    },
     "swatch": {
       "tab": "Swatches",
       "default_style": {
@@ -1311,5 +1364,29 @@
     "tag_material": "Material",
     "tag_material_type": "Material Type",
     "qidi_write_info": "Qidi tags store only material and color. The tag will be written with the closest matching Qidi material and color codes."
+  },
+  "intake": {
+    "hint": "Photograph the spool's label or box, or pick an existing photo.",
+    "select_photo": "Select or take a photo",
+    "extracting": "Reading the label...",
+    "in_library": "in your library, adds a spool",
+    "from_catalog": "SpoolmanDB, creates filament and spool",
+    "use_raw": "Use the raw extraction (new filament)",
+    "continue": "Continue",
+    "back": "Back",
+    "photo_discarded": "The photo was analyzed in memory and is not stored.",
+    "prefilled_banner": "Prefilled from a label photo - review the values before saving.",
+    "fields": {
+      "vendor": "Vendor",
+      "name": "Name",
+      "material": "Material",
+      "weight_g": "Weight (g)",
+      "diameter_mm": "Diameter (mm)",
+      "extruder_temp_c": "Nozzle (C)",
+      "bed_temp_c": "Bed (C)",
+      "lot_nr": "Lot",
+      "article_number": "Article nr",
+      "confidence": "Confidence"
+    }
   }
 }

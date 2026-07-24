@@ -1,9 +1,11 @@
-import { CameraOutlined, ScanOutlined, WifiOutlined } from "@ant-design/icons";
+import { CameraOutlined, PictureOutlined, ScanOutlined, WifiOutlined } from "@ant-design/icons";
 import loadable from "@loadable/component";
 import { useTranslate } from "@refinedev/core";
 import { FloatButton, Modal, Segmented, Space, Spin, Typography } from "antd";
 import { useEffect, useState } from "react";
+import { useGetSettings } from "../utils/querySettings";
 import { NfcScannerPanel, useNfcAvailability } from "./nfcScannerModal";
+import { PhotoIntakePanel } from "./photoIntake";
 
 const { Text } = Typography;
 
@@ -34,16 +36,28 @@ const QRScannerPanel = loadable<{ onClose?: () => void }, typeof import("./qrCod
 const ScanModal = () => {
   const t = useTranslate();
   const [visible, setVisible] = useState(false);
-  const [mode, setMode] = useState<"qr" | "nfc">("qr");
+  const [mode, setMode] = useState<"qr" | "nfc" | "photo">("qr");
 
   const { available: nfcAvailable } = useNfcAvailability();
+  // Scan-to-Spool (#361): the Photo tab exists only while the feature is enabled —
+  // invisible-unless-enabled. The settings query is shared app-wide via react-query
+  // (this header-mounted modal is its one always-on consumer), so it fetches once
+  // per session, not per page.
+  const settings = useGetSettings();
+  const photoAvailable = settings.data?.ai_feature_scan_to_spool?.value === "true";
 
-  // If NFC stops being available while the modal is open, fall back to QR.
+  // If a mode stops being available while the modal is open, fall back to QR.
   useEffect(() => {
-    if (!nfcAvailable && mode === "nfc") {
+    if ((!nfcAvailable && mode === "nfc") || (!photoAvailable && mode === "photo")) {
       setMode("qr");
     }
-  }, [nfcAvailable, mode]);
+  }, [nfcAvailable, photoAvailable, mode]);
+
+  const modeOptions = [
+    { label: t("scan.qr"), value: "qr", icon: <CameraOutlined /> },
+    ...(nfcAvailable ? [{ label: t("scan.nfc"), value: "nfc", icon: <WifiOutlined /> }] : []),
+    ...(photoAvailable ? [{ label: t("scan.photo"), value: "photo", icon: <PictureOutlined /> }] : []),
+  ];
 
   const close = () => setVisible(false);
 
@@ -52,21 +66,20 @@ const ScanModal = () => {
       <FloatButton type="primary" onClick={() => setVisible(true)} icon={<ScanOutlined />} shape="circle" />
       <Modal open={visible} destroyOnHidden onCancel={close} footer={null} title={t("scan.title")}>
         <Space direction="vertical" style={{ width: "100%" }} size="middle">
-          {nfcAvailable ? (
+          {modeOptions.length > 1 ? (
             <Segmented
               block
-              options={[
-                { label: t("scan.qr"), value: "qr", icon: <CameraOutlined /> },
-                { label: t("scan.nfc"), value: "nfc", icon: <WifiOutlined /> },
-              ]}
+              options={modeOptions}
               value={mode}
-              onChange={(value) => setMode(value as "qr" | "nfc")}
+              onChange={(value) => setMode(value as "qr" | "nfc" | "photo")}
             />
           ) : (
             <Text type="secondary">{t("scan.nfc_hint")}</Text>
           )}
+          {modeOptions.length > 1 && !nfcAvailable && <Text type="secondary">{t("scan.nfc_hint")}</Text>}
           {mode === "qr" && <QRScannerPanel onClose={close} />}
           {mode === "nfc" && nfcAvailable && <NfcScannerPanel active={visible && mode === "nfc"} onClose={close} />}
+          {mode === "photo" && photoAvailable && <PhotoIntakePanel onClose={close} />}
         </Space>
       </Modal>
     </>

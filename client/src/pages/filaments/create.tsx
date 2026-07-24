@@ -1,6 +1,7 @@
 import { Create, useForm, useSelect } from "@refinedev/antd";
 import { HttpError, IResourceComponentsProps, useInvalidate, useTranslate } from "@refinedev/core";
 import {
+  Alert,
   Button,
   ColorPicker,
   Divider,
@@ -77,6 +78,27 @@ export const FilamentCreate = (props: IResourceComponentsProps & CreateOrClonePr
   if (prefillArticleNumber && formProps.initialValues.article_number === undefined) {
     formProps.initialValues.article_number = prefillArticleNumber;
   }
+
+  // Scan-to-Spool raw-extraction handoff (#361): prefill what the label photo yielded.
+  const scanPrefills: { param: string; field: string; numeric?: boolean }[] = [
+    { param: "name", field: "name" },
+    { param: "material", field: "material" },
+    { param: "weight", field: "weight", numeric: true },
+    { param: "spool_weight", field: "spool_weight", numeric: true },
+    { param: "extruder_temp", field: "settings_extruder_temp", numeric: true },
+    { param: "bed_temp", field: "settings_bed_temp", numeric: true },
+    { param: "color_hex", field: "color_hex" },
+  ];
+  for (const prefill of scanPrefills) {
+    const raw = searchParams.get(prefill.param);
+    if (raw && formProps.initialValues[prefill.field] === undefined) {
+      const value = prefill.numeric ? parseFloat(raw) : raw;
+      if (!prefill.numeric || !Number.isNaN(value)) {
+        formProps.initialValues[prefill.field] = value;
+      }
+    }
+  }
+  const fromScan = searchParams.get("from_scan") === "1";
 
   if (props.mode === "clone") {
     // Fix the vendor_id
@@ -225,6 +247,7 @@ export const FilamentCreate = (props: IResourceComponentsProps & CreateOrClonePr
       {/* onFinish → Save so pressing Enter in a field submits the form (#127). The 3dfp import input
           above calls preventDefault on Enter, so it fetches rather than submitting. */}
       <Form {...formProps} layout="vertical" onFinish={() => handleSubmit("list")}>
+        {fromScan && <Alert type="info" showIcon style={{ marginBottom: 16 }} message={t("intake.prefilled_banner")} />}
         <Form.Item label={t("filament.form.import_3dfp")} help={t("filament.form.import_3dfp_help")}>
           <Space.Compact style={{ width: "100%" }}>
             <Input

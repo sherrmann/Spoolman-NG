@@ -19,6 +19,7 @@ from spoolman.updateaction import InstallType
 from spoolman.ws import websocket_manager
 
 from . import (
+    ai,
     auth,
     calibration,
     export,
@@ -202,6 +203,7 @@ app.include_router(nfc.router)
 app.include_router(export.router)
 app.include_router(import_.router)
 app.include_router(stats.router)
+app.include_router(ai.router)
 app.include_router(auth.router)
 
 # Opt-in bearer-token auth (#48): installed only when SPOOLMAN_API_TOKEN is set, so the default

@@ -6,6 +6,7 @@ import {
   ImportOutlined,
   LinkOutlined,
   PrinterOutlined,
+  RobotOutlined,
   TeamOutlined,
   ThunderboltOutlined,
   ToolOutlined,
@@ -21,6 +22,7 @@ import { useCurrentUser } from "../../utils/auth";
 import { ExtraFieldsSettings } from "./extraFieldsSettings";
 import { EntityType } from "../../utils/queryFields";
 import { GeneralSettings } from "./generalSettings";
+import { AISettings } from "./aiSettings";
 import { CustomLinksSettings } from "./customLinksSettings";
 import { ImportExportSettings } from "./importExportSettings";
 import { PrinterSettings } from "./printerSettings";
@@ -34,6 +36,7 @@ const { useToken } = theme;
 
 const panels: Record<string, React.ReactNode> = {
   general: <GeneralSettings />,
+  ai: <AISettings />,
   users: <UsersSettings />,
   swatches: <SwatchSettings />,
   "import-export": <ImportExportSettings />,
@@ -65,6 +68,7 @@ const panels: Record<string, React.ReactNode> = {
 // Map between menu keys and the URL path under /settings.
 const keyToPath: Record<string, string> = {
   general: "/settings",
+  ai: "/settings/ai",
   users: "/settings/users",
   swatches: "/settings/swatches",
   "import-export": "/settings/import-export",
@@ -81,6 +85,7 @@ const keyToPath: Record<string, string> = {
 const getActiveKey = (pathname: string): string => {
   const sub = pathname.replace(/^\/settings\/?/, "").replace(/\/$/, "");
   if (sub.startsWith("users")) return "users";
+  if (sub.startsWith("ai")) return "ai";
   if (sub.startsWith("swatches")) return "swatches";
   if (sub.startsWith("import-export")) return "import-export";
   if (sub.startsWith("custom-links")) return "custom-links";
@@ -135,6 +140,11 @@ export const Settings = () => {
                     },
                   ]
                 : []),
+              {
+                key: "ai",
+                icon: <RobotOutlined />,
+                label: t("settings.ai.tab"),
+              },
               {
                 key: "swatches",
                 icon: <IdcardOutlined />,
