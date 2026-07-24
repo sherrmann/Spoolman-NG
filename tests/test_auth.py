@@ -34,6 +34,14 @@ def _make_app(state: AuthState) -> FastAPI:
     def post_spool() -> dict:
         return {"created": True}
 
+    @app.post("/ai/chat")
+    def ai_chat() -> dict:
+        return {"ok": True}
+
+    @app.post("/ai/nl-search")
+    def ai_nl_search() -> dict:
+        return {"ok": True}
+
     @app.post("/auth/login")
     def login() -> dict:
         return {"ok": True}
@@ -202,6 +210,21 @@ def test_readonly_user_token_can_read_but_not_write(accounts_client: TestClient)
     assert accounts_client.get("/spool", headers=_auth(token)).status_code == 200
     resp = accounts_client.post("/spool", headers=_auth(token))
     assert resp.status_code == 403
+
+
+def test_readonly_user_may_post_to_the_ai_query_endpoints(accounts_client: TestClient):
+    # The chat assistant and NL search are read-only query surfaces that happen to be POSTs
+    # (they carry a body). A readonly principal must be allowed to reach them (#362), while
+    # every other POST stays blocked.
+    token = mint_token("bob", ROLE_READONLY, SECRET, ttl_seconds=3600)
+    assert accounts_client.post("/ai/chat", headers=_auth(token)).status_code == 200
+    assert accounts_client.post("/ai/nl-search", headers=_auth(token)).status_code == 200
+    assert accounts_client.post("/spool", headers=_auth(token)).status_code == 403
+
+
+def test_readonly_ai_allowlist_still_requires_a_valid_token(accounts_client: TestClient):
+    # Being on the readonly-POST allowlist does not make the endpoint credential-free.
+    assert accounts_client.post("/ai/chat").status_code == 401
 
 
 def test_invalid_user_token_is_rejected(accounts_client: TestClient):

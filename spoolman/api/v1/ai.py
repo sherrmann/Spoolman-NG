@@ -15,18 +15,21 @@ Three endpoints, all inert until the user configures an endpoint:
 import base64
 import binascii
 import logging
+from collections.abc import AsyncIterator
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from spoolman import ai, spoolintake
-from spoolman.api.v1.auth import require_admin
+from spoolman import ai, ai_tools, aichat, nlsearch, spoolintake
+from spoolman.api.v1.auth import _principal, require_admin
 from spoolman.api.v1.models import Message
 from spoolman.auth import Principal
-from spoolman.database.database import get_db_session
+from spoolman.database.database import get_db_session, get_session_maker
+from spoolman.users import ROLE_ADMIN
 
 router = APIRouter(
     prefix="/ai",
@@ -275,3 +278,155 @@ async def spool_intake_match(
     extraction = spoolintake.normalize_extraction(body.model_dump())
     matches = await spoolintake.build_matches(db, extraction)
     return SpoolIntakeResponse(extraction=AIExtraction(**extraction), matches=matches)
+
+
+# --- Chat assistant (#362, B1) -----------------------------------------------------
+
+
+class ChatRequest(BaseModel):
+    """One turn of the stateless chat protocol.
+
+    ``messages`` is the whole transcript so far in OpenAI shape (user/assistant/tool
+    turns, including any assistant ``tool_calls`` and their ``tool`` results), held by the
+    client and round-tripped every turn. ``decision`` resolves the write tool calls left
+    pending by a previous ``confirm`` event.
+    """
+
+    messages: list[dict] = Field(default_factory=list)
+    context: str | None = Field(default=None, description="What the user is currently viewing, for context.")
+    locale: str = Field(default="en", description="UI locale; the assistant replies in this language.")
+    decision: Literal["confirm", "cancel"] | None = Field(
+        default=None,
+        description="Resolve pending write(s): 'confirm' executes them, 'cancel' declines them.",
+    )
+
+
+async def _require_chat_feature(db: AsyncSession) -> None:
+    if not (await ai.get_feature_flags(db)).get("chat"):
+        raise HTTPException(status_code=404, detail="The chat assistant is not enabled.")
+
+
+@router.post(
+    "/chat",
+    name="Chat with the assistant",
+    description=(
+        "Stream one turn of the chat agent as Server-Sent Events. Read tools run automatically; a "
+        "mutation stops the stream with a confirm-card carrying before/after values, which the client "
+        "resolves by re-posting with decision='confirm' or 'cancel'. Read-only callers are offered no "
+        "write tools. 404 until the feature is enabled; 409 until an endpoint is configured."
+    ),
+    responses={404: {"model": Message}, 409: {"model": Message}},
+)
+async def chat(request: Request, body: ChatRequest) -> StreamingResponse:
+    # Gate on a short-lived session that is released BEFORE streaming begins, so its read
+    # transaction can't deadlock the stream's own writes on single-writer backends (SQLite).
+    session_maker = get_session_maker()
+    async with session_maker() as gate:
+        await _require_chat_feature(gate)
+        config = await ai.resolve_config(gate)
+        if not config.configured:
+            raise HTTPException(status_code=409, detail="No AI endpoint and model are configured.")
+
+    can_write = _principal(request).role == ROLE_ADMIN
+    context = (body.context or "").strip()[:200] or None
+    locale = (body.locale or "en").strip()[:20] or "en"
+
+    async def stream() -> AsyncIterator[str]:
+        async with session_maker() as session:
+            async for frame in aichat.run_chat(
+                db=session,
+                config=config,
+                messages=body.messages,
+                context=context,
+                locale=locale,
+                can_write=can_write,
+                decision=body.decision,
+            ):
+                yield frame
+
+    return StreamingResponse(
+        stream(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
+class ChatActionRequest(BaseModel):
+    tool: str = Field(description="The curated write tool to run (e.g. from an undo descriptor).")
+    args: dict = Field(default_factory=dict)
+
+
+class ChatActionResponse(BaseModel):
+    summary: str
+    data: dict = Field(default_factory=dict)
+    undo: dict | None = None
+
+
+@router.post(
+    "/chat/action",
+    name="Run a curated write action",
+    description=(
+        "Execute a single curated write tool directly — used for the one-click undo after a confirmed "
+        "chat mutation. Admin only, and limited to the same curated tools the chat agent can call, so it "
+        "grants no capability beyond chat itself."
+    ),
+    responses={404: {"model": Message}, 400: {"model": Message}, 422: {"model": Message}},
+)
+async def chat_action(
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+    _admin: Annotated[Principal, Depends(require_admin)],
+    body: ChatActionRequest,
+) -> ChatActionResponse:
+    await _require_chat_feature(db)
+    tool = ai_tools.WRITE_TOOLS.get(body.tool)
+    if tool is None:
+        raise HTTPException(status_code=400, detail=f"Unknown action '{body.tool}'.")
+    ctx = ai_tools.ToolContext(db=db, can_write=True)  # require_admin guarantees write eligibility
+    try:
+        result = await tool.execute(ctx, body.args)
+    except ai_tools.ToolError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return ChatActionResponse(summary=result.summary, data=result.data, undo=result.undo)
+
+
+# --- Natural-language search (#362, B2) --------------------------------------------
+
+
+class NLSearchRequest(BaseModel):
+    query: str = Field(description="The user's free-text search, e.g. 'matte black PETG in shelf B'.")
+    locale: str = Field(default="en")
+
+
+class NLSearchFilter(BaseModel):
+    field: str = Field(description="A spool-list filter field, e.g. 'filament.material' or 'location'.")
+    values: list[str] = Field(description="Grounded values (verified to exist in the database).")
+
+
+class NLSearchResponse(BaseModel):
+    filters: list[NLSearchFilter] = Field(default_factory=list)
+    search: str | None = Field(default=None, description="Leftover free-text terms for the normal search box.")
+    color_hex: str | None = Field(default=None, description="A colour to apply to the colour-similarity filter.")
+    sort: dict | None = Field(default=None, description="{field, direction} to sort by, or null.")
+
+
+@router.post(
+    "/nl-search",
+    name="Translate a natural-language spool search",
+    description=(
+        "Translate free text into the spool list's existing filter model: grounded, editable filter "
+        "values plus optional free-text, colour, and sort. Values are validated against the real "
+        "vocabulary, so hallucinated ones are dropped. 404 until enabled; 409 until configured."
+    ),
+    responses={404: {"model": Message}, 409: {"model": Message}},
+)
+async def nl_search(
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+    body: NLSearchRequest,
+) -> NLSearchResponse:
+    if not (await ai.get_feature_flags(db)).get("nl_search"):
+        raise HTTPException(status_code=404, detail="Natural-language search is not enabled.")
+    config = await ai.resolve_config(db)
+    if not config.configured:
+        raise HTTPException(status_code=409, detail="No AI endpoint and model are configured.")
+    result = await nlsearch.translate(db, config, body.query, locale=(body.locale or "en").strip()[:20] or "en")
+    return NLSearchResponse(**result)

@@ -35,6 +35,13 @@ _OPEN_GET_PATHS = frozenset({"/health", "/docs", "/redoc", "/openapi.json", "/au
 _OPEN_POST_PATHS = frozenset({"/auth/login"})
 # Methods a readonly principal is allowed to use.
 _SAFE_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
+# POST endpoints a readonly principal may still call because they only READ data: the AI
+# chat assistant (which is handed no write tools for a readonly caller) and natural-language
+# search (a pure query translator). They are POSTs only because they carry a request body,
+# not because they mutate — so the blanket "readonly may not POST" rule would wrongly lock a
+# readonly user out of asking questions (#362). Every actual mutation still goes through a
+# normal mutating route and stays blocked.
+_READONLY_POST_PATHS = frozenset({"/ai/chat", "/ai/nl-search"})
 # Login tokens are valid for this long; the client refreshes by logging in again.
 TOKEN_TTL_SECONDS = 7 * 24 * 60 * 60
 
@@ -162,6 +169,13 @@ class AuthMiddleware:
             return True
         return method == "POST" and path in _OPEN_POST_PATHS
 
+    def _readonly_allowed(self, scope: Scope) -> bool:
+        """Whether a readonly principal may make this request (safe methods + read-only POSTs)."""
+        method = scope.get("method", "GET")
+        if method in _SAFE_METHODS:
+            return True
+        return method == "POST" and _mount_relative_path(scope) in _READONLY_POST_PATHS
+
     async def _handle_http(self, scope: Scope, receive: Receive, send: Send) -> None:
         # Open routes, and everything when auth isn't configured, run as anonymous admin.
         if self._is_open(scope) or not self.state.auth_required():
@@ -173,7 +187,7 @@ class AuthMiddleware:
         if principal is None:
             await self._reject(send, 401, b"Missing or invalid credentials.", auth_header=True)
             return
-        if principal.role == ROLE_READONLY and scope.get("method", "GET") not in _SAFE_METHODS:
+        if principal.role == ROLE_READONLY and not self._readonly_allowed(scope):
             await self._reject(send, 403, b"This account is read-only.")
             return
         scope.setdefault("state", {})["principal"] = principal

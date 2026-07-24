@@ -246,6 +246,19 @@ def schedule_tasks(scheduler: Scheduler) -> None:
         scheduler.daily(datetime.time(hour=0, minute=0, second=0), _backup_task)  # type: ignore[arg-type]
 
 
+def get_session_maker() -> "async_sessionmaker[AsyncSession]":
+    """Return the process-wide async session factory.
+
+    For callers that manage a session's lifecycle themselves rather than through
+    FastAPI's request-scoped ``get_db_session`` dependency — notably the streamed chat
+    agent (spoolman.aichat), whose SSE response outlives the request handler that
+    started it, so it must own the session for the full duration of the stream.
+    """
+    if __db is None or __db.session_maker is None:
+        raise RuntimeError("DB is not setup.")
+    return __db.session_maker
+
+
 async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
     """Get a DB session to be used with FastAPI's dependency system.
 

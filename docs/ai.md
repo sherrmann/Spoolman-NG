@@ -101,6 +101,47 @@ Extraction and matching are separate API steps (`/ai/spool-intake/extract` and
 attached, so a future mobile app that runs a vision model on the device itself can
 use the same matching without any photo leaving the phone.
 
+## Chat assistant
+
+Turn on **Chat assistant** under Settings → AI. A second floating button (above the
+scan button) then opens a chat drawer on every page. Ask about your inventory in plain
+language:
+
+- *"How much black PETG do I have left?"* — answers with per-spool numbers and a total,
+  plus a **View in Spools list** link that applies the equivalent filter.
+- *"What should I reorder?"* / *"Which of my filaments survive outdoors?"* — advisory
+  answers from your low-stock, reserve, and on-order data combined with general
+  3D-printing knowledge.
+
+The assistant reads your data through a small **curated tool layer** — the same set of
+read/write actions a person has in the web UI, nothing more. It never runs raw queries.
+
+**Changes are never silent.** When the assistant wants to update, create, consume, or
+delete a spool, it renders a **confirm-card** showing the before/after values with
+**Confirm** / **Cancel** buttons — nothing happens until you confirm. After a change runs,
+a one-click **Undo** restores the previous state (deletes are the exception: they are
+marked as unable to be undone and require an explicit request). A **read-only** account
+can use the assistant to ask questions but is offered no write actions at all.
+
+The assistant replies in the interface language and never uses emoji. Each turn sends the
+current conversation and a short note of which page you are on to the configured endpoint;
+as always, with a local endpoint nothing leaves your network.
+
+## Natural-language search
+
+Turn on **Natural-language search** under Settings → AI. An **AI** button then appears
+next to the search box on the Spools page. Type a request like *"matte black PETG in
+shelf B"* and it is translated into the **normal, editable filter chips** — material,
+vendor, location, lot number, colour, and sort — that you could have set by hand. Nothing
+is a black box: the filters are shown and fully correctable, and you can clear or tweak
+any of them.
+
+The translation is **grounded on your actual data**: the model is given the real list of
+materials, vendors, and locations in your database and may only choose from them. Anything
+it can't map to a real value is dropped rather than invented, and if a request can't be
+translated at all it falls back to the ordinary free-text search — the AI button never
+blocks the normal path. It works well with a small local model.
+
 ## Privacy
 
 - With a **local endpoint** (Ollama, LM Studio, llama.cpp, vLLM on your own
