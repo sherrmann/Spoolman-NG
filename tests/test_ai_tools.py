@@ -1,14 +1,18 @@
 """Unit tests for the curated tool layer's pure logic (#362).
 
 The DB-backed behaviour is covered in tests/integration/test_ai_chat_endpoints.py; here we
-pin the parts that need no database: which tools a principal is offered, and the
-remaining-weight maths that every spool view depends on.
+pin the parts that need no database: which tools a principal is offered, the
+remaining-weight maths that every spool view depends on, and the argument coercion that
+keeps a sloppy model from crashing a turn.
 """
 # ruff: noqa: SLF001 -- this module deliberately unit-tests ai_tools' internal helpers.
 
 from types import SimpleNamespace
 
+import pytest
+
 from spoolman import ai_tools
+from spoolman.ai_tools import ToolError
 
 
 def test_readonly_is_offered_only_read_tools() -> None:
@@ -65,3 +69,81 @@ def test_remaining_weight_falls_back_to_filament_weight() -> None:
 
 def test_remaining_weight_unknown_when_no_basis() -> None:
     assert ai_tools._remaining_weight(_spool(None, 100, filament_weight=None)) is None
+
+
+# --- Argument coercion -------------------------------------------------------------
+#
+# Tool arguments come from a language model, so every one of these shapes is something a
+# small local model really emits. The contract is that a bad argument is a ToolError —
+# which the chat loop feeds back so the model can retry — never a raw ValueError/KeyError
+# that would abort the whole turn.
+
+
+@pytest.mark.parametrize("value", [12, "12", 12.0, " 12 "])
+def test_arg_int_accepts_the_shapes_models_emit(value: object) -> None:
+    assert ai_tools._arg_int({"spool_id": value}, "spool_id") == 12
+
+
+@pytest.mark.parametrize("value", ["the black one", "", None, [1], {}, True])
+def test_arg_int_rejects_junk_as_a_tool_error(value: object) -> None:
+    with pytest.raises(ToolError):
+        ai_tools._arg_int({"spool_id": value}, "spool_id")
+
+
+def test_arg_int_reports_a_missing_required_argument() -> None:
+    with pytest.raises(ToolError, match="'spool_id' argument is required"):
+        ai_tools._arg_int({}, "spool_id")
+
+
+def test_arg_int_falls_back_to_the_default_when_given_one() -> None:
+    assert ai_tools._arg_int({}, "limit", default=25) == 25
+    assert ai_tools._arg_int({"limit": None}, "limit", default=25) == 25
+
+
+def test_arg_limit_clamps_into_band() -> None:
+    assert ai_tools._arg_limit({}) == ai_tools._DEFAULT_LIMIT
+    assert ai_tools._arg_limit({"limit": 5000}) == ai_tools._MAX_LIMIT
+    # 0 or negative would otherwise silently return nothing at all.
+    assert ai_tools._arg_limit({"limit": 0}) == 1
+    assert ai_tools._arg_limit({"limit": -3}) == 1
+
+
+@pytest.mark.parametrize(("value", "expected"), [(1.5, 1.5), ("1.5", 1.5), (2, 2.0)])
+def test_arg_float_accepts_numbers_and_numeric_strings(value: object, expected: float) -> None:
+    assert ai_tools._arg_float({"use_weight_g": value}, "use_weight_g") == expected
+
+
+@pytest.mark.parametrize("value", ["a lot", None, True])
+def test_arg_float_rejects_junk_as_a_tool_error(value: object) -> None:
+    with pytest.raises(ToolError):
+        ai_tools._arg_float({"use_weight_g": value}, "use_weight_g")
+
+
+def test_optional_float_leaves_absent_absent() -> None:
+    assert ai_tools._optional_float({}, "price") is None
+    assert ai_tools._optional_float({"price": None}, "price") is None
+    assert ai_tools._optional_float({"price": "19.99"}, "price") == 19.99
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [(True, True), (False, False), ("true", True), ("TRUE", True), ("yes", True), ("no", False), ("false", False)],
+)
+def test_arg_bool_accepts_the_json_ish_strings_models_emit(value: object, expected: bool) -> None:  # noqa: FBT001
+    assert ai_tools._arg_bool({"archived": value}, "archived") is expected
+
+
+def test_arg_bool_defaults_when_absent_and_errors_on_junk() -> None:
+    assert ai_tools._arg_bool({}, "archived") is False
+    with pytest.raises(ToolError):
+        ai_tools._arg_bool({"archived": "maybe"}, "archived")
+
+
+def test_requested_changes_types_price_and_archived() -> None:
+    changes = ai_tools._requested_changes({"spool_id": 1, "price": "19.99", "archived": "true", "location": "B"})
+    assert changes == {"location": "B", "archived": True, "price": 19.99}
+
+
+def test_requested_changes_rejects_an_unparseable_price() -> None:
+    with pytest.raises(ToolError):
+        ai_tools._requested_changes({"spool_id": 1, "price": "cheap"})

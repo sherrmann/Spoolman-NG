@@ -41,6 +41,7 @@ Spoolman NG is a self-hosted web service designed to help you efficiently manage
   * Automatic spool creation from tag data when scanning unrecognized tags.
   * External integration endpoint (`POST /api/v1/nfc/lookup`) for Klipper NFC daemons and other clients.
 * **Mobile Companion App** (proof of concept): a thin Android/iOS shell around the web UI in [`mobile/`](mobile/README.md) that adds **native camera scanning and native NFC** — no HTTPS setup needed, works against plain-HTTP LAN servers, and brings NFC to iPhones (which have no Web NFC). Design and roadmap in [docs/mobile-companion-app.md](docs/mobile-companion-app.md).
+* **Optional AI features** (all off by default, nothing renders until you turn them on): a chat assistant over your inventory, natural-language spool search, Scan-to-Spool photo intake from a filament label, voice input, and a built-in **MCP server** at `/mcp` so Claude and other MCP clients can query your inventory. Spoolman never runs a model itself — you point it at an OpenAI-compatible endpoint you control (a local [Ollama](https://ollama.com/), or a cloud provider), and the installer and setup wizard can set up a local Ollama for you. Nothing is sent anywhere until you configure an endpoint. Setup and privacy details in [docs/ai.md](docs/ai.md).
 * **Database Support**: SQLite, PostgreSQL, MySQL, and CockroachDB.
 * **Multi-Printer Management**: Handles spool updates from several printers simultaneously.
 * **Advanced Monitoring**: Integrate with [Prometheus](https://prometheus.io/) for detailed historical analysis of filament usage, helping you track and optimize your printing processes. See [docs/monitoring.md](docs/monitoring.md) for setup and example queries.
@@ -52,7 +53,7 @@ Spoolman NG is a self-hosted web service designed to help you efficiently manage
   * [OctoPrint](https://github.com/mdziekon/octoprint-spoolman)
   * [OctoEverywhere](https://octoeverywhere.com/spoolman?source=github_spoolman)
   * [Home Assistant](https://github.com/Disane87/spoolman-homeassistant)
-  * [MCP Server](https://github.com/Disane87/spoolman-mcp) - Manage your filament inventory through AI assistants like Claude using the Model Context Protocol
+  * **MCP clients** (Claude and friends) — Spoolman NG has a [built-in MCP server](docs/ai.md) at `/mcp`, version-locked to the API and off until you enable it; the standalone [spoolman-mcp](https://github.com/Disane87/spoolman-mcp) remains an option if you'd rather run it separately.
 
 #### Raspberry Pi Imager 3D-printing appliances
 

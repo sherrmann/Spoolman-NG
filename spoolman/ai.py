@@ -5,8 +5,9 @@ OpenAI-compatible endpoint (Ollama, LM Studio, OpenAI, Anthropic's compatibility
 endpoint, OpenRouter, Requesty, Groq, ...). This module owns three things:
 
 * **Config resolution** — environment variables are authoritative, DB settings are
-  the UI-editable fallback (docs/llm-integration-brainstorm.md §2). A field set via
-  env is reported as env-locked so the client can disable its input.
+  the UI-editable fallback, so an operator who manages config in their own secret
+  store keeps it. A field set via env is reported as env-locked so the client can
+  disable its input.
 * **Write-only API-key storage** — the key is deliberately *not* a registered
   setting: the generic ``/setting`` API returns every registered key's value and
   broadcasts changes over websockets, either of which would leak a secret. Instead
@@ -58,7 +59,7 @@ SETTING_STT_BASE_URL = "ai_stt_base_url"
 SETTING_STT_MODEL = "ai_stt_model"
 
 #: Feature-toggle setting key -> feature name as reported by /ai/status. All default off:
-#: AI must be invisible unless explicitly enabled (brainstorm decision #7).
+#: AI must be invisible unless explicitly enabled.
 FEATURE_SETTINGS = {
     "ai_feature_chat": "chat",
     "ai_feature_scan_to_spool": "scan_to_spool",

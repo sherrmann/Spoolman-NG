@@ -1,4 +1,4 @@
-"""Managed Ollama model pull (#364, F2).
+"""Managed Ollama model pull (#364).
 
 When the configured endpoint is an Ollama server, Spoolman can help get the right models
 onto it: list what is installed and drive Ollama's own streaming pull API with progress.

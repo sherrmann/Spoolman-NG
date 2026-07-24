@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Alert, AutoComplete, Button, Checkbox, Divider, Form, Input, Select, Space, Typography, message } from "antd";
 import { useEffect, useState } from "react";
 import { AIProbeResult, AITriState, useAIProbe, useAIStatus, useSetAIKey, useSetSTTKey } from "../../utils/queryAI";
-import { useGetSettings, useSetSetting } from "../../utils/querySettings";
+import { parseBooleanSettingValue, useGetSettings, useSetSetting } from "../../utils/querySettings";
 import { getBasePath } from "../../utils/url";
 import { AI_PRESETS } from "./aiPresets";
 import { OllamaModelsSection } from "./ollamaModels";
@@ -95,14 +95,11 @@ export function AISettings() {
 
   // MCP server (#360): the copy-config block is shown once the feature is on. The endpoint
   // lives at <origin><base path>/mcp; a token-less install needs no headers.
-  const mcpRaw = settings.data?.ai_feature_mcp?.value;
-  const mcpEnabled = mcpRaw !== undefined ? JSON.parse(mcpRaw) === true : false;
+  const mcpEnabled = parseBooleanSettingValue(settings.data?.ai_feature_mcp?.value);
 
   // Voice (#363): the auto-send opt-in only makes sense once voice is on.
-  const voiceRaw = settings.data?.ai_feature_voice?.value;
-  const voiceEnabled = voiceRaw !== undefined ? JSON.parse(voiceRaw) === true : false;
-  const autosendRaw = settings.data?.ai_voice_autosend?.value;
-  const voiceAutosend = autosendRaw !== undefined ? JSON.parse(autosendRaw) === true : false;
+  const voiceEnabled = parseBooleanSettingValue(settings.data?.ai_feature_voice?.value);
+  const voiceAutosend = parseBooleanSettingValue(settings.data?.ai_voice_autosend?.value);
   const mcpConfig = JSON.stringify(
     { mcpServers: { spoolman: { url: `${window.location.origin}${getBasePath()}/mcp` } } },
     null,

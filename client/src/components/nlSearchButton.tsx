@@ -3,7 +3,7 @@ import { useGetLocale, useTranslate } from "@refinedev/core";
 import { Alert, Button, Input, Popover, Space, Typography } from "antd";
 import { useState } from "react";
 import { NlSearchResult, useNlSearch } from "../utils/queryAI";
-import { useGetSettings } from "../utils/querySettings";
+import { parseBooleanSettingValue, useGetSettings } from "../utils/querySettings";
 
 const { Text } = Typography;
 
@@ -24,7 +24,7 @@ export function NlSearchButton({
   const t = useTranslate();
   const getLocale = useGetLocale();
   const settings = useGetSettings();
-  const enabled = settings.data?.ai_feature_nl_search?.value === "true";
+  const enabled = parseBooleanSettingValue(settings.data?.ai_feature_nl_search?.value);
   const nlSearch = useNlSearch();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState(defaultQuery ?? "");

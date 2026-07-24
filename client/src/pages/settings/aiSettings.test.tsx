@@ -26,7 +26,8 @@ vi.mock("../../utils/queryAI", () => ({
   useOllamaModels: () => ({ data: { is_ollama: true, installed: [] } }),
   pullOllamaModel: vi.fn(),
 }));
-vi.mock("../../utils/querySettings", () => ({
+vi.mock("../../utils/querySettings", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../../utils/querySettings")>()),
   useGetSettings: () => ({ data: settingsMock() }),
   useSetSetting: (key: string) => ({
     mutate: (value: unknown) => setSettingMutate(key, value),

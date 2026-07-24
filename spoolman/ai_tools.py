@@ -50,6 +50,71 @@ class ToolError(Exception):
     """A tool could not run; the message is safe to show the user and feed back to the model."""
 
 
+# --- Argument coercion -------------------------------------------------------------
+#
+# Tool arguments arrive from a language model, so they are untrusted in shape as well as
+# in value: a required key can be missing, a number can arrive as "12" or as "the black
+# one", and a small local model will do both. Every coercion below raises ToolError, which
+# callers already feed back to the model so it can correct itself — a bare int()/args[key]
+# would raise ValueError/KeyError instead and abort the whole turn.
+
+
+def _arg_int(args: dict, key: str, *, default: int | None = None) -> int:
+    """Coerce args[key] to an int. Missing/blank falls back to default, or errors if none."""
+    value = args.get(key)
+    if value is None or (isinstance(value, str) and not value.strip()):
+        if default is not None:
+            return default
+        raise ToolError(f"The '{key}' argument is required.")
+    if isinstance(value, bool):
+        raise ToolError(f"The '{key}' argument must be a number.")
+    try:
+        return int(value)
+    except (TypeError, ValueError) as exc:
+        raise ToolError(f"The '{key}' argument must be a number, got {value!r}.") from exc
+
+
+def _arg_float(args: dict, key: str) -> float:
+    """Coerce a required args[key] to a float, erroring with a model-readable message."""
+    value = args.get(key)
+    if value is None or (isinstance(value, str) and not value.strip()):
+        raise ToolError(f"The '{key}' argument is required.")
+    if isinstance(value, bool):
+        raise ToolError(f"The '{key}' argument must be a number.")
+    try:
+        return float(value)
+    except (TypeError, ValueError) as exc:
+        raise ToolError(f"The '{key}' argument must be a number, got {value!r}.") from exc
+
+
+def _optional_float(args: dict, key: str) -> float | None:
+    """Coerce an optional args[key] to a float; absent stays absent, junk still errors."""
+    if args.get(key) is None:
+        return None
+    return _arg_float(args, key)
+
+
+def _arg_limit(args: dict) -> int:
+    """Coerce the shared 'limit' argument into the [1, _MAX_LIMIT] band."""
+    return min(max(_arg_int(args, "limit", default=_DEFAULT_LIMIT), 1), _MAX_LIMIT)
+
+
+def _arg_bool(args: dict, key: str, *, default: bool = False) -> bool:
+    """Coerce args[key] to a bool, accepting the JSON-ish strings models like to emit."""
+    value = args.get(key)
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        lowered = value.strip().lower()
+        if lowered in ("true", "yes", "1"):
+            return True
+        if lowered in ("false", "no", "0", ""):
+            return False
+    raise ToolError(f"The '{key}' argument must be true or false, got {value!r}.")
+
+
 @dataclass
 class ToolContext:
     """Everything a tool needs to run: a DB session and whether writes are permitted."""
@@ -177,8 +242,8 @@ async def _low_stock_fallback_g(db: AsyncSession) -> float:
 
 async def _run_find_spools(ctx: ToolContext, args: dict) -> dict:
     """Search spools by the same fields the spool list exposes; sum their remaining weight."""
-    limit = min(int(args.get("limit") or _DEFAULT_LIMIT), _MAX_LIMIT)
-    include_archived = bool(args.get("include_archived", False))
+    limit = _arg_limit(args)
+    include_archived = _arg_bool(args, "include_archived")
 
     filament_ids: list[int] | None = None
     color_hex = args.get("color_hex")
@@ -218,8 +283,8 @@ async def _run_find_spools(ctx: ToolContext, args: dict) -> dict:
 
 async def _run_find_filaments(ctx: ToolContext, args: dict) -> dict:
     """List filaments with rolled-up remaining weight, low-stock status, and on-order signal."""
-    limit = min(int(args.get("limit") or _DEFAULT_LIMIT), _MAX_LIMIT)
-    low_stock_only = bool(args.get("low_stock_only", False))
+    limit = _arg_limit(args)
+    low_stock_only = _arg_bool(args, "low_stock_only")
 
     items, _ = await filament_db.find(
         db=ctx.db,
@@ -293,12 +358,22 @@ def _spool_update_view(spool: models.Spool) -> dict:
 
 
 def _requested_changes(args: dict) -> dict:
-    """Return the subset of updatable fields the caller actually provided."""
-    return {key: args[key] for key in _UPDATABLE_FIELDS if key in args and args[key] is not None}
+    """Return the subset of updatable fields the caller actually provided, typed.
+
+    ``price`` and ``archived`` are coerced here rather than handed to the database layer
+    as whatever the model emitted ("12,50", "yes"), so a bad value is a ToolError the
+    model can correct instead of a failure deeper down.
+    """
+    changes = {key: args[key] for key in _UPDATABLE_FIELDS if key in args and args[key] is not None}
+    if "price" in changes:
+        changes["price"] = _arg_float(args, "price")
+    if "archived" in changes:
+        changes["archived"] = _arg_bool(args, "archived")
+    return changes
 
 
 async def _preview_update_spool(ctx: ToolContext, args: dict) -> ConfirmCard:
-    spool = await _get_spool(ctx, int(args["spool_id"]))
+    spool = await _get_spool(ctx, _arg_int(args, "spool_id"))
     before = _spool_update_view(spool)
     changes = _requested_changes(args)
     if not changes:
@@ -316,7 +391,7 @@ async def _preview_update_spool(ctx: ToolContext, args: dict) -> ConfirmCard:
 
 async def _execute_update_spool(ctx: ToolContext, args: dict) -> ExecutionResult:
     _require_write(ctx)
-    spool_id = int(args["spool_id"])
+    spool_id = _arg_int(args, "spool_id")
     spool = await _get_spool(ctx, spool_id)
     before = _spool_update_view(spool)
     changes = _requested_changes(args)
@@ -332,8 +407,8 @@ async def _execute_update_spool(ctx: ToolContext, args: dict) -> ExecutionResult
 
 
 async def _preview_consume_spool(ctx: ToolContext, args: dict) -> ConfirmCard:
-    spool = await _get_spool(ctx, int(args["spool_id"]))
-    delta = float(args["use_weight_g"])
+    spool = await _get_spool(ctx, _arg_int(args, "spool_id"))
+    delta = _arg_float(args, "use_weight_g")
     remaining = _remaining_weight(spool)
     after_remaining = None if remaining is None else round(max(remaining - delta, 0.0), 1)
     verb = "Consume" if delta >= 0 else "Add back"
@@ -348,8 +423,8 @@ async def _preview_consume_spool(ctx: ToolContext, args: dict) -> ConfirmCard:
 
 async def _execute_consume_spool(ctx: ToolContext, args: dict) -> ExecutionResult:
     _require_write(ctx)
-    spool_id = int(args["spool_id"])
-    delta = float(args["use_weight_g"])
+    spool_id = _arg_int(args, "spool_id")
+    delta = _arg_float(args, "use_weight_g")
     spool = await _get_spool(ctx, spool_id)
     used_before = spool.used_weight
     new_used = max(used_before + delta, 0.0)
@@ -366,22 +441,22 @@ async def _execute_consume_spool(ctx: ToolContext, args: dict) -> ExecutionResul
 
 async def _preview_set_used_weight(ctx: ToolContext, args: dict) -> ConfirmCard:
     """Preview the undo counterpart of consume_spool: setting used_weight to an exact value."""
-    spool = await _get_spool(ctx, int(args["spool_id"]))
+    spool = await _get_spool(ctx, _arg_int(args, "spool_id"))
     return ConfirmCard(
         tool="set_spool_used_weight",
         title=f"Restore usage on spool #{spool.id}",
-        summary=f"used_weight_g -> {float(args['used_weight_g']):g}",
+        summary=f"used_weight_g -> {_arg_float(args, 'used_weight_g'):g}",
         before={"used_weight_g": round(spool.used_weight, 1)},
-        after={"used_weight_g": float(args["used_weight_g"])},
+        after={"used_weight_g": _arg_float(args, "used_weight_g")},
     )
 
 
 async def _execute_set_used_weight(ctx: ToolContext, args: dict) -> ExecutionResult:
     _require_write(ctx)
-    spool_id = int(args["spool_id"])
+    spool_id = _arg_int(args, "spool_id")
     spool = await _get_spool(ctx, spool_id)
     used_before = spool.used_weight
-    new_used = max(float(args["used_weight_g"]), 0.0)
+    new_used = max(_arg_float(args, "used_weight_g"), 0.0)
     await spool_db.update(db=ctx.db, spool_id=spool_id, data={"used_weight": new_used})
     return ExecutionResult(
         summary=f"Set spool #{spool_id} used weight to {new_used:g} g.",
@@ -391,7 +466,7 @@ async def _execute_set_used_weight(ctx: ToolContext, args: dict) -> ExecutionRes
 
 
 async def _preview_create_spool(ctx: ToolContext, args: dict) -> ConfirmCard:
-    filament_id = int(args["filament_id"])
+    filament_id = _arg_int(args, "filament_id")
     try:
         fil = await filament_db.get_by_id(ctx.db, filament_id)
     except ItemNotFoundError as exc:
@@ -400,8 +475,8 @@ async def _preview_create_spool(ctx: ToolContext, args: dict) -> ConfirmCard:
         "filament": " - ".join(p for p in (fil.vendor.name if fil.vendor else None, fil.name) if p) or fil.material,
         "location": _clean(args.get("location")),
         "lot_nr": _clean(args.get("lot_nr")),
-        "initial_weight_g": args.get("initial_weight_g"),
-        "price": args.get("price"),
+        "initial_weight_g": _optional_float(args, "initial_weight_g"),
+        "price": _optional_float(args, "price"),
     }
     return ConfirmCard(
         tool="create_spool",
@@ -414,15 +489,15 @@ async def _preview_create_spool(ctx: ToolContext, args: dict) -> ConfirmCard:
 
 async def _execute_create_spool(ctx: ToolContext, args: dict) -> ExecutionResult:
     _require_write(ctx)
-    filament_id = int(args["filament_id"])
+    filament_id = _arg_int(args, "filament_id")
     try:
         created = await spool_db.create(
             db=ctx.db,
             filament_id=filament_id,
             location=_clean(args.get("location")),
             lot_nr=_clean(args.get("lot_nr")),
-            initial_weight=args.get("initial_weight_g"),
-            price=args.get("price"),
+            initial_weight=_optional_float(args, "initial_weight_g"),
+            price=_optional_float(args, "price"),
         )
     except (ItemNotFoundError, ItemCreateError) as exc:
         raise ToolError(str(exc)) from exc
@@ -434,7 +509,7 @@ async def _execute_create_spool(ctx: ToolContext, args: dict) -> ExecutionResult
 
 
 async def _preview_delete_spool(ctx: ToolContext, args: dict) -> ConfirmCard:
-    spool = await _get_spool(ctx, int(args["spool_id"]))
+    spool = await _get_spool(ctx, _arg_int(args, "spool_id"))
     return ConfirmCard(
         tool="delete_spool",
         title=f"Delete spool #{spool.id} ({_combined_name(spool)})",
@@ -447,7 +522,7 @@ async def _preview_delete_spool(ctx: ToolContext, args: dict) -> ConfirmCard:
 
 async def _execute_delete_spool(ctx: ToolContext, args: dict) -> ExecutionResult:
     _require_write(ctx)
-    spool_id = int(args["spool_id"])
+    spool_id = _arg_int(args, "spool_id")
     await _get_spool(ctx, spool_id)  # 404s as a clean ToolError before deleting
     await spool_db.delete(ctx.db, spool_id)
     return ExecutionResult(summary=f"Deleted spool #{spool_id}.", data={"spool_id": spool_id}, undo=None)

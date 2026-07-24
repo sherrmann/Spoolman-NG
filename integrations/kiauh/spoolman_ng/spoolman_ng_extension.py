@@ -106,6 +106,10 @@ class SpoolmanNgExtension(BaseExtension):
                 "downloaded now.",
                 "Needs a 64-bit OS (amd64/arm64) and ideally 8 GB+ RAM or a GPU. It is "
                 "skipped automatically on 32-bit ARM.",
+                "This runs Ollama's own installer from https://ollama.com/install.sh — "
+                "third-party code, not maintained by Spoolman — which uses sudo to add a "
+                "system user and a systemd service. Answer no to skip it; you can always "
+                "point SPOOLMAN_AI_BASE_URL at an Ollama you installed yourself.",
             ],
         )
         with_ai = get_confirm("Also set up local AI (Ollama)?", default_choice=False)

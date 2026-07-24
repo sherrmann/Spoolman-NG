@@ -384,6 +384,23 @@ database types.
 | `EXTERNAL_DB_URL` | `https://sherrmann.github.io/SpoolmanDB/` | Source of the community filament catalog ([SpoolmanDB](https://github.com/sherrmann/SpoolmanDB)). Set to an empty string to disable syncing. |
 | `EXTERNAL_DB_SYNC_INTERVAL` | `3600` | Catalog sync interval in seconds; `0` syncs only at startup. |
 
+### AI
+
+Every AI feature is off by default and stays invisible until you both configure an
+endpoint and enable the feature under **Settings → AI**. Spoolman never runs a model
+itself. These variables override the equivalent Settings → AI fields, which are
+shown locked in the UI when set. Full guide: [ai.md](ai.md).
+
+| Variable | Default | Description |
+|---|---|---|
+| `SPOOLMAN_AI_BASE_URL` | — | OpenAI-compatible endpoint, e.g. `http://gaming-pc:11434/v1` for Ollama. |
+| `SPOOLMAN_AI_API_KEY` | — | Bearer token for that endpoint (Ollama and LM Studio need none). Write-only: no endpoint ever returns it. |
+| `SPOOLMAN_AI_MODEL` | — | Model used for chat, tool calling and natural-language search. |
+| `SPOOLMAN_AI_VISION_MODEL` | — | Model used for photo intake; falls back to the chat model. |
+| `SPOOLMAN_AI_STT_BASE_URL` | — | Speech-to-text endpoint for voice input, e.g. `http://whisper:8000/v1`. Separate from the chat endpoint. |
+| `SPOOLMAN_AI_STT_API_KEY` | — | Bearer token for the transcription endpoint. Write-only, like the chat key. |
+| `SPOOLMAN_AI_STT_MODEL` | — | Transcription model, e.g. `whisper-1`. |
+
 ### Security-relevant
 
 | Variable | Default | Description |

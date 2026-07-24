@@ -18,7 +18,10 @@ vi.mock("@refinedev/core", () => ({
   useGetLocale: () => () => "en",
 }));
 vi.mock("react-router", () => ({ useLocation: () => ({ pathname: "/spool" }) }));
-vi.mock("../utils/querySettings", () => ({ useGetSettings: () => ({ data: settingsMock() }) }));
+vi.mock("../utils/querySettings", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../utils/querySettings")>()),
+  useGetSettings: () => ({ data: settingsMock() }),
+}));
 vi.mock("../utils/queryAI", () => ({
   streamChat: (body: ChatTurnRequest, onEvent: (e: ChatEvent) => void) => streamChat(body, onEvent),
   useChatAction: () => ({ mutateAsync: vi.fn(), isPending: false }),

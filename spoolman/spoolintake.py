@@ -2,17 +2,18 @@
 
 Extraction and matching are deliberately separate stages joined only by the
 extraction JSON contract, so the extraction step is swappable — the configured
-server-side vision model today, on-device extraction in the companion app later
-(brainstorm Cluster F5) — while matching stays plain fuzzy search with no LLM
-involved: the user's **own filament library first** (a known filament just gains a
-spool, no duplicate records), then the **locally-synced SpoolmanDB catalog**, with
-raw extraction as the caller's fallback.
+server-side vision model today, on-device extraction in the companion app later —
+while matching stays plain fuzzy search with no LLM involved: the user's **own
+filament library first** (a known filament just gains a spool, no duplicate
+records), then the **locally-synced SpoolmanDB catalog**, with raw extraction as
+the caller's fallback.
 
-Photos are ephemeral by design (brainstorm decision #9): image bytes exist only as
-request-scoped variables on their way to the configured endpoint, are never logged,
-and are never written to disk or database.
+Photos are ephemeral by design: image bytes exist only as request-scoped variables
+on their way to the configured endpoint, are never logged, and are never written to
+disk or database.
 """
 
+import asyncio
 import difflib
 import json
 import logging
@@ -27,7 +28,7 @@ from spoolman.database import filament
 
 logger = logging.getLogger(__name__)
 
-#: The extraction JSON contract, shared with future on-device extractors (F5).
+#: The extraction JSON contract, shared with future on-device extractors.
 EXTRACTION_KEYS = (
     "vendor",
     "name",
@@ -218,30 +219,28 @@ _CATALOG_MIN_SCORE = 0.5
 _MATCH_LIMIT = 5
 
 
-async def match_library(db: AsyncSession, extraction: dict) -> list[dict]:
-    """Rank the user's own filaments against the extraction (best first)."""
-    items, _ = await filament.find(db=db)
-    aggregates = await filament.get_aggregates(db, [item.id for item in items])
+def _rank_library(rows: list[dict], extraction: dict, aggregates: dict) -> list[dict]:
+    """Score already-loaded filament rows against the extraction (best first).
+
+    Split out from the async wrapper because this is the CPU-bound half: difflib over
+    every filament in the library. Kept pure so it can run off the event loop.
+    """
     candidates = []
-    for item in items:
+    for row in rows:
         score = score_candidate(
             extraction,
-            vendor=item.vendor.name if item.vendor is not None else None,
-            name=item.name,
-            material=item.material,
-            weight_g=item.weight,
+            vendor=row["vendor"],
+            name=row["name"],
+            material=row["material"],
+            weight_g=row["weight_g"],
         )
         if score < _LIBRARY_MIN_SCORE:
             continue
-        spool_count, remaining = aggregates.get(item.id, (0, 0.0))
+        spool_count, remaining = aggregates.get(row["filament_id"], (0, 0.0))
         candidates.append(
             {
                 "kind": "library",
-                "filament_id": item.id,
-                "vendor": item.vendor.name if item.vendor is not None else None,
-                "name": item.name,
-                "material": item.material,
-                "weight_g": item.weight,
+                **row,
                 "active_spool_count": spool_count,
                 "remaining_weight_g": round(remaining, 1),
                 "match_percent": int(score * 100),
@@ -249,6 +248,25 @@ async def match_library(db: AsyncSession, extraction: dict) -> list[dict]:
         )
     candidates.sort(key=lambda entry: -entry["match_percent"])
     return candidates[:_MATCH_LIMIT]
+
+
+async def match_library(db: AsyncSession, extraction: dict) -> list[dict]:
+    """Rank the user's own filaments against the extraction (best first)."""
+    items, _ = await filament.find(db=db)
+    aggregates = await filament.get_aggregates(db, [item.id for item in items])
+    rows = [
+        {
+            "filament_id": item.id,
+            "vendor": item.vendor.name if item.vendor is not None else None,
+            "name": item.name,
+            "material": item.material,
+            "weight_g": item.weight,
+        }
+        for item in items
+    ]
+    # Off the event loop: a large library is thousands of difflib comparisons, which would
+    # otherwise stall every other request for the duration.
+    return await asyncio.to_thread(_rank_library, rows, extraction, aggregates)
 
 
 @dataclass
@@ -287,7 +305,11 @@ def load_catalog() -> list[dict]:
 
 
 def match_catalog(extraction: dict) -> list[dict]:
-    """Rank SpoolmanDB catalog entries against the extraction (best first)."""
+    """Rank SpoolmanDB catalog entries against the extraction (best first).
+
+    Synchronous and CPU-bound (difflib across the whole catalog, which runs to thousands
+    of entries); :func:`build_matches` runs it off the event loop.
+    """
     candidates = []
     for entry in load_catalog():
         score = score_candidate(
@@ -317,4 +339,7 @@ def match_catalog(extraction: dict) -> list[dict]:
 
 async def build_matches(db: AsyncSession, extraction: dict) -> dict:
     """Run both match stages: the user's library first, then the catalog."""
-    return {"library": await match_library(db, extraction), "catalog": match_catalog(extraction)}
+    return {
+        "library": await match_library(db, extraction),
+        "catalog": await asyncio.to_thread(match_catalog, extraction),
+    }

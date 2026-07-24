@@ -169,7 +169,11 @@ if [ "$with_ai" == "yes" ]; then
     total_mem_gb=0
     if [ -r /proc/meminfo ]; then
         total_mem_kb=$(awk '/^MemTotal:/ {print $2}' /proc/meminfo)
-        total_mem_gb=$(( total_mem_kb / 1024 / 1024 ))
+        # Guard the arithmetic: a missing/odd MemTotal would otherwise abort the whole
+        # script under `set -e`, failing an install over a cosmetic RAM hint.
+        if [[ "$total_mem_kb" =~ ^[0-9]+$ ]]; then
+            total_mem_gb=$(( total_mem_kb / 1024 / 1024 ))
+        fi
     fi
 
     if [[ "$ai_arch" == "armv7l" || "$ai_arch" == "armv6l" || "$ai_arch" == "armhf" ]]; then
@@ -187,7 +191,11 @@ if [ "$with_ai" == "yes" ]; then
         if command -v ollama &> /dev/null; then
             echo -e "${GREEN}Ollama already installed. Skipping the runtime install.${NC}"
         else
-            echo -e "${GREEN}Installing the Ollama AI runtime via its official installer...${NC}"
+            echo -e "${ORANGE}This runs Ollama's official installer from https://ollama.com/install.sh${NC}"
+            echo -e "${ORANGE}— third-party code, not maintained by Spoolman. It uses sudo to add a${NC}"
+            echo -e "${ORANGE}system user and a systemd service. Skip --with-ai if you'd rather${NC}"
+            echo -e "${ORANGE}install Ollama yourself and just set SPOOLMAN_AI_BASE_URL in .env.${NC}"
+            echo -e "${GREEN}Installing the Ollama AI runtime...${NC}"
             curl -fsSL https://ollama.com/install.sh | sh
         fi
 

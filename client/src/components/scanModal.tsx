@@ -3,7 +3,7 @@ import loadable from "@loadable/component";
 import { useTranslate } from "@refinedev/core";
 import { FloatButton, Modal, Segmented, Space, Spin, Typography } from "antd";
 import { useEffect, useState } from "react";
-import { useGetSettings } from "../utils/querySettings";
+import { parseBooleanSettingValue, useGetSettings } from "../utils/querySettings";
 import { NfcScannerPanel, useNfcAvailability } from "./nfcScannerModal";
 import { PhotoIntakePanel } from "./photoIntake";
 
@@ -44,7 +44,7 @@ const ScanModal = () => {
   // (this header-mounted modal is its one always-on consumer), so it fetches once
   // per session, not per page.
   const settings = useGetSettings();
-  const photoAvailable = settings.data?.ai_feature_scan_to_spool?.value === "true";
+  const photoAvailable = parseBooleanSettingValue(settings.data?.ai_feature_scan_to_spool?.value);
 
   // If a mode stops being available while the modal is open, fall back to QR.
   useEffect(() => {
