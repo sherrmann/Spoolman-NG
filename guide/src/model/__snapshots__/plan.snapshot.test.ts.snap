@@ -277,6 +277,91 @@ server: http://<spoolman-host>:7912
 }
 `;
 
+exports[`plan snapshots > compose-sqlite-ai-sidecar 1`] = `
+{
+  "artifacts": [
+    {
+      "content": "services:
+  spoolman:
+    image: ghcr.io/sherrmann/spoolman-ng:latest # Also on Docker Hub: cookiemonster95/spoolman-ng:latest
+    restart: unless-stopped
+    volumes:
+      # Keeps your database outside the container lifecycle. Do NOT modify the target path.
+      - ./data:/home/app/.local/share/spoolman
+    ports:
+      - "7912:8000"
+    environment:
+      - SPOOLMAN_AI_BASE_URL=http://ollama:11434/v1 # the bundled Ollama sidecar
+    depends_on:
+      ollama:
+        condition: service_started
+
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    volumes:
+      # Model weights persist here — pull them from Settings → AI once it's up.
+      - ollama-data:/root/.ollama
+    # Uncomment to use an NVIDIA GPU (needs the NVIDIA Container Toolkit on the host):
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+volumes:
+  ollama-data:
+",
+      "filename": "docker-compose.yml",
+      "id": "compose",
+      "language": "yaml",
+      "title": "docker-compose.yml",
+    },
+  ],
+  "steps": [
+    {
+      "artifactIds": [
+        "compose",
+      ],
+      "body": "Create an empty directory (e.g. ~/spoolman) and save this file in it as docker-compose.yml.",
+      "id": "compose-file",
+      "notes": undefined,
+      "title": "Create a folder and save docker-compose.yml",
+    },
+    {
+      "body": "Then open http://<host>:7912.",
+      "commands": [
+        "docker compose up -d",
+      ],
+      "id": "start",
+      "notes": [
+        {
+          "id": "armv7-best-effort",
+          "level": "info",
+          "text": "On 32-bit ARM (armv7, e.g. older Raspberry Pi OS) support is best-effort — amd64 and arm64 are the recommended targets. A 64-bit OS is worth it on Pi 3B+/4 hardware.",
+        },
+      ],
+      "title": "Start it",
+    },
+    {
+      "body": "Your compose file adds a local Ollama service and points Spoolman at it (SPOOLMAN_AI_BASE_URL) — nothing leaves your machine. Ollama starts empty: open Settings → AI in the web UI and pull a recommended model to switch on chat, natural-language search and label scanning. Spoolman manages the models; it never touches the runtime.",
+      "id": "ai-models",
+      "notes": [
+        {
+          "id": "ai-first-pull",
+          "level": "info",
+          "text": "The first model is a few GB and runs in the Ollama container — a GPU (or 8 GB+ RAM for CPU-only) makes it usable. You can also point SPOOLMAN_AI_BASE_URL at an Ollama box elsewhere on your network and drop the sidecar.",
+        },
+      ],
+      "title": "Turn on the AI features",
+    },
+  ],
+  "warnings": [],
+}
+`;
+
 exports[`plan snapshots > compose-sqlite-caddy-token 1`] = `
 {
   "artifacts": [

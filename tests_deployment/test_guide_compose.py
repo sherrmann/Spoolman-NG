@@ -58,6 +58,11 @@ DB_PRESETS = [
     ("compose-mysql-nfc-puid-tz", "mysql"),
 ]
 
+#: The local-AI preset (#364, F1): a bundled Ollama sidecar the wizard points
+#: SPOOLMAN_AI_BASE_URL at. Like the DB sidecar recipes, this compose block exists
+#: nowhere else, so it's booted for real and smoke-tested against `/v1/models`.
+AI_PRESET = "compose-sqlite-ai-sidecar"
+
 
 @pytest.fixture(scope="module")
 def guide_matrix(tmp_path_factory: pytest.TempPathFactory) -> Path:
@@ -252,3 +257,63 @@ def test_database_sidecar_stack_boots(_stack: Stack) -> None:
     assert _sidecar_spool_count(project, compose_file, expected_db, _stack.db_password) >= 1, (
         f"spool did not land in the {expected_db} sidecar database"
     )
+
+
+@pytest.mark.slow
+def test_ai_sidecar_stack_boots(guide_matrix: Path, tmp_path: Path) -> None:
+    """The wizard's Ollama sidecar boots and answers the OpenAI-compatible endpoint.
+
+    Booting a real ``ollama/ollama`` image is a heavy pull, hence ``slow``. The smoke
+    is deliberately model-free: we prove the sidecar the wizard points Spoolman at is a
+    genuine Ollama server (``/v1/models`` returns an OpenAI-shaped, initially empty list)
+    and that Spoolman itself comes up healthy with ``SPOOLMAN_AI_BASE_URL`` wired in.
+    Pulling a model is a separate, multi-GB concern the settings UI owns (#364, F2).
+    """
+    source = (guide_matrix / AI_PRESET / "docker-compose.yml").read_text()
+    image = os.environ.get("SPOOLMAN_IMAGE", "ghcr.io/sherrmann/spoolman-ng:latest")
+
+    # Reuse the shared prepare (spoolman image/port, leak label); then expose the
+    # otherwise-internal Ollama port on an ephemeral loopback port so we can smoke it.
+    prepared, _ = _prepare(source, image=image, db_password=secrets.token_hex(16))
+    doc = yaml.safe_load(prepared)
+    doc["services"]["ollama"]["ports"] = ["127.0.0.1::11434"]
+
+    (tmp_path / "data").mkdir()
+    (tmp_path / "data").chmod(0o777)
+    compose_file = tmp_path / "docker-compose.yml"
+    compose_file.write_text(yaml.safe_dump(doc, sort_keys=False))
+
+    project = "spoolman-deploy-guide-ai-sidecar"
+    up = _compose(project, compose_file, "up", "-d", timeout=600, check=False)
+    try:
+        if up.returncode != 0:
+            logs = _compose(project, compose_file, "logs", "--tail", "80", check=False)
+            pytest.fail(
+                f"`docker compose up` failed for {AI_PRESET}:\n{up.stderr[-1500:]}\nlogs:\n{logs.stdout[-2000:]}"
+            )
+
+        # Spoolman comes up healthy with the AI base URL in its environment.
+        sp_port = _compose(project, compose_file, "port", "spoolman", "8000").stdout.strip().splitlines()[0]
+        wait_for(
+            lambda: http_get(f"http://{sp_port}/api/v1/health", timeout=5)[0] == 200,
+            timeout=180,
+            what="the AI-sidecar stack's Spoolman to serve",
+        )
+
+        # The bundled Ollama sidecar answers the exact endpoint SPOOLMAN_AI_BASE_URL points at.
+        ol_port = _compose(project, compose_file, "port", "ollama", "11434").stdout.strip().splitlines()[0]
+        wait_for(
+            lambda: http_get(f"http://{ol_port}/v1/models", timeout=5)[0] == 200,
+            timeout=180,
+            what="the Ollama sidecar to serve /v1/models",
+        )
+        status, body = http_get(f"http://{ol_port}/v1/models", timeout=10)
+        assert status == 200, f"/v1/models returned {status}: {body[:300]}"
+        payload = json.loads(body)
+        # OpenAI-compatible models listing. Ollama returns data: null (not []) with no
+        # model pulled, so we assert the envelope shape, not a populated list.
+        assert payload.get("object") == "list", f"unexpected /v1/models shape: {body[:300]}"
+        assert "data" in payload, f"/v1/models missing a data field: {body[:300]}"
+    finally:
+        if not keep_resources():
+            _compose(project, compose_file, "down", "-v", "--remove-orphans", timeout=120, check=False)

@@ -21,6 +21,10 @@ vi.mock("../../utils/queryAI", () => ({
   useAIProbe: () => ({ mutate: probeMutate, isPending: false, isError: false, error: null }),
   useSetAIKey: () => ({ mutate: setKeyMutate, mutateAsync: vi.fn(), isPending: false }),
   useSetSTTKey: () => ({ mutate: vi.fn(), mutateAsync: vi.fn(), isPending: false }),
+  // The managed-pull section renders when the probe reports an Ollama endpoint; it has its
+  // own dedicated test file, so here we only stub the two exports it reaches for.
+  useOllamaModels: () => ({ data: { is_ollama: true, installed: [] } }),
+  pullOllamaModel: vi.fn(),
 }));
 vi.mock("../../utils/querySettings", () => ({
   useGetSettings: () => ({ data: settingsMock() }),

@@ -41,6 +41,31 @@ function dbServiceLines(database: "postgres" | "mysql"): string[] {
 }
 
 /**
+ * The local-AI sidecar (#364, F1). Runs Ollama alongside Spoolman so chat, NL
+ * search and label scanning work with nothing leaving the machine. amd64/arm64
+ * only — Ollama publishes no 32-bit ARM image, so rules.ts refuses armv7 before
+ * this is ever emitted. We manage models (Settings → AI), never the runtime.
+ */
+function ollamaServiceLines(): string[] {
+  return [
+    "  ollama:",
+    "    image: ollama/ollama:latest",
+    "    restart: unless-stopped",
+    "    volumes:",
+    "      # Model weights persist here — pull them from Settings → AI once it's up.",
+    "      - ollama-data:/root/.ollama",
+    "    # Uncomment to use an NVIDIA GPU (needs the NVIDIA Container Toolkit on the host):",
+    "    # deploy:",
+    "    #   resources:",
+    "    #     reservations:",
+    "    #       devices:",
+    "    #         - driver: nvidia",
+    "    #           count: all",
+    "    #           capabilities: [gpu]",
+  ];
+}
+
+/**
  * Assembles a docker-compose.yml. The SQLite/no-extras output intentionally
  * matches the canonical root docker-compose.yml (drift-tested semantically).
  */
@@ -77,6 +102,7 @@ export function buildCompose(cfg: WizardConfig): string {
     env.push(`SPOOLMAN_API_TOKEN=${API_TOKEN_PLACEHOLDER} # generate one: openssl rand -hex 32`);
   }
   if (cfg.extras.nfc) env.push("SPOOLMAN_NFC_ENABLED=TRUE # server-side USB NFC reader — see docs/nfc.md");
+  if (cfg.extras.ai) env.push("SPOOLMAN_AI_BASE_URL=http://ollama:11434/v1 # the bundled Ollama sidecar");
   if (env.length > 0) {
     lines.push("    environment:");
     for (const entry of env) lines.push(`      - ${entry}`);
@@ -99,16 +125,25 @@ export function buildCompose(cfg: WizardConfig): string {
     lines.push("      - traefik.http.services.spoolman.loadbalancer.server.port=8000");
   }
 
+  // Sidecars (db, ollama) each contribute a depends_on entry, a service block and
+  // a named volume — collected here so any combination lays out correctly.
+  const dependsOn: string[] = [];
+  const sidecars: string[] = [];
+  const volumes: string[] = [];
   if (externalDb) {
-    lines.push("    depends_on:");
-    lines.push("      db:");
-    lines.push("        condition: service_healthy");
-    lines.push("");
-    lines.push(...dbServiceLines(cfg.database as "postgres" | "mysql"));
-    lines.push("");
-    lines.push("volumes:");
-    lines.push("  db-data:");
+    dependsOn.push("      db:", "        condition: service_healthy");
+    sidecars.push("", ...dbServiceLines(cfg.database as "postgres" | "mysql"));
+    volumes.push("  db-data:");
   }
+  if (cfg.extras.ai) {
+    dependsOn.push("      ollama:", "        condition: service_started");
+    sidecars.push("", ...ollamaServiceLines());
+    volumes.push("  ollama-data:");
+  }
+
+  if (dependsOn.length > 0) lines.push("    depends_on:", ...dependsOn);
+  lines.push(...sidecars);
+  if (volumes.length > 0) lines.push("", "volumes:", ...volumes);
 
   return `${lines.join("\n")}\n`;
 }

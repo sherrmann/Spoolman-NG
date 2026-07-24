@@ -153,6 +153,75 @@ export function useSetSTTKey() {
   return useSetKey("stt_api_key");
 }
 
+// --- Managed Ollama model pull (#364, F2) ------------------------------------------
+
+export interface OllamaModels {
+  is_ollama: boolean;
+  installed: string[];
+}
+
+export function useOllamaModels(enabled: boolean) {
+  return useQuery<OllamaModels>({
+    queryKey: ["ai-ollama-models"],
+    enabled,
+    queryFn: async () => {
+      const response = await apiFetch(`${getAPIURL()}/ai/ollama/models`);
+      if (!response.ok) {
+        throw new Error((await response.json().catch(() => ({}))).message ?? `HTTP ${response.status}`);
+      }
+      return response.json();
+    },
+  });
+}
+
+export interface OllamaPullProgress {
+  status: string;
+  total: number | null;
+  completed: number | null;
+  percent: number | null;
+}
+
+export type OllamaPullEvent =
+  | { event: "progress"; data: OllamaPullProgress }
+  | { event: "error"; data: { message: string } }
+  | { event: "done"; data: Record<string, never> };
+
+/**
+ * Stream one Ollama model pull, invoking `onEvent` for each progress frame. Resolves when
+ * the stream ends (a `done` event is always last). Throws on a non-200 (gating) response.
+ */
+export async function pullOllamaModel(
+  model: string,
+  onEvent: (event: OllamaPullEvent) => void,
+  signal?: AbortSignal,
+): Promise<void> {
+  const response = await apiFetch(`${getAPIURL()}/ai/ollama/pull`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ model }),
+    signal,
+  });
+  if (!response.ok || !response.body) {
+    const payload = await response.json().catch(() => ({}));
+    throw new Error(payload.detail ?? payload.message ?? `HTTP ${response.status}`);
+  }
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    let boundary = buffer.indexOf("\n\n");
+    while (boundary !== -1) {
+      const parsed = parseSseBlock(buffer.slice(0, boundary));
+      buffer = buffer.slice(boundary + 2);
+      if (parsed) onEvent(parsed as unknown as OllamaPullEvent);
+      boundary = buffer.indexOf("\n\n");
+    }
+  }
+}
+
 // --- Voice transcription (#363) ----------------------------------------------------
 
 export function useTranscribe() {

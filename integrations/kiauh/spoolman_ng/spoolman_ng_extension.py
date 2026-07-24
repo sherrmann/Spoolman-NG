@@ -96,7 +96,21 @@ class SpoolmanNgExtension(BaseExtension):
             )
         spoolman_ng.set_port(port)
 
-        if not spoolman_ng.run_install_script():
+        Logger.print_dialog(
+            DialogType.INFO,
+            [
+                "Optional: set up local AI (Ollama) on this machine.",
+                "This installs the Ollama runtime and points Spoolman at it so the "
+                "chat assistant, natural-language search and label scanning work fully "
+                "offline. Models are pulled later from Settings -> AI; none are "
+                "downloaded now.",
+                "Needs a 64-bit OS (amd64/arm64) and ideally 8 GB+ RAM or a GPU. It is "
+                "skipped automatically on 32-bit ARM.",
+            ],
+        )
+        with_ai = get_confirm("Also set up local AI (Ollama)?", default_choice=False)
+
+        if not spoolman_ng.run_install_script(with_ai=with_ai):
             return
 
         self.__moonraker_integration(port)

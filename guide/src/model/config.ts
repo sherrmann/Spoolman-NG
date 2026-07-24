@@ -3,6 +3,8 @@ export type SwitchDirection = "native-to-docker" | "docker-to-native";
 export type Platform = "compose" | "native" | "ha-addon" | "helm" | "third-party-chart";
 export type Database = "sqlite" | "postgres" | "mysql";
 export type Proxy = "none" | "caddy" | "nginx" | "traefik";
+/** Host CPU architecture — only consulted for the AI sidecar (Ollama has no 32-bit ARM build). */
+export type Arch = "amd64" | "arm64" | "armv7";
 
 export interface Extras {
   /** Server-side USB NFC reader (docs/nfc.md). */
@@ -13,6 +15,10 @@ export interface Extras {
   tz: string | null;
   /** Docker-only uid/gid of the in-container user owning the data volume. */
   puidPgid: { puid: number; pgid: number } | null;
+  /** Bundle a local Ollama sidecar for AI features (#364, compose only; refused on armv7). */
+  ai: boolean;
+  /** Host CPU architecture; only consulted when `ai` is on. */
+  arch: Arch;
 }
 
 export interface WizardConfig {
@@ -39,7 +45,7 @@ export const defaultConfig: WizardConfig = {
   proxy: "none",
   subPath: null,
   installedBefore20260719: false,
-  extras: { nfc: false, apiToken: false, tz: null, puidPgid: null },
+  extras: { nfc: false, apiToken: false, tz: null, puidPgid: null, ai: false, arch: "amd64" },
 };
 
 /** The platform the generated plan targets (goal "switch" implies it). */

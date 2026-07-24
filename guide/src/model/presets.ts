@@ -49,6 +49,9 @@ export const presets: Preset[] = [
     proxy: "caddy",
     extras: { apiToken: true },
   }),
+  preset("compose-sqlite-ai-sidecar", "Compose + local AI (Ollama sidecar)", {
+    extras: { ai: true, arch: "arm64" },
+  }),
   preset("compose-migrate-upstream-postgres", "Migrate from upstream Spoolman on Compose (Postgres)", {
     goal: "migrate-upstream",
     database: "postgres",

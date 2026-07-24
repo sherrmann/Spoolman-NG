@@ -38,6 +38,22 @@ export function normalizeConfig(input: WizardConfig): NormalizedConfig {
     });
   }
 
+  // #364: Ollama publishes no 32-bit ARM image, so a local AI sidecar cannot run on
+  // armv7. Drop it and point at a remote endpoint instead rather than emitting a
+  // compose file that would never pull.
+  if (effective.extras.ai && effective.extras.arch === "armv7") {
+    effective.extras.ai = false;
+    warnings.push({
+      level: "warning",
+      id: "ai-unavailable-on-armv7",
+      text:
+        "Local AI omitted: Ollama has no 32-bit ARM (armv7) build, so the bundled sidecar cannot run on this " +
+        "host. Point SPOOLMAN_AI_BASE_URL at an Ollama server on another machine (a NAS, desktop or mini-PC) or " +
+        "any OpenAI-compatible endpoint, then configure it under Settings → AI. A 64-bit OS (arm64) on Pi 3B+/4/5 " +
+        "hardware lets the sidecar run locally.",
+    });
+  }
+
   // The one-click updater only applies to native installs; the flag is asked only there.
   if (effective.platform !== "native" || !effective.klipper || effective.goal !== "update") {
     effective.installedBefore20260719 = false;

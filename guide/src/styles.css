@@ -161,6 +161,18 @@ legend {
   flex: 1;
 }
 
+.ai-arch {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+}
+
+.field-label {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
 .steps {
   margin: 0;
   padding-left: 1.4rem;

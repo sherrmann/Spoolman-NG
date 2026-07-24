@@ -157,6 +157,29 @@ function nfcSteps(cfg: WizardConfig): Step[] {
   ];
 }
 
+function aiSteps(cfg: WizardConfig): Step[] {
+  // Only the compose path bundles the sidecar; native AI is set up by the installer
+  // (scripts/install.sh --with-ai). rules.ts has already dropped ai on armv7.
+  if (!cfg.extras.ai || cfg.platform !== "compose") return [];
+  return [
+    {
+      id: "ai-models",
+      title: "Turn on the AI features",
+      body:
+        "Your compose file adds a local Ollama service and points Spoolman at it (SPOOLMAN_AI_BASE_URL) — nothing " +
+        "leaves your machine. Ollama starts empty: open Settings → AI in the web UI and pull a recommended model to " +
+        "switch on chat, natural-language search and label scanning. Spoolman manages the models; it never touches the runtime.",
+      notes: [
+        {
+          level: "info",
+          id: "ai-first-pull",
+          text: "The first model is a few GB and runs in the Ollama container — a GPU (or 8 GB+ RAM for CPU-only) makes it usable. You can also point SPOOLMAN_AI_BASE_URL at an Ollama box elsewhere on your network and drop the sidecar.",
+        },
+      ],
+    },
+  ];
+}
+
 function freshSteps(cfg: WizardConfig): Step[] {
   const steps: Step[] = [];
   switch (cfg.platform) {
@@ -307,6 +330,7 @@ function freshSteps(cfg: WizardConfig): Step[] {
   if (cfg.klipper && cfg.platform === "native") steps.push(klipperUpdaterStep());
   if (cfg.klipper) steps.push(klipperTrackingStep(cfg));
   steps.push(...nfcSteps(cfg));
+  steps.push(...aiSteps(cfg));
   return steps;
 }
 
@@ -512,6 +536,7 @@ function switchSteps(cfg: WizardConfig): Step[] {
         title: "Once happy, remove the native install",
         body: `Disable the systemd unit and delete ~/Spoolman — keep the old data directory until you've verified the Docker install (see Uninstalling in the installation guide: ${DOCS_URL}).`,
       },
+      ...aiSteps(cfg),
     ];
   }
   // docker → native

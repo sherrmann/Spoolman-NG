@@ -28,6 +28,21 @@ if [ "$(basename "$current_dir")" = "scripts" ]; then
 fi
 
 #
+# Parse arguments (order-independent). -systemd=yes/no keeps its historic meaning
+# (KIAUH passes it positionally); --with-ai opts into a local Ollama AI runtime (#364).
+#
+systemd_option=""
+with_ai="no"
+for arg in "$@"; do
+    case "$arg" in
+        -systemd=yes) systemd_option="yes" ;;
+        -systemd=no)  systemd_option="no" ;;
+        --with-ai)    with_ai="yes" ;;
+        *) echo -e "${ORANGE}Ignoring unknown argument: $arg${NC}" ;;
+    esac
+done
+
+#
 # Install uv if not installed
 #
 local_uv_dir="$(pwd)/uv"
@@ -145,6 +160,57 @@ if [ ! -f ".env" ]; then
 fi
 
 #
+# Optional local AI (#364): install the Ollama runtime and point Spoolman at it.
+# We manage models later from Settings -> AI; the runtime is all that's set up here,
+# and no model weights are downloaded. Arch/RAM-gated — Ollama has no 32-bit ARM build.
+#
+if [ "$with_ai" == "yes" ]; then
+    ai_arch="$(uname -m)"
+    total_mem_gb=0
+    if [ -r /proc/meminfo ]; then
+        total_mem_kb=$(awk '/^MemTotal:/ {print $2}' /proc/meminfo)
+        total_mem_gb=$(( total_mem_kb / 1024 / 1024 ))
+    fi
+
+    if [[ "$ai_arch" == "armv7l" || "$ai_arch" == "armv6l" || "$ai_arch" == "armhf" ]]; then
+        # Ollama publishes no 32-bit ARM build — a local runtime cannot run here.
+        echo -e "${ORANGE}Local AI (--with-ai) is unavailable on 32-bit ARM: Ollama has no armv7 build.${NC}"
+        echo -e "${ORANGE}Run Ollama on another machine (a NAS, desktop or mini-PC) and add to your .env:${NC}"
+        echo -e "${ORANGE}  SPOOLMAN_AI_BASE_URL=http://<that-host>:11434/v1${NC}"
+        echo -e "${ORANGE}then enable features under Settings -> AI. Skipping the local AI install.${NC}"
+    else
+        if [ "$total_mem_gb" -gt 0 ] && [ "$total_mem_gb" -lt 4 ]; then
+            echo -e "${ORANGE}Note: ~${total_mem_gb} GB RAM detected. Local models still run, but stick to small ones${NC}"
+            echo -e "${ORANGE}(e.g. llama3.2:3b); 8 GB+ or a GPU is recommended for the standard models.${NC}"
+        fi
+
+        if command -v ollama &> /dev/null; then
+            echo -e "${GREEN}Ollama already installed. Skipping the runtime install.${NC}"
+        else
+            echo -e "${GREEN}Installing the Ollama AI runtime via its official installer...${NC}"
+            curl -fsSL https://ollama.com/install.sh | sh
+        fi
+
+        # The installer registers and starts a systemd unit on systemd hosts; make sure.
+        if command -v systemctl &> /dev/null && [ -d /run/systemd/system ]; then
+            $SUDO systemctl enable --now ollama &> /dev/null || true
+        fi
+
+        # Point Spoolman at the local endpoint (OpenAI-compatible path under /v1), unless
+        # the user already set one. Models are pulled later from Settings -> AI.
+        if grep -q "^SPOOLMAN_AI_BASE_URL=" .env 2> /dev/null; then
+            echo -e "${GREEN}SPOOLMAN_AI_BASE_URL already set in .env; leaving it unchanged.${NC}"
+        else
+            sed -i "/^#[[:space:]]*SPOOLMAN_AI_BASE_URL=/d" .env
+            echo "SPOOLMAN_AI_BASE_URL=http://127.0.0.1:11434/v1" >> .env
+            echo -e "${GREEN}Set SPOOLMAN_AI_BASE_URL=http://127.0.0.1:11434/v1 in .env.${NC}"
+        fi
+
+        echo -e "${GREEN}Local AI runtime ready. Open Settings -> AI in Spoolman to pull a model and turn features on.${NC}"
+    fi
+fi
+
+#
 # Add execute permissions of all files in scripts dir
 #
 echo -e "${GREEN}Adding execute permissions to all files in scripts dir...${NC}"
@@ -153,10 +219,9 @@ chmod +x scripts/*.sh
 #
 # Install systemd service
 #
-systemd_option=$1
-if [ "$systemd_option" == "-systemd=no" ]; then
+if [ "$systemd_option" == "no" ]; then
    choice="n"
-elif [ "$systemd_option" == "-systemd=yes" ]; then
+elif [ "$systemd_option" == "yes" ]; then
    choice="y"
 elif ! command -v systemctl &> /dev/null; then
    echo -e "${ORANGE}systemctl not found. Skipping systemd service installation.${NC}"
