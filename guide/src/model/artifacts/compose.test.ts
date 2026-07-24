@@ -86,6 +86,32 @@ describe("compose generator", () => {
     expect(doc.services.spoolman.environment).toContain("SPOOLMAN_API_TOKEN=change-me");
   });
 
+  it("#364 — local AI adds an Ollama sidecar, a named volume and the base-URL env", () => {
+    const doc = parsed(cfg({ extras: { ...defaultConfig.extras, ai: true, arch: "arm64" } }));
+    expect(Object.keys(doc.services)).toEqual(["spoolman", "ollama"]);
+    expect(doc.services.ollama.image).toBe("ollama/ollama:latest");
+    expect(doc.services.ollama.volumes).toEqual(["ollama-data:/root/.ollama"]);
+    expect(doc.services.spoolman.depends_on).toEqual({ ollama: { condition: "service_started" } });
+    expect(doc.services.spoolman.environment).toContain("SPOOLMAN_AI_BASE_URL=http://ollama:11434/v1");
+    expect(doc.volumes).toEqual({ "ollama-data": null });
+  });
+
+  it("#364 — AI alongside an external database lays out both sidecars and both volumes", () => {
+    const doc = parsed(cfg({ database: "postgres", extras: { ...defaultConfig.extras, ai: true } }));
+    expect(Object.keys(doc.services).sort()).toEqual(["db", "ollama", "spoolman"]);
+    expect(doc.services.spoolman.depends_on).toEqual({
+      db: { condition: "service_healthy" },
+      ollama: { condition: "service_started" },
+    });
+    expect(doc.volumes).toEqual({ "db-data": null, "ollama-data": null });
+  });
+
+  it("#364 — no AI sidecar without the extra (the default stays single-service)", () => {
+    const doc = parsed(cfg({}));
+    expect(Object.keys(doc.services)).toEqual(["spoolman"]);
+    expect(doc.services.spoolman.environment ?? []).not.toContain("SPOOLMAN_AI_BASE_URL=http://ollama:11434/v1");
+  });
+
   it("rule 1 end-to-end — Klipper + token leaves the token out of every artifact", () => {
     const plan = buildPlan(cfg({ klipper: true, extras: { ...defaultConfig.extras, apiToken: true } }));
     for (const artifact of plan.artifacts) {

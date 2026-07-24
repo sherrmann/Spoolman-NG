@@ -953,6 +953,17 @@
         "copy": "Copy config",
         "copied": "Configuration copied to the clipboard.",
         "auth_note": "If this Spoolman requires an API token, add an \"Authorization\": \"Bearer <token>\" entry under \"headers\". Read-only accounts get query tools only."
+      },
+      "models": {
+        "title": "Ollama models",
+        "hint": "Your endpoint is an Ollama server. Pull a recommended model straight from here - Spoolman manages models, never the runtime.",
+        "installed": "Installed",
+        "pull": "Pull",
+        "pulled": "Pulled {{model}}.",
+        "purpose": {
+          "chat": "chat",
+          "vision": "vision"
+        }
       }
     },
     "swatch": {

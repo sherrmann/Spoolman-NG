@@ -7,6 +7,7 @@ import { AIProbeResult, AITriState, useAIProbe, useAIStatus, useSetAIKey, useSet
 import { useGetSettings, useSetSetting } from "../../utils/querySettings";
 import { getBasePath } from "../../utils/url";
 import { AI_PRESETS } from "./aiPresets";
+import { OllamaModelsSection } from "./ollamaModels";
 
 const { Text, Paragraph } = Typography;
 
@@ -313,6 +314,8 @@ export function AISettings() {
           )}
         </div>
       )}
+
+      {capabilities?.is_ollama && <OllamaModelsSection />}
 
       <Divider orientation="left">{t("settings.ai.features.title")}</Divider>
       <Paragraph type="secondary">{t("settings.ai.features.hint")}</Paragraph>

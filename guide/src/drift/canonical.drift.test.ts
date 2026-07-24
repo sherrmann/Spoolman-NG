@@ -17,7 +17,14 @@ const kitchenSink = cfg({
   database: "postgres",
   proxy: "nginx",
   subPath: "/spoolman",
-  extras: { nfc: true, apiToken: true, tz: "Europe/Berlin", puidPgid: { puid: 99, pgid: 100 } },
+  extras: {
+    nfc: true,
+    apiToken: true,
+    tz: "Europe/Berlin",
+    puidPgid: { puid: 99, pgid: 100 },
+    ai: true,
+    arch: "amd64",
+  },
 });
 
 describe("canonical repo files stay the source of truth", () => {

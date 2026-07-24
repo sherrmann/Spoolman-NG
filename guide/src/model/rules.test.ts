@@ -29,6 +29,29 @@ describe("rule 1 — #268: Klipper + API token", () => {
   });
 });
 
+describe("#364 — local AI is refused on armv7", () => {
+  it("drops the sidecar and warns with remote-endpoint guidance on armv7", () => {
+    const { effective, warnings } = normalizeConfig(
+      cfg({ extras: { ...defaultConfig.extras, ai: true, arch: "armv7" } }),
+    );
+    expect(effective.extras.ai).toBe(false);
+    const note = warnings.find((w) => w.id === "ai-unavailable-on-armv7");
+    expect(note?.level).toBe("warning");
+    expect(note?.text).toMatch(/SPOOLMAN_AI_BASE_URL/);
+  });
+
+  it.each(["amd64", "arm64"] as const)("keeps the sidecar on %s", (arch) => {
+    const { effective, warnings } = normalizeConfig(cfg({ extras: { ...defaultConfig.extras, ai: true, arch } }));
+    expect(effective.extras.ai).toBe(true);
+    expect(warnings.map((w) => w.id)).not.toContain("ai-unavailable-on-armv7");
+  });
+
+  it("says nothing about AI when the sidecar was never requested", () => {
+    const { warnings } = normalizeConfig(cfg({ extras: { ...defaultConfig.extras, arch: "armv7" } }));
+    expect(warnings.map((w) => w.id)).not.toContain("ai-unavailable-on-armv7");
+  });
+});
+
 describe("goal switch resolves the effective platform", () => {
   it("native-to-docker targets compose", () => {
     const { effective } = normalizeConfig(

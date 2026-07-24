@@ -14,6 +14,7 @@ Three endpoints, all inert until the user configures an endpoint:
 
 import base64
 import binascii
+import json
 import logging
 from collections.abc import AsyncIterator
 from datetime import datetime
@@ -24,7 +25,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from spoolman import ai, ai_tools, aichat, nlsearch, spoolintake, voice
+from spoolman import ai, ai_tools, aichat, nlsearch, ollama, spoolintake, voice
 from spoolman.api.v1.auth import _principal, require_admin
 from spoolman.api.v1.models import Message
 from spoolman.auth import Principal
@@ -499,3 +500,93 @@ async def transcribe(
     except ai.AIRequestError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
     return TranscriptionResponse(text=text)
+
+
+# --- Managed Ollama model pull (#364, F2) ------------------------------------------
+
+
+class OllamaModelsResponse(BaseModel):
+    is_ollama: bool = Field(description="Whether the configured endpoint is an Ollama server.")
+    installed: list[str] = Field(default_factory=list, description="Model names installed on the server.")
+
+
+class OllamaPullRequest(BaseModel):
+    model: str = Field(min_length=1, max_length=200, description="The Ollama model to pull, e.g. 'qwen3:8b'.")
+
+
+def _sse_frame(event: str, data: dict) -> str:
+    return f"event: {event}\ndata: {json.dumps(data)}\n\n"
+
+
+@router.get(
+    "/ollama/models",
+    name="List installed Ollama models",
+    description=(
+        "When the configured endpoint is an Ollama server, list the models installed on it so the "
+        "UI can show recommended-vs-installed. Admin only. 409 until an endpoint is configured."
+    ),
+    responses={409: {"model": Message}, 502: {"model": Message}},
+)
+async def ollama_models(
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+    _admin: Annotated[Principal, Depends(require_admin)],
+) -> OllamaModelsResponse:
+    config = await ai.resolve_config(db)
+    if not config.base_url:
+        raise HTTPException(status_code=409, detail="No AI endpoint is configured.")
+    try:
+        installed = await ollama.list_installed_models(config)
+    except ai.AIRequestError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    if installed is None:
+        return OllamaModelsResponse(is_ollama=False)
+    return OllamaModelsResponse(is_ollama=True, installed=installed)
+
+
+@router.post(
+    "/ollama/pull",
+    name="Pull an Ollama model",
+    description=(
+        "Drive Ollama's streaming pull for one model, relaying its download progress as Server-Sent "
+        "Events (progress/done/error). Admin only. Spoolman manages models, never the runtime."
+    ),
+    responses={409: {"model": Message}},
+)
+async def ollama_pull(
+    body: OllamaPullRequest,
+    _admin: Annotated[Principal, Depends(require_admin)],
+) -> StreamingResponse:
+    # Resolve config on a short session released before streaming (it does no DB work).
+    session_maker = get_session_maker()
+    async with session_maker() as gate:
+        config = await ai.resolve_config(gate)
+    if not config.base_url:
+        raise HTTPException(status_code=409, detail="No AI endpoint is configured.")
+    try:
+        installed = await ollama.list_installed_models(config)
+    except ai.AIRequestError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    if installed is None:
+        raise HTTPException(status_code=409, detail="The configured endpoint is not an Ollama server.")
+    model = body.model.strip()
+
+    async def stream() -> AsyncIterator[str]:
+        try:
+            async for progress in ollama.pull_model(config, model):
+                total = progress.get("total")
+                completed = progress.get("completed")
+                has_progress = isinstance(total, (int, float)) and total and completed
+                percent = int(completed / total * 100) if has_progress else None
+                yield _sse_frame(
+                    "progress",
+                    {"status": progress.get("status", ""), "total": total, "completed": completed, "percent": percent},
+                )
+        except ai.AIRequestError as exc:
+            yield _sse_frame("error", {"message": str(exc)})
+        yield _sse_frame("done", {})
+
+    return StreamingResponse(
+        stream(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )

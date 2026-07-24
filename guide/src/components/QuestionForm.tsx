@@ -1,5 +1,5 @@
-import type { Database, Goal, Platform, Proxy, SwitchDirection, WizardConfig } from "../model/config";
-import { relevantQuestions } from "../model/config";
+import type { Arch, Database, Goal, Platform, Proxy, SwitchDirection, WizardConfig } from "../model/config";
+import { effectivePlatform, relevantQuestions } from "../model/config";
 
 interface Props {
   config: WizardConfig;
@@ -30,6 +30,12 @@ const DATABASES: Array<[Database, string]> = [
   ["sqlite", "SQLite (default — fine for most homes)"],
   ["postgres", "PostgreSQL"],
   ["mysql", "MySQL / MariaDB"],
+];
+
+const ARCHES: Array<[Arch, string]> = [
+  ["amd64", "amd64 (Intel/AMD)"],
+  ["arm64", "arm64 (Pi 4/5 on 64-bit OS, Apple Silicon)"],
+  ["armv7", "armv7 (32-bit ARM — no local AI)"],
 ];
 
 /** The issue's five proxy choices; "sub-path only" maps to proxy:none + a sub-path. */
@@ -255,6 +261,29 @@ export function QuestionForm({ config, onChange }: Props) {
                 />
               </label>
             </div>
+          )}
+          {effectivePlatform(config) === "compose" && (
+            <>
+              <label className="checkbox">
+                <input
+                  type="checkbox"
+                  checked={config.extras.ai}
+                  onChange={(e) => setExtras({ ai: e.target.checked })}
+                />
+                Local AI assistant (adds an Ollama sidecar — chat, search, label scanning)
+              </label>
+              {config.extras.ai && (
+                <div className="ai-arch">
+                  <span className="field-label">Host CPU architecture</span>
+                  <Radios
+                    name="arch"
+                    value={config.extras.arch}
+                    options={ARCHES}
+                    onSelect={(arch) => setExtras({ arch })}
+                  />
+                </div>
+              )}
+            </>
           )}
         </fieldset>
       )}

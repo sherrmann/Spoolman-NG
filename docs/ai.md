@@ -57,6 +57,34 @@ preset dropdown fills in the base URL for common choices:
 Local-first works well: the Spoolman host itself is often a Raspberry Pi, but an
 Ollama on any machine on your network (a desktop PC, a NAS) is one URL away.
 
+## Running a model locally
+
+You don't have to bring your own endpoint — Spoolman can set up a local
+[Ollama](https://ollama.com/) runtime for you so everything stays on your own
+hardware. Spoolman **manages models, never the runtime**: once Ollama is running,
+the model shortlist and downloads live in **Settings → AI**.
+
+Local AI wants a 64-bit OS (amd64 or arm64) and ideally 8 GB+ RAM or a GPU. It is
+unavailable on 32-bit ARM (armv7), where Ollama ships no build — point
+`SPOOLMAN_AI_BASE_URL` at an Ollama on another machine instead.
+
+- **Docker Compose.** The [setup wizard](../guide) has a *Local AI assistant*
+  option that adds an `ollama` service to your generated `docker-compose.yml`, a
+  named volume for the model weights, and
+  `SPOOLMAN_AI_BASE_URL=http://ollama:11434/v1` on the Spoolman service. Bring the
+  stack up and the endpoint is already wired.
+- **Native install.** Run the installer with `--with-ai`
+  (`bash scripts/install.sh --with-ai`): it installs the Ollama runtime, enables
+  its service, and sets `SPOOLMAN_AI_BASE_URL` in your `.env`. The
+  [KIAUH extension](../integrations/kiauh) offers the same as a *Also set up local
+  AI (Ollama)?* prompt during install. No models are downloaded by the installer.
+
+**Pulling a model.** However Ollama got there, open **Settings → AI**. When the
+endpoint is an Ollama server, an **Ollama models** panel lists a curated shortlist
+(small and standard chat models plus vision models) with installed status and
+download size, and pulls the one you pick with a live progress bar — no shell
+required.
+
 ## The connection test
 
 **Test connection** checks the endpoint and reports per capability:

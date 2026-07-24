@@ -96,15 +96,20 @@ def set_port(port: int) -> None:
     SPOOLMAN_NG_ENV_FILE.write_text(content)
 
 
-def run_install_script() -> bool:
+def run_install_script(*, with_ai: bool = False) -> bool:
     """Run the bundled installer.
 
     -systemd=yes skips its only interactive prompt; the script may use sudo
     for system packages and the service unit, so it runs on the user's tty.
+    with_ai passes --with-ai, which installs a local Ollama AI runtime and
+    points Spoolman at it (skipped by the installer itself on 32-bit ARM).
     """
+    cmd = ["bash", "scripts/install.sh", "-systemd=yes"]
+    if with_ai:
+        cmd.append("--with-ai")
     try:
         run(
-            ["bash", "scripts/install.sh", "-systemd=yes"],
+            cmd,
             cwd=SPOOLMAN_NG_DIR,
             check=True,
         )
