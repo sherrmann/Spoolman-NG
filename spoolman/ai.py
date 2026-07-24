@@ -413,6 +413,42 @@ def _remember(result: ProbeResult) -> ProbeResult:
 # --- Chat completions --------------------------------------------------------------
 
 
+async def _post_chat(config: AIConfig, payload: dict, timeout: float) -> dict:
+    """POST one chat-completion request and return the assistant message object.
+
+    The single outbound HTTP path shared by every text and tool-calling caller. Raises
+    AIRequestError with a user-safe message on any failure (unreachable, HTTP error,
+    unexpected shape). The returned dict is the raw ``choices[0].message`` — it carries
+    ``content`` and, when the model called tools, ``tool_calls``.
+    """
+    headers = {"Authorization": f"Bearer {config.api_key}"} if config.api_key else {}
+    async with httpx.AsyncClient(timeout=timeout, headers=headers) as client:
+        try:
+            response = await client.post(f"{config.base_url}/chat/completions", json=payload)
+        except httpx.TimeoutException as exc:
+            raise AIRequestError(f"The AI endpoint timed out after {int(timeout)} s.") from exc
+        except httpx.HTTPError as exc:
+            raise AIRequestError(f"The AI endpoint is unreachable: {exc.__class__.__name__}.") from exc
+
+    if response.status_code == httpx.codes.UNAUTHORIZED:
+        raise AIRequestError("The AI endpoint rejected the API key (HTTP 401).")
+    if response.status_code != httpx.codes.OK:
+        detail = ""
+        try:
+            detail = str(response.json().get("error", {}).get("message", ""))[:200]
+        except (json.JSONDecodeError, AttributeError):
+            detail = response.text[:200]
+        raise AIRequestError(f"The AI endpoint returned HTTP {response.status_code}. {detail}".strip())
+
+    try:
+        message = response.json()["choices"][0]["message"]
+    except (json.JSONDecodeError, KeyError, IndexError, TypeError) as exc:
+        raise AIRequestError("The AI endpoint returned an unexpected response shape.") from exc
+    if not isinstance(message, dict):
+        raise AIRequestError("The AI endpoint returned an unexpected response shape.")
+    return message
+
+
 async def chat_completion(
     config: AIConfig,
     messages: list[dict],
@@ -434,30 +470,38 @@ async def chat_completion(
     if not model:
         raise AIRequestError("No model is configured.")
 
-    headers = {"Authorization": f"Bearer {config.api_key}"} if config.api_key else {}
     payload = {"model": model, "messages": messages, "max_tokens": max_tokens}
-    async with httpx.AsyncClient(timeout=timeout, headers=headers) as client:
-        try:
-            response = await client.post(f"{config.base_url}/chat/completions", json=payload)
-        except httpx.TimeoutException as exc:
-            raise AIRequestError(f"The AI endpoint timed out after {int(timeout)} s.") from exc
-        except httpx.HTTPError as exc:
-            raise AIRequestError(f"The AI endpoint is unreachable: {exc.__class__.__name__}.") from exc
-
-    if response.status_code == httpx.codes.UNAUTHORIZED:
-        raise AIRequestError("The AI endpoint rejected the API key (HTTP 401).")
-    if response.status_code != httpx.codes.OK:
-        detail = ""
-        try:
-            detail = str(response.json().get("error", {}).get("message", ""))[:200]
-        except (json.JSONDecodeError, AttributeError):
-            detail = response.text[:200]
-        raise AIRequestError(f"The AI endpoint returned HTTP {response.status_code}. {detail}".strip())
-
-    try:
-        content = response.json()["choices"][0]["message"]["content"]
-    except (json.JSONDecodeError, KeyError, IndexError, TypeError) as exc:
-        raise AIRequestError("The AI endpoint returned an unexpected response shape.") from exc
+    message = await _post_chat(config, payload, timeout)
+    content = message.get("content")
     if not isinstance(content, str):
         raise AIRequestError("The AI endpoint returned no text content.")
     return content
+
+
+async def chat_completion_tools(
+    config: AIConfig,
+    messages: list[dict],
+    *,
+    tools: list[dict] | None = None,
+    max_tokens: int = 1500,
+    timeout: float = _CHAT_TIMEOUT,
+) -> dict:
+    """Run one tool-enabled chat completion and return the raw assistant message.
+
+    The agent loop (spoolman.aichat) drives this: it feeds the message history plus the
+    curated tool schemas, and reads back either ``content`` (a final answer) or
+    ``tool_calls`` (the model wants to call one of the tools). ``tools`` is only attached
+    when non-empty, so a read-only caller with no write tools — or any caller on a
+    pure-conversation turn — still sends a valid request to endpoints that reject an
+    empty tools array.
+    """
+    if not config.base_url:
+        raise AIRequestError("No AI endpoint is configured.")
+    if not config.model:
+        raise AIRequestError("No model is configured.")
+
+    payload: dict = {"model": config.model, "messages": messages, "max_tokens": max_tokens}
+    if tools:
+        payload["tools"] = tools
+        payload["tool_choice"] = "auto"
+    return await _post_chat(config, payload, timeout)

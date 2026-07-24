@@ -352,6 +352,28 @@
     },
     "photo": "Photo"
   },
+  "chat": {
+    "title": "Assistant",
+    "open": "Ask the assistant",
+    "placeholder": "Ask about your filament and spools…",
+    "send": "Send",
+    "thinking": "Thinking…",
+    "empty": "Ask me about your spools and filament — for example \"how much black PETG do I have left?\" or \"what should I reorder?\".",
+    "viewInList": "View in Spools list",
+    "confirm": {
+      "before": "Before",
+      "after": "After",
+      "confirm": "Confirm",
+      "cancel": "Cancel",
+      "confirmed": "Confirmed",
+      "cancelled": "Cancelled",
+      "destructive": "Cannot be undone"
+    },
+    "executed": {
+      "undo": "Undo",
+      "undone": "Change undone."
+    }
+  },
   "scanner": {
     "title": "QR Code Scanner",
     "description": "Scan a Spoolman QR code to view details about the spool.",
@@ -369,6 +391,14 @@
   "spool": {
     "spool": "Spools",
     "custom_actions": "Actions",
+    "nlSearch": {
+      "button": "AI",
+      "title": "Search with natural language",
+      "placeholder": "e.g. black PETG in shelf B",
+      "hint": "Applied as editable filters",
+      "search": "Search",
+      "error": "The search could not be translated. Try again or use the normal search box."
+    },
     "totals": {
       "shown_one": "{{count}} spool shown",
       "shown_other": "{{count}} spools shown",

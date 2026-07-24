@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "./authReloadHandler";
-import { getAPIURL } from "./url";
+import { getAPIURL, getBasePath } from "./url";
 
 // Client bindings for the AI foundation endpoints (#359). The API key is write-only:
 // nothing here ever receives it back from the server, only whether one is set.
@@ -137,4 +137,189 @@ export function useSetAIKey() {
       queryClient.invalidateQueries({ queryKey: ["ai-status"] });
     },
   });
+}
+
+// --- Natural-language search (#362, B2) --------------------------------------------
+
+export interface NlSearchFilter {
+  field: string;
+  values: string[];
+}
+
+export interface NlSearchResult {
+  filters: NlSearchFilter[];
+  search: string | null;
+  color_hex: string | null;
+  sort: { field: string; direction: "asc" | "desc" } | null;
+}
+
+export function useNlSearch() {
+  return useMutation<NlSearchResult, Error, { query: string; locale: string }>({
+    mutationFn: async (body) => {
+      const response = await apiFetch(`${getAPIURL()}/ai/nl-search`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload.detail ?? payload.message ?? `HTTP ${response.status}`);
+      }
+      return response.json();
+    },
+  });
+}
+
+// --- Chat assistant (#362, B1) -----------------------------------------------------
+
+// The OpenAI-shape transcript the client round-trips. Assistant turns may carry tool_calls
+// and tool turns a tool_call_id; the client holds them opaquely and only replays them.
+export interface ChatMessage {
+  role: "user" | "assistant" | "tool";
+  content: string | null;
+  tool_calls?: unknown[];
+  tool_call_id?: string;
+}
+
+export interface ChatConfirmCard {
+  tool_call_id?: string;
+  tool: string;
+  title: string;
+  summary: string;
+  before: Record<string, unknown>;
+  after: Record<string, unknown>;
+  destructive: boolean;
+}
+
+export interface ChatUndo {
+  tool: string;
+  args: Record<string, unknown>;
+}
+
+export interface ChatExecutedCard {
+  tool: string;
+  summary: string;
+  undo: ChatUndo | null;
+}
+
+// Deep-link filters the server echoes from a spool search, so the UI can offer a
+// "view these in the Spools list" link.
+export interface ChatSpoolFilters {
+  material?: string;
+  vendor?: string;
+  location?: string;
+  lot_nr?: string;
+  color_hex?: string;
+  query?: string;
+  include_archived?: boolean;
+}
+
+export type ChatEvent =
+  | { event: "tool"; data: { name: string; summary: string; filters?: ChatSpoolFilters } }
+  | { event: "confirm"; data: { messages: ChatMessage[]; cards: ChatConfirmCard[] } }
+  | { event: "executed"; data: { cards: ChatExecutedCard[] } }
+  | { event: "cancelled"; data: Record<string, never> }
+  | { event: "message"; data: { content: string } }
+  | { event: "error"; data: { message: string } }
+  | { event: "done"; data: Record<string, never> };
+
+export interface ChatTurnRequest {
+  messages: ChatMessage[];
+  context?: string | null;
+  locale?: string;
+  decision?: "confirm" | "cancel";
+}
+
+function parseSseBlock(block: string): ChatEvent | null {
+  let event = "";
+  let data = "";
+  for (const line of block.split("\n")) {
+    if (line.startsWith("event: ")) event = line.slice("event: ".length);
+    else if (line.startsWith("data: ")) data = line.slice("data: ".length);
+  }
+  if (!event) return null;
+  try {
+    return { event, data: data ? JSON.parse(data) : {} } as ChatEvent;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Stream one chat turn, invoking `onEvent` for each Server-Sent Event as it arrives.
+ * Resolves when the stream ends (a `done` event is always the last one). Throws on a
+ * non-200 response (gating/config errors) before any event is delivered.
+ */
+export async function streamChat(
+  body: ChatTurnRequest,
+  onEvent: (event: ChatEvent) => void,
+  signal?: AbortSignal,
+): Promise<void> {
+  const response = await apiFetch(`${getAPIURL()}/ai/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    signal,
+  });
+  if (!response.ok || !response.body) {
+    const payload = await response.json().catch(() => ({}));
+    throw new Error(payload.detail ?? payload.message ?? `HTTP ${response.status}`);
+  }
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    let boundary = buffer.indexOf("\n\n");
+    while (boundary !== -1) {
+      const block = buffer.slice(0, boundary);
+      buffer = buffer.slice(boundary + 2);
+      const parsed = parseSseBlock(block);
+      if (parsed) onEvent(parsed);
+      boundary = buffer.indexOf("\n\n");
+    }
+  }
+}
+
+export function useChatAction() {
+  return useMutation<{ summary: string; data: Record<string, unknown>; undo: ChatUndo | null }, Error, ChatUndo>({
+    mutationFn: async (action) => {
+      const response = await apiFetch(`${getAPIURL()}/ai/chat/action`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(action),
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload.detail ?? payload.message ?? `HTTP ${response.status}`);
+      }
+      return response.json();
+    },
+  });
+}
+
+/**
+ * Build a deep-link into the Spools list with the given categorical filters applied,
+ * mirroring the list's URL-hash filter format (double-quoted exact-match values). Used by
+ * the chat to offer "view these in the Spools list".
+ */
+export function spoolListFilterLink(filters: ChatSpoolFilters): string | null {
+  const fieldByKey: Record<string, string> = {
+    material: "filament.material",
+    vendor: "filament.vendor.name",
+    location: "location",
+    lot_nr: "lot_nr",
+  };
+  const crudFilters = Object.entries(fieldByKey)
+    .filter(([key]) => typeof filters[key as keyof ChatSpoolFilters] === "string")
+    .map(([key, field]) => ({
+      field,
+      operator: "in",
+      value: [JSON.stringify(filters[key as keyof ChatSpoolFilters])],
+    }));
+  if (crudFilters.length === 0) return null;
+  const hash = new URLSearchParams({ filters: JSON.stringify(crudFilters) }).toString();
+  return `${getBasePath()}/spool#${hash}`;
 }

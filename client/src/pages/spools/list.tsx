@@ -12,7 +12,7 @@ import {
   UnorderedListOutlined,
 } from "@ant-design/icons";
 import { List, TextField, useTable } from "@refinedev/antd";
-import { useInvalidate, useNavigation, useTranslate } from "@refinedev/core";
+import { CrudFilter, useInvalidate, useNavigation, useTranslate } from "@refinedev/core";
 import { Button, Grid, Input, message, Modal, Pagination, Space, Table, Tooltip } from "antd";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
@@ -31,6 +31,8 @@ import {
 import { ColumnManager } from "../../components/columnManager";
 import { ColorSimilarityFilter, ColorSimilarityValue } from "../../components/colorSimilarityFilter";
 import { useLiveify } from "../../components/liveify";
+import { NlSearchButton } from "../../components/nlSearchButton";
+import { NlSearchResult } from "../../utils/queryAI";
 import { NumberFieldUnit } from "../../components/numberField";
 import {
   useSpoolmanFilamentFilter,
@@ -494,6 +496,24 @@ export const SpoolList = () => {
     originalOnChange?.(pagination, filters, sorter, extra);
   };
 
+  // Apply a natural-language search result (#362, B2) into the *existing* filter model, so
+  // it shows up as ordinary, editable column filters the user can refine or clear. Values
+  // are double-quoted to match the exact-match option format the column filters use.
+  const applyNlSearch = (result: NlSearchResult) => {
+    const nlFilters: CrudFilter[] = result.filters.map((f) => ({
+      field: f.field,
+      operator: "in",
+      value: f.values.map((v) => JSON.stringify(v)),
+    }));
+    setFilters(nlFilters, "replace");
+    setSearch(result.search ?? "");
+    setColorFilter(result.color_hex ? { colorHex: result.color_hex, threshold: 20 } : undefined);
+    if (result.sort) {
+      setSorters([{ field: result.sort.field, order: result.sort.direction }]);
+    }
+    setCurrentPage(1);
+  };
+
   const commonProps = {
     t,
     navigate,
@@ -524,6 +544,7 @@ export const SpoolList = () => {
             }}
             style={{ width: 200 }}
           />
+          <NlSearchButton onApply={applyNlSearch} defaultQuery={search} />
           <ColorSimilarityFilter
             value={colorFilter}
             onChange={(v) => {
