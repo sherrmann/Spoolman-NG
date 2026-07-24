@@ -40,7 +40,7 @@ _MCP_HEADERS = {"Content-Type": "application/json", "Accept": "application/json,
 
 @pytest.fixture(autouse=True)
 def _no_auth(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Default to a no-auth install (anonymous admin) unless a test overrides auth_state."""
+    """Set a no-auth install (anonymous admin) by default; a test may override auth_state."""
     monkeypatch.setattr(mcp_server, "auth_state", AuthState())
 
 
