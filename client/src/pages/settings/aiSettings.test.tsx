@@ -20,6 +20,7 @@ vi.mock("../../utils/queryAI", () => ({
   useAIStatus: () => ({ data: statusMock() }),
   useAIProbe: () => ({ mutate: probeMutate, isPending: false, isError: false, error: null }),
   useSetAIKey: () => ({ mutate: setKeyMutate, mutateAsync: vi.fn(), isPending: false }),
+  useSetSTTKey: () => ({ mutate: vi.fn(), mutateAsync: vi.fn(), isPending: false }),
 }));
 vi.mock("../../utils/querySettings", () => ({
   useGetSettings: () => ({ data: settingsMock() }),
@@ -38,8 +39,12 @@ const baseStatus: AIStatus = {
   model: null,
   vision_model: null,
   api_key_set: false,
+  stt_configured: false,
+  stt_base_url: null,
+  stt_model: null,
+  stt_api_key_set: false,
   env_locked: [],
-  features: { chat: false, scan_to_spool: false, nl_search: false, voice: false },
+  features: { chat: false, scan_to_spool: false, nl_search: false, mcp: false, voice: false },
   capabilities: null,
 };
 
@@ -55,9 +60,9 @@ describe("AISettings (#359)", () => {
     for (const feature of ["chat", "scan_to_spool", "nl_search", "voice"]) {
       expect(screen.getByTestId(`toggle-${feature}`)).toBeDisabled();
     }
-    // Three features wait on configuration; voice waits on its own feature shipping.
+    // Three features wait on the chat endpoint; voice waits on a speech-to-text endpoint.
     expect(screen.getAllByText("settings.ai.features.requires_config")).toHaveLength(3);
-    expect(screen.getByText("settings.ai.features.voice_unavailable")).toBeInTheDocument();
+    expect(screen.getByText("settings.ai.features.requires_stt")).toBeInTheDocument();
   });
 
   it("lets features be enabled once configured, persisting the matching setting", async () => {
@@ -160,6 +165,22 @@ describe("AISettings (#359)", () => {
     render(<AISettings />);
     expect(screen.getByTestId("toggle-mcp")).toBeEnabled();
     expect(screen.getByTestId("toggle-chat")).toBeDisabled();
+  });
+
+  it("renders the speech-to-text endpoint fields (#363)", () => {
+    render(<AISettings />);
+    expect(screen.getByText("settings.ai.stt.title")).toBeInTheDocument();
+    expect(screen.getByText("settings.ai.stt.base_url.label")).toBeInTheDocument();
+  });
+
+  it("blocks Voice until a speech-to-text endpoint is configured, then allows it (#363)", () => {
+    const { rerender } = render(<AISettings />);
+    expect(screen.getByTestId("toggle-voice")).toBeDisabled();
+    expect(screen.getByText("settings.ai.features.requires_stt")).toBeInTheDocument();
+
+    statusMock.mockReturnValue({ ...baseStatus, stt_configured: true });
+    rerender(<AISettings />);
+    expect(screen.getByTestId("toggle-voice")).toBeEnabled();
   });
 
   it("shows a copyable MCP config block only once MCP is enabled", () => {

@@ -25,6 +25,10 @@ export interface AIStatus {
   model: string | null;
   vision_model: string | null;
   api_key_set: boolean;
+  stt_configured: boolean;
+  stt_base_url: string | null;
+  stt_model: string | null;
+  stt_api_key_set: boolean;
   env_locked: string[];
   features: Record<string, boolean>;
   capabilities: AIProbeResult | null;
@@ -119,14 +123,16 @@ export function useSpoolIntakeExtract() {
   });
 }
 
-export function useSetAIKey() {
+// Set (or clear, with null) one of the write-only keys via /ai/config. `field` picks which:
+// "api_key" for the chat provider, "stt_api_key" for the speech-to-text endpoint (#363).
+function useSetKey(field: "api_key" | "stt_api_key") {
   const queryClient = useQueryClient();
-  return useMutation<{ api_key_set: boolean; env_locked: boolean }, Error, string | null>({
-    mutationFn: async (apiKey) => {
+  return useMutation<{ api_key_set: boolean; env_locked: boolean; stt_api_key_set: boolean }, Error, string | null>({
+    mutationFn: async (value) => {
       const response = await apiFetch(`${getAPIURL()}/ai/config`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ api_key: apiKey }),
+        body: JSON.stringify({ [field]: value }),
       });
       if (!response.ok) {
         throw new Error((await response.json()).message ?? `HTTP ${response.status}`);
@@ -135,6 +141,32 @@ export function useSetAIKey() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ai-status"] });
+    },
+  });
+}
+
+export function useSetAIKey() {
+  return useSetKey("api_key");
+}
+
+export function useSetSTTKey() {
+  return useSetKey("stt_api_key");
+}
+
+// --- Voice transcription (#363) ----------------------------------------------------
+
+export function useTranscribe() {
+  return useMutation<{ text: string }, Error, Blob>({
+    mutationFn: async (audio) => {
+      const form = new FormData();
+      // Filename hints the STT server at the container; the actual type is on the blob.
+      form.append("file", audio, "clip.webm");
+      const response = await apiFetch(`${getAPIURL()}/ai/transcribe`, { method: "POST", body: form });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload.detail ?? payload.message ?? `HTTP ${response.status}`);
+      }
+      return response.json();
     },
   });
 }

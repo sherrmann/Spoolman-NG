@@ -19,12 +19,12 @@ from collections.abc import AsyncIterator
 from datetime import datetime
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from spoolman import ai, ai_tools, aichat, nlsearch, spoolintake
+from spoolman import ai, ai_tools, aichat, nlsearch, spoolintake, voice
 from spoolman.api.v1.auth import _principal, require_admin
 from spoolman.api.v1.models import Message
 from spoolman.auth import Principal
@@ -74,6 +74,13 @@ class AIStatus(BaseModel):
     model: str | None = Field(default=None, description="Effective chat/tool model.")
     vision_model: str | None = Field(default=None, description="Effective vision model (falls back to the chat model).")
     api_key_set: bool = Field(description="Whether an API key is configured. The key itself is never returned.")
+    stt_configured: bool = Field(
+        default=False,
+        description="Whether a speech-to-text endpoint and model are configured (voice input needs both).",
+    )
+    stt_base_url: str | None = Field(default=None, description="Effective speech-to-text base URL.")
+    stt_model: str | None = Field(default=None, description="Effective speech-to-text model.")
+    stt_api_key_set: bool = Field(default=False, description="Whether a speech-to-text API key is configured.")
     env_locked: list[str] = Field(
         default_factory=list,
         description="Fields set via SPOOLMAN_AI_* env vars; the UI disables these inputs.",
@@ -98,12 +105,16 @@ class AIProbeRequest(BaseModel):
 
 
 class AIKeyRequest(BaseModel):
-    api_key: str | None = Field(description="The API key to store, or null to clear the stored key.")
+    # Both optional so each key can be set independently; only fields actually present in the
+    # request body are acted on (a present null clears that key).
+    api_key: str | None = Field(default=None, description="The chat API key to store, or null to clear it.")
+    stt_api_key: str | None = Field(default=None, description="The speech-to-text API key to store, or null to clear.")
 
 
 class AIKeyResponse(BaseModel):
-    api_key_set: bool = Field(description="Whether an API key is now in effect (env or stored).")
+    api_key_set: bool = Field(description="Whether a chat API key is now in effect (env or stored).")
     env_locked: bool = Field(description="True when SPOOLMAN_AI_API_KEY is set, which overrides the stored key.")
+    stt_api_key_set: bool = Field(default=False, description="Whether a speech-to-text API key is now in effect.")
 
 
 @router.get(
@@ -125,6 +136,10 @@ async def status(
         model=config.model,
         vision_model=config.vision_model,
         api_key_set=config.api_key is not None,
+        stt_configured=config.stt_configured,
+        stt_base_url=config.stt_base_url,
+        stt_model=config.stt_model,
+        stt_api_key_set=config.stt_api_key is not None,
         env_locked=sorted(attr for attr, source in config.sources.items() if source == "env"),
         features=await ai.get_feature_flags(db),
         capabilities=AIProbeResult.from_result(cached) if cached is not None else None,
@@ -157,10 +172,11 @@ async def run_probe(
 
 @router.post(
     "/config",
-    name="Set the AI API key",
+    name="Set the AI API keys",
     description=(
-        "Store or clear the AI provider API key. Write-only: no endpoint ever returns the key. "
-        "When SPOOLMAN_AI_API_KEY is set it overrides whatever is stored here."
+        "Store or clear the AI provider API key and/or the speech-to-text API key. Write-only: no "
+        "endpoint ever returns a key. Only fields present in the request are changed (a present "
+        "null clears that key). The SPOOLMAN_AI_*_API_KEY env vars override whatever is stored here."
     ),
 )
 async def set_key(
@@ -168,11 +184,16 @@ async def set_key(
     _admin: Annotated[Principal, Depends(require_admin)],
     body: AIKeyRequest,
 ) -> AIKeyResponse:
-    await ai.set_stored_api_key(db, body.api_key.strip() if body.api_key else None)
+    provided = body.model_dump(exclude_unset=True)
+    if "api_key" in provided:
+        await ai.set_stored_api_key(db, body.api_key.strip() if body.api_key else None)
+    if "stt_api_key" in provided:
+        await ai.set_stored_stt_api_key(db, body.stt_api_key.strip() if body.stt_api_key else None)
     config = await ai.resolve_config(db)
     return AIKeyResponse(
         api_key_set=config.api_key is not None,
         env_locked=config.sources.get("api_key") == "env",
+        stt_api_key_set=config.stt_api_key is not None,
     )
 
 
@@ -430,3 +451,51 @@ async def nl_search(
         raise HTTPException(status_code=409, detail="No AI endpoint and model are configured.")
     result = await nlsearch.translate(db, config, body.query, locale=(body.locale or "en").strip()[:20] or "en")
     return NLSearchResponse(**result)
+
+
+# --- Voice input: speech-to-text (#363) --------------------------------------------
+
+#: ~25 MB, matching the common Whisper upload ceiling; a push-to-talk clip is far smaller.
+_MAX_AUDIO_BYTES = 25 * 1024 * 1024
+
+
+class TranscriptionResponse(BaseModel):
+    text: str = Field(description="The recognised text. The user reviews it before it is sent.")
+
+
+@router.post(
+    "/transcribe",
+    name="Transcribe a voice clip",
+    description=(
+        "Forward a recorded audio clip to the configured speech-to-text endpoint and return the "
+        "recognised text (the client reviews it before sending). 404 until the voice feature is "
+        "enabled; 409 until a speech-to-text endpoint and model are configured; 502 on provider trouble."
+    ),
+    responses={404: {"model": Message}, 409: {"model": Message}, 413: {"model": Message}, 502: {"model": Message}},
+)
+async def transcribe(
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+    file: Annotated[UploadFile, File(description="The recorded audio clip.")],
+) -> TranscriptionResponse:
+    if not (await ai.get_feature_flags(db)).get("voice"):
+        raise HTTPException(status_code=404, detail="Voice input is not enabled.")
+    config = await ai.resolve_config(db)
+    if not config.stt_configured:
+        raise HTTPException(status_code=409, detail="No speech-to-text endpoint and model are configured.")
+
+    audio = await file.read()
+    if len(audio) > _MAX_AUDIO_BYTES:
+        raise HTTPException(status_code=413, detail="Audio clip is too large.")
+    if not audio:
+        raise HTTPException(status_code=400, detail="No audio was uploaded.")
+
+    try:
+        text = await voice.transcribe(
+            config,
+            audio,
+            filename=file.filename or "audio.webm",
+            content_type=file.content_type or "audio/webm",
+        )
+    except ai.AIRequestError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    return TranscriptionResponse(text=text)

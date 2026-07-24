@@ -21,6 +21,9 @@ Two layers, environment variables winning over the UI:
 | `SPOOLMAN_AI_API_KEY` | API key | Bearer token for the endpoint (Ollama and LM Studio need none) |
 | `SPOOLMAN_AI_MODEL` | Chat model | Model used for chat/tool features |
 | `SPOOLMAN_AI_VISION_MODEL` | Vision model | Model used for image features; falls back to the chat model |
+| `SPOOLMAN_AI_STT_BASE_URL` | STT base URL | Speech-to-text endpoint for voice input, e.g. `http://whisper:8000/v1` |
+| `SPOOLMAN_AI_STT_API_KEY` | STT API key | Bearer token for the transcription endpoint (local whisper needs none) |
+| `SPOOLMAN_AI_STT_MODEL` | STT model | Transcription model, e.g. `whisper-1` |
 
 A field set via environment variable is shown locked in the UI. Fields edited in
 the UI are stored in the database like other settings — except the API key:
@@ -141,6 +144,28 @@ materials, vendors, and locations in your database and may only choose from them
 it can't map to a real value is dropped rather than invented, and if a request can't be
 translated at all it falls back to the ordinary free-text search — the AI button never
 blocks the normal path. It works well with a small local model.
+
+## Voice input
+
+For the genuine hands-dirty-at-the-printer case — *"log twenty grams on the orange
+Prusament"* — the chat assistant can take voice. It needs a **separate speech-to-text
+endpoint**: chat providers like Ollama have no transcription, so voice points at its own
+OpenAI-compatible `/v1/audio/transcriptions` server (a
+[whisper.cpp](https://github.com/ggml-org/whisper.cpp) server,
+[Speaches](https://github.com/speaches-ai/speaches), Groq whisper, ...). Set its **STT base
+URL**, **model**, and (if needed) **API key** under Settings → AI, then enable **Voice
+input** — the toggle stays greyed until a transcription endpoint is configured.
+
+A **mic button** then appears in the chat input. **Hold to talk**, release to transcribe;
+drag off the button to cancel. By default the recognised text lands **editable in the input
+box** so you can fix it before sending — speech-to-text mangles vendor names ("Sunlu" →
+"sun blue"), so review is the default. Tick **Send voice transcripts automatically** under
+Settings → AI to skip the review step. Sent transcripts run through the normal chat flow,
+confirm-cards and all — a spoken "archive spool 12" still asks you to confirm.
+
+A **Speak replies** switch in the drawer header reads answers aloud using your browser's
+built-in speech synthesis (no server needed). The audio clip is sent only to your
+configured STT endpoint and is never stored by Spoolman.
 
 ## MCP server
 

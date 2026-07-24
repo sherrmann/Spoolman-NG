@@ -3,7 +3,7 @@ import { useTranslate } from "@refinedev/core";
 import { useQueryClient } from "@tanstack/react-query";
 import { Alert, AutoComplete, Button, Checkbox, Divider, Form, Input, Select, Space, Typography, message } from "antd";
 import { useEffect, useState } from "react";
-import { AIProbeResult, AITriState, useAIProbe, useAIStatus, useSetAIKey } from "../../utils/queryAI";
+import { AIProbeResult, AITriState, useAIProbe, useAIStatus, useSetAIKey, useSetSTTKey } from "../../utils/queryAI";
 import { useGetSettings, useSetSetting } from "../../utils/querySettings";
 import { getBasePath } from "../../utils/url";
 import { AI_PRESETS } from "./aiPresets";
@@ -17,6 +17,8 @@ const FEATURE_ROWS: {
   statusKey: string;
   labelKey: string;
   requiresVision?: boolean;
+  // Voice (#363) needs a speech-to-text endpoint configured, not the chat endpoint.
+  requiresStt?: boolean;
   // Most features need a configured LLM endpoint; the MCP server (#360) does not — it only
   // needs the toggle, so it stays enable-able even before an endpoint is set.
   requiresProvider?: boolean;
@@ -36,7 +38,13 @@ const FEATURE_ROWS: {
     labelKey: "settings.ai.features.mcp",
     requiresProvider: false,
   },
-  { settingKey: "ai_feature_voice", statusKey: "voice", labelKey: "settings.ai.features.voice", unavailable: true },
+  {
+    settingKey: "ai_feature_voice",
+    statusKey: "voice",
+    labelKey: "settings.ai.features.voice",
+    requiresProvider: false,
+    requiresStt: true,
+  },
 ];
 
 function TriStateRow(props: { labelKey: string; value: AITriState }) {
@@ -63,9 +71,13 @@ export function AISettings() {
   const settings = useGetSettings();
   const probe = useAIProbe();
   const setKey = useSetAIKey();
+  const setSTTKey = useSetSTTKey();
   const setBaseUrl = useSetSetting<string>("ai_base_url");
   const setModel = useSetSetting<string>("ai_model");
   const setVisionModel = useSetSetting<string>("ai_vision_model");
+  const setSTTBaseUrl = useSetSetting<string>("ai_stt_base_url");
+  const setSTTModel = useSetSetting<string>("ai_stt_model");
+  const setVoiceAutosend = useSetSetting<boolean>("ai_voice_autosend");
   const featureMutations = {
     ai_feature_chat: useSetSetting<boolean>("ai_feature_chat"),
     ai_feature_scan_to_spool: useSetSetting<boolean>("ai_feature_scan_to_spool"),
@@ -84,6 +96,12 @@ export function AISettings() {
   // lives at <origin><base path>/mcp; a token-less install needs no headers.
   const mcpRaw = settings.data?.ai_feature_mcp?.value;
   const mcpEnabled = mcpRaw !== undefined ? JSON.parse(mcpRaw) === true : false;
+
+  // Voice (#363): the auto-send opt-in only makes sense once voice is on.
+  const voiceRaw = settings.data?.ai_feature_voice?.value;
+  const voiceEnabled = voiceRaw !== undefined ? JSON.parse(voiceRaw) === true : false;
+  const autosendRaw = settings.data?.ai_voice_autosend?.value;
+  const voiceAutosend = autosendRaw !== undefined ? JSON.parse(autosendRaw) === true : false;
   const mcpConfig = JSON.stringify(
     { mcpServers: { spoolman: { url: `${window.location.origin}${getBasePath()}/mcp` } } },
     null,
@@ -96,9 +114,11 @@ export function AISettings() {
         base_url: status.data.base_url ?? "",
         model: status.data.model ?? "",
         vision_model: status.data.vision_model ?? "",
+        stt_base_url: status.data.stt_base_url ?? "",
+        stt_model: status.data.stt_model ?? "",
       });
     }
-    // The api_key field is deliberately never populated: the server never returns it.
+    // The api_key/stt_api_key fields are deliberately never populated: the server never returns them.
   }, [status.data, form]);
 
   const applyPreset = (key: string) => {
@@ -119,14 +139,28 @@ export function AISettings() {
     probe.mutate(overrides, { onSuccess: setProbeResult });
   };
 
-  const onFinish = async (values: { base_url?: string; model?: string; vision_model?: string; api_key?: string }) => {
+  const onFinish = async (values: {
+    base_url?: string;
+    model?: string;
+    vision_model?: string;
+    api_key?: string;
+    stt_base_url?: string;
+    stt_model?: string;
+    stt_api_key?: string;
+  }) => {
     try {
       if (!envLocked.has("base_url")) await setBaseUrl.mutateAsync(values.base_url ?? "");
       if (!envLocked.has("model")) await setModel.mutateAsync(values.model ?? "");
       if (!envLocked.has("vision_model")) await setVisionModel.mutateAsync(values.vision_model ?? "");
+      if (!envLocked.has("stt_base_url")) await setSTTBaseUrl.mutateAsync(values.stt_base_url ?? "");
+      if (!envLocked.has("stt_model")) await setSTTModel.mutateAsync(values.stt_model ?? "");
       if (values.api_key) {
         await setKey.mutateAsync(values.api_key);
         form.setFieldValue("api_key", "");
+      }
+      if (values.stt_api_key) {
+        await setSTTKey.mutateAsync(values.stt_api_key);
+        form.setFieldValue("stt_api_key", "");
       }
       messageApi.success(t("notifications.saveSuccessful"));
     } catch (error) {
@@ -202,6 +236,47 @@ export function AISettings() {
         >
           <AutoComplete options={modelOptions} disabled={envLocked.has("vision_model")} />
         </Form.Item>
+
+        <Divider orientation="left" plain>
+          {t("settings.ai.stt.title")}
+        </Divider>
+        <Paragraph type="secondary">{t("settings.ai.stt.hint")}</Paragraph>
+        <Form.Item
+          label={t("settings.ai.stt.base_url.label")}
+          name="stt_base_url"
+          extra={envLockedHint("stt_base_url")}
+          tooltip={t("settings.ai.stt.base_url.tooltip")}
+          rules={[{ pattern: /^https?:\/\/.+$/, message: t("settings.ai.base_url.invalid") }]}
+        >
+          <Input placeholder="http://localhost:8000/v1" disabled={envLocked.has("stt_base_url")} />
+        </Form.Item>
+        <Form.Item label={t("settings.ai.stt.api_key.label")} name="stt_api_key" extra={envLockedHint("stt_api_key")}>
+          <Input.Password
+            placeholder={
+              status.data?.stt_api_key_set
+                ? t("settings.ai.api_key.placeholder_set")
+                : t("settings.ai.api_key.placeholder_unset")
+            }
+            disabled={envLocked.has("stt_api_key")}
+            autoComplete="off"
+          />
+        </Form.Item>
+        {status.data?.stt_api_key_set && !envLocked.has("stt_api_key") && (
+          <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
+            <Button size="small" loading={setSTTKey.isPending} onClick={() => setSTTKey.mutate(null)}>
+              {t("settings.ai.api_key.clear")}
+            </Button>
+          </Form.Item>
+        )}
+        <Form.Item
+          label={t("settings.ai.stt.model.label")}
+          name="stt_model"
+          extra={envLockedHint("stt_model")}
+          tooltip={t("settings.ai.stt.model.tooltip")}
+        >
+          <Input placeholder="whisper-1" disabled={envLocked.has("stt_model")} />
+        </Form.Item>
+
         <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
           <Space>
             <Button type="primary" htmlType="submit" loading={setBaseUrl.isPending || setKey.isPending}>
@@ -252,6 +327,8 @@ export function AISettings() {
             reasonKey = "settings.ai.features.voice_unavailable";
           } else if (row.requiresProvider !== false && !status.data?.configured) {
             reasonKey = "settings.ai.features.requires_config";
+          } else if (row.requiresStt && !status.data?.stt_configured) {
+            reasonKey = "settings.ai.features.requires_stt";
           } else if (row.requiresVision && capabilities?.vision === "no") {
             reasonKey = "settings.ai.features.requires_vision";
           }
@@ -277,6 +354,17 @@ export function AISettings() {
             </div>
           );
         })}
+        {voiceEnabled && (
+          <div style={{ marginLeft: 24 }}>
+            <Checkbox
+              checked={voiceAutosend}
+              onChange={(event) => setVoiceAutosend.mutate(event.target.checked)}
+              data-testid="toggle-voice-autosend"
+            >
+              {t("settings.ai.features.voice_autosend")}
+            </Checkbox>
+          </div>
+        )}
       </Space>
 
       {mcpEnabled && (
