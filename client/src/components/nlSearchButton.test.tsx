@@ -15,7 +15,10 @@ vi.mock("@refinedev/core", () => ({
   useTranslate: () => (key: string) => key,
   useGetLocale: () => () => "en",
 }));
-vi.mock("../utils/querySettings", () => ({ useGetSettings: () => ({ data: settingsMock() }) }));
+vi.mock("../utils/querySettings", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../utils/querySettings")>()),
+  useGetSettings: () => ({ data: settingsMock() }),
+}));
 vi.mock("../utils/queryAI", () => ({
   useNlSearch: () => ({ mutateAsync, isPending: false, isError: false }),
 }));

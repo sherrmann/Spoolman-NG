@@ -1,4 +1,4 @@
-"""Natural-language spool search (#362, B2).
+"""Natural-language spool search (#362).
 
 Translate a free-text query like "matte black PETG under 500 g in shelf B" into the spool
 list's *existing* filter model, so the result is ordinary, editable filter chips — not an

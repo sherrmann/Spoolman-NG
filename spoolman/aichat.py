@@ -1,4 +1,4 @@
-"""The in-app chat agent loop (#362, B1).
+"""The in-app chat agent loop (#362).
 
 A stateless, server-side agent that shares the curated tool layer (spoolman.ai_tools)
 with the future MCP server — one tool surface, two consumers. Statelessness is the whole
@@ -160,11 +160,17 @@ def _read_summary(name: str, result: dict) -> str:
     return "Done."
 
 
+#: Fed back to the model when a tool raises something other than a ToolError. Nothing about
+#: the internal failure is exposed — the model just learns the call did not work.
+_TOOL_FAILED = "That tool failed unexpectedly. Try again with different arguments."
+
+
 async def _run_read_call(ctx: ToolContext, call: dict) -> tuple[dict, str]:
     """Execute a read tool call, returning (result-for-model, formatted 'tool' SSE event).
 
-    A ToolError becomes an error result fed back to the model (so it can recover) rather
-    than aborting the turn.
+    A failure becomes an error result fed back to the model (so it can recover) rather than
+    aborting the turn: ToolError carries its own message, anything unexpected is logged
+    server-side and reported generically.
     """
     name = _call_name(call)
     tool = ai_tools.READ_TOOLS.get(name)
@@ -174,6 +180,9 @@ async def _run_read_call(ctx: ToolContext, call: dict) -> tuple[dict, str]:
         result = await tool.run(ctx, _call_args(call))
     except ToolError as exc:
         return {"error": str(exc)}, _sse("tool", {"name": name, "summary": str(exc)})
+    except Exception:
+        logger.exception("Read tool %r raised an unexpected error.", name)
+        return {"error": _TOOL_FAILED}, _sse("tool", {"name": name, "summary": _TOOL_FAILED})
     event_data = {"name": name, "summary": _read_summary(name, result)}
     if name == "find_spools" and result.get("filters"):
         event_data["filters"] = result["filters"]
@@ -204,6 +213,10 @@ async def _resolve_pending(ctx: ToolContext, convo: list[dict], *, decision: str
                 result = await ai_tools.WRITE_TOOLS[name].execute(ctx, _call_args(call))
             except ToolError as exc:
                 convo.append(_tool_result_entry(call, {"error": str(exc)}))
+                continue
+            except Exception:
+                logger.exception("Write tool %r raised an unexpected error during execution.", name)
+                convo.append(_tool_result_entry(call, {"error": _TOOL_FAILED}))
                 continue
             convo.append(_tool_result_entry(call, {"ok": True, "summary": result.summary, **result.data}))
             executed_cards.append({"tool": name, "summary": result.summary, "undo": result.undo})
@@ -247,8 +260,13 @@ async def _handle_tool_calls(
         try:
             card = await tool.preview(ctx, _call_args(call))
         except ToolError as exc:
-            # Couldn't even preview (e.g. bad ID): feed it back so the model recovers.
+            # Couldn't even preview (e.g. bad ID, missing argument): feed it back so the
+            # model recovers instead of losing the turn.
             convo.append(_tool_result_entry(call, {"error": str(exc)}))
+            continue
+        except Exception:
+            logger.exception("Write tool %r raised an unexpected error during preview.", name)
+            convo.append(_tool_result_entry(call, {"error": _TOOL_FAILED}))
             continue
         pending_cards.append({"tool_call_id": _call_id(call), **asdict(card)})
 

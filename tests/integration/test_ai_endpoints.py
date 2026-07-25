@@ -13,6 +13,9 @@ import respx
 from httpx import AsyncClient, Response
 
 from spoolman import ai
+from spoolman.api.v1 import ai as ai_api
+from spoolman.auth import Principal
+from spoolman.users import ROLE_READONLY
 
 
 async def _set_setting(client: AsyncClient, key: str, value: object) -> None:
@@ -180,3 +183,38 @@ async def test_probe_failure_is_reported_in_body_not_http_error(client: AsyncCli
     body = probe.json()
     assert body["ok"] is False
     assert "503" in body["error"]
+
+
+# --- /ai/status is scoped to the caller's role --------------------------------------
+
+
+async def test_status_hides_provider_config_from_non_admins(
+    client: AsyncClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A read-only caller gets the flags the UI needs and none of the operator detail."""
+    await _set_setting(client, "ai_base_url", "http://prov/v1")
+    await _set_setting(client, "ai_model", "test-model")
+    await _set_setting(client, "ai_feature_chat", value=True)
+
+    monkeypatch.setattr(ai_api, "_principal", lambda _request: Principal(name="bob", role=ROLE_READONLY))
+    body = (await client.get("/api/v1/ai/status")).json()
+
+    # Readiness the client genuinely needs to decide what to render.
+    assert body["configured"] is True
+    assert body["features"]["chat"] is True
+    # Operator detail withheld.
+    assert body["base_url"] is None
+    assert body["model"] is None
+    assert body["capabilities"] is None
+    assert body["env_locked"] == []
+
+
+async def test_status_gives_admins_the_full_configuration(client: AsyncClient) -> None:
+    await _set_setting(client, "ai_base_url", "http://prov/v1")
+    await _set_setting(client, "ai_model", "test-model")
+
+    # The default principal in this harness is the anonymous admin of a no-auth install.
+    body = (await client.get("/api/v1/ai/status")).json()
+    assert body["base_url"] == "http://prov/v1"
+    assert body["model"] == "test-model"

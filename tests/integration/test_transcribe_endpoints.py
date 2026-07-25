@@ -18,6 +18,7 @@ import respx
 from httpx import AsyncClient, Response
 
 from spoolman import ai
+from spoolman.api.v1 import ai as ai_api
 
 _STT = "http://stt:9000/v1/audio/transcriptions"
 
@@ -142,3 +143,25 @@ async def test_stt_key_is_independent_of_chat_key(client: AsyncClient) -> None:
     after_stt = (await client.get("/api/v1/ai/status")).json()
     assert after_stt["api_key_set"] is True  # unchanged
     assert after_stt["stt_api_key_set"] is True
+
+
+async def test_an_oversize_clip_is_rejected_without_being_buffered(client: AsyncClient) -> None:
+    """The handler's own cap: a clip past the ceiling is refused, not forwarded.
+
+    The BodyLimitMiddleware normally stops such a request before it is buffered at all
+    (tests/test_bodylimit.py); this integration harness mounts the routers without that
+    middleware, which is exactly why the handler keeps its own bounded read.
+    """
+    await _enable_voice(client)
+    oversize = b"x" * (ai_api._MAX_AUDIO_BYTES + 1)  # noqa: SLF001
+    response = await client.post(
+        "/api/v1/ai/transcribe",
+        files={"file": ("clip.webm", oversize, "audio/webm")},
+    )
+    assert response.status_code == 413
+
+
+async def test_an_empty_upload_is_a_400(client: AsyncClient) -> None:
+    await _enable_voice(client)
+    response = await client.post("/api/v1/ai/transcribe", files={"file": ("clip.webm", b"", "audio/webm")})
+    assert response.status_code == 400

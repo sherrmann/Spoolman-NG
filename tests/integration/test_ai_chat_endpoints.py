@@ -14,6 +14,7 @@ The provider is mocked at the transport with respx; the agent's own outbound cal
 {base_url}/chat/completions return scripted tool-call / message responses.
 """
 
+import asyncio
 import json
 
 import pytest
@@ -21,6 +22,7 @@ import respx
 from httpx import AsyncClient, Response
 
 from spoolman import ai, aichat
+from spoolman.api.v1 import ai as ai_api
 from spoolman.database import database as db_module
 
 _PROVIDER = "http://prov/v1/chat/completions"
@@ -411,3 +413,85 @@ async def test_nl_search_degrades_to_free_text_on_unparseable_reply(client: Asyn
     body = response.json()
     assert body["filters"] == []
     assert body["search"] == "something weird"
+
+
+# --- Sloppy model arguments --------------------------------------------------------
+#
+# A small local model — exactly what this feature targets — routinely emits a non-numeric
+# argument or drops a required one. That must be fed back as a tool error the model can
+# recover from, never abort the turn.
+
+
+@respx.mock
+async def test_a_non_numeric_read_argument_is_fed_back_not_fatal(client: AsyncClient) -> None:
+    await _enable_chat(client)
+    await _seed_spool(client, material="PETG")
+    respx.post(_PROVIDER).mock(
+        side_effect=[
+            _tool_call_response("c1", "find_spools", {"material": "PETG", "limit": "lots"}),
+            _message_response("I hit a snag with that filter, but here is what I found."),
+        ],
+    )
+
+    response = await client.post("/api/v1/ai/chat", json={"messages": [{"role": "user", "content": "how much petg"}]})
+    events = _parse_sse(response.text)
+
+    assert _events_of(events, "error") == []
+    tool_events = _events_of(events, "tool")
+    assert "'limit' argument must be a number" in tool_events[0]["summary"]
+    # The turn still completes with an answer rather than dying.
+    assert _events_of(events, "message")
+
+
+@respx.mock
+async def test_a_write_call_missing_its_id_is_fed_back_not_fatal(client: AsyncClient) -> None:
+    await _enable_chat(client)
+    respx.post(_PROVIDER).mock(
+        side_effect=[
+            _tool_call_response("u1", "update_spool", {"location": "Shelf C"}),  # no spool_id
+            _message_response("Which spool did you mean?"),
+        ],
+    )
+
+    response = await client.post("/api/v1/ai/chat", json={"messages": [{"role": "user", "content": "move it"}]})
+    events = _parse_sse(response.text)
+
+    assert _events_of(events, "error") == []
+    assert _events_of(events, "confirm") == []  # nothing to confirm — it never previewed
+    assert _events_of(events, "message")[0]["content"] == "Which spool did you mean?"
+
+
+async def test_chat_action_rejects_bad_arguments_with_422(client: AsyncClient) -> None:
+    await _enable_chat(client)
+    response = await client.post(
+        "/api/v1/ai/chat/action",
+        json={"tool": "update_spool", "args": {"location": "Shelf C"}},  # no spool_id
+    )
+    assert response.status_code == 422
+    assert "spool_id" in response.json()["detail"]
+
+
+async def test_chat_refuses_a_turn_when_every_slot_is_busy(
+    client: AsyncClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A turn holds a DB session for the life of its stream, so the pool has to be bounded."""
+    await _enable_chat(client)
+    # Simulate every slot already taken.
+    monkeypatch.setattr(ai_api, "_chat_slots", asyncio.Semaphore(0))
+
+    response = await client.post("/api/v1/ai/chat", json={"messages": [{"role": "user", "content": "hi"}]})
+    assert response.status_code == 503
+    assert "busy" in response.json()["detail"].lower()
+
+
+@respx.mock
+async def test_a_chat_slot_is_returned_after_the_stream_finishes(client: AsyncClient) -> None:
+    await _enable_chat(client)
+    respx.post(_PROVIDER).mock(return_value=_message_response("hello"))
+
+    before = ai_api._chat_slots._value  # noqa: SLF001
+    response = await client.post("/api/v1/ai/chat", json={"messages": [{"role": "user", "content": "hi"}]})
+    assert response.status_code == 200
+    assert _events_of(_parse_sse(response.text), "message")
+    assert ai_api._chat_slots._value == before  # noqa: SLF001 -- slot released, not leaked

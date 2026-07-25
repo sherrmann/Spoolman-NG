@@ -1,7 +1,7 @@
-// Provider presets for the Settings -> AI tab (#359). Presets are data, not code
-// (docs/llm-integration-brainstorm.md §5 decision 5): every entry is just a label, a
-// base URL, and whether the provider needs an API key. Anything OpenAI-compatible
-// works via "Custom" — adding a provider here is a convenience, never a requirement.
+// Provider presets for the Settings -> AI tab (#359). Presets are data, not code:
+// every entry is just a label, a base URL, and whether the provider needs an API key.
+// Anything OpenAI-compatible works via "Custom" — adding a provider here is a
+// convenience, never a requirement.
 
 export interface AIPreset {
   key: string;

@@ -12,6 +12,7 @@ Three endpoints, all inert until the user configures an endpoint:
   never echoed back by any endpoint; responses only ever say whether one is set.
 """
 
+import asyncio
 import base64
 import binascii
 import json
@@ -26,6 +27,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from spoolman import ai, ai_tools, aichat, nlsearch, ollama, spoolintake, voice
+from spoolman.api.v1 import bodylimit
 from spoolman.api.v1.auth import _principal, require_admin
 from spoolman.api.v1.models import Message
 from spoolman.auth import Principal
@@ -123,13 +125,30 @@ class AIKeyResponse(BaseModel):
     name="Get AI status",
     description=(
         "Get the effective AI provider configuration, feature toggles, and the most recent "
-        "capability probe. The API key is never returned, only whether one is set."
+        "capability probe. The API key is never returned, only whether one is set. Only an "
+        "administrator sees the provider configuration; everyone else gets the feature flags "
+        "and readiness booleans the UI needs to decide what to render."
     ),
 )
 async def status(
+    request: Request,
     db: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> AIStatus:
     config = await ai.resolve_config(db)
+    features = await ai.get_feature_flags(db)
+    # Non-admins drive UI affordances off `features`/`configured`/`stt_configured` alone
+    # (see chatDrawer.tsx). Endpoint URLs, model names and the probe's error text are
+    # operator detail, so they stay with the operator — the Settings panel is admin-only
+    # anyway, and /ai/probe and /ai/config already require admin.
+    if _principal(request).role != ROLE_ADMIN:
+        return AIStatus(
+            configured=config.configured,
+            api_key_set=config.api_key is not None,
+            stt_configured=config.stt_configured,
+            stt_api_key_set=config.stt_api_key is not None,
+            features=features,
+        )
+
     cached = ai.get_cached_probe()
     return AIStatus(
         configured=config.configured,
@@ -142,7 +161,7 @@ async def status(
         stt_model=config.stt_model,
         stt_api_key_set=config.stt_api_key is not None,
         env_locked=sorted(attr for attr, source in config.sources.items() if source == "env"),
-        features=await ai.get_feature_flags(db),
+        features=features,
         capabilities=AIProbeResult.from_result(cached) if cached is not None else None,
     )
 
@@ -200,13 +219,15 @@ async def set_key(
 
 # --- Scan-to-Spool intake (#361) ---------------------------------------------------
 
-#: ~15 MB of image after base64 decoding; photos should be client-downscaled anyway.
-_MAX_IMAGE_B64_CHARS = 20 * 1024 * 1024
+#: ~15 MB of image after base64 decoding; photos should be client-downscaled anyway. The
+#: request body is already capped at the same figure by BodyLimitMiddleware before it is
+#: buffered — this check stays as the precise, per-field message.
+_MAX_IMAGE_B64_CHARS = bodylimit.MAX_IMAGE_BODY_BYTES
 _ALLOWED_IMAGE_MIMES = frozenset({"image/jpeg", "image/png", "image/webp"})
 
 
 class AIExtraction(BaseModel):
-    """The extraction JSON contract, shared with future on-device extractors (F5)."""
+    """The extraction JSON contract, shared with future on-device extractors."""
 
     model_config = ConfigDict(extra="ignore")
 
@@ -251,7 +272,13 @@ async def _require_scan_feature(db: AsyncSession) -> None:
         "plus ranked matches (own library first, then the SpoolmanDB catalog). The image exists "
         "in memory for the duration of the request only — it is never persisted or logged."
     ),
-    responses={404: {"model": Message}, 409: {"model": Message}, 502: {"model": Message}},
+    responses={
+        400: {"model": Message},
+        404: {"model": Message},
+        409: {"model": Message},
+        413: {"model": Message},
+        502: {"model": Message},
+    },
 )
 async def spool_intake_extract(
     db: Annotated[AsyncSession, Depends(get_db_session)],
@@ -328,6 +355,15 @@ async def _require_chat_feature(db: AsyncSession) -> None:
         raise HTTPException(status_code=404, detail="The chat assistant is not enabled.")
 
 
+#: How many chat turns may be in flight at once across the whole install. A turn holds a DB
+#: session for the life of its SSE stream and can spend minutes waiting on the provider, so
+#: without a cap a handful of clients (read-only accounts included — /ai/chat is one of the
+#: two POSTs they may make) could hold every session in the pool. Turns over the cap are
+#: refused immediately with 503 rather than queued behind a multi-minute wait.
+_MAX_CONCURRENT_CHATS = 4
+_chat_slots = asyncio.Semaphore(_MAX_CONCURRENT_CHATS)
+
+
 @router.post(
     "/chat",
     name="Chat with the assistant",
@@ -335,9 +371,10 @@ async def _require_chat_feature(db: AsyncSession) -> None:
         "Stream one turn of the chat agent as Server-Sent Events. Read tools run automatically; a "
         "mutation stops the stream with a confirm-card carrying before/after values, which the client "
         "resolves by re-posting with decision='confirm' or 'cancel'. Read-only callers are offered no "
-        "write tools. 404 until the feature is enabled; 409 until an endpoint is configured."
+        "write tools. 404 until the feature is enabled; 409 until an endpoint is configured; "
+        "503 when too many turns are already in flight."
     ),
-    responses={404: {"model": Message}, 409: {"model": Message}},
+    responses={404: {"model": Message}, 409: {"model": Message}, 503: {"model": Message}},
 )
 async def chat(request: Request, body: ChatRequest) -> StreamingResponse:
     # Gate on a short-lived session that is released BEFORE streaming begins, so its read
@@ -353,18 +390,28 @@ async def chat(request: Request, body: ChatRequest) -> StreamingResponse:
     context = (body.context or "").strip()[:200] or None
     locale = (body.locale or "en").strip()[:20] or "en"
 
+    # Claim a slot before the response starts, so an overloaded server answers with a clean
+    # 503 instead of opening a stream it has no capacity to serve.
+    if _chat_slots.locked():
+        raise HTTPException(status_code=503, detail="The assistant is busy. Try again in a moment.")
+    await _chat_slots.acquire()
+
     async def stream() -> AsyncIterator[str]:
-        async with session_maker() as session:
-            async for frame in aichat.run_chat(
-                db=session,
-                config=config,
-                messages=body.messages,
-                context=context,
-                locale=locale,
-                can_write=can_write,
-                decision=body.decision,
-            ):
-                yield frame
+        try:
+            async with session_maker() as session:
+                async for frame in aichat.run_chat(
+                    db=session,
+                    config=config,
+                    messages=body.messages,
+                    context=context,
+                    locale=locale,
+                    can_write=can_write,
+                    decision=body.decision,
+                ):
+                    yield frame
+        finally:
+            # Released however the stream ends, including a client disconnect mid-turn.
+            _chat_slots.release()
 
     return StreamingResponse(
         stream(),
@@ -392,7 +439,7 @@ class ChatActionResponse(BaseModel):
         "chat mutation. Admin only, and limited to the same curated tools the chat agent can call, so it "
         "grants no capability beyond chat itself."
     ),
-    responses={404: {"model": Message}, 400: {"model": Message}, 422: {"model": Message}},
+    responses={400: {"model": Message}, 404: {"model": Message}, 422: {"model": Message}},
 )
 async def chat_action(
     db: Annotated[AsyncSession, Depends(get_db_session)],
@@ -457,7 +504,9 @@ async def nl_search(
 # --- Voice input: speech-to-text (#363) --------------------------------------------
 
 #: ~25 MB, matching the common Whisper upload ceiling; a push-to-talk clip is far smaller.
-_MAX_AUDIO_BYTES = 25 * 1024 * 1024
+#: BodyLimitMiddleware refuses a larger request body before it is buffered; the read below
+#: is still bounded so nothing here depends on that middleware being installed.
+_MAX_AUDIO_BYTES = bodylimit.MAX_AUDIO_BODY_BYTES
 
 
 class TranscriptionResponse(BaseModel):
@@ -472,7 +521,13 @@ class TranscriptionResponse(BaseModel):
         "recognised text (the client reviews it before sending). 404 until the voice feature is "
         "enabled; 409 until a speech-to-text endpoint and model are configured; 502 on provider trouble."
     ),
-    responses={404: {"model": Message}, 409: {"model": Message}, 413: {"model": Message}, 502: {"model": Message}},
+    responses={
+        400: {"model": Message},
+        404: {"model": Message},
+        409: {"model": Message},
+        413: {"model": Message},
+        502: {"model": Message},
+    },
 )
 async def transcribe(
     db: Annotated[AsyncSession, Depends(get_db_session)],
@@ -484,7 +539,9 @@ async def transcribe(
     if not config.stt_configured:
         raise HTTPException(status_code=409, detail="No speech-to-text endpoint and model are configured.")
 
-    audio = await file.read()
+    # Read one byte past the cap rather than the whole upload: an oversize clip is
+    # rejected without ever materialising it.
+    audio = await file.read(_MAX_AUDIO_BYTES + 1)
     if len(audio) > _MAX_AUDIO_BYTES:
         raise HTTPException(status_code=413, detail="Audio clip is too large.")
     if not audio:

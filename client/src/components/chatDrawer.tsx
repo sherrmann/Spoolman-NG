@@ -14,7 +14,7 @@ import {
   useChatAction,
   useTranscribe,
 } from "../utils/queryAI";
-import { useGetSettings } from "../utils/querySettings";
+import { parseBooleanSettingValue, useGetSettings } from "../utils/querySettings";
 
 const { Text, Paragraph } = Typography;
 
@@ -76,7 +76,7 @@ export function ChatDrawer() {
   const location = useLocation();
   const settings = useGetSettings();
   const status = useAIStatus();
-  const enabled = settings.data?.ai_feature_chat?.value === "true";
+  const enabled = parseBooleanSettingValue(settings.data?.ai_feature_chat?.value);
   const chatAction = useChatAction();
   const transcribe = useTranscribe();
 
@@ -101,9 +101,9 @@ export function ChatDrawer() {
 
   const context = useMemo(() => pageContext(location.pathname), [location.pathname]);
 
-  const voiceEnabled = settings.data?.ai_feature_voice?.value === "true";
+  const voiceEnabled = parseBooleanSettingValue(settings.data?.ai_feature_voice?.value);
   const micAvailable = voiceEnabled && status.data?.stt_configured === true;
-  const autosend = settings.data?.ai_voice_autosend?.value === "true";
+  const autosend = parseBooleanSettingValue(settings.data?.ai_voice_autosend?.value);
   const speechAvailable = typeof window !== "undefined" && "speechSynthesis" in window;
 
   useEffect(() => {

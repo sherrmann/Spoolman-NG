@@ -23,6 +23,22 @@ export function parseStringSettingValue(value: string | undefined, fallback = ""
   }
 }
 
+/**
+ * Read a BOOLEAN setting's raw stored value. Settings are stored JSON-encoded, so a true
+ * flag arrives as the string "true" — but an unset or malformed value must read as false
+ * rather than throwing out of a render. Use this instead of a bare JSON.parse or a
+ * `=== "true"` comparison so every call site agrees on what "on" means.
+ */
+export function parseBooleanSettingValue(value: string | undefined, fallback = false): boolean {
+  if (value === undefined) return fallback;
+
+  try {
+    return JSON.parse(value) === true;
+  } catch {
+    return fallback;
+  }
+}
+
 export function useGetSettings() {
   return useQuery<SettingsResponse>({
     queryKey: ["settings"],

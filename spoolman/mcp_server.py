@@ -85,7 +85,12 @@ async def _execute_tool(ctx: ToolContext, name: str, args: dict) -> dict:
 
 
 async def _call_tool(name: str, arguments: dict) -> list[types.ContentBlock]:
-    """Dispatch a tool call to the curated implementation; surface refusals as tool output."""
+    """Dispatch a tool call to the curated implementation; surface refusals as tool output.
+
+    Every failure comes back as tool output rather than a transport error, so the calling
+    model can read what went wrong and retry. Unexpected exceptions are logged server-side
+    and reported generically — no internal detail crosses the MCP boundary.
+    """
     session_maker = get_session_maker()
     try:
         async with session_maker() as session:
@@ -93,6 +98,10 @@ async def _call_tool(name: str, arguments: dict) -> list[types.ContentBlock]:
             result = await _execute_tool(ctx, name, arguments or {})
     except ToolError as exc:
         return [types.TextContent(type="text", text=json.dumps({"error": str(exc)}))]
+    except Exception:
+        logger.exception("MCP tool %r raised an unexpected error.", name)
+        error = "That tool failed unexpectedly. Try again with different arguments."
+        return [types.TextContent(type="text", text=json.dumps({"error": error}))]
     return [types.TextContent(type="text", text=json.dumps(result))]
 
 
