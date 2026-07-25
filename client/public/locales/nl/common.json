@@ -388,6 +388,14 @@
       "shown_other": "{{count}} spoelen getoond",
       "selected_one": "{{count}} spoel geselecteerd",
       "selected_other": "{{count}} spoelen geselecteerd"
+    },
+    "nlSearch": {
+      "button": "AI",
+      "title": "Zoeken met natuurlijke taal",
+      "placeholder": "bijv. zwart PETG in vak B",
+      "hint": "Toegepast als bewerkbare filters",
+      "search": "Zoeken",
+      "error": "De zoekopdracht kon niet worden vertaald. Probeer het opnieuw of gebruik het normale zoekvak."
     }
   },
   "filament": {
@@ -757,6 +765,94 @@
       "add_title": "Link toevoegen",
       "edit_title": "Link bewerken",
       "delete_confirm": "Deze link verwijderen?"
+    },
+    "ai": {
+      "tab": "AI",
+      "description": "Verbind een OpenAI-compatibel eindpunt (Ollama, LM Studio, OpenAI, Anthropic, OpenRouter, Requesty, Groq, ...). Er wordt niets verzonden en er verschijnt geen AI-element in de interface totdat een functie hieronder is ingeschakeld.",
+      "preset": {
+        "label": "Voorinstelling",
+        "placeholder": "Kies een provider om de basis-URL in te vullen"
+      },
+      "base_url": {
+        "label": "Basis-URL",
+        "tooltip": "Het te gebruiken OpenAI-compatibele eindpunt, bijv. een Ollama-server op uw netwerk.",
+        "invalid": "Moet een http://- of https://-URL zijn"
+      },
+      "api_key": {
+        "label": "API-sleutel",
+        "tooltip": "Alleen-schrijven opgeslagen: de server stuurt deze nooit terug naar een client. Ollama en LM Studio hebben er geen nodig.",
+        "placeholder_set": "Er is een sleutel opgeslagen - voer een nieuwe waarde in om deze te vervangen",
+        "placeholder_unset": "Geen sleutel opgeslagen",
+        "clear": "Opgeslagen sleutel wissen"
+      },
+      "model": {
+        "label": "Chatmodel",
+        "tooltip": "Het model dat wordt gebruikt voor chat- en tool-call-functies. Voer een verbindingstest uit om de modellen van het eindpunt weer te geven."
+      },
+      "vision_model": {
+        "label": "Beeldmodel",
+        "tooltip": "Het model dat wordt gebruikt voor beeldfuncties. Laat leeg om het chatmodel te gebruiken."
+      },
+      "stt": {
+        "title": "Spraak-naar-tekst (spraakinvoer)",
+        "hint": "Een apart OpenAI-compatibel transcriptie-eindpunt voor spraakinvoer - Ollama heeft geen spraak-naar-tekst. Bijvoorbeeld een whisper.cpp-server, Speaches, of Groq whisper.",
+        "base_url": {
+          "label": "STT-basis-URL",
+          "tooltip": "Het transcriptie-eindpunt, bijv. http://localhost:8000/v1"
+        },
+        "api_key": {
+          "label": "STT-API-sleutel"
+        },
+        "model": {
+          "label": "STT-model",
+          "tooltip": "Het transcriptiemodel, bijv. whisper-1 of Systran/faster-whisper-base."
+        }
+      },
+      "env_locked": "Ingesteld via omgevingsvariabele en hier vergrendeld",
+      "test": "Verbinding testen",
+      "probe": {
+        "reachable": "Eindpunt bereikbaar",
+        "models_listed": "modellen weergegeven",
+        "failed": "De verbindingstest is mislukt.",
+        "chat": "Chat",
+        "tools": "Tool-aanroepen",
+        "vision": "Beeld",
+        "yes": "ondersteund",
+        "no": "niet ondersteund",
+        "unknown": "niet geverifieerd - dit eindpunt rapporteert geen mogelijkheden"
+      },
+      "features": {
+        "title": "Functies",
+        "hint": "Alle functies staan standaard uit. Er verschijnt nergens iets AI-gerelateerds in de interface totdat het hier is ingeschakeld.",
+        "chat": "Chatassistent",
+        "scan_to_spool": "Scan-to-Spool foto-intake",
+        "nl_search": "Zoeken met natuurlijke taal",
+        "mcp": "MCP-server",
+        "voice": "Spraakinvoer",
+        "requires_config": "Configureer en sla eerst een eindpunt en chatmodel op.",
+        "requires_vision": "De verbindingstest rapporteert geen beeldondersteuning voor het geconfigureerde model.",
+        "requires_stt": "Configureer en sla eerst een spraak-naar-tekst-eindpunt en -model op.",
+        "voice_autosend": "Spraaktranscripties automatisch verzenden in plaats van ze eerst te controleren",
+        "voice_unavailable": "Nog niet beschikbaar - dit komt met de functie spraakinvoer."
+      },
+      "mcp": {
+        "title": "MCP-server",
+        "hint": "Wijs een MCP-client (Claude Desktop, claude.ai) naar deze Spoolman om uw voorraad op te vragen en bij te werken. Er is geen LLM-provider nodig - alleen deze schakelaar.",
+        "copy": "Configuratie kopiëren",
+        "copied": "Configuratie gekopieerd naar het klembord.",
+        "auth_note": "Als deze Spoolman een API-token vereist, voeg dan een \"Authorization\": \"Bearer <token>\"-item toe onder \"headers\". Alleen-lezen accounts krijgen alleen query-tools."
+      },
+      "models": {
+        "title": "Ollama-modellen",
+        "hint": "Uw eindpunt is een Ollama-server. Haal hier direct een aanbevolen model op - Spoolman beheert modellen, nooit de runtime.",
+        "installed": "Geïnstalleerd",
+        "pull": "Ophalen",
+        "pulled": "{{model}} opgehaald.",
+        "purpose": {
+          "chat": "chat",
+          "vision": "beeld"
+        }
+      }
     }
   },
   "locations": {
@@ -1010,7 +1106,8 @@
       "unknown_content": "Geen enkel filament heeft de barcode {{code}}. Een filament aanmaken en deze barcode onthouden?",
       "create_filament": "Filament aanmaken",
       "lookup_error": "Kon die barcode niet opzoeken."
-    }
+    },
+    "photo": "Foto"
   },
   "printer": {
     "printer": "Printer",
@@ -1018,6 +1115,59 @@
       "name": "Naam",
       "comment": "Opmerking",
       "spool_count": "Spoelen"
+    }
+  },
+  "chat": {
+    "title": "Assistent",
+    "open": "Vraag de assistent",
+    "placeholder": "Vraag iets over uw filament en spoelen…",
+    "send": "Verzenden",
+    "thinking": "Denkt na…",
+    "empty": "Vraag me iets over uw spoelen en filament — bijvoorbeeld \"hoeveel zwart PETG heb ik nog over?\" of \"wat moet ik bijbestellen?\".",
+    "viewInList": "Bekijken in spoelenlijst",
+    "confirm": {
+      "before": "Voor",
+      "after": "Na",
+      "confirm": "Bevestigen",
+      "cancel": "Annuleren",
+      "confirmed": "Bevestigd",
+      "cancelled": "Geannuleerd",
+      "destructive": "Kan niet ongedaan worden gemaakt"
+    },
+    "executed": {
+      "undo": "Ongedaan maken",
+      "undone": "Wijziging ongedaan gemaakt."
+    },
+    "voice": {
+      "record": "Ingedrukt houden om te praten",
+      "listening": "Luistert…",
+      "speak": "Antwoorden uitspreken",
+      "unsupported": "Spraakopname wordt niet ondersteund in deze browser.",
+      "mic_error": "Kon geen toegang krijgen tot de microfoon."
+    }
+  },
+  "intake": {
+    "hint": "Fotografeer het label of de doos van de spoel, of kies een bestaande foto.",
+    "select_photo": "Foto selecteren of maken",
+    "extracting": "Label wordt gelezen...",
+    "in_library": "in uw bibliotheek, voegt een spoel toe",
+    "from_catalog": "SpoolmanDB, maakt filament en spoel aan",
+    "use_raw": "Gebruik de ruwe extractie (nieuw filament)",
+    "continue": "Doorgaan",
+    "back": "Terug",
+    "photo_discarded": "De foto is in het geheugen geanalyseerd en wordt niet opgeslagen.",
+    "prefilled_banner": "Vooraf ingevuld op basis van een labelfoto - controleer de waarden voordat u opslaat.",
+    "fields": {
+      "vendor": "Fabrikant",
+      "name": "Naam",
+      "material": "Materiaal",
+      "weight_g": "Gewicht (g)",
+      "diameter_mm": "Diameter (mm)",
+      "extruder_temp_c": "Nozzle (C)",
+      "bed_temp_c": "Bed (C)",
+      "lot_nr": "Lot",
+      "article_number": "Artikelnr",
+      "confidence": "Betrouwbaarheid"
     }
   }
 }

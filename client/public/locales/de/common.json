@@ -368,6 +368,14 @@
       "shown_other": "{{count}} Spulen angezeigt",
       "selected_one": "{{count}} Spule ausgewählt",
       "selected_other": "{{count}} Spulen ausgewählt"
+    },
+    "nlSearch": {
+      "button": "AI",
+      "title": "Suche in natürlicher Sprache",
+      "placeholder": "z. B. schwarzes PETG in Regal B",
+      "hint": "Wird als bearbeitbare Filter angewendet",
+      "search": "Suchen",
+      "error": "Die Suche konnte nicht übersetzt werden. Versuche es erneut oder nutze das normale Suchfeld."
     }
   },
   "filament": {
@@ -757,6 +765,94 @@
       "add_title": "Link hinzufügen",
       "edit_title": "Link bearbeiten",
       "delete_confirm": "Diesen Link löschen?"
+    },
+    "ai": {
+      "tab": "KI",
+      "description": "Verbinde einen OpenAI-kompatiblen Endpunkt (Ollama, LM Studio, OpenAI, Anthropic, OpenRouter, Requesty, Groq, ...). Es wird nichts irgendwohin gesendet, und es erscheint kein KI-Element in der Oberfläche, bis eine der Funktionen unten aktiviert wird.",
+      "preset": {
+        "label": "Voreinstellung",
+        "placeholder": "Wähle einen Anbieter, um die Basis URL auszufüllen"
+      },
+      "base_url": {
+        "label": "Basis URL",
+        "tooltip": "Der zu verwendende OpenAI-kompatible Endpunkt, z. B. ein Ollama-Server in deinem Netzwerk.",
+        "invalid": "Muss eine http:// oder https:// URL sein"
+      },
+      "api_key": {
+        "label": "API-Schlüssel",
+        "tooltip": "Wird nur schreibend gespeichert: Der Server sendet ihn nie an einen Client zurück. Ollama und LM Studio benötigen keinen.",
+        "placeholder_set": "Es ist ein Schlüssel gespeichert — gib einen neuen Wert ein, um ihn zu ersetzen",
+        "placeholder_unset": "Kein Schlüssel gespeichert",
+        "clear": "Gespeicherten Schlüssel löschen"
+      },
+      "model": {
+        "label": "Chat-Modell",
+        "tooltip": "Das Modell, das für Chat- und Tool-Calling-Funktionen verwendet wird. Führe einen Verbindungstest aus, um die Modelle des Endpunkts aufzulisten."
+      },
+      "vision_model": {
+        "label": "Vision-Modell",
+        "tooltip": "Das Modell, das für Bildfunktionen verwendet wird. Leer lassen, um das Chat-Modell zu verwenden."
+      },
+      "stt": {
+        "title": "Sprache-zu-Text (Spracheingabe)",
+        "hint": "Ein separater OpenAI-kompatibler Transkriptions-Endpunkt für die Spracheingabe — Ollama bietet keine Sprache-zu-Text-Funktion. Zum Beispiel ein whisper.cpp-Server, Speaches oder Groq whisper.",
+        "base_url": {
+          "label": "STT-Basis-URL",
+          "tooltip": "Der Transkriptions-Endpunkt, z. B. http://localhost:8000/v1"
+        },
+        "api_key": {
+          "label": "STT-API-Schlüssel"
+        },
+        "model": {
+          "label": "STT-Modell",
+          "tooltip": "Das Transkriptionsmodell, z. B. whisper-1 oder Systran/faster-whisper-base."
+        }
+      },
+      "env_locked": "Über eine Umgebungsvariable gesetzt und hier gesperrt",
+      "test": "Verbindung testen",
+      "probe": {
+        "reachable": "Endpunkt erreichbar",
+        "models_listed": "Modelle aufgelistet",
+        "failed": "Der Verbindungstest ist fehlgeschlagen.",
+        "chat": "Chat",
+        "tools": "Tool-Aufrufe",
+        "vision": "Vision",
+        "yes": "unterstützt",
+        "no": "nicht unterstützt",
+        "unknown": "nicht überprüft — dieser Endpunkt meldet keine Fähigkeiten"
+      },
+      "features": {
+        "title": "Funktionen",
+        "hint": "Alle Funktionen sind standardmäßig deaktiviert. Nichts KI-Bezogenes erscheint irgendwo in der Oberfläche, bis es hier aktiviert wird.",
+        "chat": "Chat-Assistent",
+        "scan_to_spool": "Scan-to-Spool-Fotoerfassung",
+        "nl_search": "Suche in natürlicher Sprache",
+        "mcp": "MCP-Server",
+        "voice": "Spracheingabe",
+        "requires_config": "Konfiguriere und speichere zuerst einen Endpunkt und ein Chat-Modell.",
+        "requires_vision": "Der Verbindungstest meldet keine Vision-Unterstützung für das konfigurierte Modell.",
+        "requires_stt": "Konfiguriere und speichere zuerst einen Sprache-zu-Text-Endpunkt und ein Modell.",
+        "voice_autosend": "Sprachtranskripte automatisch senden, statt sie vorher zu überprüfen",
+        "voice_unavailable": "Noch nicht verfügbar — kommt mit der Spracheingabe-Funktion."
+      },
+      "mcp": {
+        "title": "MCP-Server",
+        "hint": "Richte einen MCP-Client (Claude Desktop, claude.ai) auf dieses Spoolman, um deinen Bestand abzufragen und zu aktualisieren. Kein LLM-Anbieter nötig — nur dieser Schalter.",
+        "copy": "Konfiguration kopieren",
+        "copied": "Konfiguration in die Zwischenablage kopiert.",
+        "auth_note": "Falls dieses Spoolman einen API-Token erfordert, füge unter \"headers\" einen Eintrag \"Authorization\": \"Bearer <token>\" hinzu. Nur-Lese-Konten erhalten nur Abfrage-Tools."
+      },
+      "models": {
+        "title": "Ollama-Modelle",
+        "hint": "Dein Endpunkt ist ein Ollama-Server. Lade ein empfohlenes Modell direkt von hier — Spoolman verwaltet Modelle, niemals die Laufzeitumgebung.",
+        "installed": "Installiert",
+        "pull": "Herunterladen",
+        "pulled": "{{model}} heruntergeladen.",
+        "purpose": {
+          "chat": "Chat",
+          "vision": "Vision"
+        }
+      }
     }
   },
   "locations": {
@@ -1010,7 +1106,8 @@
       "unknown_content": "Kein Filament hat den Barcode {{code}}. Ein Filament erstellen und sich diesen Barcode merken?",
       "create_filament": "Filament erstellen",
       "lookup_error": "Dieser Barcode konnte nicht nachgeschlagen werden."
-    }
+    },
+    "photo": "Foto"
   },
   "printer": {
     "printer": "Drucker",
@@ -1018,6 +1115,59 @@
       "name": "Name",
       "comment": "Kommentar",
       "spool_count": "Spulen"
+    }
+  },
+  "chat": {
+    "title": "Assistent",
+    "open": "Assistent fragen",
+    "placeholder": "Frag nach deinem Filament und deinen Spulen…",
+    "send": "Senden",
+    "thinking": "Denkt nach…",
+    "empty": "Frag mich nach deinen Spulen und deinem Filament — zum Beispiel „Wie viel schwarzes PETG habe ich noch?“ oder „Was sollte ich nachbestellen?“.",
+    "viewInList": "In der Spulenliste anzeigen",
+    "confirm": {
+      "before": "Vorher",
+      "after": "Nachher",
+      "confirm": "Bestätigen",
+      "cancel": "Abbrechen",
+      "confirmed": "Bestätigt",
+      "cancelled": "Abgebrochen",
+      "destructive": "Kann nicht rückgängig gemacht werden"
+    },
+    "executed": {
+      "undo": "Rückgängig",
+      "undone": "Änderung rückgängig gemacht."
+    },
+    "voice": {
+      "record": "Zum Sprechen halten",
+      "listening": "Hört zu…",
+      "speak": "Antworten vorlesen",
+      "unsupported": "Sprachaufnahme wird in diesem Browser nicht unterstützt.",
+      "mic_error": "Zugriff auf das Mikrofon nicht möglich."
+    }
+  },
+  "intake": {
+    "hint": "Fotografiere das Etikett oder die Verpackung der Spule, oder wähle ein vorhandenes Foto.",
+    "select_photo": "Foto auswählen oder aufnehmen",
+    "extracting": "Etikett wird gelesen...",
+    "in_library": "in deiner Bibliothek, fügt eine Spule hinzu",
+    "from_catalog": "SpoolmanDB, erstellt Filament und Spule",
+    "use_raw": "Rohdaten verwenden (neues Filament)",
+    "continue": "Weiter",
+    "back": "Zurück",
+    "photo_discarded": "Das Foto wurde im Arbeitsspeicher analysiert und wird nicht gespeichert.",
+    "prefilled_banner": "Vorausgefüllt anhand eines Etikettenfotos — prüfe die Werte vor dem Speichern.",
+    "fields": {
+      "vendor": "Hersteller",
+      "name": "Name",
+      "material": "Material",
+      "weight_g": "Gewicht (g)",
+      "diameter_mm": "Durchmesser (mm)",
+      "extruder_temp_c": "Düse (C)",
+      "bed_temp_c": "Bett (C)",
+      "lot_nr": "Charge",
+      "article_number": "Artikelnr",
+      "confidence": "Zuverlässigkeit"
     }
   }
 }

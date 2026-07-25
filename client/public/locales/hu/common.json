@@ -322,6 +322,14 @@
       "shown_other": "{{count}} db tekercs megjelenítve",
       "selected_one": "{{count}} tekercs kiválasztva",
       "selected_other": "{{count}} db tekercs kiválasztva"
+    },
+    "nlSearch": {
+      "button": "AI",
+      "title": "Természetes nyelvű keresés",
+      "placeholder": "pl. fekete PETG a B polcon",
+      "hint": "Szerkeszthető szűrőkként kerül alkalmazásra",
+      "search": "Keresés",
+      "error": "Nem sikerült értelmezni a keresést. Próbáld újra, vagy használd a normál keresőmezőt."
     }
   },
   "buttons": {
@@ -757,6 +765,94 @@
       "add_title": "Link hozzáadása",
       "edit_title": "Link szerkesztése",
       "delete_confirm": "Törlöd ezt a linket?"
+    },
+    "ai": {
+      "tab": "AI",
+      "description": "Kapcsolódj egy OpenAI-kompatibilis végponthoz (Ollama, LM Studio, OpenAI, Anthropic, OpenRouter, Requesty, Groq, ...). Semmi nem kerül elküldésre sehova, és semmilyen AI-elem nem jelenik meg a felületen, amíg az alábbi funkciók valamelyikét be nem kapcsolod.",
+      "preset": {
+        "label": "Preset",
+        "placeholder": "Válassz szolgáltatót az alap URL kitöltéséhez"
+      },
+      "base_url": {
+        "label": "Alap URL",
+        "tooltip": "A használni kívánt OpenAI-kompatibilis végpont, pl. egy Ollama szerver a hálózatodon.",
+        "invalid": "http:// vagy https:// kezdetű URL-nek kell lennie"
+      },
+      "api_key": {
+        "label": "API kulcs",
+        "tooltip": "Csak írásra tárolva: a szerver soha nem küldi vissza egyetlen kliensnek sem. Az Ollamához és az LM Studióhoz nincs szükség rá.",
+        "placeholder_set": "Egy kulcs el van tárolva - adj meg egy új értéket a cseréjéhez",
+        "placeholder_unset": "Nincs tárolt kulcs",
+        "clear": "Tárolt kulcs törlése"
+      },
+      "model": {
+        "label": "Chat modell",
+        "tooltip": "A chat és eszközhívási funkciókhoz használt modell. Futtass kapcsolattesztet a végpont modelljeinek listázásához."
+      },
+      "vision_model": {
+        "label": "Képfelismerő modell",
+        "tooltip": "A képekkel kapcsolatos funkciókhoz használt modell. Hagyd üresen a chat modell használatához."
+      },
+      "stt": {
+        "title": "Beszédfelismerés (hangbevitel)",
+        "hint": "Külön OpenAI-kompatibilis átírási végpont a hangbevitelhez - az Ollama nem tud beszédfelismerést. Például egy whisper.cpp szerver, Speaches, vagy Groq whisper.",
+        "base_url": {
+          "label": "STT alap URL",
+          "tooltip": "Az átírási végpont, pl. http://localhost:8000/v1"
+        },
+        "api_key": {
+          "label": "STT API kulcs"
+        },
+        "model": {
+          "label": "STT modell",
+          "tooltip": "Az átírási modell, pl. whisper-1 vagy Systran/faster-whisper-base."
+        }
+      },
+      "env_locked": "Környezeti változóval beállítva, itt zárolva",
+      "test": "Kapcsolat tesztelése",
+      "probe": {
+        "reachable": "A végpont elérhető",
+        "models_listed": "listázott modellek",
+        "failed": "A kapcsolatteszt sikertelen volt.",
+        "chat": "Chat",
+        "tools": "Eszközhívások",
+        "vision": "Képfelismerés",
+        "yes": "támogatott",
+        "no": "nem támogatott",
+        "unknown": "nem ellenőrizve - ez a végpont nem jelzi a képességeket"
+      },
+      "features": {
+        "title": "Funkciók",
+        "hint": "Alapértelmezés szerint minden funkció ki van kapcsolva. Semmi AI-val kapcsolatos nem jelenik meg a felületen, amíg itt be nem kapcsolod.",
+        "chat": "Chat asszisztens",
+        "scan_to_spool": "Scan-to-Spool fotós felvétel",
+        "nl_search": "Természetes nyelvű keresés",
+        "mcp": "MCP szerver",
+        "voice": "Hangbevitel",
+        "requires_config": "Először állíts be és mentsd el egy végpontot és egy chat modellt.",
+        "requires_vision": "A kapcsolatteszt szerint a beállított modell nem támogatja a képfelismerést.",
+        "requires_stt": "Először állíts be és mentsd el egy beszédfelismerési végpontot és modellt.",
+        "voice_autosend": "Hangátiratok automatikus küldése átnézés nélkül",
+        "voice_unavailable": "Még nem elérhető - ez a hangbeviteli funkcióval érkezik majd."
+      },
+      "mcp": {
+        "title": "MCP szerver",
+        "hint": "Irányíts egy MCP klienst (Claude Desktop, claude.ai) erre a Spoolmanre, hogy lekérdezhesd és frissíthesd a készletedet. Nincs szükség LLM szolgáltatóra - csak erre a kapcsolóra.",
+        "copy": "Konfiguráció másolása",
+        "copied": "A konfiguráció a vágólapra másolva.",
+        "auth_note": "Ha ehhez a Spoolmanhez API token szükséges, adj hozzá egy \"Authorization\": \"Bearer <token>\" bejegyzést a \"headers\" alá. A csak olvasási jogú fiókok csak lekérdező eszközöket kapnak."
+      },
+      "models": {
+        "title": "Ollama modellek",
+        "hint": "A végpontod egy Ollama szerver. Tölts le egy ajánlott modellt közvetlenül innen - a Spoolman a modelleket kezeli, sosem a futtatókörnyezetet.",
+        "installed": "Telepítve",
+        "pull": "Letöltés",
+        "pulled": "{{model}} letöltve.",
+        "purpose": {
+          "chat": "chat",
+          "vision": "képfelismerés"
+        }
+      }
     }
   },
   "locations": {
@@ -1010,7 +1106,8 @@
       "unknown_content": "Egyik filamenthez sem tartozik a(z) {{code}} vonalkód. Létrehozol egy filamentet, és elmentjük hozzá ezt a vonalkódot?",
       "create_filament": "Filament létrehozása",
       "lookup_error": "Nem sikerült kikeresni ezt a vonalkódot."
-    }
+    },
+    "photo": "Fénykép"
   },
   "printer": {
     "printer": "Nyomtató",
@@ -1018,6 +1115,59 @@
       "name": "Név",
       "comment": "Megjegyzés",
       "spool_count": "Tekercsek"
+    }
+  },
+  "chat": {
+    "title": "Asszisztens",
+    "open": "Kérdezd meg az asszisztenst",
+    "placeholder": "Kérdezz a filamentjeidről és tekercseidről…",
+    "send": "Küldés",
+    "thinking": "Gondolkodás…",
+    "empty": "Kérdezz a tekercseidről és filamentjeidről — például: „mennyi fekete PETG-m maradt?” vagy „mit kellene újrarendelnem?”.",
+    "viewInList": "Megnyitás a Tekercsek listában",
+    "confirm": {
+      "before": "Előtte",
+      "after": "Utána",
+      "confirm": "Megerősítés",
+      "cancel": "Mégse",
+      "confirmed": "Megerősítve",
+      "cancelled": "Megszakítva",
+      "destructive": "Nem vonható vissza"
+    },
+    "executed": {
+      "undo": "Visszavonás",
+      "undone": "A módosítás visszavonva."
+    },
+    "voice": {
+      "record": "Tartsd lenyomva a beszédhez",
+      "listening": "Hallgatás…",
+      "speak": "Válaszok felolvasása",
+      "unsupported": "A hangrögzítés nem támogatott ebben a böngészőben.",
+      "mic_error": "Nem sikerült hozzáférni a mikrofonhoz."
+    }
+  },
+  "intake": {
+    "hint": "Fényképezd le a tekercs címkéjét vagy dobozát, vagy válassz egy meglévő fotót.",
+    "select_photo": "Fotó kiválasztása vagy készítése",
+    "extracting": "A címke beolvasása...",
+    "in_library": "megvan a könyvtáradban, tekercset ad hozzá",
+    "from_catalog": "SpoolmanDB, szálat és tekercset hoz létre",
+    "use_raw": "Nyers adatok használata (új szál)",
+    "continue": "Folytatás",
+    "back": "Vissza",
+    "photo_discarded": "A fotó elemzése memóriában történt, nincs elmentve.",
+    "prefilled_banner": "Előre kitöltve egy címkefotó alapján - mentés előtt ellenőrizd az értékeket.",
+    "fields": {
+      "vendor": "Gyártó",
+      "name": "Név",
+      "material": "Anyag",
+      "weight_g": "Súly (g)",
+      "diameter_mm": "Átmérő (mm)",
+      "extruder_temp_c": "Fúvóka (C)",
+      "bed_temp_c": "Tárgyasztal (C)",
+      "lot_nr": "Tételszám",
+      "article_number": "Cikkszám",
+      "confidence": "Megbízhatóság"
     }
   }
 }

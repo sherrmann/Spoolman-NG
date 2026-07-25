@@ -357,6 +357,14 @@
       "shown_other": "{{count}} makara gösteriliyor",
       "selected_one": "{{count}} makara seçildi",
       "selected_other": "{{count}} makara seçildi"
+    },
+    "nlSearch": {
+      "button": "AI",
+      "title": "Doğal dilde arama",
+      "placeholder": "örn. B rafındaki siyah PETG",
+      "hint": "Düzenlenebilir filtreler olarak uygulanır",
+      "search": "Ara",
+      "error": "Arama yorumlanamadı. Tekrar deneyin veya normal arama kutusunu kullanın."
     }
   },
   "filament": {
@@ -711,6 +719,94 @@
       "add_title": "Bağlantı ekle",
       "edit_title": "Bağlantıyı düzenle",
       "delete_confirm": "Bu bağlantı silinsin mi?"
+    },
+    "ai": {
+      "tab": "YZ",
+      "description": "OpenAI uyumlu bir uç nokta bağlayın (Ollama, LM Studio, OpenAI, Anthropic, OpenRouter, Requesty, Groq, ...). Aşağıdaki özelliklerden biri etkinleştirilene kadar hiçbir yere veri gönderilmez ve arayüzde hiçbir YZ öğesi görünmez.",
+      "preset": {
+        "label": "Ön ayar",
+        "placeholder": "Temel URL'yi doldurmak için bir sağlayıcı seçin"
+      },
+      "base_url": {
+        "label": "Temel URL",
+        "tooltip": "Kullanılacak OpenAI uyumlu uç nokta, örn. ağınızdaki bir Ollama sunucusu.",
+        "invalid": "http:// veya https:// ile başlayan bir URL olmalıdır"
+      },
+      "api_key": {
+        "label": "API anahtarı",
+        "tooltip": "Yalnızca yazılabilir olarak saklanır: sunucu bunu hiçbir istemciye geri göndermez. Ollama ve LM Studio için gerekli değildir.",
+        "placeholder_set": "Bir anahtar kayıtlı - değiştirmek için yeni bir değer girin",
+        "placeholder_unset": "Kayıtlı anahtar yok",
+        "clear": "Kayıtlı anahtarı temizle"
+      },
+      "model": {
+        "label": "Sohbet modeli",
+        "tooltip": "Sohbet ve araç çağırma özellikleri için kullanılan model. Uç noktanın modellerini listelemek için bir bağlantı testi çalıştırın."
+      },
+      "vision_model": {
+        "label": "Görüntü modeli",
+        "tooltip": "Görüntü özellikleri için kullanılan model. Sohbet modelini kullanmak için boş bırakın."
+      },
+      "stt": {
+        "title": "Sesten metne (sesli giriş)",
+        "hint": "Sesli giriş için ayrı bir OpenAI uyumlu transkripsiyon uç noktası - Ollama'da sesten metne özelliği yoktur. Örneğin bir whisper.cpp sunucusu, Speaches veya Groq whisper.",
+        "base_url": {
+          "label": "STT temel URL'si",
+          "tooltip": "Transkripsiyon uç noktası, örn. http://localhost:8000/v1"
+        },
+        "api_key": {
+          "label": "STT API anahtarı"
+        },
+        "model": {
+          "label": "STT modeli",
+          "tooltip": "Transkripsiyon modeli, örn. whisper-1 veya Systran/faster-whisper-base."
+        }
+      },
+      "env_locked": "Bir ortam değişkeni üzerinden ayarlandı ve burada kilitli",
+      "test": "Bağlantıyı test et",
+      "probe": {
+        "reachable": "Uç noktaya ulaşılabiliyor",
+        "models_listed": "listelenen modeller",
+        "failed": "Bağlantı testi başarısız oldu.",
+        "chat": "Sohbet",
+        "tools": "Araç çağrıları",
+        "vision": "Görüntü",
+        "yes": "destekleniyor",
+        "no": "desteklenmiyor",
+        "unknown": "doğrulanmadı - bu uç nokta yetenekleri bildirmiyor"
+      },
+      "features": {
+        "title": "Özellikler",
+        "hint": "Tüm özellikler varsayılan olarak kapalıdır. Burada etkinleştirilene kadar arayüzde hiçbir yerde YZ ile ilgili bir şey görünmez.",
+        "chat": "Sohbet asistanı",
+        "scan_to_spool": "Scan-to-Spool fotoğraf girişi",
+        "nl_search": "Doğal dilde arama",
+        "mcp": "MCP sunucusu",
+        "voice": "Sesli giriş",
+        "requires_config": "Önce bir uç nokta ve sohbet modeli yapılandırıp kaydedin.",
+        "requires_vision": "Bağlantı testi, yapılandırılan model için görüntü desteği bildirmiyor.",
+        "requires_stt": "Önce bir sesten metne uç noktası ve modeli yapılandırıp kaydedin.",
+        "voice_autosend": "Sesli transkriptleri önce incelemeden otomatik olarak gönder",
+        "voice_unavailable": "Henüz kullanılamıyor - bu, sesli giriş özelliğiyle birlikte gelecek."
+      },
+      "mcp": {
+        "title": "MCP sunucusu",
+        "hint": "Envanterinizi sorgulamak ve güncellemek için bir MCP istemcisini (Claude Desktop, claude.ai) bu Spoolman'a yönlendirin. LLM sağlayıcısına gerek yoktur - yalnızca bu anahtar yeterlidir.",
+        "copy": "Yapılandırmayı kopyala",
+        "copied": "Yapılandırma panoya kopyalandı.",
+        "auth_note": "Bu Spoolman bir API token'ı gerektiriyorsa, \"headers\" altına bir \"Authorization\": \"Bearer <token>\" girdisi ekleyin. Salt okunur hesaplar yalnızca sorgu araçları alır."
+      },
+      "models": {
+        "title": "Ollama modelleri",
+        "hint": "Uç noktanız bir Ollama sunucusu. Önerilen bir modeli doğrudan buradan indirin - Spoolman modelleri yönetir, çalışma zamanını asla yönetmez.",
+        "installed": "Yüklü",
+        "pull": "İndir",
+        "pulled": "{{model}} indirildi.",
+        "purpose": {
+          "chat": "sohbet",
+          "vision": "görüntü"
+        }
+      }
     }
   },
   "documentTitle": {
@@ -998,7 +1094,8 @@
       "unknown_content": "Hiçbir filamentin {{code}} barkodu yok. Bir filament oluşturulup bu barkod ona kaydedilsin mi?",
       "create_filament": "Filament oluştur",
       "lookup_error": "Bu barkod sorgulanamadı."
-    }
+    },
+    "photo": "Fotoğraf"
   },
   "printer": {
     "printer": "Yazıcı",
@@ -1006,6 +1103,59 @@
       "name": "Ad",
       "comment": "Yorum",
       "spool_count": "Makaralar"
+    }
+  },
+  "chat": {
+    "title": "Asistan",
+    "open": "Asistana sor",
+    "placeholder": "Filamentiniz ve makaralarınız hakkında sorun…",
+    "send": "Gönder",
+    "thinking": "Düşünüyor…",
+    "empty": "Makaralarınız ve filamentiniz hakkında bana soru sorun — örneğin \"elimde ne kadar siyah PETG kaldı?\" veya \"neyi yeniden sipariş etmeliyim?\".",
+    "viewInList": "Makaralar listesinde göster",
+    "confirm": {
+      "before": "Önce",
+      "after": "Sonra",
+      "confirm": "Onayla",
+      "cancel": "İptal et",
+      "confirmed": "Onaylandı",
+      "cancelled": "İptal edildi",
+      "destructive": "Geri alınamaz"
+    },
+    "executed": {
+      "undo": "Geri al",
+      "undone": "Değişiklik geri alındı."
+    },
+    "voice": {
+      "record": "Konuşmak için basılı tutun",
+      "listening": "Dinleniyor…",
+      "speak": "Yanıtları sesli oku",
+      "unsupported": "Bu tarayıcıda sesli kayıt desteklenmiyor.",
+      "mic_error": "Mikrofona erişilemedi."
+    }
+  },
+  "intake": {
+    "hint": "Makaranın etiketini veya kutusunu fotoğraflayın, ya da var olan bir fotoğrafı seçin.",
+    "select_photo": "Fotoğraf seçin veya çekin",
+    "extracting": "Etiket okunuyor...",
+    "in_library": "kütüphanenizde, bir makara ekler",
+    "from_catalog": "SpoolmanDB, filament ve makara oluşturur",
+    "use_raw": "Ham veriyi kullan (yeni filament)",
+    "continue": "Devam et",
+    "back": "Geri",
+    "photo_discarded": "Fotoğraf bellekte analiz edildi ve saklanmadı.",
+    "prefilled_banner": "Bir etiket fotoğrafından önceden dolduruldu - kaydetmeden önce değerleri gözden geçirin.",
+    "fields": {
+      "vendor": "Üretici",
+      "name": "Ad",
+      "material": "Malzeme",
+      "weight_g": "Ağırlık (g)",
+      "diameter_mm": "Çap (mm)",
+      "extruder_temp_c": "Nozul (C)",
+      "bed_temp_c": "Tabla (C)",
+      "lot_nr": "Lot",
+      "article_number": "Artikel no",
+      "confidence": "Güven"
     }
   }
 }

@@ -407,6 +407,14 @@
       "selected_one": "{{count}} bobină selectată",
       "selected_few": "{{count}} bobine selectate",
       "selected_other": "{{count}} de bobine selectate"
+    },
+    "nlSearch": {
+      "button": "IA",
+      "title": "Caută în limbaj natural",
+      "placeholder": "ex. PETG negru pe raftul B",
+      "hint": "Aplicat ca filtre editabile",
+      "search": "Caută",
+      "error": "Căutarea nu a putut fi interpretată. Încearcă din nou sau folosește câmpul de căutare obișnuit."
     }
   },
   "filament": {
@@ -774,6 +782,94 @@
       "add_title": "Adaugă link",
       "edit_title": "Editează linkul",
       "delete_confirm": "Ștergeți acest link?"
+    },
+    "ai": {
+      "tab": "IA",
+      "description": "Conectează un server compatibil OpenAI (Ollama, LM Studio, OpenAI, Anthropic, OpenRouter, Requesty, Groq, ...). Nimic nu este trimis nicăieri și niciun element de IA nu apare în interfață până când o funcție de mai jos nu este activată.",
+      "preset": {
+        "label": "Presetare",
+        "placeholder": "Alege un furnizor pentru a completa URL-ul de bază"
+      },
+      "base_url": {
+        "label": "URL de bază",
+        "tooltip": "Serverul compatibil OpenAI care va fi folosit, de ex. un server Ollama din rețeaua ta.",
+        "invalid": "Trebuie să fie un URL http:// sau https://"
+      },
+      "api_key": {
+        "label": "Cheie API",
+        "tooltip": "Stocată doar pentru scriere: serverul nu o retrimite niciodată către vreun client. Ollama și LM Studio nu au nevoie de una.",
+        "placeholder_set": "O cheie este stocată - introdu o valoare nouă pentru a o înlocui",
+        "placeholder_unset": "Nicio cheie stocată",
+        "clear": "Șterge cheia stocată"
+      },
+      "model": {
+        "label": "Model de chat",
+        "tooltip": "Modelul folosit pentru funcțiile de chat și de apelare a uneltelor. Rulează un test de conexiune pentru a lista modelele disponibile pe acest server."
+      },
+      "vision_model": {
+        "label": "Model de viziune",
+        "tooltip": "Modelul folosit pentru funcțiile bazate pe imagini. Lasă necompletat pentru a folosi modelul de chat."
+      },
+      "stt": {
+        "title": "Conversie vorbire în text (intrare vocală)",
+        "hint": "Un server de transcriere separat, compatibil OpenAI, pentru intrarea vocală - Ollama nu are conversie vorbire în text. De exemplu un server whisper.cpp, Speaches sau Groq whisper.",
+        "base_url": {
+          "label": "URL de bază STT",
+          "tooltip": "Serverul de transcriere, de ex. http://localhost:8000/v1"
+        },
+        "api_key": {
+          "label": "Cheie API STT"
+        },
+        "model": {
+          "label": "Model STT",
+          "tooltip": "Modelul de transcriere, de ex. whisper-1 sau Systran/faster-whisper-base."
+        }
+      },
+      "env_locked": "Setat printr-o variabilă de mediu și blocat aici",
+      "test": "Testează conexiunea",
+      "probe": {
+        "reachable": "Server accesibil",
+        "models_listed": "modele listate",
+        "failed": "Testul de conexiune a eșuat.",
+        "chat": "Chat",
+        "tools": "Apeluri de unelte",
+        "vision": "Viziune",
+        "yes": "acceptat",
+        "no": "neacceptat",
+        "unknown": "neverificat - acest server nu raportează capabilitățile"
+      },
+      "features": {
+        "title": "Funcții",
+        "hint": "Toate funcțiile sunt dezactivate implicit. Nimic legat de IA nu apare nicăieri în interfață până când nu este activat aici.",
+        "chat": "Asistent de chat",
+        "scan_to_spool": "Preluare foto Scan-to-Spool",
+        "nl_search": "Căutare în limbaj natural",
+        "mcp": "Server MCP",
+        "voice": "Intrare vocală",
+        "requires_config": "Configurează și salvează mai întâi un server și un model de chat.",
+        "requires_vision": "Testul de conexiune indică faptul că modelul configurat nu are suport pentru viziune.",
+        "requires_stt": "Configurează și salvează mai întâi un server și un model de conversie vorbire în text.",
+        "voice_autosend": "Trimite automat transcrierile vocale, fără a le revizui întâi",
+        "voice_unavailable": "Nu este disponibil încă - vine odată cu funcția de intrare vocală."
+      },
+      "mcp": {
+        "title": "Server MCP",
+        "hint": "Îndreaptă un client MCP (Claude Desktop, claude.ai) către acest Spoolman pentru a interoga și actualiza inventarul tău. Nu ai nevoie de niciun furnizor LLM - doar de acest comutator.",
+        "copy": "Copiază configurația",
+        "copied": "Configurația a fost copiată în clipboard.",
+        "auth_note": "Dacă acest Spoolman necesită un token API, adaugă o intrare \"Authorization\": \"Bearer <token>\" sub \"headers\". Conturile doar-citire primesc doar unelte de interogare."
+      },
+      "models": {
+        "title": "Modele Ollama",
+        "hint": "Serverul tău este un server Ollama. Descarcă un model recomandat direct de aici - Spoolman gestionează modelele, niciodată mediul de rulare.",
+        "installed": "Instalat",
+        "pull": "Descarcă",
+        "pulled": "S-a descărcat {{model}}.",
+        "purpose": {
+          "chat": "chat",
+          "vision": "viziune"
+        }
+      }
     }
   },
   "locations": {
@@ -1027,7 +1123,8 @@
       "unknown_content": "Niciun filament nu are codul de bare {{code}}. Creați un filament și memorați acest cod de bare?",
       "create_filament": "Creează filament",
       "lookup_error": "Căutarea codului de bare a eșuat."
-    }
+    },
+    "photo": "Fotografie"
   },
   "printer": {
     "printer": "Imprimantă",
@@ -1035,6 +1132,59 @@
       "name": "Nume",
       "comment": "Comentariu",
       "spool_count": "Bobine"
+    }
+  },
+  "chat": {
+    "title": "Asistent",
+    "open": "Întreabă asistentul",
+    "placeholder": "Întreabă despre filamentele și bobinele tale…",
+    "send": "Trimite",
+    "thinking": "Se gândește…",
+    "empty": "Întreabă-mă despre bobinele și filamentele tale — de exemplu „cât PETG negru mai am?” sau „ce ar trebui să reaprovizionez?”.",
+    "viewInList": "Vezi în lista de bobine",
+    "confirm": {
+      "before": "Înainte",
+      "after": "După",
+      "confirm": "Confirmă",
+      "cancel": "Anulează",
+      "confirmed": "Confirmat",
+      "cancelled": "Anulat",
+      "destructive": "Nu poate fi anulat"
+    },
+    "executed": {
+      "undo": "Anulează",
+      "undone": "Modificarea a fost anulată."
+    },
+    "voice": {
+      "record": "Ține apăsat pentru a vorbi",
+      "listening": "Ascultă…",
+      "speak": "Citește răspunsurile cu voce tare",
+      "unsupported": "Înregistrarea vocală nu este suportată în acest browser.",
+      "mic_error": "Nu s-a putut accesa microfonul."
+    }
+  },
+  "intake": {
+    "hint": "Fotografiază eticheta sau cutia bobinei, sau alege o fotografie existentă.",
+    "select_photo": "Alege sau fă o fotografie",
+    "extracting": "Se citește eticheta...",
+    "in_library": "în biblioteca ta, adaugă o bobină",
+    "from_catalog": "SpoolmanDB, creează filament și bobină",
+    "use_raw": "Folosește extragerea brută (filament nou)",
+    "continue": "Continuă",
+    "back": "Înapoi",
+    "photo_discarded": "Fotografia a fost analizată în memorie și nu este stocată.",
+    "prefilled_banner": "Precompletat dintr-o fotografie a etichetei - verifică valorile înainte de a salva.",
+    "fields": {
+      "vendor": "Producător",
+      "name": "Nume",
+      "material": "Material",
+      "weight_g": "Greutate (g)",
+      "diameter_mm": "Diametru (mm)",
+      "extruder_temp_c": "Duză (C)",
+      "bed_temp_c": "Pat (C)",
+      "lot_nr": "Lot",
+      "article_number": "Articol nr",
+      "confidence": "Încredere"
     }
   }
 }

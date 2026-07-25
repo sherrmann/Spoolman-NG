@@ -368,6 +368,14 @@
       "shown_other": "{{count}} spolar visas",
       "selected_one": "{{count}} spole vald",
       "selected_other": "{{count}} spolar valda"
+    },
+    "nlSearch": {
+      "button": "AI",
+      "title": "Sök med naturligt språk",
+      "placeholder": "t.ex. svart PETG i hylla B",
+      "hint": "Tillämpas som redigerbara filter",
+      "search": "Sök",
+      "error": "Sökningen kunde inte tolkas. Försök igen eller använd den vanliga sökrutan."
     }
   },
   "filament": {
@@ -713,6 +721,94 @@
       "add_title": "Lägg till länk",
       "edit_title": "Ändra länk",
       "delete_confirm": "Ta bort den här länken?"
+    },
+    "ai": {
+      "tab": "AI",
+      "description": "Anslut en OpenAI-kompatibel endpoint (Ollama, LM Studio, OpenAI, Anthropic, OpenRouter, Requesty, Groq, ...). Ingenting skickas någonstans och inget AI-element visas i gränssnittet förrän en funktion nedan har aktiverats.",
+      "preset": {
+        "label": "Förinställning",
+        "placeholder": "Välj en leverantör för att fylla i bas-URL:en"
+      },
+      "base_url": {
+        "label": "Bas-URL",
+        "tooltip": "Den OpenAI-kompatibla endpoint som ska användas, t.ex. en Ollama-server på ditt nätverk.",
+        "invalid": "Måste vara en http://- eller https://-URL"
+      },
+      "api_key": {
+        "label": "API-nyckel",
+        "tooltip": "Lagras skrivskyddat: servern skickar aldrig tillbaka den till någon klient. Ollama och LM Studio behöver ingen.",
+        "placeholder_set": "En nyckel är sparad - ange ett nytt värde för att ersätta den",
+        "placeholder_unset": "Ingen nyckel sparad",
+        "clear": "Rensa sparad nyckel"
+      },
+      "model": {
+        "label": "Chattmodell",
+        "tooltip": "Modellen som används för chatt- och verktygsanropsfunktioner. Kör ett anslutningstest för att lista endpointens modeller."
+      },
+      "vision_model": {
+        "label": "Vision-modell",
+        "tooltip": "Modellen som används för bildfunktioner. Lämna tomt för att använda chattmodellen."
+      },
+      "stt": {
+        "title": "Tal till text (röstinmatning)",
+        "hint": "En separat OpenAI-kompatibel transkriberingsendpoint för röstinmatning - Ollama har ingen tal-till-text-funktion. Till exempel en whisper.cpp-server, Speaches eller Groq whisper.",
+        "base_url": {
+          "label": "STT-bas-URL",
+          "tooltip": "Transkriberingsendpointen, t.ex. http://localhost:8000/v1"
+        },
+        "api_key": {
+          "label": "STT-API-nyckel"
+        },
+        "model": {
+          "label": "STT-modell",
+          "tooltip": "Transkriberingsmodellen, t.ex. whisper-1 eller Systran/faster-whisper-base."
+        }
+      },
+      "env_locked": "Angetts via miljövariabel och är låst här",
+      "test": "Testa anslutning",
+      "probe": {
+        "reachable": "Endpointen är nåbar",
+        "models_listed": "modeller listade",
+        "failed": "Anslutningstestet misslyckades.",
+        "chat": "Chatt",
+        "tools": "Verktygsanrop",
+        "vision": "Vision",
+        "yes": "stöds",
+        "no": "stöds inte",
+        "unknown": "inte verifierat - denna endpoint rapporterar inte funktioner"
+      },
+      "features": {
+        "title": "Funktioner",
+        "hint": "Alla funktioner är avstängda som standard. Inget AI-relaterat visas någonstans i gränssnittet förrän det har aktiverats här.",
+        "chat": "Chattassistent",
+        "scan_to_spool": "Scan-to-Spool-fotoinmatning",
+        "nl_search": "Sökning med naturligt språk",
+        "mcp": "MCP-server",
+        "voice": "Röstinmatning",
+        "requires_config": "Konfigurera och spara en endpoint och en chattmodell först.",
+        "requires_vision": "Anslutningstestet rapporterar inget vision-stöd för den konfigurerade modellen.",
+        "requires_stt": "Konfigurera och spara en tal-till-text-endpoint och -modell först.",
+        "voice_autosend": "Skicka rösttranskriptioner automatiskt istället för att granska dem först",
+        "voice_unavailable": "Inte tillgänglig ännu - detta kommer med röstinmatningsfunktionen."
+      },
+      "mcp": {
+        "title": "MCP-server",
+        "hint": "Peka en MCP-klient (Claude Desktop, claude.ai) mot den här Spoolman-instansen för att fråga och uppdatera ditt lager. Ingen LLM-leverantör behövs - bara det här reglaget.",
+        "copy": "Kopiera konfiguration",
+        "copied": "Konfigurationen har kopierats till urklipp.",
+        "auth_note": "Om den här Spoolman-instansen kräver en API-token, lägg till en \"Authorization\": \"Bearer <token>\"-post under \"headers\". Skrivskyddade konton får endast frågeverktyg."
+      },
+      "models": {
+        "title": "Ollama-modeller",
+        "hint": "Din endpoint är en Ollama-server. Hämta en rekommenderad modell direkt härifrån - Spoolman hanterar modeller, aldrig körmiljön.",
+        "installed": "Installerad",
+        "pull": "Hämta",
+        "pulled": "Hämtade {{model}}.",
+        "purpose": {
+          "chat": "chatt",
+          "vision": "vision"
+        }
+      }
     }
   },
   "documentTitle": {
@@ -1010,7 +1106,8 @@
       "unknown_content": "Inget filament har streckkoden {{code}}. Skapa ett filament och kom ihåg den här streckkoden?",
       "create_filament": "Skapa filament",
       "lookup_error": "Det gick inte att slå upp streckkoden."
-    }
+    },
+    "photo": "Foto"
   },
   "printer": {
     "printer": "Skrivare",
@@ -1018,6 +1115,59 @@
       "name": "Namn",
       "comment": "Kommentar",
       "spool_count": "Spolar"
+    }
+  },
+  "chat": {
+    "title": "Assistent",
+    "open": "Fråga assistenten",
+    "placeholder": "Fråga om ditt filament och dina spolar…",
+    "send": "Skicka",
+    "thinking": "Tänker…",
+    "empty": "Fråga mig om dina spolar och ditt filament — till exempel \"hur mycket svart PETG har jag kvar?\" eller \"vad borde jag beställa mer av?\".",
+    "viewInList": "Visa i spollistan",
+    "confirm": {
+      "before": "Före",
+      "after": "Efter",
+      "confirm": "Bekräfta",
+      "cancel": "Avbryt",
+      "confirmed": "Bekräftad",
+      "cancelled": "Avbruten",
+      "destructive": "Kan inte ångras"
+    },
+    "executed": {
+      "undo": "Ångra",
+      "undone": "Ändringen ångrades."
+    },
+    "voice": {
+      "record": "Håll intryckt för att tala",
+      "listening": "Lyssnar…",
+      "speak": "Läs upp svar",
+      "unsupported": "Röstinspelning stöds inte i denna webbläsare.",
+      "mic_error": "Det gick inte att komma åt mikrofonen."
+    }
+  },
+  "intake": {
+    "hint": "Fotografera spolens etikett eller förpackning, eller välj ett befintligt foto.",
+    "select_photo": "Välj eller ta ett foto",
+    "extracting": "Läser etiketten...",
+    "in_library": "i ditt bibliotek, lägger till en spole",
+    "from_catalog": "SpoolmanDB, skapar filament och spole",
+    "use_raw": "Använd den råa extraktionen (nytt filament)",
+    "continue": "Fortsätt",
+    "back": "Tillbaka",
+    "photo_discarded": "Fotot analyserades i minnet och sparas inte.",
+    "prefilled_banner": "Förifyllt från ett etikettfoto - granska värdena innan du sparar.",
+    "fields": {
+      "vendor": "Tillverkare",
+      "name": "Namn",
+      "material": "Material",
+      "weight_g": "Vikt (g)",
+      "diameter_mm": "Diameter (mm)",
+      "extruder_temp_c": "Munstycke (C)",
+      "bed_temp_c": "Bädd (C)",
+      "lot_nr": "Batch",
+      "article_number": "Artikelnr",
+      "confidence": "Tillförlitlighet"
     }
   }
 }

@@ -211,6 +211,14 @@
       "selected_one": "{{count}} bobina seleccionada",
       "selected_many": "{{count}} bobinas seleccionadas",
       "selected_other": "{{count}} bobinas seleccionadas"
+    },
+    "nlSearch": {
+      "button": "IA",
+      "title": "Buscar con lenguaje natural",
+      "placeholder": "p. ej. PETG negro en el estante B",
+      "hint": "Se aplica como filtros editables",
+      "search": "Buscar",
+      "error": "No se pudo traducir la búsqueda. Inténtalo de nuevo o usa el cuadro de búsqueda normal."
     }
   },
   "filament": {
@@ -774,6 +782,94 @@
       "add_title": "Añadir enlace",
       "edit_title": "Editar enlace",
       "delete_confirm": "¿Borrar este enlace?"
+    },
+    "ai": {
+      "tab": "IA",
+      "description": "Conecta un endpoint compatible con OpenAI (Ollama, LM Studio, OpenAI, Anthropic, OpenRouter, Requesty, Groq, ...). No se envía nada a ningún sitio y no aparece ningún elemento de IA en la interfaz hasta que actives una función a continuación.",
+      "preset": {
+        "label": "Preajuste",
+        "placeholder": "Elige un proveedor para rellenar la URL base"
+      },
+      "base_url": {
+        "label": "URL base",
+        "tooltip": "El endpoint compatible con OpenAI que se usará, p. ej. un servidor Ollama en tu red.",
+        "invalid": "Debe ser una URL http:// o https://"
+      },
+      "api_key": {
+        "label": "Clave de API",
+        "tooltip": "Se almacena en modo solo escritura: el servidor nunca la devuelve a ningún cliente. Ollama y LM Studio no la necesitan.",
+        "placeholder_set": "Hay una clave almacenada - introduce un valor nuevo para reemplazarla",
+        "placeholder_unset": "Sin clave almacenada",
+        "clear": "Borrar clave almacenada"
+      },
+      "model": {
+        "label": "Modelo de chat",
+        "tooltip": "El modelo utilizado para las funciones de chat y de llamada a herramientas. Ejecuta una prueba de conexión para listar los modelos del endpoint."
+      },
+      "vision_model": {
+        "label": "Modelo de visión",
+        "tooltip": "El modelo utilizado para las funciones de imagen. Déjalo vacío para usar el modelo de chat."
+      },
+      "stt": {
+        "title": "Voz a texto (entrada de voz)",
+        "hint": "Un endpoint de transcripción compatible con OpenAI independiente para la entrada de voz - Ollama no tiene voz a texto. Por ejemplo, un servidor whisper.cpp, Speaches o Groq whisper.",
+        "base_url": {
+          "label": "URL base de voz a texto",
+          "tooltip": "El endpoint de transcripción, p. ej. http://localhost:8000/v1"
+        },
+        "api_key": {
+          "label": "Clave de API de voz a texto"
+        },
+        "model": {
+          "label": "Modelo de voz a texto",
+          "tooltip": "El modelo de transcripción, p. ej. whisper-1 o Systran/faster-whisper-base."
+        }
+      },
+      "env_locked": "Establecido mediante variable de entorno y bloqueado aquí",
+      "test": "Probar conexión",
+      "probe": {
+        "reachable": "Endpoint accesible",
+        "models_listed": "modelos listados",
+        "failed": "La prueba de conexión falló.",
+        "chat": "Chat",
+        "tools": "Llamadas a herramientas",
+        "vision": "Visión",
+        "yes": "compatible",
+        "no": "no compatible",
+        "unknown": "no verificado - este endpoint no informa sus capacidades"
+      },
+      "features": {
+        "title": "Funciones",
+        "hint": "Todas las funciones están desactivadas de forma predeterminada. Ningún elemento relacionado con la IA aparece en ningún lugar de la interfaz hasta que lo actives aquí.",
+        "chat": "Asistente de chat",
+        "scan_to_spool": "Alta de bobina por foto (Scan-to-Spool)",
+        "nl_search": "Búsqueda en lenguaje natural",
+        "mcp": "Servidor MCP",
+        "voice": "Entrada de voz",
+        "requires_config": "Configura y guarda primero un endpoint y un modelo de chat.",
+        "requires_vision": "La prueba de conexión indica que el modelo configurado no admite visión.",
+        "requires_stt": "Configura y guarda primero un endpoint y un modelo de voz a texto.",
+        "voice_autosend": "Enviar las transcripciones de voz automáticamente en lugar de revisarlas primero",
+        "voice_unavailable": "Aún no disponible - llegará con la función de entrada de voz."
+      },
+      "mcp": {
+        "title": "Servidor MCP",
+        "hint": "Apunta un cliente MCP (Claude Desktop, claude.ai) a este Spoolman para consultar y actualizar tu inventario. No hace falta ningún proveedor de LLM - solo este interruptor.",
+        "copy": "Copiar configuración",
+        "copied": "Configuración copiada al portapapeles.",
+        "auth_note": "Si este Spoolman requiere un token de API, añade una entrada \"Authorization\": \"Bearer <token>\" bajo \"headers\". Las cuentas de solo lectura solo obtienen herramientas de consulta."
+      },
+      "models": {
+        "title": "Modelos de Ollama",
+        "hint": "Tu endpoint es un servidor Ollama. Descarga un modelo recomendado directamente desde aquí - Spoolman gestiona los modelos, nunca el runtime.",
+        "installed": "Instalado",
+        "pull": "Descargar",
+        "pulled": "Se descargó {{model}}.",
+        "purpose": {
+          "chat": "chat",
+          "vision": "visión"
+        }
+      }
     }
   },
   "locations": {
@@ -1027,7 +1123,8 @@
       "unknown_content": "Ningún filamento tiene el código de barras {{code}}. ¿Crear un filamento y recordar este código de barras?",
       "create_filament": "Crear filamento",
       "lookup_error": "No se pudo consultar ese código de barras."
-    }
+    },
+    "photo": "Foto"
   },
   "printer": {
     "printer": "Impresora",
@@ -1035,6 +1132,59 @@
       "name": "Nombre",
       "comment": "Comentario",
       "spool_count": "Bobinas"
+    }
+  },
+  "chat": {
+    "title": "Asistente",
+    "open": "Preguntar al asistente",
+    "placeholder": "Pregunta sobre tu filamento y tus bobinas…",
+    "send": "Enviar",
+    "thinking": "Pensando…",
+    "empty": "Pregúntame sobre tus bobinas y tu filamento — por ejemplo «¿cuánto PETG negro me queda?» o «¿qué debería reponer?».",
+    "viewInList": "Ver en la lista de bobinas",
+    "confirm": {
+      "before": "Antes",
+      "after": "Después",
+      "confirm": "Confirmar",
+      "cancel": "Cancelar",
+      "confirmed": "Confirmado",
+      "cancelled": "Cancelado",
+      "destructive": "No se puede deshacer"
+    },
+    "executed": {
+      "undo": "Deshacer",
+      "undone": "Cambio deshecho."
+    },
+    "voice": {
+      "record": "Mantén pulsado para hablar",
+      "listening": "Escuchando…",
+      "speak": "Leer respuestas",
+      "unsupported": "La grabación de voz no es compatible con este navegador.",
+      "mic_error": "No se pudo acceder al micrófono."
+    }
+  },
+  "intake": {
+    "hint": "Fotografía la etiqueta o la caja de la bobina, o elige una foto existente.",
+    "select_photo": "Seleccionar o tomar una foto",
+    "extracting": "Leyendo la etiqueta...",
+    "in_library": "en tu biblioteca, añade una bobina",
+    "from_catalog": "SpoolmanDB, crea el filamento y la bobina",
+    "use_raw": "Usar la extracción sin procesar (nuevo filamento)",
+    "continue": "Continuar",
+    "back": "Atrás",
+    "photo_discarded": "La foto se analizó en memoria y no se almacena.",
+    "prefilled_banner": "Rellenado automáticamente a partir de una foto de la etiqueta - revisa los valores antes de guardar.",
+    "fields": {
+      "vendor": "Fabricante",
+      "name": "Nombre",
+      "material": "Material",
+      "weight_g": "Peso (g)",
+      "diameter_mm": "Diámetro (mm)",
+      "extruder_temp_c": "Boquilla (C)",
+      "bed_temp_c": "Cama (C)",
+      "lot_nr": "Lote",
+      "article_number": "Nº artículo",
+      "confidence": "Confianza"
     }
   }
 }

@@ -185,6 +185,14 @@
       "selected_one": "Wybrano {{count}} szpulę",
       "selected_few": "Wybrano {{count}} szpule",
       "selected_many": "Wybrano {{count}} szpul"
+    },
+    "nlSearch": {
+      "button": "AI",
+      "title": "Wyszukiwanie w języku naturalnym",
+      "placeholder": "np. czarny PETG na półce B",
+      "hint": "Zastosowane jako edytowalne filtry",
+      "search": "Szukaj",
+      "error": "Nie udało się przetłumaczyć wyszukiwania. Spróbuj ponownie lub użyj zwykłego pola wyszukiwania."
     }
   },
   "dashboard": {
@@ -774,6 +782,94 @@
       "add_title": "Dodaj link",
       "edit_title": "Edytuj link",
       "delete_confirm": "Usunąć ten link?"
+    },
+    "ai": {
+      "tab": "AI",
+      "description": "Połącz się z endpointem kompatybilnym z OpenAI (Ollama, LM Studio, OpenAI, Anthropic, OpenRouter, Requesty, Groq, ...). Nic nie jest nigdzie wysyłane i żaden element AI nie pojawia się w interfejsie, dopóki poniższa funkcja nie zostanie włączona.",
+      "preset": {
+        "label": "Preset",
+        "placeholder": "Wybierz dostawcę, aby uzupełnić bazowy URL"
+      },
+      "base_url": {
+        "label": "Bazowy URL",
+        "tooltip": "Endpoint kompatybilny z OpenAI, którego chcesz użyć, np. serwer Ollama w Twojej sieci.",
+        "invalid": "Musi być adresem URL http:// lub https://"
+      },
+      "api_key": {
+        "label": "Klucz API",
+        "tooltip": "Przechowywany tylko do zapisu: serwer nigdy nie odsyła go z powrotem do żadnego klienta. Ollama i LM Studio go nie wymagają.",
+        "placeholder_set": "Klucz jest zapisany - wprowadź nową wartość, aby go zastąpić",
+        "placeholder_unset": "Brak zapisanego klucza",
+        "clear": "Wyczyść zapisany klucz"
+      },
+      "model": {
+        "label": "Model czatu",
+        "tooltip": "Model używany do czatu i funkcji wywołań narzędzi. Uruchom test połączenia, aby wyświetlić listę modeli endpointu."
+      },
+      "vision_model": {
+        "label": "Model wizyjny",
+        "tooltip": "Model używany do funkcji obrazu. Pozostaw puste, aby użyć modelu czatu."
+      },
+      "stt": {
+        "title": "Zamiana mowy na tekst (wejście głosowe)",
+        "hint": "Osobny endpoint transkrypcji kompatybilny z OpenAI dla wejścia głosowego - Ollama nie obsługuje zamiany mowy na tekst. Na przykład serwer whisper.cpp, Speaches lub Groq whisper.",
+        "base_url": {
+          "label": "Bazowy URL STT",
+          "tooltip": "Endpoint transkrypcji, np. http://localhost:8000/v1"
+        },
+        "api_key": {
+          "label": "Klucz API STT"
+        },
+        "model": {
+          "label": "Model STT",
+          "tooltip": "Model transkrypcji, np. whisper-1 lub Systran/faster-whisper-base."
+        }
+      },
+      "env_locked": "Ustawione przez zmienną środowiskową i zablokowane tutaj",
+      "test": "Testuj połączenie",
+      "probe": {
+        "reachable": "Endpoint dostępny",
+        "models_listed": "modele na liście",
+        "failed": "Test połączenia nie powiódł się.",
+        "chat": "Czat",
+        "tools": "Wywołania narzędzi",
+        "vision": "Wizja",
+        "yes": "obsługiwane",
+        "no": "nieobsługiwane",
+        "unknown": "niezweryfikowane - ten endpoint nie zgłasza swoich możliwości"
+      },
+      "features": {
+        "title": "Funkcje",
+        "hint": "Wszystkie funkcje są domyślnie wyłączone. Nic związanego z AI nie pojawia się nigdzie w interfejsie, dopóki nie zostanie tutaj włączone.",
+        "chat": "Asystent czatu",
+        "scan_to_spool": "Wczytywanie zdjęć Scan-to-Spool",
+        "nl_search": "Wyszukiwanie w języku naturalnym",
+        "mcp": "Serwer MCP",
+        "voice": "Wejście głosowe",
+        "requires_config": "Najpierw skonfiguruj i zapisz endpoint oraz model czatu.",
+        "requires_vision": "Test połączenia nie zgłasza obsługi wizji dla skonfigurowanego modelu.",
+        "requires_stt": "Najpierw skonfiguruj i zapisz endpoint oraz model zamiany mowy na tekst.",
+        "voice_autosend": "Wysyłaj transkrypcje głosowe automatycznie zamiast najpierw je przeglądać",
+        "voice_unavailable": "Jeszcze niedostępne - pojawi się wraz z funkcją wejścia głosowego."
+      },
+      "mcp": {
+        "title": "Serwer MCP",
+        "hint": "Skieruj klienta MCP (Claude Desktop, claude.ai) na tego Spoolmana, aby odpytywać i aktualizować swój magazyn. Nie jest wymagany dostawca LLM - wystarczy ten przełącznik.",
+        "copy": "Kopiuj konfigurację",
+        "copied": "Konfiguracja skopiowana do schowka.",
+        "auth_note": "Jeśli ten Spoolman wymaga tokenu API, dodaj wpis \"Authorization\": \"Bearer <token>\" w sekcji \"headers\". Konta tylko do odczytu otrzymują wyłącznie narzędzia zapytań."
+      },
+      "models": {
+        "title": "Modele Ollama",
+        "hint": "Twój endpoint to serwer Ollama. Pobierz zalecany model bezpośrednio stąd - Spoolman zarządza modelami, nigdy środowiskiem uruchomieniowym.",
+        "installed": "Zainstalowany",
+        "pull": "Pobierz",
+        "pulled": "Pobrano {{model}}.",
+        "purpose": {
+          "chat": "czat",
+          "vision": "wizja"
+        }
+      }
     }
   },
   "locations": {
@@ -1027,7 +1123,8 @@
       "unknown_content": "Żaden filament nie ma kodu kreskowego {{code}}. Utworzyć filament i zapamiętać ten kod?",
       "create_filament": "Utwórz filament",
       "lookup_error": "Nie udało się wyszukać tego kodu kreskowego."
-    }
+    },
+    "photo": "Zdjęcie"
   },
   "printer": {
     "printer": "Drukarka",
@@ -1035,6 +1132,59 @@
       "name": "Nazwa",
       "comment": "Komentarz",
       "spool_count": "Szpule"
+    }
+  },
+  "chat": {
+    "title": "Asystent",
+    "open": "Zapytaj asystenta",
+    "placeholder": "Zapytaj o swój filament i szpule…",
+    "send": "Wyślij",
+    "thinking": "Myślenie…",
+    "empty": "Zapytaj mnie o swoje szpule i filament — na przykład „Ile zostało mi czarnego PETG?” lub „Co powinienem zamówić ponownie?”.",
+    "viewInList": "Zobacz na liście szpul",
+    "confirm": {
+      "before": "Przed",
+      "after": "Po",
+      "confirm": "Potwierdź",
+      "cancel": "Anuluj",
+      "confirmed": "Potwierdzono",
+      "cancelled": "Anulowano",
+      "destructive": "Nie można cofnąć"
+    },
+    "executed": {
+      "undo": "Cofnij",
+      "undone": "Zmiana cofnięta."
+    },
+    "voice": {
+      "record": "Przytrzymaj, aby mówić",
+      "listening": "Słucham…",
+      "speak": "Odczytuj odpowiedzi na głos",
+      "unsupported": "Nagrywanie głosu nie jest obsługiwane w tej przeglądarce.",
+      "mic_error": "Nie udało się uzyskać dostępu do mikrofonu."
+    }
+  },
+  "intake": {
+    "hint": "Zrób zdjęcie etykiety lub pudełka szpuli albo wybierz istniejące zdjęcie.",
+    "select_photo": "Wybierz lub zrób zdjęcie",
+    "extracting": "Odczytywanie etykiety...",
+    "in_library": "w Twojej bibliotece, dodaje szpulę",
+    "from_catalog": "SpoolmanDB, tworzy filament i szpulę",
+    "use_raw": "Użyj surowych danych (nowy filament)",
+    "continue": "Kontynuuj",
+    "back": "Wstecz",
+    "photo_discarded": "Zdjęcie zostało przeanalizowane w pamięci i nie jest przechowywane.",
+    "prefilled_banner": "Wypełniono na podstawie zdjęcia etykiety - sprawdź wartości przed zapisaniem.",
+    "fields": {
+      "vendor": "Producent",
+      "name": "Nazwa",
+      "material": "Materiał",
+      "weight_g": "Waga (g)",
+      "diameter_mm": "Średnica (mm)",
+      "extruder_temp_c": "Dysza (C)",
+      "bed_temp_c": "Stół (C)",
+      "lot_nr": "Partia",
+      "article_number": "Nr artykułu",
+      "confidence": "Pewność"
     }
   }
 }

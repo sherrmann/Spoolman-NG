@@ -282,7 +282,8 @@
       "unknown_content": "No filament has the barcode {{code}}. Create a filament and remember this barcode?",
       "create_filament": "Create filament",
       "lookup_error": "Could not look up that barcode."
-    }
+    },
+    "photo": "Photo"
   },
   "scanner": {
     "title": "QR Code Scanner",
@@ -434,6 +435,14 @@
     },
     "formats": {
       "last_used": "Last used {{date}}"
+    },
+    "nlSearch": {
+      "button": "AI",
+      "title": "Search with natural language",
+      "placeholder": "e.g. black PETG in shelf B",
+      "hint": "Applied as editable filters",
+      "search": "Search",
+      "error": "The search could not be translated. Try again or use the normal search box."
     }
   },
   "filament": {
@@ -808,6 +817,94 @@
       "key_not_changed": "Please change the key to something else.",
       "delete_confirm": "Delete field {{name}}?",
       "delete_confirm_description": "This will delete the field and all associated data for all entities."
+    },
+    "ai": {
+      "tab": "AI",
+      "description": "Connect an OpenAI-compatible endpoint (Ollama, LM Studio, OpenAI, Anthropic, OpenRouter, Requesty, Groq, ...). Nothing is sent anywhere and no AI element appears in the interface until a feature below is enabled.",
+      "preset": {
+        "label": "Preset",
+        "placeholder": "Pick a provider to fill in the base URL"
+      },
+      "base_url": {
+        "label": "Base URL",
+        "tooltip": "The OpenAI-compatible endpoint to use, e.g. an Ollama server on your network.",
+        "invalid": "Must be an http:// or https:// URL"
+      },
+      "api_key": {
+        "label": "API key",
+        "tooltip": "Stored write-only: the server never sends it back to any client. Ollama and LM Studio need none.",
+        "placeholder_set": "A key is stored - enter a new value to replace it",
+        "placeholder_unset": "No key stored",
+        "clear": "Clear stored key"
+      },
+      "model": {
+        "label": "Chat model",
+        "tooltip": "The model used for chat and tool-calling features. Run a connection test to list the endpoint's models."
+      },
+      "vision_model": {
+        "label": "Vision model",
+        "tooltip": "The model used for image features. Leave empty to use the chat model."
+      },
+      "stt": {
+        "title": "Speech-to-text (voice input)",
+        "hint": "A separate OpenAI-compatible transcription endpoint for voice input - Ollama has no speech-to-text. For example a whisper.cpp server, Speaches, or Groq whisper.",
+        "base_url": {
+          "label": "STT base URL",
+          "tooltip": "The transcription endpoint, e.g. http://localhost:8000/v1"
+        },
+        "api_key": {
+          "label": "STT API key"
+        },
+        "model": {
+          "label": "STT model",
+          "tooltip": "The transcription model, e.g. whisper-1 or Systran/faster-whisper-base."
+        }
+      },
+      "env_locked": "Set via environment variable and locked here",
+      "test": "Test connection",
+      "probe": {
+        "reachable": "Endpoint reachable",
+        "models_listed": "models listed",
+        "failed": "The connection test failed.",
+        "chat": "Chat",
+        "tools": "Tool calls",
+        "vision": "Vision",
+        "yes": "supported",
+        "no": "not supported",
+        "unknown": "not verified - this endpoint does not report capabilities"
+      },
+      "features": {
+        "title": "Features",
+        "hint": "All features are off by default. Nothing AI-related appears anywhere in the interface until it is enabled here.",
+        "chat": "Chat assistant",
+        "scan_to_spool": "Scan-to-Spool photo intake",
+        "nl_search": "Natural-language search",
+        "mcp": "MCP server",
+        "voice": "Voice input",
+        "requires_config": "Configure and save an endpoint and chat model first.",
+        "requires_vision": "The connection test reports no vision support for the configured model.",
+        "requires_stt": "Configure and save a speech-to-text endpoint and model first.",
+        "voice_autosend": "Send voice transcripts automatically instead of reviewing them first",
+        "voice_unavailable": "Not available yet - this arrives with the voice input feature."
+      },
+      "mcp": {
+        "title": "MCP server",
+        "hint": "Point an MCP client (Claude Desktop, claude.ai) at this Spoolman to query and update your inventory. No LLM provider needed - only this toggle.",
+        "copy": "Copy config",
+        "copied": "Configuration copied to the clipboard.",
+        "auth_note": "If this Spoolman requires an API token, add an \"Authorization\": \"Bearer <token>\" entry under \"headers\". Read-only accounts get query tools only."
+      },
+      "models": {
+        "title": "Ollama models",
+        "hint": "Your endpoint is an Ollama server. Pull a recommended model straight from here - Spoolman manages models, never the runtime.",
+        "installed": "Installed",
+        "pull": "Pull",
+        "pulled": "Pulled {{model}}.",
+        "purpose": {
+          "chat": "chat",
+          "vision": "vision"
+        }
+      }
     }
   },
   "documentTitle": {
@@ -1017,5 +1114,58 @@
     "tag_material": "Material",
     "tag_material_type": "Material Type",
     "qidi_write_info": "Qidi tags store only material and colour. The tag will be written with the closest matching Qidi material and colour codes."
+  },
+  "chat": {
+    "title": "Assistant",
+    "open": "Ask the assistant",
+    "placeholder": "Ask about your filament and spools…",
+    "send": "Send",
+    "thinking": "Thinking…",
+    "empty": "Ask me about your spools and filament — for example \"how much black PETG do I have left?\" or \"what should I reorder?\".",
+    "viewInList": "View in Spools list",
+    "confirm": {
+      "before": "Before",
+      "after": "After",
+      "confirm": "Confirm",
+      "cancel": "Cancel",
+      "confirmed": "Confirmed",
+      "cancelled": "Cancelled",
+      "destructive": "Cannot be undone"
+    },
+    "executed": {
+      "undo": "Undo",
+      "undone": "Change undone."
+    },
+    "voice": {
+      "record": "Hold to talk",
+      "listening": "Listening…",
+      "speak": "Speak replies",
+      "unsupported": "Voice recording is not supported in this browser.",
+      "mic_error": "Could not access the microphone."
+    }
+  },
+  "intake": {
+    "hint": "Photograph the spool's label or box, or pick an existing photo.",
+    "select_photo": "Select or take a photo",
+    "extracting": "Reading the label...",
+    "in_library": "in your library, adds a spool",
+    "from_catalog": "SpoolmanDB, creates filament and spool",
+    "use_raw": "Use the raw extraction (new filament)",
+    "continue": "Continue",
+    "back": "Back",
+    "photo_discarded": "The photo was analysed in memory and is not stored.",
+    "prefilled_banner": "Prefilled from a label photo - review the values before saving.",
+    "fields": {
+      "vendor": "Vendor",
+      "name": "Name",
+      "material": "Material",
+      "weight_g": "Weight (g)",
+      "diameter_mm": "Diameter (mm)",
+      "extruder_temp_c": "Nozzle (C)",
+      "bed_temp_c": "Bed (C)",
+      "lot_nr": "Lot",
+      "article_number": "Article nr",
+      "confidence": "Confidence"
+    }
   }
 }

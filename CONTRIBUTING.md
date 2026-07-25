@@ -77,7 +77,8 @@ These rules keep the client's interaction model consistent as features are added
 - Target `master`. Keep PRs focused; describe the user-visible behavior change.
 - If you add or change UI strings, add them to
   `client/public/locales/en/common.json`. Other locales may lag behind English —
-  that's expected until a fork translation project is set up (see below).
+  missing keys fall back to English, so that never blocks a merge (see
+  [Translations](#translations)).
 - New endpoints stay under `/api/v1` and must remain drop-in compatible with
   upstream Spoolman — integrations (Moonraker, OctoPrint, Home Assistant)
   depend on that contract.
@@ -86,11 +87,29 @@ These rules keep the client's interaction model consistent as features are added
 
 ## Translations
 
-The upstream Weblate project feeds the original repository, not this fork.
-Until a Spoolman NG translation project exists, contribute translations
-directly: edit `client/public/locales/<lang>/common.json`, using
-`en/common.json` as the reference for keys, and open a PR.
-`npm run check-i18n` (run in CI) reports per-locale key coverage.
+`client/public/locales/en/common.json` is the source of truth for every UI
+string; the other 30 locale files under `client/public/locales/<lang>/` are
+translations of it. A key missing from a locale falls back to English at
+runtime, so a partial translation is always safe to ship.
+
+There is no translation platform behind this fork — the upstream Weblate project
+feeds the original repository, not this one. Translations here are kept up to
+date by generating them, then correcting them as native speakers report
+problems. Two ways to contribute:
+
+- **Corrections are the most valuable thing you can send.** Generated
+  translations get terminology and register wrong in ways only a speaker
+  notices. Edit `client/public/locales/<lang>/common.json` and open a PR — a
+  single fixed string is a welcome PR.
+- **New strings**: add them to `en/common.json` in the same PR as the feature.
+  Filling in the other locales is not a blocker for merging; it is fine to land
+  English-only and translate in a follow-up.
+
+`npm run check-i18n` (run in CI) reports per-locale key coverage as advisory
+output, and **fails** the build if a translation drops or mangles a `{{variable}}`
+or `<tag>` from the English value — those break the UI at runtime for one
+language only, which is exactly the kind of thing nobody notices. Coverage
+sitting below 100% is normal and not a failure.
 
 ## Filament database
 

@@ -462,6 +462,14 @@
       "shown_other": "{{count}} spoler vist",
       "selected_one": "{{count}} spole valgt",
       "selected_other": "{{count}} spoler valgt"
+    },
+    "nlSearch": {
+      "button": "AI",
+      "title": "Søk med naturlig språk",
+      "placeholder": "f.eks. svart PETG i hylle B",
+      "hint": "Brukes som redigerbare filtre",
+      "search": "Søk",
+      "error": "Søket kunne ikke tolkes. Prøv igjen, eller bruk det vanlige søkefeltet."
     }
   },
   "yes": "Ja",
@@ -787,6 +795,94 @@
       "add_title": "Legg til lenke",
       "edit_title": "Rediger lenke",
       "delete_confirm": "Slette denne lenken?"
+    },
+    "ai": {
+      "tab": "AI",
+      "description": "Koble til et OpenAI-kompatibelt endepunkt (Ollama, LM Studio, OpenAI, Anthropic, OpenRouter, Requesty, Groq, ...). Ingenting sendes noe sted, og ingen AI-elementer vises i grensesnittet før en funksjon nedenfor er aktivert.",
+      "preset": {
+        "label": "Forhåndsinnstilling",
+        "placeholder": "Velg en leverandør for å fylle inn Base-URL-en"
+      },
+      "base_url": {
+        "label": "Base-URL",
+        "tooltip": "Det OpenAI-kompatible endepunktet som skal brukes, f.eks. en Ollama-server på nettverket ditt.",
+        "invalid": "Må være en http://- eller https://-URL"
+      },
+      "api_key": {
+        "label": "API-nøkkel",
+        "tooltip": "Lagres kun for skriving: serveren sender den aldri tilbake til noen klient. Ollama og LM Studio trenger ingen nøkkel.",
+        "placeholder_set": "En nøkkel er lagret - skriv inn en ny verdi for å erstatte den",
+        "placeholder_unset": "Ingen nøkkel lagret",
+        "clear": "Tøm lagret nøkkel"
+      },
+      "model": {
+        "label": "Chat-modell",
+        "tooltip": "Modellen som brukes for chat- og verktøykallfunksjoner. Kjør en tilkoblingstest for å liste opp endepunktets modeller."
+      },
+      "vision_model": {
+        "label": "Bildemodell",
+        "tooltip": "Modellen som brukes til bildefunksjoner. La stå tomt for å bruke chat-modellen."
+      },
+      "stt": {
+        "title": "Tale til tekst (taleinndata)",
+        "hint": "Et eget OpenAI-kompatibelt transkripsjonsendepunkt for taleinndata - Ollama har ingen tale-til-tekst-funksjon. For eksempel en whisper.cpp-server, Speaches, eller Groq whisper.",
+        "base_url": {
+          "label": "STT Base-URL",
+          "tooltip": "Transkripsjonsendepunktet, f.eks. http://localhost:8000/v1"
+        },
+        "api_key": {
+          "label": "STT API-nøkkel"
+        },
+        "model": {
+          "label": "STT-modell",
+          "tooltip": "Transkripsjonsmodellen, f.eks. whisper-1 eller Systran/faster-whisper-base."
+        }
+      },
+      "env_locked": "Angitt via miljøvariabel og låst her",
+      "test": "Test tilkobling",
+      "probe": {
+        "reachable": "Endepunkt tilgjengelig",
+        "models_listed": "modeller oppført",
+        "failed": "Tilkoblingstesten mislyktes.",
+        "chat": "Chat",
+        "tools": "Verktøykall",
+        "vision": "Bilde",
+        "yes": "støttet",
+        "no": "ikke støttet",
+        "unknown": "ikke bekreftet - dette endepunktet oppgir ikke hvilke funksjoner det støtter"
+      },
+      "features": {
+        "title": "Funksjoner",
+        "hint": "Alle funksjoner er avslått som standard. Ingenting AI-relatert vises noe sted i grensesnittet før det er aktivert her.",
+        "chat": "Chat-assistent",
+        "scan_to_spool": "Scan-to-Spool fotoregistrering",
+        "nl_search": "Søk med naturlig språk",
+        "mcp": "MCP-server",
+        "voice": "Taleinndata",
+        "requires_config": "Konfigurer og lagre et endepunkt og en chat-modell først.",
+        "requires_vision": "Tilkoblingstesten rapporterer at den konfigurerte modellen ikke støtter bilder.",
+        "requires_stt": "Konfigurer og lagre et tale-til-tekst-endepunkt og en modell først.",
+        "voice_autosend": "Send taletranskripsjoner automatisk i stedet for å se over dem først",
+        "voice_unavailable": "Ikke tilgjengelig ennå - dette kommer med taleinndata-funksjonen."
+      },
+      "mcp": {
+        "title": "MCP-server",
+        "hint": "Pek en MCP-klient (Claude Desktop, claude.ai) mot denne Spoolman-instansen for å spørre mot og oppdatere lageret ditt. Ingen LLM-leverandør nødvendig - kun denne bryteren.",
+        "copy": "Kopier konfigurasjon",
+        "copied": "Konfigurasjonen ble kopiert til utklippstavlen.",
+        "auth_note": "Hvis denne Spoolman-instansen krever et API-token, legg til en \"Authorization\": \"Bearer <token>\"-oppføring under \"headers\". Skrivebeskyttede kontoer får kun søkeverktøy."
+      },
+      "models": {
+        "title": "Ollama-modeller",
+        "hint": "Endepunktet ditt er en Ollama-server. Hent en anbefalt modell direkte herfra - Spoolman administrerer modeller, aldri selve kjøretiden.",
+        "installed": "Installert",
+        "pull": "Hent",
+        "pulled": "Hentet {{model}}.",
+        "purpose": {
+          "chat": "chat",
+          "vision": "bilde"
+        }
+      }
     }
   },
   "calibration": {
@@ -1010,7 +1106,8 @@
       "unknown_content": "Ingen filamenter har strekkoden {{code}}. Opprette et filament og huske denne strekkoden?",
       "create_filament": "Opprett filament",
       "lookup_error": "Kunne ikke slå opp strekkoden."
-    }
+    },
+    "photo": "Foto"
   },
   "printer": {
     "printer": "Printer",
@@ -1018,6 +1115,59 @@
       "name": "Navn",
       "comment": "Kommentar",
       "spool_count": "Spoler"
+    }
+  },
+  "chat": {
+    "title": "Assistent",
+    "open": "Spør assistenten",
+    "placeholder": "Spør om filamentet og spolene dine…",
+    "send": "Send",
+    "thinking": "Tenker…",
+    "empty": "Spør meg om spolene og filamentet ditt — for eksempel «hvor mye svart PETG har jeg igjen?» eller «hva bør jeg etterbestille?».",
+    "viewInList": "Vis i spolelisten",
+    "confirm": {
+      "before": "Før",
+      "after": "Etter",
+      "confirm": "Bekreft",
+      "cancel": "Avbryt",
+      "confirmed": "Bekreftet",
+      "cancelled": "Avbrutt",
+      "destructive": "Kan ikke angres"
+    },
+    "executed": {
+      "undo": "Angre",
+      "undone": "Endringen er angret."
+    },
+    "voice": {
+      "record": "Hold inne for å snakke",
+      "listening": "Lytter…",
+      "speak": "Les svar høyt",
+      "unsupported": "Lydopptak støttes ikke i denne nettleseren.",
+      "mic_error": "Fikk ikke tilgang til mikrofonen."
+    }
+  },
+  "intake": {
+    "hint": "Ta bilde av spolens etikett eller eske, eller velg et eksisterende bilde.",
+    "select_photo": "Velg eller ta et bilde",
+    "extracting": "Leser etiketten...",
+    "in_library": "i biblioteket ditt, legger til en spole",
+    "from_catalog": "SpoolmanDB, oppretter filament og spole",
+    "use_raw": "Bruk rådata fra utlesingen (nytt filament)",
+    "continue": "Fortsett",
+    "back": "Tilbake",
+    "photo_discarded": "Bildet ble analysert i minnet og lagres ikke.",
+    "prefilled_banner": "Forhåndsutfylt fra et etikettbilde - se over verdiene før du lagrer.",
+    "fields": {
+      "vendor": "Leverandør",
+      "name": "Navn",
+      "material": "Materiale",
+      "weight_g": "Vekt (g)",
+      "diameter_mm": "Diameter (mm)",
+      "extruder_temp_c": "Dyse (C)",
+      "bed_temp_c": "Printplate (C)",
+      "lot_nr": "Batch",
+      "article_number": "Artikkelnr",
+      "confidence": "Sikkerhet"
     }
   }
 }

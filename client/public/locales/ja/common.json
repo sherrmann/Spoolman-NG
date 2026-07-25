@@ -345,6 +345,14 @@
     "totals": {
       "shown_other": "{{count}}本のスプールを表示中",
       "selected_other": "{{count}}本のスプールを選択中"
+    },
+    "nlSearch": {
+      "button": "AI",
+      "title": "自然言語で検索",
+      "placeholder": "例: 棚Bの黒いPETG",
+      "hint": "編集可能なフィルタとして適用されます",
+      "search": "検索",
+      "error": "検索内容を変換できませんでした。もう一度試すか、通常の検索ボックスをご利用ください。"
     }
   },
   "filament": {
@@ -655,6 +663,94 @@
       "add_title": "リンクを追加",
       "edit_title": "リンクを編集",
       "delete_confirm": "このリンクを削除しますか?"
+    },
+    "ai": {
+      "tab": "AI",
+      "description": "OpenAI互換のエンドポイント（Ollama、LM Studio、OpenAI、Anthropic、OpenRouter、Requesty、Groq など）を接続します。以下の機能を有効にするまで、どこにも何も送信されず、インターフェースにAI関連の要素は表示されません。",
+      "preset": {
+        "label": "プリセット",
+        "placeholder": "プロバイダを選択するとベースURLが自動入力されます"
+      },
+      "base_url": {
+        "label": "ベースURL",
+        "tooltip": "使用するOpenAI互換のエンドポイント。例: ネットワーク上のOllamaサーバー。",
+        "invalid": "http:// または https:// のURLを入力してください"
+      },
+      "api_key": {
+        "label": "APIキー",
+        "tooltip": "書き込み専用で保存されます。サーバーがクライアントに送り返すことはありません。OllamaとLM Studioでは不要です。",
+        "placeholder_set": "キーが保存されています - 置き換える場合は新しい値を入力してください",
+        "placeholder_unset": "キーは保存されていません",
+        "clear": "保存済みのキーをクリア"
+      },
+      "model": {
+        "label": "チャットモデル",
+        "tooltip": "チャットとツール呼び出し機能に使用されるモデルです。接続テストを実行すると、エンドポイントのモデル一覧を取得できます。"
+      },
+      "vision_model": {
+        "label": "ビジョンモデル",
+        "tooltip": "画像機能に使用されるモデルです。空欄の場合はチャットモデルが使用されます。"
+      },
+      "stt": {
+        "title": "音声認識（音声入力）",
+        "hint": "音声入力用に、文字起こしを行う別のOpenAI互換エンドポイントです - Ollamaには音声認識機能がありません。例: whisper.cppサーバー、Speaches、Groq whisperなど。",
+        "base_url": {
+          "label": "音声認識のベースURL",
+          "tooltip": "文字起こしのエンドポイント。例: http://localhost:8000/v1"
+        },
+        "api_key": {
+          "label": "音声認識のAPIキー"
+        },
+        "model": {
+          "label": "音声認識モデル",
+          "tooltip": "文字起こしに使用するモデル。例: whisper-1 や Systran/faster-whisper-base。"
+        }
+      },
+      "env_locked": "環境変数で設定されているため、ここではロックされています",
+      "test": "接続テスト",
+      "probe": {
+        "reachable": "エンドポイントに到達できました",
+        "models_listed": "取得したモデル数",
+        "failed": "接続テストに失敗しました。",
+        "chat": "チャット",
+        "tools": "ツール呼び出し",
+        "vision": "ビジョン",
+        "yes": "対応",
+        "no": "非対応",
+        "unknown": "未確認 - このエンドポイントは対応状況を報告しません"
+      },
+      "features": {
+        "title": "機能",
+        "hint": "すべての機能はデフォルトで無効です。ここで有効にするまで、AI関連の要素はインターフェースのどこにも表示されません。",
+        "chat": "チャットアシスタント",
+        "scan_to_spool": "Scan-to-Spool（写真からの登録）",
+        "nl_search": "自然言語検索",
+        "mcp": "MCPサーバー",
+        "voice": "音声入力",
+        "requires_config": "先にエンドポイントとチャットモデルを設定して保存してください。",
+        "requires_vision": "接続テストの結果、設定されたモデルはビジョン機能に対応していません。",
+        "requires_stt": "先に音声認識のエンドポイントとモデルを設定して保存してください。",
+        "voice_autosend": "確認せずに音声の文字起こしを自動的に送信する",
+        "voice_unavailable": "まだ利用できません - 音声入力機能と共に追加されます。"
+      },
+      "mcp": {
+        "title": "MCPサーバー",
+        "hint": "MCPクライアント（Claude Desktop、claude.ai）をこのSpoolmanに接続し、在庫の照会や更新を行えます。LLMプロバイダは不要で、このトグルのみで利用できます。",
+        "copy": "設定をコピー",
+        "copied": "設定をクリップボードにコピーしました。",
+        "auth_note": "このSpoolmanがAPIトークンを必要とする場合は、\"headers\" の下に \"Authorization\": \"Bearer <token>\" を追加してください。読み取り専用アカウントには照会用ツールのみが提供されます。"
+      },
+      "models": {
+        "title": "Ollamaモデル",
+        "hint": "このエンドポイントはOllamaサーバーです。ここから推奨モデルを直接プルできます - Spoolmanが管理するのはモデルのみで、ランタイム自体は管理しません。",
+        "installed": "インストール済み",
+        "pull": "プル",
+        "pulled": "{{model}} をプルしました。",
+        "purpose": {
+          "chat": "チャット",
+          "vision": "ビジョン"
+        }
+      }
     }
   },
   "documentTitle": {
@@ -981,7 +1077,8 @@
       "unknown_content": "バーコード {{code}} を持つフィラメントはありません。フィラメントを作成してこのバーコードを記憶させますか?",
       "create_filament": "フィラメントを作成",
       "lookup_error": "バーコードを照会できませんでした。"
-    }
+    },
+    "photo": "写真"
   },
   "printer": {
     "printer": "プリンター",
@@ -989,6 +1086,59 @@
       "name": "名称",
       "comment": "コメント",
       "spool_count": "スプール数"
+    }
+  },
+  "chat": {
+    "title": "アシスタント",
+    "open": "アシスタントに質問",
+    "placeholder": "フィラメントやスプールについて質問…",
+    "send": "送信",
+    "thinking": "考え中…",
+    "empty": "スプールやフィラメントについて何でも聞いてください — 例えば「黒のPETGはあとどれくらい残ってる?」や「そろそろ買い足したほうがいいのは?」など。",
+    "viewInList": "スプール一覧で表示",
+    "confirm": {
+      "before": "変更前",
+      "after": "変更後",
+      "confirm": "確認",
+      "cancel": "キャンセル",
+      "confirmed": "確認済み",
+      "cancelled": "キャンセル済み",
+      "destructive": "元に戻せません"
+    },
+    "executed": {
+      "undo": "元に戻す",
+      "undone": "変更を元に戻しました。"
+    },
+    "voice": {
+      "record": "長押しで話す",
+      "listening": "聞き取り中…",
+      "speak": "返信を読み上げる",
+      "unsupported": "このブラウザでは音声録音に対応していません。",
+      "mic_error": "マイクにアクセスできませんでした。"
+    }
+  },
+  "intake": {
+    "hint": "スプールのラベルまたは箱を撮影するか、既存の写真を選択してください。",
+    "select_photo": "写真を選択または撮影",
+    "extracting": "ラベルを読み取り中...",
+    "in_library": "ライブラリに登録済み、スプールを追加",
+    "from_catalog": "SpoolmanDB、フィラメントとスプールを作成",
+    "use_raw": "抽出結果をそのまま使用（新規フィラメント）",
+    "continue": "続ける",
+    "back": "戻る",
+    "photo_discarded": "写真はメモリ上で解析され、保存されません。",
+    "prefilled_banner": "ラベル写真から自動入力されました - 保存する前に内容を確認してください。",
+    "fields": {
+      "vendor": "製造者",
+      "name": "名称",
+      "material": "マテリアル",
+      "weight_g": "重さ (g)",
+      "diameter_mm": "直径 (mm)",
+      "extruder_temp_c": "ノズル (C)",
+      "bed_temp_c": "ベッド (C)",
+      "lot_nr": "ロット",
+      "article_number": "製品番号",
+      "confidence": "信頼度"
     }
   }
 }

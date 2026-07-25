@@ -334,6 +334,14 @@
       "selected_one": "{{count}} bobine sélectionnée",
       "selected_many": "{{count}} bobines sélectionnées",
       "selected_other": "{{count}} bobines sélectionnées"
+    },
+    "nlSearch": {
+      "button": "AI",
+      "title": "Recherche en langage naturel",
+      "placeholder": "p. ex. PETG noir en étagère B",
+      "hint": "Appliqué sous forme de filtres modifiables",
+      "search": "Rechercher",
+      "error": "La recherche n'a pas pu être interprétée. Réessayez ou utilisez le champ de recherche normal."
     }
   },
   "buttons": {
@@ -774,6 +782,94 @@
       "add_title": "Ajouter un lien",
       "edit_title": "Éditer le lien",
       "delete_confirm": "Supprimer ce lien ?"
+    },
+    "ai": {
+      "tab": "IA",
+      "description": "Connectez un point de terminaison compatible OpenAI (Ollama, LM Studio, OpenAI, Anthropic, OpenRouter, Requesty, Groq, ...). Rien n'est envoyé nulle part et aucun élément lié à l'IA n'apparaît dans l'interface tant qu'une fonctionnalité ci-dessous n'est pas activée.",
+      "preset": {
+        "label": "Préréglage",
+        "placeholder": "Choisissez un fournisseur pour préremplir l'URL de base"
+      },
+      "base_url": {
+        "label": "Base de l'URL",
+        "tooltip": "Le point de terminaison compatible OpenAI à utiliser, p. ex. un serveur Ollama sur votre réseau.",
+        "invalid": "Doit être une URL http:// ou https://"
+      },
+      "api_key": {
+        "label": "Clé API",
+        "tooltip": "Stockée en écriture seule : le serveur ne la renvoie jamais à un client. Ollama et LM Studio n'en ont pas besoin.",
+        "placeholder_set": "Une clé est enregistrée - saisissez une nouvelle valeur pour la remplacer",
+        "placeholder_unset": "Aucune clé enregistrée",
+        "clear": "Effacer la clé enregistrée"
+      },
+      "model": {
+        "label": "Modèle de chat",
+        "tooltip": "Le modèle utilisé pour les fonctionnalités de chat et d'appel d'outils. Lancez un test de connexion pour lister les modèles du point de terminaison."
+      },
+      "vision_model": {
+        "label": "Modèle de vision",
+        "tooltip": "Le modèle utilisé pour les fonctionnalités d'image. Laissez vide pour utiliser le modèle de chat."
+      },
+      "stt": {
+        "title": "Reconnaissance vocale (saisie vocale)",
+        "hint": "Un point de terminaison de transcription compatible OpenAI distinct pour la saisie vocale - Ollama n'a pas de reconnaissance vocale. Par exemple un serveur whisper.cpp, Speaches, ou Groq whisper.",
+        "base_url": {
+          "label": "URL de base STT",
+          "tooltip": "Le point de terminaison de transcription, p. ex. http://localhost:8000/v1"
+        },
+        "api_key": {
+          "label": "Clé API STT"
+        },
+        "model": {
+          "label": "Modèle STT",
+          "tooltip": "Le modèle de transcription, p. ex. whisper-1 ou Systran/faster-whisper-base."
+        }
+      },
+      "env_locked": "Défini via une variable d'environnement et verrouillé ici",
+      "test": "Tester la connexion",
+      "probe": {
+        "reachable": "Point de terminaison joignable",
+        "models_listed": "modèles listés",
+        "failed": "Le test de connexion a échoué.",
+        "chat": "Chat",
+        "tools": "Appels d'outils",
+        "vision": "Vision",
+        "yes": "pris en charge",
+        "no": "non pris en charge",
+        "unknown": "non vérifié - ce point de terminaison n'indique pas ses capacités"
+      },
+      "features": {
+        "title": "Fonctionnalités",
+        "hint": "Toutes les fonctionnalités sont désactivées par défaut. Rien de lié à l'IA n'apparaît nulle part dans l'interface tant que ce n'est pas activé ici.",
+        "chat": "Assistant de chat",
+        "scan_to_spool": "Saisie photo Scan-to-Spool",
+        "nl_search": "Recherche en langage naturel",
+        "mcp": "Serveur MCP",
+        "voice": "Saisie vocale",
+        "requires_config": "Configurez et enregistrez d'abord un point de terminaison et un modèle de chat.",
+        "requires_vision": "Le test de connexion ne signale pas de prise en charge de la vision pour le modèle configuré.",
+        "requires_stt": "Configurez et enregistrez d'abord un point de terminaison et un modèle de reconnaissance vocale.",
+        "voice_autosend": "Envoyer automatiquement les transcriptions vocales au lieu de les relire d'abord",
+        "voice_unavailable": "Pas encore disponible - ceci arrivera avec la fonctionnalité de saisie vocale."
+      },
+      "mcp": {
+        "title": "Serveur MCP",
+        "hint": "Pointez un client MCP (Claude Desktop, claude.ai) vers ce Spoolman pour interroger et mettre à jour votre inventaire. Aucun fournisseur LLM n'est nécessaire - seulement cette option.",
+        "copy": "Copier la configuration",
+        "copied": "Configuration copiée dans le presse-papiers.",
+        "auth_note": "Si ce Spoolman nécessite un jeton API, ajoutez une entrée \"Authorization\": \"Bearer <token>\" sous \"headers\". Les comptes en lecture seule n'ont accès qu'aux outils de requête."
+      },
+      "models": {
+        "title": "Modèles Ollama",
+        "hint": "Votre point de terminaison est un serveur Ollama. Téléchargez un modèle recommandé directement depuis ici - Spoolman gère les modèles, jamais l'environnement d'exécution.",
+        "installed": "Installé",
+        "pull": "Télécharger",
+        "pulled": "{{model}} téléchargé.",
+        "purpose": {
+          "chat": "chat",
+          "vision": "vision"
+        }
+      }
     }
   },
   "locations": {
@@ -1027,7 +1123,8 @@
       "unknown_content": "Aucun filament n'a le code-barres {{code}}. Créer un filament et mémoriser ce code-barres ?",
       "create_filament": "Créer un filament",
       "lookup_error": "Impossible de rechercher ce code-barres."
-    }
+    },
+    "photo": "Photo"
   },
   "printer": {
     "printer": "Imprimante",
@@ -1035,6 +1132,59 @@
       "name": "Nom",
       "comment": "Commentaire",
       "spool_count": "Bobines"
+    }
+  },
+  "chat": {
+    "title": "Assistant",
+    "open": "Demander à l'assistant",
+    "placeholder": "Posez une question sur vos filaments et bobines…",
+    "send": "Envoyer",
+    "thinking": "Réflexion…",
+    "empty": "Posez-moi une question sur vos bobines et filaments — par exemple « combien de PETG noir me reste-t-il ? » ou « qu'est-ce que je dois racheter ? ».",
+    "viewInList": "Voir dans la liste des bobines",
+    "confirm": {
+      "before": "Avant",
+      "after": "Après",
+      "confirm": "Confirmer",
+      "cancel": "Annuler",
+      "confirmed": "Confirmé",
+      "cancelled": "Annulé",
+      "destructive": "Ne peut pas être annulé"
+    },
+    "executed": {
+      "undo": "Annuler",
+      "undone": "Modification annulée."
+    },
+    "voice": {
+      "record": "Maintenir pour parler",
+      "listening": "Écoute…",
+      "speak": "Lire les réponses à voix haute",
+      "unsupported": "L'enregistrement vocal n'est pas pris en charge par ce navigateur.",
+      "mic_error": "Impossible d'accéder au microphone."
+    }
+  },
+  "intake": {
+    "hint": "Photographiez l'étiquette ou la boîte de la bobine, ou choisissez une photo existante.",
+    "select_photo": "Choisir ou prendre une photo",
+    "extracting": "Lecture de l'étiquette...",
+    "in_library": "dans votre bibliothèque, ajoute une bobine",
+    "from_catalog": "SpoolmanDB, crée un filament et une bobine",
+    "use_raw": "Utiliser l'extraction brute (nouveau filament)",
+    "continue": "Continuer",
+    "back": "Retour",
+    "photo_discarded": "La photo a été analysée en mémoire et n'est pas stockée.",
+    "prefilled_banner": "Préremplie à partir d'une photo d'étiquette - vérifiez les valeurs avant d'enregistrer.",
+    "fields": {
+      "vendor": "Fabricant",
+      "name": "Nom",
+      "material": "Matériau",
+      "weight_g": "Poids (g)",
+      "diameter_mm": "Diamètre (mm)",
+      "extruder_temp_c": "Buse (C)",
+      "bed_temp_c": "Lit (C)",
+      "lot_nr": "Lot",
+      "article_number": "N° d'article",
+      "confidence": "Confiance"
     }
   }
 }

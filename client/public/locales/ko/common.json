@@ -345,6 +345,14 @@
     "totals": {
       "shown_other": "스풀 {{count}}개 표시됨",
       "selected_other": "스풀 {{count}}개 선택됨"
+    },
+    "nlSearch": {
+      "button": "AI",
+      "title": "자연어로 검색",
+      "placeholder": "예: B 선반의 검은색 PETG",
+      "hint": "편집 가능한 필터로 적용됨",
+      "search": "검색",
+      "error": "검색어를 해석하지 못했습니다. 다시 시도하거나 일반 검색창을 사용하세요."
     }
   },
   "filament": {
@@ -694,6 +702,94 @@
       "add_title": "링크 추가",
       "edit_title": "링크 수정",
       "delete_confirm": "이 링크를 삭제하시겠습니까?"
+    },
+    "ai": {
+      "tab": "AI",
+      "description": "OpenAI 호환 엔드포인트(Ollama, LM Studio, OpenAI, Anthropic, OpenRouter, Requesty, Groq, ...)에 연결하세요. 아래에서 기능을 활성화하기 전까지는 아무 데이터도 전송되지 않으며 인터페이스에 AI 관련 요소가 표시되지 않습니다.",
+      "preset": {
+        "label": "프리셋",
+        "placeholder": "제공업체를 선택하면 기본 URL이 채워집니다"
+      },
+      "base_url": {
+        "label": "기본 URL",
+        "tooltip": "사용할 OpenAI 호환 엔드포인트입니다. 예: 네트워크 상의 Ollama 서버.",
+        "invalid": "http:// 또는 https:// URL이어야 합니다"
+      },
+      "api_key": {
+        "label": "API 키",
+        "tooltip": "쓰기 전용으로 저장됩니다: 서버는 이 값을 어떤 클라이언트에도 다시 전송하지 않습니다. Ollama와 LM Studio는 키가 필요 없습니다.",
+        "placeholder_set": "키가 저장되어 있습니다 - 새 값을 입력하면 교체됩니다",
+        "placeholder_unset": "저장된 키 없음",
+        "clear": "저장된 키 지우기"
+      },
+      "model": {
+        "label": "채팅 모델",
+        "tooltip": "채팅 및 도구 호출 기능에 사용되는 모델입니다. 연결 테스트를 실행하면 엔드포인트의 모델 목록을 확인할 수 있습니다."
+      },
+      "vision_model": {
+        "label": "비전 모델",
+        "tooltip": "이미지 관련 기능에 사용되는 모델입니다. 비워 두면 채팅 모델을 사용합니다."
+      },
+      "stt": {
+        "title": "음성 인식 (음성 입력)",
+        "hint": "음성 입력을 위한 별도의 OpenAI 호환 음성 인식 엔드포인트입니다 - Ollama에는 음성 인식 기능이 없습니다. 예: whisper.cpp 서버, Speaches, 또는 Groq whisper.",
+        "base_url": {
+          "label": "STT 기본 URL",
+          "tooltip": "음성 인식 엔드포인트입니다. 예: http://localhost:8000/v1"
+        },
+        "api_key": {
+          "label": "STT API 키"
+        },
+        "model": {
+          "label": "STT 모델",
+          "tooltip": "음성 인식 모델입니다. 예: whisper-1 또는 Systran/faster-whisper-base."
+        }
+      },
+      "env_locked": "환경 변수로 설정되어 있어 여기서는 잠겨 있습니다",
+      "test": "연결 테스트",
+      "probe": {
+        "reachable": "엔드포인트에 연결 가능",
+        "models_listed": "나열된 모델",
+        "failed": "연결 테스트에 실패했습니다.",
+        "chat": "채팅",
+        "tools": "도구 호출",
+        "vision": "비전",
+        "yes": "지원됨",
+        "no": "지원되지 않음",
+        "unknown": "확인되지 않음 - 이 엔드포인트는 기능 정보를 제공하지 않습니다"
+      },
+      "features": {
+        "title": "기능",
+        "hint": "모든 기능은 기본적으로 꺼져 있습니다. 여기서 활성화하기 전까지는 인터페이스 어디에도 AI 관련 요소가 나타나지 않습니다.",
+        "chat": "채팅 어시스턴트",
+        "scan_to_spool": "Scan-to-Spool 사진 등록",
+        "nl_search": "자연어 검색",
+        "mcp": "MCP 서버",
+        "voice": "음성 입력",
+        "requires_config": "먼저 엔드포인트와 채팅 모델을 설정하고 저장하세요.",
+        "requires_vision": "연결 테스트 결과 설정된 모델은 비전 기능을 지원하지 않습니다.",
+        "requires_stt": "먼저 음성 인식 엔드포인트와 모델을 설정하고 저장하세요.",
+        "voice_autosend": "검토 없이 음성 인식 결과를 자동으로 전송",
+        "voice_unavailable": "아직 사용할 수 없습니다 - 음성 입력 기능과 함께 제공될 예정입니다."
+      },
+      "mcp": {
+        "title": "MCP 서버",
+        "hint": "MCP 클라이언트(Claude Desktop, claude.ai)를 이 Spoolman으로 연결하면 재고를 조회하고 업데이트할 수 있습니다. LLM 제공업체는 필요 없으며 이 토글만 있으면 됩니다.",
+        "copy": "설정 복사",
+        "copied": "설정이 클립보드에 복사되었습니다.",
+        "auth_note": "이 Spoolman에 API 토큰이 필요한 경우, \"headers\" 아래에 \"Authorization\": \"Bearer <token>\" 항목을 추가하세요. 읽기 전용 계정은 조회 도구만 사용할 수 있습니다."
+      },
+      "models": {
+        "title": "Ollama 모델",
+        "hint": "설정된 엔드포인트가 Ollama 서버입니다. 여기서 바로 추천 모델을 받을 수 있습니다 - Spoolman은 모델만 관리하며 런타임은 건드리지 않습니다.",
+        "installed": "설치됨",
+        "pull": "받기",
+        "pulled": "받기 완료 {{model}}.",
+        "purpose": {
+          "chat": "채팅",
+          "vision": "비전"
+        }
+      }
     }
   },
   "documentTitle": {
@@ -837,7 +933,8 @@
       "unknown_content": "바코드 {{code}}를 가진 필라멘트가 없습니다. 필라멘트를 생성하고 이 바코드를 기억하시겠습니까?",
       "create_filament": "필라멘트 생성",
       "lookup_error": "해당 바코드를 조회할 수 없습니다."
-    }
+    },
+    "photo": "사진"
   },
   "printer": {
     "printer": "프린터",
@@ -990,5 +1087,58 @@
     "tag_material": "재료",
     "tag_material_type": "재료 유형",
     "qidi_write_info": "Qidi 태그는 재료와 색상만 저장합니다. 태그에는 가장 근접한 Qidi 재료 및 색상 코드가 기록됩니다."
+  },
+  "chat": {
+    "title": "어시스턴트",
+    "open": "어시스턴트에게 물어보기",
+    "placeholder": "필라멘트와 스풀에 대해 물어보세요…",
+    "send": "전송",
+    "thinking": "생각 중…",
+    "empty": "스풀과 필라멘트에 대해 무엇이든 물어보세요 — 예를 들어 \"검은색 PETG가 얼마나 남았어?\" 또는 \"뭘 재주문해야 해?\".",
+    "viewInList": "스풀 목록에서 보기",
+    "confirm": {
+      "before": "변경 전",
+      "after": "변경 후",
+      "confirm": "확인",
+      "cancel": "취소",
+      "confirmed": "확인됨",
+      "cancelled": "취소됨",
+      "destructive": "되돌릴 수 없음"
+    },
+    "executed": {
+      "undo": "되돌리기",
+      "undone": "변경 사항을 되돌렸습니다."
+    },
+    "voice": {
+      "record": "길게 눌러 말하기",
+      "listening": "듣는 중…",
+      "speak": "답변 읽어주기",
+      "unsupported": "이 브라우저에서는 음성 녹음이 지원되지 않습니다.",
+      "mic_error": "마이크에 접근할 수 없습니다."
+    }
+  },
+  "intake": {
+    "hint": "스풀의 라벨이나 상자를 촬영하거나 기존 사진을 선택하세요.",
+    "select_photo": "사진 선택 또는 촬영",
+    "extracting": "라벨 읽는 중...",
+    "in_library": "라이브러리에 있음, 스풀 추가",
+    "from_catalog": "SpoolmanDB, 필라멘트와 스풀 생성",
+    "use_raw": "원본 인식 결과 사용 (새 필라멘트)",
+    "continue": "계속",
+    "back": "이전",
+    "photo_discarded": "사진은 메모리에서 분석된 후 저장되지 않습니다.",
+    "prefilled_banner": "라벨 사진에서 값을 자동으로 채웠습니다 - 저장하기 전에 값을 확인하세요.",
+    "fields": {
+      "vendor": "제조사",
+      "name": "이름",
+      "material": "재료",
+      "weight_g": "중량 (g)",
+      "diameter_mm": "외경 (mm)",
+      "extruder_temp_c": "노즐 (C)",
+      "bed_temp_c": "배드 (C)",
+      "lot_nr": "Lot",
+      "article_number": "제품 번호",
+      "confidence": "신뢰도"
+    }
   }
 }

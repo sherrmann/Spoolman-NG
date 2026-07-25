@@ -367,6 +367,14 @@
       "selected_two": "Izbrana {{count}} koluta",
       "selected_few": "Izbrani {{count}} koluti",
       "selected_other": "Izbranih {{count}} kolutov"
+    },
+    "nlSearch": {
+      "button": "AI",
+      "title": "Iskanje z naravnim jezikom",
+      "placeholder": "npr. črn PETG na polici B",
+      "hint": "Uporabljeno kot filtri, ki jih lahko urejate",
+      "search": "Iskanje",
+      "error": "Iskanja ni bilo mogoče prevesti. Poskusite znova ali uporabite navadno iskalno polje."
     }
   },
   "settings": {
@@ -493,6 +501,94 @@
       "add_title": "Dodaj povezavo",
       "edit_title": "Uredi povezavo",
       "delete_confirm": "Izbrišem to povezavo?"
+    },
+    "ai": {
+      "tab": "AI",
+      "description": "Povežite končno točko, združljivo z OpenAI (Ollama, LM Studio, OpenAI, Anthropic, OpenRouter, Requesty, Groq, ...). Nič se nikamor ne pošilja in noben element AI se ne prikaže v vmesniku, dokler spodaj ne omogočite katere od funkcij.",
+      "preset": {
+        "label": "Prednastavitev",
+        "placeholder": "Izberite ponudnika, da se izpolni osnovni URL"
+      },
+      "base_url": {
+        "label": "Osnovni URL",
+        "tooltip": "Končna točka, združljiva z OpenAI, ki naj se uporabi, npr. strežnik Ollama v vašem omrežju.",
+        "invalid": "Mora biti URL http:// ali https://"
+      },
+      "api_key": {
+        "label": "Ključ API",
+        "tooltip": "Shranjen je samo za pisanje: strežnik ga nikoli ne pošlje nazaj nobenemu odjemalcu. Ollama in LM Studio ga ne potrebujeta.",
+        "placeholder_set": "Ključ je shranjen - vnesite novo vrednost, da ga zamenjate",
+        "placeholder_unset": "Ključ ni shranjen",
+        "clear": "Počisti shranjeni ključ"
+      },
+      "model": {
+        "label": "Model za klepet",
+        "tooltip": "Model, uporabljen za klepet in funkcije klicanja orodij. Zaženite preizkus povezave, da izpišete modele končne točke."
+      },
+      "vision_model": {
+        "label": "Model za vid",
+        "tooltip": "Model, uporabljen za funkcije s slikami. Pustite prazno, če želite uporabiti klepetalni model."
+      },
+      "stt": {
+        "title": "Pretvorba govora v besedilo (glasovni vnos)",
+        "hint": "Ločena končna točka za prepisovanje, združljiva z OpenAI, za glasovni vnos - Ollama nima pretvorbe govora v besedilo. Na primer strežnik whisper.cpp, Speaches ali Groq whisper.",
+        "base_url": {
+          "label": "Osnovni URL STT",
+          "tooltip": "Končna točka za prepisovanje, npr. http://localhost:8000/v1"
+        },
+        "api_key": {
+          "label": "Ključ API za STT"
+        },
+        "model": {
+          "label": "Model STT",
+          "tooltip": "Model za prepisovanje, npr. whisper-1 ali Systran/faster-whisper-base."
+        }
+      },
+      "env_locked": "Nastavljeno prek okoljske spremenljivke in tukaj zaklenjeno",
+      "test": "Preizkusi povezavo",
+      "probe": {
+        "reachable": "Končna točka dosegljiva",
+        "models_listed": "izpisani modeli",
+        "failed": "Preizkus povezave ni uspel.",
+        "chat": "Klepet",
+        "tools": "Klici orodij",
+        "vision": "Vid",
+        "yes": "podprto",
+        "no": "ni podprto",
+        "unknown": "ni preverjeno - ta končna točka ne poroča o zmožnostih"
+      },
+      "features": {
+        "title": "Funkcije",
+        "hint": "Vse funkcije so privzeto izklopljene. Nič, kar je povezano z AI, se nikjer v vmesniku ne prikaže, dokler tega ne omogočite tukaj.",
+        "chat": "Klepetalni pomočnik",
+        "scan_to_spool": "Vnos s fotografijo Scan-to-Spool",
+        "nl_search": "Iskanje z naravnim jezikom",
+        "mcp": "Strežnik MCP",
+        "voice": "Glasovni vnos",
+        "requires_config": "Najprej nastavite in shranite končno točko ter klepetalni model.",
+        "requires_vision": "Preizkus povezave javlja, da nastavljeni model ne podpira vida.",
+        "requires_stt": "Najprej nastavite in shranite končno točko in model za pretvorbo govora v besedilo.",
+        "voice_autosend": "Samodejno pošlji prepise govora, namesto da jih najprej pregledate",
+        "voice_unavailable": "Še ni na voljo - to pride s funkcijo glasovnega vnosa."
+      },
+      "mcp": {
+        "title": "Strežnik MCP",
+        "hint": "Usmerite odjemalca MCP (Claude Desktop, claude.ai) na ta Spoolman za poizvedovanje in posodabljanje vaše zaloge. Ponudnik LLM ni potreben - samo to stikalo.",
+        "copy": "Kopiraj konfiguracijo",
+        "copied": "Konfiguracija je kopirana v odložišče.",
+        "auth_note": "Če ta Spoolman zahteva žeton API, dodajte vnos \"Authorization\": \"Bearer <token>\" pod \"headers\". Računi samo za branje dobijo le orodja za poizvedovanje."
+      },
+      "models": {
+        "title": "Modeli Ollama",
+        "hint": "Vaša končna točka je strežnik Ollama. Priporočen model lahko prenesete neposredno od tu - Spoolman upravlja modele, nikoli izvajalnega okolja.",
+        "installed": "Nameščen",
+        "pull": "Prenesi",
+        "pulled": "Model {{model}} je prenesen.",
+        "purpose": {
+          "chat": "klepet",
+          "vision": "vid"
+        }
+      }
     }
   },
   "scanner": {
@@ -888,7 +984,8 @@
       "unknown_content": "Noben filament nima črtne kode {{code}}. Ustvarim filament in si zapomnim to črtno kodo?",
       "create_filament": "Ustvari filament",
       "lookup_error": "Te črtne kode ni bilo mogoče poiskati."
-    }
+    },
+    "photo": "Fotografija"
   },
   "printer": {
     "printer": "Tiskalnik",
@@ -1041,5 +1138,58 @@
     "tag_material": "Material",
     "tag_material_type": "Vrsta materiala",
     "qidi_write_info": "Značke Qidi hranijo samo material in barvo. Na značko bodo zapisane kode materiala in barve Qidi, ki se najbolj ujemajo."
+  },
+  "chat": {
+    "title": "Pomočnik",
+    "open": "Vprašaj pomočnika",
+    "placeholder": "Vprašajte o svojem filamentu in kolutih…",
+    "send": "Pošlji",
+    "thinking": "Razmišljam …",
+    "empty": "Vprašajte me o svojih kolutih in filamentu — na primer »koliko črnega PETG mi je še ostalo?« ali »kaj naj ponovno naročim?«.",
+    "viewInList": "Prikaži v seznamu kolutov",
+    "confirm": {
+      "before": "Pred",
+      "after": "Po",
+      "confirm": "Potrdi",
+      "cancel": "Prekliči",
+      "confirmed": "Potrjeno",
+      "cancelled": "Preklicano",
+      "destructive": "Ni mogoče razveljaviti"
+    },
+    "executed": {
+      "undo": "Razveljavi",
+      "undone": "Sprememba razveljavljena."
+    },
+    "voice": {
+      "record": "Pridržite za govor",
+      "listening": "Poslušam …",
+      "speak": "Izgovarjaj odgovore",
+      "unsupported": "Ta brskalnik ne podpira glasovnega snemanja.",
+      "mic_error": "Do mikrofona ni bilo mogoče dostopati."
+    }
+  },
+  "intake": {
+    "hint": "Fotografirajte nalepko ali škatlo koluta ali izberite obstoječo fotografijo.",
+    "select_photo": "Izberite ali posnemite fotografijo",
+    "extracting": "Branje nalepke...",
+    "in_library": "v vaši knjižnici, doda kolut",
+    "from_catalog": "SpoolmanDB, ustvari filament in kolut",
+    "use_raw": "Uporabi neobdelan izvleček (nov filament)",
+    "continue": "Nadaljuj",
+    "back": "Nazaj",
+    "photo_discarded": "Fotografija je bila analizirana v pomnilniku in ni shranjena.",
+    "prefilled_banner": "Samodejno izpolnjeno iz fotografije nalepke - pred shranjevanjem preglejte vrednosti.",
+    "fields": {
+      "vendor": "Proizvajalec",
+      "name": "Ime",
+      "material": "Material",
+      "weight_g": "Masa (g)",
+      "diameter_mm": "Premer (mm)",
+      "extruder_temp_c": "Šoba (C)",
+      "bed_temp_c": "Miza (C)",
+      "lot_nr": "Serija",
+      "article_number": "Št. izdelka",
+      "confidence": "Zanesljivost"
+    }
   }
 }

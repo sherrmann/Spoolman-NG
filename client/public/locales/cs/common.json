@@ -380,6 +380,14 @@
       "selected_one": "Vybrána {{count}} cívka",
       "selected_few": "Vybrány {{count}} cívky",
       "selected_other": "Vybráno {{count}} cívek"
+    },
+    "nlSearch": {
+      "button": "AI",
+      "title": "Hledat přirozeným jazykem",
+      "placeholder": "např. černý PETG na polici B",
+      "hint": "Použito jako upravitelné filtry",
+      "search": "Hledat",
+      "error": "Hledání se nepodařilo přeložit. Zkuste to znovu nebo použijte běžné vyhledávací pole."
     }
   },
   "filament": {
@@ -774,6 +782,94 @@
       "add_title": "Přidat odkaz",
       "edit_title": "Upravit odkaz",
       "delete_confirm": "Smazat tento odkaz?"
+    },
+    "ai": {
+      "tab": "AI",
+      "description": "Připojte koncový bod kompatibilní s OpenAI (Ollama, LM Studio, OpenAI, Anthropic, OpenRouter, Requesty, Groq, ...). Nikam se nic neodesílá a v rozhraní se neobjeví žádný prvek AI, dokud níže nezapnete některou funkci.",
+      "preset": {
+        "label": "Předvolba",
+        "placeholder": "Vyberte poskytovatele pro vyplnění základní URL"
+      },
+      "base_url": {
+        "label": "Základní URL",
+        "tooltip": "Koncový bod kompatibilní s OpenAI, který se má použít, např. server Ollama ve vaší síti.",
+        "invalid": "Musí to být URL adresa http:// nebo https://"
+      },
+      "api_key": {
+        "label": "API klíč",
+        "tooltip": "Ukládá se pouze pro zápis: server jej nikdy neposílá zpět žádnému klientovi. Ollama a LM Studio žádný nepotřebují.",
+        "placeholder_set": "Klíč je uložen - zadejte novou hodnotu pro jeho nahrazení",
+        "placeholder_unset": "Žádný klíč není uložen",
+        "clear": "Vymazat uložený klíč"
+      },
+      "model": {
+        "label": "Model chatu",
+        "tooltip": "Model použitý pro chat a funkce volání nástrojů. Spuštěním testu připojení zobrazíte seznam modelů koncového bodu."
+      },
+      "vision_model": {
+        "label": "Model pro obrázky",
+        "tooltip": "Model použitý pro funkce práce s obrázky. Ponechte prázdné pro použití modelu chatu."
+      },
+      "stt": {
+        "title": "Převod řeči na text (hlasový vstup)",
+        "hint": "Samostatný koncový bod pro přepis kompatibilní s OpenAI pro hlasový vstup - Ollama převod řeči na text nemá. Například server whisper.cpp, Speaches nebo Groq whisper.",
+        "base_url": {
+          "label": "Základní URL STT",
+          "tooltip": "Koncový bod pro přepis, např. http://localhost:8000/v1"
+        },
+        "api_key": {
+          "label": "API klíč STT"
+        },
+        "model": {
+          "label": "Model STT",
+          "tooltip": "Model pro přepis, např. whisper-1 nebo Systran/faster-whisper-base."
+        }
+      },
+      "env_locked": "Nastaveno pomocí proměnné prostředí a zde uzamčeno",
+      "test": "Otestovat připojení",
+      "probe": {
+        "reachable": "Koncový bod dostupný",
+        "models_listed": "vypsané modely",
+        "failed": "Test připojení se nezdařil.",
+        "chat": "Chat",
+        "tools": "Volání nástrojů",
+        "vision": "Obrázky",
+        "yes": "podporováno",
+        "no": "nepodporováno",
+        "unknown": "neověřeno - tento koncový bod nehlásí své schopnosti"
+      },
+      "features": {
+        "title": "Funkce",
+        "hint": "Všechny funkce jsou ve výchozím stavu vypnuté. Nic souvisejícího s AI se v rozhraní neobjeví, dokud to zde nezapnete.",
+        "chat": "Chatovací asistent",
+        "scan_to_spool": "Scan-to-Spool (příjem cívky z fotografie)",
+        "nl_search": "Vyhledávání přirozeným jazykem",
+        "mcp": "MCP server",
+        "voice": "Hlasový vstup",
+        "requires_config": "Nejprve nastavte a uložte koncový bod a model chatu.",
+        "requires_vision": "Test připojení hlásí, že nastavený model nepodporuje práci s obrázky.",
+        "requires_stt": "Nejprve nastavte a uložte koncový bod a model pro převod řeči na text.",
+        "voice_autosend": "Odesílat přepisy hlasu automaticky, bez jejich předchozí kontroly",
+        "voice_unavailable": "Zatím není k dispozici - přijde spolu s funkcí hlasového vstupu."
+      },
+      "mcp": {
+        "title": "MCP server",
+        "hint": "Nasměrujte MCP klienta (Claude Desktop, claude.ai) na tento Spoolman a dotazujte se na váš inventář nebo jej aktualizujte. Není potřeba žádný poskytovatel LLM - stačí tento přepínač.",
+        "copy": "Kopírovat konfiguraci",
+        "copied": "Konfigurace zkopírována do schránky.",
+        "auth_note": "Pokud tento Spoolman vyžaduje API token, přidejte pod \"headers\" položku \"Authorization\": \"Bearer <token>\". Účty pouze pro čtení mají k dispozici jen dotazovací nástroje."
+      },
+      "models": {
+        "title": "Modely Ollama",
+        "hint": "Váš koncový bod je server Ollama. Doporučený model můžete stáhnout přímo odsud - Spoolman spravuje modely, nikdy ne běhové prostředí.",
+        "installed": "Nainstalováno",
+        "pull": "Stáhnout",
+        "pulled": "Model {{model}} byl stažen.",
+        "purpose": {
+          "chat": "chat",
+          "vision": "obrázky"
+        }
+      }
     }
   },
   "locations": {
@@ -1027,7 +1123,8 @@
       "unknown_content": "Žádný filament nemá čárový kód {{code}}. Vytvořit filament a zapamatovat si tento čárový kód?",
       "create_filament": "Vytvořit filament",
       "lookup_error": "Tento čárový kód se nepodařilo vyhledat."
-    }
+    },
+    "photo": "Fotografie"
   },
   "printer": {
     "printer": "Tiskárna",
@@ -1035,6 +1132,59 @@
       "name": "Název",
       "comment": "Komentář",
       "spool_count": "Cívky"
+    }
+  },
+  "chat": {
+    "title": "Asistent",
+    "open": "Zeptat se asistenta",
+    "placeholder": "Zeptejte se na váš filament a cívky…",
+    "send": "Odeslat",
+    "thinking": "Přemýšlím…",
+    "empty": "Zeptejte se mě na vaše cívky a filament — například „kolik mi zbývá černého PETG?“ nebo „co bych měl doobjednat?“.",
+    "viewInList": "Zobrazit v seznamu cívek",
+    "confirm": {
+      "before": "Před",
+      "after": "Po",
+      "confirm": "Potvrdit",
+      "cancel": "Zrušit",
+      "confirmed": "Potvrzeno",
+      "cancelled": "Zrušeno",
+      "destructive": "Nelze vrátit zpět"
+    },
+    "executed": {
+      "undo": "Vrátit zpět",
+      "undone": "Změna byla vrácena zpět."
+    },
+    "voice": {
+      "record": "Podržte pro mluvení",
+      "listening": "Poslouchám…",
+      "speak": "Předčítat odpovědi",
+      "unsupported": "Nahrávání hlasu není v tomto prohlížeči podporováno.",
+      "mic_error": "Nepodařilo se získat přístup k mikrofonu."
+    }
+  },
+  "intake": {
+    "hint": "Vyfotografujte štítek nebo krabici cívky, nebo vyberte existující fotografii.",
+    "select_photo": "Vybrat nebo vyfotit fotografii",
+    "extracting": "Čtení štítku...",
+    "in_library": "ve vaší knihovně, přidá cívku",
+    "from_catalog": "SpoolmanDB, vytvoří filament a cívku",
+    "use_raw": "Použít nezpracovaná data (nový filament)",
+    "continue": "Pokračovat",
+    "back": "Zpět",
+    "photo_discarded": "Fotografie byla analyzována v paměti a není uložena.",
+    "prefilled_banner": "Předvyplněno z fotografie štítku - před uložením zkontrolujte hodnoty.",
+    "fields": {
+      "vendor": "Výrobce",
+      "name": "Název",
+      "material": "Materiál",
+      "weight_g": "Hmotnost (g)",
+      "diameter_mm": "Průměr (mm)",
+      "extruder_temp_c": "Tryska (C)",
+      "bed_temp_c": "Podložka (C)",
+      "lot_nr": "Šarže",
+      "article_number": "Číslo výrobku",
+      "confidence": "Spolehlivost"
     }
   }
 }

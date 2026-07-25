@@ -427,6 +427,14 @@
       "shown_other": "{{count}} pooli kuvatud",
       "selected_one": "{{count}} pool valitud",
       "selected_other": "{{count}} pooli valitud"
+    },
+    "nlSearch": {
+      "button": "AI",
+      "title": "Otsi loomulikus keeles",
+      "placeholder": "nt must PETG riiulil B",
+      "hint": "Rakendatakse muudetavate filtritena",
+      "search": "Otsi",
+      "error": "Otsingut ei õnnestunud teisendada. Proovi uuesti või kasuta tavalist otsingukasti."
     }
   },
   "filament": {
@@ -741,6 +749,94 @@
       "add_title": "Lisa link",
       "edit_title": "Muuda linki",
       "delete_confirm": "Kas kustutada see link?"
+    },
+    "ai": {
+      "tab": "AI",
+      "description": "Ühenda OpenAI-ga ühilduv otspunkt (Ollama, LM Studio, OpenAI, Anthropic, OpenRouter, Requesty, Groq jne). Midagi ei saadeta kuhugi ja liideses ei kuva ühtegi AI-elementi enne, kui allpool mõni funktsioon on lubatud.",
+      "preset": {
+        "label": "Eelseadistus",
+        "placeholder": "Vali teenusepakkuja, et täita baas-URL"
+      },
+      "base_url": {
+        "label": "Baas-URL",
+        "tooltip": "Kasutatav OpenAI-ga ühilduv otspunkt, nt Ollama server sinu võrgus.",
+        "invalid": "Peab olema http:// või https:// URL"
+      },
+      "api_key": {
+        "label": "API-võti",
+        "tooltip": "Salvestatakse ainult kirjutamiseks: server ei saada seda kunagi tagasi ühelegi kliendile. Ollama ja LM Studio ei vaja seda.",
+        "placeholder_set": "Võti on salvestatud - sisesta uus väärtus selle asendamiseks",
+        "placeholder_unset": "Võtit pole salvestatud",
+        "clear": "Tühjenda salvestatud võti"
+      },
+      "model": {
+        "label": "Vestlusmudel",
+        "tooltip": "Mudel, mida kasutatakse vestluse ja tööriistakutsete funktsioonide jaoks. Otspunkti mudelite loendi nägemiseks tee ühendustest."
+      },
+      "vision_model": {
+        "label": "Nägemismudel",
+        "tooltip": "Mudel, mida kasutatakse pildifunktsioonide jaoks. Jäta tühjaks, et kasutada vestlusmudelit."
+      },
+      "stt": {
+        "title": "Kõnest tekstiks (häälsisestus)",
+        "hint": "Eraldi OpenAI-ga ühilduv transkriptsiooniotspunkt häälsisestuse jaoks - Ollamal pole kõne-tekstiks funktsiooni. Näiteks whisper.cpp server, Speaches või Groq whisper.",
+        "base_url": {
+          "label": "STT baas-URL",
+          "tooltip": "Transkriptsiooniotspunkt, nt http://localhost:8000/v1"
+        },
+        "api_key": {
+          "label": "STT API-võti"
+        },
+        "model": {
+          "label": "STT mudel",
+          "tooltip": "Transkriptsioonimudel, nt whisper-1 või Systran/faster-whisper-base."
+        }
+      },
+      "env_locked": "Määratud keskkonnamuutuja kaudu ja siin lukustatud",
+      "test": "Testi ühendust",
+      "probe": {
+        "reachable": "Otspunkt kättesaadav",
+        "models_listed": "mudeleid loetletud",
+        "failed": "Ühendustest ebaõnnestus.",
+        "chat": "Vestlus",
+        "tools": "Tööriistakutsed",
+        "vision": "Nägemine",
+        "yes": "toetatud",
+        "no": "ei toetata",
+        "unknown": "kontrollimata - see otspunkt ei anna teada oma võimalustest"
+      },
+      "features": {
+        "title": "Funktsioonid",
+        "hint": "Kõik funktsioonid on vaikimisi välja lülitatud. Midagi AI-ga seotut ei kuvata liideses kusagil enne, kui see siin sisse lülitatakse.",
+        "chat": "Vestlusassistent",
+        "scan_to_spool": "Scan-to-Spool fotolt sisestamine",
+        "nl_search": "Loomuliku keele otsing",
+        "mcp": "MCP server",
+        "voice": "Häälsisestus",
+        "requires_config": "Seadista ja salvesta kõigepealt otspunkt ja vestlusmudel.",
+        "requires_vision": "Ühendustest näitab, et seadistatud mudelil puudub nägemistugi.",
+        "requires_stt": "Seadista ja salvesta kõigepealt kõne-tekstiks otspunkt ja mudel.",
+        "voice_autosend": "Saada häältuvastuse tekst automaatselt, selle asemel et see enne üle vaadata",
+        "voice_unavailable": "Pole veel saadaval - see lisandub häälsisestuse funktsiooniga."
+      },
+      "mcp": {
+        "title": "MCP server",
+        "hint": "Suuna MCP klient (Claude Desktop, claude.ai) selle Spoolmani peale, et päringuid teha ja oma laoseisu uuendada. LLM-i teenusepakkujat pole vaja - ainult see lüliti.",
+        "copy": "Kopeeri seadistus",
+        "copied": "Seadistus kopeeriti lõikelauale.",
+        "auth_note": "Kui see Spoolman nõuab API-tokenit, lisa \"headers\" alla kirje \"Authorization\": \"Bearer <token>\". Kirjutuskaitstud kontod saavad ainult päringutööriistad."
+      },
+      "models": {
+        "title": "Ollama mudelid",
+        "hint": "Sinu otspunkt on Ollama server. Tõmba soovitatud mudel otse siit - Spoolman haldab mudeleid, kuid mitte kunagi käitusaega.",
+        "installed": "Installitud",
+        "pull": "Tõmba",
+        "pulled": "Tõmmatud {{model}}.",
+        "purpose": {
+          "chat": "vestlus",
+          "vision": "nägemine"
+        }
+      }
     }
   },
   "documentTitle": {
@@ -998,7 +1094,8 @@
       "unknown_content": "Ühelgi filamendil pole vöötkoodi {{code}}. Kas luua filament ja jätta see vöötkood meelde?",
       "create_filament": "Loo filament",
       "lookup_error": "Selle vöötkoodi otsimine ebaõnnestus."
-    }
+    },
+    "photo": "Foto"
   },
   "printer": {
     "printer": "Printer",
@@ -1006,6 +1103,59 @@
       "name": "Nimi",
       "comment": "Kommentaar",
       "spool_count": "Poolid"
+    }
+  },
+  "chat": {
+    "title": "Assistent",
+    "open": "Küsi assistendilt",
+    "placeholder": "Küsi oma filamendi ja poolide kohta…",
+    "send": "Saada",
+    "thinking": "Mõtlemine…",
+    "empty": "Küsi minult oma poolide ja filamendi kohta — näiteks \"kui palju musta PETG-d mul veel alles on?\" või \"mida peaksin juurde tellima?\".",
+    "viewInList": "Vaata poolide loendis",
+    "confirm": {
+      "before": "Enne",
+      "after": "Pärast",
+      "confirm": "Kinnita",
+      "cancel": "Tühista",
+      "confirmed": "Kinnitatud",
+      "cancelled": "Tühistatud",
+      "destructive": "Ei saa tagasi võtta"
+    },
+    "executed": {
+      "undo": "Võta tagasi",
+      "undone": "Muudatus tagasi võetud."
+    },
+    "voice": {
+      "record": "Hoia all, et rääkida",
+      "listening": "Kuulamine…",
+      "speak": "Loe vastused ette",
+      "unsupported": "See brauser ei toeta häälsalvestust.",
+      "mic_error": "Mikrofonile ei õnnestunud ligi pääseda."
+    }
+  },
+  "intake": {
+    "hint": "Pildista pooli silt või karp, või vali olemasolev foto.",
+    "select_photo": "Vali või tee foto",
+    "extracting": "Sildi lugemine...",
+    "in_library": "sinu andmebaasis, lisab pooli",
+    "from_catalog": "SpoolmanDB, loob filamendi ja pooli",
+    "use_raw": "Kasuta toorandmeid (uus filament)",
+    "continue": "Jätka",
+    "back": "Tagasi",
+    "photo_discarded": "Fotot analüüsiti mälus ja seda ei salvestata.",
+    "prefilled_banner": "Eeltäidetud sildifoto põhjal - vaata väärtused enne salvestamist üle.",
+    "fields": {
+      "vendor": "Tootja",
+      "name": "Nimi",
+      "material": "Materjal",
+      "weight_g": "Kaal (g)",
+      "diameter_mm": "Läbimõõt (mm)",
+      "extruder_temp_c": "Düüs (C)",
+      "bed_temp_c": "Alus (C)",
+      "lot_nr": "Partii nr",
+      "article_number": "Artikli nr",
+      "confidence": "Usaldusväärsus"
     }
   }
 }

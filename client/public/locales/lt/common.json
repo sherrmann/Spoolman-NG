@@ -369,6 +369,14 @@
       "selected_one": "Pasirinkta {{count}} ritė",
       "selected_few": "Pasirinktos {{count}} ritės",
       "selected_other": "Pasirinkta {{count}} ričių"
+    },
+    "nlSearch": {
+      "button": "AI",
+      "title": "Paieška natūralia kalba",
+      "placeholder": "pvz. juodas PETG B lentynoje",
+      "hint": "Pritaikoma kaip redaguojami filtrai",
+      "search": "Ieškoti",
+      "error": "Nepavyko išversti paieškos. Bandykite dar kartą arba naudokite įprastą paieškos lauką."
     }
   },
   "filament": {
@@ -728,6 +736,94 @@
       "add_title": "Pridėti nuorodą",
       "edit_title": "Redaguoti nuorodą",
       "delete_confirm": "Šalinti šią nuorodą?"
+    },
+    "ai": {
+      "tab": "AI",
+      "description": "Prijunkite OpenAI suderinamą galinį tašką (Ollama, LM Studio, OpenAI, Anthropic, OpenRouter, Requesty, Groq, ...). Niekas niekur nesiunčiama, ir joks AI elementas sąsajoje nerodomas, kol žemiau neįjungiama kuri nors funkcija.",
+      "preset": {
+        "label": "Šablonas",
+        "placeholder": "Pasirinkite tiekėją, kad būtų užpildytas bazinis URL"
+      },
+      "base_url": {
+        "label": "Bazinis URL",
+        "tooltip": "OpenAI suderinamas galinis taškas, kurį naudoti, pvz., Ollama serveris jūsų tinkle.",
+        "invalid": "Turi būti http:// arba https:// URL"
+      },
+      "api_key": {
+        "label": "API raktas",
+        "tooltip": "Saugomas tik rašymui: serveris niekada nesiunčia jo atgal jokiam klientui. Ollama ir LM Studio jo nereikia.",
+        "placeholder_set": "Raktas išsaugotas - įveskite naują reikšmę, kad jį pakeistumėte",
+        "placeholder_unset": "Raktas neišsaugotas",
+        "clear": "Išvalyti išsaugotą raktą"
+      },
+      "model": {
+        "label": "Pokalbio modelis",
+        "tooltip": "Modelis, naudojamas pokalbių ir įrankių iškvietimo funkcijoms. Atlikite ryšio patikrinimą, kad būtų parodyti galinio taško modeliai."
+      },
+      "vision_model": {
+        "label": "Vaizdo modelis",
+        "tooltip": "Modelis, naudojamas vaizdo funkcijoms. Palikite tuščią, kad būtų naudojamas pokalbio modelis."
+      },
+      "stt": {
+        "title": "Kalbos į tekstą atpažinimas (balso įvestis)",
+        "hint": "Atskiras OpenAI suderinamas transkripcijos galinis taškas balso įvesčiai - Ollama neturi kalbos į tekstą atpažinimo. Pavyzdžiui, whisper.cpp serveris, Speaches arba Groq whisper.",
+        "base_url": {
+          "label": "STT bazinis URL",
+          "tooltip": "Transkripcijos galinis taškas, pvz., http://localhost:8000/v1"
+        },
+        "api_key": {
+          "label": "STT API raktas"
+        },
+        "model": {
+          "label": "STT modelis",
+          "tooltip": "Transkripcijos modelis, pvz., whisper-1 arba Systran/faster-whisper-base."
+        }
+      },
+      "env_locked": "Nustatyta per aplinkos kintamąjį ir čia užrakinta",
+      "test": "Patikrinti ryšį",
+      "probe": {
+        "reachable": "Galinis taškas pasiekiamas",
+        "models_listed": "surašyta modelių",
+        "failed": "Ryšio patikrinimas nepavyko.",
+        "chat": "Pokalbiai",
+        "tools": "Įrankių iškvietimai",
+        "vision": "Vaizdas",
+        "yes": "palaikoma",
+        "no": "nepalaikoma",
+        "unknown": "nepatikrinta - šis galinis taškas nepraneša galimybių"
+      },
+      "features": {
+        "title": "Funkcijos",
+        "hint": "Visos funkcijos pagal numatytuosius nustatymus išjungtos. Niekas, susijęs su AI, sąsajoje nerodoma, kol tai neįjungiama čia.",
+        "chat": "Pokalbių asistentas",
+        "scan_to_spool": "Scan-to-Spool nuotraukos įvedimas",
+        "nl_search": "Paieška natūralia kalba",
+        "mcp": "MCP serveris",
+        "voice": "Balso įvestis",
+        "requires_config": "Pirmiausia sukonfigūruokite ir išsaugokite galinį tašką bei pokalbio modelį.",
+        "requires_vision": "Ryšio patikrinimas rodo, kad sukonfigūruotas modelis nepalaiko vaizdo.",
+        "requires_stt": "Pirmiausia sukonfigūruokite ir išsaugokite kalbos į tekstą atpažinimo galinį tašką bei modelį.",
+        "voice_autosend": "Automatiškai siųsti balso įrašų nuorašus, jų iš anksto neperžiūrint",
+        "voice_unavailable": "Dar neprieinama - tai atsiras kartu su balso įvesties funkcija."
+      },
+      "mcp": {
+        "title": "MCP serveris",
+        "hint": "Nukreipkite MCP klientą (Claude Desktop, claude.ai) į šį Spoolman, kad galėtumėte užklausti ir atnaujinti savo atsargas. LLM tiekėjo nereikia - tik šis jungiklis.",
+        "copy": "Kopijuoti konfigūraciją",
+        "copied": "Konfigūracija nukopijuota į iškarpinę.",
+        "auth_note": "Jei šiam Spoolman reikalingas API prieigos raktas, po \"headers\" pridėkite įrašą \"Authorization\": \"Bearer <token>\". Tik skaitymo paskyros gauna tik užklausų įrankius."
+      },
+      "models": {
+        "title": "Ollama modeliai",
+        "hint": "Jūsų galinis taškas yra Ollama serveris. Atsisiųskite rekomenduojamą modelį tiesiai iš čia - Spoolman tvarko modelius, bet niekada vykdymo aplinką.",
+        "installed": "Įdiegta",
+        "pull": "Atsisiųsti",
+        "pulled": "Atsisiųsta {{model}}.",
+        "purpose": {
+          "chat": "pokalbis",
+          "vision": "vaizdas"
+        }
+      }
     }
   },
   "documentTitle": {
@@ -1015,7 +1111,8 @@
       "unknown_content": "Nė viena gija neturi brūkšninio kodo {{code}}. Sukurti giją ir įsiminti šį brūkšninį kodą?",
       "create_filament": "Sukurti giją",
       "lookup_error": "Nepavyko rasti šio brūkšninio kodo."
-    }
+    },
+    "photo": "Nuotrauka"
   },
   "printer": {
     "printer": "Spausdintuvas",
@@ -1023,6 +1120,59 @@
       "name": "Pavadinimas",
       "comment": "Komentaras",
       "spool_count": "Ritės"
+    }
+  },
+  "chat": {
+    "title": "Asistentas",
+    "open": "Klausti asistento",
+    "placeholder": "Klauskite apie savo gijas ir rites…",
+    "send": "Siųsti",
+    "thinking": "Mąstoma…",
+    "empty": "Klauskite manęs apie savo rites ir gijas — pavyzdžiui, „kiek juodo PETG dar turiu?“ arba „ką turėčiau užsisakyti?“.",
+    "viewInList": "Peržiūrėti ričių sąraše",
+    "confirm": {
+      "before": "Prieš",
+      "after": "Po",
+      "confirm": "Patvirtinti",
+      "cancel": "Atšaukti",
+      "confirmed": "Patvirtinta",
+      "cancelled": "Atšaukta",
+      "destructive": "Neatšaukiama"
+    },
+    "executed": {
+      "undo": "Grąžinti",
+      "undone": "Pakeitimas grąžintas."
+    },
+    "voice": {
+      "record": "Laikykite, kad kalbėtumėte",
+      "listening": "Klausoma…",
+      "speak": "Skaityti atsakymus balsu",
+      "unsupported": "Ši naršyklė nepalaiko balso įrašymo.",
+      "mic_error": "Nepavyko pasiekti mikrofono."
+    }
+  },
+  "intake": {
+    "hint": "Nufotografuokite ritės etiketę ar dėžutę, arba pasirinkite esamą nuotrauką.",
+    "select_photo": "Pasirinkti arba nufotografuoti",
+    "extracting": "Skaitoma etiketė...",
+    "in_library": "jūsų bibliotekoje, prideda ritę",
+    "from_catalog": "SpoolmanDB, sukuria giją ir ritę",
+    "use_raw": "Naudoti neapdorotus duomenis (nauja gija)",
+    "continue": "Tęsti",
+    "back": "Atgal",
+    "photo_discarded": "Nuotrauka buvo analizuota atmintyje ir nesaugoma.",
+    "prefilled_banner": "Užpildyta pagal etiketės nuotrauką - prieš išsaugant peržiūrėkite reikšmes.",
+    "fields": {
+      "vendor": "Gamintojas",
+      "name": "Pavadinimas",
+      "material": "Medžiaga",
+      "weight_g": "Svoris (g)",
+      "diameter_mm": "Skersmuo (mm)",
+      "extruder_temp_c": "Antgalis (C)",
+      "bed_temp_c": "Padas (C)",
+      "lot_nr": "Lot",
+      "article_number": "Gaminio nr",
+      "confidence": "Patikimumas"
     }
   }
 }

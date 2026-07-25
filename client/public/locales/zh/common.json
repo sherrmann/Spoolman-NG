@@ -356,6 +356,14 @@
     "totals": {
       "shown_other": "显示 {{count}} 个料盘",
       "selected_other": "已选择 {{count}} 个料盘"
+    },
+    "nlSearch": {
+      "button": "AI",
+      "title": "自然语言搜索",
+      "placeholder": "例如：B 架上的黑色 PETG",
+      "hint": "将转换为可编辑的筛选条件",
+      "search": "搜索",
+      "error": "无法解析该搜索。请重试，或使用常规搜索框。"
     }
   },
   "filament": {
@@ -740,6 +748,94 @@
       "add_title": "添加链接",
       "edit_title": "编辑链接",
       "delete_confirm": "删除此链接？"
+    },
+    "ai": {
+      "tab": "AI",
+      "description": "连接一个兼容 OpenAI 的接口（Ollama、LM Studio、OpenAI、Anthropic、OpenRouter、Requesty、Groq 等）。在下方启用某项功能之前，不会发送任何数据，界面中也不会出现任何 AI 相关元素。",
+      "preset": {
+        "label": "预设",
+        "placeholder": "选择一个提供方以自动填写基础URL"
+      },
+      "base_url": {
+        "label": "基础URL",
+        "tooltip": "要使用的兼容 OpenAI 的接口地址，例如您局域网内的 Ollama 服务器。",
+        "invalid": "必须是 http:// 或 https:// 格式的 URL"
+      },
+      "api_key": {
+        "label": "API 密钥",
+        "tooltip": "仅写入存储：服务器不会将其发送回任何客户端。Ollama 和 LM Studio 不需要密钥。",
+        "placeholder_set": "已存储密钥 - 输入新值以替换",
+        "placeholder_unset": "未存储密钥",
+        "clear": "清除已存储的密钥"
+      },
+      "model": {
+        "label": "聊天模型",
+        "tooltip": "用于聊天和工具调用功能的模型。运行连接测试以列出该接口的可用模型。"
+      },
+      "vision_model": {
+        "label": "视觉模型",
+        "tooltip": "用于图像功能的模型。留空则使用聊天模型。"
+      },
+      "stt": {
+        "title": "语音转文字（语音输入）",
+        "hint": "语音输入需要一个单独的、兼容 OpenAI 的转录接口 - Ollama 不支持语音转文字。例如 whisper.cpp 服务器、Speaches 或 Groq whisper。",
+        "base_url": {
+          "label": "STT 基础URL",
+          "tooltip": "转录接口地址，例如 http://localhost:8000/v1"
+        },
+        "api_key": {
+          "label": "STT API 密钥"
+        },
+        "model": {
+          "label": "STT 模型",
+          "tooltip": "转录模型，例如 whisper-1 或 Systran/faster-whisper-base。"
+        }
+      },
+      "env_locked": "已通过环境变量设置，此处已锁定",
+      "test": "测试连接",
+      "probe": {
+        "reachable": "接口可访问",
+        "models_listed": "已列出的模型",
+        "failed": "连接测试失败。",
+        "chat": "聊天",
+        "tools": "工具调用",
+        "vision": "视觉",
+        "yes": "支持",
+        "no": "不支持",
+        "unknown": "未验证 - 该接口未报告能力信息"
+      },
+      "features": {
+        "title": "功能",
+        "hint": "所有功能默认关闭。在此处启用之前，界面中不会出现任何与 AI 相关的内容。",
+        "chat": "聊天助手",
+        "scan_to_spool": "Scan-to-Spool 拍照录入",
+        "nl_search": "自然语言搜索",
+        "mcp": "MCP 服务器",
+        "voice": "语音输入",
+        "requires_config": "请先配置并保存接口和聊天模型。",
+        "requires_vision": "连接测试显示所配置的模型不支持视觉功能。",
+        "requires_stt": "请先配置并保存语音转文字接口和模型。",
+        "voice_autosend": "自动发送语音转录文本，而不先进行确认",
+        "voice_unavailable": "尚不可用 - 该功能将随语音输入功能一起推出。"
+      },
+      "mcp": {
+        "title": "MCP 服务器",
+        "hint": "将 MCP 客户端（Claude Desktop、claude.ai）指向此 Spoolman，即可查询和更新您的库存。无需配置 LLM 提供方 - 只需开启此开关。",
+        "copy": "复制配置",
+        "copied": "配置已复制到剪贴板。",
+        "auth_note": "如果此 Spoolman 需要 API 令牌，请在 \"headers\" 下添加一条 \"Authorization\": \"Bearer <token>\" 条目。只读账户仅可使用查询类工具。"
+      },
+      "models": {
+        "title": "Ollama 模型",
+        "hint": "您的接口是一个 Ollama 服务器。可直接在此处拉取推荐模型 - Spoolman 仅管理模型，不涉及运行时本身。",
+        "installed": "已安装",
+        "pull": "拉取",
+        "pulled": "已拉取 {{model}}。",
+        "purpose": {
+          "chat": "聊天",
+          "vision": "视觉"
+        }
+      }
     }
   },
   "locations": {
@@ -993,7 +1089,8 @@
       "unknown_content": "没有任何耗材使用条码 {{code}}。要创建一个耗材并记住此条码吗？",
       "create_filament": "创建耗材",
       "lookup_error": "无法查询该条码。"
-    }
+    },
+    "photo": "照片"
   },
   "printer": {
     "printer": "打印机",
@@ -1001,6 +1098,59 @@
       "name": "名称",
       "comment": "备注",
       "spool_count": "料盘数"
+    }
+  },
+  "chat": {
+    "title": "助手",
+    "open": "咨询助手",
+    "placeholder": "询问关于耗材和料盘的问题…",
+    "send": "发送",
+    "thinking": "思考中…",
+    "empty": "问我关于您的料盘和耗材的问题——例如“我还剩多少黑色 PETG？”或“我该补货什么了？”。",
+    "viewInList": "在料盘列表中查看",
+    "confirm": {
+      "before": "之前",
+      "after": "之后",
+      "confirm": "确认",
+      "cancel": "取消",
+      "confirmed": "已确认",
+      "cancelled": "已取消",
+      "destructive": "无法撤销"
+    },
+    "executed": {
+      "undo": "撤销",
+      "undone": "更改已撤销。"
+    },
+    "voice": {
+      "record": "按住说话",
+      "listening": "正在聆听…",
+      "speak": "朗读回复",
+      "unsupported": "此浏览器不支持语音录制。",
+      "mic_error": "无法访问麦克风。"
+    }
+  },
+  "intake": {
+    "hint": "拍摄料盘的标签或包装盒照片，或选择一张已有的照片。",
+    "select_photo": "选择或拍摄照片",
+    "extracting": "正在读取标签...",
+    "in_library": "已在您的库中，将新增一个料盘",
+    "from_catalog": "来自 SpoolmanDB，将创建耗材和料盘",
+    "use_raw": "使用原始识别结果（新建耗材）",
+    "continue": "继续",
+    "back": "返回",
+    "photo_discarded": "照片仅在内存中分析，不会被保存。",
+    "prefilled_banner": "已根据标签照片自动填写 - 保存前请核对各项数值。",
+    "fields": {
+      "vendor": "制造商",
+      "name": "名称",
+      "material": "材料",
+      "weight_g": "重量 (g)",
+      "diameter_mm": "直径 (mm)",
+      "extruder_temp_c": "喷嘴 (C)",
+      "bed_temp_c": "热床 (C)",
+      "lot_nr": "批号",
+      "article_number": "产品编号",
+      "confidence": "可信度"
     }
   }
 }

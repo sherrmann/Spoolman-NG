@@ -427,6 +427,14 @@
       "shown_other": "{{count}} spools dikhayi ja rahi hain",
       "selected_one": "{{count}} spool select kiya gaya",
       "selected_other": "{{count}} spools select kiye gaye"
+    },
+    "nlSearch": {
+      "button": "AI",
+      "title": "Natural language se khojein",
+      "placeholder": "jaise shelf B mein black PETG",
+      "hint": "Editable filters ke roop mein apply kiya gaya",
+      "search": "Khojein",
+      "error": "Search translate nahi ho paayi. Kripya dobara koshish karein ya normal search box istemal karein."
     }
   },
   "filament": {
@@ -741,6 +749,94 @@
       "add_title": "Link jodein",
       "edit_title": "Link edit karein",
       "delete_confirm": "Yeh link delete karein?"
+    },
+    "ai": {
+      "tab": "AI",
+      "description": "Ek OpenAI-compatible endpoint jodein (Ollama, LM Studio, OpenAI, Anthropic, OpenRouter, Requesty, Groq, ...). Kahin kuch nahi bheja jata aur jab tak neeche koi feature enable nahi kiya jata, tab tak interface mein koi AI element nahi dikhta.",
+      "preset": {
+        "label": "Preset",
+        "placeholder": "Base URL bharne ke liye ek provider chunein"
+      },
+      "base_url": {
+        "label": "Base URL",
+        "tooltip": "Istemal karne wala OpenAI-compatible endpoint, jaise aapke network par ek Ollama server.",
+        "invalid": "http:// ya https:// URL hona chahiye"
+      },
+      "api_key": {
+        "label": "API key",
+        "tooltip": "Sirf likhne ke liye store kiya jata hai: server ise kabhi kisi client ko wapas nahi bhejta. Ollama aur LM Studio ko iski zaroorat nahi hai.",
+        "placeholder_set": "Ek key store hai - use badalne ke liye nayi value enter karein",
+        "placeholder_unset": "Koi key store nahi hai",
+        "clear": "Stored key saaf karein"
+      },
+      "model": {
+        "label": "Chat model",
+        "tooltip": "Chat aur tool-calling features ke liye istemal hone wala model. Endpoint ke models ki list dekhne ke liye connection test chalayein."
+      },
+      "vision_model": {
+        "label": "Vision model",
+        "tooltip": "Image features ke liye istemal hone wala model. Chat model istemal karne ke liye khaali chhodein."
+      },
+      "stt": {
+        "title": "Speech-to-text (voice input)",
+        "hint": "Voice input ke liye ek alag OpenAI-compatible transcription endpoint - Ollama mein speech-to-text nahi hai. Jaise ek whisper.cpp server, Speaches, ya Groq whisper.",
+        "base_url": {
+          "label": "STT base URL",
+          "tooltip": "Transcription endpoint, jaise http://localhost:8000/v1"
+        },
+        "api_key": {
+          "label": "STT API key"
+        },
+        "model": {
+          "label": "STT model",
+          "tooltip": "Transcription model, jaise whisper-1 ya Systran/faster-whisper-base."
+        }
+      },
+      "env_locked": "Environment variable ke zariye set hai aur yahan locked hai",
+      "test": "Connection test karein",
+      "probe": {
+        "reachable": "Endpoint tak pahunch ho gayi",
+        "models_listed": "list kiye gaye models",
+        "failed": "Connection test vifal raha.",
+        "chat": "Chat",
+        "tools": "Tool calls",
+        "vision": "Vision",
+        "yes": "supported",
+        "no": "not supported",
+        "unknown": "verify nahi ho paaya - yeh endpoint capabilities report nahi karta"
+      },
+      "features": {
+        "title": "Features",
+        "hint": "Sabhi features default roop se band hain. Jab tak yahan enable na kiya jaye, tab tak interface mein kahin bhi AI-related kuch nahi dikhta.",
+        "chat": "Chat Sahayak",
+        "scan_to_spool": "Scan-to-Spool photo intake",
+        "nl_search": "Natural-language search",
+        "mcp": "MCP server",
+        "voice": "Voice input",
+        "requires_config": "Pehle ek endpoint aur chat model configure karke save karein.",
+        "requires_vision": "Connection test ke anusaar configured model ke liye koi vision support nahi hai.",
+        "requires_stt": "Pehle ek speech-to-text endpoint aur model configure karke save karein.",
+        "voice_autosend": "Voice transcripts ko pehle review karne ke bajaye automatically bhej dein",
+        "voice_unavailable": "Abhi uplabdh nahi hai - yeh voice input feature ke saath aayega."
+      },
+      "mcp": {
+        "title": "MCP server",
+        "hint": "Apne inventory ko query aur update karne ke liye kisi MCP client (Claude Desktop, claude.ai) ko is Spoolman par point karein. Koi LLM provider zaroori nahi - sirf yeh toggle.",
+        "copy": "Config copy karein",
+        "copied": "Configuration clipboard mein copy ho gayi.",
+        "auth_note": "Agar is Spoolman ko ek API token chahiye, to \"headers\" ke andar ek \"Authorization\": \"Bearer <token>\" entry jodein. Read-only accounts ko sirf query tools milte hain."
+      },
+      "models": {
+        "title": "Ollama models",
+        "hint": "Aapka endpoint ek Ollama server hai. Yahin se seedhe ek recommended model pull karein - Spoolman models manage karta hai, runtime kabhi nahi.",
+        "installed": "Installed",
+        "pull": "Pull karein",
+        "pulled": "{{model}} pull ho gaya.",
+        "purpose": {
+          "chat": "chat",
+          "vision": "vision"
+        }
+      }
     }
   },
   "documentTitle": {
@@ -998,7 +1094,8 @@
       "unknown_content": "Kisi bhi filament ka barcode {{code}} nahi hai. Ek filament banakar yeh barcode yaad rakhein?",
       "create_filament": "Filament banayein",
       "lookup_error": "Us barcode ki jaankari nahi mil payi."
-    }
+    },
+    "photo": "Photo"
   },
   "printer": {
     "printer": "Printer",
@@ -1006,6 +1103,59 @@
       "name": "Naam",
       "comment": "Comment",
       "spool_count": "Spools"
+    }
+  },
+  "chat": {
+    "title": "Sahayak",
+    "open": "Sahayak se poochein",
+    "placeholder": "Apne filament aur spools ke baare mein poochein…",
+    "send": "Bhejein",
+    "thinking": "Soch raha hai…",
+    "empty": "Apne spools aur filament ke baare mein mujhse poochein — jaise \"mere paas kitna black PETG bacha hai?\" ya \"mujhe kya reorder karna chahiye?\".",
+    "viewInList": "Spools list mein dekhein",
+    "confirm": {
+      "before": "Pehle",
+      "after": "Baad",
+      "confirm": "Confirm karein",
+      "cancel": "Cancel karein",
+      "confirmed": "Confirm ho gaya",
+      "cancelled": "Cancel ho gaya",
+      "destructive": "Ise undo nahi kiya ja sakta"
+    },
+    "executed": {
+      "undo": "Undo karein",
+      "undone": "Badlav undo kar diya gaya."
+    },
+    "voice": {
+      "record": "Bolne ke liye dabaye rakhein",
+      "listening": "Sun raha hai…",
+      "speak": "Jawab bolein",
+      "unsupported": "Is browser mein voice recording support nahi hai.",
+      "mic_error": "Microphone access nahi ho paaya."
+    }
+  },
+  "intake": {
+    "hint": "Spool ke label ya box ki photo lein, ya ek maujooda photo chunein.",
+    "select_photo": "Photo select karein ya lein",
+    "extracting": "Label padha ja raha hai...",
+    "in_library": "aapki library mein, ek spool jodta hai",
+    "from_catalog": "SpoolmanDB, filament aur spool banata hai",
+    "use_raw": "Raw extraction istemal karein (naya filament)",
+    "continue": "Aage badhen",
+    "back": "Peeche",
+    "photo_discarded": "Photo memory mein analyze ki gayi thi aur store nahi ki gayi hai.",
+    "prefilled_banner": "Ek label photo se prefill kiya gaya - save karne se pehle values check kar lein.",
+    "fields": {
+      "vendor": "Manufacturer",
+      "name": "Naam",
+      "material": "Material",
+      "weight_g": "Vajan (g)",
+      "diameter_mm": "Diameter (mm)",
+      "extruder_temp_c": "Nozzle (C)",
+      "bed_temp_c": "Bed (C)",
+      "lot_nr": "Lot",
+      "article_number": "Article Nr",
+      "confidence": "Confidence"
     }
   }
 }
