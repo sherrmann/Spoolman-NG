@@ -68,7 +68,16 @@
         "none": "Nessuno",
         "code128": "Code 128"
       },
-      "tooltip": "Stampa le etichette per le righe selezionate, oppure scegli gli elementi nella pagina successiva"
+      "tooltip": "Stampa le etichette per le righe selezionate, oppure scegli gli elementi nella pagina successiva",
+      "qrSize": {
+        "label": "Dimensione QR",
+        "tooltip": "Dimensione di stampa del quadrato del codice QR in mm. Automatico mantiene il comportamento storico: il QR occupa metà dell'etichetta (tutta l'etichetta se non viene stampato nient'altro). Il Margine interno QR viene aggiunto attorno alla dimensione scelta come zona di rispetto.",
+        "auto": "Automatico",
+        "custom": "Personalizzato",
+        "tooSmall": "I codici QR più piccoli di {{mm}} mm possono essere difficili da scansionare con la fotocamera di uno smartphone.",
+        "clamped": "Questa etichetta può contenere solo ≈ {{rendered}} mm — più piccolo dei {{requested}} mm impostati.",
+        "clampedTooSmall": "Questa etichetta può contenere solo ≈ {{rendered}} mm ({{requested}} mm impostati) — sotto il minimo di {{mm}} mm per la fotocamera di uno smartphone."
+      }
     },
     "generic": {
       "printerMarginBottom": "Safe-Zone Inferiore",
@@ -122,7 +131,19 @@
       "invalidGeometry": "La griglia di etichette non entra nella carta",
       "invalidGeometryHelp": "Margini e spaziatura non lasciano spazio alle etichette. Riduci i margini, la spaziatura, le colonne o le righe — oppure scegli una dimensione carta più grande.",
       "contentClipped": "Parte del contenuto delle etichette è tagliata",
-      "contentClippedHelp": "Il contenuto di almeno un'etichetta non entra nella sua etichetta e verrà tagliato in stampa. Riduci la dimensione del testo, accorcia il modello oppure usa meno colonne/righe così ogni etichetta è più grande."
+      "contentClippedHelp": "Il contenuto di almeno un'etichetta non entra nella sua etichetta e verrà tagliato in stampa. Riduci la dimensione del testo, accorcia il modello oppure usa meno colonne/righe così ogni etichetta è più grande.",
+      "checklist": {
+        "title": "Prima di stampare",
+        "intro": "Le finestre di stampa del browser spesso ridimensionano le pagine, il che compromette la geometria dell'etichetta. Nella finestra di stampa che si aprirà, verifica:",
+        "scale": "La scala è al 100% / “Dimensioni effettive” — mai “Adatta alla pagina”.",
+        "paperSize": "La dimensione carta selezionata è esattamente {{width}} × {{height}} mm.",
+        "margins": "I margini sono impostati su “Nessuno” (Spoolman gestisce già i margini).",
+        "headersFooters": "Intestazioni e piè di pagina sono disattivati.",
+        "pageSizeModeHint": "Hai scelto una dimensione carta per etichette ma la Dimensione pagina è impostata su “Automatico”. “Adatta alla dimensione dell'etichetta” indica al browser la geometria esatta della pagina.",
+        "pageSizeModeApply": "Passa a Adatta alla dimensione dell'etichetta",
+        "dontShowAgain": "Non mostrare più",
+        "printNow": "Stampa ora"
+      }
     },
     "spoolSelect": {
       "selectedTotal_one": "{{count}} bobina selezionata",
@@ -151,7 +172,8 @@
       "reprintConfirmTitle": "Ristampare le etichette?",
       "reprintConfirmContent_one": "{{count}} filamento selezionato ha già un'etichetta stampata. Stamparla di nuovo?",
       "reprintConfirmContent_many": "{{count}} filamenti selezionati hanno già etichette stampate. Stamparle di nuovo?",
-      "reprintConfirmContent_other": "{{count}} filamenti selezionati hanno già etichette stampate. Stamparle di nuovo?"
+      "reprintConfirmContent_other": "{{count}} filamenti selezionati hanno già etichette stampate. Stamparle di nuovo?",
+      "searchPlaceholder": "Cerca per ID filamento, produttore, nome o materiale"
     }
   },
   "documentTitle": {
@@ -389,7 +411,8 @@
       "low_stock_threshold": "Segnala questo filamento da riordinare quando il peso rimanente totale delle sue bobine scende sotto questo numero di grammi.",
       "reserve_count": "Numero di bobine di scorta non aperte che tieni a disposizione, conteggiate senza creare una bobina per ciascuna.",
       "settings_extruder_temp_range": "Intervallo di temperatura dell'estrusore consigliato dal produttore (min–max). Opzionale, lascia vuoto se hai un solo valore.",
-      "settings_bed_temp_range": "Intervallo di temperatura del piatto consigliato dal produttore (min–max). Opzionale, lascia vuoto se hai un solo valore."
+      "settings_bed_temp_range": "Intervallo di temperatura del piatto consigliato dal produttore (min–max). Opzionale, lascia vuoto se hai un solo valore.",
+      "image": "Una foto per riconoscere questo filamento — ad es. la bobina o l'inserzione del negozio. Viene ridotta di dimensione nel browser prima del caricamento; i metadati come la posizione GPS vengono rimossi."
     },
     "fields": {
       "material": "Materiale",
@@ -427,7 +450,8 @@
       "finish": "Finitura",
       "pattern": "Motivo",
       "translucent": "Traslucido",
-      "glow": "Fosforescente"
+      "glow": "Fosforescente",
+      "image": "Foto"
     },
     "titles": {
       "clone": "Clona Filamento",
@@ -518,6 +542,16 @@
     },
     "messages": {
       "update_error": "Impossibile salvare le modifiche. Riprova."
+    },
+    "image": {
+      "upload": "Carica foto",
+      "replace": "Sostituisci foto",
+      "remove": "Rimuovi foto",
+      "uploaded": "Foto salvata",
+      "upload_error": "Impossibile salvare la foto",
+      "removed": "Foto rimossa",
+      "remove_error": "Impossibile rimuovere la foto",
+      "prepare_error": "Impossibile leggere il file immagine"
     }
   },
   "actions": {
@@ -656,7 +690,12 @@
       "materials_one": "{{count}} materiale",
       "materials_many": "{{count}} materiali",
       "materials_other": "{{count}} materiali"
-    }
+    },
+    "load_error_title": "Impossibile caricare le bobine",
+    "load_error_desc": "Si è verificato un problema durante il caricamento delle bobine. Riprova.",
+    "gathering_dust": "Dimenticate da tempo",
+    "never_used": "Mai utilizzata",
+    "no_stale": "Nessuna bobina dimenticata da tempo"
   },
   "settings": {
     "settings": "Configurazione",
@@ -900,7 +939,8 @@
       "description": "Seleziona le posizioni per cui stampare etichette QR scansionabili.",
       "select_placeholder": "Seleziona posizioni",
       "none_selected": "Nessuna posizione selezionata"
-    }
+    },
+    "load_error": "Impossibile caricare le bobine"
   },
   "calibration": {
     "title": "Calibrazione",
@@ -980,7 +1020,165 @@
         "cancel": "Annulla"
       },
       "skip_finish_confirm": "Contrassegnare questa sessione come completata senza salvare questo passaggio?",
-      "session_complete": "Sessione di calibrazione contrassegnata come completata."
+      "session_complete": "Sessione di calibrazione contrassegnata come completata.",
+      "revisiting": "In revisione"
+    },
+    "wiki": {
+      "link": "Wiki",
+      "tooltip": "Apri il wiki di OrcaSlicer per questo passaggio",
+      "tooltip_short": "Wiki di OrcaSlicer"
+    },
+    "sections": {
+      "test_method": "Metodo di test",
+      "test_setup": "Configurazione del test",
+      "your_result": "Il tuo risultato",
+      "auto_computed": "· calcolato automaticamente"
+    },
+    "step_status": {
+      "skipped": "Saltato",
+      "done": "✓ Fatto",
+      "incomplete": "Incompleto"
+    },
+    "confidence_display": "Affidabilità: {{level}}",
+    "confirm_delete": {
+      "tooltip": "Elimina",
+      "confirming": "Clicca di nuovo per confermare",
+      "short": "Sicuro?"
+    },
+    "select_step": {
+      "placeholder": "Seleziona un passaggio di calibrazione",
+      "required": "Seleziona un passaggio di calibrazione."
+    },
+    "optional": "Opzionale",
+    "optional_notes": "Note opzionali…",
+    "printer_name_placeholder": "es. Bambu X1C, Ender 3",
+    "flow_calc": {
+      "title": "Calcolatore del risultato della passata",
+      "pass1": "Passata 1",
+      "pass2": "Passata 2",
+      "method_yolo": "YOLO (Consigliato)",
+      "method_legacy": "Legacy (2 passate)",
+      "yolo_desc": "Calibrazione in una sola passata che utilizza il pattern Archimedean Chords (OrcaSlicer ≥ 2.3.0). Inserisci il tuo Flow Ratio attuale e il valore di correzione osservato sulla stampa.",
+      "legacy_desc": "Calibrazione a due passate. Procedi attraverso i risultati della prima e della seconda passata per calcolare il tuo Flow Ratio finale.",
+      "start": "Inizia →",
+      "yolo_pass1_desc": "Stampa il modello di test Archimedean Chords. Inserisci il tuo Flow Ratio attuale e il valore di correzione mostrato sulla stampa. Il nuovo Flow Ratio viene calcolato automaticamente.",
+      "legacy_pass1_desc": "Stampa il modello di test della prima passata. Inserisci il tuo Flow Ratio di partenza e la percentuale di correzione osservata sulla stampa.",
+      "pass2_desc": "Imposta il Flow Ratio del tuo slicer sul risultato della Passata 1, ristampa il modello di test, quindi inserisci la nuova percentuale di correzione.",
+      "current_flow_ratio": "Flow Ratio Attuale",
+      "modifier": "Modificatore",
+      "new_flow_ratio": "Nuovo Flow Ratio",
+      "flow_ratio": "Flow Ratio",
+      "result": "Risultato",
+      "cancel": "Annulla",
+      "apply": "Applica al modulo ✓",
+      "next_pass2": "Successivo: Passata 2 →",
+      "back": "← Indietro"
+    },
+    "pa": {
+      "method_tower": "Torre (Consigliato)",
+      "method_pattern": "Pattern / Linea",
+      "tower_desc": "Stampa il test della torre PA. Inserisci il tipo di estrusore, il valore del passo PA (A) e l'altezza misurata (B) al layer che ha l'aspetto migliore. Il PA viene calcolato automaticamente come A × B.",
+      "pattern_desc": "Stampa il test a pattern o a linee PA. Individua la linea ottimale e inserisci qui sotto il suo valore PA."
+    },
+    "input_shaping_advisory": {
+      "title": "Hai una stampante moderna? Potresti non averne bisogno.",
+      "desc_wizard": "La maggior parte delle stampanti CoreXY moderne con Klipper e un accelerometro (ADXL345), così come qualsiasi stampante Bambu Lab, gestisce già l'input shaping automaticamente — e con una precisione molto superiore a qualsiasi torre di test manuale. Se è il tuo caso, salta questo passaggio e risparmiati la fatica.",
+      "desc_drawer": "La maggior parte delle stampanti CoreXY moderne con Klipper e un accelerometro (ADXL345), così come qualsiasi stampante Bambu Lab, gestisce già l'input shaping automaticamente — e con una precisione molto superiore a qualsiasi torre di test manuale. Se è il tuo caso, chiudi semplicemente questo pannello senza salvare.",
+      "skip": "La mia stampante se ne occupa già — salta →"
+    },
+    "vfa": {
+      "artifact_speeds": "Velocità con artefatti",
+      "artifact_speeds_desc": "Stampa la torre di test VFA e segna ogni velocità in cui osservi artefatti VFA. La Velocità minima e massima di elusione vengono calcolate automaticamente da questo elenco.",
+      "speed_placeholder": "Velocità",
+      "add_speed": "Aggiungi velocità"
+    },
+    "step_copy": {
+      "temperature": {
+        "title": "Temperatura",
+        "description": "Trova la temperatura di stampa ottimale per questo filamento. Stampa una torre di temperatura e cerca il layer che offre il miglior equilibrio tra adesione dei layer, qualità della superficie e stringing minimo. Temperature più alte migliorano l'adesione; temperature più basse riducono ooze e stringing."
+      },
+      "volumetric_speed": {
+        "title": "Velocità volumetrica",
+        "description": "Determina la portata volumetrica massima che il tuo hotend riesce a sostenere con questo filamento prima che compaia la sotto-estrusione. Stampa un test a rampa di velocità di flusso o una serie di cubi a parete singola a velocità crescenti, e annota la velocità appena prima che la qualità peggiori."
+      },
+      "pressure_advance": {
+        "title": "Pressure Advance",
+        "description": "Regola il Pressure Advance (Klipper / Bambu) o il Linear Advance (Marlin) per eliminare il rigonfiamento negli angoli e migliorare la qualità degli spigoli vivi. Stampa un pattern di test PA e trova il valore che restituisce gli spigoli più puliti e netti. Abilita l'Adaptive PA se supportato dal tuo firmware."
+      },
+      "flow_rate": {
+        "title": "Flusso",
+        "description": "Ottimizza il moltiplicatore di estrusione affinché la quantità reale di plastica depositata corrisponda a quanto previsto dallo slicer. Stampa due cubi di calibrazione (uno al 98%, uno al 100%) e misura le loro pareti con un calibro per calcolare il Flow Ratio corretto."
+      },
+      "retraction": {
+        "title": "Retrazione",
+        "description": "Trova la lunghezza e la velocità di retrazione minime che eliminano lo stringing senza rovinare il filamento o causare intasamenti. Stampa una torre di distanza di retrazione e scegli l'impostazione più bassa che produce spostamenti a vuoto puliti."
+      },
+      "tolerance": {
+        "title": "Tolleranza",
+        "description": "Misura con quanta precisione la tua stampante riproduce le dimensioni degli elementi. Stampa un modello di test per la tolleranza, misura gli elementi target con un calibro e registra lo scostamento. Applica il risultato nelle impostazioni di precisione dimensionale / compensazione XY del tuo slicer."
+      },
+      "cornering": {
+        "title": "Cornering",
+        "description": "Regola il comportamento in curva per bilanciare la velocità di stampa con il ringing e gli artefatti nei cambi di direzione. Usa Junction Deviation (Marlin 2.x / RepRapFirmware), il classico Jerk (Marlin più datato) o Square Corner Velocity (Klipper). Stampa un pattern di test per il cornering e riduci il valore finché il ringing non scompare."
+      },
+      "input_shaping": {
+        "title": "Input Shaping",
+        "description": "Riduci il ghosting e il ringing applicando la compensazione delle risonanze. Misura la frequenza di risonanza della tua stampante (accelerometro consigliato, oppure usa una torre visiva per il ringing). Seleziona il tipo di shaper e le frequenze che minimizzano gli artefatti, quindi inseriscile qui sotto."
+      },
+      "vfa": {
+        "title": "VFA (Vertical Fine Artifacts)",
+        "description": "Trova la velocità di stampa massima prima che compaiano artefatti verticali sulla superficie (VFA / rigature). Stampa un test a rampa di velocità su un oggetto con pareti lisce e annota la velocità appena prima che compaiano rigature regolari sulla superficie."
+      }
+    },
+    "field_labels": {
+      "inputs": {
+        "start_temp": "Temp. iniziale",
+        "end_temp": "Temp. finale",
+        "step_size": "Incremento",
+        "start_speed": "Velocità iniziale",
+        "end_speed": "Velocità finale",
+        "measured_height": "Altezza misurata",
+        "extruder_type": "Tipo di estrusore",
+        "pa_step_a": "Passo PA (A)",
+        "measured_height_b": "Altezza misurata (B)",
+        "start_retract": "Retrazione iniziale",
+        "factor": "Fattore",
+        "test_size": "Dimensione elemento di test",
+        "measured_size": "Dimensione misurata",
+        "firmware_type": "Firmware / Funzione",
+        "start_value": "Valore iniziale",
+        "end_value": "Valore finale",
+        "shaper_type": "Tipo di Shaper",
+        "frequency_x": "Frequenza di risonanza X",
+        "frequency_y": "Frequenza di risonanza Y"
+      },
+      "outputs": {
+        "temperature": "Temp. ottimale",
+        "max_volumetric_speed": "Velocità volumetrica massima",
+        "pressure_advance": "Valore PA",
+        "flow_ratio": "Flow Ratio",
+        "retraction_length": "Retrazione consigliata",
+        "tolerance_offset": "Scostamento di tolleranza",
+        "cornering_value": "Valore consigliato",
+        "shaper_type_x": "Shaper consigliato X",
+        "frequency_x": "Frequenza calibrata X",
+        "shaper_type_y": "Shaper consigliato Y",
+        "frequency_y": "Frequenza calibrata Y",
+        "min_avoidance_speed": "Velocità minima di elusione",
+        "max_avoidance_speed": "Velocità massima di elusione"
+      },
+      "options": {
+        "direct_drive": "Direct Drive",
+        "bowden": "Bowden",
+        "junction_deviation": "Junction Deviation (Marlin 2.x / RepRapFirmware)",
+        "jerk": "Jerk (Marlin classico)",
+        "square_corner_velocity": "Square Corner Velocity (Klipper)",
+        "mzv": "MZV",
+        "ei": "EI",
+        "zv": "ZV",
+        "2hump_ei": "2HUMP_EI",
+        "3hump_ei": "3HUMP_EI"
+      }
     }
   },
   "external": {
@@ -1186,5 +1384,114 @@
       "article_number": "Numero articolo",
       "confidence": "Affidabilità"
     }
+  },
+  "update": {
+    "available": "Aggiornamento disponibile",
+    "tooltip": "È disponibile la versione {{version}}",
+    "notification": {
+      "title": "È disponibile una nuova versione di Spoolman",
+      "description": "È stata rilasciata la versione {{version}}. Scopri le novità e come aggiornare.",
+      "viewRelease": "Visualizza note di rilascio"
+    },
+    "action": {
+      "open": "Aggiorna",
+      "howTo": "Come aggiornare",
+      "modalTitle": "Aggiorna Spoolman",
+      "currentVersion": "Installata: {{version}}",
+      "latestVersion": "ultima: {{version}}",
+      "viewReleaseNotes": "Visualizza note di rilascio",
+      "close": "Chiudi",
+      "updateNow": "Aggiorna ora",
+      "updateToVersion": "Aggiorna alla versione {{version}}",
+      "native": {
+        "description": "Questa è un'installazione nativa, quindi Spoolman può aggiornarsi automaticamente all'ultima versione.",
+        "restartNotice": "Il servizio si riavvierà automaticamente dopo l'aggiornamento. Se Spoolman non è gestito da systemd, riavvialo manualmente al termine dell'aggiornamento.",
+        "adminRequired": "Per eseguire l'aggiornamento da qui è necessario aver effettuato l'accesso come amministratore.",
+        "disabled": "Gli aggiornamenti avviati dall'interfaccia sono disattivati su questa istanza. Configura l'autenticazione, oppure imposta SPOOLMAN_ALLOW_UI_UPDATE=TRUE per abilitare il pulsante. Puoi anche aggiornare da una shell:"
+      },
+      "docker": {
+        "description": "Questa istanza è in esecuzione in Docker. Aggiorna scaricando la nuova immagine e ricreando il container:",
+        "tagReminder": "Se il tuo file compose fissa un tag specifico dell'immagine, aggiornalo alla nuova versione (es. ghcr.io/sherrmann/spoolman-ng:{{version}}) prima di scaricare."
+      },
+      "haAddon": {
+        "description": "Questa istanza è in esecuzione come componente aggiuntivo di Home Assistant. Aggiornala da Home Assistant, che propone automaticamente la nuova versione:",
+        "steps": "Impostazioni → Componenti aggiuntivi → Spoolman → Aggiorna"
+      },
+      "unknown": {
+        "description": "Aggiorna installando l'ultima versione nello stesso modo in cui hai installato Spoolman inizialmente. Consulta le note di rilascio per i dettagli."
+      },
+      "started": {
+        "title": "Aggiornamento avviato",
+        "descriptionManaged": "Spoolman si sta aggiornando e si riavvierà automaticamente. Questa pagina si riconnetterà non appena sarà di nuovo disponibile.",
+        "descriptionManual": "Spoolman si sta aggiornando. Riavvia Spoolman manualmente al termine dell'aggiornamento."
+      },
+      "failed": {
+        "title": "Aggiornamento non riuscito"
+      }
+    }
+  },
+  "low_stock": {
+    "title": "Scorte basse",
+    "remaining_header": "Rimanente",
+    "remaining_left": "{{amount}} rimanenti",
+    "threshold_button": "Regola soglia",
+    "threshold_button_value": "Soglia: {{value}}",
+    "section": {
+      "explicit": "Sotto la soglia impostata",
+      "fallback": "Sotto il valore predefinito di {{grams}} g"
+    },
+    "empty": "Niente da riordinare — le scorte sono a posto."
+  },
+  "orders": {
+    "title": "Ordini",
+    "empty": "Ancora nessun ordine.",
+    "new_order": "Nuovo ordine",
+    "new_order_title": "Nuovo ordine",
+    "add_line": "Aggiungi filamento",
+    "remove_line": "Rimuovi riga",
+    "select_filament": "Seleziona un filamento",
+    "no_lines": "Aggiungi almeno un filamento prima di creare l'ordine.",
+    "order_number": "Ordine #",
+    "shop": "Negozio",
+    "ordered_at": "Ordinato",
+    "lines_summary": "{{arrived}} di {{total}} arrivati",
+    "lines_summary_title": "Righe",
+    "state_title": "Stato",
+    "filaments_count_one": "{{count}} filamento",
+    "filaments_count_other": "{{count}} filamenti",
+    "arrived_action": "Arrivato…",
+    "outstanding": "In sospeso",
+    "create_error": "Impossibile creare l'ordine. Riprova.",
+    "state": {
+      "open": "Aperto — {{count}} in sospeso",
+      "arrived": "Arrivato"
+    },
+    "mark_ordered": "Segna come ordinato",
+    "mark_ordered_title": "Segna \"{{name}}\" come ordinato",
+    "create_order": "Crea ordine",
+    "create_order_title": "Crea ordine — {{count}} selezionati",
+    "shop_placeholder": "Digita il nome di un negozio (lo crea se nuovo)",
+    "order_date": "Data ordine",
+    "quantity": "Quantità",
+    "price_per_unit": "Prezzo / bobina (opz.)",
+    "order_number_field": "Numero ordine (opz.)",
+    "url": "Link ordine (opz.)",
+    "selected_count": "{{count}} selezionati",
+    "arrive_title": "Cosa è arrivato dall'ordine #{{number}}?",
+    "arrive_subtitle": "Le consegne parziali dividono la riga — il resto resta in ordine.",
+    "arrive_error": "Impossibile segnare l'ordine come arrivato. Riprova.",
+    "arrived_check": "Arrivato",
+    "n_of_m": "{{delivered}} di {{outstanding}} in sospeso",
+    "split_preview": "{{delivered}} arriveranno, {{rest}} restano in ordine",
+    "create_spools": "Crea bobine per gli elementi consegnati",
+    "location": "Posizione",
+    "banner": "Questo filamento è in ordine (ordine #{{id}}) — segnare la sua riga come arrivata?",
+    "mark_arrived": "Segna come arrivato",
+    "details_title": "Ordine {{number}}",
+    "comment": "Note",
+    "update_error": "Impossibile aggiornare l'ordine. Riprova.",
+    "delete_error": "Impossibile eliminare l'ordine. Riprova.",
+    "delete_confirm": "Eliminare questo ordine? Anche le sue righe verranno eliminate.",
+    "filaments_count_many": "{{count}} filamenti"
   }
 }

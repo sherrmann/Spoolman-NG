@@ -119,7 +119,19 @@
       "invalidGeometry": "Etiket ızgarası kağıda sığmıyor",
       "invalidGeometryHelp": "Kenar boşlukları ve aralıklar etiketlere yer bırakmıyor. Kenar boşluklarını, aralıkları, sütun veya satır sayısını azaltın — ya da daha büyük bir kağıt boyutu seçin.",
       "contentClipped": "Bazı etiket içerikleri kesiliyor",
-      "contentClippedHelp": "En az bir etiketin içeriği etikete sığmıyor ve yazdırıldığında kesilecek. Her etiketin daha büyük olması için metin boyutunu küçültün, şablonu kısaltın veya daha az sütun/satır kullanın."
+      "contentClippedHelp": "En az bir etiketin içeriği etikete sığmıyor ve yazdırıldığında kesilecek. Her etiketin daha büyük olması için metin boyutunu küçültün, şablonu kısaltın veya daha az sütun/satır kullanın.",
+      "checklist": {
+        "title": "Yazdırmadan önce",
+        "intro": "Tarayıcı yazdırma pencereleri genellikle sayfaları yeniden ölçeklendirir, bu da etiket geometrisini bozar. Bir sonra açılan yazdırma penceresinde şunları kontrol edin:",
+        "scale": "Ölçek %100 / “Gerçek boyut” olarak ayarlı — asla “Sayfaya sığdır” değil.",
+        "paperSize": "Seçilen kağıt boyutu tam olarak {{width}} × {{height}} mm.",
+        "margins": "Kenar boşlukları “Yok” olarak ayarlı (Spoolman kenar boşluklarını zaten kendisi ayarlıyor).",
+        "headersFooters": "Üst bilgi ve alt bilgiler kapalı.",
+        "pageSizeModeHint": "Bir etiket kağıt boyutu seçtiniz ama Sayfa Boyutu “Otomatik” olarak ayarlı. “Etiket boyutuna uydur”, tarayıcıya tam sayfa geometrisini bildirir.",
+        "pageSizeModeApply": "Etiket boyutuna uydur'a geç",
+        "dontShowAgain": "Bunu bir daha gösterme",
+        "printNow": "Şimdi yazdır"
+      }
     },
     "qrcode": {
       "button": "Etiketleri Yazdır",
@@ -177,7 +189,16 @@
         "none": "Yok",
         "code128": "Code 128"
       },
-      "tooltip": "Seçili satırların etiketlerini yazdırın veya sonraki sayfada öğe seçin"
+      "tooltip": "Seçili satırların etiketlerini yazdırın veya sonraki sayfada öğe seçin",
+      "qrSize": {
+        "label": "QR Boyutu",
+        "tooltip": "QR kodu karesinin mm cinsinden yazdırılan boyutu. Otomatik, önceki davranışı korur: QR, etiketin yarısını kaplar (başka bir şey yazdırılmıyorsa tamamını). QR İç Boşluğu, seçilen boyutun etrafına sessiz bölge olarak eklenir.",
+        "auto": "Otomatik",
+        "custom": "Özel",
+        "tooSmall": "{{mm}} mm'den küçük QR kodlarının telefon kamerasıyla taranması zor olabilir.",
+        "clamped": "Bu etikete yalnızca ≈ {{rendered}} mm sığıyor — ayarladığınız {{requested}} mm'den daha küçük.",
+        "clampedTooSmall": "Bu etikete yalnızca ≈ {{rendered}} mm sığıyor ({{requested}} mm ayarlandı) — {{mm}} mm telefon kamerası minimumunun altında."
+      }
     },
     "spoolSelect": {
       "title": "Makaraları Seçin",
@@ -202,7 +223,8 @@
       "hidePrinted": "Yazdırılmış Olanları Gizle",
       "reprintConfirmTitle": "Etiketler yeniden yazdırılsın mı?",
       "reprintConfirmContent_one": "Seçili {{count}} filamentin zaten yazdırılmış bir etiketi var. Yeniden yazdırılsın mı?",
-      "reprintConfirmContent_other": "Seçili {{count}} filamentin zaten yazdırılmış etiketleri var. Yeniden yazdırılsın mı?"
+      "reprintConfirmContent_other": "Seçili {{count}} filamentin zaten yazdırılmış etiketleri var. Yeniden yazdırılsın mı?",
+      "searchPlaceholder": "Filament ID, üretici, ad veya malzemeye göre arayın"
     }
   },
   "scanner": {
@@ -405,7 +427,8 @@
       "finish": "Yüzey",
       "pattern": "Desen",
       "translucent": "Yarı Saydam",
-      "glow": "Karanlıkta Parlayan"
+      "glow": "Karanlıkta Parlayan",
+      "image": "Fotoğraf"
     },
     "fields_help": {
       "name": "Filament adı, aynı üreticinin diğer filament türlerinden ayırt edilebilmesi için kullanılır. Örneğin, renk bilgisini içermelidir.",
@@ -418,7 +441,8 @@
       "low_stock_threshold": "Bu filamentin makaralarındaki toplam kalan ağırlık bu gram değerinin altına düştüğünde filamenti yeniden sipariş için işaretler.",
       "reserve_count": "Elinizde bulundurduğunuz açılmamış yedek makara sayısı; her biri için ayrı bir makara oluşturmadan takip edilir.",
       "settings_extruder_temp_range": "Üreticinin önerdiği extruder sıcaklık aralığı (min–maks). İsteğe bağlıdır; yalnızca tek bir değeriniz varsa boş bırakın.",
-      "settings_bed_temp_range": "Üreticinin önerdiği tabla sıcaklık aralığı (min–maks). İsteğe bağlıdır; yalnızca tek bir değeriniz varsa boş bırakın."
+      "settings_bed_temp_range": "Üreticinin önerdiği tabla sıcaklık aralığı (min–maks). İsteğe bağlıdır; yalnızca tek bir değeriniz varsa boş bırakın.",
+      "image": "Bu filamenti tanımak için kullanılacak bir fotoğraf — ör. makara veya mağaza ilanı. Yüklemeden önce tarayıcıda küçültülür; GPS konumu gibi meta veriler kaldırılır."
     },
     "titles": {
       "create": "Filament Oluştur",
@@ -504,6 +528,16 @@
     },
     "messages": {
       "update_error": "Değişiklikler kaydedilemedi. Lütfen tekrar deneyin."
+    },
+    "image": {
+      "upload": "Fotoğraf yükle",
+      "replace": "Fotoğrafı değiştir",
+      "remove": "Fotoğrafı kaldır",
+      "uploaded": "Fotoğraf kaydedildi",
+      "upload_error": "Fotoğraf kaydedilemedi",
+      "removed": "Fotoğraf kaldırıldı",
+      "remove_error": "Fotoğraf kaldırılamadı",
+      "prepare_error": "Bu görüntü dosyası okunamadı"
     }
   },
   "vendor": {
@@ -573,7 +607,12 @@
       "top": "en çok",
       "materials_one": "{{count}} malzeme",
       "materials_other": "{{count}} malzeme"
-    }
+    },
+    "load_error_title": "Makaralar yüklenemedi",
+    "load_error_desc": "Makaralarınız yüklenirken bir sorun oluştu. Lütfen tekrar deneyin.",
+    "gathering_dust": "Toz Topluyor",
+    "never_used": "Hiç kullanılmadı",
+    "no_stale": "Toz toplayan makara yok"
   },
   "help": {
     "help": "Yardım",
@@ -871,7 +910,8 @@
       "description": "Taranabilir QR etiketleri yazdırılacak konumları seçin.",
       "select_placeholder": "Konumları seçin",
       "none_selected": "Konum seçilmedi"
-    }
+    },
+    "load_error": "Makaralar yüklenemedi"
   },
   "calibration": {
     "title": "Kalibrasyon",
@@ -951,7 +991,165 @@
         "cancel": "İptal"
       },
       "skip_finish_confirm": "Bu adımı kaydetmeden oturum tamamlandı olarak işaretlensin mi?",
-      "session_complete": "Kalibrasyon oturumu tamamlandı olarak işaretlendi."
+      "session_complete": "Kalibrasyon oturumu tamamlandı olarak işaretlendi.",
+      "revisiting": "Yeniden inceleniyor"
+    },
+    "wiki": {
+      "link": "Wiki",
+      "tooltip": "Bu adım için OrcaSlicer wiki sayfasını aç",
+      "tooltip_short": "OrcaSlicer wiki"
+    },
+    "sections": {
+      "test_method": "Test Yöntemi",
+      "test_setup": "Test Kurulumu",
+      "your_result": "Sonucunuz",
+      "auto_computed": "· otomatik hesaplandı"
+    },
+    "step_status": {
+      "skipped": "Atlandı",
+      "done": "✓ Tamamlandı",
+      "incomplete": "Tamamlanmamış"
+    },
+    "confidence_display": "{{level}} güven",
+    "confirm_delete": {
+      "tooltip": "Sil",
+      "confirming": "Onaylamak için tekrar tıklayın",
+      "short": "Emin misiniz?"
+    },
+    "select_step": {
+      "placeholder": "Bir kalibrasyon adımı seçin",
+      "required": "Lütfen bir kalibrasyon adımı seçin."
+    },
+    "optional": "İsteğe Bağlı",
+    "optional_notes": "İsteğe bağlı notlar…",
+    "printer_name_placeholder": "örn. Bambu X1C, Ender 3",
+    "flow_calc": {
+      "title": "Geçiş Sonucu Hesaplayıcı",
+      "pass1": "Geçiş 1",
+      "pass2": "Geçiş 2",
+      "method_yolo": "YOLO (Önerilen)",
+      "method_legacy": "Eski Yöntem (2 Geçiş)",
+      "yolo_desc": "Arşimet Kirişleri (Archimedean Chords) desenini kullanan tek geçişli kalibrasyon (OrcaSlicer ≥ 2.3.0). Mevcut akış oranınızı ve baskıda gözlemlenen düzeltme değerini girin.",
+      "legacy_desc": "İki geçişli kalibrasyon. Nihai akış oranınızı hesaplamak için ilk ve ikinci geçiş sonuçlarınızı sırayla girin.",
+      "start": "Başlat →",
+      "yolo_pass1_desc": "Arşimet Kirişleri test modelini yazdırın. Mevcut akış oranınızı ve baskıda görünen düzeltme değerini girin. Yeni akış oranı otomatik olarak hesaplanır.",
+      "legacy_pass1_desc": "İlk geçiş test modelinizi yazdırın. Başlangıç akış oranınızı ve baskıda gözlemlenen düzeltme yüzdesini girin.",
+      "pass2_desc": "Dilimleyicinizin akış oranını Geçiş 1 sonucuna ayarlayın, test modelini yeniden yazdırın, ardından yeni düzeltme yüzdesini girin.",
+      "current_flow_ratio": "Mevcut Akış Oranı",
+      "modifier": "Düzeltme",
+      "new_flow_ratio": "Yeni Akış Oranı",
+      "flow_ratio": "Akış Oranı",
+      "result": "Sonuç",
+      "cancel": "İptal",
+      "apply": "Forma Uygula ✓",
+      "next_pass2": "Sonraki: Geçiş 2 →",
+      "back": "← Geri"
+    },
+    "pa": {
+      "method_tower": "Kule (Önerilen)",
+      "method_pattern": "Desen / Çizgi",
+      "tower_desc": "PA kule testini yazdırın. Extruder tipini, PA adım değerini (A) ve en iyi görünen katmandaki ölçülen yüksekliği (B) girin. PA, A × B olarak otomatik hesaplanır.",
+      "pattern_desc": "PA desen veya çizgi testini yazdırın. En uygun çizgiyi belirleyin ve PA değerini aşağıya doğrudan girin."
+    },
+    "input_shaping_advisory": {
+      "title": "Modern bir yazıcınız mı var? Buna ihtiyacınız olmayabilir.",
+      "desc_wizard": "İvmeölçerli (ADXL345) Klipper çalıştıran çoğu modern CoreXY yazıcı veya herhangi bir Bambu Lab yazıcısı, input shaping işlemini zaten otomatik olarak halleder — hem de manuel bir test kulesinden çok daha doğru şekilde. Bu sizin için geçerliyse, bu adımı atlayın ve kendinizi zahmetten kurtarın.",
+      "desc_drawer": "İvmeölçerli (ADXL345) Klipper çalıştıran çoğu modern CoreXY yazıcı veya herhangi bir Bambu Lab yazıcısı, input shaping işlemini zaten otomatik olarak halleder — hem de manuel bir test kulesinden çok daha doğru şekilde. Bu sizin için geçerliyse, kaydetmeden bu çekmeceyi kapatmanız yeterli.",
+      "skip": "Yazıcım bunu zaten hallediyor — atla →"
+    },
+    "vfa": {
+      "artifact_speeds": "Artefakt Hızları",
+      "artifact_speeds_desc": "VFA test kulesini yazdırın ve VFA artefaktları gözlemlediğiniz her hızı işaretleyin. Min ve Maks Kaçınma Hızı bu listeden otomatik hesaplanır.",
+      "speed_placeholder": "Hız",
+      "add_speed": "Hız Ekle"
+    },
+    "step_copy": {
+      "temperature": {
+        "title": "Sıcaklık",
+        "description": "Bu filament için en uygun yazdırma sıcaklığını bulun. Bir sıcaklık kulesi yazdırın ve katman yapışması, yüzey kalitesi ile minimum sicim oluşumu arasında en iyi dengeyi veren katmanı arayın. Daha sıcak yapışmayı iyileştirir; daha soğuk sızıntı ve sicim oluşumunu azaltır."
+      },
+      "volumetric_speed": {
+        "title": "Hacimsel Hız",
+        "description": "Hotend'inizin bu filamentle, ekstrüzyon yetersizliği ortaya çıkmadan önce sürdürebileceği maksimum hacimsel akış hızını belirleyin. Bir akış hızı rampa testi veya artan hızlarda tek duvarlı küpler serisi yazdırın ve kalitenin bozulmaya başladığı hızın hemen öncesini not edin."
+      },
+      "pressure_advance": {
+        "title": "Pressure Advance",
+        "description": "Köşe şişmesini gidermek ve keskin köşe kalitesini artırmak için Pressure Advance (Klipper / Bambu) veya Linear Advance (Marlin) ayarını yapın. Bir PA test deseni yazdırın ve en temiz, en keskin köşeleri veren değeri bulun. Firmware'iniz destekliyorsa Adaptive PA'yı etkinleştirin."
+      },
+      "flow_rate": {
+        "title": "Akış Oranı",
+        "description": "Gerçekte ekstrüde edilen plastik miktarının dilimleyicinin beklentisiyle eşleşmesi için ekstrüzyon çarpanını ince ayarlayın. İki kalibrasyon küpü yazdırın (biri %98, diğeri %100) ve doğru akış oranını hesaplamak için duvarlarını kumpasla ölçün."
+      },
+      "retraction": {
+        "title": "Geri Çekme (Retraction)",
+        "description": "Filamenti aşındırmadan veya tıkanmaya yol açmadan sicim oluşumunu ortadan kaldıran minimum geri çekme uzunluğunu ve hızını bulun. Bir geri çekme mesafesi kulesi yazdırın ve temiz hareket geçişleri veren en düşük ayarı seçin."
+      },
+      "tolerance": {
+        "title": "Tolerans",
+        "description": "Yazıcınızın öğe boyutlarını ne kadar doğrulukla ürettiğini ölçün. Bir tolerans test modeli yazdırın, hedef öğeleri kumpasla ölçün ve sapmayı kaydedin. Sonucu dilimleyicinizin boyutsal doğruluk / xy telafi ayarlarına uygulayın."
+      },
+      "cornering": {
+        "title": "Köşe Dönüşü",
+        "description": "Yön değişikliklerinde yazdırma hızını çınlama ve artefaktlara karşı dengelemek için köşe dönüşü davranışını ayarlayın. Junction Deviation (Marlin 2.x / RepRapFirmware), klasik Jerk (eski Marlin) veya Square Corner Velocity (Klipper) kullanın. Bir köşe dönüşü test deseni yazdırın ve çınlama kayboluncaya kadar değeri azaltın."
+      },
+      "input_shaping": {
+        "title": "Input Shaping",
+        "description": "Rezonans telafisi uygulayarak hayalet görüntüleri ve çınlamayı azaltın. Yazıcınızın rezonans frekansını ölçün (ivmeölçer önerilir, veya görsel bir çınlama kulesi kullanın). Artefaktları en aza indiren şekillendirici (shaper) türünü ve frekansları seçin, ardından aşağıya girin."
+      },
+      "vfa": {
+        "title": "VFA (Dikey İnce Artefaktlar)",
+        "description": "Dikey yüzey artefaktları (VFA / tırtıklanma) görünür hale gelmeden önceki maksimum yazdırma hızını bulun. Düz duvarlı bir nesne üzerinde bir hız rampası testi yazdırın ve yüzeyde düzenli tırtıklanma görünmeye başlamadan hemen önceki hızı not edin."
+      }
+    },
+    "field_labels": {
+      "inputs": {
+        "start_temp": "Başlangıç Sıcaklığı",
+        "end_temp": "Bitiş Sıcaklığı",
+        "step_size": "Adım Boyutu",
+        "start_speed": "Başlangıç Hızı",
+        "end_speed": "Bitiş Hızı",
+        "measured_height": "Ölçülen Yükseklik",
+        "extruder_type": "Extruder Tipi",
+        "pa_step_a": "PA Adımı (A)",
+        "measured_height_b": "Ölçülen Yükseklik (B)",
+        "start_retract": "Başlangıç Geri Çekmesi",
+        "factor": "Faktör",
+        "test_size": "Test Öğesi Boyutu",
+        "measured_size": "Ölçülen Boyut",
+        "firmware_type": "Firmware / Özellik",
+        "start_value": "Başlangıç Değeri",
+        "end_value": "Bitiş Değeri",
+        "shaper_type": "Şekillendirici Türü",
+        "frequency_x": "Rezonans Frekansı X",
+        "frequency_y": "Rezonans Frekansı Y"
+      },
+      "outputs": {
+        "temperature": "Optimum Sıcaklık",
+        "max_volumetric_speed": "Maks Hacimsel Hız",
+        "pressure_advance": "PA Değeri",
+        "flow_ratio": "Akış Oranı",
+        "retraction_length": "Önerilen Geri Çekme",
+        "tolerance_offset": "Tolerans Sapması",
+        "cornering_value": "Önerilen Değer",
+        "shaper_type_x": "X Önerilen Şekillendirici",
+        "frequency_x": "Ayarlanan Frekans X",
+        "shaper_type_y": "Y Önerilen Şekillendirici",
+        "frequency_y": "Ayarlanan Frekans Y",
+        "min_avoidance_speed": "Min Kaçınma Hızı",
+        "max_avoidance_speed": "Maks Kaçınma Hızı"
+      },
+      "options": {
+        "direct_drive": "Direct Drive",
+        "bowden": "Bowden",
+        "junction_deviation": "Junction Deviation (Marlin 2.x / RepRapFirmware)",
+        "jerk": "Jerk (Klasik Marlin)",
+        "square_corner_velocity": "Square Corner Velocity (Klipper)",
+        "mzv": "MZV",
+        "ei": "EI",
+        "zv": "ZV",
+        "2hump_ei": "2HUMP_EI",
+        "3hump_ei": "3HUMP_EI"
+      }
     }
   },
   "external": {
@@ -1157,5 +1355,113 @@
       "article_number": "Artikel no",
       "confidence": "Güven"
     }
+  },
+  "update": {
+    "available": "güncelleme mevcut",
+    "tooltip": "{{version}} sürümü mevcut",
+    "notification": {
+      "title": "Spoolman'ın yeni bir sürümü mevcut",
+      "description": "{{version}} sürümü yayınlandı. Yenilikleri ve nasıl güncelleneceğini görün.",
+      "viewRelease": "Sürüm notlarını görüntüle"
+    },
+    "action": {
+      "open": "Güncelle",
+      "howTo": "Nasıl güncellenir",
+      "modalTitle": "Spoolman'ı Güncelle",
+      "currentVersion": "Yüklü: {{version}}",
+      "latestVersion": "en güncel: {{version}}",
+      "viewReleaseNotes": "Sürüm notlarını görüntüle",
+      "close": "Kapat",
+      "updateNow": "Şimdi güncelle",
+      "updateToVersion": "{{version}} sürümüne güncelle",
+      "native": {
+        "description": "Bu yerel (native) bir kurulum, bu nedenle Spoolman kendini en güncel sürüme güncelleyebilir.",
+        "restartNotice": "Güncellemeden sonra servis otomatik olarak yeniden başlayacaktır. Spoolman systemd tarafından yönetilmiyorsa, güncelleme tamamlandığında servisi elle yeniden başlatın.",
+        "adminRequired": "Buradan güncellemeyi çalıştırmak için bir yöneticinin oturum açmış olması gerekir.",
+        "disabled": "Bu sunucuda arayüz üzerinden tetiklenen güncellemeler devre dışı. Düğmeyi etkinleştirmek için kimlik doğrulamayı yapılandırın veya SPOOLMAN_ALLOW_UI_UPDATE=TRUE ayarlayın. Ayrıca bir kabuk (shell) üzerinden de güncelleyebilirsiniz:"
+      },
+      "docker": {
+        "description": "Bu sunucu Docker üzerinde çalışıyor. Yeni imajı çekip konteyneri yeniden oluşturarak güncelleyin:",
+        "tagReminder": "Compose dosyanız belirli bir imaj etiketine sabitliyse, çekmeden önce bunu yeni sürüme yükseltin (ör. ghcr.io/sherrmann/spoolman-ng:{{version}})."
+      },
+      "haAddon": {
+        "description": "Bu sunucu bir Home Assistant eklentisi olarak çalışıyor. Yeni sürümü otomatik olarak sunan Home Assistant üzerinden güncelleyin:",
+        "steps": "Ayarlar → Eklentiler → Spoolman → Güncelle"
+      },
+      "unknown": {
+        "description": "Spoolman'ı ilk kurduğunuz yöntemle en güncel sürümü kurarak güncelleyin. Ayrıntılar için sürüm notlarına bakın."
+      },
+      "started": {
+        "title": "Güncelleme başladı",
+        "descriptionManaged": "Spoolman güncelleniyor ve otomatik olarak yeniden başlayacak. Bu sayfa geri geldiğinde yeniden bağlanacaktır.",
+        "descriptionManual": "Spoolman güncelleniyor. Güncelleme tamamlandığında Spoolman'ı elle yeniden başlatın."
+      },
+      "failed": {
+        "title": "Güncelleme başarısız oldu"
+      }
+    }
+  },
+  "low_stock": {
+    "title": "Düşük Stok",
+    "remaining_header": "Kalan",
+    "remaining_left": "{{amount}} kaldı",
+    "threshold_button": "Eşiği ayarla",
+    "threshold_button_value": "Eşik: {{value}}",
+    "section": {
+      "explicit": "Belirlediğiniz eşiğin altında",
+      "fallback": "Varsayılan {{grams}} g'ın altında"
+    },
+    "empty": "Yeniden sipariş edilecek bir şey yok — stoklarınız yeterli."
+  },
+  "orders": {
+    "title": "Siparişler",
+    "empty": "Henüz sipariş yok.",
+    "new_order": "Yeni sipariş",
+    "new_order_title": "Yeni sipariş",
+    "add_line": "Filament ekle",
+    "remove_line": "Satırı kaldır",
+    "select_filament": "Bir filament seçin",
+    "no_lines": "Siparişi oluşturmadan önce en az bir filament ekleyin.",
+    "order_number": "Sipariş #",
+    "shop": "Mağaza",
+    "ordered_at": "Sipariş Tarihi",
+    "lines_summary": "{{total}} içinden {{arrived}} geldi",
+    "lines_summary_title": "Satırlar",
+    "state_title": "Durum",
+    "filaments_count_one": "{{count}} filament",
+    "filaments_count_other": "{{count}} filament",
+    "arrived_action": "Geldi…",
+    "outstanding": "Bekleyen",
+    "create_error": "Sipariş oluşturulamadı. Lütfen tekrar deneyin.",
+    "state": {
+      "open": "Açık — {{count}} bekliyor",
+      "arrived": "Geldi"
+    },
+    "mark_ordered": "Sipariş edildi olarak işaretle",
+    "mark_ordered_title": "\"{{name}}\" sipariş edildi olarak işaretlensin mi?",
+    "create_order": "Sipariş oluştur",
+    "create_order_title": "Sipariş oluştur — {{count}} seçildi",
+    "shop_placeholder": "Bir mağaza adı yazın (yeniyse oluşturulur)",
+    "order_date": "Sipariş Tarihi",
+    "quantity": "Miktar",
+    "price_per_unit": "Fiyat / Makara (isteğe bağlı)",
+    "order_number_field": "Sipariş Numarası (isteğe bağlı)",
+    "url": "Sipariş Bağlantısı (isteğe bağlı)",
+    "selected_count": "{{count}} seçildi",
+    "arrive_title": "#{{number}} numaralı siparişten ne geldi?",
+    "arrive_subtitle": "Kısmi teslimatlar satırı böler — kalanı sipariş üzerinde kalır.",
+    "arrive_error": "Sipariş geldi olarak işaretlenemedi. Lütfen tekrar deneyin.",
+    "arrived_check": "Geldi",
+    "n_of_m": "{{outstanding}} içinden {{delivered}}",
+    "split_preview": "{{delivered}} gelecek, {{rest}} siparişte kalacak",
+    "create_spools": "Teslim edilen öğeler için makara oluştur",
+    "location": "Konum",
+    "banner": "Bu filament siparişte (sipariş #{{id}}) — satırı geldi olarak işaretlensin mi?",
+    "mark_arrived": "Geldi olarak işaretle",
+    "details_title": "Sipariş {{number}}",
+    "comment": "Yorum",
+    "update_error": "Sipariş güncellenemedi. Lütfen tekrar deneyin.",
+    "delete_error": "Sipariş silinemedi. Lütfen tekrar deneyin.",
+    "delete_confirm": "Bu sipariş silinsin mi? Satırları da silinecektir."
   }
 }

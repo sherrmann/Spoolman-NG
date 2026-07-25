@@ -77,7 +77,12 @@
       "top": "top",
       "materials_one": "{{count}} material",
       "materials_other": "{{count}} materials"
-    }
+    },
+    "load_error_title": "Spools load karne mein vifal",
+    "load_error_desc": "Aapki spools load karne mein samasya hui. Kripya dobara koshish karein.",
+    "gathering_dust": "Dhool Kha Rahi",
+    "never_used": "Kabhi istemal nahi hui",
+    "no_stale": "Koi dhool kha rahi spool nahi"
   },
   "locations": {
     "error_empty": "Naam khaali nahi ho sakta",
@@ -107,7 +112,8 @@
       "description": "Jin jagahon ke liye scan hone wale QR labels print karne hain unhe select karein.",
       "select_placeholder": "Jagahein select karein",
       "none_selected": "Koi jagah select nahi ki gayi"
-    }
+    },
+    "load_error": "Spools load karne mein vifal"
   },
   "warnWhenUnsavedChanges": "Kya aap sach mein jaana chahte hain? Aapke kuch badlav save nahi hue hain.",
   "notifications": {
@@ -189,7 +195,19 @@
       "invalidGeometry": "Label grid kaagaz par fit nahi ho raha hai",
       "invalidGeometryHelp": "Margins aur spacing labels ke liye jagah nahi chhodte. Margins, spacing, columns ya rows kam karein — ya bada paper size chunein.",
       "contentClipped": "Kuch label content kat raha hai",
-      "contentClippedHelp": "Kam se kam ek label ka content uske label ke andar fit nahi ho raha hai aur print hone par kat jayega. Text size kam karein, template chhota karein, ya kam columns/rows istemal karein taaki har label bada ho."
+      "contentClippedHelp": "Kam se kam ek label ka content uske label ke andar fit nahi ho raha hai aur print hone par kat jayega. Text size kam karein, template chhota karein, ya kam columns/rows istemal karein taaki har label bada ho.",
+      "checklist": {
+        "title": "Print karne se pehle",
+        "intro": "Browser ke print dialogs aksar pages ko re-scale kar dete hain, jisse label ki geometry bigad jaati hai. Aage khulne wale print dialog mein yeh check karein:",
+        "scale": "Scale 100% / “Actual size” par hai — kabhi bhi “Fit to page” nahi.",
+        "paperSize": "Chuna gaya paper size bilkul {{width}} × {{height}} mm hai.",
+        "margins": "Margins “None” par set hain (Spoolman margins pehle se handle karta hai).",
+        "headersFooters": "Headers aur footers band hain.",
+        "pageSizeModeHint": "Aapne ek label paper size chuna hai lekin Page Size “Automatic” par hai. “Label size se match karein” browser ko exact page geometry batata hai.",
+        "pageSizeModeApply": "Label size se match karein par switch karein",
+        "dontShowAgain": "Ise dobara na dikhayen",
+        "printNow": "Abhi Print karein"
+      }
     },
     "qrcode": {
       "button": "Labels print karein",
@@ -247,7 +265,16 @@
         "none": "Koi nahi",
         "code128": "Code 128"
       },
-      "tooltip": "Select ki gayi rows ke liye labels print karein, ya agle page par items chunein"
+      "tooltip": "Select ki gayi rows ke liye labels print karein, ya agle page par items chunein",
+      "qrSize": {
+        "label": "QR Size",
+        "tooltip": "QR code square ka printed size mm mein. Auto purana behavior banaye rakhta hai: QR label ka aadha hissa bhar deta hai (agar kuch aur print nahi ho raha to poora label). Chune gaye size ke charon taraf quiet zone ke roop mein QR Padding jodi jaati hai.",
+        "auto": "Auto",
+        "custom": "Custom",
+        "tooSmall": "{{mm}} mm se chhote QR codes ko phone camera se scan karna mushkil ho sakta hai.",
+        "clamped": "Yeh label sirf ≈ {{rendered}} mm fit karta hai — aapke set kiye gaye {{requested}} mm se chhota.",
+        "clampedTooSmall": "Yeh label sirf ≈ {{rendered}} mm fit karta hai ({{requested}} mm set) — {{mm}} mm ke phone-camera minimum se kam."
+      }
     },
     "spoolSelect": {
       "title": "Spools chunein",
@@ -272,7 +299,8 @@
       "hidePrinted": "Pehle se printed chhupayen",
       "reprintConfirmTitle": "Labels dobara print karein?",
       "reprintConfirmContent_one": "{{count}} chune gaye filament ka label pehle se print ho chuka hai. Use dobara print karein?",
-      "reprintConfirmContent_other": "{{count}} chune gaye filaments ke labels pehle se print ho chuke hain. Unhe dobara print karein?"
+      "reprintConfirmContent_other": "{{count}} chune gaye filaments ke labels pehle se print ho chuke hain. Unhe dobara print karein?",
+      "searchPlaceholder": "Filament ID, vendor, naam, ya material se khojein"
     }
   },
   "scanner": {
@@ -475,7 +503,8 @@
       "finish": "Finish",
       "pattern": "Pattern",
       "translucent": "Ardh-paardarshi",
-      "glow": "Andhere mein chamakne wala"
+      "glow": "Andhere mein chamakne wala",
+      "image": "Photo"
     },
     "fields_help": {
       "name": "Filament ka naam, taaki isse usi manufacturer ke doosre filament types se alag pehchana ja sake. Ismein udaharan ke liye rang shamil hona chahiye.",
@@ -488,7 +517,8 @@
       "low_stock_threshold": "Jab is filament ki sabhi spools ka kul bacha hua vajan itne grams se neeche chala jaye, to ise dobara order karne ke liye flag karein.",
       "reserve_count": "Bina khuli extra spools ki sankhya jo aap paas rakhte hain — har ek ke liye spool banaye bina track hoti hain.",
       "settings_extruder_temp_range": "Manufacturer ki recommended extruder temperature range (min–max). Vaikalpik hai, agar aapke paas sirf ek value hai to khaali chhodein.",
-      "settings_bed_temp_range": "Manufacturer ki recommended bed temperature range (min–max). Vaikalpik hai, agar aapke paas sirf ek value hai to khaali chhodein."
+      "settings_bed_temp_range": "Manufacturer ki recommended bed temperature range (min–max). Vaikalpik hai, agar aapke paas sirf ek value hai to khaali chhodein.",
+      "image": "Is filament ko pehchaanne ke liye ek photo — jaise spool ya shop listing. Upload se pehle browser mein downscale ki jaati hai; GPS location jaisa metadata hata diya jaata hai."
     },
     "titles": {
       "create": "Filament banayein",
@@ -574,6 +604,16 @@
     },
     "messages": {
       "update_error": "Badlav save nahi ho paye. Kripya dobara koshish karein."
+    },
+    "image": {
+      "upload": "Photo upload karein",
+      "replace": "Photo replace karein",
+      "remove": "Photo hatayen",
+      "uploaded": "Photo save ho gayi",
+      "upload_error": "Photo save nahi ho payi",
+      "removed": "Photo hata di gayi",
+      "remove_error": "Photo hata nahi payi",
+      "prepare_error": "Woh image file padhi nahi ja saki"
     }
   },
   "vendor": {
@@ -951,7 +991,165 @@
         "cancel": "Cancel karein"
       },
       "skip_finish_confirm": "Is step ko save kiye bina session ko complete mark karein?",
-      "session_complete": "Calibration session complete mark kiya gaya."
+      "session_complete": "Calibration session complete mark kiya gaya.",
+      "revisiting": "Dobara"
+    },
+    "wiki": {
+      "link": "Wiki",
+      "tooltip": "Is step ke liye OrcaSlicer wiki kholein",
+      "tooltip_short": "OrcaSlicer wiki"
+    },
+    "sections": {
+      "test_method": "Test Method",
+      "test_setup": "Test Setup",
+      "your_result": "Aapka Result",
+      "auto_computed": "· auto-calculate hua"
+    },
+    "step_status": {
+      "skipped": "Skip kiya gaya",
+      "done": "✓ Ho Gaya",
+      "incomplete": "Adhoora"
+    },
+    "confidence_display": "{{level}} Confidence",
+    "confirm_delete": {
+      "tooltip": "Delete",
+      "confirming": "Confirm karne ke liye dobara click karein",
+      "short": "Pakka?"
+    },
+    "select_step": {
+      "placeholder": "Ek calibration step chunein",
+      "required": "Kripya ek calibration step chunein."
+    },
+    "optional": "Vaikalpik",
+    "optional_notes": "Vaikalpik notes…",
+    "printer_name_placeholder": "jaise Bambu X1C, Ender 3",
+    "flow_calc": {
+      "title": "Pass Result Calculator",
+      "pass1": "Pass 1",
+      "pass2": "Pass 2",
+      "method_yolo": "YOLO (Recommended)",
+      "method_legacy": "Legacy (2-Pass)",
+      "yolo_desc": "Archimedean Chords pattern istemal karke single-pass calibration (OrcaSlicer ≥ 2.3.0). Apna current flow ratio aur print par dekha gaya correction value enter karein.",
+      "legacy_desc": "Two-pass calibration. Apna final flow ratio calculate karne ke liye pehle aur doosre pass ke results se guzrein.",
+      "start": "Shuru →",
+      "yolo_pass1_desc": "Archimedean Chords test model print karein. Apna current flow ratio aur print par dikhaya gaya correction value enter karein. Naya flow ratio apne aap calculate ho jayega.",
+      "legacy_pass1_desc": "Apna pehla pass test model print karein. Apna starting flow ratio aur print par dekha gaya correction percentage enter karein.",
+      "pass2_desc": "Apne slicer ka flow ratio Pass 1 ke result par set karein, test model dobara print karein, phir naya correction percentage enter karein.",
+      "current_flow_ratio": "Current Flow Ratio",
+      "modifier": "Modifier",
+      "new_flow_ratio": "New Flow Ratio",
+      "flow_ratio": "Flow Ratio",
+      "result": "Result",
+      "cancel": "Cancel karein",
+      "apply": "Form mein Apply karein ✓",
+      "next_pass2": "Aage: Pass 2 →",
+      "back": "← Peeche"
+    },
+    "pa": {
+      "method_tower": "Tower (Recommended)",
+      "method_pattern": "Pattern / Line",
+      "tower_desc": "PA tower test print karein. Apna extruder type, PA step value (A), aur sabse achhi lagne wali layer ki measured height (B) enter karein. PA A × B ke roop mein auto-calculate hota hai.",
+      "pattern_desc": "PA pattern ya line test print karein. Optimal line pehchanein aur uska PA value seedhe neeche enter karein."
+    },
+    "input_shaping_advisory": {
+      "title": "Aapke paas modern printer hai? Shayad aapko iski zaroorat na ho.",
+      "desc_wizard": "Accelerometer (ADXL345) ke saath Klipper chalane wale zyadatar modern CoreXY printers, ya koi bhi Bambu Lab printer, input shaping pehle se apne aap handle karte hain — aur manual test tower se kahin zyada accurately. Agar yeh aap par lagoo hota hai, to yeh step skip karein aur khud ki mehnat bachayen.",
+      "desc_drawer": "Accelerometer (ADXL345) ke saath Klipper chalane wale zyadatar modern CoreXY printers, ya koi bhi Bambu Lab printer, input shaping pehle se apne aap handle karte hain — aur manual test tower se kahin zyada accurately. Agar yeh aap par lagoo hota hai, to bas is drawer ko bina save kiye band kar dein.",
+      "skip": "Mera printer yeh khud handle karta hai — skip karein →"
+    },
+    "vfa": {
+      "artifact_speeds": "Artifact Speeds",
+      "artifact_speeds_desc": "VFA test tower print karein aur har us speed ko mark karein jahan aapko VFA artifacts dikhayi dein. Min aur Max Avoidance Speed is list se auto-compute hoti hain.",
+      "speed_placeholder": "Speed",
+      "add_speed": "Speed jodein"
+    },
+    "step_copy": {
+      "temperature": {
+        "title": "Temperature",
+        "description": "Is filament ke liye optimal printing temperature dhoondhein. Ek temperature tower print karein aur wo layer dekhein jo layer adhesion, surface quality, aur minimal stringing ke beech sabse achha balance de. Zyada garam temperature bonding behtar banata hai; kam garam temperature ooze aur stringing kam karta hai."
+      },
+      "volumetric_speed": {
+        "title": "Volumetric Speed",
+        "description": "Pata karein ki is filament ke saath aapka hotend under-extrusion aane se pehle kitni maximum volumetric flow rate sustain kar sakta hai. Badhti speeds par ek flow-rate ramp test ya single-wall cubes ki series print karein, aur woh speed note karein jiske turant baad quality kharab hone lage."
+      },
+      "pressure_advance": {
+        "title": "Pressure Advance",
+        "description": "Corner bulging khatam karne aur sharp-corner quality behtar karne ke liye Pressure Advance (Klipper / Bambu) ya Linear Advance (Marlin) tune karein. Ek PA test pattern print karein aur wo value dial in karein jo sabse clean, sharp corners de. Agar aapka firmware support kare to Adaptive PA enable karein."
+      },
+      "flow_rate": {
+        "title": "Flow Rate",
+        "description": "Extrusion multiplier ko fine-tune karein taaki deposit hone wale plastic ki asli matra slicer ki expectation se match kare. Do calibration cubes print karein (ek 98% par, ek 100% par) aur sahi flow ratio calculate karne ke liye calipers se unki walls maapein."
+      },
+      "retraction": {
+        "title": "Retraction",
+        "description": "Woh minimum retraction length aur speed dhoondhein jo filament ko grind kiye ya clog kiye bina stringing khatam kar de. Ek retraction distance tower print karein aur woh sabse kam setting chunein jo clean travel moves de."
+      },
+      "tolerance": {
+        "title": "Tolerance",
+        "description": "Maapein ki aapka printer feature sizes ko kitni accuracy se reproduce karta hai. Ek tolerance test model print karein, target features ko calipers se maapein, aur offset record karein. Result ko apne slicer ki dimensional accuracy / xy compensation settings mein apply karein."
+      },
+      "cornering": {
+        "title": "Cornering",
+        "description": "Direction changes par ringing aur artifacts ke saath print speed ka balance banane ke liye cornering behavior tune karein. Junction Deviation (Marlin 2.x / RepRapFirmware), classic Jerk (older Marlin), ya Square Corner Velocity (Klipper) ka istemal karein. Ek cornering test pattern print karein aur ringing khatam hone tak value kam karte jayen."
+      },
+      "input_shaping": {
+        "title": "Input Shaping",
+        "description": "Resonance compensation apply karke ghosting aur ringing kam karein. Apne printer ki resonance frequency maapein (accelerometer recommended hai, ya visual ringing tower istemal karein). Woh shaper type aur frequencies chunein jo artifacts ko sabse kam karein, phir unhe neeche enter karein."
+      },
+      "vfa": {
+        "title": "VFA (Vertical Fine Artifacts)",
+        "description": "Vertical surface artifacts (VFA / ribbing) dikhayi dene se pehle ki maximum print speed dhoondhein. Ek smooth-walled object par speed-ramp test print karein aur woh speed note karein jiske turant baad surface par regular ribbing dikhayi de."
+      }
+    },
+    "field_labels": {
+      "inputs": {
+        "start_temp": "Start Temp",
+        "end_temp": "End Temp",
+        "step_size": "Step Size",
+        "start_speed": "Start Speed",
+        "end_speed": "End Speed",
+        "measured_height": "Measured Height",
+        "extruder_type": "Extruder Type",
+        "pa_step_a": "PA Step (A)",
+        "measured_height_b": "Measured Height (B)",
+        "start_retract": "Start Retraction",
+        "factor": "Factor",
+        "test_size": "Test Feature Size",
+        "measured_size": "Measured Size",
+        "firmware_type": "Firmware / Feature",
+        "start_value": "Start Value",
+        "end_value": "End Value",
+        "shaper_type": "Shaper Type",
+        "frequency_x": "Resonance Freq X",
+        "frequency_y": "Resonance Freq Y"
+      },
+      "outputs": {
+        "temperature": "Optimal Temp",
+        "max_volumetric_speed": "Max Volumetric Speed",
+        "pressure_advance": "PA Value",
+        "flow_ratio": "Flow Ratio",
+        "retraction_length": "Recommended Retraction",
+        "tolerance_offset": "Tolerance Offset",
+        "cornering_value": "Recommended Value",
+        "shaper_type_x": "X Recommended Shaper",
+        "frequency_x": "Tuned Freq X",
+        "shaper_type_y": "Y Recommended Shaper",
+        "frequency_y": "Tuned Freq Y",
+        "min_avoidance_speed": "Min Avoidance Speed",
+        "max_avoidance_speed": "Max Avoidance Speed"
+      },
+      "options": {
+        "direct_drive": "Direct Drive",
+        "bowden": "Bowden",
+        "junction_deviation": "Junction Deviation (Marlin 2.x / RepRapFirmware)",
+        "jerk": "Jerk (Classic Marlin)",
+        "square_corner_velocity": "Square Corner Velocity (Klipper)",
+        "mzv": "MZV",
+        "ei": "EI",
+        "zv": "ZV",
+        "2hump_ei": "2HUMP_EI",
+        "3hump_ei": "3HUMP_EI"
+      }
     }
   },
   "external": {
@@ -1157,5 +1355,113 @@
       "article_number": "Article Nr",
       "confidence": "Confidence"
     }
+  },
+  "update": {
+    "available": "update uplabdh hai",
+    "tooltip": "Version {{version}} uplabdh hai",
+    "notification": {
+      "title": "Spoolman ka ek naya version uplabdh hai",
+      "description": "Version {{version}} release ho gaya hai. Naya kya hai aur update kaise karein, dekhein.",
+      "viewRelease": "Release notes dekhein"
+    },
+    "action": {
+      "open": "Update karein",
+      "howTo": "Update kaise karein",
+      "modalTitle": "Spoolman Update karein",
+      "currentVersion": "Installed: {{version}}",
+      "latestVersion": "latest: {{version}}",
+      "viewReleaseNotes": "Release notes dekhein",
+      "close": "Band karein",
+      "updateNow": "Abhi Update karein",
+      "updateToVersion": "{{version}} par Update karein",
+      "native": {
+        "description": "Yeh ek native install hai, isliye Spoolman khud ko latest release tak update kar sakta hai.",
+        "restartNotice": "Update ke baad service apne aap restart ho jayegi. Agar Spoolman systemd se manage nahi hoti, to update poora hone par use manually restart karein.",
+        "adminRequired": "Yahan se update chalane ke liye ek administrator ka sign in hona zaroori hai.",
+        "disabled": "Is instance par UI se trigger hone wale updates band hain. Authentication configure karein, ya button enable karne ke liye SPOOLMAN_ALLOW_UI_UPDATE=TRUE set karein. Aap shell se bhi update kar sakte hain:"
+      },
+      "docker": {
+        "description": "Yeh instance Docker mein chal rahi hai. Naya image pull karke aur container ko dobara banakar update karein:",
+        "tagReminder": "Agar aapki compose file kisi khaas image tag ko pin karti hai, to pull karne se pehle use naye version tak badhayein (jaise ghcr.io/sherrmann/spoolman-ng:{{version}})."
+      },
+      "haAddon": {
+        "description": "Yeh instance Home Assistant add-on ke roop mein chal rahi hai. Ise Home Assistant se update karein, jo naya version apne aap offer karta hai:",
+        "steps": "Settings → Add-ons → Spoolman → Update"
+      },
+      "unknown": {
+        "description": "Jis tarah aapne Spoolman pehli baar install kiya tha, usi tarah latest release install karke update karein. Details ke liye release notes dekhein."
+      },
+      "started": {
+        "title": "Update shuru ho gaya",
+        "descriptionManaged": "Spoolman update ho raha hai aur apne aap restart ho jayega. Wapas aane par yeh page dobara connect ho jayega.",
+        "descriptionManual": "Spoolman update ho raha hai. Update poora hone par Spoolman ko manually restart karein."
+      },
+      "failed": {
+        "title": "Update vifal raha"
+      }
+    }
+  },
+  "low_stock": {
+    "title": "Kam Stock",
+    "remaining_header": "Bacha Hua",
+    "remaining_left": "{{amount}} bacha",
+    "threshold_button": "Seema adjust karein",
+    "threshold_button_value": "Seema: {{value}}",
+    "section": {
+      "explicit": "Aapki set ki gayi seema se neeche",
+      "fallback": "{{grams}} g default se neeche"
+    },
+    "empty": "Reorder karne ke liye kuch nahi — aapka stock theek hai."
+  },
+  "orders": {
+    "title": "Orders",
+    "empty": "Abhi koi order nahi.",
+    "new_order": "Naya order",
+    "new_order_title": "Naya order",
+    "add_line": "Filament jodein",
+    "remove_line": "Line hatayen",
+    "select_filament": "Ek filament chunein",
+    "no_lines": "Order banane se pehle kam se kam ek filament jodein.",
+    "order_number": "Order #",
+    "shop": "Dukaan",
+    "ordered_at": "Order kiya gaya",
+    "lines_summary": "{{total}} mein se {{arrived}} pahunche",
+    "lines_summary_title": "Lines",
+    "state_title": "Status",
+    "filaments_count_one": "{{count}} filament",
+    "filaments_count_other": "{{count}} filaments",
+    "arrived_action": "Pahunche…",
+    "outstanding": "Baaki",
+    "create_error": "Order banaya nahi ja saka. Kripya dobara koshish karein.",
+    "state": {
+      "open": "Open — {{count}} baaki",
+      "arrived": "Pahuncha"
+    },
+    "mark_ordered": "Ordered mark karein",
+    "mark_ordered_title": "\"{{name}}\" ko Ordered mark karein",
+    "create_order": "Order banayein",
+    "create_order_title": "Order banayein — {{count}} select kiye gaye",
+    "shop_placeholder": "Dukaan ka naam type karein (naya ho to ban jayega)",
+    "order_date": "Order ki Date",
+    "quantity": "Matra",
+    "price_per_unit": "Keemat / spool (vaikalpik)",
+    "order_number_field": "Order Number (vaikalpik)",
+    "url": "Order Link (vaikalpik)",
+    "selected_count": "{{count}} select kiye gaye",
+    "arrive_title": "Order #{{number}} se kya pahuncha?",
+    "arrive_subtitle": "Partial deliveries line ko split kar deti hain — baaki order par rehta hai.",
+    "arrive_error": "Order ko pahuncha hua mark nahi kiya ja saka. Kripya dobara koshish karein.",
+    "arrived_check": "Pahuncha",
+    "n_of_m": "{{outstanding}} mein se {{delivered}} pahunche",
+    "split_preview": "{{delivered}} pahunchenge, {{rest}} order par rahenge",
+    "create_spools": "Pahunche hue items ke liye spools banayein",
+    "location": "Jagah",
+    "banner": "Yeh filament order par hai (order #{{id}}) — iski line ko pahuncha hua mark karein?",
+    "mark_arrived": "Pahuncha hua mark karein",
+    "details_title": "Order {{number}}",
+    "comment": "Comment",
+    "update_error": "Order update nahi ho paya. Kripya dobara koshish karein.",
+    "delete_error": "Order delete nahi ho paya. Kripya dobara koshish karein.",
+    "delete_confirm": "Yeh order delete karein? Iski lines bhi delete ho jayengi."
   }
 }

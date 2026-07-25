@@ -68,7 +68,16 @@
         "none": "Ingen",
         "code128": "Code 128"
       },
-      "tooltip": "Print etiketter til de valgte rækker, eller vælg elementer på næste side"
+      "tooltip": "Print etiketter til de valgte rækker, eller vælg elementer på næste side",
+      "qrSize": {
+        "label": "QR-størrelse",
+        "tooltip": "Den printede størrelse af QR-kodens firkant i mm. Automatisk bevarer den hidtidige opførsel: QR-koden fylder halvdelen af etiketten (det hele, hvis intet andet printes). QR-margen tilføjes rundt om den valgte størrelse som en stillezone.",
+        "auto": "Automatisk",
+        "custom": "Brugerdefineret",
+        "tooSmall": "QR-koder mindre end {{mm}} mm kan være svære at skanne med et telefonkamera.",
+        "clamped": "Denne etiket har kun plads til ≈ {{rendered}} mm — mindre end de {{requested}} mm, du har angivet.",
+        "clampedTooSmall": "Denne etiket har kun plads til ≈ {{rendered}} mm ({{requested}} mm angivet) — under minimumsgrænsen på {{mm}} mm for telefonkameraer."
+      }
     },
     "generic": {
       "printerMarginBottom": "Safe-Zone bund",
@@ -122,7 +131,19 @@
       "invalidGeometry": "Etiketgitteret passer ikke på papiret",
       "invalidGeometryHelp": "Margener og afstand efterlader ingen plads til etiketterne. Reducér margener, afstand, kolonner eller rækker — eller vælg en større papirstørrelse.",
       "contentClipped": "Noget etiketindhold bliver skåret af",
-      "contentClippedHelp": "Mindst én etikets indhold passer ikke inden for etiketten og bliver skåret af ved print. Reducér tekststørrelsen, gør skabelonen kortere, eller brug færre kolonner/rækker, så hver etiket bliver større."
+      "contentClippedHelp": "Mindst én etikets indhold passer ikke inden for etiketten og bliver skåret af ved print. Reducér tekststørrelsen, gør skabelonen kortere, eller brug færre kolonner/rækker, så hver etiket bliver større.",
+      "checklist": {
+        "title": "Før du printer",
+        "intro": "Browserens udskriftsdialog skalerer ofte siderne om, hvilket ødelægger etikettens geometri. Tjek følgende i den udskriftsdialog, der åbner herefter:",
+        "scale": "Skalering er 100 % / “Faktisk størrelse” — aldrig “Tilpas til side”.",
+        "paperSize": "Den valgte papirstørrelse er præcis {{width}} × {{height}} mm.",
+        "margins": "Margener er sat til “Ingen” (Spoolman håndterer allerede margener).",
+        "headersFooters": "Sidehoveder og sidefødder er slået fra.",
+        "pageSizeModeHint": "Du har valgt en etiket-papirstørrelse, men Sidestørrelse er “Automatisk”. “Match etiketstørrelse” fortæller browseren den præcise sidegeometri.",
+        "pageSizeModeApply": "Skift til Match etiketstørrelse",
+        "dontShowAgain": "Vis ikke dette igen",
+        "printNow": "Print nu"
+      }
     },
     "spoolSelect": {
       "selectedTotal_one": "{{count}} spole valgt",
@@ -147,7 +168,8 @@
       "hidePrinted": "Skjul allerede printede",
       "reprintConfirmTitle": "Print etiketter igen?",
       "reprintConfirmContent_one": "{{count}} valgt filament har allerede en printet etiket. Print den igen?",
-      "reprintConfirmContent_other": "{{count}} valgte filamenter har allerede printede etiketter. Print dem igen?"
+      "reprintConfirmContent_other": "{{count}} valgte filamenter har allerede printede etiketter. Print dem igen?",
+      "searchPlaceholder": "Søg efter filament-ID, producent, navn eller materiale"
     }
   },
   "documentTitle": {
@@ -377,7 +399,8 @@
       "low_stock_threshold": "Markér dette filament til genbestilling, når den samlede resterende vægt på tværs af dets spoler falder under dette antal gram.",
       "reserve_count": "Antal uåbnede ekstra spoler, du har på lager, og som spores uden at oprette en spole for hver enkelt.",
       "settings_extruder_temp_range": "Producentens anbefalede ekstrudertemperaturområde (min–maks). Valgfrit, lad det stå tomt, hvis du kun har én enkelt værdi.",
-      "settings_bed_temp_range": "Producentens anbefalede printpladetemperaturområde (min–maks). Valgfrit, lad det stå tomt, hvis du kun har én enkelt værdi."
+      "settings_bed_temp_range": "Producentens anbefalede printpladetemperaturområde (min–maks). Valgfrit, lad det stå tomt, hvis du kun har én enkelt værdi.",
+      "image": "Et foto til at genkende dette filament på — f.eks. spolen eller butikkens produktbillede. Nedskaleres i browseren før upload; metadata som GPS-placering fjernes."
     },
     "fields": {
       "material": "Materiale",
@@ -415,7 +438,8 @@
       "finish": "Finish",
       "pattern": "Mønster",
       "translucent": "Gennemskinnelig",
-      "glow": "Selvlysende"
+      "glow": "Selvlysende",
+      "image": "Foto"
     },
     "titles": {
       "clone": "Klon filament",
@@ -502,6 +526,16 @@
     },
     "messages": {
       "update_error": "Kunne ikke gemme ændringerne. Prøv igen."
+    },
+    "image": {
+      "upload": "Upload foto",
+      "replace": "Udskift foto",
+      "remove": "Fjern foto",
+      "uploaded": "Foto gemt",
+      "upload_error": "Kunne ikke gemme fotoet",
+      "removed": "Foto fjernet",
+      "remove_error": "Kunne ikke fjerne fotoet",
+      "prepare_error": "Kunne ikke læse den billedfil"
     }
   },
   "actions": {
@@ -639,7 +673,12 @@
       "top": "top",
       "materials_one": "{{count}} materiale",
       "materials_other": "{{count}} materialer"
-    }
+    },
+    "load_error_title": "Kunne ikke indlæse spoler",
+    "load_error_desc": "Der opstod et problem med at indlæse dine spoler. Prøv igen.",
+    "gathering_dust": "Samler støv",
+    "never_used": "Aldrig brugt",
+    "no_stale": "Ingen spoler samler støv"
   },
   "settings": {
     "header": "Indstillinger",
@@ -883,7 +922,8 @@
       "description": "Vælg de lokationer, der skal printes QR-etiketter til.",
       "select_placeholder": "Vælg lokationer",
       "none_selected": "Ingen lokationer valgt"
-    }
+    },
+    "load_error": "Kunne ikke indlæse spoler"
   },
   "calibration": {
     "title": "Kalibrering",
@@ -963,7 +1003,165 @@
         "cancel": "Annuller"
       },
       "skip_finish_confirm": "Markér denne session som fuldført uden at gemme dette trin?",
-      "session_complete": "Kalibreringssession markeret som fuldført."
+      "session_complete": "Kalibreringssession markeret som fuldført.",
+      "revisiting": "Genbesøger"
+    },
+    "wiki": {
+      "link": "Wiki",
+      "tooltip": "Åbn OrcaSlicer-wikien for dette trin",
+      "tooltip_short": "OrcaSlicer-wiki"
+    },
+    "sections": {
+      "test_method": "Testmetode",
+      "test_setup": "Testopsætning",
+      "your_result": "Dit resultat",
+      "auto_computed": "· beregnet automatisk"
+    },
+    "step_status": {
+      "skipped": "Sprunget over",
+      "done": "✓ Udført",
+      "incomplete": "Ufuldstændig"
+    },
+    "confidence_display": "{{level}} sikkerhed",
+    "confirm_delete": {
+      "tooltip": "Slet",
+      "confirming": "Klik igen for at bekræfte",
+      "short": "Sikker?"
+    },
+    "select_step": {
+      "placeholder": "Vælg et kalibreringstrin",
+      "required": "Vælg venligst et kalibreringstrin."
+    },
+    "optional": "Valgfri",
+    "optional_notes": "Valgfrie noter…",
+    "printer_name_placeholder": "f.eks. Bambu X1C, Ender 3",
+    "flow_calc": {
+      "title": "Resultatberegner for Pass",
+      "pass1": "Pass 1",
+      "pass2": "Pass 2",
+      "method_yolo": "YOLO (Anbefalet)",
+      "method_legacy": "Legacy (2-Pass)",
+      "yolo_desc": "Kalibrering i ét pass med Archimedean Chords-mønsteret (OrcaSlicer ≥ 2.3.0). Indtast dit nuværende flow ratio og den korrektionsværdi, du observerer på printet.",
+      "legacy_desc": "Kalibrering i to pass. Gennemgå resultaterne fra dit første og andet pass for at beregne dit endelige flow ratio.",
+      "start": "Start →",
+      "yolo_pass1_desc": "Print testmodellen Archimedean Chords. Indtast dit nuværende flow ratio og den korrektionsværdi, der vises på printet. Det nye flow ratio beregnes automatisk.",
+      "legacy_pass1_desc": "Print din første pass-testmodel. Indtast dit start-flow ratio og den korrektionsprocent, du observerer på printet.",
+      "pass2_desc": "Sæt din slicers flow ratio til resultatet fra Pass 1, print testmodellen igen, og indtast derefter den nye korrektionsprocent.",
+      "current_flow_ratio": "Nuværende Flow Ratio",
+      "modifier": "Modifikator",
+      "new_flow_ratio": "Nyt Flow Ratio",
+      "flow_ratio": "Flow Ratio",
+      "result": "Resultat",
+      "cancel": "Annuller",
+      "apply": "Anvend på formular ✓",
+      "next_pass2": "Næste: Pass 2 →",
+      "back": "← Tilbage"
+    },
+    "pa": {
+      "method_tower": "Tårn (Anbefalet)",
+      "method_pattern": "Mønster / Linje",
+      "tower_desc": "Print PA-tårn-testen. Indtast din ekstrudertype, PA-trinværdien (A) og den målte højde (B) ved det bedst udseende lag. PA beregnes automatisk som A × B.",
+      "pattern_desc": "Print PA-mønster- eller linjetesten. Identificér den optimale linje, og indtast dens PA-værdi direkte nedenfor."
+    },
+    "input_shaping_advisory": {
+      "title": "Har du en moderne printer? Måske behøver du ikke dette.",
+      "desc_wizard": "De fleste moderne CoreXY-printere, der kører Klipper med et accelerometer (ADXL345), eller enhver Bambu Lab-printer, håndterer allerede input shaping automatisk — og langt mere præcist, end et manuelt testtårn nogensinde kunne. Hvis dette gælder for dig, kan du springe dette trin over og spare dig selv for besværet.",
+      "desc_drawer": "De fleste moderne CoreXY-printere, der kører Klipper med et accelerometer (ADXL345), eller enhver Bambu Lab-printer, håndterer allerede input shaping automatisk — og langt mere præcist, end et manuelt testtårn nogensinde kunne. Hvis dette gælder for dig, skal du blot lukke dette panel uden at gemme.",
+      "skip": "Min printer klarer dette — spring det over →"
+    },
+    "vfa": {
+      "artifact_speeds": "Artefakthastigheder",
+      "artifact_speeds_desc": "Print VFA-testtårnet, og markér hver hastighed, hvor du observerer VFA-artefakter. Min. og maks. undgåelseshastighed beregnes automatisk ud fra denne liste.",
+      "speed_placeholder": "Hastighed",
+      "add_speed": "Tilføj hastighed"
+    },
+    "step_copy": {
+      "temperature": {
+        "title": "Temperatur",
+        "description": "Find den optimale printtemperatur for dette filament. Print et temperaturtårn, og find det lag, der giver den bedste balance mellem lagvedhæftning, overfladekvalitet og mindst mulig stringing. Højere temperatur forbedrer vedhæftningen; lavere temperatur reducerer oozing og stringing."
+      },
+      "volumetric_speed": {
+        "title": "Volumetrisk hastighed",
+        "description": "Find den maksimale volumetriske flowrate, dit hotend kan opretholde med dette filament, før underekstrudering opstår. Print en flowrate-ramp-test eller en serie af enkeltvægs-kuber ved stigende hastigheder, og notér hastigheden lige før kvaliteten forringes."
+      },
+      "pressure_advance": {
+        "title": "Pressure Advance",
+        "description": "Justér Pressure Advance (Klipper / Bambu) eller Linear Advance (Marlin) for at eliminere udbuling i hjørner og forbedre kvaliteten af skarpe hjørner. Print et PA-testmønster, og find frem til den værdi, der giver de reneste og skarpeste hjørner. Aktivér Adaptive PA, hvis det understøttes af din firmware."
+      },
+      "flow_rate": {
+        "title": "Flow Rate",
+        "description": "Finjustér ekstruderingsmultiplikatoren, så den faktiske mængde plast, der aflejres, matcher slicerens forventning. Print to kalibreringskuber (én ved 98 % og én ved 100 %), og mål deres vægge med et skydelære for at beregne det korrekte flow ratio."
+      },
+      "retraction": {
+        "title": "Retraction",
+        "description": "Find den mindste retraction-længde og -hastighed, der eliminerer stringing uden at slibe filamentet ned eller forårsage tilstopninger. Print et retraction-distancetårn, og vælg den laveste indstilling, der giver rene rejsebevægelser."
+      },
+      "tolerance": {
+        "title": "Tolerance",
+        "description": "Mål, hvor præcist din printer gengiver størrelser på detaljer. Print en tolerancetest-model, mål de relevante detaljer med et skydelære, og notér afvigelsen. Anvend resultatet i din slicers indstillinger for dimensionsnøjagtighed / xy-kompensation."
+      },
+      "cornering": {
+        "title": "Cornering",
+        "description": "Justér cornering-adfærden for at afveje printhastighed mod ringing og artefakter ved retningsskift. Brug Junction Deviation (Marlin 2.x / RepRapFirmware), klassisk Jerk (ældre Marlin) eller Square Corner Velocity (Klipper). Print et cornering-testmønster, og reducér værdien, indtil ringing forsvinder."
+      },
+      "input_shaping": {
+        "title": "Input Shaping",
+        "description": "Reducér ghosting og ringing ved at anvende resonanskompensation. Mål din printers resonansfrekvens (accelerometer anbefales, eller brug et visuelt ringing-tårn). Vælg den shaper-type og de frekvenser, der minimerer artefakter, og indtast dem nedenfor."
+      },
+      "vfa": {
+        "title": "VFA (Vertical Fine Artifacts)",
+        "description": "Find den maksimale printhastighed, før vertikale overfladeartefakter (VFA / ribbing) bliver synlige. Print en hastigheds-ramp-test på et objekt med glatte vægge, og notér hastigheden lige før regelmæssig ribbing opstår på overfladen."
+      }
+    },
+    "field_labels": {
+      "inputs": {
+        "start_temp": "Starttemperatur",
+        "end_temp": "Sluttemperatur",
+        "step_size": "Trinstørrelse",
+        "start_speed": "Starthastighed",
+        "end_speed": "Sluthastighed",
+        "measured_height": "Målt højde",
+        "extruder_type": "Ekstrudertype",
+        "pa_step_a": "PA-trin (A)",
+        "measured_height_b": "Målt højde (B)",
+        "start_retract": "Start-retraction",
+        "factor": "Faktor",
+        "test_size": "Størrelse på testelement",
+        "measured_size": "Målt størrelse",
+        "firmware_type": "Firmware / Funktion",
+        "start_value": "Startværdi",
+        "end_value": "Slutværdi",
+        "shaper_type": "Shaper-type",
+        "frequency_x": "Resonansfrekvens X",
+        "frequency_y": "Resonansfrekvens Y"
+      },
+      "outputs": {
+        "temperature": "Optimal temperatur",
+        "max_volumetric_speed": "Maks. volumetrisk hastighed",
+        "pressure_advance": "PA-værdi",
+        "flow_ratio": "Flow Ratio",
+        "retraction_length": "Anbefalet retraction",
+        "tolerance_offset": "Toleranceafvigelse",
+        "cornering_value": "Anbefalet værdi",
+        "shaper_type_x": "X anbefalet shaper",
+        "frequency_x": "Tunet frekvens X",
+        "shaper_type_y": "Y anbefalet shaper",
+        "frequency_y": "Tunet frekvens Y",
+        "min_avoidance_speed": "Min. undgåelseshastighed",
+        "max_avoidance_speed": "Maks. undgåelseshastighed"
+      },
+      "options": {
+        "direct_drive": "Direct Drive",
+        "bowden": "Bowden",
+        "junction_deviation": "Junction Deviation (Marlin 2.x / RepRapFirmware)",
+        "jerk": "Jerk (Classic Marlin)",
+        "square_corner_velocity": "Square Corner Velocity (Klipper)",
+        "mzv": "MZV",
+        "ei": "EI",
+        "zv": "ZV",
+        "2hump_ei": "2HUMP_EI",
+        "3hump_ei": "3HUMP_EI"
+      }
     }
   },
   "external": {
@@ -1169,5 +1367,113 @@
       "article_number": "Artikelnr.",
       "confidence": "Sikkerhed"
     }
+  },
+  "update": {
+    "available": "opdatering tilgængelig",
+    "tooltip": "Version {{version}} er tilgængelig",
+    "notification": {
+      "title": "En ny version af Spoolman er tilgængelig",
+      "description": "Version {{version}} er blevet udgivet. Se hvad der er nyt, og hvordan du opdaterer.",
+      "viewRelease": "Vis udgivelsesnoter"
+    },
+    "action": {
+      "open": "Opdatér",
+      "howTo": "Sådan opdaterer du",
+      "modalTitle": "Opdatér Spoolman",
+      "currentVersion": "Installeret: {{version}}",
+      "latestVersion": "nyeste: {{version}}",
+      "viewReleaseNotes": "Vis udgivelsesnoter",
+      "close": "Luk",
+      "updateNow": "Opdatér nu",
+      "updateToVersion": "Opdatér til {{version}}",
+      "native": {
+        "description": "Dette er en native installation, så Spoolman kan opdatere sig selv til den nyeste udgivelse.",
+        "restartNotice": "Tjenesten genstarter automatisk efter opdateringen. Hvis Spoolman ikke administreres af systemd, skal du genstarte den manuelt, når opdateringen er færdig.",
+        "adminRequired": "En administrator skal være logget ind for at køre opdateringen herfra.",
+        "disabled": "UI-udløste opdateringer er deaktiveret på denne instans. Konfigurér godkendelse, eller angiv SPOOLMAN_ALLOW_UI_UPDATE=TRUE for at aktivere knappen. Du kan også opdatere fra en shell:"
+      },
+      "docker": {
+        "description": "Denne instans kører i Docker. Opdatér ved at hente det nye image og genskabe containeren:",
+        "tagReminder": "Hvis din compose-fil fastlåser et bestemt image-tag, skal du opdatere det til den nye version (f.eks. ghcr.io/sherrmann/spoolman-ng:{{version}}), før du henter."
+      },
+      "haAddon": {
+        "description": "Denne instans kører som et Home Assistant-add-on. Opdatér den fra Home Assistant, som automatisk tilbyder den nye version:",
+        "steps": "Settings → Add-ons → Spoolman → Update"
+      },
+      "unknown": {
+        "description": "Opdatér ved at installere den nyeste udgivelse på samme måde, som du oprindeligt installerede Spoolman. Se udgivelsesnoterne for detaljer."
+      },
+      "started": {
+        "title": "Opdatering startet",
+        "descriptionManaged": "Spoolman opdaterer og genstarter automatisk. Denne side genopretter forbindelsen, når den er tilbage.",
+        "descriptionManual": "Spoolman opdaterer. Genstart Spoolman manuelt, når opdateringen er færdig."
+      },
+      "failed": {
+        "title": "Opdatering mislykkedes"
+      }
+    }
+  },
+  "low_stock": {
+    "title": "Lav beholdning",
+    "remaining_header": "Resterende",
+    "remaining_left": "{{amount}} tilbage",
+    "threshold_button": "Justér grænse",
+    "threshold_button_value": "Grænse: {{value}}",
+    "section": {
+      "explicit": "Under din angivne grænse",
+      "fallback": "Under standardgrænsen på {{grams}} g"
+    },
+    "empty": "Intet at genbestille — du er godt forsynet."
+  },
+  "orders": {
+    "title": "Ordrer",
+    "empty": "Ingen ordrer endnu.",
+    "new_order": "Ny ordre",
+    "new_order_title": "Ny ordre",
+    "add_line": "Tilføj filament",
+    "remove_line": "Fjern linje",
+    "select_filament": "Vælg et filament",
+    "no_lines": "Tilføj mindst ét filament, før du opretter ordren.",
+    "order_number": "Ordre-nr.",
+    "shop": "Butik",
+    "ordered_at": "Bestilt",
+    "lines_summary": "{{arrived}} af {{total}} ankommet",
+    "lines_summary_title": "Linjer",
+    "state_title": "Status",
+    "filaments_count_one": "{{count}} filament",
+    "filaments_count_other": "{{count}} filamenter",
+    "arrived_action": "Ankommet…",
+    "outstanding": "Udestående",
+    "create_error": "Kunne ikke oprette ordren. Prøv igen.",
+    "state": {
+      "open": "Åben — {{count}} udestående",
+      "arrived": "Ankommet"
+    },
+    "mark_ordered": "Markér som bestilt",
+    "mark_ordered_title": "Markér \"{{name}}\" som bestilt",
+    "create_order": "Opret ordre",
+    "create_order_title": "Opret ordre — {{count}} valgt",
+    "shop_placeholder": "Skriv et butiksnavn (opretter det, hvis det er nyt)",
+    "order_date": "Bestillingsdato",
+    "quantity": "Antal",
+    "price_per_unit": "Pris/spole (valgfri)",
+    "order_number_field": "Ordrenummer (valgfri)",
+    "url": "Ordrelink (valgfri)",
+    "selected_count": "{{count}} valgt",
+    "arrive_title": "Hvad ankom fra ordre #{{number}}?",
+    "arrive_subtitle": "Delvise leveringer opdeler linjen — resten forbliver på ordren.",
+    "arrive_error": "Kunne ikke markere ordren som ankommet. Prøv igen.",
+    "arrived_check": "Ankommet",
+    "n_of_m": "{{delivered}} af {{outstanding}} udestående",
+    "split_preview": "{{delivered}} ankommer, {{rest}} forbliver på ordren",
+    "create_spools": "Opret spoler for de leverede varer",
+    "location": "Placering",
+    "banner": "Dette filament er i bestilling (ordre #{{id}}) — markér linjen som ankommet?",
+    "mark_arrived": "Markér ankommet",
+    "details_title": "Ordre {{number}}",
+    "comment": "Kommentar",
+    "update_error": "Kunne ikke opdatere ordren. Prøv igen.",
+    "delete_error": "Kunne ikke slette ordren. Prøv igen.",
+    "delete_confirm": "Slet denne ordre? Dens linjer bliver også slettet."
   }
 }

@@ -119,7 +119,19 @@
       "invalidGeometry": "Etikečių tinklelis netelpa ant popieriaus",
       "invalidGeometryHelp": "Paraštės ir tarpai nepalieka vietos etiketėms. Sumažinkite paraštes, tarpus, stulpelių ar eilučių skaičių — arba pasirinkite didesnį popieriaus dydį.",
       "contentClipped": "Dalis etikečių turinio nukirpta",
-      "contentClippedHelp": "Bent vienos etiketės turinys netelpa į etiketę ir spausdinant bus nukirptas. Sumažinkite teksto dydį, sutrumpinkite šabloną arba naudokite mažiau stulpelių / eilučių, kad kiekviena etiketė būtų didesnė."
+      "contentClippedHelp": "Bent vienos etiketės turinys netelpa į etiketę ir spausdinant bus nukirptas. Sumažinkite teksto dydį, sutrumpinkite šabloną arba naudokite mažiau stulpelių / eilučių, kad kiekviena etiketė būtų didesnė.",
+      "checklist": {
+        "title": "Prieš spausdinant",
+        "intro": "Naršyklės spausdinimo langai dažnai pakeičia puslapio mastelį, o tai sugadina etiketės geometriją. Kitame atsidariusiame spausdinimo lange patikrinkite:",
+        "scale": "Mastelis yra 100 % / „Tikras dydis“ — niekada „Talpinti į puslapį“.",
+        "paperSize": "Pasirinktas popieriaus dydis yra tiksliai {{width}} × {{height}} mm.",
+        "margins": "Paraštės nustatytos į „Jokios“ (Spoolman jau pats tvarko paraštes).",
+        "headersFooters": "Antraštės ir poraštės išjungtos.",
+        "pageSizeModeHint": "Pasirinkote etikečių popieriaus dydį, bet Puslapio dydis yra „Automatinis“. „Atitikti etiketės dydį“ nurodo naršyklei tikslią puslapio geometriją.",
+        "pageSizeModeApply": "Perjungti į Atitikti etiketės dydį",
+        "dontShowAgain": "Daugiau nerodyti",
+        "printNow": "Spausdinti dabar"
+      }
     },
     "qrcode": {
       "button": "Spausdinti etiketes",
@@ -177,7 +189,16 @@
         "none": "Nėra",
         "code128": "Code 128"
       },
-      "tooltip": "Spausdinti pasirinktų eilučių etiketes arba pasirinkti elementus kitame puslapyje"
+      "tooltip": "Spausdinti pasirinktų eilučių etiketes arba pasirinkti elementus kitame puslapyje",
+      "qrSize": {
+        "label": "QR dydis",
+        "tooltip": "Spausdinamas QR kodo kvadrato dydis milimetrais. „Automatinis“ išlaiko įprastą elgseną: QR kodas užpildo pusę etiketės (visą etiketę, jei nieko daugiau nespausdinama). QR paraštė pridedama aplink pasirinktą dydį kaip tylioji zona.",
+        "auto": "Automatinis",
+        "custom": "Tinkintas",
+        "tooSmall": "QR kodus, mažesnius nei {{mm}} mm, gali būti sunku nuskaityti telefono kamera.",
+        "clamped": "Ši etiketė telpa tik ≈ {{rendered}} mm — mažiau nei nustatyti {{requested}} mm.",
+        "clampedTooSmall": "Ši etiketė telpa tik ≈ {{rendered}} mm (nustatyta {{requested}} mm) — mažiau nei {{mm}} mm minimalus dydis telefono kamerai."
+      }
     },
     "spoolSelect": {
       "title": "Pasirinkite ritę",
@@ -206,7 +227,8 @@
       "reprintConfirmTitle": "Spausdinti etiketes iš naujo?",
       "reprintConfirmContent_one": "{{count}} pasirinkta gija jau turi atspausdintą etiketę. Spausdinti ją dar kartą?",
       "reprintConfirmContent_few": "{{count}} pasirinktos gijos jau turi atspausdintas etiketes. Spausdinti jas dar kartą?",
-      "reprintConfirmContent_other": "{{count}} pasirinktų gijų jau turi atspausdintas etiketes. Spausdinti jas dar kartą?"
+      "reprintConfirmContent_other": "{{count}} pasirinktų gijų jau turi atspausdintas etiketes. Spausdinti jas dar kartą?",
+      "searchPlaceholder": "Ieškoti pagal gijos ID, gamintoją, pavadinimą arba medžiagą"
     }
   },
   "scanner": {
@@ -417,7 +439,8 @@
       "finish": "Paviršius",
       "pattern": "Raštas",
       "translucent": "Peršviečiama",
-      "glow": "Šviečia tamsoje"
+      "glow": "Šviečia tamsoje",
+      "image": "Nuotrauka"
     },
     "fields_help": {
       "name": "Gijos pavadinimas, kad būtų galima atskirti šį gijos tipą nuo kitų to paties gamintojo gijų. Pavyzdžiui, turėtų būti nurodyta spalva.",
@@ -430,7 +453,8 @@
       "low_stock_threshold": "Pažymėti šią giją kaip užsakytiną, kai bendras likęs visų jos ričių svoris nukrenta žemiau šio gramų skaičiaus.",
       "reserve_count": "Neatidarytų atsarginių ričių, kurias laikote atsargoje, skaičius — sekamas nekuriant ritės kiekvienai iš jų.",
       "settings_extruder_temp_range": "Gamintojo rekomenduojamas ekstruderio temperatūros intervalas (min.–maks.). Neprivaloma; palikite tuščią, jei turite tik vieną reikšmę.",
-      "settings_bed_temp_range": "Gamintojo rekomenduojamas pado temperatūros intervalas (min.–maks.). Neprivaloma; palikite tuščią, jei turite tik vieną reikšmę."
+      "settings_bed_temp_range": "Gamintojo rekomenduojamas pado temperatūros intervalas (min.–maks.). Neprivaloma; palikite tuščią, jei turite tik vieną reikšmę.",
+      "image": "Nuotrauka, pagal kurią atpažinti šią giją — pvz., ritės ar parduotuvės skelbimo nuotrauka. Prieš įkeliant sumažinama naršyklėje; metaduomenys, tokie kaip GPS vieta, pašalinami."
     },
     "titles": {
       "create": "Kirti giją",
@@ -520,6 +544,16 @@
     },
     "messages": {
       "update_error": "Nepavyko išsaugoti pakeitimų. Bandykite dar kartą."
+    },
+    "image": {
+      "upload": "Įkelti nuotrauką",
+      "replace": "Pakeisti nuotrauką",
+      "remove": "Pašalinti nuotrauką",
+      "uploaded": "Nuotrauka išsaugota",
+      "upload_error": "Nepavyko išsaugoti nuotraukos",
+      "removed": "Nuotrauka pašalinta",
+      "remove_error": "Nepavyko pašalinti nuotraukos",
+      "prepare_error": "Nepavyko nuskaityti šio paveikslėlio failo"
     }
   },
   "vendor": {
@@ -590,7 +624,12 @@
       "materials_one": "{{count}} medžiaga",
       "materials_few": "{{count}} medžiagos",
       "materials_other": "{{count}} medžiagų"
-    }
+    },
+    "load_error_title": "Nepavyko įkelti ričių",
+    "load_error_desc": "Kilo problema įkeliant jūsų rites. Bandykite dar kartą.",
+    "gathering_dust": "Apdulkėjusios",
+    "never_used": "Niekada nenaudota",
+    "no_stale": "Nėra apdulkėjusių ričių"
   },
   "help": {
     "help": "Pagalba",
@@ -888,7 +927,8 @@
       "description": "Pasirinkite vietas, kurioms spausdinti nuskaitomas QR etiketes.",
       "select_placeholder": "Pasirinkite vietas",
       "none_selected": "Nepasirinkta jokių vietų"
-    }
+    },
+    "load_error": "Nepavyko įkelti ričių"
   },
   "calibration": {
     "title": "Kalibravimas",
@@ -968,7 +1008,165 @@
         "cancel": "Atšaukti"
       },
       "skip_finish_confirm": "Pažymėti šią sesiją kaip baigtą neišsaugant šio žingsnio?",
-      "session_complete": "Kalibravimo sesija pažymėta kaip baigta."
+      "session_complete": "Kalibravimo sesija pažymėta kaip baigta.",
+      "revisiting": "Peržiūrima"
+    },
+    "wiki": {
+      "link": "Wiki",
+      "tooltip": "Atidaryti OrcaSlicer wiki šiam žingsniui",
+      "tooltip_short": "OrcaSlicer wiki"
+    },
+    "sections": {
+      "test_method": "Testavimo metodas",
+      "test_setup": "Testo nustatymai",
+      "your_result": "Jūsų rezultatas",
+      "auto_computed": "· apskaičiuota automatiškai"
+    },
+    "step_status": {
+      "skipped": "Praleista",
+      "done": "✓ Atlikta",
+      "incomplete": "Neužbaigta"
+    },
+    "confidence_display": "Pasitikėjimo lygis: {{level}}",
+    "confirm_delete": {
+      "tooltip": "Šalinti",
+      "confirming": "Spustelėkite dar kartą, kad patvirtintumėte",
+      "short": "Tikrai?"
+    },
+    "select_step": {
+      "placeholder": "Pasirinkite kalibravimo žingsnį",
+      "required": "Prašome pasirinkti kalibravimo žingsnį."
+    },
+    "optional": "Nebūtina",
+    "optional_notes": "Nebūtinos pastabos…",
+    "printer_name_placeholder": "pvz. Bambu X1C, Ender 3",
+    "flow_calc": {
+      "title": "Bandymo rezultato skaičiuoklė",
+      "pass1": "1 etapas",
+      "pass2": "2 etapas",
+      "method_yolo": "YOLO (rekomenduojama)",
+      "method_legacy": "Senasis metodas (2 etapų)",
+      "yolo_desc": "Vieno etapo kalibravimas naudojant Archimedo spiralių (Archimedean Chords) šabloną (OrcaSlicer ≥ 2.3.0). Įveskite dabartinį srauto santykį ir ant spaudinio pastebėtą korekcijos reikšmę.",
+      "legacy_desc": "Dviejų etapų kalibravimas. Peržiūrėkite pirmojo ir antrojo etapo rezultatus, kad apskaičiuotumėte galutinį srauto santykį.",
+      "start": "Pradėti →",
+      "yolo_pass1_desc": "Atspausdinkite Archimedo spiralių testinį modelį. Įveskite dabartinį srauto santykį ir ant spaudinio matomą korekcijos reikšmę. Naujas srauto santykis apskaičiuojamas automatiškai.",
+      "legacy_pass1_desc": "Atspausdinkite pirmojo etapo testinį modelį. Įveskite pradinį srauto santykį ir ant spaudinio pastebėtą korekcijos procentą.",
+      "pass2_desc": "Slicerio programoje nustatykite srauto santykį pagal 1 etapo rezultatą, iš naujo atspausdinkite testinį modelį, tada įveskite naują korekcijos procentą.",
+      "current_flow_ratio": "Dabartinis srauto santykis",
+      "modifier": "Modifikatorius",
+      "new_flow_ratio": "Naujas srauto santykis",
+      "flow_ratio": "Srauto santykis",
+      "result": "Rezultatas",
+      "cancel": "Atšaukti",
+      "apply": "Taikyti formai ✓",
+      "next_pass2": "Toliau: 2 etapas →",
+      "back": "← Atgal"
+    },
+    "pa": {
+      "method_tower": "Bokštas (rekomenduojama)",
+      "method_pattern": "Šablonas / linija",
+      "tower_desc": "Atspausdinkite PA bokšto testą. Įveskite ekstruderio tipą, PA žingsnio reikšmę (A) ir geriausiai atrodančio sluoksnio išmatuotą aukštį (B). PA apskaičiuojama automatiškai kaip A × B.",
+      "pattern_desc": "Atspausdinkite PA šablono ar linijos testą. Nustatykite optimalią liniją ir žemiau tiesiogiai įveskite jos PA reikšmę."
+    },
+    "input_shaping_advisory": {
+      "title": "Turite modernų spausdintuvą? Gali būti, kad šito jums nereikia.",
+      "desc_wizard": "Dauguma modernių CoreXY spausdintuvų su Klipper ir akselerometru (ADXL345) arba bet kuris „Bambu Lab“ spausdintuvas jau tvarko Input Shaping automatiškai — ir daug tiksliau, nei tai kada nors galėtų padaryti rankinis testinis bokštas. Jei tai tinka jums, praleiskite šį žingsnį ir sutaupykite laiko.",
+      "desc_drawer": "Dauguma modernių CoreXY spausdintuvų su Klipper ir akselerometru (ADXL345) arba bet kuris „Bambu Lab“ spausdintuvas jau tvarko Input Shaping automatiškai — ir daug tiksliau, nei tai kada nors galėtų padaryti rankinis testinis bokštas. Jei tai tinka jums, tiesiog uždarykite šį langą nesaugodami.",
+      "skip": "Mano spausdintuvas tuo pasirūpina — praleisti →"
+    },
+    "vfa": {
+      "artifact_speeds": "Artefaktų greičiai",
+      "artifact_speeds_desc": "Atspausdinkite VFA testinį bokštą ir pažymėkite kiekvieną greitį, kuriuo pastebite VFA defektus. Minimalus ir maksimalus vengimo greitis apskaičiuojami automatiškai pagal šį sąrašą.",
+      "speed_placeholder": "Greitis",
+      "add_speed": "Pridėti greitį"
+    },
+    "step_copy": {
+      "temperature": {
+        "title": "Temperatūra",
+        "description": "Raskite optimalią spausdinimo temperatūrą šiai gijai. Atspausdinkite temperatūros bokštą ir suraskite sluoksnį, kuriame geriausiai subalansuotas sluoksnių sukibimas, paviršiaus kokybė ir minimalus siūlų tempimas. Aukštesnė temperatūra pagerina sukibimą; žemesnė sumažina sunkimąsi ir siūlų tempimą."
+      },
+      "volumetric_speed": {
+        "title": "Tūrinis greitis",
+        "description": "Nustatykite didžiausią tūrinį srauto greitį, kurį jūsų karštoji galvutė gali palaikyti su šia gija, kol dar neatsiranda nepakankama ekstruzija. Atspausdinkite srauto greičio rampos testą arba seriją vienos sienelės kubelių didėjančiais greičiais ir pastebėkite greitį prieš tai, kai kokybė pradeda blogėti."
+      },
+      "pressure_advance": {
+        "title": "Pressure Advance",
+        "description": "Sureguliuokite Pressure Advance (Klipper / Bambu) arba Linear Advance (Marlin), kad pašalintumėte kampų išsipūtimą ir pagerintumėte aštrių kampų kokybę. Atspausdinkite PA testinį šabloną ir nustatykite reikšmę, kuri duoda švariausius, aštriausius kampus. Jei jūsų programinė-aparatinė įranga tai palaiko, įjunkite Adaptive PA."
+      },
+      "flow_rate": {
+        "title": "Srauto greitis",
+        "description": "Tiksliai sureguliuokite ekstruzijos daugiklį, kad realiai išspausto plastiko kiekis atitiktų slicerio tikėtiną kiekį. Atspausdinkite du kalibravimo kubelius (vieną su 98 %, kitą su 100 %) ir slankmačiu išmatuokite jų sieneles, kad apskaičiuotumėte teisingą srauto santykį."
+      },
+      "retraction": {
+        "title": "Atitraukimas",
+        "description": "Raskite mažiausią atitraukimo ilgį ir greitį, kurie pašalina siūlų tempimą negraužiant gijos ir nesukeliant užsikimšimų. Atspausdinkite atitraukimo atstumo bokštą ir pasirinkite mažiausią nustatymą, duodantį švarius perėjimo judesius."
+      },
+      "tolerance": {
+        "title": "Tolerancija",
+        "description": "Išmatuokite, kaip tiksliai jūsų spausdintuvas atkuria elementų dydžius. Atspausdinkite tolerancijos testinį modelį, slankmačiu išmatuokite tikslinius elementus ir užfiksuokite nuokrypį. Rezultatą pritaikykite slicerio matmenų tikslumo / xy kompensacijos nustatymuose."
+      },
+      "cornering": {
+        "title": "Posūkiai",
+        "description": "Sureguliuokite posūkių elgseną, kad subalansuotumėte spausdinimo greitį su virpesiais ir defektais krypties pasikeitimo vietose. Naudokite Junction Deviation (Marlin 2.x / RepRapFirmware), klasikinį Jerk (senesnis Marlin) arba Square Corner Velocity (Klipper). Atspausdinkite posūkių testinį šabloną ir mažinkite reikšmę, kol virpesiai išnyks."
+      },
+      "input_shaping": {
+        "title": "Input Shaping",
+        "description": "Sumažinkite vaiduoklinius kontūrus ir virpesius taikydami rezonanso kompensaciją. Išmatuokite savo spausdintuvo rezonanso dažnį (rekomenduojamas akselerometras arba vizualus virpesių bokštas). Pasirinkite formavimo tipą ir dažnius, kurie sumažina defektus, tada įveskite juos žemiau."
+      },
+      "vfa": {
+        "title": "VFA (vertikalūs smulkūs defektai)",
+        "description": "Raskite didžiausią spausdinimo greitį, kol dar nematyti vertikalių paviršiaus defektų (VFA / rifliavimas). Atspausdinkite greičio rampos testą ant lygiasienio objekto ir pastebėkite greitį prieš tai, kai ant paviršiaus pradeda atsirasti reguliarus rifliavimas."
+      }
+    },
+    "field_labels": {
+      "inputs": {
+        "start_temp": "Pradinė temperatūra",
+        "end_temp": "Galutinė temperatūra",
+        "step_size": "Žingsnio dydis",
+        "start_speed": "Pradinis greitis",
+        "end_speed": "Galutinis greitis",
+        "measured_height": "Išmatuotas aukštis",
+        "extruder_type": "Ekstruderio tipas",
+        "pa_step_a": "PA žingsnis (A)",
+        "measured_height_b": "Išmatuotas aukštis (B)",
+        "start_retract": "Pradinis atitraukimas",
+        "factor": "Koeficientas",
+        "test_size": "Testo elemento dydis",
+        "measured_size": "Išmatuotas dydis",
+        "firmware_type": "Programinė įranga / funkcija",
+        "start_value": "Pradinė reikšmė",
+        "end_value": "Galutinė reikšmė",
+        "shaper_type": "Formavimo tipas",
+        "frequency_x": "Rezonanso dažnis X",
+        "frequency_y": "Rezonanso dažnis Y"
+      },
+      "outputs": {
+        "temperature": "Optimali temperatūra",
+        "max_volumetric_speed": "Maks. tūrinis greitis",
+        "pressure_advance": "PA reikšmė",
+        "flow_ratio": "Srauto santykis",
+        "retraction_length": "Rekomenduojamas atitraukimas",
+        "tolerance_offset": "Tolerancijos nuokrypis",
+        "cornering_value": "Rekomenduojama reikšmė",
+        "shaper_type_x": "Rekomenduojamas X formavimo tipas",
+        "frequency_x": "Suderintas dažnis X",
+        "shaper_type_y": "Rekomenduojamas Y formavimo tipas",
+        "frequency_y": "Suderintas dažnis Y",
+        "min_avoidance_speed": "Min. vengimo greitis",
+        "max_avoidance_speed": "Maks. vengimo greitis"
+      },
+      "options": {
+        "direct_drive": "Tiesioginė pavara",
+        "bowden": "Bowden",
+        "junction_deviation": "Junction Deviation (Marlin 2.x / RepRapFirmware)",
+        "jerk": "Jerk (klasikinis Marlin)",
+        "square_corner_velocity": "Square Corner Velocity (Klipper)",
+        "mzv": "MZV",
+        "ei": "EI",
+        "zv": "ZV",
+        "2hump_ei": "2HUMP_EI",
+        "3hump_ei": "3HUMP_EI"
+      }
     }
   },
   "external": {
@@ -1174,5 +1372,114 @@
       "article_number": "Gaminio nr",
       "confidence": "Patikimumas"
     }
+  },
+  "update": {
+    "available": "atnaujinimas pasiekiamas",
+    "tooltip": "Yra pasiekiama versija {{version}}",
+    "notification": {
+      "title": "Yra nauja Spoolman versija",
+      "description": "Išleista versija {{version}}. Sužinokite, kas naujo ir kaip atnaujinti.",
+      "viewRelease": "Peržiūrėti leidimo pastabas"
+    },
+    "action": {
+      "open": "Atnaujinti",
+      "howTo": "Kaip atnaujinti",
+      "modalTitle": "Atnaujinti Spoolman",
+      "currentVersion": "Įdiegta: {{version}}",
+      "latestVersion": "naujausia: {{version}}",
+      "viewReleaseNotes": "Peržiūrėti leidimo pastabas",
+      "close": "Uždaryti",
+      "updateNow": "Atnaujinti dabar",
+      "updateToVersion": "Atnaujinti į {{version}}",
+      "native": {
+        "description": "Tai natyvus diegimas, todėl Spoolman gali atsinaujinti pats iki naujausio leidimo.",
+        "restartNotice": "Baigus atnaujinimą tarnyba bus paleista iš naujo automatiškai. Jei Spoolman netvarko systemd, atnaujinimui pasibaigus paleiskite jį iš naujo rankiniu būdu.",
+        "adminRequired": "Norint paleisti atnaujinimą iš čia, turi būti prisijungęs administratorius.",
+        "disabled": "Šiame egzemplioriuje atnaujinimai iš sąsajos yra išjungti. Sukonfigūruokite autentifikaciją arba nustatykite SPOOLMAN_ALLOW_UI_UPDATE=TRUE, kad mygtukas būtų įjungtas. Taip pat galite atnaujinti iš apvalkalo (shell):"
+      },
+      "docker": {
+        "description": "Šis egzempliorius veikia Docker aplinkoje. Atnaujinkite atsisiųsdami naują atvaizdą ir iš naujo sukurdami konteinerį:",
+        "tagReminder": "Jei jūsų compose faile nurodyta konkreti atvaizdo žyma, prieš atsisiųsdami pakeiskite ją į naują versiją (pvz., ghcr.io/sherrmann/spoolman-ng:{{version}})."
+      },
+      "haAddon": {
+        "description": "Šis egzempliorius veikia kaip Home Assistant priedas. Atnaujinkite jį iš Home Assistant, kuris naują versiją pasiūlo automatiškai:",
+        "steps": "Settings → Add-ons → Spoolman → Update"
+      },
+      "unknown": {
+        "description": "Atnaujinkite įdiegdami naujausią leidimą taip pat, kaip iš pradžių įdiegėte Spoolman. Daugiau informacijos rasite leidimo pastabose."
+      },
+      "started": {
+        "title": "Atnaujinimas pradėtas",
+        "descriptionManaged": "Spoolman atsinaujina ir bus paleistas iš naujo automatiškai. Šis puslapis prisijungs iš naujo, kai jis vėl veiks.",
+        "descriptionManual": "Spoolman atsinaujina. Baigus atnaujinimą paleiskite Spoolman iš naujo rankiniu būdu."
+      },
+      "failed": {
+        "title": "Atnaujinimas nepavyko"
+      }
+    }
+  },
+  "low_stock": {
+    "title": "Mažas kiekis",
+    "remaining_header": "Likutis",
+    "remaining_left": "Liko {{amount}}",
+    "threshold_button": "Koreguoti ribą",
+    "threshold_button_value": "Riba: {{value}}",
+    "section": {
+      "explicit": "Žemiau jūsų nustatytos ribos",
+      "fallback": "Žemiau numatytųjų {{grams}} g"
+    },
+    "empty": "Nėra ko užsisakyti — atsargų pakanka."
+  },
+  "orders": {
+    "title": "Užsakymai",
+    "empty": "Užsakymų dar nėra.",
+    "new_order": "Naujas užsakymas",
+    "new_order_title": "Naujas užsakymas",
+    "add_line": "Pridėti giją",
+    "remove_line": "Šalinti eilutę",
+    "select_filament": "Pasirinkite giją",
+    "no_lines": "Prieš kurdami užsakymą pridėkite bent vieną giją.",
+    "order_number": "Užsakymo Nr.",
+    "shop": "Parduotuvė",
+    "ordered_at": "Užsakyta",
+    "lines_summary": "Gauta {{arrived}} iš {{total}}",
+    "lines_summary_title": "Eilutės",
+    "state_title": "Būsena",
+    "filaments_count_one": "{{count}} gija",
+    "filaments_count_other": "{{count}} gijų",
+    "arrived_action": "Gauta…",
+    "outstanding": "Laukiama",
+    "create_error": "Nepavyko sukurti užsakymo. Bandykite dar kartą.",
+    "state": {
+      "open": "Atviras — laukiama {{count}}",
+      "arrived": "Gauta"
+    },
+    "mark_ordered": "Pažymėti kaip užsakytą",
+    "mark_ordered_title": "Pažymėti „{{name}}“ kaip užsakytą",
+    "create_order": "Sukurti užsakymą",
+    "create_order_title": "Sukurti užsakymą — pasirinkta {{count}}",
+    "shop_placeholder": "Įveskite parduotuvės pavadinimą (sukurs naują, jei jos nėra)",
+    "order_date": "Užsakymo data",
+    "quantity": "Kiekis",
+    "price_per_unit": "Kaina / ritei (nebūtina)",
+    "order_number_field": "Užsakymo numeris (nebūtina)",
+    "url": "Užsakymo nuoroda (nebūtina)",
+    "selected_count": "Pasirinkta {{count}}",
+    "arrive_title": "Kas atvyko iš užsakymo #{{number}}?",
+    "arrive_subtitle": "Dalinis pristatymas padalija eilutę — likusi dalis lieka užsakyta.",
+    "arrive_error": "Nepavyko pažymėti užsakymo kaip gauto. Bandykite dar kartą.",
+    "arrived_check": "Gauta",
+    "n_of_m": "{{delivered}} iš {{outstanding}} laukiama",
+    "split_preview": "{{delivered}} bus gauta, {{rest}} liks užsakyta",
+    "create_spools": "Sukurti rites pristatytiems vienetams",
+    "location": "Vieta",
+    "banner": "Ši gija yra užsakyta (užsakymas #{{id}}) — pažymėti jos eilutę kaip gautą?",
+    "mark_arrived": "Pažymėti gauta",
+    "details_title": "Užsakymas {{number}}",
+    "comment": "Komentaras",
+    "update_error": "Nepavyko atnaujinti užsakymo. Bandykite dar kartą.",
+    "delete_error": "Nepavyko ištrinti užsakymo. Bandykite dar kartą.",
+    "delete_confirm": "Ištrinti šį užsakymą? Jo eilutės taip pat bus ištrintos.",
+    "filaments_count_few": "{{count}} gijos"
   }
 }

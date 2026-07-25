@@ -171,7 +171,19 @@
       "invalidGeometry": "The label grid does not fit on the paper",
       "invalidGeometryHelp": "Margins and spacing leave no room for the labels. Reduce the margins, spacing, columns or rows — or pick a larger paper size.",
       "contentClipped": "Some label content is cut off",
-      "contentClippedHelp": "At least one label’s content does not fit inside its label and will be clipped when printed. Reduce the text size, shorten the template, or use fewer columns/rows so each label is larger."
+      "contentClippedHelp": "At least one label’s content does not fit inside its label and will be clipped when printed. Reduce the text size, shorten the template, or use fewer columns/rows so each label is larger.",
+      "checklist": {
+        "title": "Before you print",
+        "intro": "Browser print dialogs often re-scale pages, which breaks the label geometry. In the print dialog that opens next, check:",
+        "scale": "Scale is 100% / “Actual size” — never “Fit to page”.",
+        "paperSize": "The selected paper size is exactly {{width}} × {{height}} mm.",
+        "margins": "Margins are set to “None” (Spoolman already handles margins).",
+        "headersFooters": "Headers and footers are turned off.",
+        "pageSizeModeHint": "You picked a label paper size but Page Size is “Automatic”. “Match label size” tells the browser the exact page geometry.",
+        "pageSizeModeApply": "Switch to Match label size",
+        "dontShowAgain": "Don't show this again",
+        "printNow": "Print now"
+      }
     },
     "qrcode": {
       "button": "Print Labels",
@@ -229,7 +241,16 @@
       "printFilamentTitle": "Print Filament Labels",
       "printSpoolTitle": "Print Spool Labels",
       "templateHelpFilament": "Use {} to insert values of the filament object as text. For example, {id} will be replaced with the filament id, or {vendor.name} will be replaced with the vendor name. If a value is missing it will be replaced with \"?\". A second set of {} can be used to remove this. In addition, any text between the sets of {} will be removed if the value is missing. For example, {Article: {article_number}} will only show the label if a filament has an article number. Enclose text with double asterix ** to make it bold. Click the button to view a list of all available tags.",
-      "tooltip": "Print labels for the selected rows, or pick items on the next page"
+      "tooltip": "Print labels for the selected rows, or pick items on the next page",
+      "qrSize": {
+        "label": "QR Size",
+        "tooltip": "Printed size of the QR code square in mm. Auto keeps the historical behaviour: the QR fills half the label (all of it if nothing else prints). QR Padding is added around the chosen size as a quiet zone.",
+        "auto": "Auto",
+        "custom": "Custom",
+        "tooSmall": "QR codes smaller than {{mm}} mm can be hard to scan with a phone camera.",
+        "clamped": "This label only fits ≈ {{rendered}} mm — smaller than the {{requested}} mm you set.",
+        "clampedTooSmall": "This label only fits ≈ {{rendered}} mm ({{requested}} mm set) — below the {{mm}} mm phone-camera minimum."
+      }
     },
     "spoolSelect": {
       "title": "Select Spools",
@@ -254,7 +275,8 @@
       "noFilamentsSelected": "You have not selected any filaments.",
       "selectAll": "Select/Unselect All",
       "selectedTotal_one": "{{count}} filament selected",
-      "selectedTotal_other": "{{count}} filaments selected"
+      "selectedTotal_other": "{{count}} filaments selected",
+      "searchPlaceholder": "Search by filament ID, vendor, name, or material"
     }
   },
   "scan": {
@@ -663,7 +685,12 @@
       "top": "top",
       "materials_one": "{{count}} material",
       "materials_other": "{{count}} materials"
-    }
+    },
+    "load_error_title": "Failed to load spools",
+    "load_error_desc": "There was a problem loading your spools. Please try again.",
+    "gathering_dust": "Gathering Dust",
+    "never_used": "Never used",
+    "no_stale": "No spools gathering dust"
   },
   "help": {
     "help": "Help",
@@ -969,7 +996,8 @@
       "description": "Select the locations to print scannable QR labels for.",
       "select_placeholder": "Select locations",
       "none_selected": "No locations selected"
-    }
+    },
+    "load_error": "Failed to load spools"
   },
   "calibration": {
     "title": "Calibration",
@@ -1049,7 +1077,165 @@
         "cancel": "Cancel"
       },
       "skip_finish_confirm": "Mark this session as complete without saving this step?",
-      "session_complete": "Calibration session marked as complete."
+      "session_complete": "Calibration session marked as complete.",
+      "revisiting": "Revisiting"
+    },
+    "wiki": {
+      "link": "Wiki",
+      "tooltip": "Open OrcaSlicer wiki for this step",
+      "tooltip_short": "OrcaSlicer wiki"
+    },
+    "sections": {
+      "test_method": "Test Method",
+      "test_setup": "Test Setup",
+      "your_result": "Your Result",
+      "auto_computed": "· auto-computed"
+    },
+    "step_status": {
+      "skipped": "Skipped",
+      "done": "✓ Done",
+      "incomplete": "Incomplete"
+    },
+    "confidence_display": "{{level}} confidence",
+    "confirm_delete": {
+      "tooltip": "Delete",
+      "confirming": "Click again to confirm",
+      "short": "Sure?"
+    },
+    "select_step": {
+      "placeholder": "Select a calibration step",
+      "required": "Please select a calibration step."
+    },
+    "optional": "Optional",
+    "optional_notes": "Optional notes…",
+    "printer_name_placeholder": "e.g. Bambu X1C, Ender 3",
+    "flow_calc": {
+      "title": "Pass Result Calculator",
+      "pass1": "Pass 1",
+      "pass2": "Pass 2",
+      "method_yolo": "YOLO (Recommended)",
+      "method_legacy": "Legacy (2-Pass)",
+      "yolo_desc": "Single-pass calibration using the Archimedean Chords pattern (OrcaSlicer ≥ 2.3.0). Enter your current flow ratio and the correction value observed on the print.",
+      "legacy_desc": "Two-pass calibration. Step through your first and second pass results to calculate your final flow ratio.",
+      "start": "Start →",
+      "yolo_pass1_desc": "Print the Archimedean Chords test model. Enter your current flow ratio and the correction value shown on the print. The new flow ratio is calculated automatically.",
+      "legacy_pass1_desc": "Print your first pass test model. Enter your starting flow ratio and the correction percentage observed on the print.",
+      "pass2_desc": "Set your slicer flow ratio to the Pass 1 result, reprint the test model, then enter the new correction percentage.",
+      "current_flow_ratio": "Current Flow Ratio",
+      "modifier": "Modifier",
+      "new_flow_ratio": "New Flow Ratio",
+      "flow_ratio": "Flow Ratio",
+      "result": "Result",
+      "cancel": "Cancel",
+      "apply": "Apply to Form ✓",
+      "next_pass2": "Next: Pass 2 →",
+      "back": "← Back"
+    },
+    "pa": {
+      "method_tower": "Tower (Recommended)",
+      "method_pattern": "Pattern / Line",
+      "tower_desc": "Print the PA tower test. Enter your extruder type, the PA step value (A), and the measured height (B) at the best-looking layer. PA is auto-calculated as A × B.",
+      "pattern_desc": "Print the PA pattern or line test. Identify the optimal line and enter its PA value directly below."
+    },
+    "input_shaping_advisory": {
+      "title": "Got a modern printer? You might not need this.",
+      "desc_wizard": "Most modern CoreXY printers running Klipper with an accelerometer (ADXL345) or any Bambu Lab printer already handle input shaping automatically — and way more accurately than a manual test tower ever could. If this applies to you, skip this step and save yourself the hassle.",
+      "desc_drawer": "Most modern CoreXY printers running Klipper with an accelerometer (ADXL345) or any Bambu Lab printer already handle input shaping automatically — and way more accurately than a manual test tower ever could. If this applies to you, just close this drawer without saving.",
+      "skip": "My printer handles this — skip it →"
+    },
+    "vfa": {
+      "artifact_speeds": "Artifact Speeds",
+      "artifact_speeds_desc": "Print the VFA test tower and mark each speed where you observe VFA artefacts. Min and Max Avoidance Speed are auto-computed from this list.",
+      "speed_placeholder": "Speed",
+      "add_speed": "Add Speed"
+    },
+    "step_copy": {
+      "temperature": {
+        "title": "Temperature",
+        "description": "Find the optimal printing temperature for this filament. Print a temperature tower and look for the layer that gives the best balance of layer adhesion, surface quality, and minimal stringing. Hotter improves bonding; cooler reduces ooze and stringing."
+      },
+      "volumetric_speed": {
+        "title": "Volumetric Speed",
+        "description": "Determine the maximum volumetric flow rate your hotend can sustain with this filament before under-extrusion appears. Print a flow-rate ramp test or a series of single-wall cubes at increasing speeds, and note the speed just before quality degrades."
+      },
+      "pressure_advance": {
+        "title": "Pressure Advance",
+        "description": "Tune Pressure Advance (Klipper / Bambu) or Linear Advance (Marlin) to eliminate corner bulging and improve sharp-corner quality. Print a PA test pattern and dial in the value that gives the cleanest, sharpest corners. Enable Adaptive PA if supported by your firmware."
+      },
+      "flow_rate": {
+        "title": "Flow Rate",
+        "description": "Fine-tune the extrusion multiplier so that the actual amount of plastic deposited matches the slicer's expectation. Print two calibration cubes (one at 98%, one at 100%) and measure their walls with calipers to calculate the correct flow ratio."
+      },
+      "retraction": {
+        "title": "Retraction",
+        "description": "Find the minimum retraction length and speed that eliminates stringing without grinding the filament or causing clogs. Print a retraction distance tower and pick the lowest setting that produces clean travel moves."
+      },
+      "tolerance": {
+        "title": "Tolerance",
+        "description": "Measure how accurately your printer reproduces feature sizes. Print a tolerance test model, measure the target features with calipers, and record the offset. Apply the result in your slicer's dimensional accuracy / xy compensation settings."
+      },
+      "cornering": {
+        "title": "Cornering",
+        "description": "Tune cornering behaviour to balance print speed against ringing and artefacts at direction changes. Use Junction Deviation (Marlin 2.x / RepRapFirmware), classic Jerk (older Marlin), or Square Corner Velocity (Klipper). Print a cornering test pattern and reduce the value until ringing disappears."
+      },
+      "input_shaping": {
+        "title": "Input Shaping",
+        "description": "Reduce ghosting and ringing by applying resonance compensation. Measure the resonance frequency of your printer (accelerometer recommended, or use a visual ringing tower). Select the shaper type and frequencies that minimise artefacts, then enter them below."
+      },
+      "vfa": {
+        "title": "VFA (Vertical Fine Artifacts)",
+        "description": "Find the maximum print speed before vertical surface artefacts (VFA / ribbing) become visible. Print a speed-ramp test on a smooth-walled object and note the speed just before regular ribbing appears on the surface."
+      }
+    },
+    "field_labels": {
+      "inputs": {
+        "start_temp": "Start Temp",
+        "end_temp": "End Temp",
+        "step_size": "Step Size",
+        "start_speed": "Start Speed",
+        "end_speed": "End Speed",
+        "measured_height": "Measured Height",
+        "extruder_type": "Extruder Type",
+        "pa_step_a": "PA Step (A)",
+        "measured_height_b": "Measured Height (B)",
+        "start_retract": "Start Retraction",
+        "factor": "Factor",
+        "test_size": "Test Feature Size",
+        "measured_size": "Measured Size",
+        "firmware_type": "Firmware / Feature",
+        "start_value": "Start Value",
+        "end_value": "End Value",
+        "shaper_type": "Shaper Type",
+        "frequency_x": "Resonance Freq X",
+        "frequency_y": "Resonance Freq Y"
+      },
+      "outputs": {
+        "temperature": "Optimal Temp",
+        "max_volumetric_speed": "Max Volumetric Speed",
+        "pressure_advance": "PA Value",
+        "flow_ratio": "Flow Ratio",
+        "retraction_length": "Recommended Retraction",
+        "tolerance_offset": "Tolerance Offset",
+        "cornering_value": "Recommended Value",
+        "shaper_type_x": "X Recommended Shaper",
+        "frequency_x": "Tuned Freq X",
+        "shaper_type_y": "Y Recommended Shaper",
+        "frequency_y": "Tuned Freq Y",
+        "min_avoidance_speed": "Min Avoidance Speed",
+        "max_avoidance_speed": "Max Avoidance Speed"
+      },
+      "options": {
+        "direct_drive": "Direct Drive",
+        "bowden": "Bowden",
+        "junction_deviation": "Junction Deviation (Marlin 2.x / RepRapFirmware)",
+        "jerk": "Jerk (Classic Marlin)",
+        "square_corner_velocity": "Square Corner Velocity (Klipper)",
+        "mzv": "MZV",
+        "ei": "EI",
+        "zv": "ZV",
+        "2hump_ei": "2HUMP_EI",
+        "3hump_ei": "3HUMP_EI"
+      }
     }
   },
   "external": {
@@ -1167,5 +1353,113 @@
       "article_number": "Article nr",
       "confidence": "Confidence"
     }
+  },
+  "update": {
+    "available": "update available",
+    "tooltip": "Version {{version}} is available",
+    "notification": {
+      "title": "A new version of Spoolman is available",
+      "description": "Version {{version}} has been released. See what's new and how to update.",
+      "viewRelease": "View release notes"
+    },
+    "action": {
+      "open": "Update",
+      "howTo": "How to update",
+      "modalTitle": "Update Spoolman",
+      "currentVersion": "Installed: {{version}}",
+      "latestVersion": "latest: {{version}}",
+      "viewReleaseNotes": "View release notes",
+      "close": "Close",
+      "updateNow": "Update now",
+      "updateToVersion": "Update to {{version}}",
+      "native": {
+        "description": "This is a native install, so Spoolman can update itself to the latest release.",
+        "restartNotice": "The service will restart automatically after the update. If Spoolman is not managed by systemd, restart it manually once the update finishes.",
+        "adminRequired": "An administrator must be signed in to run the update from here.",
+        "disabled": "UI-triggered updates are disabled on this instance. Configure authentication, or set SPOOLMAN_ALLOW_UI_UPDATE=TRUE to enable the button. You can also update from a shell:"
+      },
+      "docker": {
+        "description": "This instance runs in Docker. Update by pulling the new image and recreating the container:",
+        "tagReminder": "If your compose file pins a specific image tag, bump it to the new version (e.g. ghcr.io/sherrmann/spoolman-ng:{{version}}) before pulling."
+      },
+      "haAddon": {
+        "description": "This instance runs as a Home Assistant add-on. Update it from Home Assistant, which offers the new version automatically:",
+        "steps": "Settings → Add-ons → Spoolman → Update"
+      },
+      "unknown": {
+        "description": "Update by installing the latest release the same way you originally installed Spoolman. See the release notes for details."
+      },
+      "started": {
+        "title": "Update started",
+        "descriptionManaged": "Spoolman is updating and will restart automatically. This page will reconnect once it is back.",
+        "descriptionManual": "Spoolman is updating. Restart Spoolman manually once the update finishes."
+      },
+      "failed": {
+        "title": "Update failed"
+      }
+    }
+  },
+  "low_stock": {
+    "title": "Low Stock",
+    "remaining_header": "Remaining",
+    "remaining_left": "{{amount}} left",
+    "threshold_button": "Adjust threshold",
+    "threshold_button_value": "Threshold: {{value}}",
+    "section": {
+      "explicit": "Below your set threshold",
+      "fallback": "Below the {{grams}} g default"
+    },
+    "empty": "Nothing to reorder — you're well stocked."
+  },
+  "orders": {
+    "title": "Orders",
+    "empty": "No orders yet.",
+    "new_order": "New order",
+    "new_order_title": "New order",
+    "add_line": "Add filament",
+    "remove_line": "Remove line",
+    "select_filament": "Select a filament",
+    "no_lines": "Add at least one filament before creating the order.",
+    "order_number": "Order #",
+    "shop": "Shop",
+    "ordered_at": "Ordered",
+    "lines_summary": "{{arrived}} of {{total}} arrived",
+    "lines_summary_title": "Lines",
+    "state_title": "State",
+    "filaments_count_one": "{{count}} filament",
+    "filaments_count_other": "{{count}} filaments",
+    "arrived_action": "Arrived…",
+    "outstanding": "Outstanding",
+    "create_error": "Couldn't create the order. Please try again.",
+    "state": {
+      "open": "Open — {{count}} outstanding",
+      "arrived": "Arrived"
+    },
+    "mark_ordered": "Mark as ordered",
+    "mark_ordered_title": "Mark \"{{name}}\" as ordered",
+    "create_order": "Create order",
+    "create_order_title": "Create order — {{count}} selected",
+    "shop_placeholder": "Type a shop name (creates it if new)",
+    "order_date": "Order date",
+    "quantity": "Quantity",
+    "price_per_unit": "Price / spool (opt.)",
+    "order_number_field": "Order number (opt.)",
+    "url": "Order link (opt.)",
+    "selected_count": "{{count}} selected",
+    "arrive_title": "What arrived from order #{{number}}?",
+    "arrive_subtitle": "Partial deliveries split the line — the rest stays on order.",
+    "arrive_error": "Couldn't mark the order arrived. Please try again.",
+    "arrived_check": "Arrived",
+    "n_of_m": "{{delivered}} of {{outstanding}} outstanding",
+    "split_preview": "{{delivered}} will arrive, {{rest}} stay on order",
+    "create_spools": "Create spools for the delivered items",
+    "location": "Location",
+    "banner": "This filament is on order (order #{{id}}) — mark its line arrived?",
+    "mark_arrived": "Mark arrived",
+    "details_title": "Order {{number}}",
+    "comment": "Comment",
+    "update_error": "Couldn't update the order. Please try again.",
+    "delete_error": "Couldn't delete the order. Please try again.",
+    "delete_confirm": "Delete this order? Its lines will be deleted too."
   }
 }
