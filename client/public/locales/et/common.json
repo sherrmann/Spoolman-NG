@@ -19,7 +19,7 @@
     "clone": "Klooni",
     "archive": "Arhiveeri",
     "notAccessTitle": "Sul pole õigusi sisenemiseks",
-    "saveAndAdd": "Salvesta ja Lisa",
+    "saveAndAdd": "Salvesta ja lisa",
     "logout": "Logi välja",
     "delete": "Kustuta",
     "cancel": "Tühista",
@@ -50,11 +50,11 @@
     "editSuccess": "Edukalt muudetud {{resource}}",
     "editError": "Viga {{resource}} muutmisel (staatuse kood: {{statusCode}})",
     "importProgress": "Importimine: {{processed}}/{{total}}",
-    "saveSuccessful": "Salvesta edukalt!",
+    "saveSuccessful": "Salvestamine õnnestus!",
     "validationError": "Viga validerimisel: {{error}}"
   },
   "warnWhenUnsavedChanges": "Oled sa kindel, et soovid lahkuda? Sul on salvestamata muudatusi.",
-  "kofi": "Anna mulle tippi Ko-fi's",
+  "kofi": "Toeta mind Ko-fis",
   "loading": "Laadimine",
   "version": "Versioon",
   "unknown": "Tundmatu",
@@ -68,7 +68,7 @@
   },
   "printing": {
     "generic": {
-      "title": "Trükkib",
+      "title": "Printimine",
       "description": "Kohanda allolevaid seadeid, et saavutada soovitud prindipaigutus. Pea meeles, et printerid ja sinu operatsioonisüsteem võivad rakendada oma veeriseid ja mõõtkava, seega võib õige tulemuse saavutamiseks olla vaja veidi katsetada. Testi seda tavalisel paberilehel, enne kui prindid päris siltidele.",
       "helpMargin": "Veerised tuleks seadistada vastavalt sinu sildipaberile ja printerile; nende muutmine mõjutab kogu ruudustiku suurust.",
       "helpPrinterMargin": "Turvatsoon tuleks seadistada vastavalt sellele, kui lähedale paberi servale sinu printer printida suudab; nende muutmine ei mõjuta kogu ruudustikku.",
@@ -195,7 +195,7 @@
         "tooltip": "QR-koodi ruudu prinditav suurus millimeetrites. Automaatne säilitab senise käitumise: QR täidab poole sildist (kogu sildi, kui muud ei prindita). QR-koodi veeris lisatakse valitud suurusele ümber tühja tsoonina.",
         "auto": "Automaatne",
         "custom": "Kohandatud",
-        "tooSmall": "QR-koodid, mis on väiksemad kui {{mm}} mm, võivad telefoni kaameraga raskesti skaneeritavad olla.",
+        "tooSmall": "QR-koodid, mis on väiksemad kui {{mm}} mm, võivad telefoni kaameraga raskesti skannitavad olla.",
         "clamped": "See silt mahutab ainult ≈ {{rendered}} mm — väiksem kui sinu määratud {{requested}} mm.",
         "clampedTooSmall": "See silt mahutab ainult ≈ {{rendered}} mm ({{requested}} mm määratud) — alla telefoni kaamera miinimumi {{mm}} mm."
       }
@@ -992,7 +992,7 @@
       },
       "skip_finish_confirm": "Kas märkida see seanss lõpetatuks ilma seda sammu salvestamata?",
       "session_complete": "Kalibreerimisseanss on märgitud lõpetatuks.",
-      "revisiting": "Vaatad üle"
+      "revisiting": "Ülevaatamisel"
     },
     "wiki": {
       "link": "Wiki",

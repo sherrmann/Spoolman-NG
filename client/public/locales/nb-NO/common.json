@@ -18,7 +18,7 @@
     "clone": "Klon",
     "clear": "Tøm",
     "filter": "Filtrer",
-    "refresh": "Gjenoppfrisk",
+    "refresh": "Oppdater",
     "notAccessTitle": "Du har ikke rettighet til å få tilgang",
     "saveAndAdd": "Lagre og legg til",
     "continue": "Fortsett",
@@ -76,9 +76,9 @@
       "name": "Filamentnavn, for å skille denne filamenttypen blant andre fra samme leverandør. Bør inneholde fargen f.eks.",
       "article_number": "f.eks. EAN, UPC osv.",
       "spool_weight": "Vekten av en tom spole. Brukes til å bestemme målt vekt på en spole.",
-      "price": "Pris på en full spole i den system- valutaen.",
+      "price": "Pris på en full spole i systemvalutaen.",
       "weight": "Filamentvekten til en full spole (nettovekt). Bør ikke inkludere vekten av selve spolen, kun filamentet. Det er det som vanligvis står på emballasjen.",
-      "material": "F.eks PLA,ABS,PETG, osv.",
+      "material": "F.eks. PLA, ABS, PETG, osv.",
       "multi_color_direction": "Retning av fargeovergang for flerfarget filament.",
       "low_stock_threshold": "Marker dette filamentet for etterbestilling når samlet gjenstående vekt på tvers av spolene faller under så mange gram.",
       "reserve_count": "Antall uåpnede reservespoler du har liggende, uten at det opprettes en spole for hver av dem.",
@@ -87,11 +87,11 @@
       "image": "Et foto for å gjenkjenne dette filamentet — f.eks. spolen eller butikkoppføringen. Skaleres ned i nettleseren før opplasting; metadata som GPS-posisjon fjernes."
     },
     "titles": {
-      "clone": "Kopier Filament",
+      "clone": "Kopier filament",
       "show_title": "[Filament #{{id}}] {{name}}",
       "show": "Vis filament",
-      "create": "Opprett Filament",
-      "edit": "Endre Filament",
+      "create": "Opprett filament",
+      "edit": "Endre filament",
       "list": "Filamenter"
     },
     "filament": "Filamenter",
@@ -207,14 +207,14 @@
       "marginBottom": "Bunnmarg",
       "printerMarginLeft": "Trygghetsavstand, venstre",
       "verticalSpacing": "Vertikal avstand",
-      "helpPrinterMargin": "Safe-Zone bør settes til hvor nær papirkanten skriveren kan skrive ut, endring av disse vil ikke påvirke hele rutenettet.",
+      "helpPrinterMargin": "Trygghetsavstand bør settes til hvor nær papirkanten skriveren kan skrive ut, endring av disse vil ikke påvirke hele rutenettet.",
       "previewScale": "Forhåndsvisningsskala",
       "helpMargin": "Margene bør konfigureres til å matche etikettpapiret og skriveren, endring av disse vil påvirke størrelsen på hele rutenettet.",
       "layoutSettings": "Layoutinnstillinger",
       "description": "Still inn innstillingene nedenfor for å få ønsket utskriftsoppsett. Husk at skrivere og operativsystemet ditt kan bruke sine egne marger og skalering, så det kan hende du må prøve og feile før alt er riktig. Test det på et stykke vanlig papir før du skriver ut på selve etikettene.",
       "horizontalSpacing": "Horisontal avstand",
       "marginLeft": "Venstre marg",
-      "showBorder": "Vis side",
+      "showBorder": "Vis grense",
       "defaultSettings": "Standard",
       "newSetting": "Ny",
       "addSettings": "Legg til ny mal",
@@ -267,13 +267,13 @@
       "bedTemp": "BT: {{temp}}",
       "lotNr": "Batch Nr: {{lot}}",
       "showFilamentComment": "Filament kommentar",
-      "template": "Etikett mal",
+      "template": "Etikettmal",
       "showQRCodeMode": {
         "simple": "Simpel",
         "no": "Nei",
         "withIcon": "Med ikon"
       },
-      "showQRCode": "Print QR-kode",
+      "showQRCode": "Skriv ut QR-kode",
       "useHTTPUrl": {
         "label": "QR-kodelenke",
         "options": {
@@ -281,9 +281,9 @@
           "url": "URL"
         },
         "preview": "Forhåndsvisning:",
-        "tooltip": "Velg om QR-koden skal bruke HTTP- eller intern URL."
+        "tooltip": "Bruker en proprietær lenke som bare fungerer når den skannes med Spoolmans skannefunksjon (standard). URL bruker enten base-URL-en angitt i innstillingene, eller URL-en til gjeldende side hvis ingen er satt."
       },
-      "templateHelp": "Velg hvilken etikettemplate du ønsker å bruke.",
+      "templateHelp": "Bruk {} for å sette inn verdier fra spoleobjektet som tekst. For eksempel vil {id} bli erstattet med spolens ID, eller {filament.material} vil bli erstattet med spolens materiale. Hvis en verdi mangler, erstattes den med «?». Et ekstra sett med {} kan brukes for å fjerne dette. I tillegg fjernes all tekst mellom settene med {} hvis verdien mangler. For eksempel vil {Lot Nr: {lot_nr}} bare vises på etiketten hvis spolen har et batchnummer. Omslutt tekst med doble stjerner ** for å gjøre den fet. Legg til et format etter et kolon: tall som {remaining_weight:0.0} avrundes til så mange desimaler, og datoer som {registered:YYYY-MM-DD HH:mm} formateres i din lokale tidssone. Start en linje med {size:1.5} for å skalere hele linjen (her 1,5×). Klikk på knappen for å se en liste over alle tilgjengelige tagger.",
       "exportButton": "Eksporter etiketter",
       "printFilamentTitle": "Skriv ut filamentetiketter",
       "printSpoolTitle": "Skriv ut spoleetiketter",
@@ -335,7 +335,7 @@
       "noSpoolsSelected": "Du har ikke valgt noen spoler.",
       "selectedTotal_one": "{{count}} spole valgt",
       "selectedTotal_other": "{{count}} spoler valgt",
-      "description": "Velg spoler å printe ut etiketter for.",
+      "description": "Velg spoler å skrive ut etiketter for.",
       "selectAll": "Velg/fjern merking av alle",
       "hidePrinted": "Skjul allerede utskrevne",
       "reprintConfirmTitle": "Skrive ut etiketter på nytt?",
@@ -407,28 +407,28 @@
     },
     "fields_help": {
       "used_weight": "Hvor mye filament har blitt benyttet fra spolen? En ny spole burde ha 0g benyttet.",
-      "weight_to_use": "Velg vekt å skrive inn. Målt vekt er kun tilgjengelig hvis spolevekt er satt for det valgte filament.",
+      "weight_to_use": "Velg vekt å skrive inn. Målt vekt er kun tilgjengelig hvis spolevekt er satt for det valgte filamentet.",
       "measured_weight": "Hvor mye veier filament og spole.",
-      "lot_nr": "Produsentens batch nummer. Kan bli benyttet or å verifiserer at print har en konsistent farge dersom flere spoler benyttes.",
+      "lot_nr": "Produsentens batch nummer. Kan bli benyttet for å verifisere at print har en konsistent farge dersom flere spoler benyttes.",
       "remaining_weight": "Hvor mye filament gjenstår på spolen. Ved en ny spole burde dette stemme med spolevekt.",
       "location": "Hvor spolen er plassert hvis du har flere lokasjoner hvor du oppbevarer spoler.",
       "price": "Pris på en full spole. Hvis ikke satt, vil prisen på filamentet bli antatt i stedet.",
       "spool_weight": "Vekten av spolen når den er tom. La stå tomt for å bruke verdien fra filamentet eller produsenten.",
       "initial_weight": "Startvekten av filament på spolen (nettovekt). Vil bruke vekten fra filament hvis ikke satt.",
-      "external_filament": "Du har valgt et filament fra den eksterne databasen. Et filamentobjekt (og muligens et produsentobjekt) opprettes automatisk når du oppretter denne spolen. Dette kan lage dupliserte filamentobjekter hvis du allerede har opprettet et filamentobjekt for denne filamentet.",
+      "external_filament": "Du har valgt et filament fra den eksterne databasen. Et filamentobjekt (og muligens et produsentobjekt) opprettes automatisk når du oppretter denne spolen. Dette kan lage dupliserte filamentobjekter hvis du allerede har opprettet et filamentobjekt for dette filamentet.",
       "printer": "Printeren denne spolen er lastet i nå. Administrer printerne dine i Innstillinger.",
       "diameter": "Målt filamentdiameter for akkurat denne spolen, brukes i lengdeberegninger. La stå tomt for å bruke filamentets diameter.",
       "color_hex": "Valgfri farge for akkurat denne spolen, overstyrer filamentets farge. Tøm for å bruke filamentets farge."
     },
     "form": {
       "new_location_prompt": "Skriv inn en ny lokasjon",
-      "spool_updated": "Denne rullen har blitt oppdatert av noen/noe siden du åpnet denne siden. Lagre nå vil overskrive disse endringene!",
+      "spool_updated": "Denne spolen har blitt oppdatert av noen/noe siden du åpnet denne siden. Lagring nå vil overskrive disse endringene!",
       "measurement_type": {
         "length": "Lengde",
         "weight": "Vekt"
       },
       "measurement_type_label": "Måleenhet",
-      "adjust_filament_help": "Justér verdien hvis målt filamentmengde avviker fra forventet.",
+      "adjust_filament_help": "Her kan du legge til eller trekke fra filament direkte på spolen. En positiv verdi vil forbruke filament, en negativ verdi vil legge til filament.",
       "adjust_filament_value": "Juster mengde"
     },
     "formats": {
@@ -590,7 +590,7 @@
       "list": "Spoler | Spoolman",
       "create": "Opprett spole | Spoolman",
       "show": "#{{id}} Vis spole | Spoolman",
-      "clone": "#{{id}} Klon spole| Spoolman"
+      "clone": "#{{id}} Klon spole | Spoolman"
     },
     "suffix": " | Spoolman",
     "filament": {
@@ -638,7 +638,7 @@
     "no_recent": "Ingen nylig brukte spoler",
     "by_material": "Etter materiale",
     "by_location": "Etter plassering",
-    "by_vendor": "Etter produsent",
+    "by_vendor": "Etter leverandør",
     "all_spools": "Alle spoler",
     "no_spools": "Ingen spoler ennå",
     "shopping_list": "Handleliste",
@@ -674,7 +674,7 @@
   "help": {
     "help": "Hjelp",
     "resources": {
-      "filament": "Filament leverandører. De har egenskaper som navn, materiale, farge, diameter og mer.",
+      "filament": "Filamentmerker. De har egenskaper som navn, materiale, farge, diameter og mer.",
       "spool": "Individuelle fysiske ruller med spesifikt filament.",
       "vendor": "Produsent av filament."
     },
@@ -684,9 +684,9 @@
     "locations": "Lokasjoner",
     "new_location": "Ny lokasjon",
     "no_location": "Ingen lokasjon",
-    "no_locations_help": "Denne siden mar deg organisere rullene med filament i lokasjoner. Legg til noen ruller for å starte!",
+    "no_locations_help": "Denne siden lar deg organisere spolene i lokasjoner. Legg til noen spoler for å starte!",
     "error_empty": "Navn kan ikke være tomt",
-    "error_exists": "Plasseringen finnes allerede",
+    "error_exists": "Lokasjonen finnes allerede",
     "location": "Lokasjon",
     "fields": {
       "button": "Egendefinerte felt",
@@ -721,7 +721,7 @@
       },
       "base_url": {
         "label": "Base-URL",
-        "tooltip": "URL som brukes ved generering av QR-koder og eksterne lenker."
+        "tooltip": "URL som brukes ved generering av funksjoner som QR-koder."
       },
       "round_prices": {
         "label": "Avrund priser",
@@ -762,9 +762,9 @@
       "boolean_false": "Nei",
       "choices_missing_error": "Du kan ikke fjerne valg. Følgende valg mangler: {{choices}}",
       "non_unique_key_error": "Nøkkelen må være unik.",
-      "key_not_changed": "Nøkkelen kan ikke endres.",
+      "key_not_changed": "Vennligst endre nøkkelen til noe annet.",
       "delete_confirm": "Slette felt {{name}}?",
-      "delete_confirm_description": "Dette vil fjerne feltet permanent fra systemet."
+      "delete_confirm_description": "Dette vil slette feltet og alle tilknyttede data for alle enheter."
     },
     "swatch": {
       "tab": "Prøvekort",
@@ -1457,7 +1457,7 @@
     "order_date": "Bestillingsdato",
     "quantity": "Antall",
     "price_per_unit": "Pris / spole (valgfri)",
-    "order_number_field": "Bestillingsnummer (valgfri)",
+    "order_number_field": "Bestillingsnummer (valgfritt)",
     "url": "Bestillingslenke (valgfri)",
     "selected_count": "{{count}} valgt",
     "arrive_title": "Hva ankom fra bestilling #{{number}}?",

@@ -204,7 +204,7 @@
       "title": "Selecionar Carretéis",
       "description": "Selecione os carretéis para imprimir suas etiquetas.",
       "showArchived": "Mostrar Arquivado",
-      "noSpoolsSelected": "Você não selecionou algum dos carretéis.",
+      "noSpoolsSelected": "Você não selecionou nenhum carretel.",
       "selectAll": "Selecionar/Desselecionar Tudo",
       "selectedTotal_one": "{{count}} carretel selecionado",
       "selectedTotal_many": "{{count}} carretéis selecionados",
@@ -466,7 +466,7 @@
     },
     "form": {
       "filament_updated": "Este filamento foi atualizado por alguém/outra coisa desde que você abriu esta página. Salvar irá sobrescrever essas alterações!",
-      "import_external": "Importar do Exterior",
+      "import_external": "Importar de Fonte Externa",
       "import_external_description": "Selecione um filamento na lista para preencher automaticamente seus detalhes no formulário de criação de filamento. Isso substituirá quaisquer dados que você inseriu no formulário.<br><br>Um objeto Fabricante será criado automaticamente quando você clicar em OK, se necessário.",
       "import_3dfp": "ID do 3D Filament Profiles",
       "import_3dfp_help": "Preencha as informações automaticamente buscando de 3dfilamentprofiles.com",
@@ -590,11 +590,11 @@
     "welcome": "Bem-vindo à sua instância do Spoolman!",
     "description": "Parece que você ainda não adicionou nenhum carretel. Veja a <helpPageLink>Página de Ajuda</helpPageLink> para obter ajuda sobre como começar.",
     "total_weight": "Estoque total",
-    "total_value": "Valor",
+    "total_value": "Valor est. do estoque",
     "low_stock": "Estoque baixo",
-    "all_stocked": "Todas as bobinas estão bem abastecidas",
+    "all_stocked": "Todos os carretéis estão bem abastecidos",
     "recently_used": "Usadas recentemente",
-    "no_recent": "Nenhuma bobina usada recentemente",
+    "no_recent": "Nenhum carretel usado recentemente",
     "by_material": "Por material",
     "by_location": "Por localização",
     "by_vendor": "Por fabricante",
@@ -703,7 +703,7 @@
       "choices_missing_error": "Você não pode remover as opções. As seguintes opções estão faltando: {{choices}}",
       "non_unique_key_error": "A chave deve ser única.",
       "key_not_changed": "Por favor, escolha outra chave.",
-      "delete_confirm": "Apagar o campo {{name}}?",
+      "delete_confirm": "Excluir o campo {{name}}?",
       "delete_confirm_description": "Isso excluirá o campo e todos os dados associados em todas as entidades."
     },
     "swatch": {
@@ -905,7 +905,7 @@
     "no_location": "Sem Local",
     "no_locations_help": "Esta página permite que você organize seus carretéis em locais, adicione alguns carretéis para começar!",
     "error_empty": "O nome não pode estar vazio",
-    "error_exists": "A localização já existe",
+    "error_exists": "O local já existe.",
     "location": "Local",
     "fields": {
       "button": "Campos personalizados",
@@ -1063,7 +1063,7 @@
       "back": "← Voltar"
     },
     "pa": {
-      "method_tower": "Torre (Recomendado)",
+      "method_tower": "Torre (Recomendada)",
       "method_pattern": "Padrão / Linha",
       "tower_desc": "Imprima o teste de torre de PA. Insira o tipo de extrusora, o valor do passo de PA (A) e a altura medida (B) na camada com melhor aparência. O PA é calculado automaticamente como A × B.",
       "pattern_desc": "Imprima o teste de padrão ou linha de PA. Identifique a linha ideal e insira seu valor de PA logo abaixo."

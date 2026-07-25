@@ -105,11 +105,18 @@ problems. Two ways to contribute:
   Filling in the other locales is not a blocker for merging; it is fine to land
   English-only and translate in a follow-up.
 
-`npm run check-i18n` (run in CI) reports per-locale key coverage as advisory
-output, and **fails** the build if a translation drops or mangles a `{{variable}}`
-or `<tag>` from the English value — those break the UI at runtime for one
-language only, which is exactly the kind of thing nobody notices. Coverage
-sitting below 100% is normal and not a failure.
+`npm run check-i18n` (run in CI) reports per-locale key coverage and advisory
+per-locale signals, and **fails** the build on two things that break the UI for
+exactly one language — the kind of defect nobody notices:
+
+- a `{{variable}}` or `<tag>` dropped, renamed or mangled relative to English;
+- a value shaped like a camelCase identifier where the English is real prose,
+  i.e. the key name transliterated instead of the sentence translated.
+
+Coverage below 100% is not a failure, and plural coverage is counted per
+language — see
+[locales/REVIEW.md](client/public/locales/REVIEW.md) for the plural rules, the
+provenance of each translation layer, and what the last review found.
 
 ## Filament database
 

@@ -16,7 +16,7 @@
     "cancel": "取消",
     "confirm": "您確定嗎？",
     "continue": "繼續",
-    "filter": "過濾器",
+    "filter": "篩選",
     "clear": "清除",
     "refresh": "重新整理",
     "show": "檢視",
@@ -68,7 +68,7 @@
   },
   "printing": {
     "generic": {
-      "title": "列印中",
+      "title": "列印",
       "description": "調整以下設定以獲得所需的列印佈局。請注意，列表機和您的操作系統可能會套用自己的邊距和縮放比例，因此可能需要進行一些反覆測試才能達到理想效果。在實際標籤上列印之前，先在普通紙上測試。",
       "helpMargin": "邊距應配置為與您的標籤紙和列表機相符，調整這些將影響整個網格的大小。",
       "rows": "列",
@@ -134,10 +134,10 @@
       }
     },
     "qrcode": {
-      "title": "標籤列印中",
+      "title": "標籤列印",
       "template": "標籤範本",
       "button": "列印標籤",
-      "templateHelp": "使用 {} 插入線捲物件的數值。例如，{id} 會被替換為線捲 ID，而 {filament.material} 則會替換為該線捲的材質。若數值缺失，會以「?」代替。您可以使用第二組 {} 來移除此符號；此外，若數值缺失，兩組 {} 之間的任何文字也都會被一併移除。例如，{批號：{lot_nr}} 僅會在該線捲含有批號資訊時顯示標籤。使用雙星號 ** 包圍文字可設為粗體。點擊按鈕可查看所有可用標籤的清單。",
+      "templateHelp": "使用 {} 插入料盤物件的數值。例如，{id} 會被替換為料盤 ID，而 {filament.material} 則會替換為該料盤的材質。若數值缺失，會以「?」代替。您可以使用第二組 {} 來移除此符號；此外，若數值缺失，兩組 {} 之間的任何文字也都會被一併移除。例如，{批號：{lot_nr}} 僅會在該料盤含有批號資訊時顯示標籤。使用雙星號 ** 包圍文字可設為粗體。在冒號後方加上格式：數字（如 {remaining_weight:0.0}）會四捨五入到指定的小數位數，日期（如 {registered:YYYY-MM-DD HH:mm}）則會以您當地時區格式化日期／時間。在一行開頭加上 {size:1.5} 可縮放整行文字（此處為 1.5 倍）。點擊按鈕可查看所有可用標籤的清單。",
       "textSize": "標籤文字大小",
       "showContent": "列印標籤",
       "useHTTPUrl": {
@@ -394,7 +394,7 @@
       "coaxial": "混色",
       "settings_extruder_temp": "擠出機溫度",
       "settings_bed_temp": "床台溫度",
-      "external_id": "內部ID",
+      "external_id": "外部ID",
       "spools": "檢視料盤",
       "longitudinal": "縱向",
       "single_color": "單色",
@@ -441,8 +441,8 @@
     },
     "form": {
       "import_external": "從外部匯入",
-      "filament_updated": "自您開啟此頁面以後，此線材已被其他人/事物更新。儲存將覆蓋這些變更！",
-      "import_external_description": "在列表中選擇一種線材，即可自動填入線材建立表單中的相關詳細資訊。此操作將覆蓋您已輸入的所有資料。<br><br>如果需要，當您點擊“確定”時，將自動建立一個製造商對象。",
+      "filament_updated": "此線材已被其他人/程式更新過。若儲存將覆蓋這些變更！",
+      "import_external_description": "在列表中選擇一種線材，即可自動填入線材建立表單中的相關詳細資訊。此操作將覆蓋您已輸入的所有資料。<br><br>如果需要，當您點擊「確定」時，將自動建立一個製造商物件。",
       "import_3dfp": "3D Filament Profiles ID",
       "import_3dfp_help": "自動從 3dfilamentprofiles.com 擷取並填入線材資訊",
       "import_3dfp_placeholder": "例如：12875",
@@ -454,7 +454,7 @@
       "vendor_create_error": "建立製造商失敗"
     },
     "buttons": {
-      "add_spool": "增加料盤",
+      "add_spool": "新增料盤",
       "fetch": "取得",
       "download_swatch": "色卡",
       "download_slicer": "切片設定檔"
@@ -577,14 +577,14 @@
       "clone": "#{{id}} 複製線材 | Spoolman"
     },
     "spool": {
-      "create": "建立線盤 | Spoolman",
-      "clone": "#{{id}} 複製線盤 | Spoolman",
-      "show": "#{{id}} 檢視線盤 | Spoolman",
-      "edit": "#{{id}} 編輯線盤 | Spoolman",
-      "list": "線盤 | Spoolman"
+      "create": "建立料盤 | Spoolman",
+      "clone": "#{{id}} 複製料盤 | Spoolman",
+      "show": "#{{id}} 檢視料盤 | Spoolman",
+      "edit": "#{{id}} 編輯料盤 | Spoolman",
+      "list": "料盤 | Spoolman"
     },
     "locations": {
-      "list": "位置| Spoolman"
+      "list": "位置 | Spoolman"
     }
   },
   "home": {
@@ -594,9 +594,9 @@
     "total_weight": "總庫存",
     "total_value": "總價值",
     "low_stock": "庫存不足",
-    "all_stocked": "所有線軸庫存充足",
+    "all_stocked": "所有料盤庫存充足",
     "recently_used": "最近使用",
-    "no_recent": "沒有最近使用的線軸",
+    "no_recent": "沒有最近使用的料盤",
     "by_material": "按材料",
     "by_location": "按位置",
     "by_vendor": "按製造商",
@@ -657,7 +657,7 @@
     "general": {
       "tab": "一般",
       "currency": {
-        "label": "貨幣設定標籤"
+        "label": "貨幣"
       },
       "base_url": {
         "tooltip": "生成 QR 碼等功能時使用的基本 URL。",
@@ -868,7 +868,7 @@
   "locations": {
     "locations": "位置",
     "no_location": "未設定位置",
-    "no_locations_help": "這個頁面讓您將料盤按位置進行整理，請從增加一些線盤來開始！",
+    "no_locations_help": "這個頁面讓您將料盤按位置進行整理，請從增加一些料盤來開始！",
     "new_location": "新增位置",
     "error_empty": "名稱不能為空",
     "error_exists": "位置已存在",

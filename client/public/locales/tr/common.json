@@ -54,9 +54,9 @@
     "saveSuccessful": "Kayıt başarılı!",
     "validationError": "Form kontrol hatası: {{error}}"
   },
-  "kofi": "Ko-fi'den bana birşeyler ateşle",
+  "kofi": "Ko-fi'de bana bahşiş bırak",
   "loading": "Yükleniyor",
-  "version": "Versiyon",
+  "version": "Sürüm",
   "unknown": "Bilinmeyen",
   "yes": "Evet",
   "no": "Hayır",
@@ -79,7 +79,7 @@
       "customSize": "Özel",
       "dimensions": "Boyutlar",
       "showBorder": "Kenarlık Göster",
-      "previewScale": "Ölçeklendirmeyi Önizle",
+      "previewScale": "Önizleme Ölçeği",
       "skipItems": "Öğeleri Atla",
       "itemCopies": "Öğe Kopyası",
       "contentSettings": "İçerik Ayarları",
@@ -103,7 +103,7 @@
       "defaultSettings": "Varsayılan",
       "addSettings": "Yeni Kayıtlı Etiket Ekle",
       "newSetting": "Yeni",
-      "duplicateSettings": "Mükerrer",
+      "duplicateSettings": "Çoğalt",
       "deleteSettings": "Mevcut Kayıtlı Etiketi Sil",
       "deleteSettingsConfirm": "Mevcut kayıtlı etiketi silmek istediğinizden emin misiniz?",
       "settingsName": "Kayıtlı Etiket Adı",
@@ -274,10 +274,10 @@
       "color_hex": "Renk"
     },
     "fields_help": {
-      "price": "Makaranın fiyatı eğer makara fiyatı belirlenmemişse filament fiyatı devralınacaktır.",
+      "price": "Dolu bir makaranın fiyatıdır. Eğer belirlenmemişse, bunun yerine filamentin fiyatı kullanılır.",
       "weight_to_use": "Hangi ağırlık değerinin girileceğini seçin. Ölçülen ağırlık, yalnızca seçilen filamente ait makara ağırlığı ayarlanmışsa kullanılabilir.",
       "used_weight": "Makaradan ne kadar filament kullanıldığını gösterir. Yeni bir makaranın kullanılmamış olması gerekir ve 0g kullanım göstermelidir.",
-      "remaining_weight": "Makara üzerinde ne kadar filament kaldığını gösterir. Yeni bir makara için bu değer, makara ağırlığıyla eşlit olmalıdır.",
+      "remaining_weight": "Makara üzerinde ne kadar filament kaldığını gösterir. Yeni bir makara için bu değer, makara ağırlığıyla eşit olmalıdır.",
       "measured_weight": "Filament ve makaranın toplam ağırlığını gösterir.",
       "initial_weight": "Makara üzerindeki filamentin ilk (net) ağırlığıdır. Ayarlanmadıysa, filament nesnesindeki ağırlık değeri kullanılır.",
       "spool_weight": "Makaranın boş ağırlığıdır. Bu alan boş bırakılırsa, filamentten veya üreticiden gelen değer kullanılır.",
@@ -296,7 +296,7 @@
       "show": "Makarayı Göster",
       "show_title": "[Makara #{{id}}] {{name}}",
       "archive": "Makarayı Arşivle",
-      "adjust": "Makara filamentini ayarla"
+      "adjust": "Makara Filamentini Ayarla"
     },
     "form": {
       "measurement_type": {
@@ -402,7 +402,7 @@
       "diameter": "Çap",
       "weight": "Ağırlık",
       "spool_weight": "Makara Ağırlığı",
-      "article_number": "Artikel Numarası",
+      "article_number": "Ürün Numarası",
       "registered": "Kayıtlı",
       "comment": "Yorum",
       "settings_extruder_temp": "Extruder Sıcaklığı",
@@ -432,7 +432,7 @@
     },
     "fields_help": {
       "name": "Filament adı, aynı üreticinin diğer filament türlerinden ayırt edilebilmesi için kullanılır. Örneğin, renk bilgisini içermelidir.",
-      "material": "Örn.PLA, ABS, PETG, gibi.",
+      "material": "Örn. PLA, ABS, PETG, gibi.",
       "price": "Tam dolu makaranın fiyatı.",
       "weight": "Dolu bir makaradaki filamentin ağırlığıdır (net ağırlık). Bu değer yalnızca filamentin ağırlığını içermelidir, makaranın kendisinin ağırlığı dahil edilmemelidir. Genellikle ambalaj üzerinde yazan değerdir.",
       "spool_weight": "Boş bir makaranın ağırlığıdır. Makaradaki ölçülen ağırlığın hesaplanmasında kullanılır.",
@@ -544,7 +544,7 @@
     "vendor": "Üreticiler",
     "fields": {
       "id": "ID",
-      "name": "İsim",
+      "name": "Ad",
       "empty_spool_weight": "Boş Makara Ağırlığı",
       "external_id": "Harici ID",
       "registered": "Kayıtlı",
@@ -561,7 +561,7 @@
       "edit": "Üretici Düzenle",
       "list": "Üreticiler",
       "show": "Üretici Göster",
-      "show_title": "[Üretici#{{id}}] {{name}}",
+      "show_title": "[Üretici #{{id}}] {{name}}",
       "view_spools": "Makaraları göster"
     },
     "form": {
@@ -663,7 +663,7 @@
         "name": "İsim",
         "field_type": "Tür",
         "unit": "Birim",
-        "order": "Sipariş",
+        "order": "Sıra",
         "default_value": "Varsayılan Değer",
         "choices": "Seçenekler",
         "multi_choice": "Çoklu Seçim",
@@ -673,7 +673,7 @@
       "field_type": {
         "text": "Metin",
         "integer": "Tam Sayı",
-        "integer_range": "Tam Sayı Aralık",
+        "integer_range": "Tam Sayı Aralığı",
         "float": "Ondalıklı Sayı",
         "float_range": "Ondalıklı Sayı Aralığı",
         "datetime": "Tarih+Saat",
@@ -872,7 +872,7 @@
       "show": "#{{id}} Makara Göster | Spoolman",
       "edit": "#{{id}} Makara Düzenle | Spoolman",
       "create": "Makara Oluştur | Spoolman",
-      "clone": "#{{id}}Makara Kopyala | Spoolman"
+      "clone": "#{{id}} Makara Kopyala | Spoolman"
     },
     "vendor": {
       "list": "Üreticiler | Spoolman",
@@ -1452,7 +1452,7 @@
     "arrive_subtitle": "Kısmi teslimatlar satırı böler — kalanı sipariş üzerinde kalır.",
     "arrive_error": "Sipariş geldi olarak işaretlenemedi. Lütfen tekrar deneyin.",
     "arrived_check": "Geldi",
-    "n_of_m": "{{outstanding}} içinden {{delivered}}",
+    "n_of_m": "{{outstanding}} içinden {{delivered}} bekliyor",
     "split_preview": "{{delivered}} gelecek, {{rest}} siparişte kalacak",
     "create_spools": "Teslim edilen öğeler için makara oluştur",
     "location": "Konum",

@@ -9,7 +9,7 @@
       "showTemperatures": "Temperaturer",
       "showVendor": "Sælger",
       "showSpoolComment": "Spole kommentarer",
-      "textSize": "Etikette tekststørrelse",
+      "textSize": "Etiket tekststørrelse",
       "title": "Etiketprint",
       "showSpoolmanIcon": "Vis Spoolman logo",
       "showLotNr": "Gruppe nr",
@@ -18,7 +18,7 @@
       "showFilamentComment": "Filament kommentarer",
       "button": "Print etiketter",
       "template": "Etiketskabelon",
-      "templateHelp": "Brug {} til at indsætte værdier for spolen som tekst. For eksempel vil {id} blive erstattet med spolens id, eller {filament.material} vil blive erstattet med materialet på spolen. Hvis en værdi mangler, vil den blive erstattet med \"?\". Et andet set af {} kan bruges for at fjerne dette. Derudover vil al tekst mellem sættene af {} blive fjernet, hvis værdien mangler. For eksemel, {Lot Nr: {lot_nr}} vil kun vise etiketten, hvis spolen har et partinummer (Lot Nr). Omgiv teksten med dobbelte asterisk ** for at gøre teksten fed. Klik på knappen for at vise en liste med mulige tags.",
+      "templateHelp": "Brug {} til at indsætte værdier for spolen som tekst. For eksempel vil {id} blive erstattet med spolens id, eller {filament.material} vil blive erstattet med materialet på spolen. Hvis en værdi mangler, vil den blive erstattet med \"?\". Et andet set af {} kan bruges for at fjerne dette. Derudover vil al tekst mellem sættene af {} blive fjernet, hvis værdien mangler. For eksempel, {Lot Nr: {lot_nr}} vil kun vise etiketten, hvis spolen har et partinummer (Lot Nr). Omgiv teksten med dobbelte asterisk ** for at gøre teksten fed. Klik på knappen for at vise en liste med mulige tags.",
       "useHTTPUrl": {
         "label": "QR-kode link",
         "tooltip": "Vil bruge proprietært link, der kun vil virke, hvis skannet med Spoolmans skanningsfunktion (standard). Webadressen bruger enten den basis-webadresse, specificeret i indstillinger, eller den nuværende sides webadresse, hvis ikke indstillet.",
@@ -34,10 +34,10 @@
         "simple": "Simpel",
         "withIcon": "Med ikon"
       },
-      "exportButton": "Eksportér labels",
-      "printFilamentTitle": "Print filament labels",
-      "printSpoolTitle": "Print spole labels",
-      "templateHelpFilament": "Brug {} til at indsætte værdier for filamentet som tekst. For eksempel vil {id} blive erstattet med filamentets id, eller {vendor.name} vil blive erstattet med producentens navn. Hvis en værdi mangler, erstattes den med \"?\". Et ekstra sæt {} kan bruges til at fjerne dette. Derudover vil al tekst mellem sættene af {} blive fjernet, hvis værdien mangler. For eksempel vil {Article: {article_number}} kun blive vist på labelen, hvis filamentet har et produkt nummer. Omgiv teksten med dobbelte asterisk ** for at gøre teksten fed. Klik på knappen for at vise en liste med mulige tags.",
+      "exportButton": "Eksportér etiketter",
+      "printFilamentTitle": "Print filamentetiketter",
+      "printSpoolTitle": "Print spoleetiketter",
+      "templateHelpFilament": "Brug {} til at indsætte værdier for filamentet som tekst. For eksempel vil {id} blive erstattet med filamentets id, eller {vendor.name} vil blive erstattet med producentens navn. Hvis en værdi mangler, erstattes den med \"?\". Et ekstra sæt {} kan bruges til at fjerne dette. Derudover vil al tekst mellem sættene af {} blive fjernet, hvis værdien mangler. For eksempel vil {Article: {article_number}} kun blive vist på labelen, hvis filamentet har et produktnummer. Omgiv teksten med dobbelte asterisk ** for at gøre teksten fed. Klik på knappen for at vise en liste med mulige tags.",
       "textColumns": {
         "label": "Tekstkolonner",
         "tooltip": "Fordel etiketteksten over dette antal kolonner. Praktisk til smalle etiketter med flere korte linjer."
@@ -160,8 +160,8 @@
     },
     "filamentSelect": {
       "title": "Vælg filamenter",
-      "description": "Vælg filamenter der skal printes labels til.",
-      "noFilamentsSelected": "Du har ikke valgt nogle filamenter.",
+      "description": "Vælg filamenter, der skal printes etiketter til.",
+      "noFilamentsSelected": "Du har ikke valgt nogen filamenter.",
       "selectAll": "Vælg alle/ingen",
       "selectedTotal_one": "{{count}} filament valgt",
       "selectedTotal_other": "{{count}} filamenter valgt",
@@ -565,7 +565,7 @@
       "name": "Navn",
       "id": "ID",
       "external_id": "Eksternt ID",
-      "empty_spool_weight": "Tom Spolevægt",
+      "empty_spool_weight": "Tom spolevægt",
       "filament_count": "Filamenter",
       "spool_count": "Spoler"
     },
@@ -591,7 +591,7 @@
   "notifications": {
     "deleteSuccess": "Sletning af {{resource}} var succesfuld(t)",
     "error": "Fejl (statuskode: {{statusCode}})",
-    "editError": "Fejl ved redigering af {{resource}} (statuskode:{{statusCode}}",
+    "editError": "Fejl ved redigering af {{resource}} (statuskode: {{statusCode}})",
     "undoable": "Du har {{seconds}} sekunder til at fortryde.",
     "importProgress": "Importerer: {{processed}}/{{total}}",
     "createError": "Der var en fejl under oprettelsen af {{resource}} (statuskode: {{statusCode}})",
@@ -628,10 +628,10 @@
   "help": {
     "resources": {
       "vendor": "Firmaerne, der laver filamentet.",
-      "filament": "Filamentmærker. De har værdier, såsom Navn, Materiale, Farve, Diameter, m.m.",
+      "filament": "Filamentmærker. De har egenskaber, såsom Navn, Materiale, Farve, Diameter, m.m.",
       "spool": "Individuelle fysiske spoler af et specifikt filament."
     },
-    "description": "<title>Hjælp</title><p>Her er nogle tips til at komme i gang.</p><p>Spoolman indeholder 3 forskellige typer data:</p><itemsHelp/><p>For at tilføje en ny spole til databasen, skal du starte med at oprette et <filamentCreateLink>Filamentobjekt</filamentCreateLink>. Når dette er gjort, fortsættes der ved at oprette et <spoolCreateLink>Spoleobjekt</spoolCreateLink> for den specifikke spole. Hvis du har flere spoler af samme filament, opretter du blot et nyt spole objekt og genbruger samme filament. </p><p> Du har også mulighed for at oprette et <vendorCreateLink>Producentobjekt</vendorCreateLink> for firmaet, der producerer filamentet, hvis du ønsker at holde styr på den information.</p><p>Du har mulighed for at linke andre 3D-printertjenester til Spoolman, Som f.eks. Moonraker. Dette giver mulighed for automatisk at opdatere og overvåge forbruget af filament for hvert print. Læs <readmeLink>Spoolman README</readmeLink> for information om opsætning af dette.</p>",
+    "description": "<title>Hjælp</title><p>Her er nogle tips til at komme i gang.</p><p>Spoolman indeholder 3 forskellige typer data:</p><itemsHelp/><p>For at tilføje en ny spole til databasen, skal du starte med at oprette et <filamentCreateLink>Filamentobjekt</filamentCreateLink>. Når dette er gjort, fortsættes der ved at oprette et <spoolCreateLink>Spoleobjekt</spoolCreateLink> for den specifikke spole. Hvis du har flere spoler af samme filament, opretter du blot et nyt spoleobjekt og genbruger samme filament. </p><p> Du har også mulighed for at oprette et <vendorCreateLink>Producentobjekt</vendorCreateLink> for firmaet, der producerer filamentet, hvis du ønsker at holde styr på den information.</p><p>Du har mulighed for at linke andre 3D-printertjenester til Spoolman, som f.eks. Moonraker. Dette giver mulighed for automatisk at opdatere og overvåge forbruget af filament for hvert print. Læs <readmeLink>Spoolman README</readmeLink> for information om opsætning af dette.</p>",
     "help": "Hjælp"
   },
   "kofi": "Donér på Ko-fi",
@@ -729,7 +729,7 @@
       "description": "<p>Her kan du tilføje ekstra brugerdefinerede felter til dine poster.</p><p>Når et felt er tilføjet, kan du ikke ændre dets nøgle eller type, og for felter af typen valg kan du ikke fjerne valgmuligheder eller ændre multi-valgstatus. Hvis du fjerner et felt, slettes de tilknyttede data for alle poster.</p><p>Nøglen er det, andre programmer læser/skriver dataene som, så hvis dit brugerdefinerede felt skal integreres med et tredjepartsprogram, skal du sørge for at indstille den korrekt. Standardværdien anvendes kun på nye poster.</p><p>Ekstra felter kan vises og sorteres i tabelvisningerne. Valg- og boolean-felter har også filtermuligheder dér, og alle ekstra felttyper understøtter filtrering efter tomme værdier.</p><p>For spolefelter kan du aktivere \"Kopiér fra filament\", så en ny spole ved oprettelsen arver værdien fra et filamentfelt med samme nøgle (medmindre spolen selv angiver en værdi).</p><p>Et \"Link\"-felt gemmer en kort værdi pr. post (f.eks. et produktnummer) og gør den til et klikbart link ved hjælp af Link-URL-skabelonen — indsæt {} der, hvor værdien skal stå, f.eks. https://www.amazon.com/dp/{}.</p>",
       "boolean_true": "Ja",
       "boolean_false": "Nej",
-      "non_unique_key_error": "Nøglen skal være Unik.",
+      "non_unique_key_error": "Nøglen skal være unik.",
       "key_not_changed": "Ændr venligst nøglen til noget andet.",
       "delete_confirm": "Slet felt: {{name}}?",
       "delete_confirm_description": "Dette vil slette feltet samt alle associerede data for alle poster."
@@ -896,7 +896,7 @@
   },
   "locations": {
     "error_empty": "Navn må ikke være tomt",
-    "error_exists": "Placering findes allerede",
+    "error_exists": "Lokation findes allerede",
     "locations": "Lokationer",
     "new_location": "Ny lokation",
     "no_location": "Ingen lokation",
@@ -945,7 +945,7 @@
       "steps_count": "{{count}} trin registreret",
       "no_steps": "Ingen trinresultater registreret endnu.",
       "printer_name": "Printernavn",
-      "nozzle_diameter": "Dyse diameter (mm)",
+      "nozzle_diameter": "Dysediameter (mm)",
       "notes": "Noter",
       "status": "Status",
       "step_type": "Kalibreringstrin",
@@ -1020,7 +1020,7 @@
     "step_status": {
       "skipped": "Sprunget over",
       "done": "✓ Udført",
-      "incomplete": "Ufuldstændig"
+      "incomplete": "Ufuldstændigt"
     },
     "confidence_display": "{{level}} sikkerhed",
     "confirm_delete": {
@@ -1185,7 +1185,7 @@
     "tag_diameter": "Diameter",
     "tag_weight": "Vægt",
     "tag_nozzle_temp": "Dyse temp",
-    "tag_bed_temp": "Bed temp",
+    "tag_bed_temp": "Plade temp",
     "mode_browser": "Browser",
     "mode_server": "Server",
     "unsupported": "NFC understøttes ikke i denne browser.",
@@ -1362,9 +1362,9 @@
       "weight_g": "Vægt (g)",
       "diameter_mm": "Diameter (mm)",
       "extruder_temp_c": "Dyse (C)",
-      "bed_temp_c": "Bed (C)",
+      "bed_temp_c": "Plade (C)",
       "lot_nr": "Parti",
-      "article_number": "Artikelnr.",
+      "article_number": "Produktnummer",
       "confidence": "Sikkerhed"
     }
   },

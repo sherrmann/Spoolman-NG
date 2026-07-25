@@ -18,7 +18,7 @@
       "showFilamentComment": "Commentaire sur le filament",
       "button": "Imprimer des étiquettes",
       "showQRCode": "Imprimer le QR Code",
-      "templateHelp": "Utilisez {} pour insérer les valeurs de l'objet bobine sous forme de texte. Par exemple, {id} sera remplacé par l'identifiant de la bobine ou {filament.material} sera remplacé par le matériau de la bobine. Si une variable n'existe pas elle sera remplacée par \"?\". Un deuxième jeu d'accolade peut empêcher cet affichage. De plus si une accolade est utilisée dans une autre tout le texte présenta dans la première accolade sera retiré si la variable est manquante. Par exemple {N° lot : {lot_nr}} sera affiché uniquement si la bobine a un numéro de lot. Entourez le texte d'un double astérisque ** pour le mettre en gras. Cliquez sur le bouton pour afficher une liste de toutes les balises disponibles.",
+      "templateHelp": "Utilisez {} pour insérer les valeurs de l'objet bobine sous forme de texte. Par exemple, {id} sera remplacé par l'identifiant de la bobine ou {filament.material} sera remplacé par le matériau de la bobine. Si une variable n'existe pas elle sera remplacée par \"?\". Un deuxième jeu d'accolade peut empêcher cet affichage. De plus, tout texte présent entre les jeux d'accolades sera retiré si la valeur est manquante. Par exemple {N° lot : {lot_nr}} sera affiché uniquement si la bobine a un numéro de lot. Entourez le texte d'un double astérisque ** pour le mettre en gras. Cliquez sur le bouton pour afficher une liste de toutes les balises disponibles.",
       "template": "Modèle d'étiquette",
       "showQRCodeMode": {
         "no": "Non",
@@ -26,7 +26,7 @@
         "withIcon": "Avec icône"
       },
       "useHTTPUrl": {
-        "tooltip": "Utilise un lien privé qui ne marchera que si il est scanné depuis Spoolman (défaut). URL utilises soit l'URL spécifiée dans les options soit l'URL de la page actuelle si ce n'est pas défini.",
+        "tooltip": "Utilise un lien privé qui ne marchera que s'il est scanné depuis Spoolman (défaut). L'URL utilise soit l'URL de base spécifiée dans les options, soit l'URL de la page actuelle si elle n'est pas définie.",
         "options": {
           "default": "Défaut",
           "url": "URL"
@@ -89,7 +89,7 @@
         "border": "Bordure"
       },
       "printerMarginTop": "Zone de sécurité en haut",
-      "customSize": "Personnaliser",
+      "customSize": "Personnalisé",
       "title": "Impression",
       "contentSettings": "Paramètres du contenu",
       "marginRight": "Marge droite",
@@ -118,7 +118,7 @@
       "deleteSettingsConfirm": "Êtes-vous sûr de vouloir supprimer ce préréglage ?",
       "settingsName": "Nom du préréglage",
       "saveAsImage": "Enregistrer comme image",
-      "itemCopies": "Nombre d'articles",
+      "itemCopies": "Copies par article",
       "duplicateSettings": "Dupliquer",
       "saveSetting": "Enregistrer les préréglages",
       "pageSizeMode": {
@@ -180,13 +180,13 @@
     "vendor": {
       "create": "Créer le fabricant | Spoolman",
       "clone": "#{{id}} Cloner le fabricant | Spoolman",
-      "edit": "#{{id}} Éditer le fabricant| Spoolman",
+      "edit": "#{{id}} Éditer le fabricant | Spoolman",
       "list": "Fabricants | Spoolman",
       "show": "#{{id}} Afficher le fabricant | Spoolman"
     },
     "default": "Spoolman",
     "spool": {
-      "edit": "#{{id}} Editer la Bobine | Spoolman",
+      "edit": "#{{id}} Éditer la Bobine | Spoolman",
       "list": "Bobines | Spoolman",
       "create": "Créer la Bobine | Spoolman",
       "show": "#{{id}} Afficher la Bobine | Spoolman",
@@ -195,9 +195,9 @@
     "filament": {
       "list": "Filaments | Spoolman",
       "show": "#{{id}} Afficher le filament | Spoolman",
-      "clone": "#{{id}} Cloner le Filament | Spoolman",
+      "clone": "#{{id}} Cloner le filament | Spoolman",
       "create": "Créer le filament | Spoolman",
-      "edit": "#{{id}} Editer le Filament | Spoolman"
+      "edit": "#{{id}} Éditer le filament | Spoolman"
     },
     "suffix": " | Spoolman",
     "home": {
@@ -244,7 +244,7 @@
     "titles": {
       "archive": "Archiver la bobine",
       "show": "Afficher la bobine",
-      "edit": "Editer la bobine",
+      "edit": "Éditer la bobine",
       "create": "Créer une bobine",
       "clone": "Cloner une bobine",
       "list": "Bobines",
@@ -274,7 +274,7 @@
     },
     "form": {
       "spool_updated": "Cette bobine a été mise à jour par quelqu'un/quelque chose depuis la dernière ouverture de la page. Enregistrer écrasera ces changements !",
-      "new_location_prompt": "Entrer une nouvelle localisation",
+      "new_location_prompt": "Entrer un nouvel emplacement",
       "measurement_type": {
         "length": "Longueur",
         "weight": "Poids"
@@ -338,7 +338,7 @@
     },
     "usage_history": {
       "title": "Historique d'utilisation",
-      "time": "Date",
+      "time": "Date et heure",
       "type": "Type",
       "change": "Variation",
       "comment": "Commentaire",
@@ -372,10 +372,10 @@
     "show": "Voir",
     "filter": "Filtre",
     "cancel": "Abandonner",
-    "edit": "Editer",
+    "edit": "Éditer",
     "showArchived": "Afficher les archives",
     "archive": "Archiver",
-    "confirm": "Êtes-vous sur ?",
+    "confirm": "Êtes-vous sûr ?",
     "delete": "Supprimer",
     "undo": "Annuler",
     "import": "Importer",
@@ -387,7 +387,7 @@
     "unArchive": "Désarchiver",
     "clone": "Cloner",
     "clear": "Effacer",
-    "saveAndAdd": "Sauvegarder et ajouter",
+    "saveAndAdd": "Enregistrer et ajouter",
     "continue": "Continuer",
     "search": "Rechercher",
     "resetUsage": "Réinitialiser l'utilisation",
@@ -457,7 +457,7 @@
       "clone": "Cloner un filament",
       "show": "Afficher le filament",
       "create": "Créer un filament",
-      "edit": "Editer le filament",
+      "edit": "Éditer le filament",
       "list": "Filaments",
       "show_title": "[Filament #{{id}}] {{name}}"
     },
@@ -559,7 +559,7 @@
     "clone": "Cloner",
     "list": "Liste",
     "show": "Voir",
-    "edit": "Editer"
+    "edit": "Éditer"
   },
   "scanner": {
     "title": "Scanner de code QR",
@@ -576,14 +576,14 @@
     "camera_n": "Appareil photo {{n}}"
   },
   "notifications": {
-    "deleteSuccess": "Suppression réussie {{resource}}",
+    "deleteSuccess": "Suppression réussie de {{resource}}",
     "error": "Erreur (status code : {{statusCode}})",
     "editError": "Erreur lors de l'édition {{resource}} (status code : {{statusCode}})",
     "undoable": "Vous avez {{seconds}} secondes pour annuler.",
     "importProgress": "Importation : {{processed}}/{{total}}",
     "createError": "Une erreur s'est produite lors de la création de {{resource}} (status code : {{statusCode}})",
     "success": "Réussite",
-    "editSuccess": "Édité avec succès {{resource}}",
+    "editSuccess": "Modification réussie de {{resource}}",
     "deleteError": "Erreur lors de la suppression de {{resource}} (status code : {{statusCode}})",
     "createSuccess": "Création réussie de {{resource}}",
     "saveSuccessful": "Sauvegarde réussie !",
@@ -598,7 +598,7 @@
       "clone": "Cloner un fabricant",
       "create": "Créer un fabricant",
       "list": "Fabricants",
-      "show_title": "[#{{id}} fabricant] {{name}}",
+      "show_title": "[Fabricant #{{id}}] {{name}}",
       "view_spools": "Voir les bobines"
     },
     "fields": {
@@ -613,7 +613,7 @@
     },
     "vendor": "Fabricants",
     "form": {
-      "vendor_updated": "Ce fabricant a été mis à jours par quelqu'un/quelque chose depuis que vous avez ouvert cette page. Enregistrer écrasera ces changements !",
+      "vendor_updated": "Ce fabricant a été mis à jour par quelqu'un/quelque chose depuis que vous avez ouvert cette page. Enregistrer écrasera ces changements !",
       "duplicate_name_warning": "Un fabricant portant ce nom existe déjà."
     },
     "fields_help": {
@@ -647,7 +647,7 @@
       "filament": "Marques de filament. Contient les propriétés comme le nom, le matériau, la couleur, le diamètre, etc.",
       "spool": "Les bobines physiques pour un filament spécifique."
     },
-    "description": "<title>Aide</title><p>Voici quelques informations pour commencer.</p><p>Spoolman garde 3 types d'informations différentes :</p><itemsHelp/><p>Pour ajouter une nouvelle bobine dans la base de données, commencez par créer un objet <filamentCreateLink>Filament</filamentCreateLink>. Une fois cela fait, créez un objet <spoolCreateLink>bobine</spoolCreateLink> pour cette bobine spécifique. Si vous achetez plus tard des bobines supplémentaires du même filament, créez simplement un objet bobine supplémentaire et réutilisez le même objet Filament.</p><p>En option, vous pouvez créer un <vendorCreateLink>Fabricant</vendorCreateLink> pour la société qui fabrique le filament si vous voulez garder une trace de cette information.</p><p>Vous avez l'option de connecter d'autres service d'impression 3D à Spoolman, comme Moonraker, pour qu'ils puissent suivre automatiquement votre utilisation de filament et mettre automatiquement à jour l'objet Bobine pour vous. Voir le <readmeLink>README Spoolman</readmeLink> pour avoir la marche à suivre pour le mettre en place.</p>",
+    "description": "<title>Aide</title><p>Voici quelques informations pour commencer.</p><p>Spoolman garde 3 types d'informations différentes :</p><itemsHelp/><p>Pour ajouter une nouvelle bobine dans la base de données, commencez par créer un objet <filamentCreateLink>Filament</filamentCreateLink>. Une fois cela fait, créez un objet <spoolCreateLink>Bobine</spoolCreateLink> pour cette bobine spécifique. Si vous achetez plus tard des bobines supplémentaires du même filament, créez simplement un objet Bobine supplémentaire et réutilisez le même objet Filament.</p><p>En option, vous pouvez créer un <vendorCreateLink>Fabricant</vendorCreateLink> pour la société qui fabrique le filament si vous voulez garder une trace de cette information.</p><p>Vous avez l'option de connecter d'autres service d'impression 3D à Spoolman, comme Moonraker, pour qu'ils puissent suivre automatiquement votre utilisation de filament et mettre automatiquement à jour l'objet Bobine pour vous. Voir le <readmeLink>README Spoolman</readmeLink> pour avoir la marche à suivre pour le mettre en place.</p>",
     "help": "Aide"
   },
   "kofi": "Me donner un pourboire sur Ko-fi",
@@ -656,7 +656,7 @@
     "welcome": "Bienvenue sur votre instance Spoolman !",
     "description": "Il semble que vous n'ayez pas encore ajouté de bobines. Consultez la <helpPageLink>page d'aide</helpPageLink> pour commencer.",
     "total_weight": "Stock total",
-    "total_value": "Valeur",
+    "total_value": "Valeur (est.)",
     "low_stock": "Stock faible",
     "all_stocked": "Toutes les bobines sont bien approvisionnées",
     "recently_used": "Utilisées récemment",
@@ -716,14 +716,14 @@
         "text": "Texte",
         "choice": "Choix",
         "integer": "Entier",
-        "float_range": "Plage décimal",
+        "float_range": "Plage décimale",
         "datetime": "Date et heure",
         "boolean": "Booléen",
         "integer_range": "Plage d'entier",
         "float": "Décimal",
         "link": "Lien"
       },
-      "tab": "Champs additionnel",
+      "tab": "Champs additionnels",
       "boolean_true": "Oui",
       "boolean_false": "Non",
       "non_unique_key_error": "La clé doit être unique.",
@@ -914,7 +914,7 @@
   "locations": {
     "locations": "Emplacements",
     "new_location": "Créer un emplacement",
-    "no_location": "Pas de localisation",
+    "no_location": "Aucun emplacement",
     "no_locations_help": "Cette page vous permet d'organiser vos bobines par lieu, ajoutez une bobine pour commencer !",
     "error_empty": "Le nom ne peut pas être vide",
     "error_exists": "L'emplacement existe déjà",

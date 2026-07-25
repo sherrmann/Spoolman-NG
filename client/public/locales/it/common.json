@@ -18,7 +18,7 @@
       "showFilamentComment": "Note Aggiuntive Filamento",
       "button": "Stampa etichette",
       "template": "Modello di etichetta",
-      "templateHelp": "Utilizza {} per inserire i valori della bobina nel testo. Ad esempio, {id} verrà sostituito con l'id della bobina, oppure {filament.material} verrà sostituito con il materiale della bobina. Racchiudi il testo con un doppio asterisco ** per renderlo in grassetto. Fai clic sul pulsante per visualizzare un elenco di tutte le etichette disponibili.",
+      "templateHelp": "Utilizza {} per inserire i valori della bobina nel testo. Ad esempio, {id} verrà sostituito con l'id della bobina, oppure {filament.material} verrà sostituito con il materiale della bobina. Se un valore è mancante, verrà sostituito con \"?\". Un secondo set di {} può essere utilizzato per rimuoverlo. Inoltre, qualsiasi testo tra i set di {} verrà rimosso se il valore è mancante. Ad esempio, {Lotto Nr: {lot_nr}} mostrerà l'etichetta solo se la bobina ha un numero di lotto. Racchiudi il testo con un doppio asterisco ** per renderlo in grassetto. Aggiungi un formato dopo i due punti: i numeri come {remaining_weight:0.0} vengono arrotondati a quel numero di decimali, e le date come {registered:YYYY-MM-DD HH:mm} formattano la data/ora nel tuo fuso orario locale. Inizia una riga con {size:1.5} per scalare l'intera riga (qui 1.5×). Fai clic sul pulsante per visualizzare un elenco di tutte le etichette disponibili.",
       "showQRCodeMode": {
         "no": "No",
         "simple": "Semplice",
@@ -151,7 +151,7 @@
       "selectedTotal_other": "{{count}} bobine selezionate",
       "description": "Seleziona le bobine per le quali stampare le etichette.",
       "showArchived": "Mostra Archiviati",
-      "title": "Seleziona Bobina",
+      "title": "Seleziona Bobine",
       "selectAll": "Seleziona/Deseleziona Tutti",
       "noSpoolsSelected": "Non hai selezionato alcuna bobina.",
       "hidePrinted": "Nascondi già stampate",
@@ -179,7 +179,7 @@
   "documentTitle": {
     "vendor": {
       "create": "Crea Produttore | Spoolman",
-      "clone": "#{{id}} Duplica Produttore | Spoolman",
+      "clone": "#{{id}} Clona Produttore | Spoolman",
       "edit": "#{{id}} Modifica Produttore | Spoolman",
       "list": "Produttori | Spoolman",
       "show": "#{{id}} Mostra Produttore | Spoolman"
@@ -207,7 +207,7 @@
       "list": "Aiuto | Spoolman"
     },
     "locations": {
-      "list": "Posizione | Spoolman"
+      "list": "Posizioni | Spoolman"
     }
   },
   "spool": {
@@ -371,7 +371,7 @@
     "save": "Salva",
     "show": "Mostra",
     "filter": "Filtro",
-    "cancel": "Cancella",
+    "cancel": "Annulla",
     "edit": "Modifica",
     "showArchived": "Mostra Archiviati",
     "archive": "Archivia",
@@ -379,7 +379,7 @@
     "delete": "Elimina",
     "undo": "Annulla",
     "import": "Importa",
-    "logout": "Disconnettersi",
+    "logout": "Disconnettiti",
     "refresh": "Aggiorna",
     "notAccessTitle": "Non hai i permessi per accedere",
     "hideArchived": "Nascondi Archiviati",
@@ -564,9 +564,9 @@
   "vendor": {
     "titles": {
       "show_title": "[Produttore #{{id}}] {{name}}",
-      "show": "Mostra Produttori",
+      "show": "Mostra Produttore",
       "edit": "Modifica Produttore",
-      "clone": "Duplica Produttore",
+      "clone": "Clona Produttore",
       "create": "Crea Produttore",
       "list": "Produttori",
       "view_spools": "Mostra bobine"
@@ -594,11 +594,11 @@
     "title": "QR-Code Scanner",
     "error": {
       "insecureContext": "La pagina non è disponibile tramite HTTPS.",
-      "notReadable": "La fotocamera non riesce a leggere.",
+      "notReadable": "Non è possibile leggere la fotocamera.",
       "notAllowed": "Non hai accesso alla fotocamera.",
       "unknown": "Si è verificato un errore. ({{error}})",
       "notFound": "Nessuna fotocamera rilevata.",
-      "streamApiNotSupported": "il browser non supporta le API MediaStream."
+      "streamApiNotSupported": "Il browser non supporta le API MediaStream."
     },
     "description": "Scansiona uno Spoolman QR-Code per visualizzare i dettagli della bobina.",
     "camera_auto": "Fotocamera automatica",
@@ -613,14 +613,14 @@
     "createError": "C'è stato un errore nella creazione di {{resource}} (status code: {{statusCode}})",
     "success": "Riuscito",
     "editSuccess": "{{resource}} modificata con successo",
-    "deleteError": "Error nella cancellazione di {{resource}} (status code: {{statusCode}})",
+    "deleteError": "Errore nella cancellazione di {{resource}} (status code: {{statusCode}})",
     "createSuccess": "{{resource}} creata correttamente",
     "saveSuccessful": "Salvataggio completato!",
     "validationError": "Errore di convalida: {{error}}"
   },
   "no": "No",
   "unknown": "Sconosciuto",
-  "yes": "Si",
+  "yes": "Sì",
   "version": "Versione",
   "table": {
     "actions": "Azioni",
@@ -642,7 +642,7 @@
     "clone": "Clona"
   },
   "help": {
-    "description": "<title>Aiuto</title><p>Ecco alcuni suggerimenti per iniziare.</p><p>Spoolman può contenere 3 diversi tipi di dati:</p><itemsHelp/><p>Per aggiungere una nuova bobina al database, inizia creando una sezione <filamentCreateLink>filamento</filamentCreateLink>. Fatto ciò, procedi con la creazione di una sezione <spoolCreateLink>bobina</spoolCreateLink> per la questa specifica bobina. Se in seguito si acquisiscono altre bobine dello stesso filamento, sarà sufficiente generare altre sezioni bobina e riutilizzare la stessa sezione filamento.</p><p>Opzionalmente, si può anche creare una sezione <vendorCreateLink>produttore</vendorCreateLink> per l'azienda produttrice del filamento, se si desidera tenere traccia di tali informazioni.</p><p>È possibile collegare a Spoolman altri servizi per stampanti 3D, come Moonraker, che può monitorare l'utilizzo del filamento e aggiornare le sezioni Spool automaticamente. Fare riferimento al <readmeLink>README di Spoolman</readmeLink> per maggiori informazioni sulla configurazione.</p>",
+    "description": "<title>Aiuto</title><p>Ecco alcuni suggerimenti per iniziare.</p><p>Spoolman può contenere 3 diversi tipi di dati:</p><itemsHelp/><p>Per aggiungere una nuova bobina al database, inizia creando una sezione <filamentCreateLink>filamento</filamentCreateLink>. Fatto ciò, procedi con la creazione di una sezione <spoolCreateLink>bobina</spoolCreateLink> per questa specifica bobina. Se in seguito si acquisiscono altre bobine dello stesso filamento, sarà sufficiente generare altre sezioni bobina e riutilizzare la stessa sezione filamento.</p><p>Opzionalmente, si può anche creare una sezione <vendorCreateLink>produttore</vendorCreateLink> per l'azienda produttrice del filamento, se si desidera tenere traccia di tali informazioni.</p><p>È possibile collegare a Spoolman altri servizi per stampanti 3D, come Moonraker, che può monitorare l'utilizzo del filamento e aggiornare le sezioni Spool automaticamente. Fare riferimento al <readmeLink>README di Spoolman</readmeLink> per maggiori informazioni sulla configurazione.</p>",
     "resources": {
       "spool": "Bobine fisiche individuali di uno specifico filamento.",
       "filament": "Marche di filamento. Hanno proprietà come nome, materiale, colore, diametro e altro.",
@@ -654,9 +654,9 @@
   "home": {
     "home": "Home",
     "welcome": "Benvenuto nella tua istanza Spoolman!",
-    "description": "Sembra che tu non abbia ancora aggiunto alcuna bobina. Vai su <helpPageLink>Help page</helpPageLink> per ricevere assistenza su come iniziare.",
-    "total_weight": "Stock totale",
-    "total_value": "Valore",
+    "description": "Sembra che tu non abbia ancora aggiunto alcuna bobina. Vai alla <helpPageLink>pagina di Aiuto</helpPageLink> per ricevere assistenza su come iniziare.",
+    "total_weight": "Scorta totale",
+    "total_value": "Valore stimato",
     "low_stock": "Scorte basse",
     "all_stocked": "Tutte le bobine sono ben rifornite",
     "recently_used": "Usate di recente",
@@ -702,7 +702,7 @@
     "extra_fields": {
       "params": {
         "order": "Ordine",
-        "default_value": "Valore di Default",
+        "default_value": "Valore predefinito",
         "key": "Chiave",
         "name": "Nome",
         "field_type": "Tipo",
@@ -713,23 +713,23 @@
         "link_template": "URL del link"
       },
       "field_type": {
-        "text": "\"Testo\" per tipo campo extra",
+        "text": "Testo",
         "datetime": "Data e ora",
         "choice": "Scelta",
-        "float": "Decimali",
+        "float": "Decimale",
         "integer_range": "Intervallo di numeri interi",
         "float_range": "Intervallo decimali",
         "boolean": "Booleano",
-        "integer": "\"Intero\" per tipo campo extra, numero intero senza decimali",
+        "integer": "Intero",
         "link": "Link"
       },
       "choices_missing_error": "Non è possibile rimuovere le scelte. Mancano i seguenti elementi: {{choices}}",
       "non_unique_key_error": "La chiave deve essere univoca.",
       "key_not_changed": "Si prega di utilizzare una chiave diversa.",
-      "boolean_true": "Si",
+      "boolean_true": "Sì",
       "boolean_false": "No",
-      "delete_confirm": "Cancellare il campo {{name}}?",
-      "delete_confirm_description": "Questo eliminerà il campo e tutti i dati associati di tutte le selezioni.",
+      "delete_confirm": "Eliminare il campo {{name}}?",
+      "delete_confirm_description": "Questo eliminerà il campo e tutti i dati associati di tutte le entità.",
       "tab": "Campi extra",
       "description": "<p>Qui puoi aggiungere campi personalizzati extra alle tue entità.</p><p>Una volta aggiunto un campo, non puoi più modificarne la chiave o il tipo, e per i campi di tipo scelta non puoi rimuovere le scelte né modificare lo stato di scelta multipla. Se rimuovi un campo, i dati associati di tutte le entità verranno eliminati.</p><p>La chiave è il modo in cui gli altri programmi leggono/scrivono i dati, quindi se il campo personalizzato deve integrarsi con un programma di terze parti, assicurati di impostarla correttamente. Il valore predefinito viene applicato solo ai nuovi elementi.</p><p>I campi extra possono essere mostrati e ordinati nelle viste tabella. I campi di tipo scelta e booleano vi offrono anche opzioni di filtro, e tutti i tipi di campi extra supportano il filtro per valori vuoti.</p><p>Per i campi delle bobine, attiva \"Copia dal filamento\" per far ereditare a una nuova bobina, al momento della creazione, il valore di un campo del filamento con la stessa chiave (a meno che la bobina non ne imposti uno proprio).</p><p>Un campo \"Link\" memorizza un valore breve per elemento (ad es. un numero articolo) e lo trasforma in un link cliccabile usando il modello URL del link — metti {} dove va il valore, ad es. https://www.amazon.com/dp/{}.</p>"
     },

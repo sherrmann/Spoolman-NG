@@ -738,7 +738,7 @@
       },
       "unit_scaling": {
         "label": "Scale large units",
-        "tooltip": "Display large weights and lengths auto-scaled (e.g. 1.5 kg, 64.37 m) instead of raw grams/millimeters in the list and detail views. Stored values and the API are unaffected."
+        "tooltip": "Display large weights and lengths auto-scaled (e.g. 1.5 kg, 64.37 m) instead of raw grams/millimetres in the list and detail views. Stored values and the API are unaffected."
       }
     },
     "swatch": {
@@ -1144,7 +1144,7 @@
       "skip": "My printer handles this — skip it →"
     },
     "vfa": {
-      "artifact_speeds": "Artifact Speeds",
+      "artifact_speeds": "Artefact Speeds",
       "artifact_speeds_desc": "Print the VFA test tower and mark each speed where you observe VFA artefacts. Min and Max Avoidance Speed are auto-computed from this list.",
       "speed_placeholder": "Speed",
       "add_speed": "Add Speed"
@@ -1183,7 +1183,7 @@
         "description": "Reduce ghosting and ringing by applying resonance compensation. Measure the resonance frequency of your printer (accelerometer recommended, or use a visual ringing tower). Select the shaper type and frequencies that minimise artefacts, then enter them below."
       },
       "vfa": {
-        "title": "VFA (Vertical Fine Artifacts)",
+        "title": "VFA (Vertical Fine Artefacts)",
         "description": "Find the maximum print speed before vertical surface artefacts (VFA / ribbing) become visible. Print a speed-ramp test on a smooth-walled object and note the speed just before regular ribbing appears on the surface."
       }
     },

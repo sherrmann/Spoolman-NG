@@ -9,7 +9,7 @@
   "buttons": {
     "create": "Vytvořit",
     "save": "Uložit",
-    "logout": "Odhlášení",
+    "logout": "Odhlásit se",
     "delete": "Smazat",
     "edit": "Upravit",
     "cancel": "Zrušit",
@@ -26,7 +26,7 @@
     "hideArchived": "Skrýt archivované",
     "showArchived": "Zobrazit archivované",
     "notAccessTitle": "Nemáte oprávnění k přístupu",
-    "clearFilters": "Vypnout filtry",
+    "clearFilters": "Vymazat filtry",
     "saveAndAdd": "Uložit a přidat",
     "continue": "Pokračovat",
     "search": "Hledat",
@@ -45,11 +45,11 @@
     "error": "Chyba (kód chyby: {{statusCode}})",
     "undoable": "Máte {{seconds}} sekund na zrušení.",
     "createSuccess": "Úspěšně vytvořeno {{resource}}",
-    "createError": "Při vytváření došlo k chybě {{resource}} (status code: {{statusCode}})",
+    "createError": "Při vytváření došlo k chybě {{resource}} (kód chyby: {{statusCode}})",
     "deleteSuccess": "Úspěšně vymazáno {{resource}}",
-    "deleteError": "Chyba při odstranění {{resource}} (status code: {{statusCode}})",
+    "deleteError": "Chyba při odstranění {{resource}} (kód chyby: {{statusCode}})",
     "editSuccess": "Úspěšně upraveno {{resource}}",
-    "editError": "Chyba při úpravě {{resource}} (status code: {{statusCode}})",
+    "editError": "Chyba při úpravě {{resource}} (kód chyby: {{statusCode}})",
     "importProgress": "Importování: {{processed}}/{{total}}",
     "saveSuccessful": "Úspěšně uloženo!",
     "validationError": "Chyba ověření: {{error}}"
@@ -67,7 +67,7 @@
   },
   "printing": {
     "generic": {
-      "title": "Probíhá tisk",
+      "title": "Tisk",
       "description": "Níže uvedeným nastavením dosáhnete požadovaného rozložení tisku. Mějte na paměti, že tiskárny a váš operační systém mohou použít vlastní okraje a měřítka, takže možná budete muset provést několik pokusů a omylů, než bude vše správně nastaveno. Před tiskem na skutečné štítky si to vyzkoušejte na kousku běžného papíru.",
       "helpMargin": "Okraje by měly být nastaveny tak, aby odpovídaly papíru na štítky a tiskárně, jejich změna ovlivní velikost celé mřížky.",
       "helpPrinterMargin": "Bezpečná zóna by měla být nastavena tak, jak blízko okraje papíru může tiskárna tisknout, jejich změna neovlivní celou mřížku.",
@@ -78,7 +78,7 @@
       "customSize": "Vlastní",
       "dimensions": "Rozměry",
       "showBorder": "Zobrazit ohraničení",
-      "previewScale": "Náhled měřítka",
+      "previewScale": "Měřítko náhledu",
       "skipItems": "Vynechat položky",
       "contentSettings": "Nastavení obsahu",
       "layoutSettings": "Nastavení rozvržení",
@@ -90,8 +90,8 @@
       "marginBottom": "Dolní okraj",
       "printerMarginLeft": "Okraj tiskárny vlevo",
       "printerMarginRight": "Okraj tiskárny vpravo",
-      "printerMarginTop": "Okraj tiskárny horní",
-      "printerMarginBottom": "Okraj tiskárny dolní",
+      "printerMarginTop": "Okraj tiskárny nahoře",
+      "printerMarginBottom": "Okraj tiskárny dole",
       "borders": {
         "none": "Žádný",
         "border": "Ohraničení",
@@ -105,7 +105,7 @@
       "settingsName": "Název předvolby",
       "settings": "Předvolby",
       "deleteSettingsConfirm": "Opravdu chcete tuto předvolbu smazat?",
-      "duplicateSettings": "Duplikát",
+      "duplicateSettings": "Duplikovat",
       "saveSetting": "Uložit předvolby",
       "saveAsImage": "Uložit jako obrázek",
       "pageSizeMode": {
@@ -249,7 +249,7 @@
       "notAllowed": "Nemáte povolen přístup ke kameře.",
       "insecureContext": "Stránka se nezobrazuje přes protokol HTTPS.",
       "streamApiNotSupported": "Prohlížeč nepodporuje MediaStream API.",
-      "notReadable": "Kamera není čitelná.",
+      "notReadable": "Kameru se nepodařilo spustit.",
       "notFound": "Nebyla nalezena žádná kamera.",
       "unknown": "Došlo k neznámé chybě. ({{error}})"
     },
@@ -290,7 +290,7 @@
     },
     "fields_help": {
       "weight_to_use": "Vyberte, jakou hodnotu hmotnosti chcete zadat. Naměřená hmotnost je k dispozici pouze v případě, že je pro vybraný filament nastavena hmotnost cívky.",
-      "used_weight": "Kolik filamntu bylo z cívky spotřebováno. Na nové cívce by mělo být použito 0 g.",
+      "used_weight": "Kolik filamentu bylo z cívky spotřebováno. Na nové cívce by mělo být použito 0 g.",
       "remaining_weight": "Kolik filamentu zbývá na cívce. U nové cívky by to mělo odpovídat hmotnosti filamentu na cívce.",
       "measured_weight": "Jaká je hmotnost filamentu a cívky.",
       "location": "Kde se cívka nachází, pokud máte více míst, kde cívky skladujete.",
@@ -305,11 +305,11 @@
     },
     "titles": {
       "create": "Vytvořit cívku",
-      "clone": "Duplovat cívku",
+      "clone": "Duplikovat cívku",
       "edit": "Upravit cívku",
       "list": "Cívky",
       "show": "Zobrazit cívku",
-      "archive": "Archivní cívka",
+      "archive": "Archivovat cívku",
       "show_title": "[Cívka #{{id}}] {{name}}",
       "adjust": "Nastavení cívky filamentu"
     },
@@ -330,7 +330,7 @@
       "adjust_filament_value": "Spotřebované množství"
     },
     "formats": {
-      "last_used": "Naposledy použitý {{date}}"
+      "last_used": "Naposledy použitá {{date}}"
     },
     "custom_actions": "Akce",
     "bulk": {
@@ -457,7 +457,7 @@
       "name": "Název filamentu, aby se tento typ vlákna odlišil od ostatních filamentů od stejného výrobce. Měl by obsahovat například barvu.",
       "material": "Např. PLA, ABS, ASA, PETG, atd.",
       "price": "Cena celé cívky.",
-      "weight": "Hmotnost plného cívky filamentu (čistá hmotnost). Tato hmotnost by neměla zahrnovat hmotnost samotné cívky, ale pouze filamentu. Obvykle se uvádí na obalu.",
+      "weight": "Hmotnost plné cívky filamentu (čistá hmotnost). Tato hmotnost by neměla zahrnovat hmotnost samotné cívky, ale pouze filamentu. Obvykle se uvádí na obalu.",
       "spool_weight": "Hmotnost prázdné cívky. Slouží k určení naměřené hmotnosti cívky.",
       "article_number": "Např. EAN, UPC, atd.",
       "multi_color_direction": "Filamenty mohou mít více barev dvěma způsoby: buď koextruzí jako dvoubarevná vlákna s konzistentními více barvami, nebo podélnými změnami barev jako gradientní vlákna, která mění barvy podél cívky.",
@@ -589,7 +589,7 @@
       "view_spools": "Zobrazit cívky"
     },
     "form": {
-      "vendor_updated": "Od otevření této stránky byl tento prodejce někým/něčím aktualizován. Uložením se tyto změny přepíší!",
+      "vendor_updated": "Od otevření této stránky byl tento výrobce někým/něčím aktualizován. Uložením se tyto změny přepíší!",
       "duplicate_name_warning": "Výrobce s tímto názvem již existuje."
     },
     "fields_help": {
@@ -612,10 +612,10 @@
     "suffix": " | Spoolman",
     "filament": {
       "list": "Filamenty | Spoolman",
-      "show": "#{{id}} Zobrazit Filament | Spoolman",
-      "edit": "#{{id}} Upravit Filament | Spoolman",
-      "create": "Vytvořit Filament | Spoolman",
-      "clone": "#{{id}} Duplikovat Filament | Spoolman"
+      "show": "#{{id}} Zobrazit filament | Spoolman",
+      "edit": "#{{id}} Upravit filament | Spoolman",
+      "create": "Vytvořit filament | Spoolman",
+      "clone": "#{{id}} Duplikovat filament | Spoolman"
     },
     "spool": {
       "list": "Cívky | Spoolman",
@@ -647,7 +647,7 @@
       "filament": "Značky vláken. Mají vlastnosti, jako je název, materiál, barva, průměr a další.",
       "spool": "Jednotlivé fyzické cívky určitého vlákna."
     },
-    "description": "<title>Nápověda</title><p>Zde je několik tipů, které vám pomohou začít.</p><p>Spoolman ukládá 3 různé typy dat:</p><itemsHelp/><p>Chcete-li do databáze přidat novou cívku, začněte vytvořením položky <filamentCreateLink>Filament</filamentCreateLink> . Jakmile to uděláte, vytvořte položku <spoolCreateLink>Cívka</spoolCreateLink> s popisem pro danou cívku. Pokud později získáte další cívky stejného filamentu, jednoduše vygenerujte další Cívku a použijte opět stejný Filament.</p><p>Volitelně můžete také vygenerovat <vendorCreateLink>Výrobce</vendorCreateLink> název společnosti vyrábějící filamenty, pokud si přejete tyto informace sledovat.</p><p>Máte možnost propojit se Spoolmanem další služby 3D tiskárny, například Moonraker, který může automaticky sledovat využití filamentu a aktualizovat dané Cívky za vás. Pokyny k nastavení najdete v <readmeLink>Spoolman README</readmeLink>.</p>",
+    "description": "<title>Nápověda</title><p>Zde je několik tipů, které vám pomohou začít.</p><p>Spoolman ukládá 3 různé typy dat:</p><itemsHelp/><p>Chcete-li do databáze přidat novou cívku, začněte vytvořením položky <filamentCreateLink>Filament</filamentCreateLink>. Jakmile to uděláte, vytvořte položku <spoolCreateLink>Cívka</spoolCreateLink> pro danou cívku. Pokud později získáte další cívky stejného filamentu, jednoduše vygenerujte další Cívku a použijte opět stejný Filament.</p><p>Volitelně můžete také vygenerovat objekt <vendorCreateLink>Výrobce</vendorCreateLink> pro společnost vyrábějící filament, pokud si přejete tyto informace sledovat.</p><p>Máte možnost propojit se Spoolmanem další služby 3D tiskárny, například Moonraker, který může automaticky sledovat využití filamentu a aktualizovat dané Cívky za vás. Pokyny k nastavení najdete v <readmeLink>Spoolman README</readmeLink>.</p>",
     "help": "Nápověda"
   },
   "kofi": "Příspěvek autorovi na Ko-fi",
@@ -704,7 +704,7 @@
         "key": "Klíč",
         "name": "Název",
         "field_type": "Typ",
-        "order": "Objednávka",
+        "order": "Pořadí",
         "default_value": "Výchozí hodnota",
         "multi_choice": "Výběr z více možností",
         "unit": "Jednotka",
@@ -716,10 +716,10 @@
         "text": "Text",
         "integer": "Celé číslo",
         "integer_range": "Rozsah celých čísel",
-        "float": "Plovoucí",
-        "datetime": "Datumčas",
+        "float": "Desetinné číslo",
+        "datetime": "Datum a čas",
         "choice": "Volba",
-        "float_range": "Plovoucí rozsah",
+        "float_range": "Rozsah desetinných čísel",
         "boolean": "Logická hodnota",
         "link": "Odkaz"
       },
@@ -743,7 +743,7 @@
         "tooltip": "Základní adresa URL, která se má použít při generování funkcí, jako jsou QR kódy."
       },
       "round_prices": {
-        "label": "Zaokrouhlené ceny",
+        "label": "Zaokrouhlovat ceny",
         "tooltip": "Zaokrouhlete ceny na nejbližší celé číslo."
       },
       "unit_scaling": {
@@ -1118,7 +1118,7 @@
         "description": "Změřte, jak přesně vaše tiskárna reprodukuje rozměry detailů. Vytiskněte testovací model tolerance, změřte cílové detaily posuvným měřítkem a zaznamenejte odchylku. Výsledek použijte v nastavení rozměrové přesnosti / kompenzace XY vašeho sliceru."
       },
       "cornering": {
-        "title": "Cornering",
+        "title": "Zatáčení",
         "description": "Doladěním chování v rozích vyvážíte rychlost tisku proti zvonění (ringing) a artefaktům při změnách směru. Použijte Junction Deviation (Marlin 2.x / RepRapFirmware), klasický Jerk (starší Marlin) nebo Square Corner Velocity (Klipper). Vytiskněte testovací vzor pro rohy a snižujte hodnotu, dokud zvonění nezmizí."
       },
       "input_shaping": {
@@ -1363,7 +1363,7 @@
   },
   "intake": {
     "hint": "Vyfotografujte štítek nebo krabici cívky, nebo vyberte existující fotografii.",
-    "select_photo": "Vybrat nebo vyfotit fotografii",
+    "select_photo": "Vybrat nebo vyfotit",
     "extracting": "Čtení štítku...",
     "in_library": "ve vaší knihovně, přidá cívku",
     "from_catalog": "SpoolmanDB, vytvoří filament a cívku",

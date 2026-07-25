@@ -20,10 +20,10 @@
     "clear": "Išvalyti",
     "refresh": "Atnaujinti",
     "show": "Rodyti",
-    "undo": "Gražinti",
+    "undo": "Grąžinti",
     "import": "Importuoti",
     "clone": "Klonuoti",
-    "archive": "Archyvas",
+    "archive": "Archyvuoti",
     "unArchive": "Išarchyvuoti",
     "hideArchived": "Paslėpti archyvuotus",
     "showArchived": "Rodyti archyvuotus",
@@ -47,11 +47,11 @@
     "createSuccess": "Sėkmingai sukurta {{resource}}",
     "createError": "Kūrimo klaida {{resource}} (kodas: {{statusCode}})",
     "deleteSuccess": "Sėkmingai ištrinta {{resource}}",
-    "deleteError": "Tkaida trinant {{resource}} (kodas: {{statusCode}})",
+    "deleteError": "Klaida trinant {{resource}} (kodas: {{statusCode}})",
     "editSuccess": "Sėkmingai redaguota {{resource}}",
     "editError": "Redagavimo klaida {{resource}} (kodas: {{statusCode}})",
     "importProgress": "Importuojama: {{processed}}/{{total}}",
-    "saveSuccessful": "Įrašytaa sėkmingai!",
+    "saveSuccessful": "Įrašyta sėkmingai!",
     "validationError": "Tikrinimo klaida: {{error}}"
   },
   "kofi": "Paremk mane Ko-fi",
@@ -64,7 +64,7 @@
     "clone": "Klonuoti"
   },
   "dashboard": {
-    "title": "Darbastalis"
+    "title": "Suvestinė"
   },
   "printing": {
     "generic": {
@@ -78,7 +78,7 @@
       "paperSize": "Popieriaus dydis",
       "customSize": "Tinkintas",
       "dimensions": "Matmenys",
-      "showBorder": "Rodyti paraštes",
+      "showBorder": "Rodyti rėmelį",
       "previewScale": "Peržiūros mastelis",
       "skipItems": "Praleisti elementus",
       "itemCopies": "Elemento kopijos",
@@ -96,7 +96,7 @@
       "printerMarginBottom": "Saugi zona apačioje",
       "borders": {
         "none": "Nėra",
-        "border": "Paraštė",
+        "border": "Rėmelis",
         "grid": "Tinklelis"
       },
       "settings": "Išankstiniai nustatymai",
@@ -201,7 +201,7 @@
       }
     },
     "spoolSelect": {
-      "title": "Pasirinkite ritę",
+      "title": "Pasirinkite rites",
       "description": "Pasirinkite rites, kurioms norite spausdinti etiketes.",
       "showArchived": "Rodyti archyvuotus",
       "noSpoolsSelected": "Nepasirinkote jokių ričių.",
@@ -280,8 +280,8 @@
     "fields_help": {
       "price": "Pilnos ritės kaina. Jei nenustatyta, bus laikoma, kad kaina yra pačios gijos kaina.",
       "weight_to_use": "Pasirinkite, kokią svorio vertę įvesti. Išmatuotas svoris galimas tik tuo atveju, jei pasirinktai kaitinimo medžiagai nustatytas ritės svoris.",
-      "used_weight": "Kiek plastiko buvo sunaudota iš ritės. Naujoje ritėje turėtų būti sunaudota 0 g.",
-      "remaining_weight": "Kiek gijos liko ant ritės. Naujos ritės svoris turėtų atitikti ritės svorį.",
+      "used_weight": "Kiek gijos buvo sunaudota iš ritės. Naujoje ritėje turėtų būti sunaudota 0 g.",
+      "remaining_weight": "Kiek gijos liko ant ritės. Naujai ritei ši reikšmė turėtų atitikti gijos svorį.",
       "measured_weight": "Kiek sveria gija ir ritė.",
       "initial_weight": "Pradinis gijos svoris ant ritės (grynasis svoris). Jei nenustatytas, bus naudojamas gijos objekto svoris.",
       "spool_weight": "Tuščios ritės svoris. Palikite tuščią, jei norite naudoti vertę, nurodytą ant gijos arba gamintojo.",
@@ -308,7 +308,7 @@
         "weight": "Svoris"
       },
       "measurement_type_label": "Matavimo tipas",
-      "adjust_filament_help": "Čia galite tiesiogiai pridėti arba atimti giją iš ritės. Teigiama vertė sunaudos giją, neigiama – jį pridės.",
+      "adjust_filament_help": "Čia galite tiesiogiai pridėti arba atimti giją iš ritės. Teigiama vertė sunaudos giją, neigiama – ją pridės.",
       "adjust_filament_value": "Suvartoti kiekį",
       "new_location_prompt": "Įveskite naują vietą",
       "spool_updated": "Šią ritę kažkas kitas atnaujino nuo tada, kai atidarėte šį puslapį. Išsaugojus šie pakeitimai bus perrašyti!"
@@ -449,7 +449,7 @@
       "weight": "Pilnos ritės gijos svoris (grynasis svoris). Į šį skaičių neturėtų būti įtrauktas pačios ritės svoris, tik gijos svoris. Tai paprastai nurodoma ant pakuotės.",
       "spool_weight": "Tuščios ritės svoris. Naudojamas išmatuotam ritės svoriui nustatyti.",
       "article_number": "Pvz. EAN, UPC, ir tt.",
-      "multi_color_direction": "Gijos turėti kelias spalvas dviem būdais: arba dėl koekstruzijos, kaip dviejų spalvų gijos su nuosekliomis daugiaspalvėmis spalvomis, arba dėl išilginių spalvų pokyčių, kaip gradientinės gijos, kurios keičia spalvas išilgai ritės.",
+      "multi_color_direction": "Gijos gali turėti kelias spalvas dviem būdais: arba dėl koekstruzijos, kaip dviejų spalvų gijos su nuosekliomis daugiaspalvėmis spalvomis, arba dėl išilginių spalvų pokyčių, kaip gradientinės gijos, kurios keičia spalvas išilgai ritės.",
       "low_stock_threshold": "Pažymėti šią giją kaip užsakytiną, kai bendras likęs visų jos ričių svoris nukrenta žemiau šio gramų skaičiaus.",
       "reserve_count": "Neatidarytų atsarginių ričių, kurias laikote atsargoje, skaičius — sekamas nekuriant ritės kiekvienai iš jų.",
       "settings_extruder_temp_range": "Gamintojo rekomenduojamas ekstruderio temperatūros intervalas (min.–maks.). Neprivaloma; palikite tuščią, jei turite tik vieną reikšmę.",
@@ -457,11 +457,11 @@
       "image": "Nuotrauka, pagal kurią atpažinti šią giją — pvz., ritės ar parduotuvės skelbimo nuotrauka. Prieš įkeliant sumažinama naršyklėje; metaduomenys, tokie kaip GPS vieta, pašalinami."
     },
     "titles": {
-      "create": "Kirti giją",
+      "create": "Sukurti giją",
       "clone": "Klonuoti giją",
       "edit": "Redaguoti giją",
       "list": "Gijos",
-      "show": "Rodyti gijas",
+      "show": "Rodyti giją",
       "show_title": "[Gija #{{id}}] {{name}}"
     },
     "form": {
@@ -576,7 +576,7 @@
       "clone": "Klonuoti gamintoją",
       "edit": "Redaguoti gamintoją",
       "list": "Gamintojai",
-      "show": "Rodyti gamintojus",
+      "show": "Rodyti gamintoją",
       "show_title": "[Gamintojas #{{id}}] {{name}}",
       "view_spools": "Rodyti rites"
     },
@@ -590,7 +590,7 @@
     "welcome": "Sveiki atvykę į savo Spoolman!",
     "description": "Panašu, kad dar nepridėjote jokių ričių. Norėdami gauti pagalbos, kaip pradėti, žr. <helpPageLink>pagalbos puslapį</helpPageLink>.",
     "total_weight": "Bendras kiekis",
-    "total_value": "Vertė",
+    "total_value": "Apytikslė vertė",
     "low_stock": "Mažas kiekis",
     "all_stocked": "Visos ritės gerai aprūpintos",
     "recently_used": "Neseniai naudotos",
@@ -638,7 +638,7 @@
       "spool": "Atskiros fizinės konkrečios gijos ritės.",
       "vendor": "Įmonės, gaminančios giją."
     },
-    "description": "<title>Pagalba</title><p>Štai keli patarimai, padėsiantys jums pradėti.</p><p>Spoolman saugo 3 skirtingų tipų duomenis:</p><itemsHelp/><p>Norėdami į duomenų bazę įtraukti naują ritę, pirmiausia sukurkite objektą <filamentCreateLink>Filament</filamentCreateLink>. Tai padarę, sukurkite objektą <spoolCreateLink>Ritė</spoolCreateLink> tai konkrečiai ritei. Jei vėliau įsigysite papildomų to paties siūlo ričių, tiesiog sugeneruokite papildomus „Ritės“ objektus ir pakartotinai naudokite tą patį „Gija“ objektą.</p><p>Pasirinktinai taip pat galite sugeneruoti objektą <vendorCreateLink>Gamintojo</vendorCreateLink> įmonei, gaminančiai giją, jei norite sekti šią informaciją.</p><p>Galite susieti su Spoolman kitas 3D spausdinimo paslaugas, pvz., „Moonraker“, kuri gali automatiškai stebėti siūlo naudojimą ir atnaujinti „Ritė“ objektus. Kaip tai nustatyti, žr. <readmeLink>„Spoolman README“</readmeLink>.</p>"
+    "description": "<title>Pagalba</title><p>Štai keli patarimai, padėsiantys jums pradėti.</p><p>Spoolman saugo 3 skirtingų tipų duomenis:</p><itemsHelp/><p>Norėdami į duomenų bazę įtraukti naują ritę, pirmiausia sukurkite objektą <filamentCreateLink>Gija</filamentCreateLink>. Tai padarę, sukurkite objektą <spoolCreateLink>Ritė</spoolCreateLink> tai konkrečiai ritei. Jei vėliau įsigysite papildomų tos pačios gijos ričių, tiesiog sugeneruokite papildomus „Ritės“ objektus ir pakartotinai naudokite tą patį „Gija“ objektą.</p><p>Pasirinktinai taip pat galite sugeneruoti objektą <vendorCreateLink>Gamintojo</vendorCreateLink> įmonei, gaminančiai giją, jei norite sekti šią informaciją.</p><p>Galite susieti su Spoolman kitas 3D spausdinimo paslaugas, pvz., „Moonraker“, kuri gali automatiškai stebėti gijos naudojimą ir atnaujinti „Ritė“ objektus. Kaip tai nustatyti, žr. <readmeLink>„Spoolman README“</readmeLink>.</p>"
   },
   "table": {
     "actions": "Veiksmai",
@@ -665,7 +665,7 @@
       },
       "round_prices": {
         "label": "Apvalinti kainas",
-        "tooltip": "Apvalinkite kainas iki artimiausio sveikojo skaičiaus."
+        "tooltip": "Apvalina kainas iki artimiausio sveikojo skaičiaus."
       },
       "unit_scaling": {
         "label": "Automatiškai parinkti vienetus",
@@ -689,7 +689,7 @@
       },
       "field_type": {
         "text": "Tekstas",
-        "integer": "Skaičius",
+        "integer": "Sveikasis skaičius",
         "integer_range": "Sveiki skaičiai",
         "float": "Realus skaičius",
         "float_range": "Realūs skaičiai",
@@ -701,7 +701,7 @@
       "boolean_true": "Taip",
       "boolean_false": "Ne",
       "choices_missing_error": "Negalite pašalinti pasirinkimų. Trūksta šių pasirinkimų: {{choices}}",
-      "non_unique_key_error": "Raktas turi būti unukalus.",
+      "non_unique_key_error": "Raktas turi būti unikalus.",
       "key_not_changed": "Prašome pakeisti raktą į ką nors kitą.",
       "delete_confirm": "Šalinti lauką {{name}}?",
       "delete_confirm_description": "Tai ištrins lauką ir visus susijusius duomenis visiems objektams."
@@ -875,7 +875,7 @@
       "list": "Pagalba | Spoolman"
     },
     "locations": {
-      "list": "Vieta | Spoolman"
+      "list": "Vietos | Spoolman"
     },
     "filament": {
       "list": "Gijos | Spoolman",
@@ -886,7 +886,7 @@
     },
     "spool": {
       "list": "Ritės | Spoolman",
-      "show": "#{{id}} Rodyti rites| Spoolman",
+      "show": "#{{id}} Rodyti ritę | Spoolman",
       "edit": "#{{id}} Redaguoti rites | Spoolman",
       "create": "Kurti ritę | Spoolman",
       "clone": "#{{id}} Klonuoti ritę | Spoolman"
@@ -1240,7 +1240,7 @@
   },
   "apiToken": {
     "title": "Reikalingas API prieigos raktas",
-    "help": "Šiam Spoolman serveriui reikalingas API prieigos raktas. Įveskite jį, kad tęstumėte; jis saugomas šioje naršyklėje.",
+    "help": "Šiam Spoolman egzemplioriui reikalingas API prieigos raktas. Įveskite jį, kad tęstumėte; jis saugomas šioje naršyklėje.",
     "placeholder": "API prieigos raktas",
     "submit": "Išsaugoti raktą"
   },
@@ -1465,7 +1465,7 @@
     "order_number_field": "Užsakymo numeris (nebūtina)",
     "url": "Užsakymo nuoroda (nebūtina)",
     "selected_count": "Pasirinkta {{count}}",
-    "arrive_title": "Kas atvyko iš užsakymo #{{number}}?",
+    "arrive_title": "Kas gauta iš užsakymo #{{number}}?",
     "arrive_subtitle": "Dalinis pristatymas padalija eilutę — likusi dalis lieka užsakyta.",
     "arrive_error": "Nepavyko pažymėti užsakymo kaip gauto. Bandykite dar kartą.",
     "arrived_check": "Gauta",

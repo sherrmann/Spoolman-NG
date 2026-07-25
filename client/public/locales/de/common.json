@@ -13,7 +13,7 @@
     "delete": "Löschen",
     "edit": "Bearbeiten",
     "cancel": "Abbrechen",
-    "confirm": "bist du sicher?",
+    "confirm": "Bist du sicher?",
     "filter": "Filter",
     "clear": "Bereinigen",
     "refresh": "Aktualisieren",
@@ -24,7 +24,7 @@
     "notAccessTitle": "Du hast keine Zugriffsberechtigung",
     "clearFilters": "Filter bereinigen",
     "showArchived": "Archivierte anzeigen",
-    "archive": "Archiv",
+    "archive": "Archivieren",
     "hideArchived": "Archivierte verstecken",
     "unArchive": "Archivieren rückgängig machen",
     "saveAndAdd": "Speichern und hinzufügen",
@@ -54,7 +54,7 @@
     "saveSuccessful": "Erfolgreich gespeichert!",
     "validationError": "Validierungsfehler: {{error}}"
   },
-  "loading": "Läd",
+  "loading": "Lädt",
   "version": "Version",
   "unknown": "Unbekannt",
   "yes": "Ja",
@@ -68,7 +68,7 @@
   "printing": {
     "generic": {
       "title": "Drucke",
-      "description": "Passe die Einstellungen unten an, um das gewünschte Drucklayout zu bekommen. Denk daran, dass Drucker und dein OS eigene Abstände und Skalierungen anwenden könnte, also musst du vielleicht ein bisschen ausprobieren, bis alles passt. Teste es auf einem normalen Blatt Papier, bevor du auf die richtigen Labels druckst.",
+      "description": "Passe die Einstellungen unten an, um das gewünschte Drucklayout zu bekommen. Denk daran, dass Drucker und dein OS eigene Abstände und Skalierungen anwenden könnten, also musst du vielleicht ein bisschen ausprobieren, bis alles passt. Teste es auf einem normalen Blatt Papier, bevor du auf die richtigen Labels druckst.",
       "helpMargin": "Abstände sollten so konfiguriert werden, dass sie zum Papier und Drucker passen. Änderungen beeinflussen die Abmessungen des gesamten Gitters.",
       "helpPrinterMargin": "Der Sicherheitsabstand sollte so eingestellt werden, wie dicht der Drucker am Rand des Papiers drucken kann. Änderungen beeinflussen nicht die Abmessungen des Gitters.",
       "print": "Drucken",
@@ -154,11 +154,11 @@
         "simple": "Einfach",
         "withIcon": "Mit Icon"
       },
-      "template": "Beschriftung Vorlagen",
-      "templateHelp": "Benutze {} um Texte der Spule dynamisch zu übernehmen. Zum Beispiel wird {id} durch die ID der Spule ersetzt, {filament.material} wird durch das Material der Spule ersetzt. Wenn ein Wert fehlt, wird er mit \"?\" ersetzt. Ein zweiter Satz von {} kann genutzt werden, um dieses zu umgehen. Zusätzlich wird jeglicher Text zwischen einem Satz von {} entfernt, wenn der Wert fehlt. Beispielsweise zeigt {Charge: {lot_nr}} nur das Label an, wenn eine Spule eine Charge definiert hat. Texte zwischen zwei Sternen ** werden fett dargestellt. Drücke auf den Knopf um alle verfügbaren Variablen zu sehen.",
-      "showQRCode": "Drucke QR Code",
+      "template": "Beschriftungsvorlagen",
+      "templateHelp": "Benutze {} um Texte der Spule dynamisch zu übernehmen. Zum Beispiel wird {id} durch die ID der Spule ersetzt, {filament.material} wird durch das Material der Spule ersetzt. Wenn ein Wert fehlt, wird er mit \"?\" ersetzt. Ein zweiter Satz von {} kann genutzt werden, um dieses zu umgehen. Zusätzlich wird jeglicher Text zwischen einem Satz von {} entfernt, wenn der Wert fehlt. Beispielsweise zeigt {Charge: {lot_nr}} nur das Label an, wenn eine Spule eine Charge definiert hat. Texte zwischen zwei Sternen ** werden fett dargestellt. Füge nach einem Doppelpunkt ein Format hinzu: Zahlen wie {remaining_weight:0.0} werden auf so viele Nachkommastellen gerundet, und Daten wie {registered:YYYY-MM-DD HH:mm} werden im Datums-/Zeitformat deiner lokalen Zeitzone dargestellt. Beginne eine Zeile mit {size:1.5}, um diese ganze Zeile zu skalieren (hier 1,5×). Drücke auf den Knopf um alle verfügbaren Variablen zu sehen.",
+      "showQRCode": "QR-Code drucken",
       "useHTTPUrl": {
-        "label": "QR Code Link",
+        "label": "QR-Code-Link",
         "tooltip": "Die Standardeinstellung verwendet einen proprietären Link, der nur funktioniert, wenn er mit der Scanfunktion von Spoolman gescannt wird. URL verwendet entweder die in den Einstellungen angegebene Basis-URL oder wenn diese nicht festgelegt ist die aktuelle Seiten-URL.",
         "options": {
           "default": "Standard",
@@ -291,10 +291,10 @@
       "measured_weight": "Gesamtgewicht von Spule und Filament.",
       "location": "Ort, an dem die Spule gelagert wird.",
       "lot_nr": "Chargennummer des Herstellers. Kann verwendet werden um gleichmäßige Farben zu garantieren, wenn mehrere Spulen verwendet werden.",
-      "price": "Preis einer vollen Spule. Falls nicht ausgewählt, wird der Preis des Filaments geschätzt.",
+      "price": "Preis einer vollen Spule. Falls nicht gesetzt, wird stattdessen der Preis des Filaments verwendet.",
       "initial_weight": "Das Anfangsgewicht des Filaments (Nettogewicht) auf der Spule. Wenn nicht gesetzt, dann wird der Wert aus dem Filament Objekt genutzt.",
       "spool_weight": "Das Gewicht der leeren Spule. Leer lassen um das Gewicht vom Hersteller zu nutzen.",
-      "external_filament": "Sie haben ein Filament aus der externen Datenbank ausgewählt. Ein Filamentobjekt (und möglicherweise ein Herstellerobjekt) wird automatisch erstellt, wenn Sie diese Spule erstellen. Dadurch können doppelte Filamentobjekte entstehen, wenn Sie bereits ein Filamentobjekt für dieses Filament erstellt haben.",
+      "external_filament": "Du hast ein Filament aus der externen Datenbank ausgewählt. Ein Filamentobjekt (und möglicherweise ein Herstellerobjekt) wird automatisch erstellt, wenn du diese Spule erstellst. Dadurch können doppelte Filamentobjekte entstehen, wenn du bereits ein Filamentobjekt für dieses Filament erstellt hast.",
       "printer": "Der Drucker, auf dem diese Spule aktuell geladen ist. Verwalte deine Drucker in den Einstellungen.",
       "diameter": "Gemessener Filamentdurchmesser dieser konkreten Spule, wird für Längenberechnungen verwendet. Leer lassen, um den Durchmesser des Filaments zu verwenden.",
       "color_hex": "Optionale Farbe für diese konkrete Spule, die die Farbe des Filaments überschreibt. Leeren, um die Farbe des Filaments zu verwenden."
@@ -307,7 +307,7 @@
       "show": "Spule anzeigen",
       "archive": "Spule archivieren",
       "show_title": "[Spule #{{id}}] {{name}}",
-      "adjust": "Filamentspulen Anpassung"
+      "adjust": "Spulenfilament anpassen"
     },
     "messages": {
       "archive": "Sicher das die Spule archiviert werden soll?",
@@ -392,7 +392,7 @@
       "selected_other": "{{count}} Spulen ausgewählt"
     },
     "nlSearch": {
-      "button": "AI",
+      "button": "KI",
       "title": "Suche in natürlicher Sprache",
       "placeholder": "z. B. schwarzes PETG in Regal B",
       "hint": "Wird als bearbeitbare Filter angewendet",
@@ -445,7 +445,7 @@
       "name": "Name des Filaments um es von anderen Typen des gleichen Herstellers zu unterscheiden. Sollte z.B. die Farbe enthalten.",
       "material": "z.B. PLA, ABS, PETG, etc.",
       "price": "Preis einer vollen Spule in der im System konfigurierten Währung.",
-      "weight": "Das Gewicht einer vollen Spule (Nettogewicht). Sollte nicht das Gewicht der Spule, sondern nur dass des Filaments auf der Spule enthalten. Entspricht normalerweise dem Gewicht, das auf der Spule aufgedruckt ist.",
+      "weight": "Das Gewicht einer vollen Spule (Nettogewicht). Sollte nicht das Gewicht der Spule, sondern nur das des Filaments auf der Spule enthalten. Entspricht normalerweise dem Gewicht, das auf der Spule aufgedruckt ist.",
       "spool_weight": "Das Gewicht der leeren Spule. Wird verwendet, um das gemessene Gewicht der Spule zu berechnen.",
       "article_number": "z.B. EAN, UPC o.Ä.",
       "multi_color_direction": "Filamente können auf zwei Arten mehrere Farben haben: entweder durch Koextrusion, wie bei zweifarbigen Filamenten mit konsistenten Mehrfarben, oder durch Farbveränderungen in Längsrichtung, wie bei Gradient-Filamenten, die die Farben entlang der Spule verschieben.",
@@ -466,7 +466,7 @@
     "form": {
       "filament_updated": "Dieses Filament wurde, seit dem die Seite geöffnet wurde, von jemand anderem/etwas anderem bearbeitet. Speichern wird diese Änderungen überschreiben!",
       "import_external": "Importieren von extern",
-      "import_external_description": "Wählen Sie ein Filament in der Liste aus, um dessen Details automatisch in das Formular zur Filamenterstellung einzutragen. Dadurch werden alle Daten, die Sie in das Formular eingegeben haben, überschrieben.<br><br>Wenn Sie auf Ok klicken, wird automatisch ein Herstellerobjekt erstellt, falls erforderlich.",
+      "import_external_description": "Wähle ein Filament in der Liste aus, um dessen Details automatisch in das Formular zur Filamenterstellung einzutragen. Dadurch werden alle Daten, die du in das Formular eingegeben hast, überschrieben.<br><br>Wenn du auf Ok klickst, wird automatisch ein Herstellerobjekt erstellt, falls erforderlich.",
       "import_3dfp": "3D Filament Profiles ID",
       "import_3dfp_help": "Informationen automatisch von 3dfilamentprofiles.com abrufen und ausfüllen",
       "import_3dfp_placeholder": "z.B. 12875",
@@ -612,7 +612,7 @@
       "list": "Hersteller | Spoolman",
       "show": "#{{id}} Hersteller anzeigen | Spoolman",
       "edit": "#{{id}} Hersteller bearbeiten | Spoolman",
-      "create": "Herstellen erstellen | Spoolman",
+      "create": "Hersteller erstellen | Spoolman",
       "clone": "#{{id}} Hersteller duplizieren | Spoolman"
     },
     "home": {
@@ -640,13 +640,13 @@
     "welcome": "Willkommen auf deiner Spoolman Instanz!",
     "description": "Es sieht so aus, als hättest du noch keine Spulen hinzugefügt. Schau auf unsere <helpPageLink>Hilfeseite</helpPageLink>, falls du Hilfe beim Start benötigst.",
     "total_weight": "Gesamtbestand",
-    "total_value": "Wert",
+    "total_value": "Geschätzter Wert",
     "low_stock": "Niedriger Bestand",
     "all_stocked": "Alle Spulen sind gut bevorratet",
     "recently_used": "Zuletzt verwendet",
     "no_recent": "Keine kürzlich verwendeten Spulen",
     "by_material": "Nach Material",
-    "by_location": "Nach Standort",
+    "by_location": "Nach Ort",
     "by_vendor": "Nach Hersteller",
     "all_spools": "Alle Spulen",
     "no_spools": "Noch keine Spulen",
@@ -688,12 +688,12 @@
         "label": "Währung"
       },
       "base_url": {
-        "label": "Basis URL",
-        "tooltip": "Die basis URL für die Generierung von Funktionen wie QR Codes."
+        "label": "Basis-URL",
+        "tooltip": "Die Basis-URL für die Generierung von Funktionen wie QR-Codes."
       },
       "round_prices": {
-        "label": "Gerundeter Preis",
-        "tooltip": "Rundet die Preise auf die nächsthöhere ganze Zahl."
+        "label": "Preise runden",
+        "tooltip": "Rundet die Preise auf die nächste ganze Zahl."
       },
       "unit_scaling": {
         "label": "Große Einheiten skalieren",
@@ -721,14 +721,14 @@
         "choice": "Auswahl",
         "integer_range": "Ganzzahlbereich",
         "boolean": "Wahr/Falsch",
-        "float_range": "Float-Bereich",
+        "float_range": "Dezimalzahlbereich",
         "datetime": "Datum und Uhrzeit",
         "link": "Link"
       },
       "boolean_true": "Ja",
       "boolean_false": "Nein",
       "delete_confirm": "Feld {{name}} entfernen?",
-      "description": "<p>Hier können Sie zusätzliche benutzerdefinierte Felder zu Ihren Elementen hinzufügen.</p><p>Nach dem Hinzufügen eines Feldes können Sie dessen Schlüssel oder Typ nicht mehr ändern, und bei Auswahlfeldern können Sie keine Auswahlmöglichkeiten entfernen oder den Mehrfachauswahlstatus ändern. Wenn Sie ein Feld entfernen, werden die zugehörigen Daten für alle Elemente gelöscht.</p><p>Der Schlüssel ist derjenige, unter dem andere Programme die Daten lesen/schreiben. Wenn Ihr benutzerdefiniertes Feld also mit einem Drittanbieter-Programm integriert werden soll, stellen Sie sicher, dass Sie ihn richtig setzen. Der Standardwert wird nur auf neue Elemente angewendet.</p><p>Zusätzliche Felder können in den Tabellenansichten angezeigt und sortiert werden. Auswahl- und Wahr/Falsch-Felder bieten dort auch Filteroptionen, und alle zusätzlichen Feldtypen unterstützen das Filtern nach leeren Werten.</p><p>Aktivieren Sie bei Spulenfeldern \"Vom Filament kopieren\", damit eine neue Spule beim Erstellen den Wert eines Filamentfelds mit demselben Schlüssel übernimmt (sofern die Spule keinen eigenen setzt).</p><p>Ein \"Link\"-Feld speichert einen kurzen Wert pro Element (z. B. eine Artikelnummer) und macht daraus über die Link-URL-Vorlage einen anklickbaren Link — setzen Sie {} an die Stelle, an der der Wert stehen soll, z. B. https://www.amazon.com/dp/{}.</p>",
+      "description": "<p>Hier kannst du zusätzliche benutzerdefinierte Felder zu deinen Elementen hinzufügen.</p><p>Nach dem Hinzufügen eines Feldes kannst du dessen Schlüssel oder Typ nicht mehr ändern, und bei Auswahlfeldern kannst du keine Auswahlmöglichkeiten entfernen oder den Mehrfachauswahlstatus ändern. Wenn du ein Feld entfernst, werden die zugehörigen Daten für alle Elemente gelöscht.</p><p>Der Schlüssel ist derjenige, unter dem andere Programme die Daten lesen/schreiben. Wenn dein benutzerdefiniertes Feld also mit einem Drittanbieter-Programm integriert werden soll, stelle sicher, dass du ihn richtig setzt. Der Standardwert wird nur auf neue Elemente angewendet.</p><p>Zusätzliche Felder können in den Tabellenansichten angezeigt und sortiert werden. Auswahl- und Wahr/Falsch-Felder bieten dort auch Filteroptionen, und alle zusätzlichen Feldtypen unterstützen das Filtern nach leeren Werten.</p><p>Aktiviere bei Spulenfeldern \"Vom Filament kopieren\", damit eine neue Spule beim Erstellen den Wert eines Filamentfelds mit demselben Schlüssel übernimmt (sofern die Spule keinen eigenen setzt).</p><p>Ein \"Link\"-Feld speichert einen kurzen Wert pro Element (z. B. eine Artikelnummer) und macht daraus über die Link-URL-Vorlage einen anklickbaren Link — setze {} an die Stelle, an der der Wert stehen soll, z. B. https://www.amazon.com/dp/{}.</p>",
       "choices_missing_error": "Du kannst die Auswahl nicht entfernen. Folgende Auswahlmöglichkeiten fehlen: {{choices}}",
       "key_not_changed": "Bitte ändere den Schlüssel auf einen anderen Wert.",
       "delete_confirm_description": "Dieses Feld und alle damit verbundenen Einträge werden gelöscht.",
@@ -813,7 +813,7 @@
         "placeholder": "Wähle einen Anbieter, um die Basis URL auszufüllen"
       },
       "base_url": {
-        "label": "Basis URL",
+        "label": "Basis-URL",
         "tooltip": "Der zu verwendende OpenAI-kompatible Endpunkt, z. B. ein Ollama-Server in deinem Netzwerk.",
         "invalid": "Muss eine http:// oder https:// URL sein"
       },
@@ -896,7 +896,7 @@
   },
   "locations": {
     "no_location": "Kein Ort",
-    "no_locations_help": "Diese Seite lässt Sie Ihre Spulen zu Orten zuweisen, fügen Sie ein paar Spulen hinzu um loszulegen!",
+    "no_locations_help": "Diese Seite lässt dich deine Spulen zu Orten zuweisen, füge ein paar Spulen hinzu, um loszulegen!",
     "locations": "Orte",
     "new_location": "Neuer Ort",
     "error_empty": "Name darf nicht leer sein",
@@ -977,7 +977,7 @@
       "temperature": "Temperatur",
       "volumetric_speed": "Volumetrische Geschwindigkeit",
       "pressure_advance": "Pressure Advance",
-      "flow_rate": "Flow",
+      "flow_rate": "Flow Rate",
       "retraction": "Retraction",
       "tolerance": "Toleranz",
       "cornering": "Kurvenverhalten",

@@ -27,7 +27,7 @@
     "showArchived": "Visa arkiverade",
     "notAccessTitle": "Du har inte tillgång till denna sida",
     "clearFilters": "Rensa filter",
-    "saveAndAdd": "Spara och Lägg till",
+    "saveAndAdd": "Spara och lägg till",
     "continue": "Fortsätt",
     "search": "Sök",
     "resetUsage": "Nollställ förbrukning",
@@ -68,13 +68,13 @@
   "printing": {
     "generic": {
       "title": "Utskrift",
-      "description": "Justera inställningarna nedan för att få önskat utskriftslayout. Kom ihåg att skrivare och ditt operativsystem kan tillämpa sina egna marginaler och skalning, så du kan behöva justera inställningarna därefter. Testa på ett vanligt papper innan du skriver ut på de faktiska etiketterna.",
+      "description": "Justera inställningarna nedan för att få önskad utskriftslayout. Kom ihåg att skrivare och ditt operativsystem kan tillämpa sina egna marginaler och skalning, så du kan behöva justera inställningarna därefter. Testa på ett vanligt papper innan du skriver ut på de faktiska etiketterna.",
       "helpMargin": "Marginaler bör konfigureras för att matcha ditt etikettpapper och skrivare, ändringar av dessa kommer att påverka storleken på hela rutnätet.",
       "helpPrinterMargin": "Säkerhetszon bör ställas in på hur nära papperskanten din skrivare kan skriva ut, ändringar av dessa kommer inte att påverka hela rutnätet.",
       "print": "Skriv ut",
       "columns": "Kolumner",
       "rows": "Rader",
-      "paperSize": "Papperstyp",
+      "paperSize": "Pappersstorlek",
       "customSize": "Anpassad",
       "dimensions": "Dimensioner",
       "showBorder": "Visa ram",
@@ -141,7 +141,7 @@
       "extruderTemp": "ET: {{temp}}",
       "textSize": "Textstorlek",
       "showSpoolmanIcon": "Visa Spoolman-ikon",
-      "showContent": "Visa text",
+      "showContent": "Skriv ut etikett",
       "showVendor": "Tillverkare",
       "showLotNr": "Batchnummer",
       "showSpoolWeight": "Spolvikt",
@@ -150,8 +150,8 @@
       "showFilamentComment": "Filamentkommentar",
       "showVendorComment": "Tillverkarkommentar",
       "template": "Textmall",
-      "templateHelp": "Använd {} för att infoga värden från spolobjektet som text. Till exempel kommer {id} att ersättas med spolens id, eller {filament.material} att ersättas med filamentets material. Omslut text med dubbla asterisker ** för att göra den fetstilad. Klicka på knappen för att visa en lista över alla tillgängliga taggar.",
-      "showQRCode": "Visa QR-kod",
+      "templateHelp": "Använd {} för att infoga värden från spolobjektet som text. Till exempel kommer {id} att ersättas med spolens id, eller {filament.material} att ersättas med filamentets material. Om ett värde saknas ersätts det med \"?\". En andra uppsättning {} kan användas för att ta bort detta. Dessutom tas all text mellan uppsättningarna av {} bort om värdet saknas. Till exempel visar {Lot Nr: {lot_nr}} bara etiketten om spolen har ett batchnummer. Omslut text med dubbla asterisker ** för att göra den fetstilad. Lägg till ett format efter ett kolon: tal som {remaining_weight:0.0} avrundas till så många decimaler, och datum som {registered:YYYY-MM-DD HH:mm} formaterar datumet/tiden i din lokala tidszon. Inled en rad med {size:1.5} för att skala hela den raden (här 1,5×). Klicka på knappen för att visa en lista över alla tillgängliga taggar.",
+      "showQRCode": "Skriv ut QR-kod",
       "showQRCodeMode": {
         "no": "Nej",
         "simple": "Enkel",
@@ -273,8 +273,8 @@
       "measured_weight": "Uppmätt vikt",
       "weight_to_use": "Vikt",
       "price": "Pris",
-      "initial_weight": "Initial Vikt",
-      "spool_weight": "Tom Vikt",
+      "initial_weight": "Initial vikt",
+      "spool_weight": "Tom vikt",
       "filament_internal": "Interna",
       "filament_external": "Externa",
       "filament_name_only": "Namn",
@@ -307,7 +307,7 @@
       "show": "Visa spole",
       "archive": "Arkivera spole",
       "show_title": "[Spole #{{id}}] {{name}}",
-      "adjust": "Justera Spolmängd"
+      "adjust": "Justera spolmängd"
     },
     "messages": {
       "archive": "Är du säker på att du vill arkivera denna spole?",
@@ -478,7 +478,7 @@
       "vendor_create_error": "Det gick inte att skapa tillverkaren"
     },
     "buttons": {
-      "add_spool": "Skapa Spole",
+      "add_spool": "Skapa spole",
       "fetch": "Hämta",
       "download_swatch": "Provkort",
       "download_slicer": "Slicerprofil"
@@ -577,7 +577,7 @@
       "duplicate_name_warning": "En tillverkare med det här namnet finns redan."
     },
     "fields_help": {
-      "empty_spool_weight": "Vikten av en tom spool från denna tillverkare."
+      "empty_spool_weight": "Vikten av en tom spole från denna tillverkare."
     }
   },
   "home": {
@@ -775,7 +775,7 @@
       },
       "api_key": {
         "label": "API-nyckel",
-        "tooltip": "Lagras skrivskyddat: servern skickar aldrig tillbaka den till någon klient. Ollama och LM Studio behöver ingen.",
+        "tooltip": "Lagras utan att kunna läsas tillbaka: servern skickar aldrig tillbaka den till någon klient. Ollama och LM Studio behöver ingen.",
         "placeholder_set": "En nyckel är sparad - ange ett nytt värde för att ersätta den",
         "placeholder_unset": "Ingen nyckel sparad",
         "clear": "Rensa sparad nyckel"
@@ -1060,7 +1060,7 @@
     "pa": {
       "method_tower": "Torn (Rekommenderas)",
       "method_pattern": "Mönster / Linje",
-      "tower_desc": "Skriv ut PA-testtornet. Ange din extrudertyp, PA-stegvärdet (A) och den uppmätta höjden (B) vid det bäst utseende lagret. PA beräknas automatiskt som A × B.",
+      "tower_desc": "Skriv ut PA-testtornet. Ange din extrudertyp, PA-stegvärdet (A) och den uppmätta höjden (B) vid lagret med bäst utseende. PA beräknas automatiskt som A × B.",
       "pattern_desc": "Skriv ut PA-mönstret eller linjetestet. Identifiera den optimala linjen och ange dess PA-värde direkt nedan."
     },
     "input_shaping_advisory": {
@@ -1086,7 +1086,7 @@
       },
       "pressure_advance": {
         "title": "Pressure Advance",
-        "description": "Justera Pressure Advance (Klipper / Bambu) eller Linear Advance (Marlin) för att eliminera hörnbulor och förbättra kvaliteten på skarpa hörn. Skriv ut ett PA-testmönster och finjustera värdet som ger de renaste, skarpaste hörnen. Aktivera Adaptive PA om ditt firmware stöder det."
+        "description": "Justera Pressure Advance (Klipper / Bambu) eller Linear Advance (Marlin) för att eliminera hörnbulor och förbättra kvaliteten på skarpa hörn. Skriv ut ett PA-testmönster och finjustera värdet som ger de renaste, skarpaste hörnen. Aktivera Adaptive PA om din firmware stöder det."
       },
       "flow_rate": {
         "title": "Flöde",

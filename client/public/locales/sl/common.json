@@ -51,7 +51,7 @@
     "editSuccess": "{{resource}} uspešno urejeno",
     "editError": "Napaka pri urejanju {{resource}} (status code:{{statusCode}})",
     "importProgress": "Uvažanje: {{processed}}/{{total}}",
-    "validationError": "Napaka overjanja: {{error}}"
+    "validationError": "Napaka pri preverjanju: {{error}}"
   },
   "loading": "Nalaganje",
   "version": "Verzija",
@@ -69,7 +69,7 @@
       "title": "Tiskanje",
       "print": "Natisni",
       "columns": "Stolpci",
-      "rows": "Vrste",
+      "rows": "Vrstice",
       "paperSize": "Velikost papirja",
       "customSize": "Po meri",
       "dimensions": "Dimenzije",
@@ -233,7 +233,7 @@
       "searchPlaceholder": "Iskanje po ID-ju filamenta, proizvajalcu, imenu ali materialu"
     }
   },
-  "warnWhenUnsavedChanges": "Ali ste prepričani, da želite zapustiti stran? Imate ne shranjene spremembe.",
+  "warnWhenUnsavedChanges": "Ali ste prepričani, da želite zapustiti stran? Imate neshranjene spremembe.",
   "kofi": "Prispevajte na Ko-fi",
   "spool": {
     "form": {
@@ -448,8 +448,8 @@
       "boolean_true": "Da",
       "boolean_false": "Ne",
       "non_unique_key_error": "Ključ mora biti edinstven.",
-      "key_not_changed": "Spremenite geslo v nekaj drugega.",
-      "delete_confirm": "Zbrišem polje {{name}}?",
+      "key_not_changed": "Spremenite ključ v nekaj drugega.",
+      "delete_confirm": "Izbrišem polje {{name}}?",
       "delete_confirm_description": "S tem boste izbrisali polje in vse povezane podatke za vse vnose.",
       "description": "<p>Tukaj lahko svojim entitetam dodate dodatna polja po meri.</p><p>Ko je polje dodano, njegovega ključa ali tipa ni mogoče spremeniti, pri poljih tipa »izbira« pa ni mogoče odstraniti možnosti ali spremeniti nastavitve za večkratno izbiro. Če polje odstranite, bodo povezani podatki za vse entitete izbrisani.</p><p>Ključ je tisto, kar drugi programi uporabljajo za branje/pisanje podatkov, zato če naj bi se vaše polje po meri integriralo s programom tretje osebe, poskrbite, da ga nastavite pravilno. Privzeta vrednost se uporablja le za nove elemente.</p><p>Dodatna polja je mogoče prikazati in razvrščati v pogledih tabel. Polja tipa izbira in logična polja tam ponujajo tudi možnosti filtriranja, vsi tipi dodatnih polj pa podpirajo filtriranje po praznih vrednostih.</p><p>Pri poljih koluta omogočite »Kopiraj iz filamenta«, da nov kolut ob ustvarjanju podeduje vrednost iz polja filamenta z istim ključem (razen če kolut nastavi svojo).</p><p>Polje »Povezava« hrani kratko vrednost za vsak element (npr. številko izdelka) in jo z uporabo predloge URL povezave spremeni v klikljivo povezavo — postavite {} tja, kamor sodi vrednost, npr. https://www.amazon.com/dp/{}.</p>",
       "choices_missing_error": "Možnosti ni mogoče odstraniti. Manjkajo naslednje možnosti: {{choices}}"
@@ -688,10 +688,10 @@
       "edit": "Uredi filament",
       "list": "Filamenti",
       "show": "Prikaži filament",
-      "show_title": "[Filament #{{id}}]{{name}}"
+      "show_title": "[Filament #{{id}}] {{name}}"
     },
     "form": {
-      "import_external": "Uvozi iz zunanjih",
+      "import_external": "Uvozi iz zunanjega",
       "filament_updated": "Ta filament je spremenil nekdo drug, odkar ste odprli stran. Shranjevanje bo te spremembe prepisalo!",
       "import_external_description": "Izberite filament s seznama, da se njegovi podatki samodejno vpišejo v obrazec za ustvarjanje filamenta. S tem se bodo nadomestili vsi podatki, ki ste jih vnesli v obrazec.<br><br>Ob kliku na »V redu« se bo po potrebi samodejno ustvaril objekt »Proizvajalec«.",
       "import_3dfp": "ID 3D Filament Profiles",
@@ -717,7 +717,7 @@
     },
     "finish_options": {
       "matte": "Mat",
-      "glossy": "Sijaj"
+      "glossy": "Sijoč"
     },
     "pattern_options": {
       "marble": "Marmor",
@@ -1200,7 +1200,7 @@
       },
       "flow_rate": {
         "title": "Pretok",
-        "description": "Natančno nastavite množitelj ekstruzije, tako da dejanska količina odloženega plastike ustreza pričakovanju rezalnika. Natisnite dve kalibracijski kocki (eno pri 98 %, eno pri 100 %) in z merilnikom izmerite njune stene, da izračunate pravilno razmerje pretoka."
+        "description": "Natančno nastavite množitelj ekstruzije, tako da dejanska količina odložene plastike ustreza pričakovanju rezalnika. Natisnite dve kalibracijski kocki (eno pri 98 %, eno pri 100 %) in z merilnikom izmerite njune stene, da izračunate pravilno razmerje pretoka."
       },
       "retraction": {
         "title": "Retrakcija",
@@ -1443,7 +1443,7 @@
     "threshold_button_value": "Prag: {{value}}",
     "section": {
       "explicit": "Pod vašim nastavljenim pragom",
-      "fallback": "Pod privzetih {{grams}} g"
+      "fallback": "Pod privzetimi {{grams}} g"
     },
     "empty": "Ni česa naročiti — vaše zaloge so dovolj velike."
   },

@@ -55,7 +55,7 @@
     "validationError": "Eroare de validare: {{error}}"
   },
   "kofi": "Donează pe Ko-fi",
-  "loading": "Încarcă",
+  "loading": "Se încarcă",
   "version": "Versiunea",
   "unknown": "Necunoscut",
   "yes": "Da",
@@ -69,16 +69,16 @@
       "borders": {
         "grid": "Rețea",
         "none": "Nici unul",
-        "border": "Frontieră"
+        "border": "Margine"
       },
       "previewScale": "Scala de previzualizare",
       "contentSettings": "Setări de conținut",
       "helpMargin": "Marginile trebuie configurate pentru a se potrivi cu hârtia de etichetă și imprimanta dvs., modificarea acestora va afecta dimensiunea întregii grile.",
-      "description": "Modificati setările de mai jos pentru a obține aspectul dorit al etichetelor. Rețineți că imprimantele și sistemul dvs. de operare pot aplica propriile setări, așa că poate fi necesar să incercati mai multe opțiuni înainte ca totul să fie corect. Testați-l pe o bucată de hârtie obișnuită înainte de a imprima pe etichetele reale.",
-      "marginRight": "Marja dreaptă",
+      "description": "Modificați setările de mai jos pentru a obține aspectul dorit al etichetelor. Rețineți că imprimantele și sistemul dvs. de operare pot aplica propriile setări, așa că poate fi necesar să încercați mai multe opțiuni înainte ca totul să fie corect. Testați-l pe o bucată de hârtie obișnuită înainte de a imprima pe etichetele reale.",
+      "marginRight": "Margine dreaptă",
       "rows": "Rânduri",
-      "marginBottom": "Marja de jos",
-      "marginTop": "Marja superioară",
+      "marginBottom": "Margine de jos",
+      "marginTop": "Margine superioară",
       "print": "Imprimare",
       "printerMarginRight": "Safe-Zone dreapta",
       "columns": "Coloane",
@@ -91,21 +91,21 @@
       "horizontalSpacing": "Spațiere orizontală",
       "customSize": "Personalizat",
       "marginLeft": "Margine stângă",
-      "printerMarginLeft": "Safe-Zone stanga",
+      "printerMarginLeft": "Safe-Zone stânga",
       "showBorder": "Arată marginea",
       "printerMarginBottom": "Safe-Zone jos",
       "title": "Imprimare",
       "itemCopies": "Copii ale obiectelor",
       "settings": "Prestabilite",
       "defaultSettings": "Implicit",
-      "addSettings": "Adăugarea de noi prestabilite",
+      "addSettings": "Adaugă prestabilire nouă",
       "newSetting": "Nou",
-      "duplicateSettings": "Duplicat",
-      "deleteSettings": "Ștergerea presetării curente",
+      "duplicateSettings": "Duplică",
+      "deleteSettings": "Șterge presetarea curentă",
       "deleteSettingsConfirm": "Ești sigur că vrei să ștergi această prestabilită?",
       "settingsName": "Numele valorii prestabilite",
-      "saveSetting": "Salvare prestabilite",
-      "saveAsImage": "Salvare ca imagine",
+      "saveSetting": "Salvează prestabilirile",
+      "saveAsImage": "Salvează ca imagine",
       "pageSizeMode": {
         "label": "Dimensiunea paginii",
         "tooltip": "\"Automat\" lasă imprimanta/browserul să aleagă geometria paginii (implicit). \"Potrivit cu dimensiunea etichetei\" emite o dimensiune @page explicită pe baza dimensiunilor hârtiei de mai sus — folosiți această opțiune pentru imprimante de rolă/etichete (de ex. Brother QL), astfel încât etichetele să se imprime la dimensiunea și orientarea corecte. Funcționează cel mai bine în Chrome.",
@@ -133,8 +133,8 @@
     "spoolSelect": {
       "showArchived": "Arată arhivate",
       "title": "Selectați bobine",
-      "description": "Selectați rolele pentru care trebuie printate etichete.",
-      "selectedTotal_one": "{{count}} bobina selectata",
+      "description": "Selectați bobinele pentru care trebuie imprimate etichete.",
+      "selectedTotal_one": "{{count}} bobină selectată",
       "selectedTotal_few": "{{count}} bobine selectate",
       "selectedTotal_other": "{{count}} bobine selectate",
       "selectAll": "Selectează/deselectează tot",
@@ -147,8 +147,8 @@
     },
     "qrcode": {
       "bedTemp": "BT: {{temp}}",
-      "title": "Printarea codurilor QR",
-      "button": "Imprimați codurile QR",
+      "title": "Imprimare etichete",
+      "button": "Imprimă etichetele",
       "showTemperatures": "Temperaturi",
       "spoolWeight": "Greutatea rolei de filament: {{weight}}",
       "showFilamentComment": "Filament Comentariu",
@@ -178,7 +178,7 @@
         "simple": "Simplu",
         "withIcon": "Cu imagine"
       },
-      "templateHelp": "Utilizați {} pentru a insera valorile obiectului filament ca text. De exemplu, {id} va fi înlocuit cu id-ul filamentului, sau {filament.material} va fi înlocuit cu materialul filamentului. Dacă o valoare lipsește, aceasta va fi înlocuită cu \"?\". Un al doilea set de {} poate fi folosit pentru a elimina acesta. În plus, orice text între seturile de {} va fi eliminat dacă valoarea lipsește. De exemplu, {Lot Nr: {lot_nr}} va afișa doar eticheta dacă filamentul are un număr de lot. Încadrați textul cu asteriscuri duble ** pentru a-l face îngroșat. Faceți clic pe buton pentru a vizualiza o listă cu toate etichetele disponibile.",
+      "templateHelp": "Utilizați {} pentru a insera valorile obiectului bobină ca text. De exemplu, {id} va fi înlocuit cu id-ul bobinei, sau {filament.material} va fi înlocuit cu materialul bobinei. Dacă o valoare lipsește, aceasta va fi înlocuită cu \"?\". Un al doilea set de {} poate fi folosit pentru a elimina acest lucru. În plus, orice text între seturile de {} va fi eliminat dacă valoarea lipsește. De exemplu, {Lot Nr: {lot_nr}} va afișa eticheta doar dacă bobina are un număr de lot. Încadrați textul cu asteriscuri duble ** pentru a-l face îngroșat. Adăugați un format după două puncte: numerele precum {remaining_weight:0.0} sunt rotunjite la atâtea zecimale, iar datele precum {registered:YYYY-MM-DD HH:mm} sunt formatate în fusul orar local. Începeți un rând cu {size:1.5} pentru a scala întregul rând (aici 1.5×). Faceți clic pe buton pentru a vizualiza o listă cu toate etichetele disponibile.",
       "exportButton": "Exportă etichetele",
       "printFilamentTitle": "Imprimare etichete filament",
       "printSpoolTitle": "Imprimare etichete bobine",
@@ -242,25 +242,25 @@
   },
   "documentTitle": {
     "vendor": {
-      "show": "#{{id}} Afișare producători | Spoolman",
+      "show": "#{{id}} Afișare producător | Spoolman",
       "list": "Producători | Spoolman",
       "edit": "#{{id}} Editare producător | Spoolman",
       "create": "Adăugare producător | Spoolman",
       "clone": "#{{id}} Duplicare producător | Spoolman"
     },
     "spool": {
-      "create": "Creare rolă| Spoolman",
-      "clone": "#{{id}} Clonare rolă | Spoolman",
-      "list": "Role | Spoolman",
-      "edit": "#{{id}} Editare rolă | Spoolman",
-      "show": "#{{id}} Afișare role | Spoolman"
+      "create": "Creare bobină | Spoolman",
+      "clone": "#{{id}} Clonare bobină | Spoolman",
+      "list": "Bobine | Spoolman",
+      "edit": "#{{id}} Editare bobină | Spoolman",
+      "show": "#{{id}} Afișare bobină | Spoolman"
     },
     "filament": {
-      "show": "#{{id}} Afișare filamente | Spoolman",
+      "show": "#{{id}} Afișare filament | Spoolman",
       "list": "Filamente | Spoolman",
       "clone": "#{{id}} Clonare filament | Spoolman",
-      "edit": "#{{id}} Editare filamente | Spoolman",
-      "create": "Creare filament| Spoolman"
+      "edit": "#{{id}} Editare filament | Spoolman",
+      "create": "Creare filament | Spoolman"
     },
     "home": {
       "list": "Acasă | Spoolman"
@@ -275,7 +275,7 @@
     }
   },
   "help": {
-    "description": "<title>Ajutor</title><p>Iată câteva sfaturi pentru a te ajuta să începi.</p><p>Spoolman are 3 tipuri diferite de date:</p><itemsHelp/><p>Pentru a adăuga o nouă rolă în baza de date, începe prin a crea un obiect <filamentCreateLink>Filament</filamentCreateLink>. Odată ce ai terminat, continuă prin a crea un obiect <spoolCreateLink>Spool</spoolCreateLink> pentru aca rolă. Dacă mai achiziționezi role suplimentare din același filament mai târziu, pur și simplu generează obiecte Rolă suplimentare și reutilizează același obiect Filament.</p><p>Opțional, poți genera și un obiect <vendorCreateLink>Producător</vendorCreateLink> pentru compania care produce filamentul, dacă dorești să urmărești această informație.</p><p>Ai opțiunea de a lega alte servicii pentru imprimante 3D de Spoolman, cum ar fi Moonraker, care poate monitoriza automat utilizarea filamentului și actualiza obiectele Rolă pentru tine. Consultă <readmeLink>README-ul Spoolman</readmeLink> pentru orientări despre cum să configurezi acest lucru.</p>",
+    "description": "<title>Ajutor</title><p>Iată câteva sfaturi pentru a te ajuta să începi.</p><p>Spoolman are 3 tipuri diferite de date:</p><itemsHelp/><p>Pentru a adăuga o nouă rolă în baza de date, începe prin a crea un obiect <filamentCreateLink>Filament</filamentCreateLink>. Odată ce ai terminat, continuă prin a crea un obiect <spoolCreateLink>Spool</spoolCreateLink> pentru acea rolă. Dacă mai achiziționezi role suplimentare din același filament mai târziu, pur și simplu generează obiecte Rolă suplimentare și reutilizează același obiect Filament.</p><p>Opțional, poți genera și un obiect <vendorCreateLink>Producător</vendorCreateLink> pentru compania care produce filamentul, dacă dorești să urmărești această informație.</p><p>Ai opțiunea de a lega alte servicii pentru imprimante 3D de Spoolman, cum ar fi Moonraker, care poate monitoriza automat utilizarea filamentului și actualiza obiectele Rolă pentru tine. Consultă <readmeLink>README-ul Spoolman</readmeLink> pentru orientări despre cum să configurezi acest lucru.</p>",
     "resources": {
       "spool": "Role de filament individuale ale unui filament specific.",
       "filament": "Brand-uri de filament. Au proprietăți precum nume, material, culoare, diametru și altele.",
@@ -324,7 +324,7 @@
       "measured_weight": "Greutatea totală a bobinei și filamentului.",
       "initial_weight": "Greutatea inițială a filamentului de pe rolă (greutate netă). Se va folosi greutatea din obiectul filament dacă nu este setată.",
       "spool_weight": "Greutatea rolei atunci când este goală. Lăsați necompletat pentru a folosi valoarea de la filament sau de la producător.",
-      "external_filament": "Ai selectat un filament din baza de date externă. Un obiect filament (și posibil un obiect de la fabricant) va fi creat automat atunci când creați această rolă. Aceasta poate crea obiecte filament duplicate dacă ați creat deja un obiect filament pentru acest filament.",
+      "external_filament": "Ai selectat un filament din baza de date externă. Un obiect filament (și posibil un obiect de la producător) va fi creat automat atunci când creați această rolă. Aceasta poate crea obiecte filament duplicate dacă ați creat deja un obiect filament pentru acest filament.",
       "printer": "Imprimanta pe care este încărcată în prezent această bobină. Gestionați imprimantele din Setări.",
       "diameter": "Diametrul măsurat al filamentului pentru această bobină anume, folosit la calculele de lungime. Lăsați gol pentru a folosi diametrul filamentului.",
       "color_hex": "Culoare opțională pentru această bobină anume, care înlocuiește culoarea filamentului. Goliți câmpul pentru a folosi culoarea filamentului."
@@ -345,7 +345,7 @@
       "reset_usage": "Resetați la zero greutatea folosită a acestei bobine? Aceasta șterge datele primei/ultimei utilizări."
     },
     "form": {
-      "spool_updated": "Această bobină a fost modificată de altcineva în timpul scurs de la deschiderea acestei pagini, Salvarea va suprascrie aceste schimbări!",
+      "spool_updated": "Această bobină a fost modificată de altcineva în timpul scurs de la deschiderea acestei pagini. Salvarea va suprascrie aceste schimbări!",
       "new_location_prompt": "Introduceți o locație nouă",
       "measurement_type": {
         "length": "Lungime",
@@ -480,12 +480,12 @@
       "image": "Fotografie"
     },
     "fields_help": {
-      "price": "Prețului unei bobine noi.",
+      "price": "Prețul unei bobine noi.",
       "material": "Ex. PLA, ABS, PETG, etc.",
       "name": "Numele filamentului, pentru a-l putea distinge de altele ale aceluiași producător. Trebuie să conțină culoarea de exemplu.",
       "spool_weight": "Greutatea unei bobine goale (fără filament). Este folosită pentru a calcula greutatea unei bobine cu filament.",
       "article_number": "Ex. EAN, UPC etc.",
-      "weight": "Greutatea netă a filamentului de pe o bobină. Nu trebuie să includă greutatea bobinei, ci doar cea a filamentului. De obicei greutatea filementului este cea înscrisă pe ambalaj.",
+      "weight": "Greutatea netă a filamentului de pe o bobină. Nu trebuie să includă greutatea bobinei, ci doar cea a filamentului. De obicei greutatea filamentului este cea înscrisă pe ambalaj.",
       "multi_color_direction": "Filamentele pot avea multiple culori în două moduri: fie prin co-extrudare, cum ar fi filamentele de două culori cu culori multiple consistente, fie prin schimbări de culoare longitudinale, cum ar fi filamentele gradient care își schimbă culorile pe parcursul rolei.",
       "low_stock_threshold": "Marchează acest filament pentru reaprovizionare când greutatea totală rămasă pe bobinele sale scade sub acest număr de grame.",
       "reserve_count": "Numărul de bobine de rezervă nedesfăcute pe care le aveți la îndemână, urmărite fără a crea câte o bobină pentru fiecare.",
@@ -608,7 +608,7 @@
     },
     "titles": {
       "clone": "Duplicarea producătorului",
-      "show": "Afișarea producătorilor",
+      "show": "Afișarea producătorului",
       "list": "Producători",
       "create": "Adăugarea unui producător",
       "show_title": "[Producător #{{id}}] {{name}}",
@@ -629,7 +629,7 @@
   "home": {
     "home": "Acasă",
     "welcome": "Bine ai venit în instanța ta Spoolman!",
-    "description": "Se pare că nu ați adăugat încă nici o rolă. Consultați pagina <helpPageLink>Ajutor</helpPageLink> pentru a începe.",
+    "description": "Se pare că nu ați adăugat încă nicio rolă. Consultați pagina <helpPageLink>Ajutor</helpPageLink> pentru a începe.",
     "total_weight": "Stoc total",
     "total_value": "Valoare",
     "low_stock": "Stoc scăzut",
@@ -710,8 +710,8 @@
         "tooltip": "URL-ul de bază care trebuie utilizat atunci când generați caracteristici, cum ar fi codurile QR."
       },
       "round_prices": {
-        "label": "Prețurile estimative",
-        "tooltip": "Prețurile estimative la cel mai apropiat întreg."
+        "label": "Rotunjește prețurile",
+        "tooltip": "Rotunjește prețurile la cel mai apropiat întreg."
       },
       "unit_scaling": {
         "label": "Scalează unitățile mari",
@@ -726,7 +726,7 @@
         "name": "Nume",
         "field_type": "Tip",
         "unit": "Unitate",
-        "order": "Stoc",
+        "order": "Ordine",
         "default_value": "Valoarea implicită",
         "choices": "Selecții",
         "multi_choice": "Selecție multiplă",
@@ -749,7 +749,7 @@
       "choices_missing_error": "Nu poți înlătura selecții. Următoarele selecții lipsesc: {{choices}}",
       "non_unique_key_error": "Cheia trebuie să fie unică.",
       "key_not_changed": "Te rog să schimbi cheia.",
-      "delete_confirm": "Ștergi câmpul{{name}}?",
+      "delete_confirm": "Ștergi câmpul {{name}}?",
       "delete_confirm_description": "Ștergerea câmpului și a tuturor datelor asociate pentru toate entitățile."
     },
     "swatch": {
@@ -917,7 +917,7 @@
     "no_location": "Fără zonă",
     "no_locations_help": "Această pagină îți permite să îți organizezi rolele în zone, adaugă câteva role pentru a începe!",
     "error_empty": "Numele nu poate fi gol",
-    "error_exists": "Locația există deja",
+    "error_exists": "Zona există deja",
     "location": "Zonă",
     "fields": {
       "button": "Câmpuri personalizate",
@@ -1088,7 +1088,7 @@
     },
     "vfa": {
       "artifact_speeds": "Viteze cu artefacte",
-      "artifact_speeds_desc": "Imprimă turnul de test VFA și marchează fiecare viteză la care observi artefacte VFA. Viteza minimă și maximă de evitare sunt calculate automat din această listă.",
+      "artifact_speeds_desc": "Imprimă turnul de test VFA și marchează fiecare viteză la care observi artefacte VFA. Vitezele minimă și maximă de evitare sunt calculate automat din această listă.",
       "speed_placeholder": "Viteză",
       "add_speed": "Adaugă viteză"
     },
@@ -1217,7 +1217,7 @@
       "disconnected": "Deconectat",
       "disabled": "Dezactivat"
     },
-    "browser_ndef_warning": "Atenție: scrierile NFC din browser folosesc formatul NDEF. Tag-urile scrise astfel NU vor fi recunoscute de aplicația TigerTag, care așteaptă date binare brute pe paginile 4-39. Folosiți modul Server pentru scrieri compatibile TigerTag sau Descarcă fișier binar brut pentru utilizare cu un instrument NFC extern.",
+    "browser_ndef_warning": "Atenție: scrierile NFC din browser folosesc formatul NDEF. Tag-urile scrise astfel NU vor fi recunoscute de aplicația TigerTag, care așteaptă date binare brute pe paginile 4-39. Folosiți modul Server pentru scrieri compatibile TigerTag sau descărcați fișierul binar brut pentru utilizare cu un instrument NFC extern.",
     "download_raw_binary": "Descarcă fișier binar brut",
     "download_success": "Fișierul binar a fost descărcat cu succes.",
     "browser_write_success": "Datele TigerTag au fost scrise pe tag-ul NFC prin NDEF.",
@@ -1447,7 +1447,7 @@
     "empty": "Nicio comandă încă.",
     "new_order": "Comandă nouă",
     "new_order_title": "Comandă nouă",
-    "add_line": "Adăugare filament",
+    "add_line": "Adaugă filament",
     "remove_line": "Elimină linia",
     "select_filament": "Selectează un filament",
     "no_lines": "Adaugă cel puțin un filament înainte de a crea comanda.",

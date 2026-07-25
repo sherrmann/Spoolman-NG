@@ -1,13 +1,13 @@
 {
   "actions": {
     "list": "Suchi",
-    "create": "Banaye",
+    "create": "Banayein",
     "edit": "Sampadan Karen",
     "show": "Dikhayen",
-    "clone": "Clone"
+    "clone": "Clone karein"
   },
   "buttons": {
-    "create": "Banaye",
+    "create": "Banayein",
     "save": "Sahejen",
     "edit": "Sampadan Karen",
     "confirm": "Kya aapko pakka hai?",
@@ -41,7 +41,7 @@
   },
   "home": {
     "total_weight": "Kul stock",
-    "total_value": "Mulya",
+    "total_value": "Anumaanit stock mulya",
     "low_stock": "Kam stock",
     "all_stocked": "Sabhi spool achhe se stock hain",
     "recently_used": "Haal hi mein istemal ki gayi",
@@ -213,7 +213,7 @@
       "button": "Labels print karein",
       "title": "Label Printing",
       "template": "Label Template",
-      "templateHelp": "Spool object ki values ko text ke roop mein daalne ke liye {} ka istemal karein. Udaharan ke liye, {id} spool id se badal diya jayega, ya {filament.material} spool ke material se badal diya jayega. Agar koi value missing hai to use \"?\" se badal diya jayega. Ise hatane ke liye {} ka doosra set istemal kiya ja sakta hai. Iske alawa, agar value missing hai to {} ke sets ke beech ka saara text hata diya jayega. Udaharan ke liye, {Lot Nr: {lot_nr}} tabhi label par dikhega jab spool ka lot number ho. Text ko bold banane ke liye use double asterix ** se gherein. Sabhi uplabdh tags ki list dekhne ke liye button par click karein.",
+      "templateHelp": "Spool object ki values ko text ke roop mein daalne ke liye {} ka istemal karein. Udaharan ke liye, {id} spool id se badal diya jayega, ya {filament.material} spool ke material se badal diya jayega. Agar koi value missing hai to use \"?\" se badal diya jayega. Ise hatane ke liye {} ka doosra set istemal kiya ja sakta hai. Iske alawa, agar value missing hai to {} ke sets ke beech ka saara text hata diya jayega. Udaharan ke liye, {Lot Nr: {lot_nr}} tabhi label par dikhega jab spool ka lot number ho. Text ko bold banane ke liye use double asterix ** se gherein. Colon ke baad ek format jodein: {remaining_weight:0.0} jaisi numbers utne hi decimals tak round ho jaati hain, aur {registered:YYYY-MM-DD HH:mm} jaisi dates aapke local time zone mein date/time format karti hain. Us poori line ko scale karne ke liye line ki shuruaat {size:1.5} se karein (yahan 1.5×). Sabhi uplabdh tags ki list dekhne ke liye button par click karein.",
       "textSize": "Label Text Size",
       "showContent": "Label print karein",
       "useHTTPUrl": {
@@ -234,7 +234,7 @@
       "exportButton": "Labels export karein",
       "printFilamentTitle": "Filament Labels print karein",
       "printSpoolTitle": "Spool Labels print karein",
-      "templateHelpFilament": "Filament object ki values ko text ke roop mein daalne ke liye {} ka istemal karein. Udaharan ke liye, {id} filament id se badal diya jayega, ya {vendor.name} vendor ke naam se badal diya jayega. Agar koi value missing hai to use \"?\" se badal diya jayega. Ise hatane ke liye {} ka doosra set istemal kiya ja sakta hai. Iske alawa, agar value missing hai to {} ke sets ke beech ka saara text hata diya jayega. Udaharan ke liye, {Article: {article_number}} tabhi label par dikhega jab filament ka article number ho. Text ko bold banane ke liye use double asterix ** se gherein. Sabhi uplabdh tags ki list dekhne ke liye button par click karein.",
+      "templateHelpFilament": "Filament object ki values ko text ke roop mein daalne ke liye {} ka istemal karein. Udaharan ke liye, {id} filament id se badal diya jayega, ya {vendor.name} Manufacturer ke naam se badal diya jayega. Agar koi value missing hai to use \"?\" se badal diya jayega. Ise hatane ke liye {} ka doosra set istemal kiya ja sakta hai. Iske alawa, agar value missing hai to {} ke sets ke beech ka saara text hata diya jayega. Udaharan ke liye, {Article: {article_number}} tabhi label par dikhega jab filament ka article number ho. Text ko bold banane ke liye use double asterix ** se gherein. Sabhi uplabdh tags ki list dekhne ke liye button par click karein.",
       "textColumns": {
         "label": "Text Columns",
         "tooltip": "Label ke text ko itne columns mein baantein. Kai chhoti lines wale patle labels ke liye kaam aata hai."
@@ -300,7 +300,7 @@
       "reprintConfirmTitle": "Labels dobara print karein?",
       "reprintConfirmContent_one": "{{count}} chune gaye filament ka label pehle se print ho chuka hai. Use dobara print karein?",
       "reprintConfirmContent_other": "{{count}} chune gaye filaments ke labels pehle se print ho chuke hain. Unhe dobara print karein?",
-      "searchPlaceholder": "Filament ID, vendor, naam, ya material se khojein"
+      "searchPlaceholder": "Filament ID, Manufacturer, naam, ya material se khojein"
     }
   },
   "scanner": {
@@ -515,7 +515,7 @@
       "article_number": "Jaise EAN, UPC, aadi.",
       "multi_color_direction": "Filaments do tarah se kai rang ke ho sakte hain: ya to coextrusion se, jaise dual-color filaments jinke multi-colors ek jaise rehte hain, ya longitudinal rang badlav se, jaise gradient filaments jinke rang spool ke saath-saath badalte hain.",
       "low_stock_threshold": "Jab is filament ki sabhi spools ka kul bacha hua vajan itne grams se neeche chala jaye, to ise dobara order karne ke liye flag karein.",
-      "reserve_count": "Bina khuli extra spools ki sankhya jo aap paas rakhte hain — har ek ke liye spool banaye bina track hoti hain.",
+      "reserve_count": "Bina khuli extra spools ki sankhya jo aapke paas rakhte hain — har ek ke liye spool banaye bina track hoti hain.",
       "settings_extruder_temp_range": "Manufacturer ki recommended extruder temperature range (min–max). Vaikalpik hai, agar aapke paas sirf ek value hai to khaali chhodein.",
       "settings_bed_temp_range": "Manufacturer ki recommended bed temperature range (min–max). Vaikalpik hai, agar aapke paas sirf ek value hai to khaali chhodein.",
       "image": "Is filament ko pehchaanne ke liye ek photo — jaise spool ya shop listing. Upload se pehle browser mein downscale ki jaati hai; GPS location jaisa metadata hata diya jaata hai."
@@ -1012,7 +1012,7 @@
     },
     "confidence_display": "{{level}} Confidence",
     "confirm_delete": {
-      "tooltip": "Delete",
+      "tooltip": "Delete karein",
       "confirming": "Confirm karne ke liye dobara click karein",
       "short": "Pakka?"
     },
@@ -1430,7 +1430,7 @@
     "state_title": "Status",
     "filaments_count_one": "{{count}} filament",
     "filaments_count_other": "{{count}} filaments",
-    "arrived_action": "Pahunche…",
+    "arrived_action": "Pahuncha…",
     "outstanding": "Baaki",
     "create_error": "Order banaya nahi ja saka. Kripya dobara koshish karein.",
     "state": {

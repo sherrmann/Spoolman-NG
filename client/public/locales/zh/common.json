@@ -67,13 +67,13 @@
   },
   "printing": {
     "generic": {
-      "title": "打印中",
+      "title": "打印",
       "description": "调整以下设置以获得所需的打印布局。请记住，打印机和您的操作系统可能会应用自己的边距和缩放，因此您可能需要多次尝试后才能正确打印。在实际标签上打印之前，请在一张普通纸上进行测试。",
       "helpMargin": "页边距应设置为与您的标签纸和打印机相匹配，更改这些将影响整个网格的大小。",
       "helpPrinterMargin": "安全区应设置为打印机可以打印的离纸张边缘距离，更改这些不会影响整个网格。",
       "print": "打印",
-      "columns": "行",
-      "rows": "列",
+      "columns": "列",
+      "rows": "行",
       "paperSize": "纸张尺寸",
       "customSize": "自定义",
       "dimensions": "尺寸标注",
@@ -149,14 +149,14 @@
       "showSpoolComment": "料盘备注",
       "showFilamentComment": "耗材备注",
       "showVendorComment": "制造商备注",
-      "template": "标签模版",
+      "template": "标签模板",
       "showQRCode": "打印二维码",
       "showQRCodeMode": {
         "no": "否",
         "withIcon": "含图标",
         "simple": "简单"
       },
-      "templateHelp": "使用 {} 将料盘的值插入为文本。例如，{id} 将被替换为料盘的ID，或者 {filament.material} 将被替换为料盘的材质。如果某个值缺失，将用 \"?\" 替代。可以使用第二组 {} 来删除缺失值相关的内容。此外，任意位于两组 {} 之间的文本，如果值缺失，将被一同删除。例如，{Lot Nr: {lot_nr}} 只有在料盘存在批号时才会显示标签内容。用双星号 ** 包裹文本可以将其加粗。点击按钮查看所有可用的标签列表。",
+      "templateHelp": "使用 {} 将料盘的值插入为文本。例如，{id} 将被替换为料盘的ID，或者 {filament.material} 将被替换为料盘的材料。如果某个值缺失，将用 \"?\" 替代。可以使用第二组 {} 来删除缺失值相关的内容。此外，任意位于两组 {} 之间的文本，如果值缺失，将被一同删除。例如，{Lot Nr: {lot_nr}} 只有在料盘存在批号时才会显示标签内容。用双星号 ** 包裹文本可以将其加粗。点击按钮查看所有可用的标签列表。",
       "useHTTPUrl": {
         "tooltip": "将使用专有链接（默认情况下，仅能通过 **Spoolman** 的扫描功能访问）。URL 将使用设置中指定的基础 URL；如果未设置基础 URL，则使用当前页面的 URL。",
         "label": "二维码链接",
@@ -235,7 +235,7 @@
     }
   },
   "scanner": {
-    "title": "扫码二维码",
+    "title": "二维码扫描器",
     "description": "扫描Spoolman二维码，查看有关料盘的详细信息。",
     "error": {
       "notAllowed": "您不被允许访问相机。",
@@ -258,7 +258,7 @@
       "weight_to_use": "重量",
       "used_weight": "已用重量",
       "remaining_weight": "剩余重量",
-      "measured_weight": "净重",
+      "measured_weight": "测量重量",
       "used_length": "已用长度",
       "remaining_length": "剩余长度",
       "location": "位置",
@@ -281,10 +281,10 @@
       "color_hex": "颜色"
     },
     "fields_help": {
-      "weight_to_use": "请选择要输入的重量值。净重只在所选的耗材设置了料盘重量时可用。",
+      "weight_to_use": "请选择要输入的重量值。测量重量只在所选的耗材设置了料盘重量时可用。",
       "used_weight": "料盘已使用的耗材重量。一个新的料盘应该是0克。",
       "remaining_weight": "料盘上剩余多少耗材。对于新的料盘，这个值应该与料盘重量相匹配。",
-      "measured_weight": "耗材和料盘的重量分别是多少。",
+      "measured_weight": "耗材和料盘的重量合计是多少。",
       "location": "如果您有多个存放料盘的地方，请填写料盘所在的位置。",
       "lot_nr": "制造商的批号。如果使用多个料盘可以使用批号进行控制，以确保打印颜色一致。",
       "price": "整卷料盘的价格。如果未设置，则默认使用该耗材的价格。",
@@ -303,7 +303,7 @@
       "show": "查看料盘",
       "archive": "料盘存档",
       "show_title": "[料盘 #{{id}}] {{name}}",
-      "adjust": "调整线盘耗材"
+      "adjust": "调整料盘耗材"
     },
     "messages": {
       "archive": "您确定要存档此料盘吗？",
@@ -318,7 +318,7 @@
         "weight": "重量"
       },
       "measurement_type_label": "测量类型",
-      "adjust_filament_help": "在这里你可以直接增加或减少线盘中的耗材。正数是减少耗材数量，负数是增加耗材数量。",
+      "adjust_filament_help": "在这里你可以直接增加或减少料盘中的耗材。正数是减少耗材数量，负数是增加耗材数量。",
       "adjust_filament_value": "消耗量"
     },
     "formats": {
@@ -613,13 +613,13 @@
   "home": {
     "home": "主页",
     "welcome": "欢迎使用您的 Spoolman！",
-    "description": "看起来您还没有添加任何线轴。请查看<helpPageLink>帮助页面</helpPageLink>以开始使用。",
+    "description": "看起来您还没有添加任何料盘。请查看<helpPageLink>帮助页面</helpPageLink>以开始使用。",
     "total_weight": "总库存",
     "total_value": "总价值",
     "low_stock": "库存不足",
-    "all_stocked": "所有线轴库存充足",
+    "all_stocked": "所有料盘库存充足",
     "recently_used": "最近使用",
-    "no_recent": "没有最近使用的线轴",
+    "no_recent": "没有最近使用的料盘",
     "by_material": "按材料",
     "by_location": "按位置",
     "by_vendor": "按制造商",
@@ -659,7 +659,7 @@
     "resources": {
       "filament": "耗材品种。它们具有名称、材料、颜色、直径等属性。",
       "vendor": "制造耗材的公司。",
-      "spool": "特定耗材的单个物理卷轴。"
+      "spool": "特定耗材的单个物理料盘。"
     },
     "description": "<title>帮助</title><p>以下是一些入门提示。</p><p>Spoolman保存了3种不同类型的数据：</p><itemsHelp/><p>要向数据库添加新的料盘，请先创建一个 <filamentCreateLink>耗材</filamentCreateLink> 对象。完成后，继续为该特定耗材创建一个 <spoolCreateLink>料盘</spoolCreateLink> 对象。如果以后获取相同耗材的其他料盘，只需生成其他的料盘对象并重复使用同一个耗材对象。</p><p>同时，如果您希望跟踪该信息，还可以为制造耗材的公司生成一个 <vendorCreateLink>制造商</vendorCreateLink> 对象。</p><p>您可以选择将其他3D打印机服务链接到 Spoolman，例如 Moonraker，它可以自动监视耗材使用情况并为您更新料盘对象。请参阅 <readmeLink>Spoolman README</readmeLink> 获取有关如何设置的指导。</p>"
   },
@@ -694,7 +694,7 @@
       },
       "boolean_true": "是",
       "boolean_false": "否",
-      "choices_missing_error": "您无法删除选择。以下选项丢失：{{choices}}",
+      "choices_missing_error": "您无法删除选项。以下选项丢失：{{choices}}",
       "non_unique_key_error": "键必须是唯一的。",
       "key_not_changed": "请将键改成其他的。",
       "delete_confirm": "删除字段 {{name}}？"
