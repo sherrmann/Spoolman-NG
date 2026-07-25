@@ -9,7 +9,7 @@
   "buttons": {
     "create": "Vytvořit",
     "save": "Uložit",
-    "logout": "Odhlášení",
+    "logout": "Odhlásit se",
     "delete": "Smazat",
     "edit": "Upravit",
     "cancel": "Zrušit",
@@ -26,7 +26,7 @@
     "hideArchived": "Skrýt archivované",
     "showArchived": "Zobrazit archivované",
     "notAccessTitle": "Nemáte oprávnění k přístupu",
-    "clearFilters": "Vypnout filtry",
+    "clearFilters": "Vymazat filtry",
     "saveAndAdd": "Uložit a přidat",
     "continue": "Pokračovat",
     "search": "Hledat",
@@ -45,11 +45,11 @@
     "error": "Chyba (kód chyby: {{statusCode}})",
     "undoable": "Máte {{seconds}} sekund na zrušení.",
     "createSuccess": "Úspěšně vytvořeno {{resource}}",
-    "createError": "Při vytváření došlo k chybě {{resource}} (status code: {{statusCode}})",
+    "createError": "Při vytváření došlo k chybě {{resource}} (kód chyby: {{statusCode}})",
     "deleteSuccess": "Úspěšně vymazáno {{resource}}",
-    "deleteError": "Chyba při odstranění {{resource}} (status code: {{statusCode}})",
+    "deleteError": "Chyba při odstranění {{resource}} (kód chyby: {{statusCode}})",
     "editSuccess": "Úspěšně upraveno {{resource}}",
-    "editError": "Chyba při úpravě {{resource}} (status code: {{statusCode}})",
+    "editError": "Chyba při úpravě {{resource}} (kód chyby: {{statusCode}})",
     "importProgress": "Importování: {{processed}}/{{total}}",
     "saveSuccessful": "Úspěšně uloženo!",
     "validationError": "Chyba ověření: {{error}}"
@@ -67,7 +67,7 @@
   },
   "printing": {
     "generic": {
-      "title": "Probíhá tisk",
+      "title": "Tisk",
       "description": "Níže uvedeným nastavením dosáhnete požadovaného rozložení tisku. Mějte na paměti, že tiskárny a váš operační systém mohou použít vlastní okraje a měřítka, takže možná budete muset provést několik pokusů a omylů, než bude vše správně nastaveno. Před tiskem na skutečné štítky si to vyzkoušejte na kousku běžného papíru.",
       "helpMargin": "Okraje by měly být nastaveny tak, aby odpovídaly papíru na štítky a tiskárně, jejich změna ovlivní velikost celé mřížky.",
       "helpPrinterMargin": "Bezpečná zóna by měla být nastavena tak, jak blízko okraje papíru může tiskárna tisknout, jejich změna neovlivní celou mřížku.",
@@ -78,7 +78,7 @@
       "customSize": "Vlastní",
       "dimensions": "Rozměry",
       "showBorder": "Zobrazit ohraničení",
-      "previewScale": "Náhled měřítka",
+      "previewScale": "Měřítko náhledu",
       "skipItems": "Vynechat položky",
       "contentSettings": "Nastavení obsahu",
       "layoutSettings": "Nastavení rozvržení",
@@ -90,8 +90,8 @@
       "marginBottom": "Dolní okraj",
       "printerMarginLeft": "Okraj tiskárny vlevo",
       "printerMarginRight": "Okraj tiskárny vpravo",
-      "printerMarginTop": "Okraj tiskárny horní",
-      "printerMarginBottom": "Okraj tiskárny dolní",
+      "printerMarginTop": "Okraj tiskárny nahoře",
+      "printerMarginBottom": "Okraj tiskárny dole",
       "borders": {
         "none": "Žádný",
         "border": "Ohraničení",
@@ -105,7 +105,7 @@
       "settingsName": "Název předvolby",
       "settings": "Předvolby",
       "deleteSettingsConfirm": "Opravdu chcete tuto předvolbu smazat?",
-      "duplicateSettings": "Duplikát",
+      "duplicateSettings": "Duplikovat",
       "saveSetting": "Uložit předvolby",
       "saveAsImage": "Uložit jako obrázek",
       "pageSizeMode": {
@@ -118,7 +118,19 @@
       "invalidGeometry": "Mřížka štítků se nevejde na papír",
       "invalidGeometryHelp": "Okraje a rozteče nenechávají na štítky žádné místo. Zmenšete okraje, rozteče, počet sloupců nebo řádků — nebo zvolte větší velikost papíru.",
       "contentClipped": "Část obsahu štítků je oříznuta",
-      "contentClippedHelp": "Obsah alespoň jednoho štítku se nevejde do jeho plochy a při tisku bude oříznut. Zmenšete velikost textu, zkraťte šablonu, nebo použijte méně sloupců/řádků, aby byl každý štítek větší."
+      "contentClippedHelp": "Obsah alespoň jednoho štítku se nevejde do jeho plochy a při tisku bude oříznut. Zmenšete velikost textu, zkraťte šablonu, nebo použijte méně sloupců/řádků, aby byl každý štítek větší.",
+      "checklist": {
+        "title": "Před tiskem",
+        "intro": "Tiskové dialogy prohlížečů často stránky přeškálují, což naruší geometrii štítků. V dialogu tisku, který se nyní otevře, zkontrolujte:",
+        "scale": "Měřítko je 100 % / „Skutečná velikost“ — nikdy „Přizpůsobit stránce“.",
+        "paperSize": "Vybraná velikost papíru je přesně {{width}} × {{height}} mm.",
+        "margins": "Okraje jsou nastaveny na „Žádné“ (Spoolman okraje řeší už sám).",
+        "headersFooters": "Záhlaví a zápatí jsou vypnuta.",
+        "pageSizeModeHint": "Vybrali jste velikost papíru na štítky, ale Velikost stránky je nastavena na „Automaticky“. „Podle velikosti štítku“ sdělí prohlížeči přesnou geometrii stránky.",
+        "pageSizeModeApply": "Přepnout na Podle velikosti štítku",
+        "dontShowAgain": "Znovu nezobrazovat",
+        "printNow": "Tisknout nyní"
+      }
     },
     "qrcode": {
       "button": "Tisk štítků",
@@ -188,7 +200,16 @@
         "none": "Žádný",
         "code128": "Code 128"
       },
-      "tooltip": "Vytiskněte štítky pro vybrané řádky, nebo vyberte položky na další stránce"
+      "tooltip": "Vytiskněte štítky pro vybrané řádky, nebo vyberte položky na další stránce",
+      "qrSize": {
+        "label": "Velikost QR kódu",
+        "tooltip": "Vytištěná velikost čtverce QR kódu v mm. Automaticky zachovává dosavadní chování: QR kód vyplní polovinu štítku (celý štítek, pokud se netiskne nic dalšího). Odsazení QR kódu se přidává kolem zvolené velikosti jako klidová zóna.",
+        "auto": "Automaticky",
+        "custom": "Vlastní",
+        "tooSmall": "QR kódy menší než {{mm}} mm může být obtížné naskenovat fotoaparátem telefonu.",
+        "clamped": "Na tento štítek se vejde jen ≈ {{rendered}} mm — méně než nastavených {{requested}} mm.",
+        "clampedTooSmall": "Na tento štítek se vejde jen ≈ {{rendered}} mm (nastaveno {{requested}} mm) — méně než minimum {{mm}} mm pro skenování telefonem."
+      }
     },
     "spoolSelect": {
       "title": "Vybrat cívky",
@@ -217,7 +238,8 @@
       "reprintConfirmTitle": "Vytisknout štítky znovu?",
       "reprintConfirmContent_one": "{{count}} vybraný filament již má vytištěný štítek. Vytisknout jej znovu?",
       "reprintConfirmContent_few": "{{count}} vybrané filamenty již mají vytištěné štítky. Vytisknout je znovu?",
-      "reprintConfirmContent_other": "{{count}} vybraných filamentů již má vytištěné štítky. Vytisknout je znovu?"
+      "reprintConfirmContent_other": "{{count}} vybraných filamentů již má vytištěné štítky. Vytisknout je znovu?",
+      "searchPlaceholder": "Hledat podle ID filamentu, výrobce, názvu nebo materiálu"
     }
   },
   "scanner": {
@@ -227,7 +249,7 @@
       "notAllowed": "Nemáte povolen přístup ke kameře.",
       "insecureContext": "Stránka se nezobrazuje přes protokol HTTPS.",
       "streamApiNotSupported": "Prohlížeč nepodporuje MediaStream API.",
-      "notReadable": "Kamera není čitelná.",
+      "notReadable": "Kameru se nepodařilo spustit.",
       "notFound": "Nebyla nalezena žádná kamera.",
       "unknown": "Došlo k neznámé chybě. ({{error}})"
     },
@@ -268,7 +290,7 @@
     },
     "fields_help": {
       "weight_to_use": "Vyberte, jakou hodnotu hmotnosti chcete zadat. Naměřená hmotnost je k dispozici pouze v případě, že je pro vybraný filament nastavena hmotnost cívky.",
-      "used_weight": "Kolik filamntu bylo z cívky spotřebováno. Na nové cívce by mělo být použito 0 g.",
+      "used_weight": "Kolik filamentu bylo z cívky spotřebováno. Na nové cívce by mělo být použito 0 g.",
       "remaining_weight": "Kolik filamentu zbývá na cívce. U nové cívky by to mělo odpovídat hmotnosti filamentu na cívce.",
       "measured_weight": "Jaká je hmotnost filamentu a cívky.",
       "location": "Kde se cívka nachází, pokud máte více míst, kde cívky skladujete.",
@@ -283,11 +305,11 @@
     },
     "titles": {
       "create": "Vytvořit cívku",
-      "clone": "Duplovat cívku",
+      "clone": "Duplikovat cívku",
       "edit": "Upravit cívku",
       "list": "Cívky",
       "show": "Zobrazit cívku",
-      "archive": "Archivní cívka",
+      "archive": "Archivovat cívku",
       "show_title": "[Cívka #{{id}}] {{name}}",
       "adjust": "Nastavení cívky filamentu"
     },
@@ -308,7 +330,7 @@
       "adjust_filament_value": "Spotřebované množství"
     },
     "formats": {
-      "last_used": "Naposledy použitý {{date}}"
+      "last_used": "Naposledy použitá {{date}}"
     },
     "custom_actions": "Akce",
     "bulk": {
@@ -380,6 +402,14 @@
       "selected_one": "Vybrána {{count}} cívka",
       "selected_few": "Vybrány {{count}} cívky",
       "selected_other": "Vybráno {{count}} cívek"
+    },
+    "nlSearch": {
+      "button": "AI",
+      "title": "Hledat přirozeným jazykem",
+      "placeholder": "např. černý PETG na polici B",
+      "hint": "Použito jako upravitelné filtry",
+      "search": "Hledat",
+      "error": "Hledání se nepodařilo přeložit. Zkuste to znovu nebo použijte běžné vyhledávací pole."
     }
   },
   "filament": {
@@ -420,20 +450,22 @@
       "finish": "Povrch",
       "pattern": "Vzor",
       "translucent": "Průsvitný",
-      "glow": "Svítící ve tmě"
+      "glow": "Svítící ve tmě",
+      "image": "Fotografie"
     },
     "fields_help": {
       "name": "Název filamentu, aby se tento typ vlákna odlišil od ostatních filamentů od stejného výrobce. Měl by obsahovat například barvu.",
       "material": "Např. PLA, ABS, ASA, PETG, atd.",
       "price": "Cena celé cívky.",
-      "weight": "Hmotnost plného cívky filamentu (čistá hmotnost). Tato hmotnost by neměla zahrnovat hmotnost samotné cívky, ale pouze filamentu. Obvykle se uvádí na obalu.",
+      "weight": "Hmotnost plné cívky filamentu (čistá hmotnost). Tato hmotnost by neměla zahrnovat hmotnost samotné cívky, ale pouze filamentu. Obvykle se uvádí na obalu.",
       "spool_weight": "Hmotnost prázdné cívky. Slouží k určení naměřené hmotnosti cívky.",
       "article_number": "Např. EAN, UPC, atd.",
       "multi_color_direction": "Filamenty mohou mít více barev dvěma způsoby: buď koextruzí jako dvoubarevná vlákna s konzistentními více barvami, nebo podélnými změnami barev jako gradientní vlákna, která mění barvy podél cívky.",
       "low_stock_threshold": "Označí tento filament k doobjednání, jakmile celková zbývající hmotnost všech jeho cívek klesne pod tento počet gramů.",
       "reserve_count": "Počet nerozbalených náhradních cívek, které máte v zásobě, evidovaných bez vytváření samostatné cívky pro každou z nich.",
       "settings_extruder_temp_range": "Výrobcem doporučený rozsah teplot extruderu (min–max). Volitelné, ponechte prázdné, pokud máte jen jednu hodnotu.",
-      "settings_bed_temp_range": "Výrobcem doporučený rozsah teplot podložky (min–max). Volitelné, ponechte prázdné, pokud máte jen jednu hodnotu."
+      "settings_bed_temp_range": "Výrobcem doporučený rozsah teplot podložky (min–max). Volitelné, ponechte prázdné, pokud máte jen jednu hodnotu.",
+      "image": "Fotografie, podle které tento filament poznáte — např. cívka nebo nabídka v obchodě. Před nahráním je v prohlížeči zmenšena; metadata jako poloha GPS jsou odstraněna."
     },
     "titles": {
       "create": "Vytvořit filament",
@@ -523,6 +555,16 @@
     },
     "messages": {
       "update_error": "Změny se nepodařilo uložit. Zkuste to prosím znovu."
+    },
+    "image": {
+      "upload": "Nahrát fotografii",
+      "replace": "Nahradit fotografii",
+      "remove": "Odebrat fotografii",
+      "uploaded": "Fotografie uložena",
+      "upload_error": "Fotografii se nepodařilo uložit",
+      "removed": "Fotografie odebrána",
+      "remove_error": "Fotografii se nepodařilo odebrat",
+      "prepare_error": "Tento soubor obrázku se nepodařilo přečíst"
     }
   },
   "vendor": {
@@ -547,7 +589,7 @@
       "view_spools": "Zobrazit cívky"
     },
     "form": {
-      "vendor_updated": "Od otevření této stránky byl tento prodejce někým/něčím aktualizován. Uložením se tyto změny přepíší!",
+      "vendor_updated": "Od otevření této stránky byl tento výrobce někým/něčím aktualizován. Uložením se tyto změny přepíší!",
       "duplicate_name_warning": "Výrobce s tímto názvem již existuje."
     },
     "fields_help": {
@@ -570,10 +612,10 @@
     "suffix": " | Spoolman",
     "filament": {
       "list": "Filamenty | Spoolman",
-      "show": "#{{id}} Zobrazit Filament | Spoolman",
-      "edit": "#{{id}} Upravit Filament | Spoolman",
-      "create": "Vytvořit Filament | Spoolman",
-      "clone": "#{{id}} Duplikovat Filament | Spoolman"
+      "show": "#{{id}} Zobrazit filament | Spoolman",
+      "edit": "#{{id}} Upravit filament | Spoolman",
+      "create": "Vytvořit filament | Spoolman",
+      "clone": "#{{id}} Duplikovat filament | Spoolman"
     },
     "spool": {
       "list": "Cívky | Spoolman",
@@ -605,7 +647,7 @@
       "filament": "Značky vláken. Mají vlastnosti, jako je název, materiál, barva, průměr a další.",
       "spool": "Jednotlivé fyzické cívky určitého vlákna."
     },
-    "description": "<title>Nápověda</title><p>Zde je několik tipů, které vám pomohou začít.</p><p>Spoolman ukládá 3 různé typy dat:</p><itemsHelp/><p>Chcete-li do databáze přidat novou cívku, začněte vytvořením položky <filamentCreateLink>Filament</filamentCreateLink> . Jakmile to uděláte, vytvořte položku <spoolCreateLink>Cívka</spoolCreateLink> s popisem pro danou cívku. Pokud později získáte další cívky stejného filamentu, jednoduše vygenerujte další Cívku a použijte opět stejný Filament.</p><p>Volitelně můžete také vygenerovat <vendorCreateLink>Výrobce</vendorCreateLink> název společnosti vyrábějící filamenty, pokud si přejete tyto informace sledovat.</p><p>Máte možnost propojit se Spoolmanem další služby 3D tiskárny, například Moonraker, který může automaticky sledovat využití filamentu a aktualizovat dané Cívky za vás. Pokyny k nastavení najdete v <readmeLink>Spoolman README</readmeLink>.</p>",
+    "description": "<title>Nápověda</title><p>Zde je několik tipů, které vám pomohou začít.</p><p>Spoolman ukládá 3 různé typy dat:</p><itemsHelp/><p>Chcete-li do databáze přidat novou cívku, začněte vytvořením položky <filamentCreateLink>Filament</filamentCreateLink>. Jakmile to uděláte, vytvořte položku <spoolCreateLink>Cívka</spoolCreateLink> pro danou cívku. Pokud později získáte další cívky stejného filamentu, jednoduše vygenerujte další Cívku a použijte opět stejný Filament.</p><p>Volitelně můžete také vygenerovat objekt <vendorCreateLink>Výrobce</vendorCreateLink> pro společnost vyrábějící filament, pokud si přejete tyto informace sledovat.</p><p>Máte možnost propojit se Spoolmanem další služby 3D tiskárny, například Moonraker, který může automaticky sledovat využití filamentu a aktualizovat dané Cívky za vás. Pokyny k nastavení najdete v <readmeLink>Spoolman README</readmeLink>.</p>",
     "help": "Nápověda"
   },
   "kofi": "Příspěvek autorovi na Ko-fi",
@@ -648,7 +690,12 @@
       "materials_one": "{{count}} materiál",
       "materials_few": "{{count}} materiály",
       "materials_other": "{{count}} materiálů"
-    }
+    },
+    "load_error_title": "Nepodařilo se načíst cívky",
+    "load_error_desc": "Při načítání vašich cívek došlo k problému. Zkuste to prosím znovu.",
+    "gathering_dust": "Sbírají prach",
+    "never_used": "Nikdy nepoužito",
+    "no_stale": "Žádné cívky nesbírají prach"
   },
   "settings": {
     "extra_fields": {
@@ -657,7 +704,7 @@
         "key": "Klíč",
         "name": "Název",
         "field_type": "Typ",
-        "order": "Objednávka",
+        "order": "Pořadí",
         "default_value": "Výchozí hodnota",
         "multi_choice": "Výběr z více možností",
         "unit": "Jednotka",
@@ -669,10 +716,10 @@
         "text": "Text",
         "integer": "Celé číslo",
         "integer_range": "Rozsah celých čísel",
-        "float": "Plovoucí",
-        "datetime": "Datumčas",
+        "float": "Desetinné číslo",
+        "datetime": "Datum a čas",
         "choice": "Volba",
-        "float_range": "Plovoucí rozsah",
+        "float_range": "Rozsah desetinných čísel",
         "boolean": "Logická hodnota",
         "link": "Odkaz"
       },
@@ -696,7 +743,7 @@
         "tooltip": "Základní adresa URL, která se má použít při generování funkcí, jako jsou QR kódy."
       },
       "round_prices": {
-        "label": "Zaokrouhlené ceny",
+        "label": "Zaokrouhlovat ceny",
         "tooltip": "Zaokrouhlete ceny na nejbližší celé číslo."
       },
       "unit_scaling": {
@@ -774,6 +821,94 @@
       "add_title": "Přidat odkaz",
       "edit_title": "Upravit odkaz",
       "delete_confirm": "Smazat tento odkaz?"
+    },
+    "ai": {
+      "tab": "AI",
+      "description": "Připojte koncový bod kompatibilní s OpenAI (Ollama, LM Studio, OpenAI, Anthropic, OpenRouter, Requesty, Groq, ...). Nikam se nic neodesílá a v rozhraní se neobjeví žádný prvek AI, dokud níže nezapnete některou funkci.",
+      "preset": {
+        "label": "Předvolba",
+        "placeholder": "Vyberte poskytovatele pro vyplnění základní URL"
+      },
+      "base_url": {
+        "label": "Základní URL",
+        "tooltip": "Koncový bod kompatibilní s OpenAI, který se má použít, např. server Ollama ve vaší síti.",
+        "invalid": "Musí to být URL adresa http:// nebo https://"
+      },
+      "api_key": {
+        "label": "API klíč",
+        "tooltip": "Ukládá se pouze pro zápis: server jej nikdy neposílá zpět žádnému klientovi. Ollama a LM Studio žádný nepotřebují.",
+        "placeholder_set": "Klíč je uložen - zadejte novou hodnotu pro jeho nahrazení",
+        "placeholder_unset": "Žádný klíč není uložen",
+        "clear": "Vymazat uložený klíč"
+      },
+      "model": {
+        "label": "Model chatu",
+        "tooltip": "Model použitý pro chat a funkce volání nástrojů. Spuštěním testu připojení zobrazíte seznam modelů koncového bodu."
+      },
+      "vision_model": {
+        "label": "Model pro obrázky",
+        "tooltip": "Model použitý pro funkce práce s obrázky. Ponechte prázdné pro použití modelu chatu."
+      },
+      "stt": {
+        "title": "Převod řeči na text (hlasový vstup)",
+        "hint": "Samostatný koncový bod pro přepis kompatibilní s OpenAI pro hlasový vstup - Ollama převod řeči na text nemá. Například server whisper.cpp, Speaches nebo Groq whisper.",
+        "base_url": {
+          "label": "Základní URL STT",
+          "tooltip": "Koncový bod pro přepis, např. http://localhost:8000/v1"
+        },
+        "api_key": {
+          "label": "API klíč STT"
+        },
+        "model": {
+          "label": "Model STT",
+          "tooltip": "Model pro přepis, např. whisper-1 nebo Systran/faster-whisper-base."
+        }
+      },
+      "env_locked": "Nastaveno pomocí proměnné prostředí a zde uzamčeno",
+      "test": "Otestovat připojení",
+      "probe": {
+        "reachable": "Koncový bod dostupný",
+        "models_listed": "vypsané modely",
+        "failed": "Test připojení se nezdařil.",
+        "chat": "Chat",
+        "tools": "Volání nástrojů",
+        "vision": "Obrázky",
+        "yes": "podporováno",
+        "no": "nepodporováno",
+        "unknown": "neověřeno - tento koncový bod nehlásí své schopnosti"
+      },
+      "features": {
+        "title": "Funkce",
+        "hint": "Všechny funkce jsou ve výchozím stavu vypnuté. Nic souvisejícího s AI se v rozhraní neobjeví, dokud to zde nezapnete.",
+        "chat": "Chatovací asistent",
+        "scan_to_spool": "Scan-to-Spool (příjem cívky z fotografie)",
+        "nl_search": "Vyhledávání přirozeným jazykem",
+        "mcp": "MCP server",
+        "voice": "Hlasový vstup",
+        "requires_config": "Nejprve nastavte a uložte koncový bod a model chatu.",
+        "requires_vision": "Test připojení hlásí, že nastavený model nepodporuje práci s obrázky.",
+        "requires_stt": "Nejprve nastavte a uložte koncový bod a model pro převod řeči na text.",
+        "voice_autosend": "Odesílat přepisy hlasu automaticky, bez jejich předchozí kontroly",
+        "voice_unavailable": "Zatím není k dispozici - přijde spolu s funkcí hlasového vstupu."
+      },
+      "mcp": {
+        "title": "MCP server",
+        "hint": "Nasměrujte MCP klienta (Claude Desktop, claude.ai) na tento Spoolman a dotazujte se na váš inventář nebo jej aktualizujte. Není potřeba žádný poskytovatel LLM - stačí tento přepínač.",
+        "copy": "Kopírovat konfiguraci",
+        "copied": "Konfigurace zkopírována do schránky.",
+        "auth_note": "Pokud tento Spoolman vyžaduje API token, přidejte pod \"headers\" položku \"Authorization\": \"Bearer <token>\". Účty pouze pro čtení mají k dispozici jen dotazovací nástroje."
+      },
+      "models": {
+        "title": "Modely Ollama",
+        "hint": "Váš koncový bod je server Ollama. Doporučený model můžete stáhnout přímo odsud - Spoolman spravuje modely, nikdy ne běhové prostředí.",
+        "installed": "Nainstalováno",
+        "pull": "Stáhnout",
+        "pulled": "Model {{model}} byl stažen.",
+        "purpose": {
+          "chat": "chat",
+          "vision": "obrázky"
+        }
+      }
     }
   },
   "locations": {
@@ -804,7 +939,8 @@
       "description": "Vyberte umístění, pro která chcete vytisknout skenovatelné QR štítky.",
       "select_placeholder": "Vyberte umístění",
       "none_selected": "Nejsou vybrána žádná umístění"
-    }
+    },
+    "load_error": "Nepodařilo se načíst cívky"
   },
   "calibration": {
     "title": "Kalibrace",
@@ -884,7 +1020,165 @@
         "cancel": "Zrušit"
       },
       "skip_finish_confirm": "Označit tuto relaci jako dokončenou bez uložení tohoto kroku?",
-      "session_complete": "Kalibrační relace byla označena jako dokončená."
+      "session_complete": "Kalibrační relace byla označena jako dokončená.",
+      "revisiting": "Opakování"
+    },
+    "wiki": {
+      "link": "Wiki",
+      "tooltip": "Otevřít wiki OrcaSliceru pro tento krok",
+      "tooltip_short": "Wiki OrcaSliceru"
+    },
+    "sections": {
+      "test_method": "Metoda testu",
+      "test_setup": "Nastavení testu",
+      "your_result": "Váš výsledek",
+      "auto_computed": "· automaticky vypočteno"
+    },
+    "step_status": {
+      "skipped": "Přeskočeno",
+      "done": "✓ Hotovo",
+      "incomplete": "Nedokončeno"
+    },
+    "confidence_display": "{{level}} spolehlivost",
+    "confirm_delete": {
+      "tooltip": "Smazat",
+      "confirming": "Klikněte znovu pro potvrzení",
+      "short": "Určitě?"
+    },
+    "select_step": {
+      "placeholder": "Vyberte kalibrační krok",
+      "required": "Vyberte prosím kalibrační krok."
+    },
+    "optional": "Volitelné",
+    "optional_notes": "Volitelné poznámky…",
+    "printer_name_placeholder": "např. Bambu X1C, Ender 3",
+    "flow_calc": {
+      "title": "Kalkulačka výsledku průchodu",
+      "pass1": "Průchod 1",
+      "pass2": "Průchod 2",
+      "method_yolo": "YOLO (doporučeno)",
+      "method_legacy": "Starší metoda (2 průchody)",
+      "yolo_desc": "Jednoprůchodová kalibrace pomocí vzoru Archimédovy tětivy (OrcaSlicer ≥ 2.3.0). Zadejte aktuální poměr průtoku a korekční hodnotu zjištěnou na výtisku.",
+      "legacy_desc": "Dvouprůchodová kalibrace. Postupně zadejte výsledky prvního a druhého průchodu pro výpočet finálního poměru průtoku.",
+      "start": "Začít →",
+      "yolo_pass1_desc": "Vytiskněte testovací model Archimédovy tětivy. Zadejte aktuální poměr průtoku a korekční hodnotu zobrazenou na výtisku. Nový poměr průtoku se vypočítá automaticky.",
+      "legacy_pass1_desc": "Vytiskněte testovací model prvního průchodu. Zadejte počáteční poměr průtoku a korekční procento zjištěné na výtisku.",
+      "pass2_desc": "Nastavte poměr průtoku ve sliceru na výsledek z Průchodu 1, znovu vytiskněte testovací model a poté zadejte nové korekční procento.",
+      "current_flow_ratio": "Aktuální poměr průtoku",
+      "modifier": "Modifikátor",
+      "new_flow_ratio": "Nový poměr průtoku",
+      "flow_ratio": "Poměr průtoku",
+      "result": "Výsledek",
+      "cancel": "Zrušit",
+      "apply": "Použít ve formuláři ✓",
+      "next_pass2": "Další: Průchod 2 →",
+      "back": "← Zpět"
+    },
+    "pa": {
+      "method_tower": "Věž (doporučeno)",
+      "method_pattern": "Vzor / linka",
+      "tower_desc": "Vytiskněte test věže PA. Zadejte typ extruderu, hodnotu kroku PA (A) a naměřenou výšku (B) u vrstvy, která vypadá nejlépe. PA se automaticky vypočítá jako A × B.",
+      "pattern_desc": "Vytiskněte test vzoru nebo linky PA. Určete optimální linku a zadejte její hodnotu PA přímo níže."
+    },
+    "input_shaping_advisory": {
+      "title": "Máte moderní tiskárnu? Možná to nepotřebujete.",
+      "desc_wizard": "Většina moderních tiskáren CoreXY s Klipperem a akcelerometrem (ADXL345), stejně jako všechny tiskárny Bambu Lab, už řeší input shaping automaticky — a mnohem přesněji, než jaké výsledky kdy dokáže dát ruční testovací věž. Pokud se vás to týká, tento krok přeskočte a ušetřete si starosti.",
+      "desc_drawer": "Většina moderních tiskáren CoreXY s Klipperem a akcelerometrem (ADXL345), stejně jako všechny tiskárny Bambu Lab, už řeší input shaping automaticky — a mnohem přesněji, než jaké výsledky kdy dokáže dát ruční testovací věž. Pokud se vás to týká, stačí toto okno zavřít bez uložení.",
+      "skip": "Moje tiskárna to zvládá sama — přeskočit →"
+    },
+    "vfa": {
+      "artifact_speeds": "Rychlosti s artefakty",
+      "artifact_speeds_desc": "Vytiskněte testovací věž VFA a označte každou rychlost, při které pozorujete artefakty VFA. Min. a Max. rychlost bez artefaktů se z tohoto seznamu vypočítají automaticky.",
+      "speed_placeholder": "Rychlost",
+      "add_speed": "Přidat rychlost"
+    },
+    "step_copy": {
+      "temperature": {
+        "title": "Teplota",
+        "description": "Najděte optimální tiskovou teplotu pro tento filament. Vytiskněte teplotní věž a najděte vrstvu, která nabízí nejlepší rovnováhu mezi přilnavostí vrstev, kvalitou povrchu a minimálním tažením vláken. Vyšší teplota zlepšuje spojení vrstev, nižší omezuje prosakování a tažení vláken."
+      },
+      "volumetric_speed": {
+        "title": "Objemová rychlost",
+        "description": "Zjistěte maximální objemový průtok, který váš hotend s tímto filamentem zvládne, než se objeví podextruze. Vytiskněte test rostoucího průtoku nebo sérii jednostěnných krychlí při rostoucích rychlostech a poznamenejte si rychlost těsně před zhoršením kvality."
+      },
+      "pressure_advance": {
+        "title": "Pressure Advance",
+        "description": "Doladěním Pressure Advance (Klipper / Bambu) nebo Linear Advance (Marlin) odstraníte vydouvání v rozích a zlepšíte kvalitu ostrých rohů. Vytiskněte testovací vzor PA a nastavte hodnotu, která dává nejčistší a nejostřejší rohy. Pokud to váš firmware podporuje, zapněte Adaptive PA."
+      },
+      "flow_rate": {
+        "title": "Průtok",
+        "description": "Doladěním multiplikátoru extruze zajistíte, aby skutečně vytlačené množství plastu odpovídalo očekávání sliceru. Vytiskněte dvě kalibrační krychle (jednu na 98 %, druhou na 100 %) a posuvným měřítkem změřte jejich stěny pro výpočet správného poměru průtoku."
+      },
+      "retraction": {
+        "title": "Retrakce",
+        "description": "Najděte minimální délku a rychlost retrakce, která odstraní tažení vláken, aniž by docházelo k prokluzu filamentu nebo ucpání. Vytiskněte věž pro testování vzdálenosti retrakce a vyberte nejnižší hodnotu, při které jsou přejezdy čisté."
+      },
+      "tolerance": {
+        "title": "Tolerance",
+        "description": "Změřte, jak přesně vaše tiskárna reprodukuje rozměry detailů. Vytiskněte testovací model tolerance, změřte cílové detaily posuvným měřítkem a zaznamenejte odchylku. Výsledek použijte v nastavení rozměrové přesnosti / kompenzace XY vašeho sliceru."
+      },
+      "cornering": {
+        "title": "Zatáčení",
+        "description": "Doladěním chování v rozích vyvážíte rychlost tisku proti zvonění (ringing) a artefaktům při změnách směru. Použijte Junction Deviation (Marlin 2.x / RepRapFirmware), klasický Jerk (starší Marlin) nebo Square Corner Velocity (Klipper). Vytiskněte testovací vzor pro rohy a snižujte hodnotu, dokud zvonění nezmizí."
+      },
+      "input_shaping": {
+        "title": "Input Shaping",
+        "description": "Omezte duchy (ghosting) a zvonění (ringing) pomocí kompenzace rezonance. Změřte rezonanční frekvenci své tiskárny (doporučen akcelerometr, případně použijte vizuální věž pro zvonění). Vyberte typ shaperu a frekvence, které artefakty minimalizují, a zadejte je níže."
+      },
+      "vfa": {
+        "title": "VFA (svislé jemné artefakty)",
+        "description": "Najděte maximální tiskovou rychlost, při které se ještě neobjevují svislé povrchové artefakty (VFA / žebrování). Vytiskněte test rostoucí rychlosti na objektu s hladkými stěnami a poznamenejte si rychlost těsně před tím, než se na povrchu objeví pravidelné žebrování."
+      }
+    },
+    "field_labels": {
+      "inputs": {
+        "start_temp": "Počáteční teplota",
+        "end_temp": "Koncová teplota",
+        "step_size": "Velikost kroku",
+        "start_speed": "Počáteční rychlost",
+        "end_speed": "Koncová rychlost",
+        "measured_height": "Naměřená výška",
+        "extruder_type": "Typ extruderu",
+        "pa_step_a": "Krok PA (A)",
+        "measured_height_b": "Naměřená výška (B)",
+        "start_retract": "Počáteční retrakce",
+        "factor": "Faktor",
+        "test_size": "Velikost testovaného prvku",
+        "measured_size": "Naměřená velikost",
+        "firmware_type": "Firmware / funkce",
+        "start_value": "Počáteční hodnota",
+        "end_value": "Koncová hodnota",
+        "shaper_type": "Typ shaperu",
+        "frequency_x": "Rezonanční frekvence X",
+        "frequency_y": "Rezonanční frekvence Y"
+      },
+      "outputs": {
+        "temperature": "Optimální teplota",
+        "max_volumetric_speed": "Max. objemová rychlost",
+        "pressure_advance": "Hodnota PA",
+        "flow_ratio": "Poměr průtoku",
+        "retraction_length": "Doporučená retrakce",
+        "tolerance_offset": "Odchylka tolerance",
+        "cornering_value": "Doporučená hodnota",
+        "shaper_type_x": "Doporučený shaper X",
+        "frequency_x": "Vyladěná frekvence X",
+        "shaper_type_y": "Doporučený shaper Y",
+        "frequency_y": "Vyladěná frekvence Y",
+        "min_avoidance_speed": "Min. rychlost bez artefaktů",
+        "max_avoidance_speed": "Max. rychlost bez artefaktů"
+      },
+      "options": {
+        "direct_drive": "Direct Drive",
+        "bowden": "Bowden",
+        "junction_deviation": "Junction Deviation (Marlin 2.x / RepRapFirmware)",
+        "jerk": "Jerk (klasický Marlin)",
+        "square_corner_velocity": "Square Corner Velocity (Klipper)",
+        "mzv": "MZV",
+        "ei": "EI",
+        "zv": "ZV",
+        "2hump_ei": "2HUMP_EI",
+        "3hump_ei": "3HUMP_EI"
+      }
     }
   },
   "external": {
@@ -1027,7 +1321,8 @@
       "unknown_content": "Žádný filament nemá čárový kód {{code}}. Vytvořit filament a zapamatovat si tento čárový kód?",
       "create_filament": "Vytvořit filament",
       "lookup_error": "Tento čárový kód se nepodařilo vyhledat."
-    }
+    },
+    "photo": "Fotografie"
   },
   "printer": {
     "printer": "Tiskárna",
@@ -1036,5 +1331,167 @@
       "comment": "Komentář",
       "spool_count": "Cívky"
     }
+  },
+  "chat": {
+    "title": "Asistent",
+    "open": "Zeptat se asistenta",
+    "placeholder": "Zeptejte se na váš filament a cívky…",
+    "send": "Odeslat",
+    "thinking": "Přemýšlím…",
+    "empty": "Zeptejte se mě na vaše cívky a filament — například „kolik mi zbývá černého PETG?“ nebo „co bych měl doobjednat?“.",
+    "viewInList": "Zobrazit v seznamu cívek",
+    "confirm": {
+      "before": "Před",
+      "after": "Po",
+      "confirm": "Potvrdit",
+      "cancel": "Zrušit",
+      "confirmed": "Potvrzeno",
+      "cancelled": "Zrušeno",
+      "destructive": "Nelze vrátit zpět"
+    },
+    "executed": {
+      "undo": "Vrátit zpět",
+      "undone": "Změna byla vrácena zpět."
+    },
+    "voice": {
+      "record": "Podržte pro mluvení",
+      "listening": "Poslouchám…",
+      "speak": "Předčítat odpovědi",
+      "unsupported": "Nahrávání hlasu není v tomto prohlížeči podporováno.",
+      "mic_error": "Nepodařilo se získat přístup k mikrofonu."
+    }
+  },
+  "intake": {
+    "hint": "Vyfotografujte štítek nebo krabici cívky, nebo vyberte existující fotografii.",
+    "select_photo": "Vybrat nebo vyfotit",
+    "extracting": "Čtení štítku...",
+    "in_library": "ve vaší knihovně, přidá cívku",
+    "from_catalog": "SpoolmanDB, vytvoří filament a cívku",
+    "use_raw": "Použít nezpracovaná data (nový filament)",
+    "continue": "Pokračovat",
+    "back": "Zpět",
+    "photo_discarded": "Fotografie byla analyzována v paměti a není uložena.",
+    "prefilled_banner": "Předvyplněno z fotografie štítku - před uložením zkontrolujte hodnoty.",
+    "fields": {
+      "vendor": "Výrobce",
+      "name": "Název",
+      "material": "Materiál",
+      "weight_g": "Hmotnost (g)",
+      "diameter_mm": "Průměr (mm)",
+      "extruder_temp_c": "Tryska (C)",
+      "bed_temp_c": "Podložka (C)",
+      "lot_nr": "Šarže",
+      "article_number": "Číslo výrobku",
+      "confidence": "Spolehlivost"
+    }
+  },
+  "update": {
+    "available": "aktualizace k dispozici",
+    "tooltip": "Je dostupná verze {{version}}",
+    "notification": {
+      "title": "K dispozici je nová verze Spoolman",
+      "description": "Byla vydána verze {{version}}. Podívejte se, co je nového a jak aktualizovat.",
+      "viewRelease": "Zobrazit poznámky k vydání"
+    },
+    "action": {
+      "open": "Aktualizovat",
+      "howTo": "Jak aktualizovat",
+      "modalTitle": "Aktualizovat Spoolman",
+      "currentVersion": "Nainstalováno: {{version}}",
+      "latestVersion": "nejnovější: {{version}}",
+      "viewReleaseNotes": "Zobrazit poznámky k vydání",
+      "close": "Zavřít",
+      "updateNow": "Aktualizovat nyní",
+      "updateToVersion": "Aktualizovat na verzi {{version}}",
+      "native": {
+        "description": "Toto je nativní instalace, takže se Spoolman může sám aktualizovat na nejnovější verzi.",
+        "restartNotice": "Služba se po aktualizaci automaticky restartuje. Pokud Spoolman nespravuje systemd, restartujte jej po dokončení aktualizace ručně.",
+        "adminRequired": "Ke spuštění aktualizace odsud musí být přihlášen administrátor.",
+        "disabled": "Aktualizace spouštěné z rozhraní jsou na této instanci vypnuté. Nastavte ověřování, nebo pro povolení tlačítka nastavte SPOOLMAN_ALLOW_UI_UPDATE=TRUE. Aktualizovat můžete také z příkazové řádky:"
+      },
+      "docker": {
+        "description": "Tato instance běží v Dockeru. Aktualizujte stažením nového image a znovuvytvořením kontejneru:",
+        "tagReminder": "Pokud váš soubor compose odkazuje na konkrétní tag image, před stažením jej změňte na novou verzi (např. ghcr.io/sherrmann/spoolman-ng:{{version}})."
+      },
+      "haAddon": {
+        "description": "Tato instance běží jako doplněk Home Assistant. Aktualizujte ji přímo v Home Assistant, který novou verzi nabídne automaticky:",
+        "steps": "Nastavení → Doplňky → Spoolman → Aktualizovat"
+      },
+      "unknown": {
+        "description": "Aktualizujte nainstalováním nejnovější verze stejným způsobem, jakým jste Spoolman původně nainstalovali. Podrobnosti najdete v poznámkách k vydání."
+      },
+      "started": {
+        "title": "Aktualizace zahájena",
+        "descriptionManaged": "Spoolman se aktualizuje a automaticky se restartuje. Tato stránka se znovu připojí, jakmile bude opět dostupný.",
+        "descriptionManual": "Spoolman se aktualizuje. Po dokončení aktualizace jej ručně restartujte."
+      },
+      "failed": {
+        "title": "Aktualizace se nezdařila"
+      }
+    }
+  },
+  "low_stock": {
+    "title": "Nízký stav",
+    "remaining_header": "Zbývá",
+    "remaining_left": "zbývá {{amount}}",
+    "threshold_button": "Upravit práh",
+    "threshold_button_value": "Práh: {{value}}",
+    "section": {
+      "explicit": "Pod vámi nastaveným prahem",
+      "fallback": "Pod výchozí hodnotou {{grams}} g"
+    },
+    "empty": "Není třeba nic doobjednávat — máte dostatek zásob."
+  },
+  "orders": {
+    "title": "Objednávky",
+    "empty": "Zatím žádné objednávky.",
+    "new_order": "Nová objednávka",
+    "new_order_title": "Nová objednávka",
+    "add_line": "Přidat filament",
+    "remove_line": "Odebrat řádek",
+    "select_filament": "Vyberte filament",
+    "no_lines": "Před vytvořením objednávky přidejte alespoň jeden filament.",
+    "order_number": "Objednávka č.",
+    "shop": "Obchod",
+    "ordered_at": "Objednáno",
+    "lines_summary": "Doručeno {{arrived}} z {{total}}",
+    "lines_summary_title": "Řádky",
+    "state_title": "Stav",
+    "filaments_count_one": "{{count}} filament",
+    "filaments_count_other": "{{count}} filamentů",
+    "arrived_action": "Doručeno…",
+    "outstanding": "Nedoručeno",
+    "create_error": "Objednávku se nepodařilo vytvořit. Zkuste to prosím znovu.",
+    "state": {
+      "open": "Otevřeno — {{count}} nedoručeno",
+      "arrived": "Doručeno"
+    },
+    "mark_ordered": "Označit jako objednané",
+    "mark_ordered_title": "Označit „{{name}}“ jako objednané",
+    "create_order": "Vytvořit objednávku",
+    "create_order_title": "Vytvořit objednávku — vybráno {{count}}",
+    "shop_placeholder": "Zadejte název obchodu (pokud neexistuje, vytvoří se)",
+    "order_date": "Datum objednávky",
+    "quantity": "Množství",
+    "price_per_unit": "Cena / cívka (volitelné)",
+    "order_number_field": "Číslo objednávky (volitelné)",
+    "url": "Odkaz na objednávku (volitelné)",
+    "selected_count": "Vybráno {{count}}",
+    "arrive_title": "Co dorazilo z objednávky č. {{number}}?",
+    "arrive_subtitle": "Částečné dodávky rozdělí řádek — zbytek zůstane v objednávce.",
+    "arrive_error": "Nepodařilo se označit objednávku jako doručenou. Zkuste to prosím znovu.",
+    "arrived_check": "Doručeno",
+    "n_of_m": "{{delivered}} z {{outstanding}} nedoručeno",
+    "split_preview": "{{delivered}} dorazí, {{rest}} zůstane v objednávce",
+    "create_spools": "Vytvořit cívky pro doručené položky",
+    "location": "Umístění",
+    "banner": "Tento filament je objednán (objednávka č. {{id}}) — označit jeho řádek jako doručený?",
+    "mark_arrived": "Označit jako doručené",
+    "details_title": "Objednávka {{number}}",
+    "comment": "Komentář",
+    "update_error": "Objednávku se nepodařilo upravit. Zkuste to prosím znovu.",
+    "delete_error": "Objednávku se nepodařilo smazat. Zkuste to prosím znovu.",
+    "delete_confirm": "Smazat tuto objednávku? Její řádky budou smazány také.",
+    "filaments_count_few": "{{count}} filamenty"
   }
 }

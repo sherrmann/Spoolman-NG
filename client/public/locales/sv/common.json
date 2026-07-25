@@ -27,7 +27,7 @@
     "showArchived": "Visa arkiverade",
     "notAccessTitle": "Du har inte tillgång till denna sida",
     "clearFilters": "Rensa filter",
-    "saveAndAdd": "Spara och Lägg till",
+    "saveAndAdd": "Spara och lägg till",
     "continue": "Fortsätt",
     "search": "Sök",
     "resetUsage": "Nollställ förbrukning",
@@ -68,13 +68,13 @@
   "printing": {
     "generic": {
       "title": "Utskrift",
-      "description": "Justera inställningarna nedan för att få önskat utskriftslayout. Kom ihåg att skrivare och ditt operativsystem kan tillämpa sina egna marginaler och skalning, så du kan behöva justera inställningarna därefter. Testa på ett vanligt papper innan du skriver ut på de faktiska etiketterna.",
+      "description": "Justera inställningarna nedan för att få önskad utskriftslayout. Kom ihåg att skrivare och ditt operativsystem kan tillämpa sina egna marginaler och skalning, så du kan behöva justera inställningarna därefter. Testa på ett vanligt papper innan du skriver ut på de faktiska etiketterna.",
       "helpMargin": "Marginaler bör konfigureras för att matcha ditt etikettpapper och skrivare, ändringar av dessa kommer att påverka storleken på hela rutnätet.",
       "helpPrinterMargin": "Säkerhetszon bör ställas in på hur nära papperskanten din skrivare kan skriva ut, ändringar av dessa kommer inte att påverka hela rutnätet.",
       "print": "Skriv ut",
       "columns": "Kolumner",
       "rows": "Rader",
-      "paperSize": "Papperstyp",
+      "paperSize": "Pappersstorlek",
       "customSize": "Anpassad",
       "dimensions": "Dimensioner",
       "showBorder": "Visa ram",
@@ -118,7 +118,19 @@
       "invalidGeometry": "Etikettrutnätet får inte plats på papperet",
       "invalidGeometryHelp": "Marginaler och avstånd lämnar inget utrymme för etiketterna. Minska marginalerna, avstånden, kolumnerna eller raderna — eller välj en större pappersstorlek.",
       "contentClipped": "Visst etikettinnehåll klipps av",
-      "contentClippedHelp": "Minst en etiketts innehåll får inte plats inom etiketten och kommer att klippas av vid utskrift. Minska textstorleken, korta ner mallen eller använd färre kolumner/rader så att varje etikett blir större."
+      "contentClippedHelp": "Minst en etiketts innehåll får inte plats inom etiketten och kommer att klippas av vid utskrift. Minska textstorleken, korta ner mallen eller använd färre kolumner/rader så att varje etikett blir större.",
+      "checklist": {
+        "title": "Innan du skriver ut",
+        "intro": "Webbläsarens utskriftsdialog skalar ofta om sidor, vilket förstör etikettens geometri. Kontrollera följande i utskriftsdialogen som öppnas härnäst:",
+        "scale": "Skala är 100 % / ”Verklig storlek” — aldrig ”Anpassa till sida”.",
+        "paperSize": "Vald pappersstorlek är exakt {{width}} × {{height}} mm.",
+        "margins": "Marginaler är satta till ”Inga” (Spoolman hanterar redan marginalerna).",
+        "headersFooters": "Sidhuvuden och sidfötter är avstängda.",
+        "pageSizeModeHint": "Du har valt en etikettpappersstorlek men Sidstorlek är satt till ”Automatiskt”. ”Matcha etikettstorlek” talar om den exakta sidgeometrin för webbläsaren.",
+        "pageSizeModeApply": "Byt till Matcha etikettstorlek",
+        "dontShowAgain": "Visa inte detta igen",
+        "printNow": "Skriv ut nu"
+      }
     },
     "qrcode": {
       "button": "Skriv ut etiketter",
@@ -129,7 +141,7 @@
       "extruderTemp": "ET: {{temp}}",
       "textSize": "Textstorlek",
       "showSpoolmanIcon": "Visa Spoolman-ikon",
-      "showContent": "Visa text",
+      "showContent": "Skriv ut etikett",
       "showVendor": "Tillverkare",
       "showLotNr": "Batchnummer",
       "showSpoolWeight": "Spolvikt",
@@ -138,8 +150,8 @@
       "showFilamentComment": "Filamentkommentar",
       "showVendorComment": "Tillverkarkommentar",
       "template": "Textmall",
-      "templateHelp": "Använd {} för att infoga värden från spolobjektet som text. Till exempel kommer {id} att ersättas med spolens id, eller {filament.material} att ersättas med filamentets material. Omslut text med dubbla asterisker ** för att göra den fetstilad. Klicka på knappen för att visa en lista över alla tillgängliga taggar.",
-      "showQRCode": "Visa QR-kod",
+      "templateHelp": "Använd {} för att infoga värden från spolobjektet som text. Till exempel kommer {id} att ersättas med spolens id, eller {filament.material} att ersättas med filamentets material. Om ett värde saknas ersätts det med \"?\". En andra uppsättning {} kan användas för att ta bort detta. Dessutom tas all text mellan uppsättningarna av {} bort om värdet saknas. Till exempel visar {Lot Nr: {lot_nr}} bara etiketten om spolen har ett batchnummer. Omslut text med dubbla asterisker ** för att göra den fetstilad. Lägg till ett format efter ett kolon: tal som {remaining_weight:0.0} avrundas till så många decimaler, och datum som {registered:YYYY-MM-DD HH:mm} formaterar datumet/tiden i din lokala tidszon. Inled en rad med {size:1.5} för att skala hela den raden (här 1,5×). Klicka på knappen för att visa en lista över alla tillgängliga taggar.",
+      "showQRCode": "Skriv ut QR-kod",
       "showQRCodeMode": {
         "no": "Nej",
         "simple": "Enkel",
@@ -188,7 +200,16 @@
         "none": "Ingen",
         "code128": "Code 128"
       },
-      "tooltip": "Skriv ut etiketter för de valda raderna, eller välj objekt på nästa sida"
+      "tooltip": "Skriv ut etiketter för de valda raderna, eller välj objekt på nästa sida",
+      "qrSize": {
+        "label": "QR-storlek",
+        "tooltip": "Utskriven storlek på QR-kodens kvadrat i mm. Automatiskt behåller det tidigare beteendet: QR-koden fyller halva etiketten (hela om inget annat skrivs ut). QR-marginal läggs till runt den valda storleken som en tyst zon.",
+        "auto": "Automatiskt",
+        "custom": "Anpassad",
+        "tooSmall": "QR-koder mindre än {{mm}} mm kan vara svåra att skanna med en mobilkamera.",
+        "clamped": "Den här etiketten får bara plats med ≈ {{rendered}} mm — mindre än de {{requested}} mm du har angett.",
+        "clampedTooSmall": "Den här etiketten får bara plats med ≈ {{rendered}} mm ({{requested}} mm angett) — under minimumet på {{mm}} mm för mobilkamera."
+      }
     },
     "spoolSelect": {
       "title": "Välj spolar",
@@ -213,7 +234,8 @@
       "hidePrinted": "Dölj redan utskrivna",
       "reprintConfirmTitle": "Skriv ut etiketter igen?",
       "reprintConfirmContent_one": "{{count}} valt filament har redan en utskriven etikett. Skriv ut den igen?",
-      "reprintConfirmContent_other": "{{count}} valda filament har redan utskrivna etiketter. Skriv ut dem igen?"
+      "reprintConfirmContent_other": "{{count}} valda filament har redan utskrivna etiketter. Skriv ut dem igen?",
+      "searchPlaceholder": "Sök på filament-ID, tillverkare, namn eller material"
     }
   },
   "scanner": {
@@ -251,8 +273,8 @@
       "measured_weight": "Uppmätt vikt",
       "weight_to_use": "Vikt",
       "price": "Pris",
-      "initial_weight": "Initial Vikt",
-      "spool_weight": "Tom Vikt",
+      "initial_weight": "Initial vikt",
+      "spool_weight": "Tom vikt",
       "filament_internal": "Interna",
       "filament_external": "Externa",
       "filament_name_only": "Namn",
@@ -285,7 +307,7 @@
       "show": "Visa spole",
       "archive": "Arkivera spole",
       "show_title": "[Spole #{{id}}] {{name}}",
-      "adjust": "Justera Spolmängd"
+      "adjust": "Justera spolmängd"
     },
     "messages": {
       "archive": "Är du säker på att du vill arkivera denna spole?",
@@ -368,6 +390,14 @@
       "shown_other": "{{count}} spolar visas",
       "selected_one": "{{count}} spole vald",
       "selected_other": "{{count}} spolar valda"
+    },
+    "nlSearch": {
+      "button": "AI",
+      "title": "Sök med naturligt språk",
+      "placeholder": "t.ex. svart PETG i hylla B",
+      "hint": "Tillämpas som redigerbara filter",
+      "search": "Sök",
+      "error": "Sökningen kunde inte tolkas. Försök igen eller använd den vanliga sökrutan."
     }
   },
   "filament": {
@@ -408,7 +438,8 @@
       "finish": "Finish",
       "pattern": "Mönster",
       "translucent": "Genomskinlig",
-      "glow": "Självlysande"
+      "glow": "Självlysande",
+      "image": "Foto"
     },
     "fields_help": {
       "name": "Filamentets namn, för att skilja detta filament från andra från samma tillverkare. Bör innehålla färgen till exempel.",
@@ -421,7 +452,8 @@
       "low_stock_threshold": "Markera detta filament för återbeställning när den totala återstående vikten för dess spolar sjunker under så här många gram.",
       "reserve_count": "Antal oöppnade reservspolar du har i lager, som spåras utan att en spole skapas för var och en.",
       "settings_extruder_temp_range": "Tillverkarens rekommenderade temperaturintervall för extrudern (min–max). Valfritt, lämna tomt om du bara har ett enda värde.",
-      "settings_bed_temp_range": "Tillverkarens rekommenderade temperaturintervall för bädden (min–max). Valfritt, lämna tomt om du bara har ett enda värde."
+      "settings_bed_temp_range": "Tillverkarens rekommenderade temperaturintervall för bädden (min–max). Valfritt, lämna tomt om du bara har ett enda värde.",
+      "image": "Ett foto för att känna igen detta filament på — t.ex. spolen eller butikens produktbild. Skalas ner i webbläsaren innan uppladdning; metadata som GPS-plats tas bort."
     },
     "titles": {
       "create": "Skapa filament",
@@ -446,7 +478,7 @@
       "vendor_create_error": "Det gick inte att skapa tillverkaren"
     },
     "buttons": {
-      "add_spool": "Skapa Spole",
+      "add_spool": "Skapa spole",
       "fetch": "Hämta",
       "download_swatch": "Provkort",
       "download_slicer": "Slicerprofil"
@@ -507,6 +539,16 @@
     },
     "messages": {
       "update_error": "Det gick inte att spara ändringarna. Försök igen."
+    },
+    "image": {
+      "upload": "Ladda upp foto",
+      "replace": "Byt foto",
+      "remove": "Ta bort foto",
+      "uploaded": "Fotot sparat",
+      "upload_error": "Det gick inte att spara fotot",
+      "removed": "Fotot borttaget",
+      "remove_error": "Det gick inte att ta bort fotot",
+      "prepare_error": "Det gick inte att läsa den bildfilen"
     }
   },
   "vendor": {
@@ -535,7 +577,7 @@
       "duplicate_name_warning": "En tillverkare med det här namnet finns redan."
     },
     "fields_help": {
-      "empty_spool_weight": "Vikten av en tom spool från denna tillverkare."
+      "empty_spool_weight": "Vikten av en tom spole från denna tillverkare."
     }
   },
   "home": {
@@ -576,7 +618,12 @@
       "top": "topp",
       "materials_one": "{{count}} material",
       "materials_other": "{{count}} material"
-    }
+    },
+    "load_error_title": "Det gick inte att ladda spolarna",
+    "load_error_desc": "Det uppstod ett problem när dina spolar skulle laddas. Försök igen.",
+    "gathering_dust": "Samlar damm",
+    "never_used": "Aldrig använd",
+    "no_stale": "Inga spolar samlar damm"
   },
   "table": {
     "actions": "Åtgärder",
@@ -713,6 +760,94 @@
       "add_title": "Lägg till länk",
       "edit_title": "Ändra länk",
       "delete_confirm": "Ta bort den här länken?"
+    },
+    "ai": {
+      "tab": "AI",
+      "description": "Anslut en OpenAI-kompatibel endpoint (Ollama, LM Studio, OpenAI, Anthropic, OpenRouter, Requesty, Groq, ...). Ingenting skickas någonstans och inget AI-element visas i gränssnittet förrän en funktion nedan har aktiverats.",
+      "preset": {
+        "label": "Förinställning",
+        "placeholder": "Välj en leverantör för att fylla i bas-URL:en"
+      },
+      "base_url": {
+        "label": "Bas-URL",
+        "tooltip": "Den OpenAI-kompatibla endpoint som ska användas, t.ex. en Ollama-server på ditt nätverk.",
+        "invalid": "Måste vara en http://- eller https://-URL"
+      },
+      "api_key": {
+        "label": "API-nyckel",
+        "tooltip": "Lagras utan att kunna läsas tillbaka: servern skickar aldrig tillbaka den till någon klient. Ollama och LM Studio behöver ingen.",
+        "placeholder_set": "En nyckel är sparad - ange ett nytt värde för att ersätta den",
+        "placeholder_unset": "Ingen nyckel sparad",
+        "clear": "Rensa sparad nyckel"
+      },
+      "model": {
+        "label": "Chattmodell",
+        "tooltip": "Modellen som används för chatt- och verktygsanropsfunktioner. Kör ett anslutningstest för att lista endpointens modeller."
+      },
+      "vision_model": {
+        "label": "Vision-modell",
+        "tooltip": "Modellen som används för bildfunktioner. Lämna tomt för att använda chattmodellen."
+      },
+      "stt": {
+        "title": "Tal till text (röstinmatning)",
+        "hint": "En separat OpenAI-kompatibel transkriberingsendpoint för röstinmatning - Ollama har ingen tal-till-text-funktion. Till exempel en whisper.cpp-server, Speaches eller Groq whisper.",
+        "base_url": {
+          "label": "STT-bas-URL",
+          "tooltip": "Transkriberingsendpointen, t.ex. http://localhost:8000/v1"
+        },
+        "api_key": {
+          "label": "STT-API-nyckel"
+        },
+        "model": {
+          "label": "STT-modell",
+          "tooltip": "Transkriberingsmodellen, t.ex. whisper-1 eller Systran/faster-whisper-base."
+        }
+      },
+      "env_locked": "Angetts via miljövariabel och är låst här",
+      "test": "Testa anslutning",
+      "probe": {
+        "reachable": "Endpointen är nåbar",
+        "models_listed": "modeller listade",
+        "failed": "Anslutningstestet misslyckades.",
+        "chat": "Chatt",
+        "tools": "Verktygsanrop",
+        "vision": "Vision",
+        "yes": "stöds",
+        "no": "stöds inte",
+        "unknown": "inte verifierat - denna endpoint rapporterar inte funktioner"
+      },
+      "features": {
+        "title": "Funktioner",
+        "hint": "Alla funktioner är avstängda som standard. Inget AI-relaterat visas någonstans i gränssnittet förrän det har aktiverats här.",
+        "chat": "Chattassistent",
+        "scan_to_spool": "Scan-to-Spool-fotoinmatning",
+        "nl_search": "Sökning med naturligt språk",
+        "mcp": "MCP-server",
+        "voice": "Röstinmatning",
+        "requires_config": "Konfigurera och spara en endpoint och en chattmodell först.",
+        "requires_vision": "Anslutningstestet rapporterar inget vision-stöd för den konfigurerade modellen.",
+        "requires_stt": "Konfigurera och spara en tal-till-text-endpoint och -modell först.",
+        "voice_autosend": "Skicka rösttranskriptioner automatiskt istället för att granska dem först",
+        "voice_unavailable": "Inte tillgänglig ännu - detta kommer med röstinmatningsfunktionen."
+      },
+      "mcp": {
+        "title": "MCP-server",
+        "hint": "Peka en MCP-klient (Claude Desktop, claude.ai) mot den här Spoolman-instansen för att fråga och uppdatera ditt lager. Ingen LLM-leverantör behövs - bara det här reglaget.",
+        "copy": "Kopiera konfiguration",
+        "copied": "Konfigurationen har kopierats till urklipp.",
+        "auth_note": "Om den här Spoolman-instansen kräver en API-token, lägg till en \"Authorization\": \"Bearer <token>\"-post under \"headers\". Skrivskyddade konton får endast frågeverktyg."
+      },
+      "models": {
+        "title": "Ollama-modeller",
+        "hint": "Din endpoint är en Ollama-server. Hämta en rekommenderad modell direkt härifrån - Spoolman hanterar modeller, aldrig körmiljön.",
+        "installed": "Installerad",
+        "pull": "Hämta",
+        "pulled": "Hämtade {{model}}.",
+        "purpose": {
+          "chat": "chatt",
+          "vision": "vision"
+        }
+      }
     }
   },
   "documentTitle": {
@@ -787,7 +922,8 @@
       "description": "Välj de platser du vill skriva ut skanningsbara QR-etiketter för.",
       "select_placeholder": "Välj platser",
       "none_selected": "Inga platser valda"
-    }
+    },
+    "load_error": "Det gick inte att ladda spolarna"
   },
   "calibration": {
     "title": "Kalibrering",
@@ -867,7 +1003,165 @@
         "cancel": "Avbryt"
       },
       "skip_finish_confirm": "Markera denna session som slutförd utan att spara detta steg?",
-      "session_complete": "Kalibreringssessionen har markerats som slutförd."
+      "session_complete": "Kalibreringssessionen har markerats som slutförd.",
+      "revisiting": "Återbesöker"
+    },
+    "wiki": {
+      "link": "Wiki",
+      "tooltip": "Öppna OrcaSlicers wiki för det här steget",
+      "tooltip_short": "OrcaSlicer-wiki"
+    },
+    "sections": {
+      "test_method": "Testmetod",
+      "test_setup": "Testinställning",
+      "your_result": "Ditt resultat",
+      "auto_computed": "· automatiskt beräknat"
+    },
+    "step_status": {
+      "skipped": "Överhoppad",
+      "done": "✓ Klar",
+      "incomplete": "Ofullständig"
+    },
+    "confidence_display": "{{level}} tillförlitlighet",
+    "confirm_delete": {
+      "tooltip": "Ta bort",
+      "confirming": "Klicka igen för att bekräfta",
+      "short": "Säker?"
+    },
+    "select_step": {
+      "placeholder": "Välj ett kalibreringssteg",
+      "required": "Välj ett kalibreringssteg."
+    },
+    "optional": "Valfritt",
+    "optional_notes": "Valfria anteckningar…",
+    "printer_name_placeholder": "t.ex. Bambu X1C, Ender 3",
+    "flow_calc": {
+      "title": "Räknare för passresultat",
+      "pass1": "Pass 1",
+      "pass2": "Pass 2",
+      "method_yolo": "YOLO (Rekommenderas)",
+      "method_legacy": "Legacy (2 pass)",
+      "yolo_desc": "Kalibrering i ett pass med mönstret Archimedean Chords (OrcaSlicer ≥ 2.3.0). Ange ditt nuvarande flödesförhållande och det korrigeringsvärde du observerar på utskriften.",
+      "legacy_desc": "Kalibrering i två pass. Gå igenom resultaten från första och andra passet för att beräkna ditt slutliga flödesförhållande.",
+      "start": "Starta →",
+      "yolo_pass1_desc": "Skriv ut testmodellen Archimedean Chords. Ange ditt nuvarande flödesförhållande och det korrigeringsvärde som visas på utskriften. Det nya flödesförhållandet beräknas automatiskt.",
+      "legacy_pass1_desc": "Skriv ut testmodellen för första passet. Ange ditt startflödesförhållande och den korrigeringsprocent du observerar på utskriften.",
+      "pass2_desc": "Ställ in slicerns flödesförhållande till resultatet från Pass 1, skriv ut testmodellen igen och ange sedan den nya korrigeringsprocenten.",
+      "current_flow_ratio": "Nuvarande flödesförhållande",
+      "modifier": "Modifierare",
+      "new_flow_ratio": "Nytt flödesförhållande",
+      "flow_ratio": "Flödesförhållande",
+      "result": "Resultat",
+      "cancel": "Avbryt",
+      "apply": "Använd i formuläret ✓",
+      "next_pass2": "Nästa: Pass 2 →",
+      "back": "← Tillbaka"
+    },
+    "pa": {
+      "method_tower": "Torn (Rekommenderas)",
+      "method_pattern": "Mönster / Linje",
+      "tower_desc": "Skriv ut PA-testtornet. Ange din extrudertyp, PA-stegvärdet (A) och den uppmätta höjden (B) vid lagret med bäst utseende. PA beräknas automatiskt som A × B.",
+      "pattern_desc": "Skriv ut PA-mönstret eller linjetestet. Identifiera den optimala linjen och ange dess PA-värde direkt nedan."
+    },
+    "input_shaping_advisory": {
+      "title": "Har du en modern skrivare? Du kanske inte behöver det här.",
+      "desc_wizard": "De flesta moderna CoreXY-skrivare som kör Klipper med en accelerometer (ADXL345), eller alla Bambu Lab-skrivare, hanterar redan input shaping automatiskt — och betydligt mer exakt än ett manuellt testtorn någonsin kan. Om det här gäller dig, hoppa över det här steget och slipp besväret.",
+      "desc_drawer": "De flesta moderna CoreXY-skrivare som kör Klipper med en accelerometer (ADXL345), eller alla Bambu Lab-skrivare, hanterar redan input shaping automatiskt — och betydligt mer exakt än ett manuellt testtorn någonsin kan. Om det här gäller dig, stäng bara den här panelen utan att spara.",
+      "skip": "Min skrivare hanterar det här — hoppa över →"
+    },
+    "vfa": {
+      "artifact_speeds": "Artefakthastigheter",
+      "artifact_speeds_desc": "Skriv ut VFA-testtornet och markera varje hastighet där du observerar VFA-artefakter. Min. och Max. undvikandehastighet beräknas automatiskt utifrån den här listan.",
+      "speed_placeholder": "Hastighet",
+      "add_speed": "Lägg till hastighet"
+    },
+    "step_copy": {
+      "temperature": {
+        "title": "Temperatur",
+        "description": "Hitta den optimala utskriftstemperaturen för det här filamentet. Skriv ut ett temperaturtorn och leta efter det lager som ger bäst balans mellan lagervidhäftning, ytkvalitet och minimal trådbildning. Högre temperatur förbättrar vidhäftningen, lägre temperatur minskar läckage och trådbildning."
+      },
+      "volumetric_speed": {
+        "title": "Volymetrisk hastighet",
+        "description": "Bestäm det maximala volymetriska flödet som ditt hotend klarar av med det här filamentet innan underextrudering uppstår. Skriv ut ett flödesramptest eller en serie enkelväggiga kuber vid ökande hastigheter, och notera hastigheten precis innan kvaliteten försämras."
+      },
+      "pressure_advance": {
+        "title": "Pressure Advance",
+        "description": "Justera Pressure Advance (Klipper / Bambu) eller Linear Advance (Marlin) för att eliminera hörnbulor och förbättra kvaliteten på skarpa hörn. Skriv ut ett PA-testmönster och finjustera värdet som ger de renaste, skarpaste hörnen. Aktivera Adaptive PA om din firmware stöder det."
+      },
+      "flow_rate": {
+        "title": "Flöde",
+        "description": "Finjustera extruderingsmultiplikatorn så att den faktiska mängden plast som läggs ut matchar slicerns förväntan. Skriv ut två kalibreringskuber (en på 98 % och en på 100 %) och mät deras väggar med ett skjutmått för att beräkna korrekt flödesförhållande."
+      },
+      "retraction": {
+        "title": "Retraktion",
+        "description": "Hitta den minsta retraktionslängden och -hastigheten som eliminerar trådbildning utan att nöta filamentet eller orsaka stopp. Skriv ut ett retraktionstorn och välj den lägsta inställningen som ger rena förflyttningsrörelser."
+      },
+      "tolerance": {
+        "title": "Tolerans",
+        "description": "Mät hur exakt din skrivare återger måttens storlekar. Skriv ut en toleranstestmodell, mät de utvalda måtten med ett skjutmått och notera avvikelsen. Använd resultatet i slicerns inställningar för dimensionsnoggrannhet / xy-kompensation."
+      },
+      "cornering": {
+        "title": "Kurvtagning",
+        "description": "Justera kurvtagningsbeteendet för att balansera utskriftshastighet mot ringning och artefakter vid riktningsändringar. Använd Junction Deviation (Marlin 2.x / RepRapFirmware), klassisk Jerk (äldre Marlin) eller Square Corner Velocity (Klipper). Skriv ut ett kurvtagningstestmönster och sänk värdet tills ringningen försvinner."
+      },
+      "input_shaping": {
+        "title": "Input Shaping",
+        "description": "Minska ghosting och ringning genom att applicera resonanskompensation. Mät din skrivares resonansfrekvens (accelerometer rekommenderas, eller använd ett visuellt ringningstorn). Välj den shapertyp och de frekvenser som minimerar artefakter, och ange dem sedan nedan."
+      },
+      "vfa": {
+        "title": "VFA (Vertical Fine Artifacts)",
+        "description": "Hitta den maximala utskriftshastigheten innan vertikala ytartefakter (VFA / räfflor) blir synliga. Skriv ut ett hastighetsramptest på ett objekt med jämna väggar och notera hastigheten precis innan regelbundna räfflor uppstår på ytan."
+      }
+    },
+    "field_labels": {
+      "inputs": {
+        "start_temp": "Starttemp",
+        "end_temp": "Sluttemp",
+        "step_size": "Stegstorlek",
+        "start_speed": "Starthastighet",
+        "end_speed": "Sluthastighet",
+        "measured_height": "Uppmätt höjd",
+        "extruder_type": "Extrudertyp",
+        "pa_step_a": "PA-steg (A)",
+        "measured_height_b": "Uppmätt höjd (B)",
+        "start_retract": "Startretraktion",
+        "factor": "Faktor",
+        "test_size": "Testmåttets storlek",
+        "measured_size": "Uppmätt storlek",
+        "firmware_type": "Firmware / Funktion",
+        "start_value": "Startvärde",
+        "end_value": "Slutvärde",
+        "shaper_type": "Shapertyp",
+        "frequency_x": "Resonansfrekv. X",
+        "frequency_y": "Resonansfrekv. Y"
+      },
+      "outputs": {
+        "temperature": "Optimal temp",
+        "max_volumetric_speed": "Max volymetrisk hastighet",
+        "pressure_advance": "PA-värde",
+        "flow_ratio": "Flödesförhållande",
+        "retraction_length": "Rekommenderad retraktion",
+        "tolerance_offset": "Toleransavvikelse",
+        "cornering_value": "Rekommenderat värde",
+        "shaper_type_x": "Rekommenderad shaper X",
+        "frequency_x": "Inställd frekv. X",
+        "shaper_type_y": "Rekommenderad shaper Y",
+        "frequency_y": "Inställd frekv. Y",
+        "min_avoidance_speed": "Min. undvikandehastighet",
+        "max_avoidance_speed": "Max. undvikandehastighet"
+      },
+      "options": {
+        "direct_drive": "Direct Drive",
+        "bowden": "Bowden",
+        "junction_deviation": "Junction Deviation (Marlin 2.x / RepRapFirmware)",
+        "jerk": "Jerk (klassisk Marlin)",
+        "square_corner_velocity": "Square Corner Velocity (Klipper)",
+        "mzv": "MZV",
+        "ei": "EI",
+        "zv": "ZV",
+        "2hump_ei": "2HUMP_EI",
+        "3hump_ei": "3HUMP_EI"
+      }
     }
   },
   "external": {
@@ -1010,7 +1304,8 @@
       "unknown_content": "Inget filament har streckkoden {{code}}. Skapa ett filament och kom ihåg den här streckkoden?",
       "create_filament": "Skapa filament",
       "lookup_error": "Det gick inte att slå upp streckkoden."
-    }
+    },
+    "photo": "Foto"
   },
   "printer": {
     "printer": "Skrivare",
@@ -1019,5 +1314,166 @@
       "comment": "Kommentar",
       "spool_count": "Spolar"
     }
+  },
+  "chat": {
+    "title": "Assistent",
+    "open": "Fråga assistenten",
+    "placeholder": "Fråga om ditt filament och dina spolar…",
+    "send": "Skicka",
+    "thinking": "Tänker…",
+    "empty": "Fråga mig om dina spolar och ditt filament — till exempel \"hur mycket svart PETG har jag kvar?\" eller \"vad borde jag beställa mer av?\".",
+    "viewInList": "Visa i spollistan",
+    "confirm": {
+      "before": "Före",
+      "after": "Efter",
+      "confirm": "Bekräfta",
+      "cancel": "Avbryt",
+      "confirmed": "Bekräftad",
+      "cancelled": "Avbruten",
+      "destructive": "Kan inte ångras"
+    },
+    "executed": {
+      "undo": "Ångra",
+      "undone": "Ändringen ångrades."
+    },
+    "voice": {
+      "record": "Håll intryckt för att tala",
+      "listening": "Lyssnar…",
+      "speak": "Läs upp svar",
+      "unsupported": "Röstinspelning stöds inte i denna webbläsare.",
+      "mic_error": "Det gick inte att komma åt mikrofonen."
+    }
+  },
+  "intake": {
+    "hint": "Fotografera spolens etikett eller förpackning, eller välj ett befintligt foto.",
+    "select_photo": "Välj eller ta ett foto",
+    "extracting": "Läser etiketten...",
+    "in_library": "i ditt bibliotek, lägger till en spole",
+    "from_catalog": "SpoolmanDB, skapar filament och spole",
+    "use_raw": "Använd den råa extraktionen (nytt filament)",
+    "continue": "Fortsätt",
+    "back": "Tillbaka",
+    "photo_discarded": "Fotot analyserades i minnet och sparas inte.",
+    "prefilled_banner": "Förifyllt från ett etikettfoto - granska värdena innan du sparar.",
+    "fields": {
+      "vendor": "Tillverkare",
+      "name": "Namn",
+      "material": "Material",
+      "weight_g": "Vikt (g)",
+      "diameter_mm": "Diameter (mm)",
+      "extruder_temp_c": "Munstycke (C)",
+      "bed_temp_c": "Bädd (C)",
+      "lot_nr": "Batch",
+      "article_number": "Artikelnr",
+      "confidence": "Tillförlitlighet"
+    }
+  },
+  "update": {
+    "available": "uppdatering tillgänglig",
+    "tooltip": "Version {{version}} är tillgänglig",
+    "notification": {
+      "title": "En ny version av Spoolman är tillgänglig",
+      "description": "Version {{version}} har släppts. Se vad som är nytt och hur du uppdaterar.",
+      "viewRelease": "Visa versionsinformation"
+    },
+    "action": {
+      "open": "Uppdatera",
+      "howTo": "Hur du uppdaterar",
+      "modalTitle": "Uppdatera Spoolman",
+      "currentVersion": "Installerad: {{version}}",
+      "latestVersion": "senaste: {{version}}",
+      "viewReleaseNotes": "Visa versionsinformation",
+      "close": "Stäng",
+      "updateNow": "Uppdatera nu",
+      "updateToVersion": "Uppdatera till {{version}}",
+      "native": {
+        "description": "Det här är en nativ installation, så Spoolman kan uppdatera sig själv till den senaste versionen.",
+        "restartNotice": "Tjänsten startas om automatiskt efter uppdateringen. Om Spoolman inte hanteras av systemd, starta om den manuellt när uppdateringen är klar.",
+        "adminRequired": "En administratör måste vara inloggad för att köra uppdateringen härifrån.",
+        "disabled": "Uppdateringar via gränssnittet är inaktiverade på den här instansen. Konfigurera autentisering, eller sätt SPOOLMAN_ALLOW_UI_UPDATE=TRUE för att aktivera knappen. Du kan även uppdatera från ett skal:"
+      },
+      "docker": {
+        "description": "Den här instansen körs i Docker. Uppdatera genom att hämta den nya avbildningen och återskapa containern:",
+        "tagReminder": "Om din compose-fil låser en specifik avbildningstagg, uppdatera den till den nya versionen (t.ex. ghcr.io/sherrmann/spoolman-ng:{{version}}) innan du hämtar."
+      },
+      "haAddon": {
+        "description": "Den här instansen körs som ett Home Assistant-tillägg. Uppdatera den från Home Assistant, som erbjuder den nya versionen automatiskt:",
+        "steps": "Inställningar → Tillägg → Spoolman → Uppdatera"
+      },
+      "unknown": {
+        "description": "Uppdatera genom att installera den senaste versionen på samma sätt som du ursprungligen installerade Spoolman. Se versionsinformationen för detaljer."
+      },
+      "started": {
+        "title": "Uppdatering startad",
+        "descriptionManaged": "Spoolman uppdateras och kommer att starta om automatiskt. Den här sidan återansluter när den är tillbaka.",
+        "descriptionManual": "Spoolman uppdateras. Starta om Spoolman manuellt när uppdateringen är klar."
+      },
+      "failed": {
+        "title": "Uppdateringen misslyckades"
+      }
+    }
+  },
+  "low_stock": {
+    "title": "Lågt lager",
+    "remaining_header": "Återstående",
+    "remaining_left": "{{amount}} kvar",
+    "threshold_button": "Justera gräns",
+    "threshold_button_value": "Gräns: {{value}}",
+    "section": {
+      "explicit": "Under din angivna gräns",
+      "fallback": "Under standardvärdet på {{grams}} g"
+    },
+    "empty": "Inget att beställa — du är välfylld."
+  },
+  "orders": {
+    "title": "Ordrar",
+    "empty": "Inga ordrar ännu.",
+    "new_order": "Ny order",
+    "new_order_title": "Ny order",
+    "add_line": "Lägg till filament",
+    "remove_line": "Ta bort rad",
+    "select_filament": "Välj ett filament",
+    "no_lines": "Lägg till minst ett filament innan du skapar ordern.",
+    "order_number": "Ordernr",
+    "shop": "Butik",
+    "ordered_at": "Beställd",
+    "lines_summary": "{{arrived}} av {{total}} har anlänt",
+    "lines_summary_title": "Rader",
+    "state_title": "Status",
+    "filaments_count_one": "{{count}} filament",
+    "filaments_count_other": "{{count}} filament",
+    "arrived_action": "Anlänt…",
+    "outstanding": "Utestående",
+    "create_error": "Det gick inte att skapa ordern. Försök igen.",
+    "state": {
+      "open": "Öppen — {{count}} utestående",
+      "arrived": "Anlänt"
+    },
+    "mark_ordered": "Markera som beställd",
+    "mark_ordered_title": "Markera \"{{name}}\" som beställd",
+    "create_order": "Skapa order",
+    "create_order_title": "Skapa order — {{count}} valda",
+    "shop_placeholder": "Skriv ett butiksnamn (skapas om det är nytt)",
+    "order_date": "Orderdatum",
+    "quantity": "Antal",
+    "price_per_unit": "Pris / spole (valfritt)",
+    "order_number_field": "Ordernummer (valfritt)",
+    "url": "Orderlänk (valfritt)",
+    "selected_count": "{{count}} valda",
+    "arrive_title": "Vad anlände från order #{{number}}?",
+    "arrive_subtitle": "Delleveranser delar upp raden — resten ligger kvar på order.",
+    "arrive_error": "Det gick inte att markera ordern som anländ. Försök igen.",
+    "arrived_check": "Anlänt",
+    "n_of_m": "{{delivered}} av {{outstanding}} utestående",
+    "split_preview": "{{delivered}} anländer, {{rest}} ligger kvar på order",
+    "create_spools": "Skapa spolar för de levererade objekten",
+    "location": "Plats",
+    "banner": "Det här filamentet är beställt (order #{{id}}) — markera dess rad som anländ?",
+    "mark_arrived": "Markera som anländ",
+    "details_title": "Order {{number}}",
+    "comment": "Kommentar",
+    "update_error": "Det gick inte att uppdatera ordern. Försök igen.",
+    "delete_error": "Det gick inte att ta bort ordern. Försök igen.",
+    "delete_confirm": "Ta bort den här ordern? Dess rader tas bort också."
   }
 }

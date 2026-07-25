@@ -16,7 +16,7 @@
     "cancel": "取消",
     "confirm": "您確定嗎？",
     "continue": "繼續",
-    "filter": "過濾器",
+    "filter": "篩選",
     "clear": "清除",
     "refresh": "重新整理",
     "show": "檢視",
@@ -68,7 +68,7 @@
   },
   "printing": {
     "generic": {
-      "title": "列印中",
+      "title": "列印",
       "description": "調整以下設定以獲得所需的列印佈局。請注意，列表機和您的操作系統可能會套用自己的邊距和縮放比例，因此可能需要進行一些反覆測試才能達到理想效果。在實際標籤上列印之前，先在普通紙上測試。",
       "helpMargin": "邊距應配置為與您的標籤紙和列表機相符，調整這些將影響整個網格的大小。",
       "rows": "列",
@@ -119,13 +119,25 @@
       "invalidGeometry": "標籤網格超出紙張範圍",
       "invalidGeometryHelp": "邊界與間距已無空間容納標籤。請縮小邊界、間距、欄數或列數，或改用較大的紙張。",
       "contentClipped": "部分標籤內容遭裁切",
-      "contentClippedHelp": "至少有一個標籤的內容超出標籤範圍，列印時將被裁切。請縮小文字大小、縮短範本，或減少欄／列數讓每個標籤變大。"
+      "contentClippedHelp": "至少有一個標籤的內容超出標籤範圍，列印時將被裁切。請縮小文字大小、縮短範本，或減少欄／列數讓每個標籤變大。",
+      "checklist": {
+        "title": "列印前",
+        "intro": "瀏覽器的列印對話框常會重新縮放頁面，導致標籤版面跑位。在接下來開啟的列印對話框中，請確認：",
+        "scale": "縮放比例為 100%／「實際大小」— 切勿選擇「符合頁面大小」。",
+        "paperSize": "所選紙張大小恰為 {{width}} × {{height}} mm。",
+        "margins": "邊界設為「無」（Spoolman 已自行處理邊界）。",
+        "headersFooters": "已關閉頁首與頁尾。",
+        "pageSizeModeHint": "您選擇了標籤紙張大小，但「頁面大小」目前為「自動」。「符合標籤大小」會告訴瀏覽器精確的頁面尺寸。",
+        "pageSizeModeApply": "切換為符合標籤大小",
+        "dontShowAgain": "不再顯示",
+        "printNow": "立即列印"
+      }
     },
     "qrcode": {
-      "title": "標籤列印中",
+      "title": "標籤列印",
       "template": "標籤範本",
       "button": "列印標籤",
-      "templateHelp": "使用 {} 插入線捲物件的數值。例如，{id} 會被替換為線捲 ID，而 {filament.material} 則會替換為該線捲的材質。若數值缺失，會以「?」代替。您可以使用第二組 {} 來移除此符號；此外，若數值缺失，兩組 {} 之間的任何文字也都會被一併移除。例如，{批號：{lot_nr}} 僅會在該線捲含有批號資訊時顯示標籤。使用雙星號 ** 包圍文字可設為粗體。點擊按鈕可查看所有可用標籤的清單。",
+      "templateHelp": "使用 {} 插入料盤物件的數值。例如，{id} 會被替換為料盤 ID，而 {filament.material} 則會替換為該料盤的材質。若數值缺失，會以「?」代替。您可以使用第二組 {} 來移除此符號；此外，若數值缺失，兩組 {} 之間的任何文字也都會被一併移除。例如，{批號：{lot_nr}} 僅會在該料盤含有批號資訊時顯示標籤。使用雙星號 ** 包圍文字可設為粗體。在冒號後方加上格式：數字（如 {remaining_weight:0.0}）會四捨五入到指定的小數位數，日期（如 {registered:YYYY-MM-DD HH:mm}）則會以您當地時區格式化日期／時間。在一行開頭加上 {size:1.5} 可縮放整行文字（此處為 1.5 倍）。點擊按鈕可查看所有可用標籤的清單。",
       "textSize": "標籤文字大小",
       "showContent": "列印標籤",
       "useHTTPUrl": {
@@ -177,7 +189,16 @@
         "none": "無",
         "code128": "Code 128"
       },
-      "tooltip": "列印所選資料列的標籤，或在下一頁選擇項目"
+      "tooltip": "列印所選資料列的標籤，或在下一頁選擇項目",
+      "qrSize": {
+        "label": "QR 碼大小",
+        "tooltip": "QR 碼正方形的列印尺寸（mm）。「自動」維持原本的行為：QR 碼會佔標籤的一半（若沒有其他列印內容則佔滿整個標籤）。QR 碼留白會在所選尺寸外圍加上安靜區。",
+        "auto": "自動",
+        "custom": "自訂",
+        "tooSmall": "小於 {{mm}} mm 的 QR 碼可能難以用手機相機掃描。",
+        "clamped": "此標籤僅能容納 ≈ {{rendered}} mm — 小於您設定的 {{requested}} mm。",
+        "clampedTooSmall": "此標籤僅能容納 ≈ {{rendered}} mm（設定為 {{requested}} mm）— 低於手機相機所需的最小值 {{mm}} mm。"
+      }
     },
     "spoolSelect": {
       "title": "選擇料盤",
@@ -198,7 +219,8 @@
       "selectedTotal_other": "已選擇 {{count}} 種線材",
       "hidePrinted": "隱藏已列印",
       "reprintConfirmTitle": "重新列印標籤？",
-      "reprintConfirmContent_other": "所選線材中有 {{count}} 種已列印過標籤。要再次列印嗎？"
+      "reprintConfirmContent_other": "所選線材中有 {{count}} 種已列印過標籤。要再次列印嗎？",
+      "searchPlaceholder": "以線材 ID、製造商、名稱或材料搜尋"
     }
   },
   "scanner": {
@@ -345,6 +367,14 @@
     "totals": {
       "shown_other": "顯示 {{count}} 個料盤",
       "selected_other": "已選擇 {{count}} 個料盤"
+    },
+    "nlSearch": {
+      "button": "AI",
+      "title": "以自然語言搜尋",
+      "placeholder": "例如：B 架上的黑色 PETG",
+      "hint": "套用為可編輯的篩選條件",
+      "search": "搜尋",
+      "error": "無法解析此搜尋內容。請再試一次，或改用一般搜尋框。"
     }
   },
   "filament": {
@@ -364,7 +394,7 @@
       "coaxial": "混色",
       "settings_extruder_temp": "擠出機溫度",
       "settings_bed_temp": "床台溫度",
-      "external_id": "內部ID",
+      "external_id": "外部ID",
       "spools": "檢視料盤",
       "longitudinal": "縱向",
       "single_color": "單色",
@@ -384,7 +414,8 @@
       "finish": "表面質感",
       "pattern": "花紋",
       "translucent": "半透明",
-      "glow": "夜光"
+      "glow": "夜光",
+      "image": "照片"
     },
     "fields_help": {
       "material": "例如：PLA、ABS、PETG等。",
@@ -397,7 +428,8 @@
       "low_stock_threshold": "當此線材所有料盤的剩餘總重量低於此克數時，將其標記為需要補貨。",
       "reserve_count": "您手邊未拆封的備用料盤數量，不必為每一個建立料盤即可追蹤。",
       "settings_extruder_temp_range": "製造商建議的擠出機溫度範圍（最低–最高）。選填；若只有單一數值，請留空。",
-      "settings_bed_temp_range": "製造商建議的床台溫度範圍（最低–最高）。選填；若只有單一數值，請留空。"
+      "settings_bed_temp_range": "製造商建議的床台溫度範圍（最低–最高）。選填；若只有單一數值，請留空。",
+      "image": "用來辨識此線材的照片 — 例如料盤本身或商品頁面截圖。上傳前會在瀏覽器中縮小尺寸；GPS 位置等中繼資料會被移除。"
     },
     "titles": {
       "create": "建立線材",
@@ -409,8 +441,8 @@
     },
     "form": {
       "import_external": "從外部匯入",
-      "filament_updated": "自您開啟此頁面以後，此線材已被其他人/事物更新。儲存將覆蓋這些變更！",
-      "import_external_description": "在列表中選擇一種線材，即可自動填入線材建立表單中的相關詳細資訊。此操作將覆蓋您已輸入的所有資料。<br><br>如果需要，當您點擊“確定”時，將自動建立一個製造商對象。",
+      "filament_updated": "此線材已被其他人/程式更新過。若儲存將覆蓋這些變更！",
+      "import_external_description": "在列表中選擇一種線材，即可自動填入線材建立表單中的相關詳細資訊。此操作將覆蓋您已輸入的所有資料。<br><br>如果需要，當您點擊「確定」時，將自動建立一個製造商物件。",
       "import_3dfp": "3D Filament Profiles ID",
       "import_3dfp_help": "自動從 3dfilamentprofiles.com 擷取並填入線材資訊",
       "import_3dfp_placeholder": "例如：12875",
@@ -422,7 +454,7 @@
       "vendor_create_error": "建立製造商失敗"
     },
     "buttons": {
-      "add_spool": "增加料盤",
+      "add_spool": "新增料盤",
       "fetch": "取得",
       "download_swatch": "色卡",
       "download_slicer": "切片設定檔"
@@ -480,6 +512,16 @@
     },
     "messages": {
       "update_error": "無法儲存變更。請再試一次。"
+    },
+    "image": {
+      "upload": "上傳照片",
+      "replace": "更換照片",
+      "remove": "移除照片",
+      "uploaded": "照片已儲存",
+      "upload_error": "無法儲存照片",
+      "removed": "照片已移除",
+      "remove_error": "無法移除照片",
+      "prepare_error": "無法讀取該圖片檔案"
     }
   },
   "vendor": {
@@ -535,14 +577,14 @@
       "clone": "#{{id}} 複製線材 | Spoolman"
     },
     "spool": {
-      "create": "建立線盤 | Spoolman",
-      "clone": "#{{id}} 複製線盤 | Spoolman",
-      "show": "#{{id}} 檢視線盤 | Spoolman",
-      "edit": "#{{id}} 編輯線盤 | Spoolman",
-      "list": "線盤 | Spoolman"
+      "create": "建立料盤 | Spoolman",
+      "clone": "#{{id}} 複製料盤 | Spoolman",
+      "show": "#{{id}} 檢視料盤 | Spoolman",
+      "edit": "#{{id}} 編輯料盤 | Spoolman",
+      "list": "料盤 | Spoolman"
     },
     "locations": {
-      "list": "位置| Spoolman"
+      "list": "位置 | Spoolman"
     }
   },
   "home": {
@@ -552,9 +594,9 @@
     "total_weight": "總庫存",
     "total_value": "總價值",
     "low_stock": "庫存不足",
-    "all_stocked": "所有線軸庫存充足",
+    "all_stocked": "所有料盤庫存充足",
     "recently_used": "最近使用",
-    "no_recent": "沒有最近使用的線軸",
+    "no_recent": "沒有最近使用的料盤",
     "by_material": "按材料",
     "by_location": "按位置",
     "by_vendor": "按製造商",
@@ -582,7 +624,12 @@
       "this_month": "本月",
       "top": "最常用",
       "materials_other": "{{count}} 種材料"
-    }
+    },
+    "load_error_title": "無法載入料盤",
+    "load_error_desc": "載入您的料盤時發生問題，請再試一次。",
+    "gathering_dust": "閒置已久",
+    "never_used": "從未使用",
+    "no_stale": "沒有閒置已久的料盤"
   },
   "help": {
     "help": "說明",
@@ -610,7 +657,7 @@
     "general": {
       "tab": "一般",
       "currency": {
-        "label": "貨幣設定標籤"
+        "label": "貨幣"
       },
       "base_url": {
         "tooltip": "生成 QR 碼等功能時使用的基本 URL。",
@@ -728,12 +775,100 @@
       "add_title": "新增連結",
       "edit_title": "編輯連結",
       "delete_confirm": "要刪除此連結嗎？"
+    },
+    "ai": {
+      "tab": "AI",
+      "description": "連接一個與 OpenAI 相容的端點（Ollama、LM Studio、OpenAI、Anthropic、OpenRouter、Requesty、Groq 等）。在下方啟用功能之前，不會傳送任何資料，介面中也不會出現任何 AI 元素。",
+      "preset": {
+        "label": "預設",
+        "placeholder": "選擇服務提供者以自動填入基本 URL"
+      },
+      "base_url": {
+        "label": "基本 URL",
+        "tooltip": "要使用的 OpenAI 相容端點，例如您網路上的 Ollama 伺服器。",
+        "invalid": "必須是以 http:// 或 https:// 開頭的 URL"
+      },
+      "api_key": {
+        "label": "API 金鑰",
+        "tooltip": "僅供寫入儲存：伺服器不會將其回傳給任何用戶端。Ollama 與 LM Studio 不需要金鑰。",
+        "placeholder_set": "已儲存金鑰 - 輸入新值以取代",
+        "placeholder_unset": "尚未儲存金鑰",
+        "clear": "清除已儲存的金鑰"
+      },
+      "model": {
+        "label": "聊天模型",
+        "tooltip": "用於聊天與工具呼叫功能的模型。執行連線測試即可列出該端點的可用模型。"
+      },
+      "vision_model": {
+        "label": "視覺模型",
+        "tooltip": "用於圖片功能的模型。留空則使用聊天模型。"
+      },
+      "stt": {
+        "title": "語音轉文字（語音輸入）",
+        "hint": "語音輸入使用另一個與 OpenAI 相容的轉錄端點 - Ollama 不支援語音轉文字。例如 whisper.cpp 伺服器、Speaches 或 Groq whisper。",
+        "base_url": {
+          "label": "STT 基本 URL",
+          "tooltip": "轉錄端點，例如 http://localhost:8000/v1"
+        },
+        "api_key": {
+          "label": "STT API 金鑰"
+        },
+        "model": {
+          "label": "STT 模型",
+          "tooltip": "轉錄模型，例如 whisper-1 或 Systran/faster-whisper-base。"
+        }
+      },
+      "env_locked": "已透過環境變數設定，此處已鎖定",
+      "test": "測試連線",
+      "probe": {
+        "reachable": "端點可連線",
+        "models_listed": "已列出模型",
+        "failed": "連線測試失敗。",
+        "chat": "聊天",
+        "tools": "工具呼叫",
+        "vision": "視覺",
+        "yes": "支援",
+        "no": "不支援",
+        "unknown": "未驗證 - 此端點未回報功能"
+      },
+      "features": {
+        "title": "功能",
+        "hint": "所有功能預設皆為關閉。在此啟用之前，介面中不會出現任何與 AI 相關的內容。",
+        "chat": "聊天助理",
+        "scan_to_spool": "Scan-to-Spool 照片輸入",
+        "nl_search": "自然語言搜尋",
+        "mcp": "MCP 伺服器",
+        "voice": "語音輸入",
+        "requires_config": "請先設定並儲存端點與聊天模型。",
+        "requires_vision": "連線測試顯示目前設定的模型不支援視覺功能。",
+        "requires_stt": "請先設定並儲存語音轉文字端點與模型。",
+        "voice_autosend": "自動傳送語音轉錄內容，不先進行檢查",
+        "voice_unavailable": "尚無法使用 - 此功能將隨語音輸入功能推出。"
+      },
+      "mcp": {
+        "title": "MCP 伺服器",
+        "hint": "將 MCP 用戶端（Claude Desktop、claude.ai）指向此 Spoolman，即可查詢並更新您的庫存。不需要 LLM 提供者 - 只需開啟此開關。",
+        "copy": "複製設定",
+        "copied": "設定已複製到剪貼簿。",
+        "auth_note": "如果此 Spoolman 需要 API 權杖，請在 \"headers\" 底下新增一個 \"Authorization\": \"Bearer <token>\" 項目。唯讀帳號僅能使用查詢工具。"
+      },
+      "models": {
+        "title": "Ollama 模型",
+        "hint": "您的端點是 Ollama 伺服器。可直接在此提取建議的模型 - Spoolman 只管理模型，不會管理執行環境。",
+        "installed": "已安裝",
+        "pull": "提取",
+        "pulled": "已提取 {{model}}。",
+        "purpose": {
+          "chat": "聊天",
+          "vision": "視覺"
+        }
+      }
     }
   },
   "locations": {
     "locations": "位置",
     "no_location": "未設定位置",
-    "no_locations_help": "這個頁面讓您將料盤按位置進行整理，請從增加一些線盤來開始！",
+    "no_locations_help": "這個頁面讓您將料盤按位置進行整理，請從增加一些料盤來開始！",
     "new_location": "新增位置",
     "error_empty": "名稱不能為空",
     "error_exists": "位置已存在",
@@ -758,7 +893,8 @@
       "description": "選擇要列印可掃描 QR 碼標籤的位置。",
       "select_placeholder": "選擇位置",
       "none_selected": "未選擇任何位置"
-    }
+    },
+    "load_error": "無法載入料盤"
   },
   "calibration": {
     "title": "校正",
@@ -838,7 +974,165 @@
         "cancel": "取消"
       },
       "skip_finish_confirm": "要不儲存此步驟，並將此校正作業標記為完成嗎？",
-      "session_complete": "校正作業已標記為完成。"
+      "session_complete": "校正作業已標記為完成。",
+      "revisiting": "重新查看"
+    },
+    "wiki": {
+      "link": "Wiki",
+      "tooltip": "開啟此步驟的 OrcaSlicer wiki 頁面",
+      "tooltip_short": "OrcaSlicer wiki"
+    },
+    "sections": {
+      "test_method": "測試方法",
+      "test_setup": "測試設定",
+      "your_result": "您的結果",
+      "auto_computed": "· 自動計算"
+    },
+    "step_status": {
+      "skipped": "已跳過",
+      "done": "✓ 完成",
+      "incomplete": "未完成"
+    },
+    "confidence_display": "可信度：{{level}}",
+    "confirm_delete": {
+      "tooltip": "刪除",
+      "confirming": "再次點擊以確認",
+      "short": "確定？"
+    },
+    "select_step": {
+      "placeholder": "選擇校正步驟",
+      "required": "請選擇校正步驟。"
+    },
+    "optional": "選填",
+    "optional_notes": "選填備註…",
+    "printer_name_placeholder": "例如：Bambu X1C、Ender 3",
+    "flow_calc": {
+      "title": "測試結果計算器",
+      "pass1": "第一次測試",
+      "pass2": "第二次測試",
+      "method_yolo": "YOLO（建議）",
+      "method_legacy": "傳統方式（兩次測試）",
+      "yolo_desc": "使用阿基米德弦圖案進行單次校正（OrcaSlicer ≥ 2.3.0）。輸入目前的流量比與列印成品上觀察到的校正值。",
+      "legacy_desc": "兩次測試校正法。依序輸入第一次與第二次測試的結果，以計算最終流量比。",
+      "start": "開始 →",
+      "yolo_pass1_desc": "列印阿基米德弦測試模型。輸入目前的流量比與成品上顯示的校正值，系統會自動計算出新的流量比。",
+      "legacy_pass1_desc": "列印第一次測試模型。輸入起始流量比與成品上觀察到的校正百分比。",
+      "pass2_desc": "將切片軟體的流量比設為第一次測試的結果，重新列印測試模型，然後輸入新的校正百分比。",
+      "current_flow_ratio": "目前流量比",
+      "modifier": "修正值",
+      "new_flow_ratio": "新流量比",
+      "flow_ratio": "流量比",
+      "result": "結果",
+      "cancel": "取消",
+      "apply": "套用至表單 ✓",
+      "next_pass2": "下一步：第二次測試 →",
+      "back": "← 上一步"
+    },
+    "pa": {
+      "method_tower": "測試塔（建議）",
+      "method_pattern": "圖案／線條",
+      "tower_desc": "列印 PA 測試塔。輸入您的擠出機類型、PA 步進值 (A)，以及外觀最佳那一層的量測高度 (B)。PA 值會自動以 A × B 計算。",
+      "pattern_desc": "列印 PA 圖案或線條測試。找出最佳線條，並在下方直接輸入其 PA 值。"
+    },
+    "input_shaping_advisory": {
+      "title": "印表機夠新？您可能不需要這個步驟。",
+      "desc_wizard": "大多數搭載加速度計（ADXL345）並運行 Klipper 的現代 CoreXY 印表機，以及所有 Bambu Lab 印表機，都已能自動處理輸入整形 — 且準確度遠勝手動測試塔。如果您符合這個情況，可以跳過此步驟，省去麻煩。",
+      "desc_drawer": "大多數搭載加速度計（ADXL345）並運行 Klipper 的現代 CoreXY 印表機，以及所有 Bambu Lab 印表機，都已能自動處理輸入整形 — 且準確度遠勝手動測試塔。如果您符合這個情況，直接關閉此側欄而不儲存即可。",
+      "skip": "我的印表機已能處理 — 跳過此步驟 →"
+    },
+    "vfa": {
+      "artifact_speeds": "瑕疵速度",
+      "artifact_speeds_desc": "列印 VFA 測試塔，並標記每個出現 VFA 瑕疵的速度。最小與最大迴避速度會依此清單自動計算。",
+      "speed_placeholder": "速度",
+      "add_speed": "新增速度"
+    },
+    "step_copy": {
+      "temperature": {
+        "title": "溫度",
+        "description": "找出此線材的最佳列印溫度。列印溫度塔，找出層間附著力、表面品質與最少牽絲三者達到最佳平衡的那一層。溫度越高附著力越好；溫度越低則能減少滲料與牽絲。"
+      },
+      "volumetric_speed": {
+        "title": "體積速度",
+        "description": "找出您的熱端在此線材下，出現擠出不足前所能維持的最大體積流量。列印流量漸增測試，或以遞增速度列印一系列單壁立方體，並記錄品質開始下降前的速度。"
+      },
+      "pressure_advance": {
+        "title": "壓力提前",
+        "description": "調校壓力提前（Klipper／Bambu）或線性提前（Marlin），以消除轉角膨脹並改善尖角品質。列印 PA 測試圖案，找出能產生最乾淨、最銳利轉角的數值。若韌體支援，建議啟用自適應 PA。"
+      },
+      "flow_rate": {
+        "title": "流量",
+        "description": "微調擠出倍率，使實際擠出的塑料量與切片軟體的預期相符。列印兩個校正立方體（一個 98%，一個 100%），用卡尺量測其壁厚以計算正確的流量比。"
+      },
+      "retraction": {
+        "title": "回抽",
+        "description": "找出能消除牽絲、同時不會導致線材磨損或堵塞的最小回抽長度與速度。列印回抽距離塔，選擇能產生乾淨空駛移動的最低設定值。"
+      },
+      "tolerance": {
+        "title": "公差",
+        "description": "量測印表機還原特徵尺寸的準確度。列印公差測試模型，用卡尺量測目標特徵並記錄偏移量，再將結果套用至切片軟體的尺寸精度／XY 補償設定。"
+      },
+      "cornering": {
+        "title": "轉角",
+        "description": "調校轉角行為，在列印速度與方向變化時的震紋、瑕疵之間取得平衡。可使用路口偏移（Marlin 2.x／RepRapFirmware）、傳統抖動（舊版 Marlin），或方角速度（Klipper）。列印轉角測試圖案，逐步降低數值直到震紋消失。"
+      },
+      "input_shaping": {
+        "title": "輸入整形",
+        "description": "透過共振補償減少殘影與震紋。量測印表機的共振頻率（建議使用加速度計，或改用目視震紋塔）。選擇能將瑕疵降到最低的整形器類型與頻率，再於下方輸入。"
+      },
+      "vfa": {
+        "title": "VFA（垂直細紋瑕疵）",
+        "description": "找出在垂直表面瑕疵（VFA／條紋）出現前的最大列印速度。在平滑壁面物件上列印速度漸增測試，記錄表面出現規律條紋前的速度。"
+      }
+    },
+    "field_labels": {
+      "inputs": {
+        "start_temp": "起始溫度",
+        "end_temp": "結束溫度",
+        "step_size": "步進值",
+        "start_speed": "起始速度",
+        "end_speed": "結束速度",
+        "measured_height": "量測高度",
+        "extruder_type": "擠出機類型",
+        "pa_step_a": "PA 步進值 (A)",
+        "measured_height_b": "量測高度 (B)",
+        "start_retract": "起始回抽量",
+        "factor": "係數",
+        "test_size": "測試特徵尺寸",
+        "measured_size": "量測尺寸",
+        "firmware_type": "韌體／功能",
+        "start_value": "起始值",
+        "end_value": "結束值",
+        "shaper_type": "整形器類型",
+        "frequency_x": "共振頻率 X",
+        "frequency_y": "共振頻率 Y"
+      },
+      "outputs": {
+        "temperature": "最佳溫度",
+        "max_volumetric_speed": "最大體積速度",
+        "pressure_advance": "PA 值",
+        "flow_ratio": "流量比",
+        "retraction_length": "建議回抽量",
+        "tolerance_offset": "公差偏移",
+        "cornering_value": "建議值",
+        "shaper_type_x": "X 建議整形器",
+        "frequency_x": "調校頻率 X",
+        "shaper_type_y": "Y 建議整形器",
+        "frequency_y": "調校頻率 Y",
+        "min_avoidance_speed": "最小迴避速度",
+        "max_avoidance_speed": "最大迴避速度"
+      },
+      "options": {
+        "direct_drive": "直驅",
+        "bowden": "鮑登",
+        "junction_deviation": "路口偏移（Marlin 2.x／RepRapFirmware）",
+        "jerk": "抖動（經典 Marlin）",
+        "square_corner_velocity": "方角速度（Klipper）",
+        "mzv": "MZV",
+        "ei": "EI",
+        "zv": "ZV",
+        "2hump_ei": "2HUMP_EI",
+        "3hump_ei": "3HUMP_EI"
+      }
     }
   },
   "external": {
@@ -981,7 +1275,8 @@
       "unknown_content": "沒有任何線材使用條碼 {{code}}。要建立線材並記住此條碼嗎？",
       "create_filament": "建立線材",
       "lookup_error": "無法查詢該條碼。"
-    }
+    },
+    "photo": "照片"
   },
   "printer": {
     "printer": "印表機",
@@ -990,5 +1285,165 @@
       "comment": "備註",
       "spool_count": "料盤數"
     }
+  },
+  "chat": {
+    "title": "助理",
+    "open": "詢問助理",
+    "placeholder": "詢問您的線材與料盤…",
+    "send": "傳送",
+    "thinking": "思考中…",
+    "empty": "詢問我關於您的料盤與線材的問題 — 例如「我還剩多少黑色 PETG？」或「我該補什麼貨？」。",
+    "viewInList": "在料盤列表中檢視",
+    "confirm": {
+      "before": "之前",
+      "after": "之後",
+      "confirm": "確認",
+      "cancel": "取消",
+      "confirmed": "已確認",
+      "cancelled": "已取消",
+      "destructive": "無法復原"
+    },
+    "executed": {
+      "undo": "復原",
+      "undone": "變更已復原。"
+    },
+    "voice": {
+      "record": "按住說話",
+      "listening": "聆聽中…",
+      "speak": "朗讀回覆",
+      "unsupported": "此瀏覽器不支援語音錄製。",
+      "mic_error": "無法存取麥克風。"
+    }
+  },
+  "intake": {
+    "hint": "拍攝料盤標籤或包裝盒的照片，或選擇現有的照片。",
+    "select_photo": "選擇或拍攝照片",
+    "extracting": "正在讀取標籤...",
+    "in_library": "已在您的線材庫中，新增料盤",
+    "from_catalog": "SpoolmanDB，建立線材與料盤",
+    "use_raw": "使用原始擷取結果（新線材）",
+    "continue": "繼續",
+    "back": "上一步",
+    "photo_discarded": "照片僅在記憶體中分析，不會被儲存。",
+    "prefilled_banner": "已根據標籤照片預先填入 - 請在儲存前檢查各欄位數值。",
+    "fields": {
+      "vendor": "製造商",
+      "name": "名稱",
+      "material": "材料",
+      "weight_g": "重量 (g)",
+      "diameter_mm": "線徑 (mm)",
+      "extruder_temp_c": "噴嘴 (C)",
+      "bed_temp_c": "床台 (C)",
+      "lot_nr": "批號",
+      "article_number": "產品編號",
+      "confidence": "可信度"
+    }
+  },
+  "update": {
+    "available": "有可用更新",
+    "tooltip": "版本 {{version}} 已可更新",
+    "notification": {
+      "title": "有新版本的 Spoolman 可供使用",
+      "description": "版本 {{version}} 已發布。查看新功能與更新方法。",
+      "viewRelease": "檢視版本說明"
+    },
+    "action": {
+      "open": "更新",
+      "howTo": "如何更新",
+      "modalTitle": "更新 Spoolman",
+      "currentVersion": "已安裝：{{version}}",
+      "latestVersion": "最新版本：{{version}}",
+      "viewReleaseNotes": "檢視版本說明",
+      "close": "關閉",
+      "updateNow": "立即更新",
+      "updateToVersion": "更新至 {{version}}",
+      "native": {
+        "description": "這是原生安裝，因此 Spoolman 可以自行更新至最新版本。",
+        "restartNotice": "更新後服務將自動重新啟動。若 Spoolman 並非由 systemd 管理，請在更新完成後手動重新啟動。",
+        "adminRequired": "必須以管理員身分登入才能從此處執行更新。",
+        "disabled": "此執行個體已停用透過介面觸發更新的功能。請設定驗證，或將 SPOOLMAN_ALLOW_UI_UPDATE 設為 TRUE 以啟用此按鈕。您也可以透過命令列更新："
+      },
+      "docker": {
+        "description": "此執行個體在 Docker 中運行。請拉取新映像檔並重建容器以完成更新：",
+        "tagReminder": "若您的 compose 檔案指定了特定的映像檔標籤，請在拉取前先將其更新為新版本（例如 ghcr.io/sherrmann/spoolman-ng:{{version}}）。"
+      },
+      "haAddon": {
+        "description": "此執行個體以 Home Assistant 附加元件的形式運行。請從 Home Assistant 更新，系統會自動提供新版本：",
+        "steps": "設定 → 附加元件 → Spoolman → 更新"
+      },
+      "unknown": {
+        "description": "請以您當初安裝 Spoolman 的相同方式安裝最新版本以完成更新。詳情請參閱版本說明。"
+      },
+      "started": {
+        "title": "更新已開始",
+        "descriptionManaged": "Spoolman 正在更新，完成後將自動重新啟動。連線恢復後本頁面將自動重新連接。",
+        "descriptionManual": "Spoolman 正在更新。更新完成後請手動重新啟動 Spoolman。"
+      },
+      "failed": {
+        "title": "更新失敗"
+      }
+    }
+  },
+  "low_stock": {
+    "title": "庫存不足",
+    "remaining_header": "剩餘",
+    "remaining_left": "剩餘 {{amount}}",
+    "threshold_button": "調整門檻",
+    "threshold_button_value": "門檻：{{value}}",
+    "section": {
+      "explicit": "低於您設定的門檻",
+      "fallback": "低於預設值 {{grams}} g"
+    },
+    "empty": "沒有需要補貨的項目 — 庫存充足。"
+  },
+  "orders": {
+    "title": "訂單",
+    "empty": "尚無訂單。",
+    "new_order": "新增訂單",
+    "new_order_title": "新增訂單",
+    "add_line": "新增線材",
+    "remove_line": "移除項目",
+    "select_filament": "選擇線材",
+    "no_lines": "建立訂單前，請至少新增一種線材。",
+    "order_number": "訂單編號",
+    "shop": "商店",
+    "ordered_at": "訂購日期",
+    "lines_summary": "已到貨 {{arrived}} / {{total}}",
+    "lines_summary_title": "項目",
+    "state_title": "狀態",
+    "filaments_count_other": "{{count}} 種線材",
+    "arrived_action": "已到貨…",
+    "outstanding": "未到貨",
+    "create_error": "無法建立訂單。請再試一次。",
+    "state": {
+      "open": "未結 — {{count}} 項未到貨",
+      "arrived": "已到貨"
+    },
+    "mark_ordered": "標記為已訂購",
+    "mark_ordered_title": "將「{{name}}」標記為已訂購",
+    "create_order": "建立訂單",
+    "create_order_title": "建立訂單 — 已選擇 {{count}} 項",
+    "shop_placeholder": "輸入商店名稱（若為新商店將自動建立）",
+    "order_date": "訂購日期",
+    "quantity": "數量",
+    "price_per_unit": "單價／料盤（選填）",
+    "order_number_field": "訂單編號（選填）",
+    "url": "訂單連結（選填）",
+    "selected_count": "已選擇 {{count}} 項",
+    "arrive_title": "訂單 #{{number}} 到貨了哪些項目？",
+    "arrive_subtitle": "部分到貨會拆分該項目 — 其餘部分將維持在途。",
+    "arrive_error": "無法將訂單標記為已到貨。請再試一次。",
+    "arrived_check": "已到貨",
+    "n_of_m": "{{delivered}} / {{outstanding}} 未到貨",
+    "split_preview": "{{delivered}} 件將到貨，{{rest}} 件維持在途",
+    "create_spools": "為已到貨項目建立料盤",
+    "location": "位置",
+    "banner": "此線材已列入訂單（訂單 #{{id}}）— 要將該項目標記為已到貨嗎？",
+    "mark_arrived": "標記為已到貨",
+    "details_title": "訂單 {{number}}",
+    "comment": "備註",
+    "update_error": "無法更新訂單。請再試一次。",
+    "delete_error": "無法刪除訂單。請再試一次。",
+    "delete_confirm": "要刪除此訂單嗎？其所有項目也將一併刪除。"
   }
 }

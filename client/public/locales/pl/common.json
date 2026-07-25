@@ -89,7 +89,7 @@
       "measured_weight": "Waga filamentu i szpuli.",
       "weight_to_use": "Wybierz jaką wagę wprowadzić. Zmierzona waga jest dostępna tylko wtedy, gdy waga szpuli jest ustawiona dla wybranego filamentu.",
       "price": "Cena pełnej szpuli. Jeśli nie ustawiona, cena filamentu będzie domyślna.",
-      "initial_weight": "Masa początkowa filamentu(netto). Może być podana przez producenta, ale możesz ustawić dla każdej szpuli, aby uwzględnić ewentualne niedokładności.",
+      "initial_weight": "Waga początkowa filamentu na szpuli (waga netto). Jeśli nie ustawiona, zostanie użyta waga z obiektu filamentu.",
       "spool_weight": "Waga pustej szpuli. Pozostaw puste, aby użyć wartości z filamentu lub od producenta.",
       "external_filament": "Wybrałeś filament z zewnętrznej bazy. Element filamentu (możliwe też że element producenta) zostanie stworzony automatycznie gdy stworzysz szpulę. Może to spowodować utworzenie się duplikatów elementów filamentu jeżeli już stworzyłeś element filamentu dla tego filamentu.",
       "printer": "Drukarka, na której ta szpula jest obecnie załadowana. Drukarkami zarządzasz w Ustawieniach.",
@@ -103,7 +103,7 @@
     },
     "form": {
       "new_location_prompt": "Wprowadź nową lokalizację",
-      "spool_updated": "Szpula została zaktualizowana od czasu otwarcia tej strony. Zapisanie nadpisze te zmiany!",
+      "spool_updated": "Ta szpula została zaktualizowana przez kogoś/coś innego od czasu otwarcia tej strony. Zapisanie nadpisze te zmiany!",
       "measurement_type": {
         "length": "Długość",
         "weight": "Waga"
@@ -113,7 +113,7 @@
       "adjust_filament_value": "Ilość zużycia"
     },
     "formats": {
-      "last_used": "Ostatnio użyty {{date}}"
+      "last_used": "Ostatnio użyta {{date}}"
     },
     "custom_actions": "Akcje",
     "bulk": {
@@ -185,6 +185,14 @@
       "selected_one": "Wybrano {{count}} szpulę",
       "selected_few": "Wybrano {{count}} szpule",
       "selected_many": "Wybrano {{count}} szpul"
+    },
+    "nlSearch": {
+      "button": "AI",
+      "title": "Wyszukiwanie w języku naturalnym",
+      "placeholder": "np. czarny PETG na półce B",
+      "hint": "Zastosowane jako edytowalne filtry",
+      "search": "Szukaj",
+      "error": "Nie udało się przetłumaczyć wyszukiwania. Spróbuj ponownie lub użyj zwykłego pola wyszukiwania."
     }
   },
   "dashboard": {
@@ -210,7 +218,7 @@
   "yes": "Tak",
   "no": "Nie",
   "tags": {
-    "clone": "Klonuj"
+    "clone": "Sklonuj"
   },
   "printing": {
     "generic": {
@@ -246,7 +254,7 @@
       "printerMarginBottom": "Bezpieczna strefa od dołu",
       "newSetting": "Nowe",
       "defaultSettings": "Domyślne",
-      "itemCopies": "Skopiuj element",
+      "itemCopies": "Kopie elementu",
       "settings": "Presety",
       "saveAsImage": "Zapisz jako obraz",
       "duplicateSettings": "Zduplikuj",
@@ -265,7 +273,19 @@
       "invalidGeometry": "Siatka etykiet nie mieści się na papierze",
       "invalidGeometryHelp": "Marginesy i odstępy nie zostawiają miejsca na etykiety. Zmniejsz marginesy, odstępy, liczbę kolumn lub wierszy — albo wybierz większy rozmiar papieru.",
       "contentClipped": "Część zawartości etykiet jest ucięta",
-      "contentClippedHelp": "Zawartość co najmniej jednej etykiety nie mieści się w jej obrębie i zostanie ucięta podczas drukowania. Zmniejsz rozmiar tekstu, skróć szablon lub użyj mniejszej liczby kolumn/wierszy, aby każda etykieta była większa."
+      "contentClippedHelp": "Zawartość co najmniej jednej etykiety nie mieści się w jej obrębie i zostanie ucięta podczas drukowania. Zmniejsz rozmiar tekstu, skróć szablon lub użyj mniejszej liczby kolumn/wierszy, aby każda etykieta była większa.",
+      "checklist": {
+        "title": "Przed wydrukiem",
+        "intro": "Okna dialogowe drukowania przeglądarki często przeskalowują strony, co psuje geometrię etykiety. W oknie dialogowym drukowania, które zaraz się otworzy, sprawdź:",
+        "scale": "Skala wynosi 100% / „Rozmiar rzeczywisty” — nigdy „Dopasuj do strony”.",
+        "paperSize": "Wybrany rozmiar papieru wynosi dokładnie {{width}} × {{height}} mm.",
+        "margins": "Marginesy są ustawione na „Brak” (Spoolman już obsługuje marginesy).",
+        "headersFooters": "Nagłówki i stopki są wyłączone.",
+        "pageSizeModeHint": "Wybrano rozmiar papieru etykietowego, ale Rozmiar strony jest ustawiony na „Automatyczny”. „Dopasuj do rozmiaru etykiety” informuje przeglądarkę o dokładnej geometrii strony.",
+        "pageSizeModeApply": "Przełącz na Dopasuj do rozmiaru etykiety",
+        "dontShowAgain": "Nie pokazuj tego ponownie",
+        "printNow": "Drukuj teraz"
+      }
     },
     "qrcode": {
       "button": "Drukuj etykiety",
@@ -335,7 +355,16 @@
         "none": "Brak",
         "code128": "Code 128"
       },
-      "tooltip": "Drukuj etykiety dla zaznaczonych wierszy lub wybierz elementy na następnej stronie"
+      "tooltip": "Drukuj etykiety dla zaznaczonych wierszy lub wybierz elementy na następnej stronie",
+      "qrSize": {
+        "label": "Rozmiar kodu QR",
+        "tooltip": "Rozmiar wydrukowanego kwadratu kodu QR w mm. Automatyczny zachowuje dotychczasowe działanie: kod QR wypełnia połowę etykiety (całą, jeśli nic więcej się nie drukuje). Margines kodu QR jest dodawany wokół wybranego rozmiaru jako strefa ciszy.",
+        "auto": "Automatyczny",
+        "custom": "Niestandardowy",
+        "tooSmall": "Kody QR mniejsze niż {{mm}} mm mogą być trudne do zeskanowania aparatem telefonu.",
+        "clamped": "Ta etykieta mieści tylko ≈ {{rendered}} mm — mniej niż ustawione {{requested}} mm.",
+        "clampedTooSmall": "Ta etykieta mieści tylko ≈ {{rendered}} mm (ustawiono {{requested}} mm) — poniżej minimum {{mm}} mm dla aparatu telefonu."
+      }
     },
     "spoolSelect": {
       "title": "Wybierz szpule",
@@ -364,7 +393,8 @@
       "reprintConfirmTitle": "Wydrukować etykiety ponownie?",
       "reprintConfirmContent_one": "{{count}} wybrany filament ma już wydrukowaną etykietę. Wydrukować ją ponownie?",
       "reprintConfirmContent_few": "{{count}} wybrane filamenty mają już wydrukowane etykiety. Wydrukować je ponownie?",
-      "reprintConfirmContent_many": "{{count}} wybranych filamentów ma już wydrukowane etykiety. Wydrukować je ponownie?"
+      "reprintConfirmContent_many": "{{count}} wybranych filamentów ma już wydrukowane etykiety. Wydrukować je ponownie?",
+      "searchPlaceholder": "Szukaj po ID filamentu, producencie, nazwie lub materiale"
     }
   },
   "scanner": {
@@ -400,7 +430,7 @@
       "settings_bed_temp": "Temperatura stołu",
       "color_hex": "Kolor",
       "article_number": "Numer artykułu",
-      "spools": "Zobacz szpule",
+      "spools": "Pokaż szpule",
       "external_id": "Zewnętrzne ID",
       "single_color": "Pojedynczy",
       "multi_color": "Wielo",
@@ -419,12 +449,13 @@
       "finish": "Wykończenie",
       "pattern": "Wzór",
       "translucent": "Półprzezroczysty",
-      "glow": "Świecący w ciemności"
+      "glow": "Świecący w ciemności",
+      "image": "Zdjęcie"
     },
     "fields_help": {
       "material": "Np. PLA, ABS, PETG itp.",
       "price": "Cena pełnej szpuli.",
-      "spool_weight": "Waga pustej szpuli. Używana do określenia ciężaru szpuli.",
+      "spool_weight": "Waga pustej szpuli. Używana do określenia zmierzonej wagi szpuli.",
       "article_number": "Np. EAN, UPC itp.",
       "name": "Nazwa filamentu, aby odróżnić ten typ filamentu od innych pochodzących od tego samego producenta. Powinna zawierać np. kolor.",
       "weight": "Waga filamentu na pełnej szpuli (waga netto). Nie powinno to obejmować wagi samej szpuli, a jedynie filamentu. Jest to zwykle napisane na opakowaniu.",
@@ -432,7 +463,8 @@
       "low_stock_threshold": "Oznacz ten filament do ponownego zamówienia, gdy łączna pozostała waga na jego szpulach spadnie poniżej tej liczby gramów.",
       "reserve_count": "Liczba nieotwartych zapasowych szpul, które masz pod ręką, śledzona bez tworzenia szpuli dla każdej z nich.",
       "settings_extruder_temp_range": "Zalecany przez producenta zakres temperatur ekstrudera (min–maks). Opcjonalne, pozostaw puste, jeśli masz tylko jedną wartość.",
-      "settings_bed_temp_range": "Zalecany przez producenta zakres temperatur stołu (min–maks). Opcjonalne, pozostaw puste, jeśli masz tylko jedną wartość."
+      "settings_bed_temp_range": "Zalecany przez producenta zakres temperatur stołu (min–maks). Opcjonalne, pozostaw puste, jeśli masz tylko jedną wartość.",
+      "image": "Zdjęcie pozwalające rozpoznać ten filament — np. szpuli lub oferty sklepowej. Zmniejszane w przeglądarce przed przesłaniem; metadane, takie jak lokalizacja GPS, są usuwane."
     },
     "titles": {
       "create": "Tworzenie filamentu",
@@ -457,7 +489,7 @@
       "vendor_create_error": "Nie udało się utworzyć producenta"
     },
     "buttons": {
-      "add_spool": "Dodaj Szpulę",
+      "add_spool": "Dodaj szpulę",
       "fetch": "Pobierz",
       "download_swatch": "Próbka",
       "download_slicer": "Profil slicera"
@@ -522,6 +554,16 @@
     },
     "messages": {
       "update_error": "Nie udało się zapisać zmian. Spróbuj ponownie."
+    },
+    "image": {
+      "upload": "Prześlij zdjęcie",
+      "replace": "Zamień zdjęcie",
+      "remove": "Usuń zdjęcie",
+      "uploaded": "Zdjęcie zapisane",
+      "upload_error": "Nie udało się zapisać zdjęcia",
+      "removed": "Zdjęcie usunięte",
+      "remove_error": "Nie udało się usunąć zdjęcia",
+      "prepare_error": "Nie udało się odczytać tego pliku obrazu"
     }
   },
   "vendor": {
@@ -602,7 +644,7 @@
   "help": {
     "resources": {
       "vendor": "Firmy produkujące filamenty.",
-      "filament": "Producenci filamentów. Mają takie właściwości, jak nazwa, materiał, kolor, średnica i inne.",
+      "filament": "Marki filamentu. Mają takie właściwości, jak nazwa, materiał, kolor, średnica i inne.",
       "spool": "Indywidualne fizyczne szpule określonego filamentu."
     },
     "help": "Pomoc",
@@ -648,7 +690,12 @@
       "materials_one": "{{count}} materiał",
       "materials_few": "{{count}} materiały",
       "materials_many": "{{count}} materiałów"
-    }
+    },
+    "load_error_title": "Nie udało się wczytać szpul",
+    "load_error_desc": "Wystąpił problem podczas wczytywania szpul. Spróbuj ponownie.",
+    "gathering_dust": "Zbierające kurz",
+    "never_used": "Nigdy nieużywane",
+    "no_stale": "Brak szpul zbierających kurz"
   },
   "settings": {
     "settings": "Ustawienia",
@@ -693,13 +740,13 @@
         "choice": "Wybór",
         "text": "Tekst",
         "float_range": "Zakres",
-        "datetime": "Data i Czas",
+        "datetime": "Data i czas",
         "boolean": "Wartość logiczna",
         "link": "Link"
       },
       "non_unique_key_error": "Klucz musi być unikalny.",
       "description": "<p>Tutaj możesz dodać dodatkowe niestandardowe pola do swoich obiektów.</p><p>Po dodaniu pola nie można zmienić jego klucza ani typu, a w przypadku pól typu wyboru nie można usuwać opcji ani zmieniać stanu wielokrotnego wyboru. Jeśli usuniesz pole, powiązane z nim dane wszystkich obiektów zostaną usunięte.</p><p>Klucz to nazwa, pod którą inne programy odczytują/zapisują dane, więc jeśli twoje niestandardowe pole ma się integrować z zewnętrznym programem, ustaw go poprawnie. Wartość domyślna jest stosowana tylko do nowych elementów.</p><p>Dodatkowe pola można wyświetlać i sortować w widokach tabeli. Pola wyboru i logiczne udostępniają tam także opcje filtrowania, a wszystkie typy dodatkowych pól obsługują filtrowanie pustych wartości.</p><p>W przypadku pól szpuli włącz „Kopiuj z filamentu”, aby nowa szpula przy tworzeniu dziedziczyła wartość z pola filamentu o tym samym kluczu (chyba że szpula ustawia własną).</p><p>Pole „Link” przechowuje krótką wartość dla każdego elementu (np. numer artykułu) i zamienia ją w klikalny link przy użyciu szablonu URL linku — wstaw {} w miejscu wartości, np. https://www.amazon.com/dp/{}.</p>",
-      "choices_missing_error": "Nie możesz usunąc możliwośći wyboru. Ten wybór nie istnieje: {{choices}}",
+      "choices_missing_error": "Nie możesz usunąć wyborów. Brakuje następujących wyborów: {{choices}}",
       "key_not_changed": "Zmień klucz na inny.",
       "delete_confirm": "Usunąć pole {{name}}?",
       "delete_confirm_description": "Ta akcja usunie wszystkie pola i powiązane z nimi dane dla wszystkich obiektów."
@@ -774,13 +821,101 @@
       "add_title": "Dodaj link",
       "edit_title": "Edytuj link",
       "delete_confirm": "Usunąć ten link?"
+    },
+    "ai": {
+      "tab": "AI",
+      "description": "Połącz się z endpointem kompatybilnym z OpenAI (Ollama, LM Studio, OpenAI, Anthropic, OpenRouter, Requesty, Groq, ...). Nic nie jest nigdzie wysyłane i żaden element AI nie pojawia się w interfejsie, dopóki poniższa funkcja nie zostanie włączona.",
+      "preset": {
+        "label": "Preset",
+        "placeholder": "Wybierz dostawcę, aby uzupełnić bazowy URL"
+      },
+      "base_url": {
+        "label": "Bazowy URL",
+        "tooltip": "Endpoint kompatybilny z OpenAI, którego chcesz użyć, np. serwer Ollama w Twojej sieci.",
+        "invalid": "Musi być adresem URL http:// lub https://"
+      },
+      "api_key": {
+        "label": "Klucz API",
+        "tooltip": "Przechowywany tylko do zapisu: serwer nigdy nie odsyła go z powrotem do żadnego klienta. Ollama i LM Studio go nie wymagają.",
+        "placeholder_set": "Klucz jest zapisany - wprowadź nową wartość, aby go zastąpić",
+        "placeholder_unset": "Brak zapisanego klucza",
+        "clear": "Wyczyść zapisany klucz"
+      },
+      "model": {
+        "label": "Model czatu",
+        "tooltip": "Model używany do czatu i funkcji wywołań narzędzi. Uruchom test połączenia, aby wyświetlić listę modeli endpointu."
+      },
+      "vision_model": {
+        "label": "Model wizyjny",
+        "tooltip": "Model używany do funkcji obrazu. Pozostaw puste, aby użyć modelu czatu."
+      },
+      "stt": {
+        "title": "Zamiana mowy na tekst (wejście głosowe)",
+        "hint": "Osobny endpoint transkrypcji kompatybilny z OpenAI dla wejścia głosowego - Ollama nie obsługuje zamiany mowy na tekst. Na przykład serwer whisper.cpp, Speaches lub Groq whisper.",
+        "base_url": {
+          "label": "Bazowy URL STT",
+          "tooltip": "Endpoint transkrypcji, np. http://localhost:8000/v1"
+        },
+        "api_key": {
+          "label": "Klucz API STT"
+        },
+        "model": {
+          "label": "Model STT",
+          "tooltip": "Model transkrypcji, np. whisper-1 lub Systran/faster-whisper-base."
+        }
+      },
+      "env_locked": "Ustawione przez zmienną środowiskową i zablokowane tutaj",
+      "test": "Testuj połączenie",
+      "probe": {
+        "reachable": "Endpoint dostępny",
+        "models_listed": "modele na liście",
+        "failed": "Test połączenia nie powiódł się.",
+        "chat": "Czat",
+        "tools": "Wywołania narzędzi",
+        "vision": "Wizja",
+        "yes": "obsługiwane",
+        "no": "nieobsługiwane",
+        "unknown": "niezweryfikowane - ten endpoint nie zgłasza swoich możliwości"
+      },
+      "features": {
+        "title": "Funkcje",
+        "hint": "Wszystkie funkcje są domyślnie wyłączone. Nic związanego z AI nie pojawia się nigdzie w interfejsie, dopóki nie zostanie tutaj włączone.",
+        "chat": "Asystent czatu",
+        "scan_to_spool": "Wczytywanie zdjęć Scan-to-Spool",
+        "nl_search": "Wyszukiwanie w języku naturalnym",
+        "mcp": "Serwer MCP",
+        "voice": "Wejście głosowe",
+        "requires_config": "Najpierw skonfiguruj i zapisz endpoint oraz model czatu.",
+        "requires_vision": "Test połączenia nie zgłasza obsługi wizji dla skonfigurowanego modelu.",
+        "requires_stt": "Najpierw skonfiguruj i zapisz endpoint oraz model zamiany mowy na tekst.",
+        "voice_autosend": "Wysyłaj transkrypcje głosowe automatycznie zamiast najpierw je przeglądać",
+        "voice_unavailable": "Jeszcze niedostępne - pojawi się wraz z funkcją wejścia głosowego."
+      },
+      "mcp": {
+        "title": "Serwer MCP",
+        "hint": "Skieruj klienta MCP (Claude Desktop, claude.ai) na tego Spoolmana, aby odpytywać i aktualizować swój magazyn. Nie jest wymagany dostawca LLM - wystarczy ten przełącznik.",
+        "copy": "Kopiuj konfigurację",
+        "copied": "Konfiguracja skopiowana do schowka.",
+        "auth_note": "Jeśli ten Spoolman wymaga tokenu API, dodaj wpis \"Authorization\": \"Bearer <token>\" w sekcji \"headers\". Konta tylko do odczytu otrzymują wyłącznie narzędzia zapytań."
+      },
+      "models": {
+        "title": "Modele Ollama",
+        "hint": "Twój endpoint to serwer Ollama. Pobierz zalecany model bezpośrednio stąd - Spoolman zarządza modelami, nigdy środowiskiem uruchomieniowym.",
+        "installed": "Zainstalowany",
+        "pull": "Pobierz",
+        "pulled": "Pobrano {{model}}.",
+        "purpose": {
+          "chat": "czat",
+          "vision": "wizja"
+        }
+      }
     }
   },
   "locations": {
     "locations": "Lokalizacje",
     "new_location": "Nowa lokalizacja",
     "no_location": "Brak lokalizacji",
-    "no_locations_help": "Ta strona pozwala uporządkować szpule w lokalizacjach, dodaj kilka szpul aby rozpocząć!",
+    "no_locations_help": "Ta strona pozwala uporządkować szpule w lokalizacjach, dodaj kilka szpul, aby rozpocząć!",
     "error_empty": "Nazwa nie może być pusta",
     "error_exists": "Lokalizacja już istnieje",
     "location": "Lokalizacja",
@@ -804,7 +939,8 @@
       "description": "Wybierz lokalizacje, dla których chcesz wydrukować skanowalne etykiety QR.",
       "select_placeholder": "Wybierz lokalizacje",
       "none_selected": "Nie wybrano lokalizacji"
-    }
+    },
+    "load_error": "Nie udało się wczytać szpul"
   },
   "calibration": {
     "title": "Kalibracja",
@@ -884,7 +1020,165 @@
         "cancel": "Anuluj"
       },
       "skip_finish_confirm": "Oznaczyć tę sesję jako ukończoną bez zapisywania tego kroku?",
-      "session_complete": "Sesja kalibracji została oznaczona jako ukończona."
+      "session_complete": "Sesja kalibracji została oznaczona jako ukończona.",
+      "revisiting": "Powrót"
+    },
+    "wiki": {
+      "link": "Wiki",
+      "tooltip": "Otwórz wiki OrcaSlicer dla tego kroku",
+      "tooltip_short": "Wiki OrcaSlicer"
+    },
+    "sections": {
+      "test_method": "Metoda testu",
+      "test_setup": "Ustawienia testu",
+      "your_result": "Twój wynik",
+      "auto_computed": "· obliczone automatycznie"
+    },
+    "step_status": {
+      "skipped": "Pominięto",
+      "done": "✓ Gotowe",
+      "incomplete": "Niekompletne"
+    },
+    "confidence_display": "Pewność: {{level}}",
+    "confirm_delete": {
+      "tooltip": "Usuń",
+      "confirming": "Kliknij ponownie, aby potwierdzić",
+      "short": "Na pewno?"
+    },
+    "select_step": {
+      "placeholder": "Wybierz krok kalibracji",
+      "required": "Wybierz krok kalibracji."
+    },
+    "optional": "Opcjonalne",
+    "optional_notes": "Opcjonalne notatki…",
+    "printer_name_placeholder": "np. Bambu X1C, Ender 3",
+    "flow_calc": {
+      "title": "Kalkulator wyniku przejścia",
+      "pass1": "Przejście 1",
+      "pass2": "Przejście 2",
+      "method_yolo": "YOLO (zalecane)",
+      "method_legacy": "Klasyczna (2 przejścia)",
+      "yolo_desc": "Kalibracja jednoprzejściowa z użyciem wzoru cięciw Archimedesa (OrcaSlicer ≥ 2.3.0). Wprowadź bieżący współczynnik przepływu oraz wartość korekty odczytaną z wydruku.",
+      "legacy_desc": "Kalibracja dwuprzejściowa. Przejdź przez wyniki pierwszego i drugiego przejścia, aby obliczyć ostateczny współczynnik przepływu.",
+      "start": "Start →",
+      "yolo_pass1_desc": "Wydrukuj model testowy cięciw Archimedesa. Wprowadź bieżący współczynnik przepływu oraz wartość korekty pokazaną na wydruku. Nowy współczynnik przepływu zostanie obliczony automatycznie.",
+      "legacy_pass1_desc": "Wydrukuj model testowy pierwszego przejścia. Wprowadź początkowy współczynnik przepływu oraz procent korekty odczytany z wydruku.",
+      "pass2_desc": "Ustaw współczynnik przepływu w slicerze na wynik z Przejścia 1, wydrukuj model testowy ponownie, a następnie wprowadź nowy procent korekty.",
+      "current_flow_ratio": "Bieżący współczynnik przepływu",
+      "modifier": "Modyfikator",
+      "new_flow_ratio": "Nowy współczynnik przepływu",
+      "flow_ratio": "Współczynnik przepływu",
+      "result": "Wynik",
+      "cancel": "Anuluj",
+      "apply": "Zastosuj w formularzu ✓",
+      "next_pass2": "Dalej: Przejście 2 →",
+      "back": "← Wstecz"
+    },
+    "pa": {
+      "method_tower": "Wieża (zalecane)",
+      "method_pattern": "Wzór / Linia",
+      "tower_desc": "Wydrukuj test wieży PA. Wprowadź typ ekstrudera, wartość kroku PA (A) oraz zmierzoną wysokość (B) przy najlepiej wyglądającej warstwie. Wartość PA jest obliczana automatycznie jako A × B.",
+      "pattern_desc": "Wydrukuj test wzoru lub linii PA. Znajdź optymalną linię i wprowadź jej wartość PA poniżej."
+    },
+    "input_shaping_advisory": {
+      "title": "Masz nowoczesną drukarkę? Możesz tego nie potrzebować.",
+      "desc_wizard": "Większość nowoczesnych drukarek CoreXY z Klipperem i akcelerometrem (ADXL345), a także wszystkie drukarki Bambu Lab, obsługują input shaping automatycznie — i to znacznie dokładniej, niż mogłaby to zrobić ręczna wieża testowa. Jeśli to dotyczy Ciebie, pomiń ten krok i oszczędź sobie kłopotu.",
+      "desc_drawer": "Większość nowoczesnych drukarek CoreXY z Klipperem i akcelerometrem (ADXL345), a także wszystkie drukarki Bambu Lab, obsługują input shaping automatycznie — i to znacznie dokładniej, niż mogłaby to zrobić ręczna wieża testowa. Jeśli to dotyczy Ciebie, po prostu zamknij ten panel bez zapisywania.",
+      "skip": "Moja drukarka to obsługuje — pomiń →"
+    },
+    "vfa": {
+      "artifact_speeds": "Prędkości artefaktów",
+      "artifact_speeds_desc": "Wydrukuj wieżę testową VFA i zaznacz każdą prędkość, przy której zauważasz artefakty VFA. Min. i Maks. prędkość unikania są obliczane automatycznie na podstawie tej listy.",
+      "speed_placeholder": "Prędkość",
+      "add_speed": "Dodaj prędkość"
+    },
+    "step_copy": {
+      "temperature": {
+        "title": "Temperatura",
+        "description": "Znajdź optymalną temperaturę druku dla tego filamentu. Wydrukuj wieżę temperaturową i znajdź warstwę dającą najlepszy balans między przyczepnością warstw, jakością powierzchni i minimalnym snuciem. Wyższa temperatura poprawia łączenie warstw; niższa zmniejsza wyciek i snucie."
+      },
+      "volumetric_speed": {
+        "title": "Prędkość objętościowa",
+        "description": "Określ maksymalny przepływ objętościowy, jaki Twój hotend może utrzymać z tym filamentem, zanim pojawi się niedodruk. Wydrukuj test rampy przepływu lub serię jednościennych sześcianów przy rosnącej prędkości i zanotuj prędkość tuż przed pogorszeniem jakości."
+      },
+      "pressure_advance": {
+        "title": "Pressure Advance",
+        "description": "Dostrój Pressure Advance (Klipper / Bambu) lub Linear Advance (Marlin), aby wyeliminować wybrzuszenia na narożnikach i poprawić jakość ostrych krawędzi. Wydrukuj wzór testowy PA i dobierz wartość dającą najczystsze, najostrzejsze narożniki. Włącz Adaptive PA, jeśli obsługuje to Twój firmware."
+      },
+      "flow_rate": {
+        "title": "Przepływ",
+        "description": "Precyzyjnie dostrój mnożnik ekstruzji, aby rzeczywista ilość nakładanego plastiku odpowiadała oczekiwaniom slicera. Wydrukuj dwa sześciany kalibracyjne (jeden przy 98%, drugi przy 100%) i zmierz ich ściany suwmiarką, aby obliczyć prawidłowy współczynnik przepływu."
+      },
+      "retraction": {
+        "title": "Retrakcja",
+        "description": "Znajdź minimalną długość i prędkość retrakcji, która eliminuje snucie bez ścierania filamentu lub powodowania zatorów. Wydrukuj wieżę testową długości retrakcji i wybierz najniższe ustawienie dające czyste ruchy przelotowe."
+      },
+      "tolerance": {
+        "title": "Tolerancja",
+        "description": "Zmierz, jak dokładnie Twoja drukarka odwzorowuje wymiary elementów. Wydrukuj model testowy tolerancji, zmierz docelowe elementy suwmiarką i zapisz odchylenie. Zastosuj wynik w ustawieniach dokładności wymiarowej / kompensacji XY w slicerze."
+      },
+      "cornering": {
+        "title": "Narożniki",
+        "description": "Dostrój zachowanie na zakrętach, aby zbalansować prędkość druku z dzwonieniem (ringing) i artefaktami przy zmianach kierunku. Użyj Junction Deviation (Marlin 2.x / RepRapFirmware), klasycznego Jerk (starszy Marlin) lub Square Corner Velocity (Klipper). Wydrukuj wzór testowy narożników i zmniejszaj wartość, aż dzwonienie zniknie."
+      },
+      "input_shaping": {
+        "title": "Input Shaping",
+        "description": "Zredukuj ghosting i dzwonienie (ringing), stosując kompensację rezonansu. Zmierz częstotliwość rezonansową swojej drukarki (zalecany akcelerometr, lub użyj wizualnej wieży dzwonienia). Wybierz typ shapera i częstotliwości minimalizujące artefakty, a następnie wprowadź je poniżej."
+      },
+      "vfa": {
+        "title": "VFA (Vertical Fine Artifacts)",
+        "description": "Znajdź maksymalną prędkość druku, zanim staną się widoczne pionowe artefakty powierzchni (VFA / prążkowanie). Wydrukuj test rampy prędkości na obiekcie o gładkich ścianach i zanotuj prędkość tuż przed pojawieniem się regularnego prążkowania na powierzchni."
+      }
+    },
+    "field_labels": {
+      "inputs": {
+        "start_temp": "Temp. początkowa",
+        "end_temp": "Temp. końcowa",
+        "step_size": "Wielkość kroku",
+        "start_speed": "Prędkość początkowa",
+        "end_speed": "Prędkość końcowa",
+        "measured_height": "Zmierzona wysokość",
+        "extruder_type": "Typ ekstrudera",
+        "pa_step_a": "Krok PA (A)",
+        "measured_height_b": "Zmierzona wysokość (B)",
+        "start_retract": "Retrakcja początkowa",
+        "factor": "Współczynnik",
+        "test_size": "Rozmiar elementu testowego",
+        "measured_size": "Zmierzony rozmiar",
+        "firmware_type": "Firmware / funkcja",
+        "start_value": "Wartość początkowa",
+        "end_value": "Wartość końcowa",
+        "shaper_type": "Typ shapera",
+        "frequency_x": "Częst. rezonansu X",
+        "frequency_y": "Częst. rezonansu Y"
+      },
+      "outputs": {
+        "temperature": "Optymalna temp.",
+        "max_volumetric_speed": "Maks. przepływ objętościowy",
+        "pressure_advance": "Wartość PA",
+        "flow_ratio": "Współczynnik przepływu",
+        "retraction_length": "Zalecana retrakcja",
+        "tolerance_offset": "Odchylenie tolerancji",
+        "cornering_value": "Zalecana wartość",
+        "shaper_type_x": "Zalecany shaper X",
+        "frequency_x": "Dostrojona częst. X",
+        "shaper_type_y": "Zalecany shaper Y",
+        "frequency_y": "Dostrojona częst. Y",
+        "min_avoidance_speed": "Min. prędkość unikania",
+        "max_avoidance_speed": "Maks. prędkość unikania"
+      },
+      "options": {
+        "direct_drive": "Napęd bezpośredni",
+        "bowden": "Bowden",
+        "junction_deviation": "Junction Deviation (Marlin 2.x / RepRapFirmware)",
+        "jerk": "Jerk (Classic Marlin)",
+        "square_corner_velocity": "Square Corner Velocity (Klipper)",
+        "mzv": "MZV",
+        "ei": "EI",
+        "zv": "ZV",
+        "2hump_ei": "2HUMP_EI",
+        "3hump_ei": "3HUMP_EI"
+      }
     }
   },
   "external": {
@@ -1027,7 +1321,8 @@
       "unknown_content": "Żaden filament nie ma kodu kreskowego {{code}}. Utworzyć filament i zapamiętać ten kod?",
       "create_filament": "Utwórz filament",
       "lookup_error": "Nie udało się wyszukać tego kodu kreskowego."
-    }
+    },
+    "photo": "Zdjęcie"
   },
   "printer": {
     "printer": "Drukarka",
@@ -1036,5 +1331,167 @@
       "comment": "Komentarz",
       "spool_count": "Szpule"
     }
+  },
+  "chat": {
+    "title": "Asystent",
+    "open": "Zapytaj asystenta",
+    "placeholder": "Zapytaj o swój filament i szpule…",
+    "send": "Wyślij",
+    "thinking": "Myślenie…",
+    "empty": "Zapytaj mnie o swoje szpule i filament — na przykład „Ile zostało mi czarnego PETG?” lub „Co powinienem zamówić ponownie?”.",
+    "viewInList": "Zobacz na liście szpul",
+    "confirm": {
+      "before": "Przed",
+      "after": "Po",
+      "confirm": "Potwierdź",
+      "cancel": "Anuluj",
+      "confirmed": "Potwierdzono",
+      "cancelled": "Anulowano",
+      "destructive": "Nie można cofnąć"
+    },
+    "executed": {
+      "undo": "Cofnij",
+      "undone": "Zmiana cofnięta."
+    },
+    "voice": {
+      "record": "Przytrzymaj, aby mówić",
+      "listening": "Słucham…",
+      "speak": "Odczytuj odpowiedzi na głos",
+      "unsupported": "Nagrywanie głosu nie jest obsługiwane w tej przeglądarce.",
+      "mic_error": "Nie udało się uzyskać dostępu do mikrofonu."
+    }
+  },
+  "intake": {
+    "hint": "Zrób zdjęcie etykiety lub pudełka szpuli albo wybierz istniejące zdjęcie.",
+    "select_photo": "Wybierz lub zrób zdjęcie",
+    "extracting": "Odczytywanie etykiety...",
+    "in_library": "w Twojej bibliotece, dodaje szpulę",
+    "from_catalog": "SpoolmanDB, tworzy filament i szpulę",
+    "use_raw": "Użyj surowych danych (nowy filament)",
+    "continue": "Kontynuuj",
+    "back": "Wstecz",
+    "photo_discarded": "Zdjęcie zostało przeanalizowane w pamięci i nie jest przechowywane.",
+    "prefilled_banner": "Wypełniono na podstawie zdjęcia etykiety - sprawdź wartości przed zapisaniem.",
+    "fields": {
+      "vendor": "Producent",
+      "name": "Nazwa",
+      "material": "Materiał",
+      "weight_g": "Waga (g)",
+      "diameter_mm": "Średnica (mm)",
+      "extruder_temp_c": "Dysza (C)",
+      "bed_temp_c": "Stół (C)",
+      "lot_nr": "Partia",
+      "article_number": "Nr artykułu",
+      "confidence": "Pewność"
+    }
+  },
+  "update": {
+    "available": "dostępna aktualizacja",
+    "tooltip": "Dostępna jest wersja {{version}}",
+    "notification": {
+      "title": "Dostępna jest nowa wersja Spoolmana",
+      "description": "Wersja {{version}} została wydana. Zobacz, co nowego i jak zaktualizować.",
+      "viewRelease": "Zobacz informacje o wydaniu"
+    },
+    "action": {
+      "open": "Aktualizuj",
+      "howTo": "Jak zaktualizować",
+      "modalTitle": "Zaktualizuj Spoolmana",
+      "currentVersion": "Zainstalowano: {{version}}",
+      "latestVersion": "najnowsza: {{version}}",
+      "viewReleaseNotes": "Zobacz informacje o wydaniu",
+      "close": "Zamknij",
+      "updateNow": "Aktualizuj teraz",
+      "updateToVersion": "Aktualizuj do wersji {{version}}",
+      "native": {
+        "description": "To jest instalacja natywna, więc Spoolman może samodzielnie zaktualizować się do najnowszej wersji.",
+        "restartNotice": "Usługa zostanie automatycznie zrestartowana po aktualizacji. Jeśli Spoolman nie jest zarządzany przez systemd, uruchom go ponownie ręcznie po zakończeniu aktualizacji.",
+        "adminRequired": "Aby uruchomić aktualizację stąd, musisz być zalogowany jako administrator.",
+        "disabled": "Aktualizacje uruchamiane z interfejsu są wyłączone w tej instancji. Skonfiguruj uwierzytelnianie lub ustaw SPOOLMAN_ALLOW_UI_UPDATE=TRUE, aby włączyć ten przycisk. Możesz też zaktualizować z poziomu powłoki:"
+      },
+      "docker": {
+        "description": "Ta instancja działa w Dockerze. Zaktualizuj, pobierając nowy obraz i tworząc kontener na nowo:",
+        "tagReminder": "Jeśli Twój plik compose wskazuje konkretny tag obrazu, zaktualizuj go do nowej wersji (np. ghcr.io/sherrmann/spoolman-ng:{{version}}) przed pobraniem."
+      },
+      "haAddon": {
+        "description": "Ta instancja działa jako dodatek Home Assistant. Zaktualizuj ją z poziomu Home Assistant, który automatycznie zaproponuje nową wersję:",
+        "steps": "Ustawienia → Dodatki → Spoolman → Aktualizuj"
+      },
+      "unknown": {
+        "description": "Zaktualizuj, instalując najnowszą wersję w taki sam sposób, w jaki pierwotnie zainstalowałeś Spoolmana. Szczegóły znajdziesz w informacjach o wydaniu."
+      },
+      "started": {
+        "title": "Aktualizacja rozpoczęta",
+        "descriptionManaged": "Spoolman aktualizuje się i zostanie automatycznie zrestartowany. Ta strona połączy się ponownie, gdy wróci.",
+        "descriptionManual": "Spoolman aktualizuje się. Uruchom go ponownie ręcznie po zakończeniu aktualizacji."
+      },
+      "failed": {
+        "title": "Aktualizacja nie powiodła się"
+      }
+    }
+  },
+  "low_stock": {
+    "title": "Niski zapas",
+    "remaining_header": "Pozostało",
+    "remaining_left": "Pozostało {{amount}}",
+    "threshold_button": "Dostosuj próg",
+    "threshold_button_value": "Próg: {{value}}",
+    "section": {
+      "explicit": "Poniżej ustawionego przez Ciebie progu",
+      "fallback": "Poniżej domyślnych {{grams}} g"
+    },
+    "empty": "Nic do zamówienia — zapasy są wystarczające."
+  },
+  "orders": {
+    "title": "Zamówienia",
+    "empty": "Brak zamówień.",
+    "new_order": "Nowe zamówienie",
+    "new_order_title": "Nowe zamówienie",
+    "add_line": "Dodaj filament",
+    "remove_line": "Usuń pozycję",
+    "select_filament": "Wybierz filament",
+    "no_lines": "Dodaj co najmniej jeden filament przed utworzeniem zamówienia.",
+    "order_number": "Nr zamówienia",
+    "shop": "Sklep",
+    "ordered_at": "Zamówiono",
+    "lines_summary": "{{arrived}} z {{total}} dostarczono",
+    "lines_summary_title": "Pozycje",
+    "state_title": "Status",
+    "filaments_count_one": "{{count}} filament",
+    "arrived_action": "Dostarczono…",
+    "outstanding": "Oczekujące",
+    "create_error": "Nie udało się utworzyć zamówienia. Spróbuj ponownie.",
+    "state": {
+      "open": "Otwarte — {{count}} oczekujących",
+      "arrived": "Dostarczono"
+    },
+    "mark_ordered": "Oznacz jako zamówione",
+    "mark_ordered_title": "Oznacz „{{name}}” jako zamówione",
+    "create_order": "Utwórz zamówienie",
+    "create_order_title": "Utwórz zamówienie — wybrano {{count}}",
+    "shop_placeholder": "Wpisz nazwę sklepu (utworzy nowy, jeśli nie istnieje)",
+    "order_date": "Data zamówienia",
+    "quantity": "Ilość",
+    "price_per_unit": "Cena / szpula (opc.)",
+    "order_number_field": "Numer zamówienia (opc.)",
+    "url": "Link zamówienia (opc.)",
+    "selected_count": "Wybrano {{count}}",
+    "arrive_title": "Co dotarło z zamówienia #{{number}}?",
+    "arrive_subtitle": "Częściowe dostawy dzielą pozycję — reszta pozostaje w zamówieniu.",
+    "arrive_error": "Nie udało się oznaczyć zamówienia jako dostarczonego. Spróbuj ponownie.",
+    "arrived_check": "Dostarczono",
+    "n_of_m": "{{delivered}} z {{outstanding}} oczekujących",
+    "split_preview": "{{delivered}} zostanie dostarczone, {{rest}} pozostanie w zamówieniu",
+    "create_spools": "Utwórz szpule dla dostarczonych pozycji",
+    "location": "Lokalizacja",
+    "banner": "Ten filament jest zamówiony (zamówienie #{{id}}) — oznaczyć jego pozycję jako dostarczoną?",
+    "mark_arrived": "Oznacz jako dostarczone",
+    "details_title": "Zamówienie {{number}}",
+    "comment": "Komentarz",
+    "update_error": "Nie udało się zaktualizować zamówienia. Spróbuj ponownie.",
+    "delete_error": "Nie udało się usunąć zamówienia. Spróbuj ponownie.",
+    "delete_confirm": "Usunąć to zamówienie? Jego pozycje również zostaną usunięte.",
+    "filaments_count_few": "{{count}} filamenty",
+    "filaments_count_many": "{{count}} filamentów"
   }
 }

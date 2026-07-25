@@ -67,13 +67,13 @@
   },
   "printing": {
     "generic": {
-      "title": "打印中",
+      "title": "打印",
       "description": "调整以下设置以获得所需的打印布局。请记住，打印机和您的操作系统可能会应用自己的边距和缩放，因此您可能需要多次尝试后才能正确打印。在实际标签上打印之前，请在一张普通纸上进行测试。",
       "helpMargin": "页边距应设置为与您的标签纸和打印机相匹配，更改这些将影响整个网格的大小。",
       "helpPrinterMargin": "安全区应设置为打印机可以打印的离纸张边缘距离，更改这些不会影响整个网格。",
       "print": "打印",
-      "columns": "行",
-      "rows": "列",
+      "columns": "列",
+      "rows": "行",
       "paperSize": "纸张尺寸",
       "customSize": "自定义",
       "dimensions": "尺寸标注",
@@ -118,7 +118,19 @@
       "invalidGeometry": "标签网格超出纸张范围",
       "invalidGeometryHelp": "边距和间距挤占了标签的空间。请减小边距、间距、列数或行数，或改用更大的纸张。",
       "contentClipped": "部分标签内容被裁剪",
-      "contentClippedHelp": "至少有一个标签的内容超出了标签范围，打印时会被裁剪。请减小文字大小、缩短模板，或减少列/行数让每个标签更大。"
+      "contentClippedHelp": "至少有一个标签的内容超出了标签范围，打印时会被裁剪。请减小文字大小、缩短模板，或减少列/行数让每个标签更大。",
+      "checklist": {
+        "title": "打印前须知",
+        "intro": "浏览器的打印对话框经常会重新缩放页面，这会破坏标签的尺寸。在接下来打开的打印对话框中，请检查：",
+        "scale": "缩放比例为 100%／“实际大小”——切勿选择“适合页面大小”。",
+        "paperSize": "所选纸张尺寸恰好为 {{width}} × {{height}} mm。",
+        "margins": "边距设置为“无”（Spoolman 已自行处理边距）。",
+        "headersFooters": "已关闭页眉和页脚。",
+        "pageSizeModeHint": "您选择了标签纸张尺寸，但“页面尺寸”仍为“自动”。“匹配标签尺寸”会告知浏览器精确的页面尺寸。",
+        "pageSizeModeApply": "切换为匹配标签尺寸",
+        "dontShowAgain": "不再显示",
+        "printNow": "立即打印"
+      }
     },
     "qrcode": {
       "button": "打印标签",
@@ -137,14 +149,14 @@
       "showSpoolComment": "料盘备注",
       "showFilamentComment": "耗材备注",
       "showVendorComment": "制造商备注",
-      "template": "标签模版",
+      "template": "标签模板",
       "showQRCode": "打印二维码",
       "showQRCodeMode": {
         "no": "否",
         "withIcon": "含图标",
         "simple": "简单"
       },
-      "templateHelp": "使用 {} 将料盘的值插入为文本。例如，{id} 将被替换为料盘的ID，或者 {filament.material} 将被替换为料盘的材质。如果某个值缺失，将用 \"?\" 替代。可以使用第二组 {} 来删除缺失值相关的内容。此外，任意位于两组 {} 之间的文本，如果值缺失，将被一同删除。例如，{Lot Nr: {lot_nr}} 只有在料盘存在批号时才会显示标签内容。用双星号 ** 包裹文本可以将其加粗。点击按钮查看所有可用的标签列表。",
+      "templateHelp": "使用 {} 将料盘的值插入为文本。例如，{id} 将被替换为料盘的ID，或者 {filament.material} 将被替换为料盘的材料。如果某个值缺失，将用 \"?\" 替代。可以使用第二组 {} 来删除缺失值相关的内容。此外，任意位于两组 {} 之间的文本，如果值缺失，将被一同删除。例如，{Lot Nr: {lot_nr}} 只有在料盘存在批号时才会显示标签内容。用双星号 ** 包裹文本可以将其加粗。点击按钮查看所有可用的标签列表。",
       "useHTTPUrl": {
         "tooltip": "将使用专有链接（默认情况下，仅能通过 **Spoolman** 的扫描功能访问）。URL 将使用设置中指定的基础 URL；如果未设置基础 URL，则使用当前页面的 URL。",
         "label": "二维码链接",
@@ -188,7 +200,16 @@
         "none": "无",
         "code128": "Code 128"
       },
-      "tooltip": "为所选行打印标签，或在下一页选择项目"
+      "tooltip": "为所选行打印标签，或在下一页选择项目",
+      "qrSize": {
+        "label": "二维码尺寸",
+        "tooltip": "二维码方块的打印尺寸（mm）。“自动”保留原有行为：二维码占标签的一半（如果没有其他打印内容则占满整个标签）。二维码留白会在所选尺寸周围添加静区。",
+        "auto": "自动",
+        "custom": "自定义",
+        "tooSmall": "小于 {{mm}} mm 的二维码可能难以用手机摄像头扫描。",
+        "clamped": "此标签仅能容纳 ≈ {{rendered}} mm——小于您设置的 {{requested}} mm。",
+        "clampedTooSmall": "此标签仅能容纳 ≈ {{rendered}} mm（设置值为 {{requested}} mm）——低于手机摄像头所需的最小尺寸 {{mm}} mm。"
+      }
     },
     "spoolSelect": {
       "title": "选择料盘",
@@ -209,11 +230,12 @@
       "selectedTotal_other": "已选择{{count}}个耗材",
       "hidePrinted": "隐藏已打印",
       "reprintConfirmTitle": "重新打印标签？",
-      "reprintConfirmContent_other": "所选耗材中有 {{count}} 个已打印过标签。要再次打印吗？"
+      "reprintConfirmContent_other": "所选耗材中有 {{count}} 个已打印过标签。要再次打印吗？",
+      "searchPlaceholder": "按耗材编号、制造商、名称或材料搜索"
     }
   },
   "scanner": {
-    "title": "扫码二维码",
+    "title": "二维码扫描器",
     "description": "扫描Spoolman二维码，查看有关料盘的详细信息。",
     "error": {
       "notAllowed": "您不被允许访问相机。",
@@ -236,7 +258,7 @@
       "weight_to_use": "重量",
       "used_weight": "已用重量",
       "remaining_weight": "剩余重量",
-      "measured_weight": "净重",
+      "measured_weight": "测量重量",
       "used_length": "已用长度",
       "remaining_length": "剩余长度",
       "location": "位置",
@@ -259,10 +281,10 @@
       "color_hex": "颜色"
     },
     "fields_help": {
-      "weight_to_use": "请选择要输入的重量值。净重只在所选的耗材设置了料盘重量时可用。",
+      "weight_to_use": "请选择要输入的重量值。测量重量只在所选的耗材设置了料盘重量时可用。",
       "used_weight": "料盘已使用的耗材重量。一个新的料盘应该是0克。",
       "remaining_weight": "料盘上剩余多少耗材。对于新的料盘，这个值应该与料盘重量相匹配。",
-      "measured_weight": "耗材和料盘的重量分别是多少。",
+      "measured_weight": "耗材和料盘的重量合计是多少。",
       "location": "如果您有多个存放料盘的地方，请填写料盘所在的位置。",
       "lot_nr": "制造商的批号。如果使用多个料盘可以使用批号进行控制，以确保打印颜色一致。",
       "price": "整卷料盘的价格。如果未设置，则默认使用该耗材的价格。",
@@ -281,7 +303,7 @@
       "show": "查看料盘",
       "archive": "料盘存档",
       "show_title": "[料盘 #{{id}}] {{name}}",
-      "adjust": "调整线盘耗材"
+      "adjust": "调整料盘耗材"
     },
     "messages": {
       "archive": "您确定要存档此料盘吗？",
@@ -296,7 +318,7 @@
         "weight": "重量"
       },
       "measurement_type_label": "测量类型",
-      "adjust_filament_help": "在这里你可以直接增加或减少线盘中的耗材。正数是减少耗材数量，负数是增加耗材数量。",
+      "adjust_filament_help": "在这里你可以直接增加或减少料盘中的耗材。正数是减少耗材数量，负数是增加耗材数量。",
       "adjust_filament_value": "消耗量"
     },
     "formats": {
@@ -356,6 +378,14 @@
     "totals": {
       "shown_other": "显示 {{count}} 个料盘",
       "selected_other": "已选择 {{count}} 个料盘"
+    },
+    "nlSearch": {
+      "button": "AI",
+      "title": "自然语言搜索",
+      "placeholder": "例如：B 架上的黑色 PETG",
+      "hint": "将转换为可编辑的筛选条件",
+      "search": "搜索",
+      "error": "无法解析该搜索。请重试，或使用常规搜索框。"
     }
   },
   "filament": {
@@ -396,7 +426,8 @@
       "finish": "表面效果",
       "pattern": "花纹",
       "translucent": "半透明",
-      "glow": "夜光"
+      "glow": "夜光",
+      "image": "照片"
     },
     "fields_help": {
       "name": "耗材名称，用于区分来自同一制造商的不同耗材类型。例如在耗材名称中包含颜色信息。",
@@ -409,7 +440,8 @@
       "low_stock_threshold": "当该耗材所有料盘的剩余总重量低于此克数时，将其标记为需要补货。",
       "reserve_count": "您手头存放的未开封备用料盘数量，无需为每一个都创建料盘即可跟踪。",
       "settings_extruder_temp_range": "制造商推荐的挤出温度范围（最低–最高）。可选；若只有单个数值，请留空。",
-      "settings_bed_temp_range": "制造商推荐的热床温度范围（最低–最高）。可选；若只有单个数值，请留空。"
+      "settings_bed_temp_range": "制造商推荐的热床温度范围（最低–最高）。可选；若只有单个数值，请留空。",
+      "image": "用于识别此耗材的照片——例如料盘本身或商品页面截图。上传前会在浏览器中缩小尺寸；GPS 位置等元数据将被移除。"
     },
     "titles": {
       "create": "创建耗材",
@@ -491,6 +523,16 @@
     },
     "messages": {
       "update_error": "无法保存更改。请重试。"
+    },
+    "image": {
+      "upload": "上传照片",
+      "replace": "更换照片",
+      "remove": "移除照片",
+      "uploaded": "照片已保存",
+      "upload_error": "无法保存照片",
+      "removed": "照片已移除",
+      "remove_error": "无法移除照片",
+      "prepare_error": "无法读取该图片文件"
     }
   },
   "vendor": {
@@ -571,13 +613,13 @@
   "home": {
     "home": "主页",
     "welcome": "欢迎使用您的 Spoolman！",
-    "description": "看起来您还没有添加任何线轴。请查看<helpPageLink>帮助页面</helpPageLink>以开始使用。",
+    "description": "看起来您还没有添加任何料盘。请查看<helpPageLink>帮助页面</helpPageLink>以开始使用。",
     "total_weight": "总库存",
     "total_value": "总价值",
     "low_stock": "库存不足",
-    "all_stocked": "所有线轴库存充足",
+    "all_stocked": "所有料盘库存充足",
     "recently_used": "最近使用",
-    "no_recent": "没有最近使用的线轴",
+    "no_recent": "没有最近使用的料盘",
     "by_material": "按材料",
     "by_location": "按位置",
     "by_vendor": "按制造商",
@@ -605,14 +647,19 @@
       "this_month": "本月",
       "top": "最常用",
       "materials_other": "{{count}} 种材料"
-    }
+    },
+    "load_error_title": "加载料盘失败",
+    "load_error_desc": "加载料盘时出现问题，请重试。",
+    "gathering_dust": "长期未用",
+    "never_used": "从未使用",
+    "no_stale": "没有长期未用的料盘"
   },
   "help": {
     "help": "帮助",
     "resources": {
       "filament": "耗材品种。它们具有名称、材料、颜色、直径等属性。",
       "vendor": "制造耗材的公司。",
-      "spool": "特定耗材的单个物理卷轴。"
+      "spool": "特定耗材的单个物理料盘。"
     },
     "description": "<title>帮助</title><p>以下是一些入门提示。</p><p>Spoolman保存了3种不同类型的数据：</p><itemsHelp/><p>要向数据库添加新的料盘，请先创建一个 <filamentCreateLink>耗材</filamentCreateLink> 对象。完成后，继续为该特定耗材创建一个 <spoolCreateLink>料盘</spoolCreateLink> 对象。如果以后获取相同耗材的其他料盘，只需生成其他的料盘对象并重复使用同一个耗材对象。</p><p>同时，如果您希望跟踪该信息，还可以为制造耗材的公司生成一个 <vendorCreateLink>制造商</vendorCreateLink> 对象。</p><p>您可以选择将其他3D打印机服务链接到 Spoolman，例如 Moonraker，它可以自动监视耗材使用情况并为您更新料盘对象。请参阅 <readmeLink>Spoolman README</readmeLink> 获取有关如何设置的指导。</p>"
   },
@@ -647,7 +694,7 @@
       },
       "boolean_true": "是",
       "boolean_false": "否",
-      "choices_missing_error": "您无法删除选择。以下选项丢失：{{choices}}",
+      "choices_missing_error": "您无法删除选项。以下选项丢失：{{choices}}",
       "non_unique_key_error": "键必须是唯一的。",
       "key_not_changed": "请将键改成其他的。",
       "delete_confirm": "删除字段 {{name}}？"
@@ -740,6 +787,94 @@
       "add_title": "添加链接",
       "edit_title": "编辑链接",
       "delete_confirm": "删除此链接？"
+    },
+    "ai": {
+      "tab": "AI",
+      "description": "连接一个兼容 OpenAI 的接口（Ollama、LM Studio、OpenAI、Anthropic、OpenRouter、Requesty、Groq 等）。在下方启用某项功能之前，不会发送任何数据，界面中也不会出现任何 AI 相关元素。",
+      "preset": {
+        "label": "预设",
+        "placeholder": "选择一个提供方以自动填写基础URL"
+      },
+      "base_url": {
+        "label": "基础URL",
+        "tooltip": "要使用的兼容 OpenAI 的接口地址，例如您局域网内的 Ollama 服务器。",
+        "invalid": "必须是 http:// 或 https:// 格式的 URL"
+      },
+      "api_key": {
+        "label": "API 密钥",
+        "tooltip": "仅写入存储：服务器不会将其发送回任何客户端。Ollama 和 LM Studio 不需要密钥。",
+        "placeholder_set": "已存储密钥 - 输入新值以替换",
+        "placeholder_unset": "未存储密钥",
+        "clear": "清除已存储的密钥"
+      },
+      "model": {
+        "label": "聊天模型",
+        "tooltip": "用于聊天和工具调用功能的模型。运行连接测试以列出该接口的可用模型。"
+      },
+      "vision_model": {
+        "label": "视觉模型",
+        "tooltip": "用于图像功能的模型。留空则使用聊天模型。"
+      },
+      "stt": {
+        "title": "语音转文字（语音输入）",
+        "hint": "语音输入需要一个单独的、兼容 OpenAI 的转录接口 - Ollama 不支持语音转文字。例如 whisper.cpp 服务器、Speaches 或 Groq whisper。",
+        "base_url": {
+          "label": "STT 基础URL",
+          "tooltip": "转录接口地址，例如 http://localhost:8000/v1"
+        },
+        "api_key": {
+          "label": "STT API 密钥"
+        },
+        "model": {
+          "label": "STT 模型",
+          "tooltip": "转录模型，例如 whisper-1 或 Systran/faster-whisper-base。"
+        }
+      },
+      "env_locked": "已通过环境变量设置，此处已锁定",
+      "test": "测试连接",
+      "probe": {
+        "reachable": "接口可访问",
+        "models_listed": "已列出的模型",
+        "failed": "连接测试失败。",
+        "chat": "聊天",
+        "tools": "工具调用",
+        "vision": "视觉",
+        "yes": "支持",
+        "no": "不支持",
+        "unknown": "未验证 - 该接口未报告能力信息"
+      },
+      "features": {
+        "title": "功能",
+        "hint": "所有功能默认关闭。在此处启用之前，界面中不会出现任何与 AI 相关的内容。",
+        "chat": "聊天助手",
+        "scan_to_spool": "Scan-to-Spool 拍照录入",
+        "nl_search": "自然语言搜索",
+        "mcp": "MCP 服务器",
+        "voice": "语音输入",
+        "requires_config": "请先配置并保存接口和聊天模型。",
+        "requires_vision": "连接测试显示所配置的模型不支持视觉功能。",
+        "requires_stt": "请先配置并保存语音转文字接口和模型。",
+        "voice_autosend": "自动发送语音转录文本，而不先进行确认",
+        "voice_unavailable": "尚不可用 - 该功能将随语音输入功能一起推出。"
+      },
+      "mcp": {
+        "title": "MCP 服务器",
+        "hint": "将 MCP 客户端（Claude Desktop、claude.ai）指向此 Spoolman，即可查询和更新您的库存。无需配置 LLM 提供方 - 只需开启此开关。",
+        "copy": "复制配置",
+        "copied": "配置已复制到剪贴板。",
+        "auth_note": "如果此 Spoolman 需要 API 令牌，请在 \"headers\" 下添加一条 \"Authorization\": \"Bearer <token>\" 条目。只读账户仅可使用查询类工具。"
+      },
+      "models": {
+        "title": "Ollama 模型",
+        "hint": "您的接口是一个 Ollama 服务器。可直接在此处拉取推荐模型 - Spoolman 仅管理模型，不涉及运行时本身。",
+        "installed": "已安装",
+        "pull": "拉取",
+        "pulled": "已拉取 {{model}}。",
+        "purpose": {
+          "chat": "聊天",
+          "vision": "视觉"
+        }
+      }
     }
   },
   "locations": {
@@ -770,7 +905,8 @@
       "description": "选择要打印可扫描二维码标签的位置。",
       "select_placeholder": "选择位置",
       "none_selected": "未选择位置"
-    }
+    },
+    "load_error": "加载料盘失败"
   },
   "calibration": {
     "title": "校准",
@@ -850,7 +986,165 @@
         "cancel": "取消"
       },
       "skip_finish_confirm": "不保存此步骤并将此会话标记为已完成？",
-      "session_complete": "校准会话已标记为完成。"
+      "session_complete": "校准会话已标记为完成。",
+      "revisiting": "重新查看"
+    },
+    "wiki": {
+      "link": "Wiki",
+      "tooltip": "打开此步骤对应的 OrcaSlicer wiki 页面",
+      "tooltip_short": "OrcaSlicer wiki"
+    },
+    "sections": {
+      "test_method": "测试方法",
+      "test_setup": "测试设置",
+      "your_result": "您的结果",
+      "auto_computed": "· 自动计算"
+    },
+    "step_status": {
+      "skipped": "已跳过",
+      "done": "✓ 已完成",
+      "incomplete": "未完成"
+    },
+    "confidence_display": "{{level}}可信度",
+    "confirm_delete": {
+      "tooltip": "删除",
+      "confirming": "再次点击以确认",
+      "short": "确定？"
+    },
+    "select_step": {
+      "placeholder": "选择校准步骤",
+      "required": "请选择一个校准步骤。"
+    },
+    "optional": "可选",
+    "optional_notes": "可选备注…",
+    "printer_name_placeholder": "例如 Bambu X1C、Ender 3",
+    "flow_calc": {
+      "title": "轮次结果计算器",
+      "pass1": "第一轮",
+      "pass2": "第二轮",
+      "method_yolo": "YOLO（推荐）",
+      "method_legacy": "传统方法（两轮）",
+      "yolo_desc": "使用阿基米德弦图案进行单轮校准（OrcaSlicer ≥ 2.3.0）。输入当前的流量比，以及在打印件上观察到的修正值。",
+      "legacy_desc": "两轮校准。依次输入第一轮和第二轮的结果，计算出最终流量比。",
+      "start": "开始 →",
+      "yolo_pass1_desc": "打印阿基米德弦测试模型。输入当前流量比，以及打印件上显示的修正值，系统会自动计算出新的流量比。",
+      "legacy_pass1_desc": "打印第一轮测试模型。输入起始流量比，以及在打印件上观察到的修正百分比。",
+      "pass2_desc": "将切片软件的流量比设置为第一轮的结果，重新打印测试模型，然后输入新的修正百分比。",
+      "current_flow_ratio": "当前流量比",
+      "modifier": "修正值",
+      "new_flow_ratio": "新流量比",
+      "flow_ratio": "流量比",
+      "result": "结果",
+      "cancel": "取消",
+      "apply": "应用到表单 ✓",
+      "next_pass2": "下一步：第二轮 →",
+      "back": "← 返回"
+    },
+    "pa": {
+      "method_tower": "测试塔（推荐）",
+      "method_pattern": "图案／线条",
+      "tower_desc": "打印 PA 测试塔。输入挤出机类型、PA 步进值 (A)，以及外观最佳那一层的测量高度 (B)。PA 值将按 A × B 自动计算。",
+      "pattern_desc": "打印 PA 图案或线条测试。找出最佳线条，并在下方直接输入其 PA 值。"
+    },
+    "input_shaping_advisory": {
+      "title": "打印机比较新？您可能不需要这一步。",
+      "desc_wizard": "大多数运行 Klipper 并配备加速度计（ADXL345）的现代 CoreXY 打印机，以及所有 Bambu Lab 打印机，都已能自动完成输入整形——而且比手动测试塔精确得多。如果您符合这种情况，跳过此步骤即可省去麻烦。",
+      "desc_drawer": "大多数运行 Klipper 并配备加速度计（ADXL345）的现代 CoreXY 打印机，以及所有 Bambu Lab 打印机，都已能自动完成输入整形——而且比手动测试塔精确得多。如果您符合这种情况，无需保存，直接关闭此抽屉即可。",
+      "skip": "我的打印机已自动处理——跳过此步骤 →"
+    },
+    "vfa": {
+      "artifact_speeds": "瑕疵速度",
+      "artifact_speeds_desc": "打印 VFA 测试塔，并标记出每个出现 VFA 瑕疵的速度。最小和最大规避速度将根据此列表自动计算。",
+      "speed_placeholder": "速度",
+      "add_speed": "添加速度"
+    },
+    "step_copy": {
+      "temperature": {
+        "title": "温度",
+        "description": "为此耗材找到最佳打印温度。打印一个温度塔，找出层间粘合、表面质量和最少拉丝三者兼顾最佳的那一层。温度越高，层间粘合越好；温度越低，渗料和拉丝越少。"
+      },
+      "volumetric_speed": {
+        "title": "体积速度",
+        "description": "确定热端在使用此耗材时，出现挤出不足之前所能维持的最大体积流量。打印流量渐变测试，或以递增速度打印一系列单壁立方体，记录质量开始下降前的临界速度。"
+      },
+      "pressure_advance": {
+        "title": "压力提前",
+        "description": "调整压力提前（Klipper／Bambu）或线性提前（Marlin），以消除转角鼓包并提升尖角质量。打印 PA 测试图案，找出能呈现最干净、最锐利转角的数值。如果固件支持，可启用自适应 PA。"
+      },
+      "flow_rate": {
+        "title": "流量",
+        "description": "微调挤出倍率，使实际挤出的塑料量与切片软件的预期相符。打印两个校准立方体（一个 98%、一个 100%），用卡尺测量其壁厚，计算出正确的流量比。"
+      },
+      "retraction": {
+        "title": "回抽",
+        "description": "找出既能消除拉丝，又不会磨损耗材或造成堵头的最小回抽长度和速度。打印回抽距离塔，选择能产生干净空驶效果的最低设置。"
+      },
+      "tolerance": {
+        "title": "公差",
+        "description": "测量打印机还原特征尺寸的精确程度。打印公差测试模型，用卡尺测量目标特征并记录偏差值，然后将结果应用到切片软件的尺寸精度／XY 补偿设置中。"
+      },
+      "cornering": {
+        "title": "拐角",
+        "description": "调整转角行为，在打印速度与方向变化处的振纹瑕疵之间取得平衡。可使用 Junction Deviation（Marlin 2.x／RepRapFirmware）、经典 Jerk（旧版 Marlin）或 Square Corner Velocity（Klipper）。打印转角测试图案，逐步降低数值直到振纹消失。"
+      },
+      "input_shaping": {
+        "title": "输入整形",
+        "description": "通过共振补偿减少重影和振纹。测量打印机的共振频率（推荐使用加速度计，也可用目测振纹塔）。选择能将瑕疵降到最低的整形器类型和频率，并在下方输入。"
+      },
+      "vfa": {
+        "title": "VFA（垂直精细瑕疵）",
+        "description": "找出打印表面出现垂直瑕疵（VFA／条纹）之前的最高打印速度。在光滑壁面物体上打印速度渐变测试，记录表面出现规律条纹前的临界速度。"
+      }
+    },
+    "field_labels": {
+      "inputs": {
+        "start_temp": "起始温度",
+        "end_temp": "结束温度",
+        "step_size": "步长",
+        "start_speed": "起始速度",
+        "end_speed": "结束速度",
+        "measured_height": "测量高度",
+        "extruder_type": "挤出机类型",
+        "pa_step_a": "PA 步进值 (A)",
+        "measured_height_b": "测量高度 (B)",
+        "start_retract": "起始回抽",
+        "factor": "系数",
+        "test_size": "测试特征尺寸",
+        "measured_size": "测量尺寸",
+        "firmware_type": "固件／功能",
+        "start_value": "起始值",
+        "end_value": "结束值",
+        "shaper_type": "整形器类型",
+        "frequency_x": "共振频率 X",
+        "frequency_y": "共振频率 Y"
+      },
+      "outputs": {
+        "temperature": "最佳温度",
+        "max_volumetric_speed": "最大体积速度",
+        "pressure_advance": "PA 值",
+        "flow_ratio": "流量比",
+        "retraction_length": "推荐回抽长度",
+        "tolerance_offset": "公差偏移",
+        "cornering_value": "推荐值",
+        "shaper_type_x": "X 轴推荐整形器",
+        "frequency_x": "调校后频率 X",
+        "shaper_type_y": "Y 轴推荐整形器",
+        "frequency_y": "调校后频率 Y",
+        "min_avoidance_speed": "最小规避速度",
+        "max_avoidance_speed": "最大规避速度"
+      },
+      "options": {
+        "direct_drive": "直驱",
+        "bowden": "远程挤出",
+        "junction_deviation": "Junction Deviation (Marlin 2.x / RepRapFirmware)",
+        "jerk": "Jerk (Classic Marlin)",
+        "square_corner_velocity": "Square Corner Velocity (Klipper)",
+        "mzv": "MZV",
+        "ei": "EI",
+        "zv": "ZV",
+        "2hump_ei": "2HUMP_EI",
+        "3hump_ei": "3HUMP_EI"
+      }
     }
   },
   "external": {
@@ -993,7 +1287,8 @@
       "unknown_content": "没有任何耗材使用条码 {{code}}。要创建一个耗材并记住此条码吗？",
       "create_filament": "创建耗材",
       "lookup_error": "无法查询该条码。"
-    }
+    },
+    "photo": "照片"
   },
   "printer": {
     "printer": "打印机",
@@ -1002,5 +1297,165 @@
       "comment": "备注",
       "spool_count": "料盘数"
     }
+  },
+  "chat": {
+    "title": "助手",
+    "open": "咨询助手",
+    "placeholder": "询问关于耗材和料盘的问题…",
+    "send": "发送",
+    "thinking": "思考中…",
+    "empty": "问我关于您的料盘和耗材的问题——例如“我还剩多少黑色 PETG？”或“我该补货什么了？”。",
+    "viewInList": "在料盘列表中查看",
+    "confirm": {
+      "before": "之前",
+      "after": "之后",
+      "confirm": "确认",
+      "cancel": "取消",
+      "confirmed": "已确认",
+      "cancelled": "已取消",
+      "destructive": "无法撤销"
+    },
+    "executed": {
+      "undo": "撤销",
+      "undone": "更改已撤销。"
+    },
+    "voice": {
+      "record": "按住说话",
+      "listening": "正在聆听…",
+      "speak": "朗读回复",
+      "unsupported": "此浏览器不支持语音录制。",
+      "mic_error": "无法访问麦克风。"
+    }
+  },
+  "intake": {
+    "hint": "拍摄料盘的标签或包装盒照片，或选择一张已有的照片。",
+    "select_photo": "选择或拍摄照片",
+    "extracting": "正在读取标签...",
+    "in_library": "已在您的库中，将新增一个料盘",
+    "from_catalog": "来自 SpoolmanDB，将创建耗材和料盘",
+    "use_raw": "使用原始识别结果（新建耗材）",
+    "continue": "继续",
+    "back": "返回",
+    "photo_discarded": "照片仅在内存中分析，不会被保存。",
+    "prefilled_banner": "已根据标签照片自动填写 - 保存前请核对各项数值。",
+    "fields": {
+      "vendor": "制造商",
+      "name": "名称",
+      "material": "材料",
+      "weight_g": "重量 (g)",
+      "diameter_mm": "直径 (mm)",
+      "extruder_temp_c": "喷嘴 (C)",
+      "bed_temp_c": "热床 (C)",
+      "lot_nr": "批号",
+      "article_number": "产品编号",
+      "confidence": "可信度"
+    }
+  },
+  "update": {
+    "available": "有可用更新",
+    "tooltip": "版本 {{version}} 可用",
+    "notification": {
+      "title": "Spoolman 有新版本可用",
+      "description": "版本 {{version}} 已发布。查看更新内容及升级方法。",
+      "viewRelease": "查看发行说明"
+    },
+    "action": {
+      "open": "更新",
+      "howTo": "如何更新",
+      "modalTitle": "更新 Spoolman",
+      "currentVersion": "已安装：{{version}}",
+      "latestVersion": "最新：{{version}}",
+      "viewReleaseNotes": "查看发行说明",
+      "close": "关闭",
+      "updateNow": "立即更新",
+      "updateToVersion": "更新到 {{version}}",
+      "native": {
+        "description": "这是原生安装，因此 Spoolman 可以自行更新到最新版本。",
+        "restartNotice": "更新后服务将自动重启。如果 Spoolman 不是由 systemd 管理，请在更新完成后手动重启。",
+        "adminRequired": "必须以管理员身份登录才能在此处执行更新。",
+        "disabled": "此实例已禁用通过界面触发的更新。请配置身份验证，或设置 SPOOLMAN_ALLOW_UI_UPDATE=TRUE 以启用该按钮。您也可以在终端中更新："
+      },
+      "docker": {
+        "description": "此实例运行在 Docker 中。请拉取新镜像并重新创建容器以完成更新：",
+        "tagReminder": "如果您的 compose 文件固定了具体的镜像标签，请在拉取前将其更新为新版本（例如 ghcr.io/sherrmann/spoolman-ng:{{version}}）。"
+      },
+      "haAddon": {
+        "description": "此实例作为 Home Assistant 附加组件运行。请从 Home Assistant 中更新，它会自动提供新版本：",
+        "steps": "设置 → 加载项 → Spoolman → 更新"
+      },
+      "unknown": {
+        "description": "请按照最初安装 Spoolman 的方式安装最新版本以完成更新。详情请参阅发行说明。"
+      },
+      "started": {
+        "title": "更新已开始",
+        "descriptionManaged": "Spoolman 正在更新，完成后将自动重启。恢复后本页面将自动重新连接。",
+        "descriptionManual": "Spoolman 正在更新。更新完成后请手动重启 Spoolman。"
+      },
+      "failed": {
+        "title": "更新失败"
+      }
+    }
+  },
+  "low_stock": {
+    "title": "库存不足",
+    "remaining_header": "剩余",
+    "remaining_left": "剩余 {{amount}}",
+    "threshold_button": "调整阈值",
+    "threshold_button_value": "阈值：{{value}}",
+    "section": {
+      "explicit": "低于您设置的阈值",
+      "fallback": "低于默认值 {{grams}} g"
+    },
+    "empty": "无需补货——库存充足。"
+  },
+  "orders": {
+    "title": "订单",
+    "empty": "暂无订单。",
+    "new_order": "新建订单",
+    "new_order_title": "新建订单",
+    "add_line": "添加耗材",
+    "remove_line": "移除行",
+    "select_filament": "选择耗材",
+    "no_lines": "创建订单前请至少添加一种耗材。",
+    "order_number": "订单号",
+    "shop": "店铺",
+    "ordered_at": "下单日期",
+    "lines_summary": "已到货 {{arrived}}／{{total}}",
+    "lines_summary_title": "订单行",
+    "state_title": "状态",
+    "filaments_count_other": "{{count}} 种耗材",
+    "arrived_action": "到货…",
+    "outstanding": "未到货",
+    "create_error": "无法创建订单。请重试。",
+    "state": {
+      "open": "进行中——{{count}} 件未到货",
+      "arrived": "已到货"
+    },
+    "mark_ordered": "标记为已下单",
+    "mark_ordered_title": "将“{{name}}”标记为已下单",
+    "create_order": "创建订单",
+    "create_order_title": "创建订单——已选择 {{count}} 项",
+    "shop_placeholder": "输入店铺名称（若不存在将自动创建）",
+    "order_date": "下单日期",
+    "quantity": "数量",
+    "price_per_unit": "价格／料盘（可选）",
+    "order_number_field": "订单号（可选）",
+    "url": "订单链接（可选）",
+    "selected_count": "已选择 {{count}} 项",
+    "arrive_title": "订单 #{{number}} 到货了什么？",
+    "arrive_subtitle": "部分到货会拆分该行——其余部分仍保留在订单中。",
+    "arrive_error": "无法将订单标记为到货。请重试。",
+    "arrived_check": "已到货",
+    "n_of_m": "{{delivered}}／{{outstanding}} 未到货",
+    "split_preview": "{{delivered}} 件到货，{{rest}} 件仍在订单中",
+    "create_spools": "为已到货的物品创建料盘",
+    "location": "位置",
+    "banner": "此耗材正在订购中（订单 #{{id}}）——要将该行标记为已到货吗？",
+    "mark_arrived": "标记到货",
+    "details_title": "订单 {{number}}",
+    "comment": "备注",
+    "update_error": "无法更新订单。请重试。",
+    "delete_error": "无法删除订单。请重试。",
+    "delete_confirm": "删除此订单？其订单行也将一并删除。"
   }
 }

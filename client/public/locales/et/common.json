@@ -19,7 +19,7 @@
     "clone": "Klooni",
     "archive": "Arhiveeri",
     "notAccessTitle": "Sul pole õigusi sisenemiseks",
-    "saveAndAdd": "Salvesta ja Lisa",
+    "saveAndAdd": "Salvesta ja lisa",
     "logout": "Logi välja",
     "delete": "Kustuta",
     "cancel": "Tühista",
@@ -50,11 +50,11 @@
     "editSuccess": "Edukalt muudetud {{resource}}",
     "editError": "Viga {{resource}} muutmisel (staatuse kood: {{statusCode}})",
     "importProgress": "Importimine: {{processed}}/{{total}}",
-    "saveSuccessful": "Salvesta edukalt!",
+    "saveSuccessful": "Salvestamine õnnestus!",
     "validationError": "Viga validerimisel: {{error}}"
   },
   "warnWhenUnsavedChanges": "Oled sa kindel, et soovid lahkuda? Sul on salvestamata muudatusi.",
-  "kofi": "Anna mulle tippi Ko-fi's",
+  "kofi": "Toeta mind Ko-fis",
   "loading": "Laadimine",
   "version": "Versioon",
   "unknown": "Tundmatu",
@@ -68,7 +68,7 @@
   },
   "printing": {
     "generic": {
-      "title": "Trükkib",
+      "title": "Printimine",
       "description": "Kohanda allolevaid seadeid, et saavutada soovitud prindipaigutus. Pea meeles, et printerid ja sinu operatsioonisüsteem võivad rakendada oma veeriseid ja mõõtkava, seega võib õige tulemuse saavutamiseks olla vaja veidi katsetada. Testi seda tavalisel paberilehel, enne kui prindid päris siltidele.",
       "helpMargin": "Veerised tuleks seadistada vastavalt sinu sildipaberile ja printerile; nende muutmine mõjutab kogu ruudustiku suurust.",
       "helpPrinterMargin": "Turvatsoon tuleks seadistada vastavalt sellele, kui lähedale paberi servale sinu printer printida suudab; nende muutmine ei mõjuta kogu ruudustikku.",
@@ -119,7 +119,19 @@
       "invalidGeometry": "Sildiruudustik ei mahu paberile",
       "invalidGeometryHelp": "Veerised ja vahed ei jäta siltidele ruumi. Vähenda veeriseid, vahesid, veerge või ridu — või vali suurem paberi suurus.",
       "contentClipped": "Osa siltide sisust lõigatakse ära",
-      "contentClippedHelp": "Vähemalt ühe sildi sisu ei mahu sildi piiresse ja lõigatakse printimisel ära. Vähenda teksti suurust, lühenda malli või kasuta vähem veerge/ridu, et iga silt oleks suurem."
+      "contentClippedHelp": "Vähemalt ühe sildi sisu ei mahu sildi piiresse ja lõigatakse printimisel ära. Vähenda teksti suurust, lühenda malli või kasuta vähem veerge/ridu, et iga silt oleks suurem.",
+      "checklist": {
+        "title": "Enne printimist",
+        "intro": "Brauseri printimisdialoogid skaleerivad tihti lehte ümber, mis rikub sildi geomeetria. Järgmisena avanevas printimisdialoogis kontrolli:",
+        "scale": "Mõõtkava on 100% / “Tegelik suurus” — mitte kunagi “Mahuta lehele”.",
+        "paperSize": "Valitud paberi suurus on täpselt {{width}} × {{height}} mm.",
+        "margins": "Veerised on “Puudub” peal (Spoolman käsitleb veeriseid juba ise).",
+        "headersFooters": "Päised ja jalused on välja lülitatud.",
+        "pageSizeModeHint": "Valisid sildipaberi suuruse, kuid Lehe suurus on “Automaatne”. “Sildi suuruse järgi” annab brauserile teada täpse lehe geomeetria.",
+        "pageSizeModeApply": "Lülitu Sildi suuruse järgi peale",
+        "dontShowAgain": "Ära näita seda uuesti",
+        "printNow": "Prindi kohe"
+      }
     },
     "qrcode": {
       "button": "Prindi sildid",
@@ -177,7 +189,16 @@
         "none": "Puudub",
         "code128": "Code 128"
       },
-      "tooltip": "Prindi valitud ridadele sildid või vali üksused järgmisel lehel"
+      "tooltip": "Prindi valitud ridadele sildid või vali üksused järgmisel lehel",
+      "qrSize": {
+        "label": "QR-koodi suurus",
+        "tooltip": "QR-koodi ruudu prinditav suurus millimeetrites. Automaatne säilitab senise käitumise: QR täidab poole sildist (kogu sildi, kui muud ei prindita). QR-koodi veeris lisatakse valitud suurusele ümber tühja tsoonina.",
+        "auto": "Automaatne",
+        "custom": "Kohandatud",
+        "tooSmall": "QR-koodid, mis on väiksemad kui {{mm}} mm, võivad telefoni kaameraga raskesti skannitavad olla.",
+        "clamped": "See silt mahutab ainult ≈ {{rendered}} mm — väiksem kui sinu määratud {{requested}} mm.",
+        "clampedTooSmall": "See silt mahutab ainult ≈ {{rendered}} mm ({{requested}} mm määratud) — alla telefoni kaamera miinimumi {{mm}} mm."
+      }
     },
     "spoolSelect": {
       "title": "Vali poolid",
@@ -202,7 +223,8 @@
       "hidePrinted": "Peida juba prinditud",
       "reprintConfirmTitle": "Kas printida sildid uuesti?",
       "reprintConfirmContent_one": "{{count}} valitud filamendil on juba prinditud silt. Kas printida see uuesti?",
-      "reprintConfirmContent_other": "{{count}} valitud filamendil on juba prinditud sildid. Kas printida need uuesti?"
+      "reprintConfirmContent_other": "{{count}} valitud filamendil on juba prinditud sildid. Kas printida need uuesti?",
+      "searchPlaceholder": "Otsi filamendi ID, tootja, nime või materjali järgi"
     }
   },
   "home": {
@@ -243,7 +265,12 @@
       "top": "enim",
       "materials_one": "{{count}} materjal",
       "materials_other": "{{count}} materjali"
-    }
+    },
+    "load_error_title": "Poolide laadimine ebaõnnestus",
+    "load_error_desc": "Poolide laadimisel tekkis viga. Palun proovi uuesti.",
+    "gathering_dust": "Kogub tolmu",
+    "never_used": "Pole kunagi kasutatud",
+    "no_stale": "Tolmu koguvaid poole pole"
   },
   "locations": {
     "error_empty": "Nimi ei tohi olla tühi",
@@ -273,7 +300,8 @@
       "description": "Vali asukohad, millele skannitavaid QR-silte printida.",
       "select_placeholder": "Vali asukohad",
       "none_selected": "Ühtegi asukohta pole valitud"
-    }
+    },
+    "load_error": "Poolide laadimine ebaõnnestus"
   },
   "scanner": {
     "title": "QR-koodi skanner",
@@ -427,6 +455,14 @@
       "shown_other": "{{count}} pooli kuvatud",
       "selected_one": "{{count}} pool valitud",
       "selected_other": "{{count}} pooli valitud"
+    },
+    "nlSearch": {
+      "button": "AI",
+      "title": "Otsi loomulikus keeles",
+      "placeholder": "nt must PETG riiulil B",
+      "hint": "Rakendatakse muudetavate filtritena",
+      "search": "Otsi",
+      "error": "Otsingut ei õnnestunud teisendada. Proovi uuesti või kasuta tavalist otsingukasti."
     }
   },
   "filament": {
@@ -467,7 +503,8 @@
       "finish": "Viimistlus",
       "pattern": "Muster",
       "translucent": "Poolläbipaistev",
-      "glow": "Pimedas helendav"
+      "glow": "Pimedas helendav",
+      "image": "Foto"
     },
     "fields_help": {
       "name": "Filamendi nimi, et eristada seda filamendi tüüpi teistest sama tootja omadest. Peaks sisaldama näiteks värvi.",
@@ -480,7 +517,8 @@
       "low_stock_threshold": "Märgi see filament tellimist vajavaks, kui selle poolide järelejäänud kogukaal langeb alla nii mitme grammi.",
       "reserve_count": "Avamata varupoolide arv, mis sul on olemas; neid jälgitakse ilma igaühe jaoks pooli loomata.",
       "settings_extruder_temp_range": "Tootja soovitatud ekstruuderi temperatuurivahemik (min–maks). Valikuline; jäta tühjaks, kui sul on ainult üks väärtus.",
-      "settings_bed_temp_range": "Tootja soovitatud aluse temperatuurivahemik (min–maks). Valikuline; jäta tühjaks, kui sul on ainult üks väärtus."
+      "settings_bed_temp_range": "Tootja soovitatud aluse temperatuurivahemik (min–maks). Valikuline; jäta tühjaks, kui sul on ainult üks väärtus.",
+      "image": "Foto, mille järgi seda filamenti ära tunda — nt pool või poekuulutus. Brauseris skaleeritakse see enne üleslaadimist väiksemaks; metaandmed nagu GPS-asukoht eemaldatakse."
     },
     "titles": {
       "create": "Loo filament",
@@ -566,6 +604,16 @@
     },
     "messages": {
       "update_error": "Muudatuste salvestamine ebaõnnestus. Palun proovi uuesti."
+    },
+    "image": {
+      "upload": "Laadi foto üles",
+      "replace": "Asenda foto",
+      "remove": "Eemalda foto",
+      "uploaded": "Foto salvestatud",
+      "upload_error": "Foto salvestamine ebaõnnestus",
+      "removed": "Foto eemaldatud",
+      "remove_error": "Foto eemaldamine ebaõnnestus",
+      "prepare_error": "Selle pildifaili lugemine ebaõnnestus"
     }
   },
   "vendor": {
@@ -741,6 +789,94 @@
       "add_title": "Lisa link",
       "edit_title": "Muuda linki",
       "delete_confirm": "Kas kustutada see link?"
+    },
+    "ai": {
+      "tab": "AI",
+      "description": "Ühenda OpenAI-ga ühilduv otspunkt (Ollama, LM Studio, OpenAI, Anthropic, OpenRouter, Requesty, Groq jne). Midagi ei saadeta kuhugi ja liideses ei kuva ühtegi AI-elementi enne, kui allpool mõni funktsioon on lubatud.",
+      "preset": {
+        "label": "Eelseadistus",
+        "placeholder": "Vali teenusepakkuja, et täita baas-URL"
+      },
+      "base_url": {
+        "label": "Baas-URL",
+        "tooltip": "Kasutatav OpenAI-ga ühilduv otspunkt, nt Ollama server sinu võrgus.",
+        "invalid": "Peab olema http:// või https:// URL"
+      },
+      "api_key": {
+        "label": "API-võti",
+        "tooltip": "Salvestatakse ainult kirjutamiseks: server ei saada seda kunagi tagasi ühelegi kliendile. Ollama ja LM Studio ei vaja seda.",
+        "placeholder_set": "Võti on salvestatud - sisesta uus väärtus selle asendamiseks",
+        "placeholder_unset": "Võtit pole salvestatud",
+        "clear": "Tühjenda salvestatud võti"
+      },
+      "model": {
+        "label": "Vestlusmudel",
+        "tooltip": "Mudel, mida kasutatakse vestluse ja tööriistakutsete funktsioonide jaoks. Otspunkti mudelite loendi nägemiseks tee ühendustest."
+      },
+      "vision_model": {
+        "label": "Nägemismudel",
+        "tooltip": "Mudel, mida kasutatakse pildifunktsioonide jaoks. Jäta tühjaks, et kasutada vestlusmudelit."
+      },
+      "stt": {
+        "title": "Kõnest tekstiks (häälsisestus)",
+        "hint": "Eraldi OpenAI-ga ühilduv transkriptsiooniotspunkt häälsisestuse jaoks - Ollamal pole kõne-tekstiks funktsiooni. Näiteks whisper.cpp server, Speaches või Groq whisper.",
+        "base_url": {
+          "label": "STT baas-URL",
+          "tooltip": "Transkriptsiooniotspunkt, nt http://localhost:8000/v1"
+        },
+        "api_key": {
+          "label": "STT API-võti"
+        },
+        "model": {
+          "label": "STT mudel",
+          "tooltip": "Transkriptsioonimudel, nt whisper-1 või Systran/faster-whisper-base."
+        }
+      },
+      "env_locked": "Määratud keskkonnamuutuja kaudu ja siin lukustatud",
+      "test": "Testi ühendust",
+      "probe": {
+        "reachable": "Otspunkt kättesaadav",
+        "models_listed": "mudeleid loetletud",
+        "failed": "Ühendustest ebaõnnestus.",
+        "chat": "Vestlus",
+        "tools": "Tööriistakutsed",
+        "vision": "Nägemine",
+        "yes": "toetatud",
+        "no": "ei toetata",
+        "unknown": "kontrollimata - see otspunkt ei anna teada oma võimalustest"
+      },
+      "features": {
+        "title": "Funktsioonid",
+        "hint": "Kõik funktsioonid on vaikimisi välja lülitatud. Midagi AI-ga seotut ei kuvata liideses kusagil enne, kui see siin sisse lülitatakse.",
+        "chat": "Vestlusassistent",
+        "scan_to_spool": "Scan-to-Spool fotolt sisestamine",
+        "nl_search": "Loomuliku keele otsing",
+        "mcp": "MCP server",
+        "voice": "Häälsisestus",
+        "requires_config": "Seadista ja salvesta kõigepealt otspunkt ja vestlusmudel.",
+        "requires_vision": "Ühendustest näitab, et seadistatud mudelil puudub nägemistugi.",
+        "requires_stt": "Seadista ja salvesta kõigepealt kõne-tekstiks otspunkt ja mudel.",
+        "voice_autosend": "Saada häältuvastuse tekst automaatselt, selle asemel et see enne üle vaadata",
+        "voice_unavailable": "Pole veel saadaval - see lisandub häälsisestuse funktsiooniga."
+      },
+      "mcp": {
+        "title": "MCP server",
+        "hint": "Suuna MCP klient (Claude Desktop, claude.ai) selle Spoolmani peale, et päringuid teha ja oma laoseisu uuendada. LLM-i teenusepakkujat pole vaja - ainult see lüliti.",
+        "copy": "Kopeeri seadistus",
+        "copied": "Seadistus kopeeriti lõikelauale.",
+        "auth_note": "Kui see Spoolman nõuab API-tokenit, lisa \"headers\" alla kirje \"Authorization\": \"Bearer <token>\". Kirjutuskaitstud kontod saavad ainult päringutööriistad."
+      },
+      "models": {
+        "title": "Ollama mudelid",
+        "hint": "Sinu otspunkt on Ollama server. Tõmba soovitatud mudel otse siit - Spoolman haldab mudeleid, kuid mitte kunagi käitusaega.",
+        "installed": "Installitud",
+        "pull": "Tõmba",
+        "pulled": "Tõmmatud {{model}}.",
+        "purpose": {
+          "chat": "vestlus",
+          "vision": "nägemine"
+        }
+      }
     }
   },
   "documentTitle": {
@@ -855,7 +991,165 @@
         "cancel": "Tühista"
       },
       "skip_finish_confirm": "Kas märkida see seanss lõpetatuks ilma seda sammu salvestamata?",
-      "session_complete": "Kalibreerimisseanss on märgitud lõpetatuks."
+      "session_complete": "Kalibreerimisseanss on märgitud lõpetatuks.",
+      "revisiting": "Ülevaatamisel"
+    },
+    "wiki": {
+      "link": "Wiki",
+      "tooltip": "Ava selle sammu OrcaSliceri wiki",
+      "tooltip_short": "OrcaSliceri wiki"
+    },
+    "sections": {
+      "test_method": "Testimismeetod",
+      "test_setup": "Testi seadistus",
+      "your_result": "Sinu tulemus",
+      "auto_computed": "· automaatselt arvutatud"
+    },
+    "step_status": {
+      "skipped": "Vahele jäetud",
+      "done": "✓ Valmis",
+      "incomplete": "Lõpetamata"
+    },
+    "confidence_display": "{{level}} usaldusväärsus",
+    "confirm_delete": {
+      "tooltip": "Kustuta",
+      "confirming": "Kinnitamiseks klõpsa uuesti",
+      "short": "Kindel?"
+    },
+    "select_step": {
+      "placeholder": "Vali kalibreerimissamm",
+      "required": "Palun vali kalibreerimissamm."
+    },
+    "optional": "Valikuline",
+    "optional_notes": "Valikulised märkmed…",
+    "printer_name_placeholder": "nt Bambu X1C, Ender 3",
+    "flow_calc": {
+      "title": "Katse tulemuse kalkulaator",
+      "pass1": "Pass 1",
+      "pass2": "Pass 2",
+      "method_yolo": "YOLO (Soovitatav)",
+      "method_legacy": "Klassikaline (2 etapiga)",
+      "yolo_desc": "Üheetapiline kalibreerimine Archimedese spiraalide (Archimedean Chords) mustriga (OrcaSlicer ≥ 2.3.0). Sisesta oma praegune flow ratio ja printilt loetud korrektsiooniväärtus.",
+      "legacy_desc": "Kaheetapiline kalibreerimine. Läbi esimese ja teise etapi tulemused, et arvutada lõplik flow ratio.",
+      "start": "Alusta →",
+      "yolo_pass1_desc": "Prindi Archimedese spiraalide (Archimedean Chords) testmudel. Sisesta oma praegune flow ratio ja printilt loetud korrektsiooniväärtus. Uus flow ratio arvutatakse automaatselt.",
+      "legacy_pass1_desc": "Prindi oma esimese etapi testmudel. Sisesta algne flow ratio ja printilt loetud korrektsiooniprotsent.",
+      "pass2_desc": "Määra sliceris flow ratio Pass 1 tulemuse peale, prindi testmudel uuesti ning sisesta seejärel uus korrektsiooniprotsent.",
+      "current_flow_ratio": "Praegune Flow Ratio",
+      "modifier": "Modifikaator",
+      "new_flow_ratio": "Uus Flow Ratio",
+      "flow_ratio": "Flow Ratio",
+      "result": "Tulemus",
+      "cancel": "Tühista",
+      "apply": "Rakenda vormile ✓",
+      "next_pass2": "Järgmine: Pass 2 →",
+      "back": "← Tagasi"
+    },
+    "pa": {
+      "method_tower": "Torn (Soovitatav)",
+      "method_pattern": "Muster / Joon",
+      "tower_desc": "Prindi PA torni test. Sisesta oma ekstruuderi tüüp, PA sammu väärtus (A) ja parima väljanägemisega kihi mõõdetud kõrgus (B). PA arvutatakse automaatselt valemiga A × B.",
+      "pattern_desc": "Prindi PA mustri- või joonetest. Leia parim joon ja sisesta selle PA väärtus otse allpool."
+    },
+    "input_shaping_advisory": {
+      "title": "Kas sul on kaasaegne printer? Võib-olla ei vaja sa seda sammu.",
+      "desc_wizard": "Enamik kaasaegseid CoreXY printereid, mis kasutavad Klipperit koos kiirendusanduriga (ADXL345), ning kõik Bambu Lab printerid tegelevad input shaping'uga juba automaatselt — ja seda oluliselt täpsemalt, kui käsitsi testtorn eales suudaks. Kui see kehtib sinu kohta, jäta see samm vahele ja säästa endale vaeva.",
+      "desc_drawer": "Enamik kaasaegseid CoreXY printereid, mis kasutavad Klipperit koos kiirendusanduriga (ADXL345), ning kõik Bambu Lab printerid tegelevad input shaping'uga juba automaatselt — ja seda oluliselt täpsemalt, kui käsitsi testtorn eales suudaks. Kui see kehtib sinu kohta, sulge lihtsalt see paneel ilma salvestamata.",
+      "skip": "Minu printer tegeleb sellega — jäta vahele →"
+    },
+    "vfa": {
+      "artifact_speeds": "Artefaktide kiirused",
+      "artifact_speeds_desc": "Prindi VFA testtorn ja märgi iga kiirus, mille juures VFA artefakte täheldad. Min ja Max Avoidance Speed arvutatakse sellest loendist automaatselt.",
+      "speed_placeholder": "Kiirus",
+      "add_speed": "Lisa kiirus"
+    },
+    "step_copy": {
+      "temperature": {
+        "title": "Temperatuur",
+        "description": "Leia selle filamendi jaoks parim printimistemperatuur. Prindi temperatuuritorn ja otsi kiht, mis annab parima tasakaalu kihtide nakkuvuse, pinnakvaliteedi ja minimaalse niidistumise vahel. Kõrgem temperatuur parandab nakkuvust; madalam vähendab tilkumist ja niidistumist."
+      },
+      "volumetric_speed": {
+        "title": "Mahuline kiirus",
+        "description": "Määra maksimaalne mahuline kiirus, mida sinu düüs selle filamendiga enne alaekstrusiooni teket taluda suudab. Prindi kasvava kiirusega vooluhulga test või seeria üheseinalisi kuubikuid üha suuremal kiirusel ning märgi üles kiirus vahetult enne kvaliteedi halvenemist."
+      },
+      "pressure_advance": {
+        "title": "Pressure Advance",
+        "description": "Seadista Pressure Advance (Klipper / Bambu) või Linear Advance (Marlin), et kõrvaldada nurkade pundumine ja parandada teravate nurkade kvaliteeti. Prindi PA testmuster ja leia väärtus, mis annab kõige puhtamad ja teravamad nurgad. Luba Adaptive PA, kui sinu firmware seda toetab."
+      },
+      "flow_rate": {
+        "title": "Flow Rate",
+        "description": "Peenhäälesta ekstrusioonikordajat, et tegelikult väljutatava plasti kogus vastaks sliceri ootustele. Prindi kaks kalibreerimiskuubikut (üks 98%, teine 100% juures) ja mõõda nende seinu nihikuga, et arvutada õige flow ratio."
+      },
+      "retraction": {
+        "title": "Retraction",
+        "description": "Leia minimaalne retraction'i pikkus ja kiirus, mis kõrvaldab niidistumise, ilma et filament libiseks (grinding) või düüs ummistuks. Prindi retraction'i vahemaa torn ja vali madalaim seade, mis annab puhtad liikumiskäigud."
+      },
+      "tolerance": {
+        "title": "Tolerants",
+        "description": "Mõõda, kui täpselt sinu printer detailide mõõtmeid taasesitab. Prindi tolerantsitesti mudel, mõõda sihtdetaile nihikuga ja märgi üles kõrvalekalle. Rakenda tulemus oma sliceri mõõtmetäpsuse / xy-kompensatsiooni seadetes."
+      },
+      "cornering": {
+        "title": "Cornering",
+        "description": "Seadista cornering'u käitumist, et tasakaalustada printimiskiirust ringinguga (ringing) ja suunamuutuse kohtade artefaktidega. Kasuta Junction Deviationit (Marlin 2.x / RepRapFirmware), klassikalist Jerki (vanem Marlin) või Square Corner Velocityt (Klipper). Prindi cornering'u testmuster ja vähenda väärtust, kuni ringing kaob."
+      },
+      "input_shaping": {
+        "title": "Input Shaping",
+        "description": "Vähenda ghosting'ut ja ringingut resonantskompensatsiooni rakendades. Mõõda oma printeri resonantssagedust (soovitatavalt kiirendusanduriga, või kasuta visuaalset ringing'u torni). Vali shaper'i tüüp ja sagedused, mis artefaktid minimeerivad, ning sisesta need allpool."
+      },
+      "vfa": {
+        "title": "VFA (vertikaalsed peenartefaktid)",
+        "description": "Leia maksimaalne printimiskiirus, enne kui pinnale tekivad vertikaalsed pinnaartefaktid (VFA / rebimismuster). Prindi kasvava kiirusega test siledaseinalisel objektil ja märgi üles kiirus vahetult enne korrapärase rebimismustri (ribbing) teket pinnal."
+      }
+    },
+    "field_labels": {
+      "inputs": {
+        "start_temp": "Algtemperatuur",
+        "end_temp": "Lõpptemperatuur",
+        "step_size": "Sammu suurus",
+        "start_speed": "Algkiirus",
+        "end_speed": "Lõppkiirus",
+        "measured_height": "Mõõdetud kõrgus",
+        "extruder_type": "Ekstruuderi tüüp",
+        "pa_step_a": "PA samm (A)",
+        "measured_height_b": "Mõõdetud kõrgus (B)",
+        "start_retract": "Algne Retraction",
+        "factor": "Tegur",
+        "test_size": "Testdetaili suurus",
+        "measured_size": "Mõõdetud suurus",
+        "firmware_type": "Firmware / funktsioon",
+        "start_value": "Algväärtus",
+        "end_value": "Lõppväärtus",
+        "shaper_type": "Shaper'i tüüp",
+        "frequency_x": "Resonantssagedus X",
+        "frequency_y": "Resonantssagedus Y"
+      },
+      "outputs": {
+        "temperature": "Optimaalne temp",
+        "max_volumetric_speed": "Maks mahuline kiirus",
+        "pressure_advance": "PA väärtus",
+        "flow_ratio": "Flow Ratio",
+        "retraction_length": "Soovitatud Retraction",
+        "tolerance_offset": "Tolerantsi kõrvalekalle",
+        "cornering_value": "Soovitatud väärtus",
+        "shaper_type_x": "X soovitatud shaper",
+        "frequency_x": "Häälestatud sagedus X",
+        "shaper_type_y": "Y soovitatud shaper",
+        "frequency_y": "Häälestatud sagedus Y",
+        "min_avoidance_speed": "Min Avoidance Speed",
+        "max_avoidance_speed": "Max Avoidance Speed"
+      },
+      "options": {
+        "direct_drive": "Direct Drive",
+        "bowden": "Bowden",
+        "junction_deviation": "Junction Deviation (Marlin 2.x / RepRapFirmware)",
+        "jerk": "Jerk (klassikaline Marlin)",
+        "square_corner_velocity": "Square Corner Velocity (Klipper)",
+        "mzv": "MZV",
+        "ei": "EI",
+        "zv": "ZV",
+        "2hump_ei": "2HUMP_EI",
+        "3hump_ei": "3HUMP_EI"
+      }
     }
   },
   "external": {
@@ -998,7 +1292,8 @@
       "unknown_content": "Ühelgi filamendil pole vöötkoodi {{code}}. Kas luua filament ja jätta see vöötkood meelde?",
       "create_filament": "Loo filament",
       "lookup_error": "Selle vöötkoodi otsimine ebaõnnestus."
-    }
+    },
+    "photo": "Foto"
   },
   "printer": {
     "printer": "Printer",
@@ -1007,5 +1302,166 @@
       "comment": "Kommentaar",
       "spool_count": "Poolid"
     }
+  },
+  "chat": {
+    "title": "Assistent",
+    "open": "Küsi assistendilt",
+    "placeholder": "Küsi oma filamendi ja poolide kohta…",
+    "send": "Saada",
+    "thinking": "Mõtlemine…",
+    "empty": "Küsi minult oma poolide ja filamendi kohta — näiteks \"kui palju musta PETG-d mul veel alles on?\" või \"mida peaksin juurde tellima?\".",
+    "viewInList": "Vaata poolide loendis",
+    "confirm": {
+      "before": "Enne",
+      "after": "Pärast",
+      "confirm": "Kinnita",
+      "cancel": "Tühista",
+      "confirmed": "Kinnitatud",
+      "cancelled": "Tühistatud",
+      "destructive": "Ei saa tagasi võtta"
+    },
+    "executed": {
+      "undo": "Võta tagasi",
+      "undone": "Muudatus tagasi võetud."
+    },
+    "voice": {
+      "record": "Hoia all, et rääkida",
+      "listening": "Kuulamine…",
+      "speak": "Loe vastused ette",
+      "unsupported": "See brauser ei toeta häälsalvestust.",
+      "mic_error": "Mikrofonile ei õnnestunud ligi pääseda."
+    }
+  },
+  "intake": {
+    "hint": "Pildista pooli silt või karp, või vali olemasolev foto.",
+    "select_photo": "Vali või tee foto",
+    "extracting": "Sildi lugemine...",
+    "in_library": "sinu andmebaasis, lisab pooli",
+    "from_catalog": "SpoolmanDB, loob filamendi ja pooli",
+    "use_raw": "Kasuta toorandmeid (uus filament)",
+    "continue": "Jätka",
+    "back": "Tagasi",
+    "photo_discarded": "Fotot analüüsiti mälus ja seda ei salvestata.",
+    "prefilled_banner": "Eeltäidetud sildifoto põhjal - vaata väärtused enne salvestamist üle.",
+    "fields": {
+      "vendor": "Tootja",
+      "name": "Nimi",
+      "material": "Materjal",
+      "weight_g": "Kaal (g)",
+      "diameter_mm": "Läbimõõt (mm)",
+      "extruder_temp_c": "Düüs (C)",
+      "bed_temp_c": "Alus (C)",
+      "lot_nr": "Partii nr",
+      "article_number": "Artikli nr",
+      "confidence": "Usaldusväärsus"
+    }
+  },
+  "update": {
+    "available": "värskendus saadaval",
+    "tooltip": "Versioon {{version}} on saadaval",
+    "notification": {
+      "title": "Uus Spoolmani versioon on saadaval",
+      "description": "Versioon {{version}} on avaldatud. Vaata, mis on uut ja kuidas uuendada.",
+      "viewRelease": "Vaata väljalaskemärkmeid"
+    },
+    "action": {
+      "open": "Uuenda",
+      "howTo": "Kuidas uuendada",
+      "modalTitle": "Uuenda Spoolmanit",
+      "currentVersion": "Installitud: {{version}}",
+      "latestVersion": "uusim: {{version}}",
+      "viewReleaseNotes": "Vaata väljalaskemärkmeid",
+      "close": "Sulge",
+      "updateNow": "Uuenda kohe",
+      "updateToVersion": "Uuenda versioonile {{version}}",
+      "native": {
+        "description": "See on natiivne paigaldus, seega saab Spoolman end uusimale väljalaskele ise uuendada.",
+        "restartNotice": "Teenus taaskäivitub pärast uuendust automaatselt. Kui Spoolmanit ei halda systemd, taaskäivita see pärast uuenduse lõppu käsitsi.",
+        "adminRequired": "Uuenduse käivitamiseks siit peab olema sisse logitud administraator.",
+        "disabled": "Liidesest käivitatavad uuendused on selles instantsis keelatud. Seadista autentimine või määra SPOOLMAN_ALLOW_UI_UPDATE=TRUE, et nupp lubada. Uuendada saab ka käsurealt:"
+      },
+      "docker": {
+        "description": "See instants töötab Dockeris. Uuenda, tõmmates uue image'i ja luues konteineri uuesti:",
+        "tagReminder": "Kui sinu compose-fail fikseerib kindla image'i sildi, tõsta see enne tõmbamist uue versiooni peale (nt ghcr.io/sherrmann/spoolman-ng:{{version}})."
+      },
+      "haAddon": {
+        "description": "See instants töötab Home Assistanti lisandusena. Uuenda seda Home Assistantist, mis pakub uut versiooni automaatselt:",
+        "steps": "Settings → Add-ons → Spoolman → Update"
+      },
+      "unknown": {
+        "description": "Uuenda, installides uusima väljalaske samamoodi nagu algselt Spoolmani installisid. Täpsemat infot vaata väljalaskemärkmetest."
+      },
+      "started": {
+        "title": "Uuendamine alustatud",
+        "descriptionManaged": "Spoolman uuendab end ja taaskäivitub automaatselt. Leht ühendub uuesti, kui see on tagasi.",
+        "descriptionManual": "Spoolman uuendab end. Taaskäivita Spoolman käsitsi, kui uuendamine on lõppenud."
+      },
+      "failed": {
+        "title": "Uuendamine ebaõnnestus"
+      }
+    }
+  },
+  "low_stock": {
+    "title": "Madal varu",
+    "remaining_header": "Järelejäänud",
+    "remaining_left": "{{amount}} alles",
+    "threshold_button": "Kohanda läve",
+    "threshold_button_value": "Lävi: {{value}}",
+    "section": {
+      "explicit": "Alla sinu määratud läve",
+      "fallback": "Alla vaikimisi {{grams}} g"
+    },
+    "empty": "Tellimist ei vaja midagi — oled hästi varustatud."
+  },
+  "orders": {
+    "title": "Tellimused",
+    "empty": "Tellimusi pole veel.",
+    "new_order": "Uus tellimus",
+    "new_order_title": "Uus tellimus",
+    "add_line": "Lisa filament",
+    "remove_line": "Eemalda rida",
+    "select_filament": "Vali filament",
+    "no_lines": "Lisa enne tellimuse loomist vähemalt üks filament.",
+    "order_number": "Tellimuse nr",
+    "shop": "Pood",
+    "ordered_at": "Tellitud",
+    "lines_summary": "{{arrived}} / {{total}} saabunud",
+    "lines_summary_title": "Read",
+    "state_title": "Olek",
+    "filaments_count_one": "{{count}} filament",
+    "filaments_count_other": "{{count}} filamenti",
+    "arrived_action": "Saabus…",
+    "outstanding": "Ootel",
+    "create_error": "Tellimuse loomine ebaõnnestus. Palun proovi uuesti.",
+    "state": {
+      "open": "Avatud — {{count}} ootel",
+      "arrived": "Saabunud"
+    },
+    "mark_ordered": "Märgi tellituks",
+    "mark_ordered_title": "Märgi \"{{name}}\" tellituks",
+    "create_order": "Loo tellimus",
+    "create_order_title": "Loo tellimus — {{count}} valitud",
+    "shop_placeholder": "Sisesta poe nimi (loob uue, kui see puudub)",
+    "order_date": "Tellimuse kuupäev",
+    "quantity": "Kogus",
+    "price_per_unit": "Hind / pool (valikuline)",
+    "order_number_field": "Tellimuse number (valikuline)",
+    "url": "Tellimuse link (valikuline)",
+    "selected_count": "{{count}} valitud",
+    "arrive_title": "Mis saabus tellimusest #{{number}}?",
+    "arrive_subtitle": "Osalised tarned jagavad rea — ülejäänu jääb tellimusse.",
+    "arrive_error": "Tellimuse saabunuks märkimine ebaõnnestus. Palun proovi uuesti.",
+    "arrived_check": "Saabunud",
+    "n_of_m": "{{delivered}} / {{outstanding}} ootel",
+    "split_preview": "{{delivered}} saabub, {{rest}} jääb tellimusse",
+    "create_spools": "Loo saabunud üksustele poolid",
+    "location": "Asukoht",
+    "banner": "See filament on tellimisel (tellimus #{{id}}) — märkida selle rida saabunuks?",
+    "mark_arrived": "Märgi saabunuks",
+    "details_title": "Tellimus {{number}}",
+    "comment": "Kommentaar",
+    "update_error": "Tellimuse uuendamine ebaõnnestus. Palun proovi uuesti.",
+    "delete_error": "Tellimuse kustutamine ebaõnnestus. Palun proovi uuesti.",
+    "delete_confirm": "Kas kustutada see tellimus? Selle read kustutatakse samuti."
   }
 }

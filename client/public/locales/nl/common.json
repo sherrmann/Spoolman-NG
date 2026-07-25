@@ -20,7 +20,7 @@
     "unArchive": "Terugzetten",
     "clone": "Klonen",
     "clear": "Wissen",
-    "saveAndAdd": "Opslaan en Toevoegen",
+    "saveAndAdd": "Opslaan en toevoegen",
     "continue": "Doorgaan",
     "search": "Zoeken",
     "resetUsage": "Verbruik resetten",
@@ -43,15 +43,15 @@
     "generic": {
       "rows": "Rijen",
       "customSize": "Aangepast",
-      "title": "Afdrukkend",
+      "title": "Afdrukken",
       "contentSettings": "Inhoudsinstellingen",
       "helpPrinterMargin": "Safe-Zone moet worden ingesteld op hoe dicht bij de papierrand uw printer kan afdrukken. Als u deze wijzigt, heeft dit geen invloed op het hele raster.",
       "previewScale": "Voorbeeldschaal",
-      "helpMargin": "Marges moeten worden geconfigureerd zodat ze overeenkomen met je labelpapier en printer. Als u deze wijzigt, heeft dit invloed op de grootte van het hele raster.",
+      "helpMargin": "Marges moeten worden geconfigureerd zodat ze overeenkomen met uw labelpapier en printer. Als u deze wijzigt, heeft dit invloed op de grootte van het hele raster.",
       "skipItems": "Items overslaan",
       "paperSize": "Papierformaat",
       "columns": "Kolommen",
-      "description": "Stem de onderstaande instellingen af om de gewenste print lay-out te krijgen. Houd er rekening mee dat printers en je besturingssysteem hun eigen marges en schaling kunnen toepassen, dus het kan zijn dat je met wat instellingen moet spelen voordat alles correct is. Test het op een stuk gewoon papier voordat u op de daadwerkelijke etiketten afdrukt.",
+      "description": "Stem de onderstaande instellingen af om de gewenste print lay-out te krijgen. Houd er rekening mee dat printers en uw besturingssysteem hun eigen marges en schaling kunnen toepassen, dus het kan zijn dat u met wat instellingen moet spelen voordat alles correct is. Test het op een stuk gewoon papier voordat u op de daadwerkelijke etiketten afdrukt.",
       "showBorder": "Rand tonen",
       "dimensions": "Afmetingen",
       "print": "Printen",
@@ -66,7 +66,7 @@
       "marginRight": "Rechter marge",
       "printerMarginRight": "Rechter Safe-Zone",
       "marginTop": "Bovenste marge",
-      "layoutSettings": "Opmaak instellingen",
+      "layoutSettings": "Opmaakinstellingen",
       "marginBottom": "Onderste marge",
       "horizontalSpacing": "Horizontale afstand",
       "marginLeft": "Linker marge",
@@ -75,8 +75,8 @@
       "defaultSettings": "Standaard",
       "addSettings": "Nieuwe voorinstelling toevoegen",
       "newSetting": "Nieuw",
-      "deleteSettings": "Huidige voorinstelling wissen",
-      "deleteSettingsConfirm": "Weet je zeker dat je deze voorinstelling wilt verwijderen?",
+      "deleteSettings": "Huidige voorinstelling verwijderen",
+      "deleteSettingsConfirm": "Weet u zeker dat u deze voorinstelling wilt verwijderen?",
       "settingsName": "Voorinstellingsnaam",
       "itemCopies": "Itemkopieën",
       "duplicateSettings": "Dupliceren",
@@ -92,7 +92,19 @@
       "invalidGeometry": "Het labelraster past niet op het papier",
       "invalidGeometryHelp": "De marges en tussenruimte laten geen ruimte over voor de labels. Verklein de marges, tussenruimte, kolommen of rijen — of kies een groter papierformaat.",
       "contentClipped": "Een deel van de labelinhoud valt weg",
-      "contentClippedHelp": "De inhoud van minstens één label past niet binnen het label en wordt bij het afdrukken afgesneden. Verklein de tekstgrootte, maak het sjabloon korter of gebruik minder kolommen/rijen zodat elk label groter is."
+      "contentClippedHelp": "De inhoud van minstens één label past niet binnen het label en wordt bij het afdrukken afgesneden. Verklein de tekstgrootte, maak het sjabloon korter of gebruik minder kolommen/rijen zodat elk label groter is.",
+      "checklist": {
+        "title": "Voor het afdrukken",
+        "intro": "Afdrukvensters van de browser schalen pagina's vaak opnieuw, wat de labelgeometrie verstoort. Controleer in het afdrukvenster dat hierna opent:",
+        "scale": "Schaal staat op 100% / “Werkelijke grootte” — nooit “Aanpassen aan pagina”.",
+        "paperSize": "Het geselecteerde papierformaat is precies {{width}} × {{height}} mm.",
+        "margins": "Marges staan op “Geen” (Spoolman verwerkt de marges al).",
+        "headersFooters": "Kopteksten en voetteksten staan uit.",
+        "pageSizeModeHint": "U heeft een labelpapierformaat gekozen, maar Paginaformaat staat op “Automatisch”. “Labelformaat aanhouden” geeft de browser de exacte paginageometrie door.",
+        "pageSizeModeApply": "Overschakelen naar Labelformaat aanhouden",
+        "dontShowAgain": "Dit niet meer tonen",
+        "printNow": "Nu afdrukken"
+      }
     },
     "qrcode": {
       "extruderTemp": "ET: {{temp}}",
@@ -111,14 +123,14 @@
       "lotNr": "Lotnummer: {{lot}}",
       "showFilamentComment": "Opmerking filament",
       "button": "Labels afdrukken",
-      "template": "Label Sjabloon",
+      "template": "Labelsjabloon",
       "templateHelp": "Gebruik {} om waarden van het spool-object als tekst in te voegen. Bijvoorbeeld, {id} wordt vervangen door de spool-id, of {filament.material} wordt vervangen door het materiaal van de spool. Als een waarde ontbreekt, wordt deze vervangen door \"?\". Een tweede set {} kan worden gebruikt om dit te verwijderen. Bovendien wordt alle tekst tussen de sets {} verwijderd als de waarde ontbreekt. Bijvoorbeeld, {Lot Nr: {lot_nr}} toont alleen het label als de spool een lotnummer heeft. Sluit tekst in met dubbele asterisk ** om deze vet te maken. Klik op de knop om een lijst met alle beschikbare tags te bekijken.",
       "showQRCodeMode": {
         "no": "Nee",
         "simple": "Simpel",
-        "withIcon": "Met Icoon"
+        "withIcon": "Met icoon"
       },
-      "showQRCode": "Print QR-Code",
+      "showQRCode": "QR-code afdrukken",
       "useHTTPUrl": {
         "options": {
           "url": "URL",
@@ -162,12 +174,21 @@
         "none": "Geen",
         "code128": "Code 128"
       },
-      "tooltip": "Druk labels af voor de geselecteerde rijen, of kies items op de volgende pagina"
+      "tooltip": "Druk labels af voor de geselecteerde rijen, of kies items op de volgende pagina",
+      "qrSize": {
+        "label": "QR-grootte",
+        "tooltip": "Afgedrukte grootte van het vierkante QR-codevak in mm. Automatisch behoudt het historische gedrag: de QR-code vult de helft van het label (alles als er verder niets wordt afgedrukt). QR-witruimte wordt rond de gekozen grootte toegevoegd als rustzone.",
+        "auto": "Automatisch",
+        "custom": "Aangepast",
+        "tooSmall": "QR-codes kleiner dan {{mm}} mm kunnen lastig te scannen zijn met een telefooncamera.",
+        "clamped": "Dit label biedt slechts plaats voor ≈ {{rendered}} mm — kleiner dan de {{requested}} mm die u heeft ingesteld.",
+        "clampedTooSmall": "Dit label biedt slechts plaats voor ≈ {{rendered}} mm ({{requested}} mm ingesteld) — onder het minimum van {{mm}} mm voor telefooncamera's."
+      }
     },
     "spoolSelect": {
       "selectedTotal_one": "{{count}} spoel geselecteerd",
       "selectedTotal_other": "{{count}} spoelen geselecteerd",
-      "description": "Selecteer spoelen waarvoor je labels wilt afdrukken.",
+      "description": "Selecteer spoelen waarvoor u labels wilt afdrukken.",
       "showArchived": "Gearchiveerde tonen",
       "title": "Spoelen selecteren",
       "selectAll": "Alles (de)selecteren",
@@ -179,7 +200,7 @@
     },
     "filamentSelect": {
       "title": "Filamenten selecteren",
-      "description": "Selecteer filamenten waarvoor je labels wilt afdrukken.",
+      "description": "Selecteer filamenten waarvoor u labels wilt afdrukken.",
       "noFilamentsSelected": "U heeft geen filamenten geselecteerd.",
       "selectAll": "Alles (de)selecteren",
       "selectedTotal_one": "{{count}} filament geselecteerd",
@@ -187,12 +208,13 @@
       "hidePrinted": "Reeds afgedrukte verbergen",
       "reprintConfirmTitle": "Labels opnieuw afdrukken?",
       "reprintConfirmContent_one": "{{count}} geselecteerd filament heeft al een afgedrukt label. Opnieuw afdrukken?",
-      "reprintConfirmContent_other": "{{count}} geselecteerde filamenten hebben al afgedrukte labels. Opnieuw afdrukken?"
+      "reprintConfirmContent_other": "{{count}} geselecteerde filamenten hebben al afgedrukte labels. Opnieuw afdrukken?",
+      "searchPlaceholder": "Zoeken op filament-ID, fabrikant, naam of materiaal"
     }
   },
   "notifications": {
     "deleteSuccess": "{{resource}} succesvol verwijderd",
-    "error": "Fout (fout code {{statusCode}})",
+    "error": "Fout (status code {{statusCode}})",
     "editError": "Fout opgetreden bij het bewerken van {{resource}} (status code {{statusCode}})",
     "undoable": "U heeft {{seconds}} seconden om ongedaan te maken.",
     "importProgress": "Importeren: {{processed}}/{{total}}",
@@ -202,7 +224,7 @@
     "deleteError": "Fout opgetreden bij het verwijderen van {{resource}} (status code {{statusCode}})",
     "createSuccess": "{{resource}} succesvol aangemaakt",
     "saveSuccessful": "Succesvol opgeslagen!",
-    "validationError": "Validatie error: {{error}}"
+    "validationError": "Validatiefout: {{error}}"
   },
   "no": "Nee",
   "unknown": "Onbekend",
@@ -297,7 +319,7 @@
       "measured_weight": "Hoeveel het filament en de spoel wegen.",
       "lot_nr": "Lotnummer van de fabrikant. Kan worden gebruikt om ervoor te zorgen dat een afdruk een consistente kleur heeft als er meerdere spoelen worden gebruikt.",
       "remaining_weight": "Hoeveel filament zit er nog op de spoel. Bij een nieuwe spoel zal dit overeenkomen met het spoelgewicht.",
-      "location": "Waar de spoel zich bevindt, wanneer er meerdere opslag locaties zijn.",
+      "location": "Waar de spoel zich bevindt, wanneer er meerdere opslaglocaties zijn.",
       "price": "Prijs van een volledige spoel. Als dit niet wordt ingevuld, wordt in plaats daarvan uitgegaan van de prijs van het filament.",
       "initial_weight": "Het initiële gewicht van het filament op de spoel (nettogewicht). Als dit niet is opgegeven, wordt het gewicht van het filament-object gebruikt.",
       "spool_weight": "Het gewicht van de spoel als deze leeg is. Laat dit leeg om de waarde van het filament of de fabrikant te gebruiken.",
@@ -388,12 +410,20 @@
       "shown_other": "{{count}} spoelen getoond",
       "selected_one": "{{count}} spoel geselecteerd",
       "selected_other": "{{count}} spoelen geselecteerd"
+    },
+    "nlSearch": {
+      "button": "AI",
+      "title": "Zoeken met natuurlijke taal",
+      "placeholder": "bijv. zwart PETG in vak B",
+      "hint": "Toegepast als bewerkbare filters",
+      "search": "Zoeken",
+      "error": "De zoekopdracht kon niet worden vertaald. Probeer het opnieuw of gebruik het normale zoekvak."
     }
   },
   "filament": {
     "fields_help": {
       "name": "Filamentnaam, om dit filamenttype onder andere van dezelfde fabrikant te onderscheiden. Moet bijvoorbeeld de kleur bevatten.",
-      "article_number": "Bv. EAN. UPC, enz.",
+      "article_number": "Bv. EAN, UPC, enz.",
       "spool_weight": "Het gewicht van een lege spoel. Wordt gebruikt om het gemeten gewicht van een spoel te bepalen.",
       "price": "Prijs van een volledige spoel.",
       "weight": "Het filamentgewicht van een volle spoel (nettogewicht). Dit mag niet het gewicht van de spoel zelf omvatten, alleen het filament. Dit staat meestal op de verpakking.",
@@ -402,12 +432,13 @@
       "low_stock_threshold": "Markeer dit filament om bij te bestellen wanneer het totale resterende gewicht van alle spoelen onder dit aantal grammen zakt.",
       "reserve_count": "Aantal ongeopende reservespoelen dat u op voorraad heeft, bijgehouden zonder voor elk een spoel aan te maken.",
       "settings_extruder_temp_range": "Door de fabrikant aanbevolen temperatuurbereik van de extruder (min–max). Optioneel, laat leeg als u maar één waarde heeft.",
-      "settings_bed_temp_range": "Door de fabrikant aanbevolen temperatuurbereik van het bed (min–max). Optioneel, laat leeg als u maar één waarde heeft."
+      "settings_bed_temp_range": "Door de fabrikant aanbevolen temperatuurbereik van het bed (min–max). Optioneel, laat leeg als u maar één waarde heeft.",
+      "image": "Een foto om dit filament aan te herkennen — bijv. de spoel of de winkelvermelding. Wordt in de browser verkleind vóór het uploaden; metadata zoals GPS-locatie wordt verwijderd."
     },
     "fields": {
       "material": "Materiaal",
       "vendor_name": "Fabrikant",
-      "settings_extruder_temp": "Extruder Temperatuur",
+      "settings_extruder_temp": "Extruder temperatuur",
       "comment": "Opmerking",
       "diameter": "Diameter",
       "weight": "Gewicht",
@@ -420,12 +451,12 @@
       "density": "Dichtheid",
       "id": "ID",
       "color_hex": "Kleur",
-      "article_number": "Artikel nummer",
+      "article_number": "Artikelnummer",
       "spools": "Spoelen tonen",
       "external_id": "Extern ID",
       "single_color": "Enkel",
       "multi_color": "Meervoudig",
-      "coaxial": "Gecoëxtrudeerde",
+      "coaxial": "Gecoëxtrudeerd",
       "longitudinal": "Longitudinaal",
       "color_hue": "Kleur",
       "spool_count": "Spoelen",
@@ -440,7 +471,8 @@
       "finish": "Afwerking",
       "pattern": "Patroon",
       "translucent": "Doorschijnend",
-      "glow": "Lichtgevend in het donker"
+      "glow": "Lichtgevend in het donker",
+      "image": "Foto"
     },
     "titles": {
       "clone": "Filament klonen",
@@ -527,6 +559,16 @@
     },
     "messages": {
       "update_error": "Kon de wijzigingen niet opslaan. Probeer het opnieuw."
+    },
+    "image": {
+      "upload": "Foto uploaden",
+      "replace": "Foto vervangen",
+      "remove": "Foto verwijderen",
+      "uploaded": "Foto opgeslagen",
+      "upload_error": "Kon de foto niet opslaan",
+      "removed": "Foto verwijderd",
+      "remove_error": "Kon de foto niet verwijderen",
+      "prepare_error": "Kon dat afbeeldingsbestand niet lezen"
     }
   },
   "scanner": {
@@ -534,7 +576,7 @@
     "error": {
       "insecureContext": "De pagina wordt niet weergegeven via HTTPS.",
       "notReadable": "De camera is niet leesbaar.",
-      "notAllowed": "Je hebt geen toegang tot de camera verleend.",
+      "notAllowed": "U heeft geen toegang tot de camera verleend.",
       "unknown": "Er is een onbekende fout opgetreden. ({{error}})",
       "notFound": "Geen camera gevonden.",
       "streamApiNotSupported": "De browser ondersteunt de MediaStream API niet."
@@ -589,14 +631,14 @@
       "filament": "Merken filament. Ze hebben eigenschappen zoals naam, materiaal, kleur, diameter en meer.",
       "spool": "Individuele fysieke spoelen van een specifiek filament."
     },
-    "description": "<title>Help</title><p>Hier zijn enkele tips om u op weg te helpen.</p><p>Spoolman bewaart 3 verschillende soorten gegevens:</p><itemsHelp/><p>Om een nieuwe toe spoel toe te voegen in de database, begin dan met het maken van een <filamentCreateLink>Filament</filamentCreateLink> object. Zodra dat is gebeurd, gaat u verder met het maken van een <spoolCreateLink>Spoel</spoolCreateLink>-object voor die specifieke spoel. Als u later extra spoelen van hetzelfde filament aanschaft, genereert u eenvoudigweg extra Spoel-objecten en hergebruikt u hetzelfde Filament-object.</p><p>Optioneel kunt u ook een <vendorCreateLink>Fabrikant</vendorCreateLink>-object voor het bedrijf genereren als u die informatie wilt bijhouden.</p><p>U heeft de mogelijkheid om andere 3D-printerservices aan Spoolman te koppelen, zoals Moonraker, die automatisch het filament gebruik kan monitoren en de Spoel-objecten voor u kan bijwerken. Raadpleeg de <readmeLink>Spoolman README</readmeLink> voor richtlijnen over hoe u dat kunt instellen.</p>",
+    "description": "<title>Help</title><p>Hier zijn enkele tips om u op weg te helpen.</p><p>Spoolman bewaart 3 verschillende soorten gegevens:</p><itemsHelp/><p>Om een nieuwe spoel toe te voegen in de database, begin dan met het maken van een <filamentCreateLink>Filament</filamentCreateLink> object. Zodra dat is gebeurd, gaat u verder met het maken van een <spoolCreateLink>Spoel</spoolCreateLink>-object voor die specifieke spoel. Als u later extra spoelen van hetzelfde filament aanschaft, genereert u eenvoudigweg extra Spoel-objecten en hergebruikt u hetzelfde Filament-object.</p><p>Optioneel kunt u ook een <vendorCreateLink>Fabrikant</vendorCreateLink>-object voor het bedrijf genereren als u die informatie wilt bijhouden.</p><p>U heeft de mogelijkheid om andere 3D-printerservices aan Spoolman te koppelen, zoals Moonraker, die automatisch het filament gebruik kan monitoren en de Spoel-objecten voor u kan bijwerken. Raadpleeg de <readmeLink>Spoolman README</readmeLink> voor richtlijnen over hoe u dat kunt instellen.</p>",
     "help": "Help"
   },
   "kofi": "Tip mij op Ko-fi",
   "home": {
     "home": "Thuis",
-    "welcome": "Welkom bij je Spoolman-installatie!",
-    "description": "Het lijkt erop dat je nog geen spoelen hebt toegevoegd. Bekijk de <helpPageLink>helppagina</helpPageLink> om aan de slag te gaan.",
+    "welcome": "Welkom bij uw Spoolman-installatie!",
+    "description": "Het lijkt erop dat u nog geen spoelen heeft toegevoegd. Bekijk de <helpPageLink>helppagina</helpPageLink> om aan de slag te gaan.",
     "total_weight": "Totale voorraad",
     "total_value": "Waarde",
     "low_stock": "Lage voorraad",
@@ -631,7 +673,12 @@
       "top": "top",
       "materials_one": "{{count}} materiaal",
       "materials_other": "{{count}} materialen"
-    }
+    },
+    "load_error_title": "Laden van spoelen mislukt",
+    "load_error_desc": "Er is een probleem opgetreden bij het laden van uw spoelen. Probeer het opnieuw.",
+    "gathering_dust": "Verzamelt stof",
+    "never_used": "Nooit gebruikt",
+    "no_stale": "Geen spoelen die stof verzamelen"
   },
   "settings": {
     "header": "Instellingen",
@@ -682,7 +729,7 @@
       "boolean_false": "Nee",
       "choices_missing_error": "U kunt geen keuzes verwijderen. De volgende keuzes ontbreken: {{choices}}",
       "non_unique_key_error": "De key moet uniek zijn.",
-      "key_not_changed": "Key niet gewijzigd.",
+      "key_not_changed": "Wijzig de key in iets anders.",
       "delete_confirm": "Veld {{name}} verwijderen?",
       "delete_confirm_description": "Hierdoor worden het veld en alle bijbehorende gegevens voor alle entiteiten verwijderd.",
       "description": "<p>Hier kunt u extra aangepaste velden toevoegen aan uw entiteiten.</p><p>Zodra een veld is toegevoegd, kunt u de key of het type ervan niet meer wijzigen, en voor keuzevelden kunt u geen keuzes verwijderen of de meerkeuze-instelling wijzigen. Als u een veld verwijdert, worden de bijbehorende gegevens voor alle entiteiten verwijderd.</p><p>De key is waaronder andere programma's de gegevens lezen/schrijven; als uw aangepaste veld dus met een programma van derden moet integreren, zorg er dan voor dat u deze correct instelt. De standaardwaarde wordt alleen toegepast op nieuwe items.</p><p>Extra velden kunnen worden getoond en gesorteerd in de tabelweergaven. Keuze- en booleaanse velden bieden daar ook filteropties, en alle typen extra velden ondersteunen filteren op lege waarden.</p><p>Schakel voor spoelvelden \"Kopiëren van filament\" in om een nieuwe spoel bij het aanmaken de waarde te laten overnemen van een filamentveld met dezelfde key (tenzij de spoel een eigen waarde instelt).</p><p>Een \"Link\"-veld slaat per item een korte waarde op (bijv. een artikelnummer) en maakt er een klikbare link van met behulp van het Link-URL-sjabloon — zet {} waar de waarde moet komen, bijv. https://www.amazon.com/dp/{}.</p>"
@@ -757,6 +804,94 @@
       "add_title": "Link toevoegen",
       "edit_title": "Link bewerken",
       "delete_confirm": "Deze link verwijderen?"
+    },
+    "ai": {
+      "tab": "AI",
+      "description": "Verbind een OpenAI-compatibel eindpunt (Ollama, LM Studio, OpenAI, Anthropic, OpenRouter, Requesty, Groq, ...). Er wordt niets verzonden en er verschijnt geen AI-element in de interface totdat een functie hieronder is ingeschakeld.",
+      "preset": {
+        "label": "Voorinstelling",
+        "placeholder": "Kies een provider om de basis-URL in te vullen"
+      },
+      "base_url": {
+        "label": "Basis-URL",
+        "tooltip": "Het te gebruiken OpenAI-compatibele eindpunt, bijv. een Ollama-server op uw netwerk.",
+        "invalid": "Moet een http://- of https://-URL zijn"
+      },
+      "api_key": {
+        "label": "API-sleutel",
+        "tooltip": "Alleen-schrijven opgeslagen: de server stuurt deze nooit terug naar een client. Ollama en LM Studio hebben er geen nodig.",
+        "placeholder_set": "Er is een sleutel opgeslagen - voer een nieuwe waarde in om deze te vervangen",
+        "placeholder_unset": "Geen sleutel opgeslagen",
+        "clear": "Opgeslagen sleutel wissen"
+      },
+      "model": {
+        "label": "Chatmodel",
+        "tooltip": "Het model dat wordt gebruikt voor chat- en tool-call-functies. Voer een verbindingstest uit om de modellen van het eindpunt weer te geven."
+      },
+      "vision_model": {
+        "label": "Beeldmodel",
+        "tooltip": "Het model dat wordt gebruikt voor beeldfuncties. Laat leeg om het chatmodel te gebruiken."
+      },
+      "stt": {
+        "title": "Spraak-naar-tekst (spraakinvoer)",
+        "hint": "Een apart OpenAI-compatibel transcriptie-eindpunt voor spraakinvoer - Ollama heeft geen spraak-naar-tekst. Bijvoorbeeld een whisper.cpp-server, Speaches, of Groq whisper.",
+        "base_url": {
+          "label": "STT-basis-URL",
+          "tooltip": "Het transcriptie-eindpunt, bijv. http://localhost:8000/v1"
+        },
+        "api_key": {
+          "label": "STT-API-sleutel"
+        },
+        "model": {
+          "label": "STT-model",
+          "tooltip": "Het transcriptiemodel, bijv. whisper-1 of Systran/faster-whisper-base."
+        }
+      },
+      "env_locked": "Ingesteld via omgevingsvariabele en hier vergrendeld",
+      "test": "Verbinding testen",
+      "probe": {
+        "reachable": "Eindpunt bereikbaar",
+        "models_listed": "modellen weergegeven",
+        "failed": "De verbindingstest is mislukt.",
+        "chat": "Chat",
+        "tools": "Tool-aanroepen",
+        "vision": "Beeld",
+        "yes": "ondersteund",
+        "no": "niet ondersteund",
+        "unknown": "niet geverifieerd - dit eindpunt rapporteert geen mogelijkheden"
+      },
+      "features": {
+        "title": "Functies",
+        "hint": "Alle functies staan standaard uit. Er verschijnt nergens iets AI-gerelateerds in de interface totdat het hier is ingeschakeld.",
+        "chat": "Chatassistent",
+        "scan_to_spool": "Scan-to-Spool foto-intake",
+        "nl_search": "Zoeken met natuurlijke taal",
+        "mcp": "MCP-server",
+        "voice": "Spraakinvoer",
+        "requires_config": "Configureer en sla eerst een eindpunt en chatmodel op.",
+        "requires_vision": "De verbindingstest rapporteert geen beeldondersteuning voor het geconfigureerde model.",
+        "requires_stt": "Configureer en sla eerst een spraak-naar-tekst-eindpunt en -model op.",
+        "voice_autosend": "Spraaktranscripties automatisch verzenden in plaats van ze eerst te controleren",
+        "voice_unavailable": "Nog niet beschikbaar - dit komt met de functie spraakinvoer."
+      },
+      "mcp": {
+        "title": "MCP-server",
+        "hint": "Wijs een MCP-client (Claude Desktop, claude.ai) naar deze Spoolman om uw voorraad op te vragen en bij te werken. Er is geen LLM-provider nodig - alleen deze schakelaar.",
+        "copy": "Configuratie kopiëren",
+        "copied": "Configuratie gekopieerd naar het klembord.",
+        "auth_note": "Als deze Spoolman een API-token vereist, voeg dan een \"Authorization\": \"Bearer <token>\"-item toe onder \"headers\". Alleen-lezen accounts krijgen alleen query-tools."
+      },
+      "models": {
+        "title": "Ollama-modellen",
+        "hint": "Uw eindpunt is een Ollama-server. Haal hier direct een aanbevolen model op - Spoolman beheert modellen, nooit de runtime.",
+        "installed": "Geïnstalleerd",
+        "pull": "Ophalen",
+        "pulled": "{{model}} opgehaald.",
+        "purpose": {
+          "chat": "chat",
+          "vision": "beeld"
+        }
+      }
     }
   },
   "locations": {
@@ -787,7 +922,8 @@
       "description": "Selecteer de locaties waarvoor u scanbare QR-labels wilt afdrukken.",
       "select_placeholder": "Locaties selecteren",
       "none_selected": "Geen locaties geselecteerd"
-    }
+    },
+    "load_error": "Laden van spoelen mislukt"
   },
   "calibration": {
     "title": "Kalibratie",
@@ -867,7 +1003,165 @@
         "cancel": "Annuleren"
       },
       "skip_finish_confirm": "Deze sessie als voltooid markeren zonder deze stap op te slaan?",
-      "session_complete": "Kalibratiesessie gemarkeerd als voltooid."
+      "session_complete": "Kalibratiesessie gemarkeerd als voltooid.",
+      "revisiting": "Opnieuw bekijken"
+    },
+    "wiki": {
+      "link": "Wiki",
+      "tooltip": "Open de OrcaSlicer-wiki voor deze stap",
+      "tooltip_short": "OrcaSlicer-wiki"
+    },
+    "sections": {
+      "test_method": "Testmethode",
+      "test_setup": "Testopstelling",
+      "your_result": "Uw resultaat",
+      "auto_computed": "· automatisch berekend"
+    },
+    "step_status": {
+      "skipped": "Overgeslagen",
+      "done": "✓ Voltooid",
+      "incomplete": "Onvolledig"
+    },
+    "confidence_display": "Betrouwbaarheid: {{level}}",
+    "confirm_delete": {
+      "tooltip": "Verwijderen",
+      "confirming": "Klik nogmaals om te bevestigen",
+      "short": "Zeker?"
+    },
+    "select_step": {
+      "placeholder": "Selecteer een kalibratiestap",
+      "required": "Selecteer een kalibratiestap."
+    },
+    "optional": "Optioneel",
+    "optional_notes": "Optionele notities…",
+    "printer_name_placeholder": "bv. Bambu X1C, Ender 3",
+    "flow_calc": {
+      "title": "Pass-resultaatcalculator",
+      "pass1": "Pass 1",
+      "pass2": "Pass 2",
+      "method_yolo": "YOLO (Aanbevolen)",
+      "method_legacy": "Legacy (2-Pass)",
+      "yolo_desc": "Kalibratie in één pass met het Archimedean Chords-patroon (OrcaSlicer ≥ 2.3.0). Voer uw huidige flowratio in en de correctiewaarde die op de print is waargenomen.",
+      "legacy_desc": "Kalibratie in twee passes. Doorloop de resultaten van uw eerste en tweede pass om uw uiteindelijke flowratio te berekenen.",
+      "start": "Start →",
+      "yolo_pass1_desc": "Print het Archimedean Chords-testmodel. Voer uw huidige flowratio in en de correctiewaarde die op de print wordt getoond. De nieuwe flowratio wordt automatisch berekend.",
+      "legacy_pass1_desc": "Print uw testmodel voor de eerste pass. Voer uw startflowratio in en het correctiepercentage dat op de print is waargenomen.",
+      "pass2_desc": "Stel de flowratio in uw slicer in op het resultaat van Pass 1, print het testmodel opnieuw en voer dan het nieuwe correctiepercentage in.",
+      "current_flow_ratio": "Huidige flowratio",
+      "modifier": "Correctiefactor",
+      "new_flow_ratio": "Nieuwe flowratio",
+      "flow_ratio": "Flowratio",
+      "result": "Resultaat",
+      "cancel": "Annuleren",
+      "apply": "Toepassen op formulier ✓",
+      "next_pass2": "Volgende: Pass 2 →",
+      "back": "← Terug"
+    },
+    "pa": {
+      "method_tower": "Toren (Aanbevolen)",
+      "method_pattern": "Patroon / Lijn",
+      "tower_desc": "Print de PA-torentest. Voer uw extrudertype in, de PA-stapwaarde (A) en de gemeten hoogte (B) bij de best ogende laag. PA wordt automatisch berekend als A × B.",
+      "pattern_desc": "Print de PA-patroon- of lijntest. Bepaal de optimale lijn en voer de bijbehorende PA-waarde hieronder in."
+    },
+    "input_shaping_advisory": {
+      "title": "Heeft u een moderne printer? Mogelijk heeft u dit niet nodig.",
+      "desc_wizard": "De meeste moderne CoreXY-printers met Klipper en een accelerometer (ADXL345), of elke Bambu Lab-printer, regelen input shaping al automatisch — en veel nauwkeuriger dan een handmatige testtoren ooit zou kunnen. Als dit op u van toepassing is, sla deze stap over en bespaar uzelf de moeite.",
+      "desc_drawer": "De meeste moderne CoreXY-printers met Klipper en een accelerometer (ADXL345), of elke Bambu Lab-printer, regelen input shaping al automatisch — en veel nauwkeuriger dan een handmatige testtoren ooit zou kunnen. Als dit op u van toepassing is, sluit dan gewoon dit paneel zonder op te slaan.",
+      "skip": "Mijn printer regelt dit — sla het over →"
+    },
+    "vfa": {
+      "artifact_speeds": "Artefactsnelheden",
+      "artifact_speeds_desc": "Print de VFA-testtoren en markeer elke snelheid waarbij u VFA-artefacten waarneemt. Min. en Max. ontwijksnelheid worden automatisch berekend op basis van deze lijst.",
+      "speed_placeholder": "Snelheid",
+      "add_speed": "Snelheid toevoegen"
+    },
+    "step_copy": {
+      "temperature": {
+        "title": "Temperatuur",
+        "description": "Bepaal de optimale printtemperatuur voor dit filament. Print een temperatuurtoren en zoek de laag met de beste balans tussen laaghechting, oppervlaktekwaliteit en minimale stringing. Hogere temperaturen verbeteren de hechting; lagere temperaturen verminderen ooze en stringing."
+      },
+      "volumetric_speed": {
+        "title": "Volumetrische snelheid",
+        "description": "Bepaal de maximale volumetrische flowrate die uw hotend met dit filament kan volhouden voordat onder-extrusie optreedt. Print een flowrate-ramptest of een reeks kubussen met enkele wand bij oplopende snelheden, en noteer de snelheid net voordat de kwaliteit achteruitgaat."
+      },
+      "pressure_advance": {
+        "title": "Pressure Advance",
+        "description": "Stel Pressure Advance (Klipper / Bambu) of Linear Advance (Marlin) af om bolling bij hoeken te elimineren en de kwaliteit van scherpe hoeken te verbeteren. Print een PA-testpatroon en stel de waarde in die de schoonste, scherpste hoeken oplevert. Schakel Adaptive PA in als uw firmware dit ondersteunt."
+      },
+      "flow_rate": {
+        "title": "Flowratio",
+        "description": "Verfijn de extrusievermenigvuldiger zodat de daadwerkelijk afgezette hoeveelheid plastic overeenkomt met wat de slicer verwacht. Print twee kalibratiekubussen (één op 98%, één op 100%) en meet de wanden met een schuifmaat om de juiste flowratio te berekenen."
+      },
+      "retraction": {
+        "title": "Retractie",
+        "description": "Bepaal de minimale retractielengte en -snelheid die stringing voorkomt zonder dat het filament doorslijpt of er verstoppingen ontstaan. Print een toren voor retractieafstand en kies de laagste instelling die schone travel-bewegingen oplevert."
+      },
+      "tolerance": {
+        "title": "Tolerantie",
+        "description": "Meet hoe nauwkeurig uw printer maatvoeringen reproduceert. Print een tolerantietestmodel, meet de doelkenmerken met een schuifmaat en noteer de afwijking. Pas het resultaat toe in de instellingen voor dimensionale nauwkeurigheid / xy-compensatie van uw slicer."
+      },
+      "cornering": {
+        "title": "Bochten",
+        "description": "Stel het bochtgedrag af om printsnelheid te balanceren tegen ringing en artefacten bij richtingsveranderingen. Gebruik Junction Deviation (Marlin 2.x / RepRapFirmware), klassieke Jerk (oudere Marlin) of Square Corner Velocity (Klipper). Print een bochtentestpatroon en verlaag de waarde totdat ringing verdwijnt."
+      },
+      "input_shaping": {
+        "title": "Input Shaping",
+        "description": "Verminder ghosting en ringing door resonantiecompensatie toe te passen. Meet de resonantiefrequentie van uw printer (accelerometer aanbevolen, of gebruik een visuele ringing-toren). Selecteer het shapertype en de frequenties die artefacten minimaliseren, en voer ze hieronder in."
+      },
+      "vfa": {
+        "title": "VFA (verticale fijne artefacten)",
+        "description": "Bepaal de maximale printsnelheid voordat verticale oppervlakteartefacten (VFA / ribbing) zichtbaar worden. Print een snelheidsramptest op een object met gladde wanden en noteer de snelheid net voordat regelmatige ribbing op het oppervlak verschijnt."
+      }
+    },
+    "field_labels": {
+      "inputs": {
+        "start_temp": "Starttemperatuur",
+        "end_temp": "Eindtemperatuur",
+        "step_size": "Stapgrootte",
+        "start_speed": "Startsnelheid",
+        "end_speed": "Eindsnelheid",
+        "measured_height": "Gemeten hoogte",
+        "extruder_type": "Extrudertype",
+        "pa_step_a": "PA-stap (A)",
+        "measured_height_b": "Gemeten hoogte (B)",
+        "start_retract": "Startretractie",
+        "factor": "Factor",
+        "test_size": "Grootte testkenmerk",
+        "measured_size": "Gemeten grootte",
+        "firmware_type": "Firmware / functie",
+        "start_value": "Startwaarde",
+        "end_value": "Eindwaarde",
+        "shaper_type": "Shapertype",
+        "frequency_x": "Resonantiefreq. X",
+        "frequency_y": "Resonantiefreq. Y"
+      },
+      "outputs": {
+        "temperature": "Optimale temperatuur",
+        "max_volumetric_speed": "Max. volumetrische snelheid",
+        "pressure_advance": "PA-waarde",
+        "flow_ratio": "Flowratio",
+        "retraction_length": "Aanbevolen retractie",
+        "tolerance_offset": "Tolerantieafwijking",
+        "cornering_value": "Aanbevolen waarde",
+        "shaper_type_x": "Aanbevolen shaper X",
+        "frequency_x": "Afgestemde freq. X",
+        "shaper_type_y": "Aanbevolen shaper Y",
+        "frequency_y": "Afgestemde freq. Y",
+        "min_avoidance_speed": "Min. ontwijksnelheid",
+        "max_avoidance_speed": "Max. ontwijksnelheid"
+      },
+      "options": {
+        "direct_drive": "Direct Drive",
+        "bowden": "Bowden",
+        "junction_deviation": "Junction Deviation (Marlin 2.x / RepRapFirmware)",
+        "jerk": "Jerk (klassieke Marlin)",
+        "square_corner_velocity": "Square Corner Velocity (Klipper)",
+        "mzv": "MZV",
+        "ei": "EI",
+        "zv": "ZV",
+        "2hump_ei": "2HUMP_EI",
+        "3hump_ei": "3HUMP_EI"
+      }
     }
   },
   "external": {
@@ -1010,7 +1304,8 @@
       "unknown_content": "Geen enkel filament heeft de barcode {{code}}. Een filament aanmaken en deze barcode onthouden?",
       "create_filament": "Filament aanmaken",
       "lookup_error": "Kon die barcode niet opzoeken."
-    }
+    },
+    "photo": "Foto"
   },
   "printer": {
     "printer": "Printer",
@@ -1019,5 +1314,166 @@
       "comment": "Opmerking",
       "spool_count": "Spoelen"
     }
+  },
+  "chat": {
+    "title": "Assistent",
+    "open": "Vraag de assistent",
+    "placeholder": "Vraag iets over uw filament en spoelen…",
+    "send": "Verzenden",
+    "thinking": "Denkt na…",
+    "empty": "Vraag me iets over uw spoelen en filament — bijvoorbeeld \"hoeveel zwart PETG heb ik nog over?\" of \"wat moet ik bijbestellen?\".",
+    "viewInList": "Bekijken in spoelenlijst",
+    "confirm": {
+      "before": "Voor",
+      "after": "Na",
+      "confirm": "Bevestigen",
+      "cancel": "Annuleren",
+      "confirmed": "Bevestigd",
+      "cancelled": "Geannuleerd",
+      "destructive": "Kan niet ongedaan worden gemaakt"
+    },
+    "executed": {
+      "undo": "Ongedaan maken",
+      "undone": "Wijziging ongedaan gemaakt."
+    },
+    "voice": {
+      "record": "Ingedrukt houden om te praten",
+      "listening": "Luistert…",
+      "speak": "Antwoorden uitspreken",
+      "unsupported": "Spraakopname wordt niet ondersteund in deze browser.",
+      "mic_error": "Kon geen toegang krijgen tot de microfoon."
+    }
+  },
+  "intake": {
+    "hint": "Fotografeer het label of de doos van de spoel, of kies een bestaande foto.",
+    "select_photo": "Foto selecteren of maken",
+    "extracting": "Label wordt gelezen...",
+    "in_library": "in uw bibliotheek, voegt een spoel toe",
+    "from_catalog": "SpoolmanDB, maakt filament en spoel aan",
+    "use_raw": "Gebruik de ruwe extractie (nieuw filament)",
+    "continue": "Doorgaan",
+    "back": "Terug",
+    "photo_discarded": "De foto is in het geheugen geanalyseerd en wordt niet opgeslagen.",
+    "prefilled_banner": "Vooraf ingevuld op basis van een labelfoto - controleer de waarden voordat u opslaat.",
+    "fields": {
+      "vendor": "Fabrikant",
+      "name": "Naam",
+      "material": "Materiaal",
+      "weight_g": "Gewicht (g)",
+      "diameter_mm": "Diameter (mm)",
+      "extruder_temp_c": "Nozzle (C)",
+      "bed_temp_c": "Bed (C)",
+      "lot_nr": "Lot",
+      "article_number": "Artikelnr",
+      "confidence": "Betrouwbaarheid"
+    }
+  },
+  "update": {
+    "available": "update beschikbaar",
+    "tooltip": "Versie {{version}} is beschikbaar",
+    "notification": {
+      "title": "Er is een nieuwe versie van Spoolman beschikbaar",
+      "description": "Versie {{version}} is uitgebracht. Bekijk wat er nieuw is en hoe u kunt bijwerken.",
+      "viewRelease": "Releasenotes bekijken"
+    },
+    "action": {
+      "open": "Bijwerken",
+      "howTo": "Hoe bijwerken",
+      "modalTitle": "Spoolman bijwerken",
+      "currentVersion": "Geïnstalleerd: {{version}}",
+      "latestVersion": "nieuwste: {{version}}",
+      "viewReleaseNotes": "Releasenotes bekijken",
+      "close": "Sluiten",
+      "updateNow": "Nu bijwerken",
+      "updateToVersion": "Bijwerken naar {{version}}",
+      "native": {
+        "description": "Dit is een native installatie, dus Spoolman kan zichzelf bijwerken naar de nieuwste release.",
+        "restartNotice": "De service wordt na de update automatisch opnieuw gestart. Als Spoolman niet door systemd wordt beheerd, start u deze handmatig opnieuw zodra de update is voltooid.",
+        "adminRequired": "Een beheerder moet zijn ingelogd om de update vanaf hier uit te voeren.",
+        "disabled": "Updates via de interface zijn uitgeschakeld op deze installatie. Configureer authenticatie, of stel SPOOLMAN_ALLOW_UI_UPDATE=TRUE in om de knop in te schakelen. U kunt ook bijwerken via een shell:"
+      },
+      "docker": {
+        "description": "Deze installatie draait in Docker. Werk bij door de nieuwe image te pullen en de container opnieuw aan te maken:",
+        "tagReminder": "Als uw compose-bestand een specifieke image-tag vastzet, werk deze dan bij naar de nieuwe versie (bijv. ghcr.io/sherrmann/spoolman-ng:{{version}}) voordat u pullt."
+      },
+      "haAddon": {
+        "description": "Deze installatie draait als een Home Assistant-add-on. Werk deze bij vanuit Home Assistant, dat de nieuwe versie automatisch aanbiedt:",
+        "steps": "Instellingen → Add-ons → Spoolman → Update"
+      },
+      "unknown": {
+        "description": "Werk bij door de nieuwste release te installeren op dezelfde manier als waarop u Spoolman oorspronkelijk hebt geïnstalleerd. Zie de releasenotes voor details."
+      },
+      "started": {
+        "title": "Update gestart",
+        "descriptionManaged": "Spoolman wordt bijgewerkt en start automatisch opnieuw op. Deze pagina maakt opnieuw verbinding zodra Spoolman weer online is.",
+        "descriptionManual": "Spoolman wordt bijgewerkt. Start Spoolman handmatig opnieuw zodra de update is voltooid."
+      },
+      "failed": {
+        "title": "Update mislukt"
+      }
+    }
+  },
+  "low_stock": {
+    "title": "Lage voorraad",
+    "remaining_header": "Overgebleven",
+    "remaining_left": "{{amount}} over",
+    "threshold_button": "Drempel aanpassen",
+    "threshold_button_value": "Drempel: {{value}}",
+    "section": {
+      "explicit": "Onder uw ingestelde drempel",
+      "fallback": "Onder de standaardwaarde van {{grams}} g"
+    },
+    "empty": "Niets om bij te bestellen — u heeft voldoende voorraad."
+  },
+  "orders": {
+    "title": "Orders",
+    "empty": "Nog geen orders.",
+    "new_order": "Nieuwe order",
+    "new_order_title": "Nieuwe order",
+    "add_line": "Filament toevoegen",
+    "remove_line": "Regel verwijderen",
+    "select_filament": "Selecteer een filament",
+    "no_lines": "Voeg minstens één filament toe voordat u de order aanmaakt.",
+    "order_number": "Order #",
+    "shop": "Winkel",
+    "ordered_at": "Besteld",
+    "lines_summary": "{{arrived}} van {{total}} aangekomen",
+    "lines_summary_title": "Regels",
+    "state_title": "Status",
+    "filaments_count_one": "{{count}} filament",
+    "filaments_count_other": "{{count}} filamenten",
+    "arrived_action": "Aangekomen…",
+    "outstanding": "Openstaand",
+    "create_error": "Kon de order niet aanmaken. Probeer het opnieuw.",
+    "state": {
+      "open": "Open — {{count}} openstaand",
+      "arrived": "Aangekomen"
+    },
+    "mark_ordered": "Markeren als besteld",
+    "mark_ordered_title": "\"{{name}}\" markeren als besteld",
+    "create_order": "Order aanmaken",
+    "create_order_title": "Order aanmaken — {{count}} geselecteerd",
+    "shop_placeholder": "Typ een winkelnaam (wordt aangemaakt als deze nieuw is)",
+    "order_date": "Orderdatum",
+    "quantity": "Aantal",
+    "price_per_unit": "Prijs / spoel (opt.)",
+    "order_number_field": "Ordernummer (opt.)",
+    "url": "Orderlink (opt.)",
+    "selected_count": "{{count}} geselecteerd",
+    "arrive_title": "Wat is er aangekomen van order #{{number}}?",
+    "arrive_subtitle": "Bij gedeeltelijke leveringen wordt de regel gesplitst — de rest blijft openstaand.",
+    "arrive_error": "Kon de order niet als aangekomen markeren. Probeer het opnieuw.",
+    "arrived_check": "Aangekomen",
+    "n_of_m": "{{delivered}} van {{outstanding}} openstaand",
+    "split_preview": "{{delivered}} komt aan, {{rest}} blijft openstaand",
+    "create_spools": "Spoelen aanmaken voor de geleverde items",
+    "location": "Locatie",
+    "banner": "Dit filament staat in bestelling (order #{{id}}) — de regel als aangekomen markeren?",
+    "mark_arrived": "Aangekomen markeren",
+    "details_title": "Order {{number}}",
+    "comment": "Opmerking",
+    "update_error": "Kon de order niet bijwerken. Probeer het opnieuw.",
+    "delete_error": "Kon de order niet verwijderen. Probeer het opnieuw.",
+    "delete_confirm": "Deze order verwijderen? De bijbehorende regels worden ook verwijderd."
   }
 }

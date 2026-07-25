@@ -18,7 +18,7 @@
     "clone": "Klon",
     "clear": "Tøm",
     "filter": "Filtrer",
-    "refresh": "Gjenoppfrisk",
+    "refresh": "Oppdater",
     "notAccessTitle": "Du har ikke rettighet til å få tilgang",
     "saveAndAdd": "Lagre og legg til",
     "continue": "Fortsett",
@@ -69,27 +69,29 @@
       "finish": "Overflate",
       "pattern": "Mønster",
       "translucent": "Gjennomskinnelig",
-      "glow": "Selvlysende"
+      "glow": "Selvlysende",
+      "image": "Foto"
     },
     "fields_help": {
       "name": "Filamentnavn, for å skille denne filamenttypen blant andre fra samme leverandør. Bør inneholde fargen f.eks.",
       "article_number": "f.eks. EAN, UPC osv.",
       "spool_weight": "Vekten av en tom spole. Brukes til å bestemme målt vekt på en spole.",
-      "price": "Pris på en full spole i den system- valutaen.",
+      "price": "Pris på en full spole i systemvalutaen.",
       "weight": "Filamentvekten til en full spole (nettovekt). Bør ikke inkludere vekten av selve spolen, kun filamentet. Det er det som vanligvis står på emballasjen.",
-      "material": "F.eks PLA,ABS,PETG, osv.",
+      "material": "F.eks. PLA, ABS, PETG, osv.",
       "multi_color_direction": "Retning av fargeovergang for flerfarget filament.",
       "low_stock_threshold": "Marker dette filamentet for etterbestilling når samlet gjenstående vekt på tvers av spolene faller under så mange gram.",
       "reserve_count": "Antall uåpnede reservespoler du har liggende, uten at det opprettes en spole for hver av dem.",
       "settings_extruder_temp_range": "Produsentens anbefalte dysetemperaturområde (min–maks). Valgfritt, la stå tomt hvis du bare har én verdi.",
-      "settings_bed_temp_range": "Produsentens anbefalte temperaturområde for printplaten (min–maks). Valgfritt, la stå tomt hvis du bare har én verdi."
+      "settings_bed_temp_range": "Produsentens anbefalte temperaturområde for printplaten (min–maks). Valgfritt, la stå tomt hvis du bare har én verdi.",
+      "image": "Et foto for å gjenkjenne dette filamentet — f.eks. spolen eller butikkoppføringen. Skaleres ned i nettleseren før opplasting; metadata som GPS-posisjon fjernes."
     },
     "titles": {
-      "clone": "Kopier Filament",
+      "clone": "Kopier filament",
       "show_title": "[Filament #{{id}}] {{name}}",
       "show": "Vis filament",
-      "create": "Opprett Filament",
-      "edit": "Endre Filament",
+      "create": "Opprett filament",
+      "edit": "Endre filament",
       "list": "Filamenter"
     },
     "filament": "Filamenter",
@@ -169,6 +171,16 @@
     },
     "messages": {
       "update_error": "Kunne ikke lagre endringene. Prøv igjen."
+    },
+    "image": {
+      "upload": "Last opp foto",
+      "replace": "Erstatt foto",
+      "remove": "Fjern foto",
+      "uploaded": "Foto lagret",
+      "upload_error": "Kunne ikke lagre fotoet",
+      "removed": "Foto fjernet",
+      "remove_error": "Kunne ikke fjerne fotoet",
+      "prepare_error": "Kunne ikke lese den bildefilen"
     }
   },
   "printing": {
@@ -195,14 +207,14 @@
       "marginBottom": "Bunnmarg",
       "printerMarginLeft": "Trygghetsavstand, venstre",
       "verticalSpacing": "Vertikal avstand",
-      "helpPrinterMargin": "Safe-Zone bør settes til hvor nær papirkanten skriveren kan skrive ut, endring av disse vil ikke påvirke hele rutenettet.",
+      "helpPrinterMargin": "Trygghetsavstand bør settes til hvor nær papirkanten skriveren kan skrive ut, endring av disse vil ikke påvirke hele rutenettet.",
       "previewScale": "Forhåndsvisningsskala",
       "helpMargin": "Margene bør konfigureres til å matche etikettpapiret og skriveren, endring av disse vil påvirke størrelsen på hele rutenettet.",
       "layoutSettings": "Layoutinnstillinger",
       "description": "Still inn innstillingene nedenfor for å få ønsket utskriftsoppsett. Husk at skrivere og operativsystemet ditt kan bruke sine egne marger og skalering, så det kan hende du må prøve og feile før alt er riktig. Test det på et stykke vanlig papir før du skriver ut på selve etikettene.",
       "horizontalSpacing": "Horisontal avstand",
       "marginLeft": "Venstre marg",
-      "showBorder": "Vis side",
+      "showBorder": "Vis grense",
       "defaultSettings": "Standard",
       "newSetting": "Ny",
       "addSettings": "Legg til ny mal",
@@ -224,7 +236,19 @@
       "invalidGeometry": "Etikettrutenettet får ikke plass på papiret",
       "invalidGeometryHelp": "Marger og avstander gir ikke plass til etikettene. Reduser margene, avstandene, kolonnene eller radene — eller velg en større papirstørrelse.",
       "contentClipped": "Noe etikettinnhold blir kuttet av",
-      "contentClippedHelp": "Innholdet på minst én etikett får ikke plass innenfor etiketten og blir kuttet av ved utskrift. Reduser tekststørrelsen, kort ned malen, eller bruk færre kolonner/rader slik at hver etikett blir større."
+      "contentClippedHelp": "Innholdet på minst én etikett får ikke plass innenfor etiketten og blir kuttet av ved utskrift. Reduser tekststørrelsen, kort ned malen, eller bruk færre kolonner/rader slik at hver etikett blir større.",
+      "checklist": {
+        "title": "Før du skriver ut",
+        "intro": "Nettleserens utskriftsdialog skalerer ofte om siden, noe som ødelegger etikettgeometrien. Sjekk følgende i utskriftsdialogen som åpnes:",
+        "scale": "Skala er 100 % / «Faktisk størrelse» — aldri «Tilpass til side».",
+        "paperSize": "Valgt papirstørrelse er nøyaktig {{width}} × {{height}} mm.",
+        "margins": "Marger er satt til «Ingen» (Spoolman håndterer allerede marger).",
+        "headersFooters": "Topp- og bunntekst er slått av.",
+        "pageSizeModeHint": "Du valgte en etikettpapirstørrelse, men Sidestørrelse er satt til «Automatisk». «Tilpass etikettstørrelse» forteller nettleseren nøyaktig sidegeometri.",
+        "pageSizeModeApply": "Bytt til Tilpass etikettstørrelse",
+        "dontShowAgain": "Ikke vis dette igjen",
+        "printNow": "Skriv ut nå"
+      }
     },
     "qrcode": {
       "showTemperatures": "Temperaturer",
@@ -243,13 +267,13 @@
       "bedTemp": "BT: {{temp}}",
       "lotNr": "Batch Nr: {{lot}}",
       "showFilamentComment": "Filament kommentar",
-      "template": "Etikett mal",
+      "template": "Etikettmal",
       "showQRCodeMode": {
         "simple": "Simpel",
         "no": "Nei",
         "withIcon": "Med ikon"
       },
-      "showQRCode": "Print QR-kode",
+      "showQRCode": "Skriv ut QR-kode",
       "useHTTPUrl": {
         "label": "QR-kodelenke",
         "options": {
@@ -257,9 +281,9 @@
           "url": "URL"
         },
         "preview": "Forhåndsvisning:",
-        "tooltip": "Velg om QR-koden skal bruke HTTP- eller intern URL."
+        "tooltip": "Bruker en proprietær lenke som bare fungerer når den skannes med Spoolmans skannefunksjon (standard). URL bruker enten base-URL-en angitt i innstillingene, eller URL-en til gjeldende side hvis ingen er satt."
       },
-      "templateHelp": "Velg hvilken etikettemplate du ønsker å bruke.",
+      "templateHelp": "Bruk {} for å sette inn verdier fra spoleobjektet som tekst. For eksempel vil {id} bli erstattet med spolens ID, eller {filament.material} vil bli erstattet med spolens materiale. Hvis en verdi mangler, erstattes den med «?». Et ekstra sett med {} kan brukes for å fjerne dette. I tillegg fjernes all tekst mellom settene med {} hvis verdien mangler. For eksempel vil {Lot Nr: {lot_nr}} bare vises på etiketten hvis spolen har et batchnummer. Omslutt tekst med doble stjerner ** for å gjøre den fet. Legg til et format etter et kolon: tall som {remaining_weight:0.0} avrundes til så mange desimaler, og datoer som {registered:YYYY-MM-DD HH:mm} formateres i din lokale tidssone. Start en linje med {size:1.5} for å skalere hele linjen (her 1,5×). Klikk på knappen for å se en liste over alle tilgjengelige tagger.",
       "exportButton": "Eksporter etiketter",
       "printFilamentTitle": "Skriv ut filamentetiketter",
       "printSpoolTitle": "Skriv ut spoleetiketter",
@@ -294,7 +318,16 @@
         "none": "Ingen",
         "code128": "Code 128"
       },
-      "tooltip": "Skriv ut etiketter for de valgte radene, eller velg elementer på neste side"
+      "tooltip": "Skriv ut etiketter for de valgte radene, eller velg elementer på neste side",
+      "qrSize": {
+        "label": "QR-størrelse",
+        "tooltip": "Utskrevet størrelse på QR-kode-kvadratet i mm. Automatisk beholder den opprinnelige oppførselen: QR-koden fyller halve etiketten (hele hvis ingenting annet skrives ut). QR-marg legges til rundt den valgte størrelsen som en stillesone.",
+        "auto": "Automatisk",
+        "custom": "Egendefinert",
+        "tooSmall": "QR-koder mindre enn {{mm}} mm kan være vanskelige å skanne med et mobilkamera.",
+        "clamped": "Denne etiketten har bare plass til ≈ {{rendered}} mm — mindre enn de {{requested}} mm du har satt.",
+        "clampedTooSmall": "Denne etiketten har bare plass til ≈ {{rendered}} mm ({{requested}} mm satt) — under minimumskravet på {{mm}} mm for mobilkamera."
+      }
     },
     "spoolSelect": {
       "showArchived": "Vis arkiverte",
@@ -302,7 +335,7 @@
       "noSpoolsSelected": "Du har ikke valgt noen spoler.",
       "selectedTotal_one": "{{count}} spole valgt",
       "selectedTotal_other": "{{count}} spoler valgt",
-      "description": "Velg spoler å printe ut etiketter for.",
+      "description": "Velg spoler å skrive ut etiketter for.",
       "selectAll": "Velg/fjern merking av alle",
       "hidePrinted": "Skjul allerede utskrevne",
       "reprintConfirmTitle": "Skrive ut etiketter på nytt?",
@@ -319,7 +352,8 @@
       "hidePrinted": "Skjul allerede utskrevne",
       "reprintConfirmTitle": "Skrive ut etiketter på nytt?",
       "reprintConfirmContent_one": "{{count}} valgt filament har allerede en utskrevet etikett. Skrive den ut på nytt?",
-      "reprintConfirmContent_other": "{{count}} valgte filamenter har allerede utskrevne etiketter. Skrive dem ut på nytt?"
+      "reprintConfirmContent_other": "{{count}} valgte filamenter har allerede utskrevne etiketter. Skrive dem ut på nytt?",
+      "searchPlaceholder": "Søk etter filament-ID, leverandør, navn eller materiale"
     }
   },
   "no": "Nei",
@@ -373,28 +407,28 @@
     },
     "fields_help": {
       "used_weight": "Hvor mye filament har blitt benyttet fra spolen? En ny spole burde ha 0g benyttet.",
-      "weight_to_use": "Velg vekt å skrive inn. Målt vekt er kun tilgjengelig hvis spolevekt er satt for det valgte filament.",
+      "weight_to_use": "Velg vekt å skrive inn. Målt vekt er kun tilgjengelig hvis spolevekt er satt for det valgte filamentet.",
       "measured_weight": "Hvor mye veier filament og spole.",
-      "lot_nr": "Produsentens batch nummer. Kan bli benyttet or å verifiserer at print har en konsistent farge dersom flere spoler benyttes.",
+      "lot_nr": "Produsentens batch nummer. Kan bli benyttet for å verifisere at print har en konsistent farge dersom flere spoler benyttes.",
       "remaining_weight": "Hvor mye filament gjenstår på spolen. Ved en ny spole burde dette stemme med spolevekt.",
       "location": "Hvor spolen er plassert hvis du har flere lokasjoner hvor du oppbevarer spoler.",
       "price": "Pris på en full spole. Hvis ikke satt, vil prisen på filamentet bli antatt i stedet.",
       "spool_weight": "Vekten av spolen når den er tom. La stå tomt for å bruke verdien fra filamentet eller produsenten.",
       "initial_weight": "Startvekten av filament på spolen (nettovekt). Vil bruke vekten fra filament hvis ikke satt.",
-      "external_filament": "Du har valgt et filament fra den eksterne databasen. Et filamentobjekt (og muligens et produsentobjekt) opprettes automatisk når du oppretter denne spolen. Dette kan lage dupliserte filamentobjekter hvis du allerede har opprettet et filamentobjekt for denne filamentet.",
+      "external_filament": "Du har valgt et filament fra den eksterne databasen. Et filamentobjekt (og muligens et produsentobjekt) opprettes automatisk når du oppretter denne spolen. Dette kan lage dupliserte filamentobjekter hvis du allerede har opprettet et filamentobjekt for dette filamentet.",
       "printer": "Printeren denne spolen er lastet i nå. Administrer printerne dine i Innstillinger.",
       "diameter": "Målt filamentdiameter for akkurat denne spolen, brukes i lengdeberegninger. La stå tomt for å bruke filamentets diameter.",
       "color_hex": "Valgfri farge for akkurat denne spolen, overstyrer filamentets farge. Tøm for å bruke filamentets farge."
     },
     "form": {
       "new_location_prompt": "Skriv inn en ny lokasjon",
-      "spool_updated": "Denne rullen har blitt oppdatert av noen/noe siden du åpnet denne siden. Lagre nå vil overskrive disse endringene!",
+      "spool_updated": "Denne spolen har blitt oppdatert av noen/noe siden du åpnet denne siden. Lagring nå vil overskrive disse endringene!",
       "measurement_type": {
         "length": "Lengde",
         "weight": "Vekt"
       },
       "measurement_type_label": "Måleenhet",
-      "adjust_filament_help": "Justér verdien hvis målt filamentmengde avviker fra forventet.",
+      "adjust_filament_help": "Her kan du legge til eller trekke fra filament direkte på spolen. En positiv verdi vil forbruke filament, en negativ verdi vil legge til filament.",
       "adjust_filament_value": "Juster mengde"
     },
     "formats": {
@@ -462,6 +496,14 @@
       "shown_other": "{{count}} spoler vist",
       "selected_one": "{{count}} spole valgt",
       "selected_other": "{{count}} spoler valgt"
+    },
+    "nlSearch": {
+      "button": "AI",
+      "title": "Søk med naturlig språk",
+      "placeholder": "f.eks. svart PETG i hylle B",
+      "hint": "Brukes som redigerbare filtre",
+      "search": "Søk",
+      "error": "Søket kunne ikke tolkes. Prøv igjen, eller bruk det vanlige søkefeltet."
     }
   },
   "yes": "Ja",
@@ -548,7 +590,7 @@
       "list": "Spoler | Spoolman",
       "create": "Opprett spole | Spoolman",
       "show": "#{{id}} Vis spole | Spoolman",
-      "clone": "#{{id}} Klon spole| Spoolman"
+      "clone": "#{{id}} Klon spole | Spoolman"
     },
     "suffix": " | Spoolman",
     "filament": {
@@ -596,7 +638,7 @@
     "no_recent": "Ingen nylig brukte spoler",
     "by_material": "Etter materiale",
     "by_location": "Etter plassering",
-    "by_vendor": "Etter produsent",
+    "by_vendor": "Etter leverandør",
     "all_spools": "Alle spoler",
     "no_spools": "Ingen spoler ennå",
     "shopping_list": "Handleliste",
@@ -622,12 +664,17 @@
       "top": "topp",
       "materials_one": "{{count}} materiale",
       "materials_other": "{{count}} materialer"
-    }
+    },
+    "load_error_title": "Kunne ikke laste spolene",
+    "load_error_desc": "Det oppsto et problem ved lasting av spolene dine. Prøv igjen.",
+    "gathering_dust": "Samler støv",
+    "never_used": "Aldri brukt",
+    "no_stale": "Ingen spoler samler støv"
   },
   "help": {
     "help": "Hjelp",
     "resources": {
-      "filament": "Filament leverandører. De har egenskaper som navn, materiale, farge, diameter og mer.",
+      "filament": "Filamentmerker. De har egenskaper som navn, materiale, farge, diameter og mer.",
       "spool": "Individuelle fysiske ruller med spesifikt filament.",
       "vendor": "Produsent av filament."
     },
@@ -637,9 +684,9 @@
     "locations": "Lokasjoner",
     "new_location": "Ny lokasjon",
     "no_location": "Ingen lokasjon",
-    "no_locations_help": "Denne siden mar deg organisere rullene med filament i lokasjoner. Legg til noen ruller for å starte!",
+    "no_locations_help": "Denne siden lar deg organisere spolene i lokasjoner. Legg til noen spoler for å starte!",
     "error_empty": "Navn kan ikke være tomt",
-    "error_exists": "Plasseringen finnes allerede",
+    "error_exists": "Lokasjonen finnes allerede",
     "location": "Lokasjon",
     "fields": {
       "button": "Egendefinerte felt",
@@ -661,7 +708,8 @@
       "description": "Velg lokasjonene du vil skrive ut skannbare QR-etiketter for.",
       "select_placeholder": "Velg lokasjoner",
       "none_selected": "Ingen lokasjoner valgt"
-    }
+    },
+    "load_error": "Kunne ikke laste spolene"
   },
   "settings": {
     "settings": "Innstillinger",
@@ -673,7 +721,7 @@
       },
       "base_url": {
         "label": "Base-URL",
-        "tooltip": "URL som brukes ved generering av QR-koder og eksterne lenker."
+        "tooltip": "URL som brukes ved generering av funksjoner som QR-koder."
       },
       "round_prices": {
         "label": "Avrund priser",
@@ -714,9 +762,9 @@
       "boolean_false": "Nei",
       "choices_missing_error": "Du kan ikke fjerne valg. Følgende valg mangler: {{choices}}",
       "non_unique_key_error": "Nøkkelen må være unik.",
-      "key_not_changed": "Nøkkelen kan ikke endres.",
+      "key_not_changed": "Vennligst endre nøkkelen til noe annet.",
       "delete_confirm": "Slette felt {{name}}?",
-      "delete_confirm_description": "Dette vil fjerne feltet permanent fra systemet."
+      "delete_confirm_description": "Dette vil slette feltet og alle tilknyttede data for alle enheter."
     },
     "swatch": {
       "tab": "Prøvekort",
@@ -787,6 +835,94 @@
       "add_title": "Legg til lenke",
       "edit_title": "Rediger lenke",
       "delete_confirm": "Slette denne lenken?"
+    },
+    "ai": {
+      "tab": "AI",
+      "description": "Koble til et OpenAI-kompatibelt endepunkt (Ollama, LM Studio, OpenAI, Anthropic, OpenRouter, Requesty, Groq, ...). Ingenting sendes noe sted, og ingen AI-elementer vises i grensesnittet før en funksjon nedenfor er aktivert.",
+      "preset": {
+        "label": "Forhåndsinnstilling",
+        "placeholder": "Velg en leverandør for å fylle inn Base-URL-en"
+      },
+      "base_url": {
+        "label": "Base-URL",
+        "tooltip": "Det OpenAI-kompatible endepunktet som skal brukes, f.eks. en Ollama-server på nettverket ditt.",
+        "invalid": "Må være en http://- eller https://-URL"
+      },
+      "api_key": {
+        "label": "API-nøkkel",
+        "tooltip": "Lagres kun for skriving: serveren sender den aldri tilbake til noen klient. Ollama og LM Studio trenger ingen nøkkel.",
+        "placeholder_set": "En nøkkel er lagret - skriv inn en ny verdi for å erstatte den",
+        "placeholder_unset": "Ingen nøkkel lagret",
+        "clear": "Tøm lagret nøkkel"
+      },
+      "model": {
+        "label": "Chat-modell",
+        "tooltip": "Modellen som brukes for chat- og verktøykallfunksjoner. Kjør en tilkoblingstest for å liste opp endepunktets modeller."
+      },
+      "vision_model": {
+        "label": "Bildemodell",
+        "tooltip": "Modellen som brukes til bildefunksjoner. La stå tomt for å bruke chat-modellen."
+      },
+      "stt": {
+        "title": "Tale til tekst (taleinndata)",
+        "hint": "Et eget OpenAI-kompatibelt transkripsjonsendepunkt for taleinndata - Ollama har ingen tale-til-tekst-funksjon. For eksempel en whisper.cpp-server, Speaches, eller Groq whisper.",
+        "base_url": {
+          "label": "STT Base-URL",
+          "tooltip": "Transkripsjonsendepunktet, f.eks. http://localhost:8000/v1"
+        },
+        "api_key": {
+          "label": "STT API-nøkkel"
+        },
+        "model": {
+          "label": "STT-modell",
+          "tooltip": "Transkripsjonsmodellen, f.eks. whisper-1 eller Systran/faster-whisper-base."
+        }
+      },
+      "env_locked": "Angitt via miljøvariabel og låst her",
+      "test": "Test tilkobling",
+      "probe": {
+        "reachable": "Endepunkt tilgjengelig",
+        "models_listed": "modeller oppført",
+        "failed": "Tilkoblingstesten mislyktes.",
+        "chat": "Chat",
+        "tools": "Verktøykall",
+        "vision": "Bilde",
+        "yes": "støttet",
+        "no": "ikke støttet",
+        "unknown": "ikke bekreftet - dette endepunktet oppgir ikke hvilke funksjoner det støtter"
+      },
+      "features": {
+        "title": "Funksjoner",
+        "hint": "Alle funksjoner er avslått som standard. Ingenting AI-relatert vises noe sted i grensesnittet før det er aktivert her.",
+        "chat": "Chat-assistent",
+        "scan_to_spool": "Scan-to-Spool fotoregistrering",
+        "nl_search": "Søk med naturlig språk",
+        "mcp": "MCP-server",
+        "voice": "Taleinndata",
+        "requires_config": "Konfigurer og lagre et endepunkt og en chat-modell først.",
+        "requires_vision": "Tilkoblingstesten rapporterer at den konfigurerte modellen ikke støtter bilder.",
+        "requires_stt": "Konfigurer og lagre et tale-til-tekst-endepunkt og en modell først.",
+        "voice_autosend": "Send taletranskripsjoner automatisk i stedet for å se over dem først",
+        "voice_unavailable": "Ikke tilgjengelig ennå - dette kommer med taleinndata-funksjonen."
+      },
+      "mcp": {
+        "title": "MCP-server",
+        "hint": "Pek en MCP-klient (Claude Desktop, claude.ai) mot denne Spoolman-instansen for å spørre mot og oppdatere lageret ditt. Ingen LLM-leverandør nødvendig - kun denne bryteren.",
+        "copy": "Kopier konfigurasjon",
+        "copied": "Konfigurasjonen ble kopiert til utklippstavlen.",
+        "auth_note": "Hvis denne Spoolman-instansen krever et API-token, legg til en \"Authorization\": \"Bearer <token>\"-oppføring under \"headers\". Skrivebeskyttede kontoer får kun søkeverktøy."
+      },
+      "models": {
+        "title": "Ollama-modeller",
+        "hint": "Endepunktet ditt er en Ollama-server. Hent en anbefalt modell direkte herfra - Spoolman administrerer modeller, aldri selve kjøretiden.",
+        "installed": "Installert",
+        "pull": "Hent",
+        "pulled": "Hentet {{model}}.",
+        "purpose": {
+          "chat": "chat",
+          "vision": "bilde"
+        }
+      }
     }
   },
   "calibration": {
@@ -867,7 +1003,165 @@
         "cancel": "Avbryt"
       },
       "skip_finish_confirm": "Merke denne økten som fullført uten å lagre dette steget?",
-      "session_complete": "Kalibreringsøkten er merket som fullført."
+      "session_complete": "Kalibreringsøkten er merket som fullført.",
+      "revisiting": "Gjennomgår"
+    },
+    "wiki": {
+      "link": "Wiki",
+      "tooltip": "Åpne OrcaSlicer-wikien for dette steget",
+      "tooltip_short": "OrcaSlicer-wiki"
+    },
+    "sections": {
+      "test_method": "Testmetode",
+      "test_setup": "Testoppsett",
+      "your_result": "Ditt resultat",
+      "auto_computed": "· automatisk beregnet"
+    },
+    "step_status": {
+      "skipped": "Hoppet over",
+      "done": "✓ Fullført",
+      "incomplete": "Ufullstendig"
+    },
+    "confidence_display": "{{level}} sikkerhet",
+    "confirm_delete": {
+      "tooltip": "Slett",
+      "confirming": "Klikk igjen for å bekrefte",
+      "short": "Sikker?"
+    },
+    "select_step": {
+      "placeholder": "Velg et kalibreringssteg",
+      "required": "Velg et kalibreringssteg."
+    },
+    "optional": "Valgfritt",
+    "optional_notes": "Valgfrie notater…",
+    "printer_name_placeholder": "f.eks. Bambu X1C, Ender 3",
+    "flow_calc": {
+      "title": "Kalkulator for passresultat",
+      "pass1": "Pass 1",
+      "pass2": "Pass 2",
+      "method_yolo": "YOLO (anbefalt)",
+      "method_legacy": "Eldre (2-pass)",
+      "yolo_desc": "Enkeltpasserings-kalibrering med Archimedean Chords-mønsteret (OrcaSlicer ≥ 2.3.0). Angi gjeldende flytforhold og korreksjonsverdien du observerte på utskriften.",
+      "legacy_desc": "Topass-kalibrering. Gå gjennom resultatene fra første og andre pass for å beregne det endelige flytforholdet.",
+      "start": "Start →",
+      "yolo_pass1_desc": "Skriv ut Archimedean Chords-testmodellen. Angi gjeldende flytforhold og korreksjonsverdien vist på utskriften. Det nye flytforholdet beregnes automatisk.",
+      "legacy_pass1_desc": "Skriv ut testmodellen for første pass. Angi startflytforholdet og korreksjonsprosenten du observerte på utskriften.",
+      "pass2_desc": "Sett slicerens flytforhold til resultatet fra Pass 1, skriv ut testmodellen på nytt, og angi deretter den nye korreksjonsprosenten.",
+      "current_flow_ratio": "Gjeldende flytforhold",
+      "modifier": "Modifikator",
+      "new_flow_ratio": "Nytt flytforhold",
+      "flow_ratio": "Flytforhold",
+      "result": "Resultat",
+      "cancel": "Avbryt",
+      "apply": "Bruk i skjema ✓",
+      "next_pass2": "Neste: Pass 2 →",
+      "back": "← Tilbake"
+    },
+    "pa": {
+      "method_tower": "Tårn (anbefalt)",
+      "method_pattern": "Mønster / linje",
+      "tower_desc": "Skriv ut PA-tårntesten. Angi ekstrudertype, PA-trinnverdien (A) og målt høyde (B) ved det peneste laget. PA beregnes automatisk som A × B.",
+      "pattern_desc": "Skriv ut PA-mønster- eller linjetesten. Finn den beste linjen og angi PA-verdien for den rett under."
+    },
+    "input_shaping_advisory": {
+      "title": "Har du en moderne printer? Du trenger kanskje ikke dette.",
+      "desc_wizard": "De fleste moderne CoreXY-printere som kjører Klipper med et akselerometer (ADXL345), eller enhver Bambu Lab-printer, håndterer allerede input shaping automatisk — og langt mer nøyaktig enn et manuelt testtårn noensinne kan. Hvis dette gjelder deg, kan du hoppe over dette steget og spare deg selv for bryet.",
+      "desc_drawer": "De fleste moderne CoreXY-printere som kjører Klipper med et akselerometer (ADXL345), eller enhver Bambu Lab-printer, håndterer allerede input shaping automatisk — og langt mer nøyaktig enn et manuelt testtårn noensinne kan. Hvis dette gjelder deg, kan du bare lukke denne skuffen uten å lagre.",
+      "skip": "Printeren min håndterer dette — hopp over →"
+    },
+    "vfa": {
+      "artifact_speeds": "Artefakthastigheter",
+      "artifact_speeds_desc": "Skriv ut VFA-testtårnet og merk hver hastighet der du observerer VFA-artefakter. Min. og maks. unngåelseshastighet beregnes automatisk fra denne listen.",
+      "speed_placeholder": "Hastighet",
+      "add_speed": "Legg til hastighet"
+    },
+    "step_copy": {
+      "temperature": {
+        "title": "Temperatur",
+        "description": "Finn den optimale utskriftstemperaturen for dette filamentet. Skriv ut et temperaturtårn og se etter laget som gir best balanse mellom lagheft, overflatekvalitet og minst mulig tråding. Høyere temperatur bedrer heftingen; lavere temperatur reduserer sig og tråding."
+      },
+      "volumetric_speed": {
+        "title": "Volumetrisk hastighet",
+        "description": "Finn den maksimale volumetriske flytraten hotend-en din kan opprettholde med dette filamentet før underekstrudering oppstår. Skriv ut en flytrate-rampetest eller en serie enkeltveggede kuber ved økende hastigheter, og noter hastigheten rett før kvaliteten forringes."
+      },
+      "pressure_advance": {
+        "title": "Pressure Advance",
+        "description": "Still inn Pressure Advance (Klipper / Bambu) eller Linear Advance (Marlin) for å eliminere hjørneutbuling og forbedre kvaliteten på skarpe hjørner. Skriv ut et PA-testmønster og finn verdien som gir de reneste, skarpeste hjørnene. Aktiver Adaptive PA hvis fastvaren din støtter det."
+      },
+      "flow_rate": {
+        "title": "Flytrate",
+        "description": "Finjuster ekstruderingsmultiplikatoren slik at den faktiske mengden plast som legges ut, samsvarer med det sliceren forventer. Skriv ut to kalibreringskuber (én på 98 % og én på 100 %) og mål veggene med et skyvelær for å beregne riktig flytforhold."
+      },
+      "retraction": {
+        "title": "Retraksjon",
+        "description": "Finn minste retraksjonslengde og -hastighet som eliminerer tråding uten å male ned filamentet eller forårsake tilstopping. Skriv ut et retraksjonsavstandstårn og velg den laveste innstillingen som gir rene forflytningsbevegelser."
+      },
+      "tolerance": {
+        "title": "Toleranse",
+        "description": "Mål hvor nøyaktig printeren din gjengir størrelsen på detaljer. Skriv ut en toleransetestmodell, mål måldetaljene med et skyvelær, og noter avviket. Bruk resultatet i sliceren sine innstillinger for dimensjonsnøyaktighet / xy-kompensasjon."
+      },
+      "cornering": {
+        "title": "Cornering",
+        "description": "Still inn hjørneoppførsel for å balansere utskriftshastighet mot ringing og artefakter ved retningsendringer. Bruk Junction Deviation (Marlin 2.x / RepRapFirmware), klassisk Jerk (eldre Marlin), eller Square Corner Velocity (Klipper). Skriv ut et hjørnetestmønster og reduser verdien til ringingen forsvinner."
+      },
+      "input_shaping": {
+        "title": "Input Shaping",
+        "description": "Reduser gjenskinn (ghosting) og ringing ved å bruke resonanskompensasjon. Mål printerens resonansfrekvens (akselerometer anbefales, eller bruk et visuelt ringetårn). Velg shaper-type og frekvenser som minimerer artefakter, og angi dem under."
+      },
+      "vfa": {
+        "title": "VFA (vertikale finartefakter)",
+        "description": "Finn maksimal utskriftshastighet før vertikale overflateartefakter (VFA / ribbing) blir synlige. Skriv ut en hastighetsrampetest på et objekt med glatte vegger, og noter hastigheten rett før jevn ribbing oppstår på overflaten."
+      }
+    },
+    "field_labels": {
+      "inputs": {
+        "start_temp": "Starttemperatur",
+        "end_temp": "Sluttemperatur",
+        "step_size": "Trinnstørrelse",
+        "start_speed": "Starthastighet",
+        "end_speed": "Slutthastighet",
+        "measured_height": "Målt høyde",
+        "extruder_type": "Ekstrudertype",
+        "pa_step_a": "PA-trinn (A)",
+        "measured_height_b": "Målt høyde (B)",
+        "start_retract": "Start-retraksjon",
+        "factor": "Faktor",
+        "test_size": "Testdetaljstørrelse",
+        "measured_size": "Målt størrelse",
+        "firmware_type": "Fastvare / funksjon",
+        "start_value": "Startverdi",
+        "end_value": "Sluttverdi",
+        "shaper_type": "Shaper-type",
+        "frequency_x": "Resonansfrekvens X",
+        "frequency_y": "Resonansfrekvens Y"
+      },
+      "outputs": {
+        "temperature": "Optimal temperatur",
+        "max_volumetric_speed": "Maks volumetrisk hastighet",
+        "pressure_advance": "PA-verdi",
+        "flow_ratio": "Flytforhold",
+        "retraction_length": "Anbefalt retraksjon",
+        "tolerance_offset": "Toleranseavvik",
+        "cornering_value": "Anbefalt verdi",
+        "shaper_type_x": "Anbefalt shaper X",
+        "frequency_x": "Justert frekvens X",
+        "shaper_type_y": "Anbefalt shaper Y",
+        "frequency_y": "Justert frekvens Y",
+        "min_avoidance_speed": "Min. unngåelseshastighet",
+        "max_avoidance_speed": "Maks. unngåelseshastighet"
+      },
+      "options": {
+        "direct_drive": "Direktedrift",
+        "bowden": "Bowden",
+        "junction_deviation": "Junction Deviation (Marlin 2.x / RepRapFirmware)",
+        "jerk": "Jerk (klassisk Marlin)",
+        "square_corner_velocity": "Square Corner Velocity (Klipper)",
+        "mzv": "MZV",
+        "ei": "EI",
+        "zv": "ZV",
+        "2hump_ei": "2HUMP_EI",
+        "3hump_ei": "3HUMP_EI"
+      }
     }
   },
   "external": {
@@ -1010,7 +1304,8 @@
       "unknown_content": "Ingen filamenter har strekkoden {{code}}. Opprette et filament og huske denne strekkoden?",
       "create_filament": "Opprett filament",
       "lookup_error": "Kunne ikke slå opp strekkoden."
-    }
+    },
+    "photo": "Foto"
   },
   "printer": {
     "printer": "Printer",
@@ -1019,5 +1314,166 @@
       "comment": "Kommentar",
       "spool_count": "Spoler"
     }
+  },
+  "chat": {
+    "title": "Assistent",
+    "open": "Spør assistenten",
+    "placeholder": "Spør om filamentet og spolene dine…",
+    "send": "Send",
+    "thinking": "Tenker…",
+    "empty": "Spør meg om spolene og filamentet ditt — for eksempel «hvor mye svart PETG har jeg igjen?» eller «hva bør jeg etterbestille?».",
+    "viewInList": "Vis i spolelisten",
+    "confirm": {
+      "before": "Før",
+      "after": "Etter",
+      "confirm": "Bekreft",
+      "cancel": "Avbryt",
+      "confirmed": "Bekreftet",
+      "cancelled": "Avbrutt",
+      "destructive": "Kan ikke angres"
+    },
+    "executed": {
+      "undo": "Angre",
+      "undone": "Endringen er angret."
+    },
+    "voice": {
+      "record": "Hold inne for å snakke",
+      "listening": "Lytter…",
+      "speak": "Les svar høyt",
+      "unsupported": "Lydopptak støttes ikke i denne nettleseren.",
+      "mic_error": "Fikk ikke tilgang til mikrofonen."
+    }
+  },
+  "intake": {
+    "hint": "Ta bilde av spolens etikett eller eske, eller velg et eksisterende bilde.",
+    "select_photo": "Velg eller ta et bilde",
+    "extracting": "Leser etiketten...",
+    "in_library": "i biblioteket ditt, legger til en spole",
+    "from_catalog": "SpoolmanDB, oppretter filament og spole",
+    "use_raw": "Bruk rådata fra utlesingen (nytt filament)",
+    "continue": "Fortsett",
+    "back": "Tilbake",
+    "photo_discarded": "Bildet ble analysert i minnet og lagres ikke.",
+    "prefilled_banner": "Forhåndsutfylt fra et etikettbilde - se over verdiene før du lagrer.",
+    "fields": {
+      "vendor": "Leverandør",
+      "name": "Navn",
+      "material": "Materiale",
+      "weight_g": "Vekt (g)",
+      "diameter_mm": "Diameter (mm)",
+      "extruder_temp_c": "Dyse (C)",
+      "bed_temp_c": "Printplate (C)",
+      "lot_nr": "Batch",
+      "article_number": "Artikkelnr",
+      "confidence": "Sikkerhet"
+    }
+  },
+  "update": {
+    "available": "oppdatering tilgjengelig",
+    "tooltip": "Versjon {{version}} er tilgjengelig",
+    "notification": {
+      "title": "En ny versjon av Spoolman er tilgjengelig",
+      "description": "Versjon {{version}} er utgitt. Se hva som er nytt og hvordan du oppdaterer.",
+      "viewRelease": "Vis utgivelsesnotater"
+    },
+    "action": {
+      "open": "Oppdater",
+      "howTo": "Slik oppdaterer du",
+      "modalTitle": "Oppdater Spoolman",
+      "currentVersion": "Installert: {{version}}",
+      "latestVersion": "nyeste: {{version}}",
+      "viewReleaseNotes": "Vis utgivelsesnotater",
+      "close": "Lukk",
+      "updateNow": "Oppdater nå",
+      "updateToVersion": "Oppdater til {{version}}",
+      "native": {
+        "description": "Dette er en direkte installasjon, så Spoolman kan oppdatere seg selv til nyeste utgivelse.",
+        "restartNotice": "Tjenesten starter automatisk på nytt etter oppdateringen. Hvis Spoolman ikke administreres av systemd, må du starte den på nytt manuelt når oppdateringen er ferdig.",
+        "adminRequired": "En administrator må være logget inn for å kjøre oppdateringen herfra.",
+        "disabled": "Oppdateringer utløst fra grensesnittet er deaktivert på denne instansen. Konfigurer autentisering, eller sett SPOOLMAN_ALLOW_UI_UPDATE=TRUE for å aktivere knappen. Du kan også oppdatere fra et skall:"
+      },
+      "docker": {
+        "description": "Denne instansen kjører i Docker. Oppdater ved å hente det nye bildet og gjenskape containeren:",
+        "tagReminder": "Hvis compose-filen din er låst til en bestemt bilde-tag, må du oppdatere den til den nye versjonen (f.eks. ghcr.io/sherrmann/spoolman-ng:{{version}}) før du henter bildet."
+      },
+      "haAddon": {
+        "description": "Denne instansen kjører som et Home Assistant-tillegg. Oppdater den fra Home Assistant, som tilbyr den nye versjonen automatisk:",
+        "steps": "Innstillinger → Tillegg → Spoolman → Oppdater"
+      },
+      "unknown": {
+        "description": "Oppdater ved å installere nyeste utgivelse på samme måte som du opprinnelig installerte Spoolman. Se utgivelsesnotatene for detaljer."
+      },
+      "started": {
+        "title": "Oppdatering startet",
+        "descriptionManaged": "Spoolman oppdateres og starter automatisk på nytt. Denne siden kobler til på nytt når den er tilbake.",
+        "descriptionManual": "Spoolman oppdateres. Start Spoolman på nytt manuelt når oppdateringen er ferdig."
+      },
+      "failed": {
+        "title": "Oppdateringen mislyktes"
+      }
+    }
+  },
+  "low_stock": {
+    "title": "Lavt lager",
+    "remaining_header": "Gjenstående",
+    "remaining_left": "{{amount}} igjen",
+    "threshold_button": "Juster grense",
+    "threshold_button_value": "Grense: {{value}}",
+    "section": {
+      "explicit": "Under grensen du har satt",
+      "fallback": "Under standardgrensen på {{grams}} g"
+    },
+    "empty": "Ingenting å etterbestille — du er godt forsynt."
+  },
+  "orders": {
+    "title": "Bestillinger",
+    "empty": "Ingen bestillinger ennå.",
+    "new_order": "Ny bestilling",
+    "new_order_title": "Ny bestilling",
+    "add_line": "Legg til filament",
+    "remove_line": "Fjern linje",
+    "select_filament": "Velg et filament",
+    "no_lines": "Legg til minst ett filament før du oppretter bestillingen.",
+    "order_number": "Bestilling #",
+    "shop": "Butikk",
+    "ordered_at": "Bestilt",
+    "lines_summary": "{{arrived}} av {{total}} ankommet",
+    "lines_summary_title": "Linjer",
+    "state_title": "Status",
+    "filaments_count_one": "{{count}} filament",
+    "filaments_count_other": "{{count}} filamenter",
+    "arrived_action": "Ankommet…",
+    "outstanding": "Utestående",
+    "create_error": "Kunne ikke opprette bestillingen. Prøv igjen.",
+    "state": {
+      "open": "Åpen — {{count}} utestående",
+      "arrived": "Ankommet"
+    },
+    "mark_ordered": "Merk som bestilt",
+    "mark_ordered_title": "Merk «{{name}}» som bestilt",
+    "create_order": "Opprett bestilling",
+    "create_order_title": "Opprett bestilling — {{count}} valgt",
+    "shop_placeholder": "Skriv inn et butikknavn (oppretter det hvis nytt)",
+    "order_date": "Bestillingsdato",
+    "quantity": "Antall",
+    "price_per_unit": "Pris / spole (valgfri)",
+    "order_number_field": "Bestillingsnummer (valgfritt)",
+    "url": "Bestillingslenke (valgfri)",
+    "selected_count": "{{count}} valgt",
+    "arrive_title": "Hva ankom fra bestilling #{{number}}?",
+    "arrive_subtitle": "Delvise leveranser deler linjen — resten forblir på bestilling.",
+    "arrive_error": "Kunne ikke merke bestillingen som ankommet. Prøv igjen.",
+    "arrived_check": "Ankommet",
+    "n_of_m": "{{delivered}} av {{outstanding}} utestående",
+    "split_preview": "{{delivered}} ankommer, {{rest}} forblir på bestilling",
+    "create_spools": "Opprett spoler for de leverte varene",
+    "location": "Lokasjon",
+    "banner": "Dette filamentet er på bestilling (bestilling #{{id}}) — merk linjen som ankommet?",
+    "mark_arrived": "Merk som ankommet",
+    "details_title": "Bestilling {{number}}",
+    "comment": "Kommentar",
+    "update_error": "Kunne ikke oppdatere bestillingen. Prøv igjen.",
+    "delete_error": "Kunne ikke slette bestillingen. Prøv igjen.",
+    "delete_confirm": "Slette denne bestillingen? Linjene slettes også."
   }
 }

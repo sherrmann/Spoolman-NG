@@ -35,7 +35,7 @@
     "undo": "元に戻す",
     "hideArchived": "アーカイブを隠す",
     "showArchived": "アーカイブを表示",
-    "unArchive": "非アーカイブ",
+    "unArchive": "アーカイブ解除",
     "notAccessTitle": "アクセス権限がありません",
     "save": "保存",
     "logout": "ログアウト",
@@ -63,7 +63,7 @@
       "paperSize": "用紙サイズ",
       "customSize": "カスタム",
       "showBorder": "線を表示",
-      "previewScale": "スケールを表示",
+      "previewScale": "プレビューの倍率",
       "skipItems": "スキップ",
       "horizontalSpacing": "水平方向の余白",
       "marginLeft": "左側の余白",
@@ -106,7 +106,19 @@
       "invalidGeometry": "ラベルのグリッドが用紙に収まりません",
       "invalidGeometryHelp": "余白と間隔でラベルのスペースがなくなっています。余白・間隔・列数・行数を減らすか、より大きな用紙サイズを選択してください。",
       "contentClipped": "一部のラベル内容が切れています",
-      "contentClippedHelp": "少なくとも1つのラベルの内容がラベル内に収まらず、印刷時に切り取られます。テキストサイズを小さくするか、テンプレートを短くするか、列数/行数を減らして各ラベルを大きくしてください。"
+      "contentClippedHelp": "少なくとも1つのラベルの内容がラベル内に収まらず、印刷時に切り取られます。テキストサイズを小さくするか、テンプレートを短くするか、列数/行数を減らして各ラベルを大きくしてください。",
+      "checklist": {
+        "title": "印刷する前に",
+        "intro": "ブラウザの印刷ダイアログはページを再スケーリングすることが多く、ラベルの寸法が崩れる原因になります。次に開く印刷ダイアログで、以下を確認してください:",
+        "scale": "倍率が100%／「実際のサイズ」になっていること — 「用紙に合わせる」は選ばないでください。",
+        "paperSize": "選択した用紙サイズが正確に {{width}} × {{height}} mm であること。",
+        "margins": "余白が「なし」に設定されていること（余白はSpoolman側ですでに調整済みです）。",
+        "headersFooters": "ヘッダーとフッターがオフになっていること。",
+        "pageSizeModeHint": "ラベル用紙サイズを選択していますが、ページサイズが「自動」のままです。「ラベルサイズに合わせる」を選ぶと、正確なページ形状がブラウザに伝わります。",
+        "pageSizeModeApply": "「ラベルサイズに合わせる」に切り替え",
+        "dontShowAgain": "今後表示しない",
+        "printNow": "今すぐ印刷"
+      }
     },
     "qrcode": {
       "button": "ラベルを印刷",
@@ -124,7 +136,7 @@
       },
       "showQRCode": "QRコード印刷",
       "showContent": "ラベル印刷",
-      "templateHelp": "値をテキストとして挿入するには{}を使用します。例えば、{id}はスプールIDに置き換えられ、{filament.material}はスプールの材質に置き換えられます。値が欠けている場合は「?」に置き換えられます。二重の{}を使用して、この置換を削除することができます。{}のセット間のテキストは、値が欠けている場合に削除されます。例えば、{Lot Nr: {lot_nr}}は、スプールにロット番号がある場合にのみラベルを表示します。テキストを太字にするには、二重のアスタリスク**で囲みます。利用可能なすべてのタグのリストを表示するには、ボタンをクリックしてください。",
+      "templateHelp": "値をテキストとして挿入するには{}を使用します。例えば、{id}はスプールIDに置き換えられ、{filament.material}はスプールの材質に置き換えられます。値が欠けている場合は「?」に置き換えられます。二重の{}を使用して、この置換を削除することができます。{}のセット間のテキストは、値が欠けている場合に削除されます。例えば、{Lot Nr: {lot_nr}}は、スプールにロット番号がある場合にのみラベルを表示します。テキストを太字にするには、二重のアスタリスク**で囲みます。コロンの後にフォーマットを追加できます。{remaining_weight:0.0}のような数値はその桁数に四捨五入され、{registered:YYYY-MM-DD HH:mm}のような日付はローカルタイムゾーンでの日付/時刻としてフォーマットされます。行の先頭に{size:1.5}を置くと、その行全体を拡大縮小できます（ここでは1.5倍）。利用可能なすべてのタグのリストを表示するには、ボタンをクリックしてください。",
       "showQRCodeMode": {
         "no": "いいえ",
         "withIcon": "アイコン付き",
@@ -164,7 +176,16 @@
         "none": "なし",
         "code128": "Code 128"
       },
-      "tooltip": "選択した行のラベルを印刷するか、次のページで対象を選択します"
+      "tooltip": "選択した行のラベルを印刷するか、次のページで対象を選択します",
+      "qrSize": {
+        "label": "QRサイズ",
+        "tooltip": "印刷されるQRコード正方形のサイズ（mm）。「自動」は従来の挙動を維持します: QRコードがラベルの半分を占め、他に何も印刷しない場合はラベル全体を占めます。選択したサイズの周囲には、クワイエットゾーンとして「QRの余白」が追加されます。",
+        "auto": "自動",
+        "custom": "カスタム",
+        "tooSmall": "{{mm}} mm より小さいQRコードは、スマートフォンのカメラで読み取りにくくなることがあります。",
+        "clamped": "このラベルには ≈ {{rendered}} mm までしか収まりません — 設定した {{requested}} mm より小さくなります。",
+        "clampedTooSmall": "このラベルには ≈ {{rendered}} mm（設定値 {{requested}} mm）までしか収まらず、スマートフォンカメラでの読み取りに必要な最小サイズ {{mm}} mm を下回ります。"
+      }
     },
     "spoolSelect": {
       "description": "スプールのラベル印刷対象を選択してください。",
@@ -185,7 +206,8 @@
       "selectedTotal_other": "{{count}}件のフィラメントを選択",
       "hidePrinted": "印刷済みを隠す",
       "reprintConfirmTitle": "ラベルを再印刷しますか?",
-      "reprintConfirmContent_other": "選択中の{{count}}件のフィラメントには既に印刷済みのラベルがあります。もう一度印刷しますか?"
+      "reprintConfirmContent_other": "選択中の{{count}}件のフィラメントには既に印刷済みのラベルがあります。もう一度印刷しますか?",
+      "searchPlaceholder": "フィラメントID・製造者・名称・マテリアルで検索"
     }
   },
   "warnWhenUnsavedChanges": "本当に離れますか? 編集が保存されていません。",
@@ -267,7 +289,7 @@
       "show_title": "[スプール #{{id}}] {{name}}",
       "adjust": "スプールフィラメントの調整",
       "edit": "スプールを編集",
-      "archive": "アーカイブしたスプール",
+      "archive": "スプールをアーカイブ",
       "list": "スプール",
       "show": "スプールを表示"
     },
@@ -345,6 +367,14 @@
     "totals": {
       "shown_other": "{{count}}本のスプールを表示中",
       "selected_other": "{{count}}本のスプールを選択中"
+    },
+    "nlSearch": {
+      "button": "AI",
+      "title": "自然言語で検索",
+      "placeholder": "例: 棚Bの黒いPETG",
+      "hint": "編集可能なフィルタとして適用されます",
+      "search": "検索",
+      "error": "検索内容を変換できませんでした。もう一度試すか、通常の検索ボックスをご利用ください。"
     }
   },
   "filament": {
@@ -384,7 +414,8 @@
       "finish": "仕上げ",
       "pattern": "パターン",
       "translucent": "半透明",
-      "glow": "蓄光"
+      "glow": "蓄光",
+      "image": "写真"
     },
     "filament": "フィラメント",
     "fields_help": {
@@ -398,7 +429,8 @@
       "low_stock_threshold": "全スプールの残り重量の合計がこのグラム数を下回ったとき、このフィラメントを再注文対象として表示します。",
       "reserve_count": "手元にある未開封の予備スプールの数です。1本ずつスプールを作成せずに管理できます。",
       "settings_extruder_temp_range": "製造者推奨のエクストルーダー温度範囲（最小–最大）。任意項目です。単一の値しかない場合は空欄にしてください。",
-      "settings_bed_temp_range": "製造者推奨のベッド温度範囲（最小–最大）。任意項目です。単一の値しかない場合は空欄にしてください。"
+      "settings_bed_temp_range": "製造者推奨のベッド温度範囲（最小–最大）。任意項目です。単一の値しかない場合は空欄にしてください。",
+      "image": "このフィラメントを見分けるための写真です — 例えばスプールやショップの商品ページなど。アップロード前にブラウザ側で縮小され、GPS位置情報などのメタデータは削除されます。"
     },
     "titles": {
       "create": "フィラメントを作成",
@@ -480,6 +512,16 @@
     },
     "messages": {
       "update_error": "変更を保存できませんでした。もう一度お試しください。"
+    },
+    "image": {
+      "upload": "写真をアップロード",
+      "replace": "写真を差し替え",
+      "remove": "写真を削除",
+      "uploaded": "写真を保存しました",
+      "upload_error": "写真を保存できませんでした",
+      "removed": "写真を削除しました",
+      "remove_error": "写真を削除できませんでした",
+      "prepare_error": "その画像ファイルを読み込めませんでした"
     }
   },
   "vendor": {
@@ -537,7 +579,7 @@
     "general": {
       "tab": "一般",
       "currency": {
-        "label": "通過"
+        "label": "通貨"
       },
       "base_url": {
         "label": "ベースURL",
@@ -556,7 +598,7 @@
       "tab": "追加項目",
       "params": {
         "unit": "単位",
-        "order": "数量",
+        "order": "順序",
         "default_value": "デフォルト値",
         "choices": "選択肢",
         "multi_choice": "複数選択",
@@ -655,6 +697,94 @@
       "add_title": "リンクを追加",
       "edit_title": "リンクを編集",
       "delete_confirm": "このリンクを削除しますか?"
+    },
+    "ai": {
+      "tab": "AI",
+      "description": "OpenAI互換のエンドポイント（Ollama、LM Studio、OpenAI、Anthropic、OpenRouter、Requesty、Groq など）を接続します。以下の機能を有効にするまで、どこにも何も送信されず、インターフェースにAI関連の要素は表示されません。",
+      "preset": {
+        "label": "プリセット",
+        "placeholder": "プロバイダを選択するとベースURLが自動入力されます"
+      },
+      "base_url": {
+        "label": "ベースURL",
+        "tooltip": "使用するOpenAI互換のエンドポイント。例: ネットワーク上のOllamaサーバー。",
+        "invalid": "http:// または https:// のURLを入力してください"
+      },
+      "api_key": {
+        "label": "APIキー",
+        "tooltip": "書き込み専用で保存されます。サーバーがクライアントに送り返すことはありません。OllamaとLM Studioでは不要です。",
+        "placeholder_set": "キーが保存されています - 置き換える場合は新しい値を入力してください",
+        "placeholder_unset": "キーは保存されていません",
+        "clear": "保存済みのキーをクリア"
+      },
+      "model": {
+        "label": "チャットモデル",
+        "tooltip": "チャットとツール呼び出し機能に使用されるモデルです。接続テストを実行すると、エンドポイントのモデル一覧を取得できます。"
+      },
+      "vision_model": {
+        "label": "ビジョンモデル",
+        "tooltip": "画像機能に使用されるモデルです。空欄の場合はチャットモデルが使用されます。"
+      },
+      "stt": {
+        "title": "音声認識（音声入力）",
+        "hint": "音声入力用に、文字起こしを行う別のOpenAI互換エンドポイントです - Ollamaには音声認識機能がありません。例: whisper.cppサーバー、Speaches、Groq whisperなど。",
+        "base_url": {
+          "label": "音声認識のベースURL",
+          "tooltip": "文字起こしのエンドポイント。例: http://localhost:8000/v1"
+        },
+        "api_key": {
+          "label": "音声認識のAPIキー"
+        },
+        "model": {
+          "label": "音声認識モデル",
+          "tooltip": "文字起こしに使用するモデル。例: whisper-1 や Systran/faster-whisper-base。"
+        }
+      },
+      "env_locked": "環境変数で設定されているため、ここではロックされています",
+      "test": "接続テスト",
+      "probe": {
+        "reachable": "エンドポイントに到達できました",
+        "models_listed": "取得したモデル数",
+        "failed": "接続テストに失敗しました。",
+        "chat": "チャット",
+        "tools": "ツール呼び出し",
+        "vision": "ビジョン",
+        "yes": "対応",
+        "no": "非対応",
+        "unknown": "未確認 - このエンドポイントは対応状況を報告しません"
+      },
+      "features": {
+        "title": "機能",
+        "hint": "すべての機能はデフォルトで無効です。ここで有効にするまで、AI関連の要素はインターフェースのどこにも表示されません。",
+        "chat": "チャットアシスタント",
+        "scan_to_spool": "Scan-to-Spool（写真からの登録）",
+        "nl_search": "自然言語検索",
+        "mcp": "MCPサーバー",
+        "voice": "音声入力",
+        "requires_config": "先にエンドポイントとチャットモデルを設定して保存してください。",
+        "requires_vision": "接続テストの結果、設定されたモデルはビジョン機能に対応していません。",
+        "requires_stt": "先に音声認識のエンドポイントとモデルを設定して保存してください。",
+        "voice_autosend": "確認せずに音声の文字起こしを自動的に送信する",
+        "voice_unavailable": "まだ利用できません - 音声入力機能と共に追加されます。"
+      },
+      "mcp": {
+        "title": "MCPサーバー",
+        "hint": "MCPクライアント（Claude Desktop、claude.ai）をこのSpoolmanに接続し、在庫の照会や更新を行えます。LLMプロバイダは不要で、このトグルのみで利用できます。",
+        "copy": "設定をコピー",
+        "copied": "設定をクリップボードにコピーしました。",
+        "auth_note": "このSpoolmanがAPIトークンを必要とする場合は、\"headers\" の下に \"Authorization\": \"Bearer <token>\" を追加してください。読み取り専用アカウントには照会用ツールのみが提供されます。"
+      },
+      "models": {
+        "title": "Ollamaモデル",
+        "hint": "このエンドポイントはOllamaサーバーです。ここから推奨モデルを直接プルできます - Spoolmanが管理するのはモデルのみで、ランタイム自体は管理しません。",
+        "installed": "インストール済み",
+        "pull": "プル",
+        "pulled": "{{model}} をプルしました。",
+        "purpose": {
+          "chat": "チャット",
+          "vision": "ビジョン"
+        }
+      }
     }
   },
   "documentTitle": {
@@ -695,7 +825,7 @@
     "locations": "場所",
     "new_location": "新しい場所",
     "no_location": "場所なし",
-    "no_locations_help": "このページでは、スプールを場所ごとに整理することができます！",
+    "no_locations_help": "このページでは、スプールを場所ごとに整理することができます。まずはスプールを追加してみましょう！",
     "error_empty": "名前を入力してください",
     "error_exists": "この場所は既に存在します",
     "location": "場所",
@@ -719,7 +849,8 @@
       "description": "スキャン可能なQRラベルを印刷する場所を選択してください。",
       "select_placeholder": "場所を選択",
       "none_selected": "場所が選択されていません"
-    }
+    },
+    "load_error": "スプールの読み込みに失敗しました"
   },
   "home": {
     "home": "ホーム",
@@ -758,7 +889,12 @@
       "this_month": "今月",
       "top": "トップ",
       "materials_other": "{{count}}種類の素材"
-    }
+    },
+    "load_error_title": "スプールの読み込みに失敗しました",
+    "load_error_desc": "スプールの読み込み中に問題が発生しました。もう一度お試しください。",
+    "gathering_dust": "長期未使用",
+    "never_used": "未使用",
+    "no_stale": "長期未使用のスプールはありません"
   },
   "calibration": {
     "title": "キャリブレーション",
@@ -838,7 +974,165 @@
         "cancel": "キャンセル"
       },
       "skip_finish_confirm": "このステップを保存せずに、このセッションを完了としてマークしますか?",
-      "session_complete": "キャリブレーションセッションを完了としてマークしました。"
+      "session_complete": "キャリブレーションセッションを完了としてマークしました。",
+      "revisiting": "再確認中"
+    },
+    "wiki": {
+      "link": "Wiki",
+      "tooltip": "このステップに関するOrcaSlicerのWikiを開く",
+      "tooltip_short": "OrcaSlicer Wiki"
+    },
+    "sections": {
+      "test_method": "テスト方法",
+      "test_setup": "テスト設定",
+      "your_result": "結果",
+      "auto_computed": "・自動計算"
+    },
+    "step_status": {
+      "skipped": "スキップ済み",
+      "done": "✓ 完了",
+      "incomplete": "未完了"
+    },
+    "confidence_display": "信頼度: {{level}}",
+    "confirm_delete": {
+      "tooltip": "削除",
+      "confirming": "もう一度クリックして確認",
+      "short": "本当に?"
+    },
+    "select_step": {
+      "placeholder": "キャリブレーションステップを選択",
+      "required": "キャリブレーションステップを選択してください。"
+    },
+    "optional": "任意",
+    "optional_notes": "メモ（任意）…",
+    "printer_name_placeholder": "例: Bambu X1C, Ender 3",
+    "flow_calc": {
+      "title": "パス結果計算ツール",
+      "pass1": "パス1",
+      "pass2": "パス2",
+      "method_yolo": "YOLO（推奨）",
+      "method_legacy": "レガシー（2パス）",
+      "yolo_desc": "アルキメデスの弦（Archimedean Chords）パターンを使用したシングルパスキャリブレーション（OrcaSlicer 2.3.0以降）。現在のフロー比と、プリント結果から確認した補正値を入力してください。",
+      "legacy_desc": "2パスキャリブレーションです。1回目と2回目のパス結果を順に入力して、最終的なフロー比を計算します。",
+      "start": "開始 →",
+      "yolo_pass1_desc": "アルキメデスの弦のテストモデルを印刷します。現在のフロー比と、プリント結果に表示された補正値を入力してください。新しいフロー比は自動的に計算されます。",
+      "legacy_pass1_desc": "1回目のパスのテストモデルを印刷します。初期のフロー比と、プリント結果から確認した補正率（%）を入力してください。",
+      "pass2_desc": "スライサーのフロー比をパス1の結果に設定し、テストモデルを再度印刷してから、新しい補正率（%）を入力してください。",
+      "current_flow_ratio": "現在のフロー比",
+      "modifier": "補正値",
+      "new_flow_ratio": "新しいフロー比",
+      "flow_ratio": "フロー比",
+      "result": "結果",
+      "cancel": "キャンセル",
+      "apply": "フォームに適用 ✓",
+      "next_pass2": "次へ: パス2 →",
+      "back": "← 戻る"
+    },
+    "pa": {
+      "method_tower": "タワー（推奨）",
+      "method_pattern": "パターン / ライン",
+      "tower_desc": "PAタワーテストを印刷します。エクストルーダータイプ、PAステップ値 (A)、そして最も見栄えの良い層での計測した高さ (B) を入力してください。PAは A × B として自動計算されます。",
+      "pattern_desc": "PAパターンまたはラインテストを印刷します。最適なラインを特定し、そのPA値を下に直接入力してください。"
+    },
+    "input_shaping_advisory": {
+      "title": "最新のプリンターをお使いですか? これは不要かもしれません。",
+      "desc_wizard": "加速度センサー（ADXL345）付きのKlipperを搭載した最新のCoreXYプリンター、またはBambu Lab製プリンターの多くは、すでにインプットシェーピングを自動で行っており、手動のテストタワーよりもずっと高精度です。これに該当する場合は、このステップをスキップして手間を省きましょう。",
+      "desc_drawer": "加速度センサー（ADXL345）付きのKlipperを搭載した最新のCoreXYプリンター、またはBambu Lab製プリンターの多くは、すでにインプットシェーピングを自動で行っており、手動のテストタワーよりもずっと高精度です。これに該当する場合は、保存せずにこのドロワーを閉じるだけで構いません。",
+      "skip": "このプリンターは自動対応済み — スキップ →"
+    },
+    "vfa": {
+      "artifact_speeds": "アーティファクト速度",
+      "artifact_speeds_desc": "VFAテストタワーを印刷し、VFAアーティファクトが確認できた速度をそれぞれマークしてください。最小回避速度と最大回避速度は、このリストから自動計算されます。",
+      "speed_placeholder": "速度",
+      "add_speed": "速度を追加"
+    },
+    "step_copy": {
+      "temperature": {
+        "title": "温度",
+        "description": "このフィラメントに最適な印刷温度を見つけます。温度タワーを印刷し、層の密着性・表面品質・糸引きの少なさが最もバランスよく仕上がる層を確認してください。温度を上げると層の接着が向上し、下げるとにじみや糸引きが減ります。"
+      },
+      "volumetric_speed": {
+        "title": "体積速度",
+        "description": "このフィラメントでアンダーエクストルージョン（押出不足）が発生する直前まで、ホットエンドが維持できる最大体積流量を求めます。流量ランプテストや、速度を上げながら印刷する単層壁のキューブを印刷し、品質が低下する直前の速度を記録してください。"
+      },
+      "pressure_advance": {
+        "title": "プレッシャーアドバンス",
+        "description": "プレッシャーアドバンス（Klipper / Bambu）またはリニアアドバンス（Marlin）を調整し、コーナーの膨らみをなくして鋭角コーナーの品質を向上させます。PAテストパターンを印刷し、最もシャープでクリーンなコーナーが得られる値を見つけてください。ファームウェアが対応していればAdaptive PAを有効にしましょう。"
+      },
+      "flow_rate": {
+        "title": "流量",
+        "description": "実際に押し出されるプラスチック量がスライサーの想定と一致するように、エクストルージョン倍率を微調整します。2つのキャリブレーションキューブ（98%と100%）を印刷し、壁厚をノギスで測定して正しいフロー比を計算してください。"
+      },
+      "retraction": {
+        "title": "リトラクション",
+        "description": "フィラメントの削れやクロッグ（詰まり）を起こさずに糸引きをなくせる、最小のリトラクション長と速度を見つけます。リトラクション距離タワーを印刷し、きれいなトラベル移動が得られる最も低い設定を選んでください。"
+      },
+      "tolerance": {
+        "title": "公差",
+        "description": "プリンターがどれだけ正確に形状の寸法を再現できるかを測定します。公差テストモデルを印刷し、対象の形状をノギスで測定してオフセットを記録してください。結果はスライサーの寸法精度／XY補正の設定に反映します。"
+      },
+      "cornering": {
+        "title": "コーナリング",
+        "description": "方向転換時のリンギングやアーティファクトと印刷速度のバランスを取るため、コーナリング動作を調整します。Junction Deviation（Marlin 2.x / RepRapFirmware）、従来のJerk（旧Marlin）、またはSquare Corner Velocity（Klipper）を使用します。コーナリングテストパターンを印刷し、リンギングが消えるまで値を下げてください。"
+      },
+      "input_shaping": {
+        "title": "インプットシェーピング",
+        "description": "共振補正を適用してゴースティングとリンギングを軽減します。プリンターの共振周波数を測定してください（加速度センサーの使用を推奨、または目視のリンギングタワーでも可）。アーティファクトを最小化するシェーパータイプと周波数を選び、以下に入力してください。"
+      },
+      "vfa": {
+        "title": "VFA（垂直方向の微細アーティファクト）",
+        "description": "垂直方向の表面アーティファクト（VFA／リブ状の模様）が現れる直前の最大印刷速度を見つけます。滑らかな壁面のオブジェクトで速度ランプテストを印刷し、表面に規則的なリブ模様が現れる直前の速度を記録してください。"
+      }
+    },
+    "field_labels": {
+      "inputs": {
+        "start_temp": "開始温度",
+        "end_temp": "終了温度",
+        "step_size": "ステップ幅",
+        "start_speed": "開始速度",
+        "end_speed": "終了速度",
+        "measured_height": "計測した高さ",
+        "extruder_type": "エクストルーダータイプ",
+        "pa_step_a": "PAステップ (A)",
+        "measured_height_b": "計測した高さ (B)",
+        "start_retract": "開始リトラクション",
+        "factor": "係数",
+        "test_size": "テスト形状のサイズ",
+        "measured_size": "計測したサイズ",
+        "firmware_type": "ファームウェア / 機能",
+        "start_value": "開始値",
+        "end_value": "終了値",
+        "shaper_type": "シェーパータイプ",
+        "frequency_x": "共振周波数 X",
+        "frequency_y": "共振周波数 Y"
+      },
+      "outputs": {
+        "temperature": "最適温度",
+        "max_volumetric_speed": "最大体積速度",
+        "pressure_advance": "PA値",
+        "flow_ratio": "フロー比",
+        "retraction_length": "推奨リトラクション",
+        "tolerance_offset": "公差オフセット",
+        "cornering_value": "推奨値",
+        "shaper_type_x": "X 推奨シェーパー",
+        "frequency_x": "調整後の周波数 X",
+        "shaper_type_y": "Y 推奨シェーパー",
+        "frequency_y": "調整後の周波数 Y",
+        "min_avoidance_speed": "最小回避速度",
+        "max_avoidance_speed": "最大回避速度"
+      },
+      "options": {
+        "direct_drive": "ダイレクトドライブ",
+        "bowden": "ボーデン",
+        "junction_deviation": "Junction Deviation（Marlin 2.x / RepRapFirmware）",
+        "jerk": "Jerk（クラシックMarlin）",
+        "square_corner_velocity": "Square Corner Velocity（Klipper）",
+        "mzv": "MZV",
+        "ei": "EI",
+        "zv": "ZV",
+        "2hump_ei": "2HUMP_EI",
+        "3hump_ei": "3HUMP_EI"
+      }
     }
   },
   "external": {
@@ -981,7 +1275,8 @@
       "unknown_content": "バーコード {{code}} を持つフィラメントはありません。フィラメントを作成してこのバーコードを記憶させますか?",
       "create_filament": "フィラメントを作成",
       "lookup_error": "バーコードを照会できませんでした。"
-    }
+    },
+    "photo": "写真"
   },
   "printer": {
     "printer": "プリンター",
@@ -990,5 +1285,165 @@
       "comment": "コメント",
       "spool_count": "スプール数"
     }
+  },
+  "chat": {
+    "title": "アシスタント",
+    "open": "アシスタントに質問",
+    "placeholder": "フィラメントやスプールについて質問…",
+    "send": "送信",
+    "thinking": "考え中…",
+    "empty": "スプールやフィラメントについて何でも聞いてください — 例えば「黒のPETGはあとどれくらい残ってる?」や「そろそろ買い足したほうがいいのは?」など。",
+    "viewInList": "スプール一覧で表示",
+    "confirm": {
+      "before": "変更前",
+      "after": "変更後",
+      "confirm": "確認",
+      "cancel": "キャンセル",
+      "confirmed": "確認済み",
+      "cancelled": "キャンセル済み",
+      "destructive": "元に戻せません"
+    },
+    "executed": {
+      "undo": "元に戻す",
+      "undone": "変更を元に戻しました。"
+    },
+    "voice": {
+      "record": "長押しで話す",
+      "listening": "聞き取り中…",
+      "speak": "返信を読み上げる",
+      "unsupported": "このブラウザでは音声録音に対応していません。",
+      "mic_error": "マイクにアクセスできませんでした。"
+    }
+  },
+  "intake": {
+    "hint": "スプールのラベルまたは箱を撮影するか、既存の写真を選択してください。",
+    "select_photo": "写真を選択または撮影",
+    "extracting": "ラベルを読み取り中...",
+    "in_library": "ライブラリに登録済み、スプールを追加",
+    "from_catalog": "SpoolmanDB、フィラメントとスプールを作成",
+    "use_raw": "抽出結果をそのまま使用（新規フィラメント）",
+    "continue": "続ける",
+    "back": "戻る",
+    "photo_discarded": "写真はメモリ上で解析され、保存されません。",
+    "prefilled_banner": "ラベル写真から自動入力されました - 保存する前に内容を確認してください。",
+    "fields": {
+      "vendor": "製造者",
+      "name": "名称",
+      "material": "マテリアル",
+      "weight_g": "重さ (g)",
+      "diameter_mm": "直径 (mm)",
+      "extruder_temp_c": "ノズル (C)",
+      "bed_temp_c": "ベッド (C)",
+      "lot_nr": "ロット",
+      "article_number": "製品番号",
+      "confidence": "信頼度"
+    }
+  },
+  "update": {
+    "available": "アップデートあり",
+    "tooltip": "バージョン {{version}} が利用可能です",
+    "notification": {
+      "title": "新しいバージョンのSpoolmanが利用可能です",
+      "description": "バージョン {{version}} がリリースされました。新機能とアップデート方法をご確認ください。",
+      "viewRelease": "リリースノートを見る"
+    },
+    "action": {
+      "open": "アップデート",
+      "howTo": "アップデート方法",
+      "modalTitle": "Spoolmanをアップデート",
+      "currentVersion": "インストール済み: {{version}}",
+      "latestVersion": "最新: {{version}}",
+      "viewReleaseNotes": "リリースノートを見る",
+      "close": "閉じる",
+      "updateNow": "今すぐアップデート",
+      "updateToVersion": "{{version}} にアップデート",
+      "native": {
+        "description": "ネイティブインストールのため、Spoolmanは自身を最新リリースにアップデートできます。",
+        "restartNotice": "アップデート後、サービスは自動的に再起動します。Spoolmanがsystemdで管理されていない場合は、アップデート完了後に手動で再起動してください。",
+        "adminRequired": "ここからアップデートを実行するには、管理者としてサインインしている必要があります。",
+        "disabled": "このインスタンスではUIからのアップデートが無効になっています。認証を設定するか、SPOOLMAN_ALLOW_UI_UPDATE=TRUE を設定するとボタンが有効になります。シェルからアップデートすることもできます:"
+      },
+      "docker": {
+        "description": "このインスタンスはDockerで実行されています。新しいイメージをプルしてコンテナを再作成することでアップデートできます:",
+        "tagReminder": "compose ファイルで特定のイメージタグを固定している場合は、プルする前に新しいバージョン（例: ghcr.io/sherrmann/spoolman-ng:{{version}}）に更新してください。"
+      },
+      "haAddon": {
+        "description": "このインスタンスはHome Assistantのアドオンとして実行されています。Home Assistant側で新しいバージョンが自動的に提示されるので、そこからアップデートしてください:",
+        "steps": "設定 → アドオン → Spoolman → アップデート"
+      },
+      "unknown": {
+        "description": "最初にSpoolmanをインストールしたのと同じ方法で最新リリースをインストールしてアップデートしてください。詳細はリリースノートをご確認ください。"
+      },
+      "started": {
+        "title": "アップデートを開始しました",
+        "descriptionManaged": "Spoolmanをアップデート中です。完了後、自動的に再起動します。復帰次第、このページも自動的に再接続します。",
+        "descriptionManual": "Spoolmanをアップデート中です。完了後は手動で再起動してください。"
+      },
+      "failed": {
+        "title": "アップデートに失敗しました"
+      }
+    }
+  },
+  "low_stock": {
+    "title": "在庫不足",
+    "remaining_header": "残量",
+    "remaining_left": "残り {{amount}}",
+    "threshold_button": "しきい値を調整",
+    "threshold_button_value": "しきい値: {{value}}",
+    "section": {
+      "explicit": "設定したしきい値を下回っています",
+      "fallback": "デフォルトの {{grams}} g を下回っています"
+    },
+    "empty": "再注文の必要はありません — 在庫は十分です。"
+  },
+  "orders": {
+    "title": "注文",
+    "empty": "注文はまだありません。",
+    "new_order": "新しい注文",
+    "new_order_title": "新しい注文",
+    "add_line": "フィラメントを追加",
+    "remove_line": "行を削除",
+    "select_filament": "フィラメントを選択",
+    "no_lines": "注文を作成する前に、フィラメントを少なくとも1つ追加してください。",
+    "order_number": "注文番号",
+    "shop": "ショップ",
+    "ordered_at": "注文日",
+    "lines_summary": "{{total}}件中{{arrived}}件到着済み",
+    "lines_summary_title": "明細",
+    "state_title": "状態",
+    "filaments_count_other": "{{count}}件のフィラメント",
+    "arrived_action": "到着…",
+    "outstanding": "未着",
+    "create_error": "注文を作成できませんでした。もう一度お試しください。",
+    "state": {
+      "open": "未完了 — 未着{{count}}件",
+      "arrived": "到着済み"
+    },
+    "mark_ordered": "注文済みにする",
+    "mark_ordered_title": "「{{name}}」を注文済みにする",
+    "create_order": "注文を作成",
+    "create_order_title": "注文を作成 — {{count}}件選択中",
+    "shop_placeholder": "ショップ名を入力（新規の場合は作成されます）",
+    "order_date": "注文日",
+    "quantity": "数量",
+    "price_per_unit": "価格 / スプール（任意）",
+    "order_number_field": "注文番号（任意）",
+    "url": "注文リンク（任意）",
+    "selected_count": "{{count}}件選択中",
+    "arrive_title": "注文 #{{number}} から何が届きましたか?",
+    "arrive_subtitle": "部分的な到着の場合は明細が分割され、残りは注文中のままになります。",
+    "arrive_error": "注文を到着済みにできませんでした。もう一度お試しください。",
+    "arrived_check": "到着済み",
+    "n_of_m": "未着{{outstanding}}件中{{delivered}}件",
+    "split_preview": "{{delivered}}件が到着、{{rest}}件は注文中のまま",
+    "create_spools": "到着した分のスプールを作成",
+    "location": "場所",
+    "banner": "このフィラメントは注文中です（注文 #{{id}}） — この明細を到着済みにしますか?",
+    "mark_arrived": "到着済みにする",
+    "details_title": "注文 {{number}}",
+    "comment": "コメント",
+    "update_error": "注文を更新できませんでした。もう一度お試しください。",
+    "delete_error": "注文を削除できませんでした。もう一度お試しください。",
+    "delete_confirm": "この注文を削除しますか? 明細も削除されます。"
   }
 }

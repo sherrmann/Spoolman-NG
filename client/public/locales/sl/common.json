@@ -51,7 +51,7 @@
     "editSuccess": "{{resource}} uspešno urejeno",
     "editError": "Napaka pri urejanju {{resource}} (status code:{{statusCode}})",
     "importProgress": "Uvažanje: {{processed}}/{{total}}",
-    "validationError": "Napaka overjanja: {{error}}"
+    "validationError": "Napaka pri preverjanju: {{error}}"
   },
   "loading": "Nalaganje",
   "version": "Verzija",
@@ -69,7 +69,7 @@
       "title": "Tiskanje",
       "print": "Natisni",
       "columns": "Stolpci",
-      "rows": "Vrste",
+      "rows": "Vrstice",
       "paperSize": "Velikost papirja",
       "customSize": "Po meri",
       "dimensions": "Dimenzije",
@@ -117,7 +117,19 @@
       "invalidGeometry": "Mreža nalepk se ne prilega papirju",
       "invalidGeometryHelp": "Robovi in razmiki ne puščajo prostora za nalepke. Zmanjšajte robove, razmike, število stolpcev ali vrst — ali izberite večjo velikost papirja.",
       "contentClipped": "Del vsebine nalepk je odrezan",
-      "contentClippedHelp": "Vsebina vsaj ene nalepke ne gre v celoti na nalepko in bo pri tiskanju odrezana. Zmanjšajte velikost besedila, skrajšajte predlogo ali uporabite manj stolpcev/vrst, da bo vsaka nalepka večja."
+      "contentClippedHelp": "Vsebina vsaj ene nalepke ne gre v celoti na nalepko in bo pri tiskanju odrezana. Zmanjšajte velikost besedila, skrajšajte predlogo ali uporabite manj stolpcev/vrst, da bo vsaka nalepka večja.",
+      "checklist": {
+        "title": "Pred tiskanjem",
+        "intro": "Pogovorna okna za tiskanje v brskalniku pogosto znova prilagodijo merilo strani, kar podre geometrijo nalepk. V pogovornem oknu za tiskanje, ki se odpre naslednje, preverite:",
+        "scale": "Merilo je 100 % / »Dejanska velikost« — nikoli »Prilagodi strani«.",
+        "paperSize": "Izbrana velikost papirja je natanko {{width}} × {{height}} mm.",
+        "margins": "Robovi so nastavljeni na »Brez« (Spoolman robove že upravlja sam).",
+        "headersFooters": "Glave in noge strani so izklopljene.",
+        "pageSizeModeHint": "Izbrali ste velikost papirja za nalepke, vendar je Velikost strani nastavljena na »Samodejno«. »Ujemanje z velikostjo nalepke« brskalniku pove natančno geometrijo strani.",
+        "pageSizeModeApply": "Preklopi na Ujemanje z velikostjo nalepke",
+        "dontShowAgain": "Tega ne prikaži več",
+        "printNow": "Natisni zdaj"
+      }
     },
     "qrcode": {
       "button": "Natisni nalepke",
@@ -175,7 +187,16 @@
       "printFilamentTitle": "Natisni nalepke filamentov",
       "printSpoolTitle": "Natisni nalepke kolutov",
       "templateHelpFilament": "Uporabite {}, da vstavite vrednosti objekta filament kot besedilo. Na primer, {id} bo nadomeščen z identifikacijsko številko filamenta, {vendor.name} pa z imenom proizvajalca. Če vrednost manjka, bo nadomeščena z znakom »?«. To lahko odstranite z dodatnim nizom {}. Poleg tega bo vsak tekst med sklopi {} odstranjen, če vrednost manjka. Na primer, {Article: {article_number}} bo prikazal napis le, če ima filament številko izdelka. Tekst obdajte z dvojno zvezdico **, da bo poudarjen. Kliknite gumb, da si ogledate seznam vseh razpoložljivih oznak.",
-      "tooltip": "Natisnite nalepke za izbrane vrstice ali izberite elemente na naslednji strani"
+      "tooltip": "Natisnite nalepke za izbrane vrstice ali izberite elemente na naslednji strani",
+      "qrSize": {
+        "label": "Velikost QR kode",
+        "tooltip": "Natisnjena velikost kvadrata QR kode v mm. Samodejno ohrani prejšnje obnašanje: QR koda zapolni polovico nalepke (celotno, če se ne natisne nič drugega). Odmik QR kode se doda okoli izbrane velikosti kot tiho območje.",
+        "auto": "Samodejno",
+        "custom": "Po meri",
+        "tooSmall": "QR kode, manjše od {{mm}} mm, je lahko težko skenirati s kamero telefona.",
+        "clamped": "Na to nalepko gre le ≈ {{rendered}} mm — manj, kot ste nastavili ({{requested}} mm).",
+        "clampedTooSmall": "Na to nalepko gre le ≈ {{rendered}} mm (nastavljeno {{requested}} mm) — manj od minimuma {{mm}} mm za kamero telefona."
+      }
     },
     "spoolSelect": {
       "description": "Izberite kolute, za katere želite natisniti nalepke.",
@@ -208,10 +229,11 @@
       "selectedTotal_one": "Izbran {{count}} filament",
       "selectedTotal_two": "Izbrana {{count}} filamenta",
       "selectedTotal_few": "Izbrani {{count}} filamenti",
-      "selectedTotal_other": "Izbranih {{count}} filamentov"
+      "selectedTotal_other": "Izbranih {{count}} filamentov",
+      "searchPlaceholder": "Iskanje po ID-ju filamenta, proizvajalcu, imenu ali materialu"
     }
   },
-  "warnWhenUnsavedChanges": "Ali ste prepričani, da želite zapustiti stran? Imate ne shranjene spremembe.",
+  "warnWhenUnsavedChanges": "Ali ste prepričani, da želite zapustiti stran? Imate neshranjene spremembe.",
   "kofi": "Prispevajte na Ko-fi",
   "spool": {
     "form": {
@@ -367,6 +389,14 @@
       "selected_two": "Izbrana {{count}} koluta",
       "selected_few": "Izbrani {{count}} koluti",
       "selected_other": "Izbranih {{count}} kolutov"
+    },
+    "nlSearch": {
+      "button": "AI",
+      "title": "Iskanje z naravnim jezikom",
+      "placeholder": "npr. črn PETG na polici B",
+      "hint": "Uporabljeno kot filtri, ki jih lahko urejate",
+      "search": "Iskanje",
+      "error": "Iskanja ni bilo mogoče prevesti. Poskusite znova ali uporabite navadno iskalno polje."
     }
   },
   "settings": {
@@ -418,8 +448,8 @@
       "boolean_true": "Da",
       "boolean_false": "Ne",
       "non_unique_key_error": "Ključ mora biti edinstven.",
-      "key_not_changed": "Spremenite geslo v nekaj drugega.",
-      "delete_confirm": "Zbrišem polje {{name}}?",
+      "key_not_changed": "Spremenite ključ v nekaj drugega.",
+      "delete_confirm": "Izbrišem polje {{name}}?",
       "delete_confirm_description": "S tem boste izbrisali polje in vse povezane podatke za vse vnose.",
       "description": "<p>Tukaj lahko svojim entitetam dodate dodatna polja po meri.</p><p>Ko je polje dodano, njegovega ključa ali tipa ni mogoče spremeniti, pri poljih tipa »izbira« pa ni mogoče odstraniti možnosti ali spremeniti nastavitve za večkratno izbiro. Če polje odstranite, bodo povezani podatki za vse entitete izbrisani.</p><p>Ključ je tisto, kar drugi programi uporabljajo za branje/pisanje podatkov, zato če naj bi se vaše polje po meri integriralo s programom tretje osebe, poskrbite, da ga nastavite pravilno. Privzeta vrednost se uporablja le za nove elemente.</p><p>Dodatna polja je mogoče prikazati in razvrščati v pogledih tabel. Polja tipa izbira in logična polja tam ponujajo tudi možnosti filtriranja, vsi tipi dodatnih polj pa podpirajo filtriranje po praznih vrednostih.</p><p>Pri poljih koluta omogočite »Kopiraj iz filamenta«, da nov kolut ob ustvarjanju podeduje vrednost iz polja filamenta z istim ključem (razen če kolut nastavi svojo).</p><p>Polje »Povezava« hrani kratko vrednost za vsak element (npr. številko izdelka) in jo z uporabo predloge URL povezave spremeni v klikljivo povezavo — postavite {} tja, kamor sodi vrednost, npr. https://www.amazon.com/dp/{}.</p>",
       "choices_missing_error": "Možnosti ni mogoče odstraniti. Manjkajo naslednje možnosti: {{choices}}"
@@ -493,6 +523,94 @@
       "add_title": "Dodaj povezavo",
       "edit_title": "Uredi povezavo",
       "delete_confirm": "Izbrišem to povezavo?"
+    },
+    "ai": {
+      "tab": "AI",
+      "description": "Povežite končno točko, združljivo z OpenAI (Ollama, LM Studio, OpenAI, Anthropic, OpenRouter, Requesty, Groq, ...). Nič se nikamor ne pošilja in noben element AI se ne prikaže v vmesniku, dokler spodaj ne omogočite katere od funkcij.",
+      "preset": {
+        "label": "Prednastavitev",
+        "placeholder": "Izberite ponudnika, da se izpolni osnovni URL"
+      },
+      "base_url": {
+        "label": "Osnovni URL",
+        "tooltip": "Končna točka, združljiva z OpenAI, ki naj se uporabi, npr. strežnik Ollama v vašem omrežju.",
+        "invalid": "Mora biti URL http:// ali https://"
+      },
+      "api_key": {
+        "label": "Ključ API",
+        "tooltip": "Shranjen je samo za pisanje: strežnik ga nikoli ne pošlje nazaj nobenemu odjemalcu. Ollama in LM Studio ga ne potrebujeta.",
+        "placeholder_set": "Ključ je shranjen - vnesite novo vrednost, da ga zamenjate",
+        "placeholder_unset": "Ključ ni shranjen",
+        "clear": "Počisti shranjeni ključ"
+      },
+      "model": {
+        "label": "Model za klepet",
+        "tooltip": "Model, uporabljen za klepet in funkcije klicanja orodij. Zaženite preizkus povezave, da izpišete modele končne točke."
+      },
+      "vision_model": {
+        "label": "Model za vid",
+        "tooltip": "Model, uporabljen za funkcije s slikami. Pustite prazno, če želite uporabiti klepetalni model."
+      },
+      "stt": {
+        "title": "Pretvorba govora v besedilo (glasovni vnos)",
+        "hint": "Ločena končna točka za prepisovanje, združljiva z OpenAI, za glasovni vnos - Ollama nima pretvorbe govora v besedilo. Na primer strežnik whisper.cpp, Speaches ali Groq whisper.",
+        "base_url": {
+          "label": "Osnovni URL STT",
+          "tooltip": "Končna točka za prepisovanje, npr. http://localhost:8000/v1"
+        },
+        "api_key": {
+          "label": "Ključ API za STT"
+        },
+        "model": {
+          "label": "Model STT",
+          "tooltip": "Model za prepisovanje, npr. whisper-1 ali Systran/faster-whisper-base."
+        }
+      },
+      "env_locked": "Nastavljeno prek okoljske spremenljivke in tukaj zaklenjeno",
+      "test": "Preizkusi povezavo",
+      "probe": {
+        "reachable": "Končna točka dosegljiva",
+        "models_listed": "izpisani modeli",
+        "failed": "Preizkus povezave ni uspel.",
+        "chat": "Klepet",
+        "tools": "Klici orodij",
+        "vision": "Vid",
+        "yes": "podprto",
+        "no": "ni podprto",
+        "unknown": "ni preverjeno - ta končna točka ne poroča o zmožnostih"
+      },
+      "features": {
+        "title": "Funkcije",
+        "hint": "Vse funkcije so privzeto izklopljene. Nič, kar je povezano z AI, se nikjer v vmesniku ne prikaže, dokler tega ne omogočite tukaj.",
+        "chat": "Klepetalni pomočnik",
+        "scan_to_spool": "Vnos s fotografijo Scan-to-Spool",
+        "nl_search": "Iskanje z naravnim jezikom",
+        "mcp": "Strežnik MCP",
+        "voice": "Glasovni vnos",
+        "requires_config": "Najprej nastavite in shranite končno točko ter klepetalni model.",
+        "requires_vision": "Preizkus povezave javlja, da nastavljeni model ne podpira vida.",
+        "requires_stt": "Najprej nastavite in shranite končno točko in model za pretvorbo govora v besedilo.",
+        "voice_autosend": "Samodejno pošlji prepise govora, namesto da jih najprej pregledate",
+        "voice_unavailable": "Še ni na voljo - to pride s funkcijo glasovnega vnosa."
+      },
+      "mcp": {
+        "title": "Strežnik MCP",
+        "hint": "Usmerite odjemalca MCP (Claude Desktop, claude.ai) na ta Spoolman za poizvedovanje in posodabljanje vaše zaloge. Ponudnik LLM ni potreben - samo to stikalo.",
+        "copy": "Kopiraj konfiguracijo",
+        "copied": "Konfiguracija je kopirana v odložišče.",
+        "auth_note": "Če ta Spoolman zahteva žeton API, dodajte vnos \"Authorization\": \"Bearer <token>\" pod \"headers\". Računi samo za branje dobijo le orodja za poizvedovanje."
+      },
+      "models": {
+        "title": "Modeli Ollama",
+        "hint": "Vaša končna točka je strežnik Ollama. Priporočen model lahko prenesete neposredno od tu - Spoolman upravlja modele, nikoli izvajalnega okolja.",
+        "installed": "Nameščen",
+        "pull": "Prenesi",
+        "pulled": "Model {{model}} je prenesen.",
+        "purpose": {
+          "chat": "klepet",
+          "vision": "vid"
+        }
+      }
     }
   },
   "scanner": {
@@ -547,7 +665,8 @@
       "finish": "Površina",
       "pattern": "Vzorec",
       "translucent": "Prosojno",
-      "glow": "Sveti v temi"
+      "glow": "Sveti v temi",
+      "image": "Fotografija"
     },
     "fields_help": {
       "material": "Npr. PLA, ABS, PETG itd.",
@@ -560,7 +679,8 @@
       "low_stock_threshold": "Filament označi za ponovno naročilo, ko skupna preostala masa vseh njegovih kolutov pade pod toliko gramov.",
       "reserve_count": "Število neodprtih rezervnih kolutov, ki jih hranite na zalogi — vodeno brez ustvarjanja koluta za vsakega posebej.",
       "settings_extruder_temp_range": "Proizvajalčevo priporočeno temperaturno območje ekstruderja (min.–maks.). Neobvezno; pustite prazno, če imate samo eno vrednost.",
-      "settings_bed_temp_range": "Proizvajalčevo priporočeno temperaturno območje mize (min.–maks.). Neobvezno; pustite prazno, če imate samo eno vrednost."
+      "settings_bed_temp_range": "Proizvajalčevo priporočeno temperaturno območje mize (min.–maks.). Neobvezno; pustite prazno, če imate samo eno vrednost.",
+      "image": "Fotografija, po kateri boste prepoznali ta filament — npr. kolut ali oglas v spletni trgovini. Pred nalaganjem se v brskalniku pomanjša; metapodatki, kot je lokacija GPS, se odstranijo."
     },
     "titles": {
       "create": "Ustvari filament",
@@ -568,10 +688,10 @@
       "edit": "Uredi filament",
       "list": "Filamenti",
       "show": "Prikaži filament",
-      "show_title": "[Filament #{{id}}]{{name}}"
+      "show_title": "[Filament #{{id}}] {{name}}"
     },
     "form": {
-      "import_external": "Uvozi iz zunanjih",
+      "import_external": "Uvozi iz zunanjega",
       "filament_updated": "Ta filament je spremenil nekdo drug, odkar ste odprli stran. Shranjevanje bo te spremembe prepisalo!",
       "import_external_description": "Izberite filament s seznama, da se njegovi podatki samodejno vpišejo v obrazec za ustvarjanje filamenta. S tem se bodo nadomestili vsi podatki, ki ste jih vnesli v obrazec.<br><br>Ob kliku na »V redu« se bo po potrebi samodejno ustvaril objekt »Proizvajalec«.",
       "import_3dfp": "ID 3D Filament Profiles",
@@ -597,7 +717,7 @@
     },
     "finish_options": {
       "matte": "Mat",
-      "glossy": "Sijaj"
+      "glossy": "Sijoč"
     },
     "pattern_options": {
       "marble": "Marmor",
@@ -654,6 +774,16 @@
     },
     "messages": {
       "update_error": "Sprememb ni bilo mogoče shraniti. Poskusite znova."
+    },
+    "image": {
+      "upload": "Naloži fotografijo",
+      "replace": "Zamenjaj fotografijo",
+      "remove": "Odstrani fotografijo",
+      "uploaded": "Fotografija shranjena",
+      "upload_error": "Fotografije ni bilo mogoče shraniti",
+      "removed": "Fotografija odstranjena",
+      "remove_error": "Fotografije ni bilo mogoče odstraniti",
+      "prepare_error": "Te slikovne datoteke ni bilo mogoče prebrati"
     }
   },
   "vendor": {
@@ -725,7 +855,12 @@
       "materials_two": "{{count}} materiala",
       "materials_few": "{{count}} materiali",
       "materials_other": "{{count}} materialov"
-    }
+    },
+    "load_error_title": "Kolutov ni bilo mogoče naložiti",
+    "load_error_desc": "Pri nalaganju vaših kolutov je prišlo do težave. Poskusite znova.",
+    "gathering_dust": "Nabira prah",
+    "never_used": "Nikoli uporabljeno",
+    "no_stale": "Noben kolut ne nabira prahu"
   },
   "help": {
     "help": "Pomoč",
@@ -809,7 +944,8 @@
       "description": "Izberite lokacije, za katere želite natisniti nalepke s QR kodo za skeniranje.",
       "select_placeholder": "Izberite lokacije",
       "none_selected": "Ni izbranih lokacij"
-    }
+    },
+    "load_error": "Kolutov ni bilo mogoče naložiti"
   },
   "errorBoundary": {
     "title": "Nekaj je šlo narobe",
@@ -888,7 +1024,8 @@
       "unknown_content": "Noben filament nima črtne kode {{code}}. Ustvarim filament in si zapomnim to črtno kodo?",
       "create_filament": "Ustvari filament",
       "lookup_error": "Te črtne kode ni bilo mogoče poiskati."
-    }
+    },
+    "photo": "Fotografija"
   },
   "printer": {
     "printer": "Tiskalnik",
@@ -976,7 +1113,165 @@
         "cancel": "Prekliči"
       },
       "skip_finish_confirm": "Označim to sejo kot zaključeno brez shranjevanja tega koraka?",
-      "session_complete": "Kalibracijska seja je označena kot zaključena."
+      "session_complete": "Kalibracijska seja je označena kot zaključena.",
+      "revisiting": "Ponovni obisk"
+    },
+    "wiki": {
+      "link": "Wiki",
+      "tooltip": "Odpri wiki OrcaSlicer za ta korak",
+      "tooltip_short": "Wiki OrcaSlicer"
+    },
+    "sections": {
+      "test_method": "Metoda testa",
+      "test_setup": "Priprava testa",
+      "your_result": "Vaš rezultat",
+      "auto_computed": "· samodejno izračunano"
+    },
+    "step_status": {
+      "skipped": "Preskočeno",
+      "done": "✓ Opravljeno",
+      "incomplete": "Nedokončano"
+    },
+    "confidence_display": "{{level}} zanesljivost",
+    "confirm_delete": {
+      "tooltip": "Izbriši",
+      "confirming": "Kliknite znova za potrditev",
+      "short": "Prepričani?"
+    },
+    "select_step": {
+      "placeholder": "Izberite korak kalibracije",
+      "required": "Prosimo, izberite korak kalibracije."
+    },
+    "optional": "Neobvezno",
+    "optional_notes": "Neobvezne opombe …",
+    "printer_name_placeholder": "npr. Bambu X1C, Ender 3",
+    "flow_calc": {
+      "title": "Kalkulator rezultata prehoda",
+      "pass1": "Prehod 1",
+      "pass2": "Prehod 2",
+      "method_yolo": "YOLO (priporočeno)",
+      "method_legacy": "Starejše (2 prehoda)",
+      "yolo_desc": "Enoprehodna kalibracija z vzorcem Archimedean Chords (OrcaSlicer ≥ 2.3.0). Vnesite trenutno razmerje pretoka in vrednost popravka, ki ste jo opazili na natisnjenem izdelku.",
+      "legacy_desc": "Dvoprehodna kalibracija. Sledite rezultatom prvega in drugega prehoda, da izračunate končno razmerje pretoka.",
+      "start": "Začni →",
+      "yolo_pass1_desc": "Natisnite testni model Archimedean Chords. Vnesite trenutno razmerje pretoka in vrednost popravka, prikazano na natisnjenem izdelku. Novo razmerje pretoka se izračuna samodejno.",
+      "legacy_pass1_desc": "Natisnite testni model prvega prehoda. Vnesite začetno razmerje pretoka in odstotek popravka, ki ste ga opazili na natisnjenem izdelku.",
+      "pass2_desc": "Razmerje pretoka v rezalniku nastavite na rezultat prehoda 1, znova natisnite testni model in nato vnesite nov odstotek popravka.",
+      "current_flow_ratio": "Trenutno razmerje pretoka",
+      "modifier": "Modifikator",
+      "new_flow_ratio": "Novo razmerje pretoka",
+      "flow_ratio": "Razmerje pretoka",
+      "result": "Rezultat",
+      "cancel": "Prekliči",
+      "apply": "Uporabi v obrazcu ✓",
+      "next_pass2": "Naprej: Prehod 2 →",
+      "back": "← Nazaj"
+    },
+    "pa": {
+      "method_tower": "Stolp (priporočeno)",
+      "method_pattern": "Vzorec / Črta",
+      "tower_desc": "Natisnite testni stolp PA. Vnesite vrsto ekstruderja, vrednost koraka PA (A) in izmerjeno višino (B) na najlepše izgledajoči plasti. PA se samodejno izračuna kot A × B.",
+      "pattern_desc": "Natisnite testni vzorec ali črto PA. Določite optimalno črto in spodaj vnesite njeno vrednost PA."
+    },
+    "input_shaping_advisory": {
+      "title": "Imate sodoben tiskalnik? Morda tega ne potrebujete.",
+      "desc_wizard": "Večina sodobnih tiskalnikov CoreXY, ki poganjajo Klipper s pospeškometrom (ADXL345), ter vsi tiskalniki Bambu Lab že samodejno poskrbijo za Input Shaping — in to veliko natančneje, kot bi kdaj lahko ročni testni stolp. Če to velja za vas, ta korak preskočite in si prihranite trud.",
+      "desc_drawer": "Večina sodobnih tiskalnikov CoreXY, ki poganjajo Klipper s pospeškometrom (ADXL345), ter vsi tiskalniki Bambu Lab že samodejno poskrbijo za Input Shaping — in to veliko natančneje, kot bi kdaj lahko ročni testni stolp. Če to velja za vas, preprosto zaprite to okno brez shranjevanja.",
+      "skip": "Moj tiskalnik to opravi sam — preskoči →"
+    },
+    "vfa": {
+      "artifact_speeds": "Hitrosti artefaktov",
+      "artifact_speeds_desc": "Natisnite testni stolp VFA in označite vsako hitrost, pri kateri opazite artefakte VFA. Min. in maks. hitrost izogibanja se samodejno izračunata iz tega seznama.",
+      "speed_placeholder": "Hitrost",
+      "add_speed": "Dodaj hitrost"
+    },
+    "step_copy": {
+      "temperature": {
+        "title": "Temperatura",
+        "description": "Poiščite optimalno temperaturo tiskanja za ta filament. Natisnite temperaturni stolp in poiščite plast, ki daje najboljše ravnovesje med oprijemom plasti, kakovostjo površine in minimalnim nitkanjem. Višja temperatura izboljša oprijem; nižja zmanjša iztekanje in nitkanje."
+      },
+      "volumetric_speed": {
+        "title": "Volumetrična hitrost",
+        "description": "Določite največji volumetrični pretok, ki ga vaša grelna glava zdrži s tem filamentom, preden se pojavi podekstrudiranje. Natisnite test s stopnjujočim pretokom ali niz enostenskih kock pri naraščajočih hitrostih in si zapomnite hitrost tik pred poslabšanjem kakovosti."
+      },
+      "pressure_advance": {
+        "title": "Pressure Advance",
+        "description": "Prilagodite Pressure Advance (Klipper / Bambu) ali Linear Advance (Marlin), da odpravite izbočenje v vogalih in izboljšate kakovost ostrih vogalov. Natisnite testni vzorec PA in nastavite vrednost, ki da najčistejše in najostrejše vogale. Če vaš firmware to podpira, omogočite Adaptive PA."
+      },
+      "flow_rate": {
+        "title": "Pretok",
+        "description": "Natančno nastavite množitelj ekstruzije, tako da dejanska količina odložene plastike ustreza pričakovanju rezalnika. Natisnite dve kalibracijski kocki (eno pri 98 %, eno pri 100 %) in z merilnikom izmerite njune stene, da izračunate pravilno razmerje pretoka."
+      },
+      "retraction": {
+        "title": "Retrakcija",
+        "description": "Poiščite najmanjšo dolžino in hitrost retrakcije, ki odpravi nitkanje, ne da bi filament drobil ali povzročal zamašitve. Natisnite stolp za razdaljo retrakcije in izberite najnižjo nastavitev, ki daje čiste premike med tiskanjem."
+      },
+      "tolerance": {
+        "title": "Toleranca",
+        "description": "Izmerite, kako natančno vaš tiskalnik reproducira velikosti elementov. Natisnite testni model tolerance, s kljunastim merilom izmerite ciljne elemente in zabeležite odstopanje. Rezultat uporabite v nastavitvah dimenzijske natančnosti / XY kompenzacije v rezalniku."
+      },
+      "cornering": {
+        "title": "Vogali",
+        "description": "Prilagodite obnašanje pri vogalih, da uravnotežite hitrost tiskanja z zvonjenjem in artefakti pri spremembah smeri. Uporabite Junction Deviation (Marlin 2.x / RepRapFirmware), klasični Jerk (starejši Marlin) ali Square Corner Velocity (Klipper). Natisnite testni vzorec za vogale in zmanjšujte vrednost, dokler zvonjenje ne izgine."
+      },
+      "input_shaping": {
+        "title": "Input Shaping",
+        "description": "Zmanjšajte pojav duhov (ghosting) in zvonjenje z uporabo kompenzacije resonance. Izmerite resonančno frekvenco svojega tiskalnika (priporočen je pospeškometer, lahko pa uporabite tudi vizualni stolp zvonjenja). Izberite vrsto oblikovalnika (shaper) in frekvence, ki zmanjšajo artefakte, nato jih vnesite spodaj."
+      },
+      "vfa": {
+        "title": "VFA (navpični fini artefakti)",
+        "description": "Poiščite največjo hitrost tiskanja, preden postanejo vidni navpični artefakti na površini (VFA / rebrenje). Natisnite test s stopnjujočo hitrostjo na predmetu z gladkimi stenami in si zapomnite hitrost tik pred pojavom rednega rebrenja na površini."
+      }
+    },
+    "field_labels": {
+      "inputs": {
+        "start_temp": "Začetna temp.",
+        "end_temp": "Končna temp.",
+        "step_size": "Velikost koraka",
+        "start_speed": "Začetna hitrost",
+        "end_speed": "Končna hitrost",
+        "measured_height": "Izmerjena višina",
+        "extruder_type": "Vrsta ekstruderja",
+        "pa_step_a": "Korak PA (A)",
+        "measured_height_b": "Izmerjena višina (B)",
+        "start_retract": "Začetna retrakcija",
+        "factor": "Faktor",
+        "test_size": "Velikost testnega elementa",
+        "measured_size": "Izmerjena velikost",
+        "firmware_type": "Firmware / funkcija",
+        "start_value": "Začetna vrednost",
+        "end_value": "Končna vrednost",
+        "shaper_type": "Vrsta oblikovalnika",
+        "frequency_x": "Resonančna frek. X",
+        "frequency_y": "Resonančna frek. Y"
+      },
+      "outputs": {
+        "temperature": "Optimalna temp.",
+        "max_volumetric_speed": "Maks. volumetrična hitrost",
+        "pressure_advance": "Vrednost PA",
+        "flow_ratio": "Razmerje pretoka",
+        "retraction_length": "Priporočena retrakcija",
+        "tolerance_offset": "Odmik tolerance",
+        "cornering_value": "Priporočena vrednost",
+        "shaper_type_x": "Priporočen oblikovalnik X",
+        "frequency_x": "Nastavljena frek. X",
+        "shaper_type_y": "Priporočen oblikovalnik Y",
+        "frequency_y": "Nastavljena frek. Y",
+        "min_avoidance_speed": "Min. hitrost izogibanja",
+        "max_avoidance_speed": "Maks. hitrost izogibanja"
+      },
+      "options": {
+        "direct_drive": "Direct Drive",
+        "bowden": "Bowden",
+        "junction_deviation": "Junction Deviation (Marlin 2.x / RepRapFirmware)",
+        "jerk": "Jerk (klasični Marlin)",
+        "square_corner_velocity": "Square Corner Velocity (Klipper)",
+        "mzv": "MZV",
+        "ei": "EI",
+        "zv": "ZV",
+        "2hump_ei": "2HUMP_EI",
+        "3hump_ei": "3HUMP_EI"
+      }
     }
   },
   "external": {
@@ -1041,5 +1336,168 @@
     "tag_material": "Material",
     "tag_material_type": "Vrsta materiala",
     "qidi_write_info": "Značke Qidi hranijo samo material in barvo. Na značko bodo zapisane kode materiala in barve Qidi, ki se najbolj ujemajo."
+  },
+  "chat": {
+    "title": "Pomočnik",
+    "open": "Vprašaj pomočnika",
+    "placeholder": "Vprašajte o svojem filamentu in kolutih…",
+    "send": "Pošlji",
+    "thinking": "Razmišljam …",
+    "empty": "Vprašajte me o svojih kolutih in filamentu — na primer »koliko črnega PETG mi je še ostalo?« ali »kaj naj ponovno naročim?«.",
+    "viewInList": "Prikaži v seznamu kolutov",
+    "confirm": {
+      "before": "Pred",
+      "after": "Po",
+      "confirm": "Potrdi",
+      "cancel": "Prekliči",
+      "confirmed": "Potrjeno",
+      "cancelled": "Preklicano",
+      "destructive": "Ni mogoče razveljaviti"
+    },
+    "executed": {
+      "undo": "Razveljavi",
+      "undone": "Sprememba razveljavljena."
+    },
+    "voice": {
+      "record": "Pridržite za govor",
+      "listening": "Poslušam …",
+      "speak": "Izgovarjaj odgovore",
+      "unsupported": "Ta brskalnik ne podpira glasovnega snemanja.",
+      "mic_error": "Do mikrofona ni bilo mogoče dostopati."
+    }
+  },
+  "intake": {
+    "hint": "Fotografirajte nalepko ali škatlo koluta ali izberite obstoječo fotografijo.",
+    "select_photo": "Izberite ali posnemite fotografijo",
+    "extracting": "Branje nalepke...",
+    "in_library": "v vaši knjižnici, doda kolut",
+    "from_catalog": "SpoolmanDB, ustvari filament in kolut",
+    "use_raw": "Uporabi neobdelan izvleček (nov filament)",
+    "continue": "Nadaljuj",
+    "back": "Nazaj",
+    "photo_discarded": "Fotografija je bila analizirana v pomnilniku in ni shranjena.",
+    "prefilled_banner": "Samodejno izpolnjeno iz fotografije nalepke - pred shranjevanjem preglejte vrednosti.",
+    "fields": {
+      "vendor": "Proizvajalec",
+      "name": "Ime",
+      "material": "Material",
+      "weight_g": "Masa (g)",
+      "diameter_mm": "Premer (mm)",
+      "extruder_temp_c": "Šoba (C)",
+      "bed_temp_c": "Miza (C)",
+      "lot_nr": "Serija",
+      "article_number": "Št. izdelka",
+      "confidence": "Zanesljivost"
+    }
+  },
+  "update": {
+    "available": "posodobitev na voljo",
+    "tooltip": "Na voljo je verzija {{version}}",
+    "notification": {
+      "title": "Na voljo je nova verzija Spoolmana",
+      "description": "Izšla je verzija {{version}}. Oglejte si novosti in navodila za posodobitev.",
+      "viewRelease": "Prikaži opombe ob izdaji"
+    },
+    "action": {
+      "open": "Posodobi",
+      "howTo": "Kako posodobiti",
+      "modalTitle": "Posodobi Spoolman",
+      "currentVersion": "Nameščena: {{version}}",
+      "latestVersion": "najnovejša: {{version}}",
+      "viewReleaseNotes": "Prikaži opombe ob izdaji",
+      "close": "Zapri",
+      "updateNow": "Posodobi zdaj",
+      "updateToVersion": "Posodobi na {{version}}",
+      "native": {
+        "description": "To je namestitev v izvorni obliki, zato se lahko Spoolman sam posodobi na najnovejšo izdajo.",
+        "restartNotice": "Storitev se bo po posodobitvi samodejno znova zagnala. Če Spoolmana ne upravlja systemd, ga po zaključku posodobitve znova zaženite ročno.",
+        "adminRequired": "Za zagon posodobitve od tu mora biti prijavljen skrbnik.",
+        "disabled": "Posodobitve prek vmesnika so na tej instanci onemogočene. Nastavite avtentikacijo ali nastavite SPOOLMAN_ALLOW_UI_UPDATE=TRUE, da omogočite ta gumb. Posodobite lahko tudi iz ukazne lupine:"
+      },
+      "docker": {
+        "description": "Ta instanca teče v Dockerju. Posodobite tako, da prenesete novo sliko in znova ustvarite vsebnik:",
+        "tagReminder": "Če vaša datoteka compose določa točno oznako slike, jo pred prenosom posodobite na novo verzijo (npr. ghcr.io/sherrmann/spoolman-ng:{{version}})."
+      },
+      "haAddon": {
+        "description": "Ta instanca teče kot dodatek Home Assistant. Posodobite jo prek Home Assistanta, ki novo verzijo ponudi samodejno:",
+        "steps": "Nastavitve → Dodatki → Spoolman → Posodobi"
+      },
+      "unknown": {
+        "description": "Posodobite tako, da namestite najnovejšo izdajo na enak način, kot ste prvotno namestili Spoolman. Podrobnosti najdete v opombah ob izdaji."
+      },
+      "started": {
+        "title": "Posodobitev se je začela",
+        "descriptionManaged": "Spoolman se posodablja in se bo samodejno znova zagnal. Ta stran se bo znova povezala, ko bo spet na voljo.",
+        "descriptionManual": "Spoolman se posodablja. Ko se posodobitev konča, ga znova zaženite ročno."
+      },
+      "failed": {
+        "title": "Posodobitev ni uspela"
+      }
+    }
+  },
+  "low_stock": {
+    "title": "Nizka zaloga",
+    "remaining_header": "Preostalo",
+    "remaining_left": "še {{amount}}",
+    "threshold_button": "Prilagodi prag",
+    "threshold_button_value": "Prag: {{value}}",
+    "section": {
+      "explicit": "Pod vašim nastavljenim pragom",
+      "fallback": "Pod privzetimi {{grams}} g"
+    },
+    "empty": "Ni česa naročiti — vaše zaloge so dovolj velike."
+  },
+  "orders": {
+    "title": "Naročila",
+    "empty": "Še ni naročil.",
+    "new_order": "Novo naročilo",
+    "new_order_title": "Novo naročilo",
+    "add_line": "Dodaj filament",
+    "remove_line": "Odstrani vrstico",
+    "select_filament": "Izberite filament",
+    "no_lines": "Pred ustvarjanjem naročila dodajte vsaj en filament.",
+    "order_number": "Naročilo #",
+    "shop": "Trgovina",
+    "ordered_at": "Naročeno",
+    "lines_summary": "Prispelo {{arrived}} od {{total}}",
+    "lines_summary_title": "Vrstice",
+    "state_title": "Stanje",
+    "filaments_count_one": "{{count}} filament",
+    "filaments_count_other": "{{count}} filamentov",
+    "arrived_action": "Prispelo …",
+    "outstanding": "Preostalo",
+    "create_error": "Naročila ni bilo mogoče ustvariti. Poskusite znova.",
+    "state": {
+      "open": "Odprto — preostalo {{count}}",
+      "arrived": "Prispelo"
+    },
+    "mark_ordered": "Označi kot naročeno",
+    "mark_ordered_title": "Označi »{{name}}« kot naročeno",
+    "create_order": "Ustvari naročilo",
+    "create_order_title": "Ustvari naročilo — izbranih {{count}}",
+    "shop_placeholder": "Vnesite ime trgovine (če je nova, jo ustvari)",
+    "order_date": "Datum naročila",
+    "quantity": "Količina",
+    "price_per_unit": "Cena / kolut (neobv.)",
+    "order_number_field": "Številka naročila (neobv.)",
+    "url": "Povezava do naročila (neobv.)",
+    "selected_count": "Izbranih {{count}}",
+    "arrive_title": "Kaj je prispelo iz naročila #{{number}}?",
+    "arrive_subtitle": "Delne dobave razdelijo vrstico — preostanek ostane naročen.",
+    "arrive_error": "Naročila ni bilo mogoče označiti kot prispelo. Poskusite znova.",
+    "arrived_check": "Prispelo",
+    "n_of_m": "{{delivered}} od {{outstanding}} preostalo",
+    "split_preview": "{{delivered}} bo prispelo, {{rest}} ostane naročenih",
+    "create_spools": "Ustvari kolute za dostavljene izdelke",
+    "location": "Lokacija",
+    "banner": "Ta filament je naročen (naročilo #{{id}}) — označim njegovo vrstico kot prispelo?",
+    "mark_arrived": "Označi kot prispelo",
+    "details_title": "Naročilo {{number}}",
+    "comment": "Komentar",
+    "update_error": "Naročila ni bilo mogoče posodobiti. Poskusite znova.",
+    "delete_error": "Naročila ni bilo mogoče izbrisati. Poskusite znova.",
+    "delete_confirm": "Izbrišem to naročilo? Izbrisane bodo tudi njegove vrstice.",
+    "filaments_count_two": "{{count}} filamenta",
+    "filaments_count_few": "{{count}} filamenti"
   }
 }

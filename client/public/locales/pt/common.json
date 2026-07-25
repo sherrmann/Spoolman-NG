@@ -50,12 +50,12 @@
     "deleteError": "Erro ao excluir {{resource}} (código de status: {{statusCode}})",
     "editSuccess": "{{resource}} editado com sucesso",
     "editError": "Erro ao editar {{resource}} (código de status: {{statusCode}})",
-    "importProgress": "Importando: {{processed}}/{{total}}",
+    "importProgress": "A importar: {{processed}}/{{total}}",
     "saveSuccessful": "Guardado com sucesso!",
     "validationError": "Erro de validação: {{error}}"
   },
   "kofi": "Doe no Ko-fi",
-  "loading": "Carregando",
+  "loading": "A carregar...",
   "version": "Versão",
   "unknown": "Desconhecido",
   "yes": "Sim",
@@ -69,13 +69,13 @@
     "generic": {
       "title": "Imprimindo",
       "helpMargin": "As margens devem ser configuradas para corresponder à sua etiqueta de papel e à impressora. Alterá-las afetará o tamanho de toda a grade.",
-      "helpPrinterMargin": "A zona segura deve ser definida para o quão próximo da borda do papel sua impressora pode imprimir, alterá-la não afetará toda a grade.",
+      "helpPrinterMargin": "A zona segura deve ser definida para o quão próximo da borda do papel a sua impressora pode imprimir, alterá-la não afetará toda a grade.",
       "previewScale": "Visualizar Escala",
       "skipItems": "Pular Itens",
       "horizontalSpacing": "Espaçamento Horizontal",
       "marginRight": "Margem Direita",
       "marginTop": "Margem Superior",
-      "description": "Ajuste as configurações abaixo para obter o layout de impressão desejado. Tenha em mente que impressoras e sistemas operacionais podem aplicar suas próprias margens e escalonamento, portanto, pode ser necessário fazer algumas tentativas antes que tudo estaja correto. Teste em uma folha de papel comum antes de imprimir nas etiquetas reais.",
+      "description": "Ajuste as configurações abaixo para obter o layout de impressão desejado. Tenha em mente que impressoras e sistemas operacionais podem aplicar as suas próprias margens e escalonamento, portanto, pode ser necessário fazer algumas tentativas antes que tudo esteja correto. Teste numa folha de papel comum antes de imprimir nas etiquetas reais.",
       "print": "Imprimir",
       "columns": "Colunas",
       "dimensions": "Dimensões",
@@ -101,7 +101,7 @@
       "defaultSettings": "Por omissão",
       "addSettings": "Adicionar Pré-Definição",
       "newSetting": "Novo",
-      "deleteSettings": "Remover Pré-definição Actual",
+      "deleteSettings": "Remover Pré-definição Atual",
       "deleteSettingsConfirm": "Tem a certeza que pretender remover esta pré-definição?",
       "settingsName": "Nome da Pré-definição",
       "itemCopies": "Cópias do Artigo",
@@ -118,12 +118,24 @@
       "invalidGeometry": "A grade de etiquetas não cabe no papel",
       "invalidGeometryHelp": "As margens e o espaçamento não deixam espaço para as etiquetas. Reduza as margens, o espaçamento, as colunas ou as linhas — ou escolha um tamanho de papel maior.",
       "contentClipped": "O conteúdo de algumas etiquetas fica cortado",
-      "contentClippedHelp": "O conteúdo de pelo menos uma etiqueta não cabe dentro dela e será cortado na impressão. Reduza o tamanho do texto, encurte o modelo ou use menos colunas/linhas para que cada etiqueta fique maior."
+      "contentClippedHelp": "O conteúdo de pelo menos uma etiqueta não cabe dentro dela e será cortado na impressão. Reduza o tamanho do texto, encurte o modelo ou use menos colunas/linhas para que cada etiqueta fique maior.",
+      "checklist": {
+        "title": "Antes de imprimir",
+        "intro": "As caixas de diálogo de impressão dos navegadores muitas vezes reescalam as páginas, o que estraga a geometria das etiquetas. Na caixa de diálogo de impressão que abrir a seguir, verifique:",
+        "scale": "A escala está a 100% / “Tamanho real” — nunca “Ajustar à página”.",
+        "paperSize": "O tamanho de papel selecionado é exatamente {{width}} × {{height}} mm.",
+        "margins": "As margens estão definidas como “Nenhuma” (o Spoolman já trata as margens).",
+        "headersFooters": "Os cabeçalhos e rodapés estão desativados.",
+        "pageSizeModeHint": "Escolheu um tamanho de papel de etiqueta, mas o Tamanho da Página está definido como “Automático”. “Ajustar ao tamanho da etiqueta” indica ao navegador a geometria exata da página.",
+        "pageSizeModeApply": "Mudar para Ajustar ao tamanho da etiqueta",
+        "dontShowAgain": "Não mostrar novamente",
+        "printNow": "Imprimir agora"
+      }
     },
     "spoolSelect": {
-      "selectedTotal_one": "{{count}} bobine selecionado",
+      "selectedTotal_one": "{{count}} bobine selecionada",
       "selectedTotal_many": "{{count}} bobines selecionados",
-      "selectedTotal_other": "{{count}} bobines selecionados",
+      "selectedTotal_other": "{{count}} bobines selecionadas",
       "noSpoolsSelected": "Não selecionou nenhuma bobine.",
       "title": "Selecionar Bobines",
       "description": "Selecione as bobines para imprimir as etiquetas.",
@@ -153,7 +165,7 @@
       "showFilamentComment": "Comentário sobre o Filamento",
       "showVendorComment": "Comentário sobre o Fabricante",
       "template": "Modelo de Etiqueta",
-      "templateHelp": "Use {} para incluir valores da bobine como texto. Por exemplo {id} será substituído pelo ID da bobine, ou {filament.material} será substituído pelo material da bobine. Coloque texto entre duplos asteriscos ** para colocar a negrito. Pressione o botão para ver a lista de etiquetas disponíveis.",
+      "templateHelp": "Use {} para incluir valores da bobine como texto. Por exemplo, {id} será substituído pelo ID da bobine, ou {filament.material} será substituído pelo material da bobine. Se um valor estiver em falta, será substituído por \"?\". Um segundo conjunto de {} pode ser usado para remover isto. Além disso, qualquer texto entre os conjuntos de {} será removido se o valor estiver em falta. Por exemplo, {Lot Nr: {lot_nr}} só será mostrado se a bobine tiver um número de lote. Coloque texto entre duplos asteriscos ** para o colocar a negrito. Adicione um formato depois de dois pontos: números como {remaining_weight:0.0} são arredondados a esse número de casas decimais, e datas como {registered:YYYY-MM-DD HH:mm} formatam a data/hora no seu fuso horário local. Comece uma linha com {size:1.5} para escalar essa linha inteira (aqui 1,5×). Pressione o botão para ver a lista de todas as etiquetas disponíveis.",
       "showQRCode": "Imprimir Código QR",
       "showQRCodeMode": {
         "no": "Não",
@@ -203,7 +215,16 @@
         "none": "Nenhum",
         "code128": "Code 128"
       },
-      "tooltip": "Imprima etiquetas para as linhas selecionadas ou escolha itens na página seguinte"
+      "tooltip": "Imprima etiquetas para as linhas selecionadas ou escolha itens na página seguinte",
+      "qrSize": {
+        "label": "Tamanho do QR",
+        "tooltip": "Tamanho impresso do quadrado do código QR, em mm. Automático mantém o comportamento histórico: o QR preenche metade da etiqueta (ou a etiqueta toda, se não houver mais nada a imprimir). A Margem do QR é adicionada à volta do tamanho escolhido como zona de silêncio.",
+        "auto": "Automático",
+        "custom": "Personalizado",
+        "tooSmall": "Códigos QR mais pequenos do que {{mm}} mm podem ser difíceis de ler com a câmara do telemóvel.",
+        "clamped": "Esta etiqueta só permite ≈ {{rendered}} mm — menos do que os {{requested}} mm definidos.",
+        "clampedTooSmall": "Esta etiqueta só permite ≈ {{rendered}} mm ({{requested}} mm definidos) — abaixo do mínimo de {{mm}} mm para câmaras de telemóvel."
+      }
     },
     "filamentSelect": {
       "title": "Selecionar Filamentos",
@@ -217,7 +238,8 @@
       "reprintConfirmTitle": "Reimprimir etiquetas?",
       "reprintConfirmContent_one": "{{count}} filamento selecionado já tem uma etiqueta impressa. Imprimi-la novamente?",
       "reprintConfirmContent_many": "{{count}} filamentos selecionados já têm etiquetas impressas. Imprimi-las novamente?",
-      "reprintConfirmContent_other": "{{count}} filamentos selecionados já têm etiquetas impressas. Imprimi-las novamente?"
+      "reprintConfirmContent_other": "{{count}} filamentos selecionados já têm etiquetas impressas. Imprimi-las novamente?",
+      "searchPlaceholder": "Pesquisar por ID do filamento, fabricante, nome ou material"
     }
   },
   "spool": {
@@ -257,9 +279,9 @@
       "used_weight": "Quanto filamento foi usado da bobine. Uma nova bobine deve ter usado 0g.",
       "remaining_weight": "Quanto filamento resta na bobine. Para uma bobine nova, deve corresponder ao peso da bobine.",
       "measured_weight": "Quanto pesa o filamento e a bobine.",
-      "location": "Onde a bobine está localizado se tiver vários locais onde armazena as suas bobines.",
+      "location": "Onde a bobine está localizada se tiver vários locais onde armazena as suas bobines.",
       "price": "Preço de uma bobine completa na moeda definida no sistema. Se não for definido, o preço do filamento será presumido.",
-      "initial_weight": "O peso inicial do filamento sem o peso da bobine (peso liquido). Se nada for indicado, será usado o peso da definição do filamento.",
+      "initial_weight": "O peso inicial do filamento sem o peso da bobine (peso líquido). Se nada for indicado, será usado o peso da definição do filamento.",
       "spool_weight": "O peso da bobine vazia. Deixe em branco para usar o valor do filamento ou do fabricante.",
       "external_filament": "Escolheu um filamento de uma base de dados externa. O filamento (e possivelmente o fabricante) será criado automaticamente quando for criada a bobine. Isto poderá criar filamentos duplicados caso já tenha criado um filamento para este filamento específico.",
       "printer": "A impressora onde esta bobine está atualmente carregada. Faça a gestão das suas impressoras nas Configurações.",
@@ -366,6 +388,14 @@
       "selected_one": "{{count}} bobine selecionada",
       "selected_many": "{{count}} bobines selecionadas",
       "selected_other": "{{count}} bobines selecionadas"
+    },
+    "nlSearch": {
+      "button": "IA",
+      "title": "Pesquisar com linguagem natural",
+      "placeholder": "p. ex. PETG preto na prateleira B",
+      "hint": "Aplicado como filtros editáveis",
+      "search": "Pesquisar",
+      "error": "Não foi possível traduzir a pesquisa. Tente novamente ou use a caixa de pesquisa normal."
     }
   },
   "filament": {
@@ -406,7 +436,8 @@
       "finish": "Acabamento",
       "pattern": "Padrão",
       "translucent": "Translúcido",
-      "glow": "Brilha no Escuro"
+      "glow": "Brilha no Escuro",
+      "image": "Foto"
     },
     "fields_help": {
       "article_number": "Por exemplo EAN, UPC, etc.",
@@ -419,7 +450,8 @@
       "low_stock_threshold": "Sinaliza este filamento para reposição quando o peso restante total das suas bobines descer abaixo deste número de gramas.",
       "reserve_count": "Número de bobines sobresselentes por abrir que mantém disponíveis, contabilizadas sem criar uma bobine para cada uma.",
       "settings_extruder_temp_range": "Intervalo de temperatura do bico recomendado pelo fabricante (mín–máx). Opcional; deixe em branco se tiver apenas um único valor.",
-      "settings_bed_temp_range": "Intervalo de temperatura da mesa recomendado pelo fabricante (mín–máx). Opcional; deixe em branco se tiver apenas um único valor."
+      "settings_bed_temp_range": "Intervalo de temperatura da mesa recomendado pelo fabricante (mín–máx). Opcional; deixe em branco se tiver apenas um único valor.",
+      "image": "Uma foto para identificar este filamento — por exemplo, a bobine ou o anúncio da loja. É reduzida no navegador antes do carregamento; metadados como a localização GPS são removidos."
     },
     "titles": {
       "create": "Criar Filamento",
@@ -509,6 +541,16 @@
     },
     "messages": {
       "update_error": "Não foi possível guardar as alterações. Tente novamente."
+    },
+    "image": {
+      "upload": "Carregar foto",
+      "replace": "Substituir foto",
+      "remove": "Remover foto",
+      "uploaded": "Foto guardada",
+      "upload_error": "Não foi possível guardar a foto",
+      "removed": "Foto removida",
+      "remove_error": "Não foi possível remover a foto",
+      "prepare_error": "Não foi possível ler esse ficheiro de imagem"
     }
   },
   "vendor": {
@@ -542,14 +584,14 @@
   },
   "home": {
     "home": "Início",
-    "welcome": "Bem vindo à sua instância do Spoolman!",
+    "welcome": "Bem-vindo à sua instância do Spoolman!",
     "description": "Parece que ainda não adicionou nenhuma bobine. Veja a <helpPageLink>Página de Ajuda</helpPageLink> para obter ajuda a começar.",
     "total_weight": "Stock total",
-    "total_value": "Valor",
+    "total_value": "Valor estimado do stock",
     "low_stock": "Stock baixo",
-    "all_stocked": "Todas as bobinas estão bem abastecidas",
+    "all_stocked": "Todas as bobines estão bem abastecidas",
     "recently_used": "Usadas recentemente",
-    "no_recent": "Sem bobinas usadas recentemente",
+    "no_recent": "Sem bobines usadas recentemente",
     "by_material": "Por material",
     "by_location": "Por localização",
     "by_vendor": "Por fabricante",
@@ -579,7 +621,12 @@
       "materials_one": "{{count}} material",
       "materials_many": "{{count}} materiais",
       "materials_other": "{{count}} materiais"
-    }
+    },
+    "load_error_title": "Falha ao carregar as bobines",
+    "load_error_desc": "Ocorreu um problema ao carregar as suas bobines. Tente novamente.",
+    "gathering_dust": "A acumular pó",
+    "never_used": "Nunca usada",
+    "no_stale": "Sem bobines a acumular pó"
   },
   "help": {
     "help": "Ajuda",
@@ -659,13 +706,13 @@
         "field_type": "Tipo",
         "unit": "Unidade",
         "order": "Ordem",
-        "default_value": "Valor Padrão",
+        "default_value": "Valor Predefinido",
         "choices": "Opções",
         "copy_from_filament": "Copiar do Filamento",
         "link_template": "URL da Ligação"
       },
       "field_type": {
-        "datetime": "Date e Hora",
+        "datetime": "Data e Hora",
         "text": "Texto",
         "integer": "Inteiro",
         "float": "Decimal",
@@ -676,8 +723,8 @@
         "link": "Ligação"
       },
       "key_not_changed": "Por favor, mude a chave por outra.",
-      "delete_confirm": "Apagar o campo {{name}}?",
-      "delete_confirm_description": "Isto irá apagar o campo e todos os dados associados em todas as entidades.",
+      "delete_confirm": "Excluir o campo {{name}}?",
+      "delete_confirm_description": "Isto irá excluir o campo e todos os dados associados em todas as entidades.",
       "description": "<p>Aqui pode adicionar campos personalizados extras às suas entidades.</p><p>Depois de um campo ser adicionado, não pode alterar a sua chave nem o seu tipo, e nos campos do tipo opção não pode remover opções nem alterar o estado de múltipla escolha. Se remover um campo, os dados associados de todas as entidades serão eliminados.</p><p>A chave é a forma como outros programas leem/escrevem os dados, por isso, se o seu campo personalizado se destina a integrar com um programa de terceiros, certifique-se de que a define corretamente. O valor predefinido só é aplicado a itens novos.</p><p>Os campos extras podem ser mostrados e ordenados nas vistas de tabela. Os campos de opção e booleanos também disponibilizam aí opções de filtro, e todos os tipos de campos extras permitem filtrar por valores vazios.</p><p>Nos campos de bobine, ative \"Copiar do Filamento\" para que uma bobine nova herde, no momento da criação, o valor de um campo de filamento com a mesma chave (a menos que a bobine defina o seu próprio valor).</p><p>Um campo \"Ligação\" guarda um valor curto por item (p. ex. um número de artigo) e transforma-o numa ligação clicável usando o modelo URL da Ligação — coloque {} onde deve ficar o valor, p. ex. https://www.amazon.com/dp/{}.</p>",
       "choices_missing_error": "Não pode remover as opções. As seguintes opções serão perdidas: {{choices}}",
       "tab": "Campos Extras",
@@ -774,6 +821,94 @@
       "add_title": "Adicionar ligação",
       "edit_title": "Editar ligação",
       "delete_confirm": "Excluir esta ligação?"
+    },
+    "ai": {
+      "tab": "IA",
+      "description": "Ligue a um endpoint compatível com OpenAI (Ollama, LM Studio, OpenAI, Anthropic, OpenRouter, Requesty, Groq, ...). Nada é enviado para lado nenhum e nenhum elemento de IA aparece na interface até que uma funcionalidade abaixo seja ativada.",
+      "preset": {
+        "label": "Pré-definição",
+        "placeholder": "Escolha um fornecedor para preencher o endereço base"
+      },
+      "base_url": {
+        "label": "Endereço Base",
+        "tooltip": "O endpoint compatível com OpenAI a utilizar, p. ex. um servidor Ollama na sua rede.",
+        "invalid": "Tem de ser um URL http:// ou https://"
+      },
+      "api_key": {
+        "label": "Chave de API",
+        "tooltip": "Armazenada apenas para escrita: o servidor nunca a devolve a nenhum cliente. Ollama e LM Studio não precisam de nenhuma.",
+        "placeholder_set": "Existe uma chave guardada - introduza um novo valor para a substituir",
+        "placeholder_unset": "Nenhuma chave guardada",
+        "clear": "Limpar chave guardada"
+      },
+      "model": {
+        "label": "Modelo de chat",
+        "tooltip": "O modelo usado nas funcionalidades de chat e de chamada de ferramentas. Execute um teste de ligação para listar os modelos do endpoint."
+      },
+      "vision_model": {
+        "label": "Modelo de visão",
+        "tooltip": "O modelo usado nas funcionalidades de imagem. Deixe vazio para usar o modelo de chat."
+      },
+      "stt": {
+        "title": "Voz para texto (entrada por voz)",
+        "hint": "Um endpoint de transcrição compatível com OpenAI separado para a entrada por voz - o Ollama não tem voz para texto. Por exemplo, um servidor whisper.cpp, Speaches, ou Groq whisper.",
+        "base_url": {
+          "label": "Endereço base do STT",
+          "tooltip": "O endpoint de transcrição, p. ex. http://localhost:8000/v1"
+        },
+        "api_key": {
+          "label": "Chave de API do STT"
+        },
+        "model": {
+          "label": "Modelo do STT",
+          "tooltip": "O modelo de transcrição, p. ex. whisper-1 ou Systran/faster-whisper-base."
+        }
+      },
+      "env_locked": "Definido através de variável de ambiente e bloqueado aqui",
+      "test": "Testar ligação",
+      "probe": {
+        "reachable": "Endpoint acessível",
+        "models_listed": "modelos listados",
+        "failed": "O teste de ligação falhou.",
+        "chat": "Chat",
+        "tools": "Chamadas de ferramentas",
+        "vision": "Visão",
+        "yes": "suportado",
+        "no": "não suportado",
+        "unknown": "não verificado - este endpoint não comunica capacidades"
+      },
+      "features": {
+        "title": "Funcionalidades",
+        "hint": "Todas as funcionalidades estão desativadas por predefinição. Nada relacionado com IA aparece em lado nenhum da interface até ser ativado aqui.",
+        "chat": "Assistente de chat",
+        "scan_to_spool": "Captação fotográfica Scan-to-Spool",
+        "nl_search": "Pesquisa em linguagem natural",
+        "mcp": "Servidor MCP",
+        "voice": "Entrada por voz",
+        "requires_config": "Configure e guarde primeiro um endpoint e um modelo de chat.",
+        "requires_vision": "O teste de ligação não reporta suporte de visão para o modelo configurado.",
+        "requires_stt": "Configure e guarde primeiro um endpoint e modelo de voz para texto.",
+        "voice_autosend": "Enviar transcrições de voz automaticamente em vez de as rever primeiro",
+        "voice_unavailable": "Ainda não disponível - chega com a funcionalidade de entrada por voz."
+      },
+      "mcp": {
+        "title": "Servidor MCP",
+        "hint": "Aponte um cliente MCP (Claude Desktop, claude.ai) para este Spoolman para consultar e atualizar o seu inventário. Não é necessário nenhum fornecedor de LLM - apenas esta opção.",
+        "copy": "Copiar configuração",
+        "copied": "Configuração copiada para a área de transferência.",
+        "auth_note": "Se este Spoolman exigir um token de API, adicione uma entrada \"Authorization\": \"Bearer <token>\" em \"headers\". As contas de apenas leitura só têm acesso a ferramentas de consulta."
+      },
+      "models": {
+        "title": "Modelos Ollama",
+        "hint": "O seu endpoint é um servidor Ollama. Obtenha um modelo recomendado diretamente daqui - o Spoolman gere os modelos, nunca o runtime.",
+        "installed": "Instalado",
+        "pull": "Obter",
+        "pulled": "{{model}} obtido.",
+        "purpose": {
+          "chat": "chat",
+          "vision": "visão"
+        }
+      }
     }
   },
   "locations": {
@@ -782,7 +917,7 @@
     "no_location": "Sem Local",
     "no_locations_help": "Esta página permite organizar as suas bobines em locais, adicione algumas bobines para começar!",
     "error_empty": "O nome não pode estar vazio",
-    "error_exists": "A localização já existe",
+    "error_exists": "O local já existe",
     "location": "Local",
     "fields": {
       "button": "Campos personalizados",
@@ -804,7 +939,8 @@
       "description": "Selecione os locais para os quais imprimir etiquetas QR digitalizáveis.",
       "select_placeholder": "Selecionar locais",
       "none_selected": "Nenhum local selecionado"
-    }
+    },
+    "load_error": "Falha ao carregar as bobines"
   },
   "calibration": {
     "title": "Calibração",
@@ -884,7 +1020,165 @@
         "cancel": "Cancelar"
       },
       "skip_finish_confirm": "Marcar esta sessão como concluída sem guardar este passo?",
-      "session_complete": "Sessão de calibração marcada como concluída."
+      "session_complete": "Sessão de calibração marcada como concluída.",
+      "revisiting": "A rever"
+    },
+    "wiki": {
+      "link": "Wiki",
+      "tooltip": "Abrir a wiki do OrcaSlicer para este passo",
+      "tooltip_short": "Wiki do OrcaSlicer"
+    },
+    "sections": {
+      "test_method": "Método de Teste",
+      "test_setup": "Configuração do Teste",
+      "your_result": "O Seu Resultado",
+      "auto_computed": "· calculado automaticamente"
+    },
+    "step_status": {
+      "skipped": "Saltado",
+      "done": "✓ Concluído",
+      "incomplete": "Incompleto"
+    },
+    "confidence_display": "confiança {{level}}",
+    "confirm_delete": {
+      "tooltip": "Excluir",
+      "confirming": "Clique novamente para confirmar",
+      "short": "De certeza?"
+    },
+    "select_step": {
+      "placeholder": "Selecione um passo de calibração",
+      "required": "Por favor, selecione um passo de calibração."
+    },
+    "optional": "Opcional",
+    "optional_notes": "Notas opcionais…",
+    "printer_name_placeholder": "p. ex. Bambu X1C, Ender 3",
+    "flow_calc": {
+      "title": "Calculadora de Resultado de Passagem",
+      "pass1": "Passagem 1",
+      "pass2": "Passagem 2",
+      "method_yolo": "YOLO (Recomendado)",
+      "method_legacy": "Legado (2 Passagens)",
+      "yolo_desc": "Calibração numa só passagem, usando o padrão de Cordas de Arquimedes (OrcaSlicer ≥ 2.3.0). Introduza o rácio de fluxo atual e o valor de correção observado na impressão.",
+      "legacy_desc": "Calibração em duas passagens. Percorra os resultados da primeira e segunda passagem para calcular o rácio de fluxo final.",
+      "start": "Iniciar →",
+      "yolo_pass1_desc": "Imprima o modelo de teste de Cordas de Arquimedes. Introduza o rácio de fluxo atual e o valor de correção apresentado na impressão. O novo rácio de fluxo é calculado automaticamente.",
+      "legacy_pass1_desc": "Imprima o modelo de teste da primeira passagem. Introduza o rácio de fluxo inicial e a percentagem de correção observada na impressão.",
+      "pass2_desc": "Defina o rácio de fluxo do fatiador para o resultado da Passagem 1, reimprima o modelo de teste e depois introduza a nova percentagem de correção.",
+      "current_flow_ratio": "Rácio de Fluxo Atual",
+      "modifier": "Modificador",
+      "new_flow_ratio": "Novo Rácio de Fluxo",
+      "flow_ratio": "Rácio de Fluxo",
+      "result": "Resultado",
+      "cancel": "Cancelar",
+      "apply": "Aplicar ao Formulário ✓",
+      "next_pass2": "Seguinte: Passagem 2 →",
+      "back": "← Voltar"
+    },
+    "pa": {
+      "method_tower": "Torre (Recomendado)",
+      "method_pattern": "Padrão / Linha",
+      "tower_desc": "Imprima o teste da torre de PA. Introduza o tipo de extrusor, o valor do incremento de PA (A) e a altura medida (B) na camada com melhor aspeto. O PA é calculado automaticamente como A × B.",
+      "pattern_desc": "Imprima o teste de padrão ou linha de PA. Identifique a linha ideal e introduza o respetivo valor de PA diretamente abaixo."
+    },
+    "input_shaping_advisory": {
+      "title": "Tem uma impressora moderna? Pode não precisar disto.",
+      "desc_wizard": "A maioria das impressoras CoreXY modernas com Klipper e um acelerómetro (ADXL345), ou qualquer impressora Bambu Lab, já trata o input shaping automaticamente — e com muito mais precisão do que uma torre de teste manual alguma vez conseguiria. Se isto se aplica a si, salte este passo e poupe-se ao trabalho.",
+      "desc_drawer": "A maioria das impressoras CoreXY modernas com Klipper e um acelerómetro (ADXL345), ou qualquer impressora Bambu Lab, já trata o input shaping automaticamente — e com muito mais precisão do que uma torre de teste manual alguma vez conseguiria. Se isto se aplica a si, feche este painel sem guardar.",
+      "skip": "A minha impressora já trata disto — saltar →"
+    },
+    "vfa": {
+      "artifact_speeds": "Velocidades com Artefactos",
+      "artifact_speeds_desc": "Imprima a torre de teste de VFA e assinale cada velocidade em que observar artefactos de VFA. As velocidades mínima e máxima de evitamento são calculadas automaticamente a partir desta lista.",
+      "speed_placeholder": "Velocidade",
+      "add_speed": "Adicionar Velocidade"
+    },
+    "step_copy": {
+      "temperature": {
+        "title": "Temperatura",
+        "description": "Encontre a temperatura de impressão ideal para este filamento. Imprima uma torre de temperatura e procure a camada que oferece o melhor equilíbrio entre adesão entre camadas, qualidade de superfície e stringing mínimo. Mais quente melhora a adesão; mais frio reduz a babagem e o stringing."
+      },
+      "volumetric_speed": {
+        "title": "Velocidade Volumétrica",
+        "description": "Determine a taxa de fluxo volumétrico máxima que o seu hotend consegue sustentar com este filamento antes de surgir subextrusão. Imprima um teste de rampa de taxa de fluxo ou uma série de cubos de parede única a velocidades crescentes, e registe a velocidade mesmo antes de a qualidade começar a degradar-se."
+      },
+      "pressure_advance": {
+        "title": "Pressure Advance",
+        "description": "Ajuste o Pressure Advance (Klipper / Bambu) ou o Linear Advance (Marlin) para eliminar o inchaço nos cantos e melhorar a qualidade dos cantos vivos. Imprima um padrão de teste de PA e afine o valor que produz os cantos mais limpos e definidos. Ative o Adaptive PA se for suportado pelo seu firmware."
+      },
+      "flow_rate": {
+        "title": "Taxa de Fluxo",
+        "description": "Afine o multiplicador de extrusão para que a quantidade real de plástico depositado corresponda ao esperado pelo fatiador. Imprima dois cubos de calibração (um a 98%, outro a 100%) e meça as suas paredes com uma craveira para calcular o rácio de fluxo correto."
+      },
+      "retraction": {
+        "title": "Retração",
+        "description": "Encontre o comprimento e a velocidade de retração mínimos que eliminam o stringing sem desgastar o filamento nem causar entupimentos. Imprima uma torre de distância de retração e escolha a definição mais baixa que produza movimentos de deslocação limpos."
+      },
+      "tolerance": {
+        "title": "Tolerância",
+        "description": "Meça com que precisão a sua impressora reproduz os tamanhos das peças. Imprima um modelo de teste de tolerância, meça as características-alvo com uma craveira e registe o desvio. Aplique o resultado nas definições de precisão dimensional / compensação XY do seu fatiador."
+      },
+      "cornering": {
+        "title": "Curvas",
+        "description": "Ajuste o comportamento nas curvas para equilibrar a velocidade de impressão com o ringing e os artefactos nas mudanças de direção. Use Junction Deviation (Marlin 2.x / RepRapFirmware), o clássico Jerk (Marlin mais antigo) ou Square Corner Velocity (Klipper). Imprima um padrão de teste de curvas e reduza o valor até o ringing desaparecer."
+      },
+      "input_shaping": {
+        "title": "Input Shaping",
+        "description": "Reduza o ghosting e o ringing aplicando compensação de ressonância. Meça a frequência de ressonância da sua impressora (recomenda-se um acelerómetro, ou use uma torre visual de ringing). Selecione o tipo de shaper e as frequências que minimizam os artefactos, e depois introduza-os abaixo."
+      },
+      "vfa": {
+        "title": "VFA (Artefactos Verticais Finos)",
+        "description": "Encontre a velocidade de impressão máxima antes de os artefactos de superfície verticais (VFA / estrias) se tornarem visíveis. Imprima um teste de rampa de velocidade num objeto de paredes lisas e registe a velocidade mesmo antes de surgirem estrias regulares na superfície."
+      }
+    },
+    "field_labels": {
+      "inputs": {
+        "start_temp": "Temp. Inicial",
+        "end_temp": "Temp. Final",
+        "step_size": "Tamanho do Incremento",
+        "start_speed": "Velocidade Inicial",
+        "end_speed": "Velocidade Final",
+        "measured_height": "Altura Medida",
+        "extruder_type": "Tipo de Extrusor",
+        "pa_step_a": "Incremento de PA (A)",
+        "measured_height_b": "Altura Medida (B)",
+        "start_retract": "Retração Inicial",
+        "factor": "Fator",
+        "test_size": "Tamanho da Peça de Teste",
+        "measured_size": "Tamanho Medido",
+        "firmware_type": "Firmware / Funcionalidade",
+        "start_value": "Valor Inicial",
+        "end_value": "Valor Final",
+        "shaper_type": "Tipo de Shaper",
+        "frequency_x": "Freq. de Ressonância X",
+        "frequency_y": "Freq. de Ressonância Y"
+      },
+      "outputs": {
+        "temperature": "Temp. Ideal",
+        "max_volumetric_speed": "Velocidade Volumétrica Máx.",
+        "pressure_advance": "Valor de PA",
+        "flow_ratio": "Rácio de Fluxo",
+        "retraction_length": "Retração Recomendada",
+        "tolerance_offset": "Desvio de Tolerância",
+        "cornering_value": "Valor Recomendado",
+        "shaper_type_x": "Shaper Recomendado X",
+        "frequency_x": "Freq. Afinada X",
+        "shaper_type_y": "Shaper Recomendado Y",
+        "frequency_y": "Freq. Afinada Y",
+        "min_avoidance_speed": "Velocidade Mínima de Evitamento",
+        "max_avoidance_speed": "Velocidade Máxima de Evitamento"
+      },
+      "options": {
+        "direct_drive": "Extrusão Direta",
+        "bowden": "Bowden",
+        "junction_deviation": "Junction Deviation (Marlin 2.x / RepRapFirmware)",
+        "jerk": "Jerk (Marlin Clássico)",
+        "square_corner_velocity": "Square Corner Velocity (Klipper)",
+        "mzv": "MZV",
+        "ei": "EI",
+        "zv": "ZV",
+        "2hump_ei": "2HUMP_EI",
+        "3hump_ei": "3HUMP_EI"
+      }
     }
   },
   "external": {
@@ -1027,7 +1321,8 @@
       "unknown_content": "Nenhum filamento tem o código de barras {{code}}. Criar um filamento e memorizar este código de barras?",
       "create_filament": "Criar filamento",
       "lookup_error": "Não foi possível consultar esse código de barras."
-    }
+    },
+    "photo": "Foto"
   },
   "printer": {
     "printer": "Impressora",
@@ -1036,5 +1331,167 @@
       "comment": "Comentário",
       "spool_count": "Bobines"
     }
+  },
+  "chat": {
+    "title": "Assistente",
+    "open": "Perguntar ao assistente",
+    "placeholder": "Pergunte sobre os seus filamentos e bobines…",
+    "send": "Enviar",
+    "thinking": "A pensar…",
+    "empty": "Pergunte-me sobre as suas bobines e filamentos — por exemplo, \"quanto PETG preto ainda tenho?\" ou \"o que devo repor?\".",
+    "viewInList": "Ver na lista de Bobines",
+    "confirm": {
+      "before": "Antes",
+      "after": "Depois",
+      "confirm": "Confirmar",
+      "cancel": "Cancelar",
+      "confirmed": "Confirmado",
+      "cancelled": "Cancelado",
+      "destructive": "Não pode ser desfeito"
+    },
+    "executed": {
+      "undo": "Desfazer",
+      "undone": "Alteração desfeita."
+    },
+    "voice": {
+      "record": "Mantenha premido para falar",
+      "listening": "A ouvir…",
+      "speak": "Ler respostas em voz alta",
+      "unsupported": "A gravação de voz não é suportada neste navegador.",
+      "mic_error": "Não foi possível aceder ao microfone."
+    }
+  },
+  "intake": {
+    "hint": "Fotografe a etiqueta ou a caixa da bobine, ou escolha uma foto existente.",
+    "select_photo": "Selecionar ou tirar uma foto",
+    "extracting": "A ler a etiqueta...",
+    "in_library": "na sua biblioteca, adiciona uma bobine",
+    "from_catalog": "SpoolmanDB, cria filamento e bobine",
+    "use_raw": "Usar a extração em bruto (novo filamento)",
+    "continue": "Continuar",
+    "back": "Voltar",
+    "photo_discarded": "A foto foi analisada em memória e não é guardada.",
+    "prefilled_banner": "Pré-preenchido a partir de uma foto da etiqueta - reveja os valores antes de guardar.",
+    "fields": {
+      "vendor": "Fabricante",
+      "name": "Nome",
+      "material": "Material",
+      "weight_g": "Peso (g)",
+      "diameter_mm": "Diâmetro (mm)",
+      "extruder_temp_c": "Bico (C)",
+      "bed_temp_c": "Mesa (C)",
+      "lot_nr": "Lote",
+      "article_number": "Nº Artigo",
+      "confidence": "Confiança"
+    }
+  },
+  "update": {
+    "available": "atualização disponível",
+    "tooltip": "A versão {{version}} está disponível",
+    "notification": {
+      "title": "Está disponível uma nova versão do Spoolman",
+      "description": "A versão {{version}} foi lançada. Veja as novidades e como atualizar.",
+      "viewRelease": "Ver notas de lançamento"
+    },
+    "action": {
+      "open": "Atualizar",
+      "howTo": "Como atualizar",
+      "modalTitle": "Atualizar o Spoolman",
+      "currentVersion": "Instalado: {{version}}",
+      "latestVersion": "mais recente: {{version}}",
+      "viewReleaseNotes": "Ver notas de lançamento",
+      "close": "Fechar",
+      "updateNow": "Atualizar agora",
+      "updateToVersion": "Atualizar para {{version}}",
+      "native": {
+        "description": "Esta é uma instalação nativa, pelo que o Spoolman se pode atualizar sozinho para a versão mais recente.",
+        "restartNotice": "O serviço vai reiniciar automaticamente após a atualização. Se o Spoolman não for gerido pelo systemd, reinicie-o manualmente assim que a atualização terminar.",
+        "adminRequired": "É necessário ter sessão iniciada como administrador para executar a atualização a partir daqui.",
+        "disabled": "As atualizações a partir da interface estão desativadas nesta instância. Configure a autenticação, ou defina SPOOLMAN_ALLOW_UI_UPDATE=TRUE para ativar o botão. Também pode atualizar a partir de um terminal:"
+      },
+      "docker": {
+        "description": "Esta instância corre em Docker. Atualize obtendo a nova imagem e recriando o contentor:",
+        "tagReminder": "Se o seu ficheiro compose fixar uma tag de imagem específica, atualize-a para a nova versão (p. ex. ghcr.io/sherrmann/spoolman-ng:{{version}}) antes de obter a imagem."
+      },
+      "haAddon": {
+        "description": "Esta instância corre como um add-on do Home Assistant. Atualize-a a partir do Home Assistant, que disponibiliza a nova versão automaticamente:",
+        "steps": "Configurações → Add-ons → Spoolman → Atualizar"
+      },
+      "unknown": {
+        "description": "Atualize instalando a versão mais recente da mesma forma como instalou originalmente o Spoolman. Consulte as notas de lançamento para mais detalhes."
+      },
+      "started": {
+        "title": "Atualização iniciada",
+        "descriptionManaged": "O Spoolman está a atualizar e vai reiniciar automaticamente. Esta página vai voltar a ligar-se assim que estiver disponível.",
+        "descriptionManual": "O Spoolman está a atualizar. Reinicie o Spoolman manualmente assim que a atualização terminar."
+      },
+      "failed": {
+        "title": "Falha na atualização"
+      }
+    }
+  },
+  "low_stock": {
+    "title": "Stock Baixo",
+    "remaining_header": "Restante",
+    "remaining_left": "{{amount}} restantes",
+    "threshold_button": "Ajustar limite",
+    "threshold_button_value": "Limite: {{value}}",
+    "section": {
+      "explicit": "Abaixo do limite definido",
+      "fallback": "Abaixo do valor por omissão de {{grams}} g"
+    },
+    "empty": "Nada a repor — o stock está bem abastecido."
+  },
+  "orders": {
+    "title": "Encomendas",
+    "empty": "Ainda sem encomendas.",
+    "new_order": "Nova encomenda",
+    "new_order_title": "Nova encomenda",
+    "add_line": "Adicionar filamento",
+    "remove_line": "Remover linha",
+    "select_filament": "Selecione um filamento",
+    "no_lines": "Adicione pelo menos um filamento antes de criar a encomenda.",
+    "order_number": "Nº de Encomenda",
+    "shop": "Loja",
+    "ordered_at": "Encomendado",
+    "lines_summary": "{{arrived}} de {{total}} chegaram",
+    "lines_summary_title": "Linhas",
+    "state_title": "Estado",
+    "filaments_count_one": "{{count}} filamento",
+    "filaments_count_other": "{{count}} filamentos",
+    "arrived_action": "Chegou…",
+    "outstanding": "Pendente",
+    "create_error": "Não foi possível criar a encomenda. Tente novamente.",
+    "state": {
+      "open": "Aberta — {{count}} pendente(s)",
+      "arrived": "Chegada"
+    },
+    "mark_ordered": "Marcar como encomendado",
+    "mark_ordered_title": "Marcar \"{{name}}\" como encomendado",
+    "create_order": "Criar encomenda",
+    "create_order_title": "Criar encomenda — {{count}} selecionados",
+    "shop_placeholder": "Escreva o nome de uma loja (cria uma nova se não existir)",
+    "order_date": "Data da encomenda",
+    "quantity": "Quantidade",
+    "price_per_unit": "Preço / bobine (opc.)",
+    "order_number_field": "Número da encomenda (opc.)",
+    "url": "Ligação da encomenda (opc.)",
+    "selected_count": "{{count}} selecionados",
+    "arrive_title": "O que chegou da encomenda #{{number}}?",
+    "arrive_subtitle": "As entregas parciais dividem a linha — o resto permanece em encomenda.",
+    "arrive_error": "Não foi possível marcar a encomenda como chegada. Tente novamente.",
+    "arrived_check": "Chegou",
+    "n_of_m": "{{delivered}} de {{outstanding}} pendentes",
+    "split_preview": "{{delivered}} vão chegar, {{rest}} ficam em encomenda",
+    "create_spools": "Criar bobines para os itens entregues",
+    "location": "Localização",
+    "banner": "Este filamento está encomendado (encomenda #{{id}}) — marcar a linha como chegada?",
+    "mark_arrived": "Marcar como chegada",
+    "details_title": "Encomenda {{number}}",
+    "comment": "Comentário",
+    "update_error": "Não foi possível atualizar a encomenda. Tente novamente.",
+    "delete_error": "Não foi possível excluir a encomenda. Tente novamente.",
+    "delete_confirm": "Excluir esta encomenda? As suas linhas também serão excluídas.",
+    "filaments_count_many": "{{count}} filamentos"
   }
 }
