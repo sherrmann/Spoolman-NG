@@ -403,6 +403,18 @@
       "released_in": null
     },
     {
+      "fork_issue": 88,
+      "upstream": [
+        552,
+        740
+      ],
+      "title": "Support attaching a reference image/photo to a filament",
+      "kind": "feature",
+      "pri": "P2",
+      "pr": null,
+      "released_in": null
+    },
+    {
       "fork_issue": 91,
       "upstream": [
         559,
@@ -1068,6 +1080,17 @@
       "released_in": null
     },
     {
+      "fork_issue": 135,
+      "upstream": [
+        843
+      ],
+      "title": "Add a 'transfer weight to another spool' option to the spool adjust modal",
+      "kind": "feature",
+      "pri": "P3",
+      "pr": null,
+      "released_in": null
+    },
+    {
       "fork_issue": 137,
       "upstream": [
         884
@@ -1088,25 +1111,6 @@
       "title": "Add Bambu Lab AMS/Cloud integration to sync spool assignment and usage",
       "kind": "feature",
       "pri": "P1"
-    },
-    {
-      "fork_issue": 88,
-      "upstream": [
-        552,
-        740
-      ],
-      "title": "Support attaching a reference image/photo to a filament",
-      "kind": "feature",
-      "pri": "P2"
-    },
-    {
-      "fork_issue": 135,
-      "upstream": [
-        843
-      ],
-      "title": "Add a 'transfer weight to another spool' option to the spool adjust modal",
-      "kind": "feature",
-      "pri": "P3"
     }
   ],
   "skipped": [
