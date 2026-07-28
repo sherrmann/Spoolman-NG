@@ -29,6 +29,7 @@ from spoolman.database import filament as filament_db
 from spoolman.database import location as location_db
 from spoolman.database import spool as spool_db
 from spoolman.database import vendor as vendor_db
+from spoolman.exceptions import ItemNotFoundError
 
 _PROVIDER = "http://prov/v1/chat/completions"
 
@@ -720,6 +721,74 @@ async def test_create_vendor_execute_also_refuses_a_duplicate_bypassing_preview(
     # Only the original "Sunlu" exists; execute did not silently create a second one.
     assert len(found) == 1
     assert found[0].name == "Sunlu"
+
+
+# --- create_filament: grounded physics + vendor disclosure -------------------------
+
+
+async def test_create_filament_preview_discloses_the_vendor_it_would_create(
+    client: AsyncClient,  # noqa: ARG001
+) -> None:
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    # Creating a vendor as a side effect is a change the user never asked for, so the
+    # confirm-card must say so out loud before they approve.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+        card = await ai_tools.WRITE_TOOLS["create_filament"].preview(
+            ctx,
+            {"name": "PLA Meta", "vendor_name": "BrandNew", "density": 1.24, "diameter": 1.75},
+        )
+    assert "also creates the vendor" in card.summary
+    assert card.after["vendor"] == "BrandNew"
+
+
+async def test_create_filament_execute_creates_both_filament_and_vendor(
+    client: AsyncClient,  # noqa: ARG001
+) -> None:
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+        result = await ai_tools.WRITE_TOOLS["create_filament"].execute(
+            ctx,
+            {"name": "PLA Meta", "vendor_name": "BrandNew", "density": 1.24, "diameter": 1.75},
+        )
+        filament_id = result.data["filament_id"]
+
+        created_filament = await filament_db.get_by_id(session, filament_id)
+        assert created_filament.name == "PLA Meta"
+        assert created_filament.density == 1.24
+        assert created_filament.diameter == 1.75
+
+        found_vendor, _ = await vendor_db.find(db=session, name="BrandNew")
+        assert any(item.name == "BrandNew" for item in found_vendor)
+
+        # delete_filament (create_filament's undo tool) doesn't exist as a registered WRITE_TOOL
+        # until Task 10 -- the descriptor already names it, so pin its shape now, and prove the
+        # round-trip by calling the same database function delete_filament will wrap. The
+        # WRITE_TOOLS["delete_filament"] round-trip itself becomes testable once that tool lands.
+        undo = result.undo
+        assert undo == {"tool": "delete_filament", "args": {"filament_id": filament_id}}
+        await filament_db.delete(session, undo["args"]["filament_id"])
+
+        with pytest.raises(ItemNotFoundError, match="No filament with ID"):
+            await filament_db.get_by_id(session, filament_id)
+
+
+async def test_create_filament_requires_density_and_diameter_end_to_end(
+    client: AsyncClient,  # noqa: ARG001
+) -> None:
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    # A missing physics field must fail loudly rather than let filament.create default it.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+        with pytest.raises(ai_tools.ToolError, match="density"):
+            await ai_tools.WRITE_TOOLS["create_filament"].execute(ctx, {"name": "PLA Meta", "diameter": 1.75})
+
+        found, _ = await filament_db.find(db=session, search="PLA Meta")
+    assert found == []
 
 
 async def test_delete_location_execute_raises_a_clean_error_for_a_double_undo(

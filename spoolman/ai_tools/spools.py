@@ -22,7 +22,6 @@ from spoolman.ai_tools.base import (
     echo_spool_filters,
     get_spool,
     initial_weight,
-    low_stock_fallback_g,
     optional_float,
     remaining_weight,
     require_write,
@@ -82,49 +81,6 @@ async def _run_find_spools(ctx: ToolContext, args: dict) -> dict:
         "spools": briefs,
         "filters": echo_spool_filters(args),
     }
-
-
-async def _run_find_filaments(ctx: ToolContext, args: dict) -> dict:
-    """List filaments with rolled-up remaining weight, low-stock status, and on-order signal."""
-    limit = arg_limit(args)
-    low_stock_only = arg_bool(args, "low_stock_only")
-
-    items, _ = await filament_db.find(
-        db=ctx.db,
-        search=clean_str(args.get("query")),
-        material=clean_str(args.get("material")),
-        vendor_name=clean_str(args.get("vendor")),
-        limit=None if low_stock_only else limit,
-    )
-    ids = [item.id for item in items]
-    aggregates = await filament_db.get_aggregates(ctx.db, ids)
-    on_order = await filament_db.get_on_order(ctx.db, ids)
-    fallback = await low_stock_fallback_g(ctx.db)
-
-    rows = []
-    for item in items:
-        spool_count, remaining = aggregates.get(item.id, (0, 0.0))
-        threshold = item.low_stock_threshold or fallback
-        is_low = threshold is not None and threshold > 0 and remaining <= threshold
-        if low_stock_only and not is_low:
-            continue
-        rows.append(
-            {
-                "id": item.id,
-                "name": item.name,
-                "vendor": item.vendor.name if item.vendor is not None else None,
-                "material": item.material,
-                "color_hex": item.color_hex,
-                "total_remaining_weight_g": round(remaining, 1),
-                "active_spool_count": spool_count,
-                "low_stock": is_low,
-                "low_stock_threshold_g": round(threshold, 1) if threshold else None,
-                "reserve_count": item.reserve_count,
-                "on_order": item.id in on_order,
-            },
-        )
-    rows.sort(key=lambda row: row["total_remaining_weight_g"])
-    return {"count": len(rows), "filaments": rows[:limit]}
 
 
 # --- Write tools -------------------------------------------------------------------
@@ -338,26 +294,6 @@ READ_TOOLS: dict[str, ReadTool] = {
             },
         },
         run=_run_find_spools,
-    ),
-    "find_filaments": ReadTool(
-        name="find_filaments",
-        description=(
-            "List the user's filament types with total remaining weight across their spools, low-stock "
-            "status, spare-spool reserve, and whether more is on order. Set low_stock_only to answer "
-            "'what should I reorder?'. Use the returned materials to reason about suitability "
-            "(e.g. which resist UV/outdoors)."
-        ),
-        parameters={
-            "type": "object",
-            "properties": {
-                "material": {"type": "string", "description": "Filter by material."},
-                "vendor": {"type": "string", "description": "Filter by vendor name."},
-                "query": {"type": "string", "description": "Free-text search across filament fields."},
-                "low_stock_only": {"type": "boolean", "description": "Return only filaments at or below threshold."},
-                "limit": {"type": "integer", "description": f"Max filaments to return (default {DEFAULT_LIMIT})."},
-            },
-        },
-        run=_run_find_filaments,
     ),
 }
 
