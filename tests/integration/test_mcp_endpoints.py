@@ -193,6 +193,7 @@ async def test_readonly_is_offered_no_write_tools_and_write_is_refused(
             "get_usage_stats",
             "find_locations",
             "find_vendors",
+            "catalog_lookup",
         }  # zero write tools
 
         # A forced write (the tool wasn't even offered) is refused, not executed.

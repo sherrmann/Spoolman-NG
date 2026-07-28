@@ -9,7 +9,7 @@ Domain modules each publish ``READ_TOOLS``/``WRITE_TOOLS``; this module merges t
 single registry both consumers read. Adding a domain means adding a module and one line here.
 """
 
-from spoolman.ai_tools import inventory, spools, stats
+from spoolman.ai_tools import catalog, inventory, spools, stats
 from spoolman.ai_tools.base import (
     DEFAULT_LIMIT,
     MAX_LIMIT,
@@ -35,7 +35,7 @@ from spoolman.ai_tools.base import (
     spool_brief,
 )
 
-_MODULES = (inventory, spools, stats)
+_MODULES = (catalog, inventory, spools, stats)
 
 READ_TOOLS: dict[str, ReadTool] = {name: tool for module in _MODULES for name, tool in module.READ_TOOLS.items()}
 WRITE_TOOLS: dict[str, WriteTool] = {name: tool for module in _MODULES for name, tool in module.WRITE_TOOLS.items()}

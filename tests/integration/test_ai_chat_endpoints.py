@@ -326,6 +326,7 @@ async def test_readonly_principal_is_offered_no_write_tools(
         "get_usage_stats",
         "find_locations",
         "find_vendors",
+        "catalog_lookup",
     }  # read tools only
     assert any(frame.startswith("event: message") for frame in frames)
 
