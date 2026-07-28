@@ -21,9 +21,16 @@ def location_row(location: object, *, spool_count: int, remaining_g: float) -> d
 
 
 async def _run_find_locations(ctx: ToolContext, args: dict) -> dict:
-    """List storage locations with how many spools and how much filament each holds."""
+    """List storage locations with how many spools and how much filament each holds.
+
+    Occupancy is computed after the query, so ranking must happen before truncation — the
+    registry is fetched unlimited, sorted by weight, and only then capped. Truncating first
+    would let "which shelf has the most left" miss the actual answer. The same shape
+    find_filaments uses for low_stock_only, and safe here because a location registry is
+    inherently small (shelves and dry boxes, not inventory rows).
+    """
     limit = arg_limit(args)
-    items, total = await location_db.find(db=ctx.db, name=clean_str(args.get("query")), limit=limit)
+    items, total = await location_db.find(db=ctx.db, name=clean_str(args.get("query")))
     ids = [item.id for item in items]
     counts = await location_db.get_aggregates(ctx.db, ids)
     weights = await location_db.get_weight_aggregates(ctx.db, ids)
@@ -31,7 +38,7 @@ async def _run_find_locations(ctx: ToolContext, args: dict) -> dict:
         location_row(item, spool_count=counts.get(item.id, 0), remaining_g=weights.get(item.id, 0.0)) for item in items
     ]
     rows.sort(key=lambda row: -row["remaining_weight_g"])
-    return {"count": total, "returned": len(rows), "locations": rows}
+    return {"count": total, "returned": min(len(rows), limit), "locations": rows[:limit]}
 
 
 READ_TOOLS: dict[str, ReadTool] = {

@@ -538,3 +538,36 @@ async def test_location_weight_aggregates_sum_remaining_by_name(client: AsyncCli
         weights = await location_db.get_weight_aggregates(session, [shelf.id])
 
     assert weights[shelf.id] == 1400.0
+
+
+async def test_find_locations_ranks_by_weight_before_truncating(client: AsyncClient) -> None:  # noqa: ARG001
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    #
+    # location_db.find applies no default ORDER BY, so without a sort it returns rows in
+    # whatever order the DB gives them back -- in practice, for a fresh SQLite table with no
+    # deletes, that's insertion order. A naive "truncate first, sort second" implementation
+    # would slice that unordered page down to `limit` *before* ranking by weight, silently
+    # dropping the heaviest location once there are more matches than the limit. Insert the
+    # heaviest location LAST (so it would be cut from a naive first-N page) and pass a small
+    # explicit limit: the tool must still rank it first.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        filament = await filament_db.create(db=session, density=1.24, diameter=1.75, weight=1000)
+        for index, name in enumerate(["A", "B", "C", "D", "E"]):
+            await location_db.create(db=session, name=name)
+            await spool_db.create(
+                db=session,
+                filament_id=filament.id,
+                location=name,
+                initial_weight=100.0 * (index + 1),
+            )
+
+        ctx = ai_tools.ToolContext(db=session, can_write=False)
+        result = await ai_tools.READ_TOOLS["find_locations"].run(ctx, {"limit": 2})
+
+    assert result["count"] == 5
+    assert result["returned"] == 2
+    assert len(result["locations"]) == 2
+    # "E" holds 500 g, the most of all five, but was created last.
+    assert result["locations"][0]["name"] == "E"
+    assert result["locations"][0]["remaining_weight_g"] == 500.0
