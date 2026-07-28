@@ -28,6 +28,7 @@ from spoolman.database import database as db_module
 from spoolman.database import filament as filament_db
 from spoolman.database import location as location_db
 from spoolman.database import spool as spool_db
+from spoolman.database import vendor as vendor_db
 
 _PROVIDER = "http://prov/v1/chat/completions"
 
@@ -577,3 +578,65 @@ async def test_find_locations_ranks_by_weight_before_truncating(client: AsyncCli
     # "E" holds 500 g, the most of all five, but was created last.
     assert result["locations"][0]["name"] == "E"
     assert result["locations"][0]["remaining_weight_g"] == 500.0
+
+
+async def test_find_vendors_ranks_by_spool_count_before_truncating_and_fields_not_swapped(
+    client: AsyncClient,  # noqa: ARG001
+) -> None:
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    #
+    # This test guards against two regressions:
+    # 1. Truncating before sorting: vendor_db.find applies no default ORDER BY, so a naive
+    #    "truncate first, sort second" implementation would slice that unordered page down to
+    #    `limit` *before* ranking by spool count, silently dropping the vendor with the most
+    #    spools once there are more vendors than the limit. Insert the vendor with the most
+    #    spools LAST (so it would be cut from a naive first-N page) and pass a small explicit
+    #    limit: the tool must still rank it first.
+    # 2. Swapped filament_count and spool_count: the aggregates tuple is (filament_count,
+    #    spool_count), and fetching the wrong index returns swapped values. Use distinct,
+    #    non-coincidental values so a swap is visibly wrong (not a false match).
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        # Create vendors A-E with distinct, non-overlapping counts so swaps are obvious.
+        vendors = {}
+        expected = {
+            "A": {"filament_count": 1, "spool_count": 10},
+            "B": {"filament_count": 2, "spool_count": 20},
+            "C": {"filament_count": 3, "spool_count": 30},
+            "D": {"filament_count": 4, "spool_count": 40},
+            "E": {"filament_count": 5, "spool_count": 50},  # Most spools, created last
+        }
+
+        for name in ["A", "B", "C", "D", "E"]:
+            vendor = await vendor_db.create(db=session, name=name)
+            vendors[name] = vendor
+
+        # Create filaments and spools to build up the expected counts.
+        for name in ["A", "B", "C", "D", "E"]:
+            fc = expected[name]["filament_count"]
+            sc = expected[name]["spool_count"]
+            # Create `fc` distinct filaments for this vendor
+            for _ in range(fc):
+                fil = await filament_db.create(
+                    db=session, density=1.24, diameter=1.75, weight=1000, vendor_id=vendors[name].id
+                )
+            # Create total `sc` spools, distributing evenly across the filaments
+            filaments = (await filament_db.find(db=session, vendor_id=vendors[name].id))[0]
+            for spool_idx in range(sc):
+                fil = filaments[spool_idx % len(filaments)]
+                await spool_db.create(db=session, filament_id=fil.id, initial_weight=100.0)
+
+        ctx = ai_tools.ToolContext(db=session, can_write=False)
+        result = await ai_tools.READ_TOOLS["find_vendors"].run(ctx, {"limit": 2})
+
+    assert result["count"] == 5
+    assert result["returned"] == 2
+    assert len(result["vendors"]) == 2
+    # "E" has the most spools (50), the most of all five, but was created last.
+    assert result["vendors"][0]["name"] == "E"
+    assert result["vendors"][0]["spool_count"] == 50
+    assert result["vendors"][0]["filament_count"] == 5
+    # Verify the second vendor is the next-ranked one (D with 40 spools, 4 filaments).
+    assert result["vendors"][1]["name"] == "D"
+    assert result["vendors"][1]["spool_count"] == 40
+    assert result["vendors"][1]["filament_count"] == 4
