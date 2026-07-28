@@ -32,6 +32,12 @@ def test_dates_parse_iso_and_tolerate_a_trailing_z() -> None:
     assert stats.parse_date({"from_date": "2026-01-31T10:00:00Z"}, "from_date") == expected_datetime
 
 
+def test_an_offset_date_is_converted_to_utc_not_merely_stripped() -> None:
+    # Event times are stored naive-UTC; dropping the offset would shift the window five hours.
+    expected = datetime(2026, 1, 31, 5, 0)  # noqa: DTZ001
+    assert stats.parse_date({"from_date": "2026-01-31T00:00:00-05:00"}, "from_date") == expected
+
+
 def test_absent_date_stays_absent_and_junk_errors() -> None:
     assert stats.parse_date({}, "from_date") is None
     with pytest.raises(ToolError, match="from_date"):

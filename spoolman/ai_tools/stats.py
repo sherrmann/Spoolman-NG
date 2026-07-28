@@ -5,7 +5,7 @@ through last month" is answered from the spool usage-event log rather than from 
 imagination.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from spoolman.ai_tools.base import ReadTool, ToolContext, ToolError
 from spoolman.database import stats as stats_db
@@ -27,7 +27,13 @@ def parse_bucket(args: dict) -> UsageBucket:
 
 
 def parse_date(args: dict, key: str) -> datetime | None:
-    """Coerce an optional ISO-8601 date/datetime argument to a naive UTC datetime, or None."""
+    """Coerce an optional ISO-8601 date/datetime argument to a naive UTC datetime, or None.
+
+    SpoolUsageEvent.time is stored naive-UTC, and usage_stats compares from_date/to_date
+    against it directly. An offset-aware input is therefore converted to UTC before the
+    offset is dropped — merely stripping it would silently treat the wall-clock value as if
+    it were already UTC, shifting the query window by the offset (e.g. 5 hours for -05:00).
+    """
     raw = args.get(key)
     if raw is None or (isinstance(raw, str) and not raw.strip()):
         return None
@@ -35,6 +41,8 @@ def parse_date(args: dict, key: str) -> datetime | None:
         parsed = datetime.fromisoformat(str(raw).strip().replace("Z", "+00:00"))
     except ValueError as exc:
         raise ToolError(f"The '{key}' argument must be an ISO date like 2026-01-31, got {raw!r}.") from exc
+    if parsed.tzinfo is not None:
+        parsed = parsed.astimezone(timezone.utc)
     return parsed.replace(tzinfo=None)
 
 
