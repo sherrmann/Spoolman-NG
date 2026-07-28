@@ -25,6 +25,9 @@ from httpx import AsyncClient, Response
 from spoolman import ai, ai_tools, aichat
 from spoolman.api.v1 import ai as ai_api
 from spoolman.database import database as db_module
+from spoolman.database import filament as filament_db
+from spoolman.database import location as location_db
+from spoolman.database import spool as spool_db
 
 _PROVIDER = "http://prov/v1/chat/completions"
 
@@ -316,7 +319,7 @@ async def test_readonly_principal_is_offered_no_write_tools(
         ]
 
     offered = {schema["function"]["name"] for schema in captured["tools"]}
-    assert offered == {"find_spools", "find_filaments", "get_usage_stats"}  # read tools only
+    assert offered == {"find_spools", "find_filaments", "get_usage_stats", "find_locations"}  # read tools only
     assert any(frame.startswith("event: message") for frame in frames)
 
 
@@ -516,3 +519,22 @@ async def test_get_usage_stats_tool_reports_real_consumption(client: AsyncClient
     assert result["total_consumed_weight_g"] == 42.5
     assert len(result["periods"]) == 1
     assert result["periods"][0]["period"] == current_period
+
+
+# --- Location weight aggregate: name-matched, not FK-matched ----------------------
+
+
+async def test_location_weight_aggregates_sum_remaining_by_name(client: AsyncClient) -> None:  # noqa: ARG001
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    # Locations are a name registry: spools match by the plain Spool.location string, not an FK.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        shelf = await location_db.create(db=session, name="Shelf B")
+        filament = await filament_db.create(db=session, density=1.24, diameter=1.75, weight=1000)
+        await spool_db.create(db=session, filament_id=filament.id, location="Shelf B", initial_weight=1000)
+        await spool_db.create(db=session, filament_id=filament.id, location="Shelf B", initial_weight=400)
+        await spool_db.create(db=session, filament_id=filament.id, location="Elsewhere", initial_weight=999)
+
+        weights = await location_db.get_weight_aggregates(session, [shelf.id])
+
+    assert weights[shelf.id] == 1400.0
