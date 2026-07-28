@@ -700,13 +700,82 @@ async def test_create_vendor_refuses_a_case_insensitive_duplicate(client: AsyncC
     assert resolved.name == "Sunlu"
 
 
-async def test_readonly_create_location_execute_is_refused_not_executed(client: AsyncClient) -> None:  # noqa: ARG001
+async def test_create_vendor_execute_also_refuses_a_duplicate_bypassing_preview(
+    client: AsyncClient,  # noqa: ARG001
+) -> None:
     # `client` isn't called directly but its fixture wires up db_module's session maker.
+    # POST /api/v1/ai/chat/action (spoolman/api/v1/ai.py) looks a tool up in WRITE_TOOLS and calls
+    # .execute() directly -- it never calls .preview() first. create_vendor's own description
+    # promises a duplicate is refused, so execute must enforce that too, not just preview.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        await vendor_db.create(db=session, name="Sunlu")
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+
+        with pytest.raises(ai_tools.ToolError, match="already exists"):
+            await ai_tools.WRITE_TOOLS["create_vendor"].execute(ctx, {"name": "sunlu"})
+
+        found, _ = await vendor_db.find(db=session, name="sunlu")
+    # Only the original "Sunlu" exists; execute did not silently create a second one.
+    assert len(found) == 1
+    assert found[0].name == "Sunlu"
+
+
+async def test_delete_location_execute_raises_a_clean_error_for_a_double_undo(
+    client: AsyncClient,  # noqa: ARG001
+) -> None:
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    # Executing the same undo descriptor twice (or deleting a row removed elsewhere) must surface
+    # as a model-facing ToolError, matching the preview's own ItemNotFoundError -> ToolError
+    # conversion -- an uncaught ItemNotFoundError is swallowed by aichat.py's generic exception
+    # handler into "That tool failed unexpectedly", which teaches the model nothing actionable.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+        result = await ai_tools.WRITE_TOOLS["create_location"].execute(ctx, {"name": "Dry box 2"})
+        undo = result.undo
+        await ai_tools.WRITE_TOOLS[undo["tool"]].execute(ctx, undo["args"])
+
+        with pytest.raises(ai_tools.ToolError, match="No location with ID"):
+            await ai_tools.WRITE_TOOLS[undo["tool"]].execute(ctx, undo["args"])
+
+
+async def test_delete_vendor_execute_raises_a_clean_error_for_a_double_undo(
+    client: AsyncClient,  # noqa: ARG001
+) -> None:
+    # `client` isn't called directly but its fixture wires up db_module's session maker. See
+    # test_delete_location_execute_raises_a_clean_error_for_a_double_undo for why this matters.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+        result = await ai_tools.WRITE_TOOLS["create_vendor"].execute(ctx, {"name": "Voolt3D"})
+        undo = result.undo
+        await ai_tools.WRITE_TOOLS[undo["tool"]].execute(ctx, undo["args"])
+
+        with pytest.raises(ai_tools.ToolError, match="No vendor with ID"):
+            await ai_tools.WRITE_TOOLS[undo["tool"]].execute(ctx, undo["args"])
+
+
+@pytest.mark.parametrize(
+    ("tool_name", "args"),
+    [
+        ("create_location", {"name": "Shelf Z"}),
+        ("delete_location", {"location_id": 1}),
+        ("create_vendor", {"name": "NewCo"}),
+        ("delete_vendor", {"vendor_id": 1}),
+    ],
+)
+async def test_readonly_execute_is_refused_for_every_inventory_write_tool(
+    client: AsyncClient,  # noqa: ARG001
+    tool_name: str,
+    args: dict,
+) -> None:
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    # require_write(ctx) must be the first statement of every execute here -- parametrized over
+    # all four tools so a missing call in any one of them (not just create_location) fails this
+    # test rather than slipping through untested.
     session_maker = db_module.get_session_maker()
     async with session_maker() as session:
         ctx = ai_tools.ToolContext(db=session, can_write=False)
         with pytest.raises(ai_tools.ToolError, match="read-only"):
-            await ai_tools.WRITE_TOOLS["create_location"].execute(ctx, {"name": "Shelf Z"})
-
-        found, _ = await location_db.find(db=session, name="Shelf Z")
-    assert found == []
+            await ai_tools.WRITE_TOOLS[tool_name].execute(ctx, args)

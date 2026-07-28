@@ -141,6 +141,32 @@ async def resolve_vendor_by_name(ctx: ToolContext, name: str) -> models.Vendor |
     return next((item for item in items if (item.name or "").strip().lower() == lowered), None)
 
 
+async def _require_unique_vendor_name(ctx: ToolContext, name: str) -> None:
+    """Raise a ToolError if a vendor with this name (case-insensitively) already exists.
+
+    Checked by both preview and execute: the chat-action endpoint can call execute directly
+    without ever previewing, so the duplicate-refusal this tool advertises must hold there too.
+    """
+    if await resolve_vendor_by_name(ctx, name) is not None:
+        raise ToolError(f"A vendor named '{name}' already exists.")
+
+
+async def _get_location(ctx: ToolContext, location_id: int) -> models.Location:
+    """Fetch a location by ID, or raise a model-facing ToolError if it doesn't exist."""
+    try:
+        return await location_db.get_by_id(ctx.db, location_id)
+    except ItemNotFoundError as exc:
+        raise ToolError(f"No location with ID {location_id} exists.") from exc
+
+
+async def _get_vendor(ctx: ToolContext, vendor_id: int) -> models.Vendor:
+    """Fetch a vendor by ID, or raise a model-facing ToolError if it doesn't exist."""
+    try:
+        return await vendor_db.get_by_id(ctx.db, vendor_id)
+    except ItemNotFoundError as exc:
+        raise ToolError(f"No vendor with ID {vendor_id} exists.") from exc
+
+
 async def _preview_create_location(ctx: ToolContext, args: dict) -> ConfirmCard:  # noqa: ARG001
     name = _require_name(args)
     after = {"name": name, "comment": clean_str(args.get("comment"))}
@@ -166,10 +192,7 @@ async def _execute_create_location(ctx: ToolContext, args: dict) -> ExecutionRes
 
 async def _preview_delete_location(ctx: ToolContext, args: dict) -> ConfirmCard:
     location_id = arg_int(args, "location_id")
-    try:
-        item = await location_db.get_by_id(ctx.db, location_id)
-    except ItemNotFoundError as exc:
-        raise ToolError(f"No location with ID {location_id} exists.") from exc
+    item = await _get_location(ctx, location_id)
     return ConfirmCard(
         tool="delete_location",
         title=f"Delete the location '{item.name}'",
@@ -183,14 +206,14 @@ async def _preview_delete_location(ctx: ToolContext, args: dict) -> ConfirmCard:
 async def _execute_delete_location(ctx: ToolContext, args: dict) -> ExecutionResult:
     require_write(ctx)
     location_id = arg_int(args, "location_id")
+    await _get_location(ctx, location_id)  # 404s as a clean ToolError before deleting
     await location_db.delete(ctx.db, location_id)
     return ExecutionResult(summary=f"Deleted location #{location_id}.", data={"location_id": location_id}, undo=None)
 
 
 async def _preview_create_vendor(ctx: ToolContext, args: dict) -> ConfirmCard:
     name = _require_name(args)
-    if await resolve_vendor_by_name(ctx, name) is not None:
-        raise ToolError(f"A vendor named '{name}' already exists.")
+    await _require_unique_vendor_name(ctx, name)
     after = {"name": name, "comment": clean_str(args.get("comment"))}
     return ConfirmCard(
         tool="create_vendor",
@@ -204,6 +227,7 @@ async def _preview_create_vendor(ctx: ToolContext, args: dict) -> ConfirmCard:
 async def _execute_create_vendor(ctx: ToolContext, args: dict) -> ExecutionResult:
     require_write(ctx)
     name = _require_name(args)
+    await _require_unique_vendor_name(ctx, name)
     created = await vendor_db.create(db=ctx.db, name=name, comment=clean_str(args.get("comment")))
     return ExecutionResult(
         summary=f"Created the vendor '{name}'.",
@@ -214,10 +238,7 @@ async def _execute_create_vendor(ctx: ToolContext, args: dict) -> ExecutionResul
 
 async def _preview_delete_vendor(ctx: ToolContext, args: dict) -> ConfirmCard:
     vendor_id = arg_int(args, "vendor_id")
-    try:
-        item = await vendor_db.get_by_id(ctx.db, vendor_id)
-    except ItemNotFoundError as exc:
-        raise ToolError(f"No vendor with ID {vendor_id} exists.") from exc
+    item = await _get_vendor(ctx, vendor_id)
     return ConfirmCard(
         tool="delete_vendor",
         title=f"Delete the vendor '{item.name}'",
@@ -231,6 +252,7 @@ async def _preview_delete_vendor(ctx: ToolContext, args: dict) -> ConfirmCard:
 async def _execute_delete_vendor(ctx: ToolContext, args: dict) -> ExecutionResult:
     require_write(ctx)
     vendor_id = arg_int(args, "vendor_id")
+    await _get_vendor(ctx, vendor_id)  # 404s as a clean ToolError before deleting
     await vendor_db.delete(ctx.db, vendor_id)
     return ExecutionResult(summary=f"Deleted vendor #{vendor_id}.", data={"vendor_id": vendor_id}, undo=None)
 
