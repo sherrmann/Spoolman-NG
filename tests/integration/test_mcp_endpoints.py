@@ -187,7 +187,13 @@ async def test_readonly_is_offered_no_write_tools_and_write_is_refused(
 
     async with _mcp_session(token=token) as session:
         tools = {tool.name for tool in (await session.list_tools()).tools}
-        assert tools == {"find_spools", "find_filaments", "get_usage_stats", "find_locations"}  # zero write tools
+        assert tools == {
+            "find_spools",
+            "find_filaments",
+            "get_usage_stats",
+            "find_locations",
+            "find_vendors",
+        }  # zero write tools
 
         # A forced write (the tool wasn't even offered) is refused, not executed.
         forced = await session.call_tool("create_spool", {"filament_id": filament["id"]})

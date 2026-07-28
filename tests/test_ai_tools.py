@@ -18,7 +18,7 @@ from spoolman.ai_tools import ToolError, spools
 def test_readonly_is_offered_only_read_tools() -> None:
     schemas = ai_tools.tool_schemas(can_write=False)
     names = {schema["function"]["name"] for schema in schemas}
-    assert names == {"find_spools", "find_filaments", "get_usage_stats", "find_locations"}
+    assert names == {"find_spools", "find_filaments", "get_usage_stats", "find_locations", "find_vendors"}
 
 
 def test_writer_is_offered_read_and_model_write_tools() -> None:
@@ -28,6 +28,7 @@ def test_writer_is_offered_read_and_model_write_tools() -> None:
         "find_filaments",
         "get_usage_stats",
         "find_locations",
+        "find_vendors",
         "update_spool",
         "consume_spool",
         "create_spool",

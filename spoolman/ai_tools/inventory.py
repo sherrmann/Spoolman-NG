@@ -7,6 +7,7 @@ a filament creation on a vendor that doesn't exist yet.
 
 from spoolman.ai_tools.base import ReadTool, ToolContext, WriteTool, arg_limit, clean_str
 from spoolman.database import location as location_db
+from spoolman.database import vendor as vendor_db
 
 
 def location_row(location: object, *, spool_count: int, remaining_g: float) -> dict:
@@ -41,6 +42,36 @@ async def _run_find_locations(ctx: ToolContext, args: dict) -> dict:
     return {"count": total, "returned": min(len(rows), limit), "locations": rows[:limit]}
 
 
+def vendor_row(vendor: object, *, filament_count: int, spool_count: int) -> dict:
+    """Shape one vendor plus its rolled-up counts for the model."""
+    return {
+        "id": vendor.id,
+        "name": vendor.name,
+        "comment": vendor.comment,
+        "empty_spool_weight_g": vendor.empty_spool_weight,
+        "filament_count": filament_count,
+        "spool_count": spool_count,
+    }
+
+
+async def _run_find_vendors(ctx: ToolContext, args: dict) -> dict:
+    """List vendors with how many filament types and spools the user has from each.
+
+    Vendor rankings are computed after the query, so ranking must happen before truncation — the
+    registry is fetched unlimited, sorted by spool count, and only then capped. Truncating first
+    would let "who do I buy most from" miss the actual answer.
+    """
+    limit = arg_limit(args)
+    items, total = await vendor_db.find(db=ctx.db, name=clean_str(args.get("query")))
+    aggregates = await vendor_db.get_aggregates(ctx.db, [item.id for item in items])
+    rows = []
+    for item in items:
+        counts = aggregates.get(item.id, (0, 0))
+        rows.append(vendor_row(item, filament_count=counts[0], spool_count=counts[1]))
+    rows.sort(key=lambda row: -row["spool_count"])
+    return {"count": total, "returned": min(len(rows), limit), "vendors": rows[:limit]}
+
+
 READ_TOOLS: dict[str, ReadTool] = {
     "find_locations": ReadTool(
         name="find_locations",
@@ -57,6 +88,22 @@ READ_TOOLS: dict[str, ReadTool] = {
             },
         },
         run=_run_find_locations,
+    ),
+    "find_vendors": ReadTool(
+        name="find_vendors",
+        description=(
+            "List the manufacturers/vendors the user buys from, with how many filament types and "
+            "spools they have from each. Use to check whether a vendor already exists before "
+            "creating a filament, or for 'who do I buy most from'."
+        ),
+        parameters={
+            "type": "object",
+            "properties": {
+                "query": {"type": "string", "description": "Filter by vendor name."},
+                "limit": {"type": "integer", "description": "Max vendors to return (default 25)."},
+            },
+        },
+        run=_run_find_vendors,
     ),
 }
 

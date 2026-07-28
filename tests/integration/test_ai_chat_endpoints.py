@@ -319,7 +319,13 @@ async def test_readonly_principal_is_offered_no_write_tools(
         ]
 
     offered = {schema["function"]["name"] for schema in captured["tools"]}
-    assert offered == {"find_spools", "find_filaments", "get_usage_stats", "find_locations"}  # read tools only
+    assert offered == {
+        "find_spools",
+        "find_filaments",
+        "get_usage_stats",
+        "find_locations",
+        "find_vendors",
+    }  # read tools only
     assert any(frame.startswith("event: message") for frame in frames)
 
 
