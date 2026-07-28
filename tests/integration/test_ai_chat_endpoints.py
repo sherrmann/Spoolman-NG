@@ -16,12 +16,13 @@ The provider is mocked at the transport with respx; the agent's own outbound cal
 
 import asyncio
 import json
+from datetime import datetime
 
 import pytest
 import respx
 from httpx import AsyncClient, Response
 
-from spoolman import ai, aichat
+from spoolman import ai, ai_tools, aichat
 from spoolman.api.v1 import ai as ai_api
 from spoolman.database import database as db_module
 
@@ -315,7 +316,7 @@ async def test_readonly_principal_is_offered_no_write_tools(
         ]
 
     offered = {schema["function"]["name"] for schema in captured["tools"]}
-    assert offered == {"find_spools", "find_filaments"}  # read tools only
+    assert offered == {"find_spools", "find_filaments", "get_usage_stats"}  # read tools only
     assert any(frame.startswith("event: message") for frame in frames)
 
 
@@ -495,3 +496,23 @@ async def test_a_chat_slot_is_returned_after_the_stream_finishes(client: AsyncCl
     assert response.status_code == 200
     assert _events_of(_parse_sse(response.text), "message")
     assert ai_api._chat_slots._value == before  # noqa: SLF001 -- slot released, not leaked
+
+
+# --- Usage stats tool reads the real event log -------------------------------------
+
+
+async def test_get_usage_stats_tool_reports_real_consumption(client: AsyncClient) -> None:
+    spool = await _seed_spool(client, weight=1000)
+    spool_id = spool["id"]
+    use_response = await client.put(f"/api/v1/spool/{spool_id}/use", json={"use_weight": 42.5})
+    assert use_response.status_code == 200, use_response.text
+
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        ctx = ai_tools.ToolContext(db=session, can_write=False)
+        result = await ai_tools.READ_TOOLS["get_usage_stats"].run(ctx, {"bucket": "month"})
+
+    current_period = datetime.utcnow().strftime("%Y-%m")
+    assert result["total_consumed_weight_g"] == 42.5
+    assert len(result["periods"]) == 1
+    assert result["periods"][0]["period"] == current_period

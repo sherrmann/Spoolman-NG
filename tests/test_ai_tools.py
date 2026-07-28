@@ -18,12 +18,20 @@ from spoolman.ai_tools import ToolError, spools
 def test_readonly_is_offered_only_read_tools() -> None:
     schemas = ai_tools.tool_schemas(can_write=False)
     names = {schema["function"]["name"] for schema in schemas}
-    assert names == {"find_spools", "find_filaments"}
+    assert names == {"find_spools", "find_filaments", "get_usage_stats"}
 
 
 def test_writer_is_offered_read_and_model_write_tools() -> None:
     names = {schema["function"]["name"] for schema in ai_tools.tool_schemas(can_write=True)}
-    assert names == {"find_spools", "find_filaments", "update_spool", "consume_spool", "create_spool", "delete_spool"}
+    assert names == {
+        "find_spools",
+        "find_filaments",
+        "get_usage_stats",
+        "update_spool",
+        "consume_spool",
+        "create_spool",
+        "delete_spool",
+    }
 
 
 def test_internal_undo_tool_is_never_offered_to_the_model() -> None:
