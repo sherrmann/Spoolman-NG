@@ -33,6 +33,8 @@ def test_writer_is_offered_read_and_model_write_tools() -> None:
         "consume_spool",
         "create_spool",
         "delete_spool",
+        "create_location",
+        "create_vendor",
     }
 
 

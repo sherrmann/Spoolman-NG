@@ -640,3 +640,73 @@ async def test_find_vendors_ranks_by_spool_count_before_truncating_and_fields_no
     assert result["vendors"][1]["name"] == "D"
     assert result["vendors"][1]["spool_count"] == 40
     assert result["vendors"][1]["filament_count"] == 4
+
+
+# --- create_location / create_vendor: undo round-trips and duplicate refusal ------
+
+
+async def test_create_location_undo_round_trip(client: AsyncClient) -> None:  # noqa: ARG001
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+        result = await ai_tools.WRITE_TOOLS["create_location"].execute(ctx, {"name": "Dry box 1"})
+        location_id = result.data["location_id"]
+
+        found, _ = await location_db.find(db=session, name="Dry box 1")
+        assert any(item.id == location_id for item in found)
+
+        undo = result.undo
+        assert undo == {"tool": "delete_location", "args": {"location_id": location_id}}
+        await ai_tools.WRITE_TOOLS[undo["tool"]].execute(ctx, undo["args"])
+
+        found_after, _ = await location_db.find(db=session, name="Dry box 1")
+    assert found_after == []
+
+
+async def test_create_vendor_undo_round_trip(client: AsyncClient) -> None:  # noqa: ARG001
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+        result = await ai_tools.WRITE_TOOLS["create_vendor"].execute(ctx, {"name": "Sunlu"})
+        vendor_id = result.data["vendor_id"]
+
+        found, _ = await vendor_db.find(db=session, name="Sunlu")
+        assert any(item.id == vendor_id for item in found)
+
+        undo = result.undo
+        assert undo == {"tool": "delete_vendor", "args": {"vendor_id": vendor_id}}
+        await ai_tools.WRITE_TOOLS[undo["tool"]].execute(ctx, undo["args"])
+
+        found_after, _ = await vendor_db.find(db=session, name="Sunlu")
+    assert found_after == []
+
+
+async def test_create_vendor_refuses_a_case_insensitive_duplicate(client: AsyncClient) -> None:  # noqa: ARG001
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    # "sunlu" must resolve to the existing "Sunlu" rather than create a duplicate (Task 8 relies
+    # on this same case-insensitive match to decide whether create_filament also creates a vendor).
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        await vendor_db.create(db=session, name="Sunlu")
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+
+        with pytest.raises(ai_tools.ToolError, match="already exists"):
+            await ai_tools.WRITE_TOOLS["create_vendor"].preview(ctx, {"name": "sunlu"})
+
+        resolved = await ai_tools.inventory.resolve_vendor_by_name(ctx, "SUNLU")
+    assert resolved is not None
+    assert resolved.name == "Sunlu"
+
+
+async def test_readonly_create_location_execute_is_refused_not_executed(client: AsyncClient) -> None:  # noqa: ARG001
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        ctx = ai_tools.ToolContext(db=session, can_write=False)
+        with pytest.raises(ai_tools.ToolError, match="read-only"):
+            await ai_tools.WRITE_TOOLS["create_location"].execute(ctx, {"name": "Shelf Z"})
+
+        found, _ = await location_db.find(db=session, name="Shelf Z")
+    assert found == []

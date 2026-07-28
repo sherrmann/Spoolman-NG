@@ -2,7 +2,29 @@
 
 from types import SimpleNamespace
 
+import pytest
+
+from spoolman import ai_tools
 from spoolman.ai_tools import inventory
+from spoolman.ai_tools.base import ToolContext, ToolError
+
+
+def test_undo_deletes_are_registered_but_hidden_from_the_model() -> None:
+    for name in ("delete_location", "delete_vendor"):
+        assert ai_tools.WRITE_TOOLS[name].model_facing is False
+    offered = {schema["function"]["name"] for schema in ai_tools.tool_schemas(can_write=True)}
+    assert "delete_location" not in offered
+    assert "delete_vendor" not in offered
+    assert "create_location" in offered
+    assert "create_vendor" in offered
+
+
+async def test_create_location_requires_a_name() -> None:
+    # No real DB session is needed: the name check runs before anything touches ctx.db, so a
+    # None placeholder is enough to exercise the validation path.
+    ctx = ToolContext(db=None, can_write=True)
+    with pytest.raises(ToolError, match="name"):
+        await inventory.WRITE_TOOLS["create_location"].preview(ctx, {})
 
 
 def test_location_row_carries_occupancy() -> None:
