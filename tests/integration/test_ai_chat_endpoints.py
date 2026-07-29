@@ -1021,6 +1021,12 @@ async def test_delete_filament_execute_cascades_to_every_spool_and_its_usage_his
     # `db.delete(filament)` fails outright (the ORM tries to null the FK on flush) the instant the
     # filament has any spool at all -- the single most common case for a real delete. This proves
     # the cascade actually runs, including for an archived spool and its usage events.
+    #
+    # A second, untouched filament (with its own spool and usage event) is also seeded here: the
+    # cascade's WHERE clause scopes it to exactly this filament_id, and a suite where every test
+    # creates only one filament in a fresh per-test database can't tell a correctly scoped cascade
+    # apart from one that (say) drops the WHERE clause entirely and deletes every spool in the
+    # table -- both would leave that single test's own assertions equally satisfied.
     session_maker = db_module.get_session_maker()
     async with session_maker() as session:
         created = await filament_db.create(db=session, density=1.24, diameter=1.75, name="Doomed")
@@ -1030,6 +1036,12 @@ async def test_delete_filament_execute_cascades_to_every_spool_and_its_usage_his
         await spool_db.update(db=session, spool_id=archived_spool.id, data={"archived": True})
         session.add(
             models.SpoolUsageEvent(spool_id=kept_spool.id, time=datetime.utcnow(), event_type="use", delta=10.0),
+        )
+
+        survivor_filament = await filament_db.create(db=session, density=1.24, diameter=1.75, name="Survivor")
+        survivor_spool = await spool_db.create(db=session, filament_id=survivor_filament.id)
+        session.add(
+            models.SpoolUsageEvent(spool_id=survivor_spool.id, time=datetime.utcnow(), event_type="use", delta=5.0),
         )
         await session.commit()
         ctx = ai_tools.ToolContext(db=session, can_write=True)
@@ -1048,7 +1060,20 @@ async def test_delete_filament_execute_cascades_to_every_spool_and_its_usage_his
                 select(models.SpoolUsageEvent).where(models.SpoolUsageEvent.spool_id == kept_spool.id),
             )
         ).all()
-    assert remaining_events == []
+        assert remaining_events == []
+
+        # The blast radius stops at this filament: the unrelated second filament, its spool, and its
+        # usage event must all still exist.
+        survived_filament = await filament_db.get_by_id(session, survivor_filament.id)
+        assert survived_filament.id == survivor_filament.id
+        survived_spool = await spool_db.get_by_id(session, survivor_spool.id)
+        assert survived_spool.id == survivor_spool.id
+        survivor_events = (
+            await session.execute(
+                select(models.SpoolUsageEvent).where(models.SpoolUsageEvent.spool_id == survivor_spool.id),
+            )
+        ).all()
+    assert len(survivor_events) == 1
 
 
 async def test_create_filament_undo_round_trip_actually_deletes_the_filament(
@@ -1203,6 +1228,7 @@ async def test_delete_vendor_execute_raises_a_clean_error_for_a_double_undo(
         ("delete_location", {"location_id": 1}),
         ("create_vendor", {"name": "NewCo"}),
         ("delete_vendor", {"vendor_id": 1}),
+        ("delete_filament", {"filament_id": 1}),
     ],
 )
 async def test_readonly_execute_is_refused_for_every_inventory_write_tool(
@@ -1212,8 +1238,9 @@ async def test_readonly_execute_is_refused_for_every_inventory_write_tool(
 ) -> None:
     # `client` isn't called directly but its fixture wires up db_module's session maker.
     # require_write(ctx) must be the first statement of every execute here -- parametrized over
-    # all four tools so a missing call in any one of them (not just create_location) fails this
-    # test rather than slipping through untested.
+    # all five tools so a missing call in any one of them (not just create_location) fails this
+    # test rather than slipping through untested. delete_filament is the most destructive tool in
+    # the registry, so it belongs here more than any of the others.
     session_maker = db_module.get_session_maker()
     async with session_maker() as session:
         ctx = ai_tools.ToolContext(db=session, can_write=False)

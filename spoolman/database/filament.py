@@ -413,7 +413,11 @@ async def delete(db: AsyncSession, filament_id: int) -> None:
     line_count = await count_order_line_references(db, filament_id)
     if line_count:
         raise ItemDeleteError(f"Cannot delete filament {filament_id}: {line_count} order line(s) reference it.")
-    spools_result = await db.execute(select(models.Spool).where(models.Spool.filament_id == filament_id))
+    # joinedload("*") mirrors spool.get_by_id: Spool.from_db (needed below, to notify per-spool
+    # subscribers) reads spool.filament/.printer, and those are unloaded on a plain select().
+    spools_result = await db.execute(
+        select(models.Spool).options(joinedload("*")).where(models.Spool.filament_id == filament_id),
+    )
     spools = spools_result.unique().scalars().all()
     if spools:
         spool_ids = [spool.id for spool in spools]
@@ -432,6 +436,14 @@ async def delete(db: AsyncSession, filament_id: int) -> None:
     try:
         await db.commit()  # Flush immediately so any errors are propagated in this request.
         await filament_changed(filament, EventType.DELETED)
+        # Every cascaded spool is its own websocket resource (mirrors spool.delete's own DELETED
+        # event): without this, a live client keeps showing rows for spools that no longer exist.
+        # Safe post-commit because the session maker sets expire_on_commit=False, same as spool.delete
+        # relies on. Lazy import because spool.py imports this module (matches update, above).
+        from spoolman.database import spool  # noqa: PLC0415
+
+        for deleted_spool in spools:
+            await spool.spool_changed(deleted_spool, EventType.DELETED)
     except IntegrityError as exc:
         await db.rollback()
         raise ItemDeleteError("Failed to delete filament.") from exc
