@@ -784,6 +784,29 @@ async def test_create_order_refuses_a_nonexistent_filament(client: AsyncClient) 
             await ai_tools.WRITE_TOOLS["create_order"].preview(ctx, {"lines": [{"filament_id": 999999}]})
 
 
+async def test_delete_order_execute_raises_a_clean_error_for_a_double_undo(
+    client: AsyncClient,  # noqa: ARG001
+) -> None:
+    # `client` isn't called directly but its fixture wires up db_module's session maker. See
+    # test_delete_location_execute_raises_a_clean_error_for_a_double_undo for why this matters:
+    # executing the same undo descriptor twice (or deleting a row removed elsewhere) must surface
+    # as a model-facing ToolError, not a raw ItemNotFoundError that bypasses the chat_action
+    # endpoint's except ToolError -> 422 contract.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        filament = await filament_db.create(db=session, density=1.24, diameter=1.75, weight=1000)
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+        result = await ai_tools.WRITE_TOOLS["create_order"].execute(
+            ctx,
+            {"lines": [{"filament_id": filament.id}]},
+        )
+        undo = result.undo
+        await ai_tools.WRITE_TOOLS[undo["tool"]].execute(ctx, undo["args"])
+
+        with pytest.raises(ai_tools.ToolError, match="No order with ID"):
+            await ai_tools.WRITE_TOOLS[undo["tool"]].execute(ctx, undo["args"])
+
+
 # --- create_location / create_vendor: undo round-trips and duplicate refusal ------
 
 
@@ -1366,6 +1389,7 @@ async def test_delete_vendor_execute_raises_a_clean_error_for_a_double_undo(
         ("delete_vendor", {"vendor_id": 1}),
         ("delete_filament", {"filament_id": 1}),
         ("create_order", {"lines": [{"filament_id": 1}]}),
+        ("delete_order", {"order_id": 1}),
     ],
 )
 async def test_readonly_execute_is_refused_for_every_inventory_write_tool(
@@ -1375,7 +1399,7 @@ async def test_readonly_execute_is_refused_for_every_inventory_write_tool(
 ) -> None:
     # `client` isn't called directly but its fixture wires up db_module's session maker.
     # require_write(ctx) must be the first statement of every execute here -- parametrized over
-    # all six tools so a missing call in any one of them (not just create_location) fails this
+    # all seven tools so a missing call in any one of them (not just create_location) fails this
     # test rather than slipping through untested. delete_filament is the most destructive tool in
     # the registry, so it belongs here more than any of the others.
     session_maker = db_module.get_session_maker()

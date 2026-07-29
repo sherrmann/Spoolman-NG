@@ -78,3 +78,15 @@ def test_lines_reject_malformed_entries_with_actionable_messages() -> None:
         orders.parse_lines({"lines": [{"quantity": 2}]})
     with pytest.raises(ToolError, match="quantity"):
         orders.parse_lines({"lines": [{"filament_id": 3, "quantity": "a lot"}]})
+
+
+def test_lines_error_messages_name_the_offending_line_even_when_it_is_not_the_first() -> None:
+    # A five-line order with a bad entry buried in the middle must still say which one -- a
+    # message that just says "the 'filament_id' argument is required" gives a model that just
+    # submitted a multi-line order no way to tell which of its lines to fix.
+    with pytest.raises(ToolError, match=r"Line 2:.*filament_id"):
+        orders.parse_lines({"lines": [{"filament_id": 3, "quantity": 1}, {"quantity": 2}]})
+    with pytest.raises(ToolError, match=r"Line 2:.*quantity"):
+        orders.parse_lines(
+            {"lines": [{"filament_id": 3, "quantity": 1}, {"filament_id": 4, "quantity": "a lot"}]},
+        )

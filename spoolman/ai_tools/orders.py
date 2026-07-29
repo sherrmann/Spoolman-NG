@@ -148,16 +148,19 @@ def parse_lines(args: dict) -> list[dict]:
     for index, entry in enumerate(raw):
         if not isinstance(entry, dict):
             raise ToolError(f"Line {index + 1} of 'lines' must be an object with a filament_id.")
-        quantity = arg_int(entry, "quantity", default=1)
+        # arg_int/optional_float have no notion of "which line" -- they're shared by every tool
+        # in the layer -- so a bad filament_id or quantity here raises a ToolError with no line
+        # context. Re-raise with the index prefixed, or a model mid-multi-line-order gets e.g.
+        # "the 'filament_id' argument is required" with no way to tell which of its lines to fix.
+        try:
+            filament_id = arg_int(entry, "filament_id")
+            quantity = arg_int(entry, "quantity", default=1)
+            price_per_unit = optional_float(entry, "price_per_unit")
+        except ToolError as exc:
+            raise ToolError(f"Line {index + 1}: {exc}") from exc
         if quantity < 1:
             raise ToolError(f"Line {index + 1}: 'quantity' must be at least 1, got {quantity}.")
-        parsed.append(
-            {
-                "filament_id": arg_int(entry, "filament_id"),
-                "quantity": quantity,
-                "price_per_unit": optional_float(entry, "price_per_unit"),
-            },
-        )
+        parsed.append({"filament_id": filament_id, "quantity": quantity, "price_per_unit": price_per_unit})
     return parsed
 
 
@@ -232,6 +235,10 @@ async def _preview_delete_order(ctx: ToolContext, args: dict) -> ConfirmCard:
 async def _execute_delete_order(ctx: ToolContext, args: dict) -> ExecutionResult:
     require_write(ctx)
     order_id = arg_int(args, "order_id")
+    try:
+        await order_db.get_by_id(ctx.db, order_id)  # 404s as a clean ToolError before deleting
+    except ItemNotFoundError as exc:
+        raise ToolError(f"No order with ID {order_id} exists.") from exc
     await order_db.delete(ctx.db, order_id)
     return ExecutionResult(summary=f"Deleted order #{order_id}.", data={"order_id": order_id}, undo=None)
 
