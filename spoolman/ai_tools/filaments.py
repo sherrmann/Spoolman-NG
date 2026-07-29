@@ -4,6 +4,8 @@ Thin wrappers over :mod:`spoolman.database.filament` and :mod:`spoolman.database
 see :mod:`spoolman.ai_tools` for the guardrails these tools operate under.
 """
 
+import logging
+
 from spoolman.ai_tools import inventory
 from spoolman.ai_tools.base import (
     DEFAULT_LIMIT,
@@ -23,7 +25,8 @@ from spoolman.ai_tools.base import (
 )
 from spoolman.database import filament as filament_db
 from spoolman.database import vendor as vendor_db
-from spoolman.exceptions import ItemCreateError, ItemNotFoundError
+
+logger = logging.getLogger(__name__)
 
 # --- Read tools --------------------------------------------------------------------
 
@@ -163,6 +166,29 @@ async def _preview_create_filament(ctx: ToolContext, args: dict) -> ConfirmCard:
     )
 
 
+async def _cleanup_orphaned_vendor(ctx: ToolContext, created_vendor_id: int | None) -> None:
+    """Delete a vendor this same call just created, after the following filament create failed.
+
+    ``vendor_db.create`` commits immediately and durably; if ``filament_db.create`` then raises
+    for any reason (a raw ``IntegrityError`` included -- ``filament.create`` has no try/except of
+    its own around its commit), leaving that vendor in place would be the exact silent vendor
+    creation this tool exists to prevent, reached through the error path instead of the happy one.
+
+    Never called with a vendor this call did not create: ``created_vendor_id`` is None whenever
+    ``vendor_name`` resolved to an existing vendor, and this function's only caller respects that.
+    A failed commit leaves the session needing a rollback before it can be reused, so that happens
+    here too. Any failure during cleanup itself is logged, never raised -- it must not mask the
+    original error the caller is about to report.
+    """
+    if created_vendor_id is None:
+        return
+    try:
+        await ctx.db.rollback()
+        await vendor_db.delete(ctx.db, created_vendor_id)
+    except Exception:  # Cleanup is best-effort; the original error still gets raised by the caller.
+        logger.exception("Failed to clean up orphaned vendor %s after a failed filament create.", created_vendor_id)
+
+
 async def _execute_create_filament(ctx: ToolContext, args: dict) -> ExecutionResult:
     require_write(ctx)
     fields = curated_fields(args)
@@ -175,7 +201,8 @@ async def _execute_create_filament(ctx: ToolContext, args: dict) -> ExecutionRes
         created_vendor_id = created_vendor.id
     try:
         created = await filament_db.create(db=ctx.db, vendor_id=vendor_id, **fields)
-    except (ItemNotFoundError, ItemCreateError) as exc:
+    except Exception as exc:  # Any failure here must not leave an orphaned vendor behind.
+        await _cleanup_orphaned_vendor(ctx, created_vendor_id)
         raise ToolError(str(exc)) from exc
     summary = f"Created filament #{created.id}."
     if created_vendor_id is not None:

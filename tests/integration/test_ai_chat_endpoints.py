@@ -23,6 +23,7 @@ import respx
 from httpx import AsyncClient, Response
 
 from spoolman import ai, ai_tools, aichat
+from spoolman.ai_tools import filaments
 from spoolman.api.v1 import ai as ai_api
 from spoolman.database import database as db_module
 from spoolman.database import filament as filament_db
@@ -789,6 +790,62 @@ async def test_create_filament_requires_density_and_diameter_end_to_end(
 
         found, _ = await filament_db.find(db=session, search="PLA Meta")
     assert found == []
+
+
+async def test_create_filament_cleans_up_the_vendor_it_created_when_the_filament_create_fails(
+    client: AsyncClient,  # noqa: ARG001
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    # vendor_db.create commits immediately and durably. If the subsequent filament_db.create then
+    # raises ANYTHING -- a raw IntegrityError included, since filament.create has no try/except of
+    # its own around its commit -- the auto-created vendor must not survive as an orphan the user
+    # never asked for. That would be the exact silent vendor creation this tool exists to prevent,
+    # reached through the error path instead of the happy path.
+    async def _boom(**_kwargs: object) -> None:
+        raise RuntimeError("simulated filament creation failure")
+
+    monkeypatch.setattr(filaments.filament_db, "create", _boom)
+
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+        with pytest.raises(ai_tools.ToolError, match="simulated filament creation failure"):
+            await ai_tools.WRITE_TOOLS["create_filament"].execute(
+                ctx,
+                {"name": "PLA Meta", "vendor_name": "OrphanCo", "density": 1.24, "diameter": 1.75},
+            )
+
+        found, _ = await vendor_db.find(db=session, name="OrphanCo")
+    assert found == []
+
+
+async def test_create_filament_never_deletes_a_pre_existing_vendor_when_the_filament_create_fails(
+    client: AsyncClient,  # noqa: ARG001
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    # The dangerous inverse of the orphan cleanup above: a vendor the user already had must never
+    # be deleted just because a later filament create happened to fail. Getting this backwards
+    # would destroy real user data.
+    async def _boom(**_kwargs: object) -> None:
+        raise RuntimeError("simulated filament creation failure")
+
+    monkeypatch.setattr(filaments.filament_db, "create", _boom)
+
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        await vendor_db.create(db=session, name="ExistingCo")
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+        with pytest.raises(ai_tools.ToolError, match="simulated filament creation failure"):
+            await ai_tools.WRITE_TOOLS["create_filament"].execute(
+                ctx,
+                {"name": "PLA Meta", "vendor_name": "ExistingCo", "density": 1.24, "diameter": 1.75},
+            )
+
+        found, _ = await vendor_db.find(db=session, name="ExistingCo")
+    assert len(found) == 1
+    assert found[0].name == "ExistingCo"
 
 
 async def test_delete_location_execute_raises_a_clean_error_for_a_double_undo(
