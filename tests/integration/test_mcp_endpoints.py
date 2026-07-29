@@ -193,6 +193,7 @@ async def test_readonly_is_offered_no_write_tools_and_write_is_refused(
             "get_usage_stats",
             "find_locations",
             "find_vendors",
+            "find_orders",
             "catalog_lookup",
         }  # zero write tools
 

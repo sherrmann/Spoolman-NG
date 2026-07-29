@@ -31,6 +31,7 @@ from spoolman.database import filament as filament_db
 from spoolman.database import location as location_db
 from spoolman.database import models
 from spoolman.database import order as order_db
+from spoolman.database import shop as shop_db
 from spoolman.database import spool as spool_db
 from spoolman.database import vendor as vendor_db
 from spoolman.exceptions import ItemNotFoundError
@@ -331,6 +332,7 @@ async def test_readonly_principal_is_offered_no_write_tools(
         "get_usage_stats",
         "find_locations",
         "find_vendors",
+        "find_orders",
         "catalog_lookup",
     }  # read tools only
     assert any(frame.startswith("event: message") for frame in frames)
@@ -646,6 +648,93 @@ async def test_find_vendors_ranks_by_spool_count_before_truncating_and_fields_no
     assert result["vendors"][1]["name"] == "D"
     assert result["vendors"][1]["spool_count"] == 40
     assert result["vendors"][1]["filament_count"] == 4
+
+
+async def test_find_orders_ranks_by_ordered_at_before_truncating(client: AsyncClient) -> None:  # noqa: ARG001
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    #
+    # order.find applies no default ORDER BY, so without a sort it returns rows in whatever
+    # order the DB gives them back -- in practice, for a fresh SQLite table with no deletes,
+    # that's insertion order. Status/date filtering and the ordered_at sort both happen in the
+    # tool layer (order.find only filters by shop_id), so a naive "fetch limit rows, then filter
+    # and sort" implementation would slice that unordered page down to `limit` *before* ranking
+    # by ordered_at, silently dropping the most-recent orders once there are more matches than
+    # the limit. Insert the orders oldest-first (so the newest ones would be cut from a naive
+    # first-N page) and pass a small explicit limit: the tool must still rank the newest first.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        shop = await shop_db.create(db=session, name="Filament Direct")
+        filament = await filament_db.create(db=session, density=1.24, diameter=1.75, weight=1000)
+        orders = [
+            await order_db.create(
+                db=session,
+                shop_id=shop.id,
+                ordered_at=datetime(2026, 1, index + 1),  # noqa: DTZ001 -- naive UTC, matches ordered_at storage
+                lines=[{"filament_id": filament.id, "quantity": 1}],
+            )
+            for index in range(5)
+        ]
+
+        ctx = ai_tools.ToolContext(db=session, can_write=False)
+        result = await ai_tools.READ_TOOLS["find_orders"].run(ctx, {"status": "all", "limit": 2})
+
+    assert result["count"] == 5
+    assert result["returned"] == 2
+    assert len(result["orders"]) == 2
+    # orders[4] (Jan 5) was placed last but must rank first; orders[3] (Jan 4) second. Compared
+    # by id (not the ordered_at string) since order.create's naive->UTC conversion is sensitive
+    # to the test host's local timezone and would make an exact date string flaky.
+    assert result["orders"][0]["id"] == orders[4].id
+    assert result["orders"][1]["id"] == orders[3].id
+
+
+async def test_find_orders_derives_status_and_filters_by_shop_and_date(client: AsyncClient) -> None:  # noqa: ARG001
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    #
+    # Guards the two domain facts the tool must get right: an order links to a Shop (not a
+    # Vendor), and open/arrived is derived from the lines' arrived_at, never a stored column --
+    # so both the shop filter and the status filter must be applied over what order.find (which
+    # only knows shop_id) returns.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        shop_a = await shop_db.create(db=session, name="Shop A")
+        shop_b = await shop_db.create(db=session, name="Shop B")
+        filament = await filament_db.create(db=session, density=1.24, diameter=1.75, weight=1000)
+
+        open_order = await order_db.create(
+            db=session,
+            shop_id=shop_a.id,
+            ordered_at=datetime(2026, 6, 1),  # noqa: DTZ001 -- naive UTC, matches ordered_at storage
+            lines=[{"filament_id": filament.id, "quantity": 2}],
+        )
+        arrived_order = await order_db.create(
+            db=session,
+            shop_id=shop_a.id,
+            ordered_at=datetime(2026, 6, 2),  # noqa: DTZ001 -- naive UTC, matches ordered_at storage
+            lines=[
+                {
+                    "filament_id": filament.id,
+                    "quantity": 1,
+                    "arrived_at": datetime(2026, 6, 3),  # noqa: DTZ001 -- naive UTC, matches arrived_at storage
+                },
+            ],
+        )
+        await order_db.create(
+            db=session,
+            shop_id=shop_b.id,
+            ordered_at=datetime(2026, 6, 1),  # noqa: DTZ001 -- naive UTC, matches ordered_at storage
+            lines=[{"filament_id": filament.id, "quantity": 5}],
+        )
+
+        ctx = ai_tools.ToolContext(db=session, can_write=False)
+        # Default status is "open", scoped to shop_a: only the still-outstanding order there.
+        result = await ai_tools.READ_TOOLS["find_orders"].run(ctx, {"shop": "Shop A"})
+
+    assert result["count"] == 1
+    assert result["orders"][0]["id"] == open_order.id
+    assert result["orders"][0]["status"] == "open"
+    assert result["orders"][0]["outstanding_units"] == 2
+    assert arrived_order.id != open_order.id  # sanity: the arrived order was excluded, not coincidentally absent
 
 
 # --- create_location / create_vendor: undo round-trips and duplicate refusal ------

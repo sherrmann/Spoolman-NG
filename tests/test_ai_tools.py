@@ -24,6 +24,7 @@ def test_readonly_is_offered_only_read_tools() -> None:
         "get_usage_stats",
         "find_locations",
         "find_vendors",
+        "find_orders",
         "catalog_lookup",
     }
 
@@ -36,6 +37,7 @@ def test_writer_is_offered_read_and_model_write_tools() -> None:
         "get_usage_stats",
         "find_locations",
         "find_vendors",
+        "find_orders",
         "catalog_lookup",
         "update_spool",
         "consume_spool",
