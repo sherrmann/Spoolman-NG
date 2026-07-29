@@ -245,16 +245,21 @@ async def _execute_delete_order(ctx: ToolContext, args: dict) -> ExecutionResult
     return ExecutionResult(summary=f"Deleted order #{order_id}.", data={"order_id": order_id}, undo=None)
 
 
-async def _resolve_location_id(ctx: ToolContext, name: str | None) -> int | None:
-    """Resolve a location name to its ID, raising if the name doesn't match an existing one."""
+async def _resolve_location_id(ctx: ToolContext, name: str | None) -> tuple[int | None, str | None]:
+    """Resolve a location name to its (id, canonical name), raising if the name doesn't match.
+
+    Returning the canonical name too lets the confirm-card state what will actually happen --
+    a user typing 'shelf b' must see 'Shelf B', the name the spools are actually filed under,
+    not an echo of whatever casing they happened to type.
+    """
     if name is None:
-        return None
+        return None, None
     items, _ = await location_db.find(db=ctx.db, name=name)
     lowered = name.strip().lower()
     match = next((item for item in items if (item.name or "").strip().lower() == lowered), None)
     if match is None:
         raise ToolError(f"No location named '{name}' exists. Create it first or omit the location.")
-    return match.id
+    return match.id, match.name
 
 
 async def _preview_arrive_order(ctx: ToolContext, args: dict) -> ConfirmCard:
@@ -275,7 +280,9 @@ async def _preview_arrive_order(ctx: ToolContext, args: dict) -> ConfirmCard:
 
     create_spools = arg_bool(args, "create_spools", default=True)
     location = clean_str(args.get("location"))
-    await _resolve_location_id(ctx, location)  # fail before the user confirms, not after
+    # Fail before the user confirms, not after -- and use the resolved canonical name in the
+    # summary below, not the user's raw casing/spacing, since that's where the spools actually land.
+    _location_id, resolved_location = await _resolve_location_id(ctx, location)
     units = sum(line.quantity for line in outstanding)
     described = await _describe_lines(
         ctx,
@@ -283,9 +290,11 @@ async def _preview_arrive_order(ctx: ToolContext, args: dict) -> ConfirmCard:
     )
     summary = f"Marks {len(outstanding)} line(s) arrived: " + "; ".join(described) + "."
     if create_spools:
-        summary += f" Creates {units} spool(s)" + (f" in {location}." if location else ".")
+        summary += f" Creates {units} spool(s)" + (f" in {resolved_location}." if resolved_location else ".")
     # There is no clean single call that reverses a partial arrival plus spool creation, so the
-    # card is where the user gets to see the whole effect. Undo is honestly absent.
+    # card is where the user gets to see the whole effect. Undo is honestly absent, and this is
+    # the one irreversible non-delete write in the tool set -- the flag set below is what puts
+    # the red "cannot be undone" styling on the confirm button, not just this sentence.
     summary += " This cannot be undone in one click."
     return ConfirmCard(
         tool="arrive_order",
@@ -293,14 +302,27 @@ async def _preview_arrive_order(ctx: ToolContext, args: dict) -> ConfirmCard:
         summary=summary,
         before={"status": "open", "outstanding_units": units},
         after={"status": "arrived", "spools_created": units if create_spools else 0},
+        destructive=True,
     )
 
 
 async def _execute_arrive_order(ctx: ToolContext, args: dict) -> ExecutionResult:
-    """Mark every outstanding line of an order arrived, optionally creating one spool per unit."""
+    """Mark every outstanding line of an order arrived, optionally creating one spool per unit.
+
+    Mirrors preview's guards exactly: a non-existent order and an order with nothing outstanding
+    both 404/422 as a clean ToolError here too, rather than a 500 (the order lookup) or a silent
+    "Marked order #N arrived" false success (the outstanding check) -- this write has no undo, so
+    a confirmed action that then quietly does nothing is exactly the failure mode to avoid.
+    """
     require_write(ctx)
     order_id = arg_int(args, "order_id")
-    location_id = await _resolve_location_id(ctx, clean_str(args.get("location")))
+    try:
+        item = await order_db.get_by_id(ctx.db, order_id)
+    except ItemNotFoundError as exc:
+        raise ToolError(f"No order with ID {order_id} exists.") from exc
+    if not any(line.arrived_at is None for line in item.lines):
+        raise ToolError(f"Order #{order_id} has no outstanding lines; it already arrived.")
+    location_id, _resolved_location = await _resolve_location_id(ctx, clean_str(args.get("location")))
     try:
         spools = await order_db.arrive(
             db=ctx.db,

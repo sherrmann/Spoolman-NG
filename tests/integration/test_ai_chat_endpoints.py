@@ -834,6 +834,30 @@ async def test_arrive_order_preview_states_what_it_will_create(client: AsyncClie
     assert "Shelf B" in card.summary
     assert "cannot be undone" in card.summary
     assert card.after["spools_created"] == 3
+    # The one irreversible non-delete write in the tool set: the red "cannot be undone" styling
+    # must actually be armed, not just described in the summary sentence.
+    assert card.destructive is True
+
+
+async def test_arrive_order_preview_echoes_the_resolved_location_name_not_the_raw_input(
+    client: AsyncClient,  # noqa: ARG001
+) -> None:
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    # A user typing "shelf b" must see the canonical "Shelf B" -- where the spools actually land.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        filament = await filament_db.create(db=session, density=1.24, diameter=1.75, weight=1000)
+        order = await order_db.create(db=session, lines=[{"filament_id": filament.id, "quantity": 1}])
+        await location_db.create(db=session, name="Shelf B")
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+
+        card = await ai_tools.WRITE_TOOLS["arrive_order"].preview(
+            ctx,
+            {"order_id": order.id, "location": "shelf b"},
+        )
+
+    assert "Shelf B" in card.summary
+    assert "shelf b" not in card.summary
 
 
 async def test_arrive_order_creates_spools_matching_the_card_and_offers_no_undo(
@@ -879,6 +903,23 @@ async def test_arrive_order_preview_refuses_a_nonexistent_order_without_mutating
     assert (await client.get("/api/v1/spool")).json() == []
 
 
+async def test_arrive_order_execute_refuses_a_nonexistent_order_as_a_clean_error(
+    client: AsyncClient,
+) -> None:
+    # A forced/direct execute call (bypassing preview) must still translate the database layer's
+    # ItemNotFoundError into a model-facing ToolError -- not a raw exception that would surface as
+    # a 500 via POST /chat/action instead of a clean 422, matching every other execute in this file.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+
+        with pytest.raises(ai_tools.ToolError, match="No order with ID 999999 exists"):
+            await ai_tools.WRITE_TOOLS["arrive_order"].execute(ctx, {"order_id": 999999})
+
+    # Nothing was created via the API either -- belt and suspenders on "no mutation happened".
+    assert (await client.get("/api/v1/spool")).json() == []
+
+
 async def test_arrive_order_preview_refuses_an_already_arrived_order_without_mutating(
     client: AsyncClient,  # noqa: ARG001
 ) -> None:
@@ -902,6 +943,30 @@ async def test_arrive_order_preview_refuses_an_already_arrived_order_without_mut
     assert before_count == after_count
     assert before_spools == after_spools
     assert orders.is_open(refetched) is False  # unchanged: still arrived, not re-mutated
+
+
+async def test_arrive_order_execute_refuses_an_already_arrived_order_instead_of_a_false_success(
+    client: AsyncClient,  # noqa: ARG001
+) -> None:
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    # A forced/direct execute call (bypassing preview) against an order with nothing outstanding
+    # must raise, not silently no-op while still reporting "Marked order #N arrived." -- a false
+    # success on a write that has no undo is the one failure mode this tool must never produce.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        filament = await filament_db.create(db=session, density=1.24, diameter=1.75, weight=1000)
+        order = await order_db.create(db=session, lines=[{"filament_id": filament.id, "quantity": 1}])
+        await order_db.arrive(db=session, order_id=order.id, create_spools=False)
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+        before_spools, before_count = await spool_db.find(db=session)
+
+        with pytest.raises(ai_tools.ToolError, match=f"Order #{order.id} has no outstanding lines"):
+            await ai_tools.WRITE_TOOLS["arrive_order"].execute(ctx, {"order_id": order.id, "create_spools": True})
+
+        after_spools, after_count = await spool_db.find(db=session)
+
+    assert before_count == after_count
+    assert before_spools == after_spools
 
 
 async def test_arrive_order_preview_refuses_an_unknown_location_without_mutating(

@@ -7,14 +7,18 @@ The numbers are ceilings with headroom, not targets — raise them deliberately,
 that says why.
 """
 
+import ast
+import inspect
 import json
+import textwrap
 
 from spoolman import ai_tools
 
-#: Ceiling on the serialised writer tool payload. The completed 18-tool set (task 13 adds the
-#: last one, arrive_order) lands near 12 KB -- raised deliberately from the pre-completion
-#: estimate of 9 KB, which undercounted arrive_order's verbatim description and parameters.
-MAX_SCHEMA_CHARS = 13_000
+#: Ceiling on the serialised writer tool payload. The completed 18-tool set lands at 12,057
+#: chars -- arrive_order itself is only 618 of that; the other 17 tools were already at 11,437,
+#: so the old 9 KB estimate was ~2.4 KB low before this task, not because of arrive_order. Raised
+#: deliberately, with headroom, now that the set is frozen at 18.
+MAX_SCHEMA_CHARS = 12_500
 #: One-line tool descriptions; a paragraph belongs in the system prompt, not in a schema.
 MAX_DESCRIPTION_CHARS = 400
 
@@ -54,6 +58,57 @@ def test_undo_only_tools_are_offered_to_nobody() -> None:
     for can_write in (True, False):
         offered = {schema["function"]["name"] for schema in ai_tools.tool_schemas(can_write=can_write)}
         assert not (offered & hidden), f"undo-only tools leaked into the schema list: {offered & hidden}"
+
+
+def _call_sets_keyword_to(node: ast.Call, keyword: str, *, value: bool | None) -> bool:
+    """Whether this call node passes ``keyword=value`` as a literal (not computed) argument."""
+    for kw in node.keywords:
+        if kw.arg == keyword:
+            return isinstance(kw.value, ast.Constant) and kw.value.value is value
+    return False
+
+
+def _every_call_sets_keyword_to(func: object, call_name: str, keyword: str, *, value: bool | None) -> bool:
+    """Whether ``func``'s source has at least one ``call_name(...)`` call, all setting ``keyword=value``.
+
+    Walks the AST rather than grepping the raw text: a plain substring search for e.g.
+    ``"undo=None"`` would also match that exact text sitting in a comment or docstring -- this
+    repo hit that case for real, with a comment explaining the no-undo/destructive pairing right
+    next to the ``ConfirmCard(...)`` call it describes. An AST walk only sees actual keyword
+    arguments, so it can't be fooled by prose, and a non-literal value (a dict, a variable, an
+    f-string) never spuriously counts as matching ``value``.
+    """
+    tree = ast.parse(textwrap.dedent(inspect.getsource(func)))
+    calls = [
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == call_name
+    ]
+    return bool(calls) and all(_call_sets_keyword_to(call, keyword, value=value) for call in calls)
+
+
+def _always_returns_no_undo(tool: ai_tools.WriteTool) -> bool:
+    """Whether every ``ExecutionResult(...)`` returned by ``tool.execute`` sets ``undo=None``.
+
+    Every write tool's ``execute`` builds its ``ExecutionResult`` with a literal ``undo=`` at
+    each return site -- either ``undo=None`` or ``undo={...}`` -- never a value computed from a
+    condition (true across every module in the package at the time this test was written). That
+    makes an AST check a safe stand-in for actually calling execute, which would otherwise mean
+    giving this DB-free budget file a database fixture per write tool.
+    """
+    return _every_call_sets_keyword_to(tool.execute, "ExecutionResult", "undo", value=None)
+
+
+def test_every_write_tool_without_an_undo_is_marked_destructive() -> None:
+    # The card's red "Cannot be undone" badge is the only visual signal a write is irreversible.
+    # Any tool that returns undo=None must earn it; this pins the pair together so a future
+    # no-undo tool can't ship with an ordinary-looking, safe-seeming confirm-card.
+    for name, tool in ai_tools.WRITE_TOOLS.items():
+        if not _always_returns_no_undo(tool):
+            continue
+        assert _every_call_sets_keyword_to(tool.preview, "ConfirmCard", "destructive", value=True), (
+            f"{name} has no undo but its preview never sets destructive=True"
+        )
 
 
 #: The model-facing set is fixed by design. Changing it is a spec decision, not a refactor.
