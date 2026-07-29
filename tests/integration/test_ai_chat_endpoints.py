@@ -737,6 +737,53 @@ async def test_find_orders_derives_status_and_filters_by_shop_and_date(client: A
     assert arrived_order.id != open_order.id  # sanity: the arrived order was excluded, not coincidentally absent
 
 
+# --- create_order / delete_order: hidden undo delete --------------------------------
+
+
+async def test_create_order_undo_round_trip_actually_deletes_the_order(
+    client: AsyncClient,  # noqa: ARG001
+) -> None:
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    # delete_order exists only so create_order is reversible: it must be registered
+    # model_facing=False (the model is never told about it) and its execute must genuinely
+    # remove the order created above, not just report success.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        filament = await filament_db.create(db=session, density=1.24, diameter=1.75, weight=1000)
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+
+        result = await ai_tools.WRITE_TOOLS["create_order"].execute(
+            ctx,
+            {"lines": [{"filament_id": filament.id, "quantity": 2, "price_per_unit": 19.5}]},
+        )
+        order_id = result.data["order_id"]
+
+        created = await order_db.get_by_id(session, order_id)
+        assert created.lines[0].filament_id == filament.id
+        assert created.lines[0].quantity == 2
+        assert created.lines[0].price_per_unit == 19.5
+
+        undo = result.undo
+        assert undo == {"tool": "delete_order", "args": {"order_id": order_id}}
+        assert ai_tools.WRITE_TOOLS["delete_order"].model_facing is False
+
+        await ai_tools.WRITE_TOOLS[undo["tool"]].execute(ctx, undo["args"])
+
+        with pytest.raises(ItemNotFoundError, match="No order with ID"):
+            await order_db.get_by_id(session, order_id)
+
+
+async def test_create_order_refuses_a_nonexistent_filament(client: AsyncClient) -> None:  # noqa: ARG001
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    # Mirrors the ItemNotFoundError -> ToolError translation every other create/preview does:
+    # an uncaught ItemNotFoundError would otherwise be swallowed into a generic failure message.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+        with pytest.raises(ai_tools.ToolError, match="No filament with ID 999999 exists"):
+            await ai_tools.WRITE_TOOLS["create_order"].preview(ctx, {"lines": [{"filament_id": 999999}]})
+
+
 # --- create_location / create_vendor: undo round-trips and duplicate refusal ------
 
 
@@ -1318,6 +1365,7 @@ async def test_delete_vendor_execute_raises_a_clean_error_for_a_double_undo(
         ("create_vendor", {"name": "NewCo"}),
         ("delete_vendor", {"vendor_id": 1}),
         ("delete_filament", {"filament_id": 1}),
+        ("create_order", {"lines": [{"filament_id": 1}]}),
     ],
 )
 async def test_readonly_execute_is_refused_for_every_inventory_write_tool(
@@ -1327,7 +1375,7 @@ async def test_readonly_execute_is_refused_for_every_inventory_write_tool(
 ) -> None:
     # `client` isn't called directly but its fixture wires up db_module's session maker.
     # require_write(ctx) must be the first statement of every execute here -- parametrized over
-    # all five tools so a missing call in any one of them (not just create_location) fails this
+    # all six tools so a missing call in any one of them (not just create_location) fails this
     # test rather than slipping through untested. delete_filament is the most destructive tool in
     # the registry, so it belongs here more than any of the others.
     session_maker = db_module.get_session_maker()

@@ -6,16 +6,23 @@ database layer returns, because ``order.find`` filters only by shop.
 """
 
 from spoolman.ai_tools.base import (
+    ConfirmCard,
+    ExecutionResult,
     ReadTool,
     ToolContext,
     ToolError,
     WriteTool,
+    arg_int,
     arg_limit,
     clean_str,
+    optional_float,
+    require_write,
 )
 from spoolman.ai_tools.stats import parse_date
+from spoolman.database import filament as filament_db
 from spoolman.database import order as order_db
 from spoolman.database import shop as shop_db
+from spoolman.exceptions import ItemNotFoundError
 
 _STATUSES = ("open", "arrived", "all")
 
@@ -124,4 +131,155 @@ READ_TOOLS: dict[str, ReadTool] = {
     ),
 }
 
-WRITE_TOOLS: dict[str, WriteTool] = {}
+# --- Write tools -------------------------------------------------------------------
+
+
+def parse_lines(args: dict) -> list[dict]:
+    """Coerce the 'lines' argument into order-line dicts.
+
+    This is the hardest argument shape in the tool set for a small model to fill: a list of
+    objects. Every failure mode gets a message the model can act on, because the alternative is
+    a lost turn.
+    """
+    raw = args.get("lines")
+    if not isinstance(raw, list) or not raw:
+        raise ToolError("The 'lines' argument must be a non-empty list of {filament_id, quantity} objects.")
+    parsed = []
+    for index, entry in enumerate(raw):
+        if not isinstance(entry, dict):
+            raise ToolError(f"Line {index + 1} of 'lines' must be an object with a filament_id.")
+        quantity = arg_int(entry, "quantity", default=1)
+        if quantity < 1:
+            raise ToolError(f"Line {index + 1}: 'quantity' must be at least 1, got {quantity}.")
+        parsed.append(
+            {
+                "filament_id": arg_int(entry, "filament_id"),
+                "quantity": quantity,
+                "price_per_unit": optional_float(entry, "price_per_unit"),
+            },
+        )
+    return parsed
+
+
+async def _describe_lines(ctx: ToolContext, lines: list[dict]) -> list[str]:
+    """Human line descriptions for a confirm-card, validating each filament exists."""
+    described = []
+    for line in lines:
+        try:
+            filament = await filament_db.get_by_id(ctx.db, line["filament_id"])
+        except ItemNotFoundError as exc:
+            raise ToolError(f"No filament with ID {line['filament_id']} exists.") from exc
+        vendor = filament.vendor.name if filament.vendor is not None else None
+        name = " - ".join(part for part in (vendor, filament.name) if part) or filament.material
+        described.append(f"{line['quantity']} x {name}")
+    return described
+
+
+async def _preview_create_order(ctx: ToolContext, args: dict) -> ConfirmCard:
+    lines = parse_lines(args)
+    described = await _describe_lines(ctx, lines)
+    shop = clean_str(args.get("shop"))
+    after = {
+        "shop": shop,
+        "order_number": clean_str(args.get("order_number")),
+        "lines": described,
+        "units": sum(line["quantity"] for line in lines),
+    }
+    return ConfirmCard(
+        tool="create_order",
+        title=f"Create an order of {after['units']} spool(s)" + (f" from {shop}" if shop else ""),
+        summary="; ".join(described),
+        before={},
+        after={key: value for key, value in after.items() if value is not None},
+    )
+
+
+async def _execute_create_order(ctx: ToolContext, args: dict) -> ExecutionResult:
+    require_write(ctx)
+    lines = parse_lines(args)
+    await _describe_lines(ctx, lines)
+    created = await order_db.create(
+        db=ctx.db,
+        shop_id=await _resolve_shop_id(ctx, clean_str(args.get("shop"))),
+        ordered_at=parse_date(args, "ordered_at"),
+        order_number=clean_str(args.get("order_number")),
+        comment=clean_str(args.get("comment")),
+        lines=lines,
+    )
+    return ExecutionResult(
+        summary=f"Created order #{created.id} with {len(lines)} line(s).",
+        data={"order_id": created.id},
+        undo={"tool": "delete_order", "args": {"order_id": created.id}},
+    )
+
+
+async def _preview_delete_order(ctx: ToolContext, args: dict) -> ConfirmCard:
+    order_id = arg_int(args, "order_id")
+    try:
+        item = await order_db.get_by_id(ctx.db, order_id)
+    except ItemNotFoundError as exc:
+        raise ToolError(f"No order with ID {order_id} exists.") from exc
+    return ConfirmCard(
+        tool="delete_order",
+        title=f"Delete order #{order_id}",
+        summary="The order and its lines are removed. Spools already created from it are kept.",
+        before=order_row(item),
+        after={},
+        destructive=True,
+    )
+
+
+async def _execute_delete_order(ctx: ToolContext, args: dict) -> ExecutionResult:
+    require_write(ctx)
+    order_id = arg_int(args, "order_id")
+    await order_db.delete(ctx.db, order_id)
+    return ExecutionResult(summary=f"Deleted order #{order_id}.", data={"order_id": order_id}, undo=None)
+
+
+WRITE_TOOLS: dict[str, WriteTool] = {
+    "create_order": WriteTool(
+        name="create_order",
+        description=(
+            "Record a filament order the user has placed. 'lines' is a list of "
+            "{filament_id, quantity, price_per_unit} objects; every filament must already exist "
+            "(use create_filament first). Requires user confirmation."
+        ),
+        parameters={
+            "type": "object",
+            "properties": {
+                "lines": {
+                    "type": "array",
+                    "description": "The ordered filaments.",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "filament_id": {"type": "integer"},
+                            "quantity": {"type": "integer", "description": "Spools ordered (default 1)."},
+                            "price_per_unit": {"type": "number"},
+                        },
+                        "required": ["filament_id"],
+                    },
+                },
+                "shop": {"type": "string", "description": "Shop name; must already exist."},
+                "order_number": {"type": "string"},
+                "ordered_at": {"type": "string", "description": "ISO date the order was placed."},
+                "comment": {"type": "string"},
+            },
+            "required": ["lines"],
+        },
+        preview=_preview_create_order,
+        execute=_execute_create_order,
+    ),
+    "delete_order": WriteTool(
+        name="delete_order",
+        description="Delete an order and its lines (internal undo helper).",
+        parameters={
+            "type": "object",
+            "properties": {"order_id": {"type": "integer"}},
+            "required": ["order_id"],
+        },
+        preview=_preview_delete_order,
+        execute=_execute_delete_order,
+        model_facing=False,
+    ),
+}
