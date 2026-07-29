@@ -21,6 +21,7 @@ from datetime import datetime
 import pytest
 import respx
 from httpx import AsyncClient, Response
+from sqlalchemy import select
 
 from spoolman import ai, ai_tools, aichat
 from spoolman.ai_tools import filaments
@@ -28,6 +29,8 @@ from spoolman.api.v1 import ai as ai_api
 from spoolman.database import database as db_module
 from spoolman.database import filament as filament_db
 from spoolman.database import location as location_db
+from spoolman.database import models
+from spoolman.database import order as order_db
 from spoolman.database import spool as spool_db
 from spoolman.database import vendor as vendor_db
 from spoolman.exceptions import ItemNotFoundError
@@ -765,10 +768,9 @@ async def test_create_filament_execute_creates_both_filament_and_vendor(
         found_vendor, _ = await vendor_db.find(db=session, name="BrandNew")
         assert any(item.name == "BrandNew" for item in found_vendor)
 
-        # delete_filament (create_filament's undo tool) doesn't exist as a registered WRITE_TOOL
-        # until Task 10 -- the descriptor already names it, so pin its shape now, and prove the
-        # round-trip by calling the same database function delete_filament will wrap. The
-        # WRITE_TOOLS["delete_filament"] round-trip itself becomes testable once that tool lands.
+        # Pin the undo descriptor's shape here, alongside the vendor-creation assertions above;
+        # the full WRITE_TOOLS["delete_filament"] round trip is exercised separately by
+        # test_create_filament_undo_round_trip_actually_deletes_the_filament.
         undo = result.undo
         assert undo == {"tool": "delete_filament", "args": {"filament_id": filament_id}}
         await filament_db.delete(session, undo["args"]["filament_id"])
@@ -964,6 +966,112 @@ async def test_update_filament_partial_change_leaves_other_nullable_fields_untou
         updated = await filament_db.get_by_id(session, filament_id)
     assert updated.name == "New"
     assert updated.comment == "Keep me"
+
+
+# --- delete_filament: the blast-radius preview and the one irreversible write ------
+
+
+async def test_delete_filament_preview_counts_every_spool_including_archived(
+    client: AsyncClient,  # noqa: ARG001
+) -> None:
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    # The card must disclose the TRUE blast radius: an archived spool is destroyed by the
+    # cascade exactly like an active one (it is not just hidden inventory), so it must count too.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        created = await filament_db.create(db=session, density=1.24, diameter=1.75, name="Doomed")
+        filament_id = created.id
+        await spool_db.create(db=session, filament_id=filament_id)
+        archived = await spool_db.create(db=session, filament_id=filament_id)
+        await spool_db.update(db=session, spool_id=archived.id, data={"archived": True})
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+
+        card = await ai_tools.WRITE_TOOLS["delete_filament"].preview(ctx, {"filament_id": filament_id})
+
+    assert card.destructive is True
+    assert "2 spool" in card.summary
+
+
+async def test_delete_filament_refuses_while_an_order_line_references_it(
+    client: AsyncClient,  # noqa: ARG001
+) -> None:
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    # filament_db.delete would raise ItemDeleteError here -- the preview must refuse up front,
+    # before the user ever confirms a delete that is doomed to fail.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        created = await filament_db.create(db=session, density=1.24, diameter=1.75, name="Ordered")
+        filament_id = created.id
+        await order_db.create(db=session, lines=[{"filament_id": filament_id, "quantity": 1}])
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+
+        with pytest.raises(ai_tools.ToolError, match="order line"):
+            await ai_tools.WRITE_TOOLS["delete_filament"].preview(ctx, {"filament_id": filament_id})
+
+        # Refused, not merely warned about: the filament is still there.
+        still_there = await filament_db.get_by_id(session, filament_id)
+    assert still_there.id == filament_id
+
+
+async def test_delete_filament_execute_cascades_to_every_spool_and_its_usage_history(
+    client: AsyncClient,  # noqa: ARG001
+) -> None:
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    # Spool.filament_id is NOT NULL and the ORM relationship carries no delete cascade, so a naive
+    # `db.delete(filament)` fails outright (the ORM tries to null the FK on flush) the instant the
+    # filament has any spool at all -- the single most common case for a real delete. This proves
+    # the cascade actually runs, including for an archived spool and its usage events.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        created = await filament_db.create(db=session, density=1.24, diameter=1.75, name="Doomed")
+        filament_id = created.id
+        kept_spool = await spool_db.create(db=session, filament_id=filament_id)
+        archived_spool = await spool_db.create(db=session, filament_id=filament_id)
+        await spool_db.update(db=session, spool_id=archived_spool.id, data={"archived": True})
+        session.add(
+            models.SpoolUsageEvent(spool_id=kept_spool.id, time=datetime.utcnow(), event_type="use", delta=10.0),
+        )
+        await session.commit()
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+
+        result = await ai_tools.WRITE_TOOLS["delete_filament"].execute(ctx, {"filament_id": filament_id})
+        assert result.undo is None
+
+        with pytest.raises(ItemNotFoundError, match="No filament with ID"):
+            await filament_db.get_by_id(session, filament_id)
+        with pytest.raises(ItemNotFoundError, match="No spool with ID"):
+            await spool_db.get_by_id(session, kept_spool.id)
+        with pytest.raises(ItemNotFoundError, match="No spool with ID"):
+            await spool_db.get_by_id(session, archived_spool.id)
+        remaining_events = (
+            await session.execute(
+                select(models.SpoolUsageEvent).where(models.SpoolUsageEvent.spool_id == kept_spool.id),
+            )
+        ).all()
+    assert remaining_events == []
+
+
+async def test_create_filament_undo_round_trip_actually_deletes_the_filament(
+    client: AsyncClient,  # noqa: ARG001
+) -> None:
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    # create_filament's undo descriptor has always named delete_filament, but that tool did not
+    # exist as a registered WRITE_TOOL until now -- prove the full round trip actually works.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+        result = await ai_tools.WRITE_TOOLS["create_filament"].execute(
+            ctx,
+            {"name": "Undo Me", "density": 1.24, "diameter": 1.75},
+        )
+        filament_id = result.data["filament_id"]
+        undo = result.undo
+        assert undo == {"tool": "delete_filament", "args": {"filament_id": filament_id}}
+
+        await ai_tools.WRITE_TOOLS[undo["tool"]].execute(ctx, undo["args"])
+
+        with pytest.raises(ItemNotFoundError, match="No filament with ID"):
+            await filament_db.get_by_id(session, filament_id)
 
 
 # --- update_spool: the same nullable-field undo hazard, in the sibling tool --------

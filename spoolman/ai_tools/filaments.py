@@ -25,7 +25,7 @@ from spoolman.ai_tools.base import (
 )
 from spoolman.database import filament as filament_db
 from spoolman.database import vendor as vendor_db
-from spoolman.exceptions import ItemNotFoundError
+from spoolman.exceptions import ItemDeleteError, ItemNotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -299,6 +299,46 @@ async def _execute_update_filament(ctx: ToolContext, args: dict) -> ExecutionRes
     )
 
 
+async def _preview_delete_filament(ctx: ToolContext, args: dict) -> ConfirmCard:
+    filament_id = arg_int(args, "filament_id")
+    item = await _get_filament(ctx, filament_id)
+    line_count = await filament_db.count_order_line_references(ctx.db, filament_id)
+    if line_count:
+        # filament_db.delete would raise ItemDeleteError in that case -- refuse before the user
+        # confirms a delete that then fails, the worst possible sequence for a destructive change.
+        raise ToolError(
+            f"Cannot delete filament {filament_id}: {line_count} order line(s) reference it. "
+            "Delete or amend those orders first.",
+        )
+    # The true blast radius, not just the active-inventory rollup: an archived spool is destroyed
+    # by the cascade exactly like an active one, so it must count here too. filament_db.get_aggregates
+    # deliberately excludes archived spools (it answers "what's in stock"), the wrong lens for a
+    # destructive, no-undo preview.
+    spool_count = await filament_db.count_spools(ctx.db, filament_id)
+    return ConfirmCard(
+        tool="delete_filament",
+        title=f"Delete filament #{filament_id} ({item.name or item.material or 'unnamed'})",
+        summary=(
+            f"This permanently deletes the filament and its {spool_count} spool(s), including their "
+            "usage history. It cannot be undone."
+        ),
+        before={"name": item.name, "material": item.material, "spool_count": spool_count},
+        after={},
+        destructive=True,
+    )
+
+
+async def _execute_delete_filament(ctx: ToolContext, args: dict) -> ExecutionResult:
+    require_write(ctx)
+    filament_id = arg_int(args, "filament_id")
+    await _get_filament(ctx, filament_id)
+    try:
+        await filament_db.delete(ctx.db, filament_id)
+    except ItemDeleteError as exc:
+        raise ToolError(str(exc)) from exc
+    return ExecutionResult(summary=f"Deleted filament #{filament_id}.", data={"filament_id": filament_id}, undo=None)
+
+
 # --- Registry ----------------------------------------------------------------------
 
 READ_TOOLS: dict[str, ReadTool] = {
@@ -383,5 +423,20 @@ WRITE_TOOLS: dict[str, WriteTool] = {
         },
         preview=_preview_update_filament,
         execute=_execute_update_filament,
+    ),
+    "delete_filament": WriteTool(
+        name="delete_filament",
+        description=(
+            "Permanently delete a filament type and all its spools, including usage history. "
+            "Destructive and cannot be undone. Refused while any order references it. Only do this "
+            "when clearly asked. Requires user confirmation."
+        ),
+        parameters={
+            "type": "object",
+            "properties": {"filament_id": {"type": "integer"}},
+            "required": ["filament_id"],
+        },
+        preview=_preview_delete_filament,
+        execute=_execute_delete_filament,
     ),
 }
