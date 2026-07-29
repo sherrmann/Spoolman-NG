@@ -848,6 +848,42 @@ async def test_create_filament_never_deletes_a_pre_existing_vendor_when_the_fila
     assert found[0].name == "ExistingCo"
 
 
+# --- update_filament: before/after diff and a genuinely reversible undo ------------
+
+
+async def test_update_filament_undo_round_trip(client: AsyncClient) -> None:  # noqa: ARG001
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    # weight_g (tool argument) maps to the `weight` column -- a field where the two names
+    # genuinely differ. The undo descriptor must be expressed in tool argument names, or a
+    # naive reuse of the before-values would produce an undo call with an unrecognised
+    # "weight" key that silently does nothing; executing it is the only way to prove that.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        created = await filament_db.create(db=session, density=1.24, diameter=1.75, name="Old", weight=1000)
+        filament_id = created.id
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+
+        result = await ai_tools.WRITE_TOOLS["update_filament"].execute(
+            ctx,
+            {"filament_id": filament_id, "name": "New", "weight_g": 900},
+        )
+        undo = result.undo
+        assert undo == {
+            "tool": "update_filament",
+            "args": {"filament_id": filament_id, "name": "Old", "weight_g": 1000.0},
+        }
+
+        updated = await filament_db.get_by_id(session, filament_id)
+        assert updated.name == "New"
+        assert updated.weight == 900.0
+
+        await ai_tools.WRITE_TOOLS[undo["tool"]].execute(ctx, undo["args"])
+
+        reverted = await filament_db.get_by_id(session, filament_id)
+    assert reverted.name == "Old"
+    assert reverted.weight == 1000.0
+
+
 async def test_delete_location_execute_raises_a_clean_error_for_a_double_undo(
     client: AsyncClient,  # noqa: ARG001
 ) -> None:

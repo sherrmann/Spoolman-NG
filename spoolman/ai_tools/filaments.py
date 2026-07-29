@@ -25,6 +25,7 @@ from spoolman.ai_tools.base import (
 )
 from spoolman.database import filament as filament_db
 from spoolman.database import vendor as vendor_db
+from spoolman.exceptions import ItemNotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -91,6 +92,10 @@ _CURATED = {
     "comment": ("comment", "str"),
 }
 
+#: Column name -> tool argument name, so an undo descriptor can be expressed in tool arguments.
+_COLUMN_TO_ARG = {column: arg for arg, (column, _kind) in _CURATED.items()}
+_COLUMN_TO_ARG.update({"density": "density", "diameter": "diameter", "color_hex": "color_hex"})
+
 
 _HEX_COLOR_LENGTH = 6
 
@@ -135,6 +140,14 @@ def curated_fields(args: dict, *, require_physics: bool = True) -> dict:
     if color is not None:
         fields["color_hex"] = color
     return fields
+
+
+def changes_for_update(args: dict) -> dict:
+    """Return the curated fields the caller actually provided, for an update; error when empty."""
+    changes = curated_fields(args, require_physics=False)
+    if not changes:
+        raise ToolError("No changes were provided to update.")
+    return changes
 
 
 async def _resolve_vendor(ctx: ToolContext, args: dict) -> tuple[object | None, str | None]:
@@ -214,6 +227,48 @@ async def _execute_create_filament(ctx: ToolContext, args: dict) -> ExecutionRes
     )
 
 
+def _filament_view(item: object, keys: list[str]) -> dict:
+    """Return the current values of the named columns, for a before/after card."""
+    return {key: getattr(item, key) for key in keys}
+
+
+async def _get_filament(ctx: ToolContext, filament_id: int) -> object:
+    """Fetch a filament by ID, or raise a model-facing ToolError if it doesn't exist."""
+    try:
+        return await filament_db.get_by_id(ctx.db, filament_id)
+    except ItemNotFoundError as exc:
+        raise ToolError(f"No filament with ID {filament_id} exists.") from exc
+
+
+async def _preview_update_filament(ctx: ToolContext, args: dict) -> ConfirmCard:
+    item = await _get_filament(ctx, arg_int(args, "filament_id"))
+    changes = changes_for_update(args)
+    before = _filament_view(item, list(changes))
+    return ConfirmCard(
+        tool="update_filament",
+        title=f"Update filament #{item.id} ({item.name or item.material or 'unnamed'})",
+        summary=", ".join(f"{key}: {before[key]!r} -> {changes[key]!r}" for key in changes),
+        before=before,
+        after=dict(changes),
+    )
+
+
+async def _execute_update_filament(ctx: ToolContext, args: dict) -> ExecutionResult:
+    require_write(ctx)
+    filament_id = arg_int(args, "filament_id")
+    item = await _get_filament(ctx, filament_id)
+    changes = changes_for_update(args)
+    before = _filament_view(item, list(changes))
+    await filament_db.update(db=ctx.db, filament_id=filament_id, data=dict(changes))
+    # The undo descriptor speaks the tool's argument names, not the column names.
+    reverse = {_COLUMN_TO_ARG[column]: value for column, value in before.items()}
+    return ExecutionResult(
+        summary=f"Updated filament #{filament_id}: " + ", ".join(f"{k} -> {v!r}" for k, v in changes.items()),
+        data={"filament_id": filament_id, "changed": list(changes)},
+        undo={"tool": "update_filament", "args": {"filament_id": filament_id, **reverse}},
+    )
+
+
 # --- Registry ----------------------------------------------------------------------
 
 READ_TOOLS: dict[str, ReadTool] = {
@@ -269,5 +324,34 @@ WRITE_TOOLS: dict[str, WriteTool] = {
         },
         preview=_preview_create_filament,
         execute=_execute_create_filament,
+    ),
+    "update_filament": WriteTool(
+        name="update_filament",
+        description=(
+            "Update fields of an existing filament type. Only the fields you pass are changed. "
+            "density and diameter are validated if given, but not required. Requires user confirmation."
+        ),
+        parameters={
+            "type": "object",
+            "properties": {
+                "filament_id": {"type": "integer", "description": "The filament to update."},
+                "name": {"type": "string", "description": "Product name, e.g. 'PLA Meta'."},
+                "material": {"type": "string", "description": "e.g. PLA, PETG, ASA."},
+                "density": {"type": "number", "description": "g/cm3."},
+                "diameter": {"type": "number", "description": "mm, e.g. 1.75."},
+                "weight_g": {"type": "number", "description": "Net filament weight of a full spool."},
+                "spool_weight_g": {"type": "number", "description": "Weight of the empty spool."},
+                "color_hex": {"type": "string", "description": "6-digit hex without '#'."},
+                "price": {"type": "number"},
+                "extruder_temp": {"type": "integer"},
+                "bed_temp": {"type": "integer"},
+                "article_number": {"type": "string"},
+                "low_stock_threshold_g": {"type": "number"},
+                "comment": {"type": "string"},
+            },
+            "required": ["filament_id"],
+        },
+        preview=_preview_update_filament,
+        execute=_execute_update_filament,
     ),
 }

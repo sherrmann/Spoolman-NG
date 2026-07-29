@@ -44,3 +44,14 @@ def test_color_hex_is_normalised_and_validated() -> None:
     assert filaments.curated_fields({"density": 1, "diameter": 1, "color_hex": "#AABBCC"})["color_hex"] == "AABBCC"
     with pytest.raises(ToolError, match="color_hex"):
         filaments.curated_fields({"density": 1, "diameter": 1, "color_hex": "black"})
+
+
+def test_update_does_not_require_physics_but_still_validates_it() -> None:
+    assert filaments.curated_fields({"name": "New name"}, require_physics=False) == {"name": "New name"}
+    with pytest.raises(ToolError, match="density"):
+        filaments.curated_fields({"density": "thick"}, require_physics=False)
+
+
+def test_update_rejects_an_empty_change_set() -> None:
+    with pytest.raises(ToolError, match="No changes"):
+        filaments.changes_for_update({"filament_id": 1})
