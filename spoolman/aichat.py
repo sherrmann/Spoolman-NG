@@ -67,6 +67,11 @@ def _system_prompt(*, context: str | None, locale: str, can_write: bool) -> str:
             "confirms them in the interface. Call the write tool with the intended change; do not claim a "
             "change has happened until a tool result confirms it. Never delete without being clearly asked.",
         )
+        lines.append(
+            "Never invent a filament's density or diameter. Call catalog_lookup for real values, or ask "
+            "the user. Prefer arrive_order over creating spools by hand when an order arrives, and check "
+            "find_vendors or find_locations before creating a vendor or location that may already exist.",
+        )
     else:
         lines.append("This user has read-only access. You can answer questions but cannot make any changes.")
     return "\n".join(lines)

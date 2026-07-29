@@ -308,8 +308,9 @@ WRITE_TOOLS: dict[str, WriteTool] = {
     "update_spool": WriteTool(
         name="update_spool",
         description=(
-            "Change a spool's location, lot number, comment, price, or archived flag. Only the fields "
-            "you pass are changed. Requires user confirmation before it runs."
+            "Change a spool's location, lot number, comment, price, or archived flag. Omit any field you "
+            "don't want to change; pass null only to clear that field, not as a placeholder for 'nothing "
+            "to set'. Requires user confirmation before it runs."
         ),
         parameters={
             "type": "object",

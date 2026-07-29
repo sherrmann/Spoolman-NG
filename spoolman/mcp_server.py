@@ -40,9 +40,19 @@ logger = logging.getLogger(__name__)
 
 SERVER_NAME = "spoolman-ng"
 
-#: The write tools exposed over MCP — the curated set from #360 (log usage, create, archive
-#: via update). delete_spool is intentionally excluded: destructive and outside MCP scope.
-_MCP_WRITE_TOOLS = ("create_spool", "update_spool", "consume_spool")
+#: The write tools exposed over MCP: curated, non-destructive changes only. Deletes are never
+#: offered here — an MCP client's user does not see Spoolman's confirm-cards.
+_MCP_WRITE_TOOLS = (
+    "create_spool",
+    "update_spool",
+    "consume_spool",
+    "create_filament",
+    "update_filament",
+    "create_order",
+    "arrive_order",
+    "create_location",
+    "create_vendor",
+)
 
 #: URI of the low-stock report resource.
 LOW_STOCK_URI = "spoolman://low-stock"

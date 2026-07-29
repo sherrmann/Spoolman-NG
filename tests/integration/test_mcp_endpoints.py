@@ -224,3 +224,12 @@ async def test_low_stock_resource_and_restock_prompt(client: AsyncClient) -> Non
         assert mcp_server.RESTOCK_PROMPT in prompts
         prompt = await session.get_prompt(mcp_server.RESTOCK_PROMPT, {})
         assert "find_filaments" in prompt.messages[0].content.text
+
+
+# --- Write-set invariant -------------------------------------------------------------
+
+
+def test_mcp_never_offers_a_destructive_tool() -> None:
+    """No name in the curated MCP write set may be a delete: no confirm-card exists over MCP."""
+    for name in mcp_server._MCP_WRITE_TOOLS:  # noqa: SLF001 -- unit-testing the module's own invariant
+        assert not name.startswith("delete_"), f"{name} must not be exposed over MCP"

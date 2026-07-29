@@ -307,3 +307,24 @@ async def test_probe_cache_holds_latest_result() -> None:
     second = await ai.probe(ai.AIConfig(base_url="https://api.example.com/v1", model="m"))
     assert ai.get_cached_probe() is second
     assert second.ok is True
+
+
+# --- System prompt -------------------------------------------------------------------
+
+
+def test_system_prompt_forbids_guessing_filament_physics() -> None:
+    from spoolman.aichat import _system_prompt  # noqa: PLC0415
+
+    prompt = _system_prompt(context=None, locale="en", can_write=True)
+
+    assert "catalog_lookup" in prompt
+    assert "density" in prompt
+
+
+def test_readonly_prompt_still_says_nothing_about_writing() -> None:
+    from spoolman.aichat import _system_prompt  # noqa: PLC0415
+
+    prompt = _system_prompt(context=None, locale="en", can_write=False)
+
+    assert "read-only" in prompt
+    assert "catalog_lookup" not in prompt

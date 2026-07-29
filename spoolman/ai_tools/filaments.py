@@ -398,8 +398,9 @@ WRITE_TOOLS: dict[str, WriteTool] = {
     "update_filament": WriteTool(
         name="update_filament",
         description=(
-            "Update fields of an existing filament type. Only the fields you pass are changed. "
-            "density and diameter are validated if given, but not required. Requires user confirmation."
+            "Update fields of an existing filament type. Omit any field you don't want to change; pass "
+            "null only to clear that field, not as a placeholder for 'nothing to set'. density and "
+            "diameter are validated if given, but not required. Requires user confirmation."
         ),
         parameters={
             "type": "object",

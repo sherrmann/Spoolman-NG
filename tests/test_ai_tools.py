@@ -205,3 +205,13 @@ def test_package_reexports_the_public_surface() -> None:
 def test_model_facing_flag_replaces_the_hardcoded_write_list() -> None:
     assert ai_tools.WRITE_TOOLS["set_spool_used_weight"].model_facing is False
     assert ai_tools.WRITE_TOOLS["update_spool"].model_facing is True
+
+
+def test_update_descriptions_warn_that_explicit_null_clears_a_field() -> None:
+    # Presence-based change detection (task 9) means a key present with value null clears
+    # that field, so undo can restore a previously-empty one. A model that lazily emits null
+    # for "nothing to set here" would silently wipe a column, so the description must spell
+    # out the omit-vs-null distinction, not just "only the fields you pass are changed".
+    for name in ("update_spool", "update_filament"):
+        description = ai_tools.WRITE_TOOLS[name].description.lower()
+        assert "clear" in description, f"{name}'s description no longer warns that null clears a field"
