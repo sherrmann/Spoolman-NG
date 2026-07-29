@@ -111,34 +111,64 @@ def _color_hex(args: dict) -> str | None:
     return candidate
 
 
+def _coerce_curated_entry(args: dict, arg_name: str, kind: str) -> tuple[bool, object]:
+    """Coerce one already-present curated argument; returns (should_set, coerced_value).
+
+    ``should_set`` is False only for a blank string, which (unlike an explicit None) means
+    "nothing was really provided" rather than "clear this field" -- matching the long-standing
+    ``clean_str`` behaviour for every other string field in this tool layer.
+    """
+    value = args[arg_name]
+    if value is None:
+        return True, None
+    if kind == "str":
+        cleaned = clean_str(value)
+        return cleaned is not None, cleaned
+    if kind == "float":
+        return True, arg_float(args, arg_name)
+    return True, arg_int(args, arg_name)
+
+
+def _apply_color_hex(args: dict, fields: dict) -> None:
+    """Set or clear ``fields['color_hex']`` from ``args``, if the key was provided at all."""
+    if "color_hex" not in args:
+        return
+    if args["color_hex"] is None:
+        fields["color_hex"] = None
+        return
+    color = _color_hex(args)
+    if color is not None:
+        fields["color_hex"] = color
+
+
 def curated_fields(args: dict, *, require_physics: bool = True) -> dict:
     """Map tool arguments onto filament.create/update kwargs, keeping only the curated subset.
 
     ``density`` and ``diameter`` are required on create and are never defaulted: they are exactly
     the fields a model will confidently fabricate, and a wrong density silently corrupts every
     weight calculation for that filament forever. The model is told to call catalog_lookup or ask.
+
+    Change-detection is by *key presence*, not truthiness: most curated columns are nullable, and
+    an update's undo descriptor carries the prior value verbatim, None included. Treating an
+    explicit None the same as "not provided" would make that value un-undoable -- restoring a
+    field to None would either be silently dropped (if other fields also changed) or look like an
+    empty change set (if it was the only one). A key absent from ``args`` is left alone; a key
+    present with value None clears that column.
     """
     fields: dict = {}
-    if require_physics or args.get("density") is not None:
+    if require_physics or "density" in args:
         fields["density"] = arg_float(args, "density")
-    if require_physics or args.get("diameter") is not None:
+    if require_physics or "diameter" in args:
         fields["diameter"] = arg_float(args, "diameter")
 
     for arg_name, (column, kind) in _CURATED.items():
-        if args.get(arg_name) is None:
+        if arg_name not in args:
             continue
-        if kind == "str":
-            value = clean_str(args.get(arg_name))
-            if value is not None:
-                fields[column] = value
-        elif kind == "float":
-            fields[column] = arg_float(args, arg_name)
-        else:
-            fields[column] = arg_int(args, arg_name)
+        should_set, value = _coerce_curated_entry(args, arg_name, kind)
+        if should_set:
+            fields[column] = value
 
-    color = _color_hex(args)
-    if color is not None:
-        fields["color_hex"] = color
+    _apply_color_hex(args, fields)
     return fields
 
 

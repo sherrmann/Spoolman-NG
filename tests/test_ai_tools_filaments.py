@@ -55,3 +55,11 @@ def test_update_does_not_require_physics_but_still_validates_it() -> None:
 def test_update_rejects_an_empty_change_set() -> None:
     with pytest.raises(ToolError, match="No changes"):
         filaments.changes_for_update({"filament_id": 1})
+
+
+def test_curated_fields_clears_a_nullable_column_on_explicit_none_but_ignores_absence() -> None:
+    # comment is nullable. An explicit None must clear it (so an undo can restore a None
+    # before-value); a key that is simply absent from args must not appear at all, or a
+    # partial update would silently null out every other nullable column it didn't touch.
+    assert filaments.curated_fields({"comment": None}, require_physics=False) == {"comment": None}
+    assert filaments.curated_fields({}, require_physics=False) == {}

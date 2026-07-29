@@ -105,11 +105,18 @@ def _requested_changes(args: dict) -> dict:
     ``price`` and ``archived`` are coerced here rather than handed to the database layer
     as whatever the model emitted ("12,50", "yes"), so a bad value is a ToolError the
     model can correct instead of a failure deeper down.
+
+    Change-detection is by *key presence*, not truthiness: every updatable field is nullable,
+    and an update's undo descriptor carries the prior value verbatim, None included. Treating an
+    explicit None the same as "not provided" would make that value un-undoable -- restoring a
+    field to None would either be silently dropped (if other fields also changed) or look like an
+    empty change set (if it was the only one). A key absent from ``args`` is left alone; a key
+    present with value None clears that column, skipping its coercion (which would reject None).
     """
-    changes = {key: args[key] for key in _UPDATABLE_FIELDS if key in args and args[key] is not None}
-    if "price" in changes:
+    changes = {key: args[key] for key in _UPDATABLE_FIELDS if key in args}
+    if changes.get("price") is not None:
         changes["price"] = arg_float(args, "price")
-    if "archived" in changes:
+    if changes.get("archived") is not None:
         changes["archived"] = arg_bool(args, "archived")
     return changes
 

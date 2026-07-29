@@ -884,6 +884,175 @@ async def test_update_filament_undo_round_trip(client: AsyncClient) -> None:  # 
     assert reverted.weight == 1000.0
 
 
+async def test_update_filament_undo_restores_a_field_whose_before_value_was_none(
+    client: AsyncClient,  # noqa: ARG001
+) -> None:
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    # comment starts unset (None). If change-detection conflates "not provided" with "explicit
+    # None", the undo's before-value (None) is dropped by the same filter on re-execution, and
+    # since comment is the ONLY change here, the undo call would carry an empty change set --
+    # changes_for_update would raise instead of restoring anything.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        created = await filament_db.create(db=session, density=1.24, diameter=1.75, name="Old")
+        filament_id = created.id
+        assert created.comment is None
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+
+        result = await ai_tools.WRITE_TOOLS["update_filament"].execute(
+            ctx,
+            {"filament_id": filament_id, "comment": "Bought at MRRF"},
+        )
+        undo = result.undo
+        assert undo == {"tool": "update_filament", "args": {"filament_id": filament_id, "comment": None}}
+
+        updated = await filament_db.get_by_id(session, filament_id)
+        assert updated.comment == "Bought at MRRF"
+
+        await ai_tools.WRITE_TOOLS[undo["tool"]].execute(ctx, undo["args"])
+
+        reverted = await filament_db.get_by_id(session, filament_id)
+    assert reverted.comment is None
+
+
+async def test_update_filament_undo_restores_a_none_and_a_non_none_field_together(
+    client: AsyncClient,  # noqa: ARG001
+) -> None:
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    # Mixing a None-originated field (comment) with a non-None one (name) in the same call is
+    # the more insidious failure mode: if the None before-value is silently dropped, the undo
+    # still "succeeds" (name reverts) while comment is left at its new value with no error at all.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        created = await filament_db.create(db=session, density=1.24, diameter=1.75, name="Old")
+        filament_id = created.id
+        assert created.comment is None
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+
+        result = await ai_tools.WRITE_TOOLS["update_filament"].execute(
+            ctx,
+            {"filament_id": filament_id, "name": "New", "comment": "Bought at MRRF"},
+        )
+        undo = result.undo
+        assert undo == {
+            "tool": "update_filament",
+            "args": {"filament_id": filament_id, "name": "Old", "comment": None},
+        }
+
+        await ai_tools.WRITE_TOOLS[undo["tool"]].execute(ctx, undo["args"])
+
+        reverted = await filament_db.get_by_id(session, filament_id)
+    assert reverted.name == "Old"
+    assert reverted.comment is None
+
+
+async def test_update_filament_partial_change_leaves_other_nullable_fields_untouched(
+    client: AsyncClient,  # noqa: ARG001
+) -> None:
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    # The dangerous inverse of the two tests above: if presence-detection is implemented wrong
+    # (e.g. by defaulting every curated field to None instead of skipping absent keys), a change
+    # to `name` alone could wipe out `comment`, which was never mentioned in this call at all.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        created = await filament_db.create(db=session, density=1.24, diameter=1.75, name="Old", comment="Keep me")
+        filament_id = created.id
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+
+        await ai_tools.WRITE_TOOLS["update_filament"].execute(ctx, {"filament_id": filament_id, "name": "New"})
+
+        updated = await filament_db.get_by_id(session, filament_id)
+    assert updated.name == "New"
+    assert updated.comment == "Keep me"
+
+
+# --- update_spool: the same nullable-field undo hazard, in the sibling tool --------
+
+
+async def test_update_spool_undo_restores_a_field_whose_before_value_was_none(
+    client: AsyncClient,  # noqa: ARG001
+) -> None:
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    # comment starts unset (None), same hazard as update_filament: if change-detection conflates
+    # "not provided" with "explicit None", the undo's None before-value is dropped on
+    # re-execution, and since comment is the ONLY change here, changes_for_update-equivalent
+    # logic in _requested_changes would see an empty change set instead of restoring anything.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        filament = await filament_db.create(db=session, density=1.24, diameter=1.75, name="PLA")
+        spool = await spool_db.create(db=session, filament_id=filament.id, location="Shelf A")
+        spool_id = spool.id
+        assert spool.comment is None
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+
+        result = await ai_tools.WRITE_TOOLS["update_spool"].execute(
+            ctx,
+            {"spool_id": spool_id, "comment": "Slightly damp"},
+        )
+        undo = result.undo
+        assert undo == {"tool": "update_spool", "args": {"spool_id": spool_id, "comment": None}}
+
+        updated = await spool_db.get_by_id(session, spool_id)
+        assert updated.comment == "Slightly damp"
+
+        await ai_tools.WRITE_TOOLS[undo["tool"]].execute(ctx, undo["args"])
+
+        reverted = await spool_db.get_by_id(session, spool_id)
+    assert reverted.comment is None
+
+
+async def test_update_spool_undo_restores_a_none_and_a_non_none_field_together(
+    client: AsyncClient,  # noqa: ARG001
+) -> None:
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    # Mixing a None-originated field (comment) with a non-None one (location) is the more
+    # insidious failure mode: if the None before-value is silently dropped, the undo still
+    # "succeeds" (location reverts) while comment is left at its new value with no error at all.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        filament = await filament_db.create(db=session, density=1.24, diameter=1.75, name="PLA")
+        spool = await spool_db.create(db=session, filament_id=filament.id, location="Shelf A")
+        spool_id = spool.id
+        assert spool.comment is None
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+
+        result = await ai_tools.WRITE_TOOLS["update_spool"].execute(
+            ctx,
+            {"spool_id": spool_id, "location": "Shelf B", "comment": "Slightly damp"},
+        )
+        undo = result.undo
+        assert undo == {
+            "tool": "update_spool",
+            "args": {"spool_id": spool_id, "location": "Shelf A", "comment": None},
+        }
+
+        await ai_tools.WRITE_TOOLS[undo["tool"]].execute(ctx, undo["args"])
+
+        reverted = await spool_db.get_by_id(session, spool_id)
+    assert reverted.location == "Shelf A"
+    assert reverted.comment is None
+
+
+async def test_update_spool_partial_change_leaves_other_nullable_fields_untouched(
+    client: AsyncClient,  # noqa: ARG001
+) -> None:
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    # The dangerous inverse of the two tests above: if presence-detection is implemented wrong,
+    # a change to `location` alone could wipe out `comment`, never mentioned in this call at all.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        filament = await filament_db.create(db=session, density=1.24, diameter=1.75, name="PLA")
+        spool = await spool_db.create(db=session, filament_id=filament.id, location="Shelf A", comment="Keep me")
+        spool_id = spool.id
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+
+        await ai_tools.WRITE_TOOLS["update_spool"].execute(ctx, {"spool_id": spool_id, "location": "Shelf B"})
+
+        updated = await spool_db.get_by_id(session, spool_id)
+    assert updated.location == "Shelf B"
+    assert updated.comment == "Keep me"
+
+
 async def test_delete_location_execute_raises_a_clean_error_for_a_double_undo(
     client: AsyncClient,  # noqa: ARG001
 ) -> None:

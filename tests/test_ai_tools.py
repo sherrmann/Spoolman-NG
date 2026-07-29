@@ -171,6 +171,14 @@ def test_requested_changes_rejects_an_unparseable_price() -> None:
         spools._requested_changes({"spool_id": 1, "price": "cheap"})
 
 
+def test_requested_changes_clears_a_nullable_field_on_explicit_none_but_ignores_absence() -> None:
+    # comment (and location, lot_nr, price, archived) are nullable. An explicit None must clear
+    # it (so an undo can restore a None before-value); a key simply absent from args must not
+    # appear at all, or a partial update would silently null out every other untouched column.
+    assert spools._requested_changes({"spool_id": 1, "comment": None}) == {"comment": None}
+    assert spools._requested_changes({"spool_id": 1}) == {}
+
+
 def test_package_reexports_the_public_surface() -> None:
     # aichat.py and mcp_server.py import these names from the package root; the split must not move them.
     for name in (
