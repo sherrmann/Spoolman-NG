@@ -12,6 +12,7 @@ from spoolman.ai_tools.base import (
     ToolContext,
     ToolError,
     WriteTool,
+    arg_bool,
     arg_int,
     arg_limit,
     clean_str,
@@ -20,6 +21,7 @@ from spoolman.ai_tools.base import (
 )
 from spoolman.ai_tools.stats import parse_date
 from spoolman.database import filament as filament_db
+from spoolman.database import location as location_db
 from spoolman.database import order as order_db
 from spoolman.database import shop as shop_db
 from spoolman.exceptions import ItemNotFoundError
@@ -243,6 +245,79 @@ async def _execute_delete_order(ctx: ToolContext, args: dict) -> ExecutionResult
     return ExecutionResult(summary=f"Deleted order #{order_id}.", data={"order_id": order_id}, undo=None)
 
 
+async def _resolve_location_id(ctx: ToolContext, name: str | None) -> int | None:
+    """Resolve a location name to its ID, raising if the name doesn't match an existing one."""
+    if name is None:
+        return None
+    items, _ = await location_db.find(db=ctx.db, name=name)
+    lowered = name.strip().lower()
+    match = next((item for item in items if (item.name or "").strip().lower() == lowered), None)
+    if match is None:
+        raise ToolError(f"No location named '{name}' exists. Create it first or omit the location.")
+    return match.id
+
+
+async def _preview_arrive_order(ctx: ToolContext, args: dict) -> ConfirmCard:
+    """Build the confirm-card for marking an order's outstanding lines arrived.
+
+    Everything that would make ``execute`` fail is checked here first -- a non-existent order,
+    an order with nothing outstanding, or a named location that doesn't exist -- because this
+    write has no undo: the card is the user's only chance to catch a mistake before it happens.
+    """
+    order_id = arg_int(args, "order_id")
+    try:
+        item = await order_db.get_by_id(ctx.db, order_id)
+    except ItemNotFoundError as exc:
+        raise ToolError(f"No order with ID {order_id} exists.") from exc
+    outstanding = [line for line in item.lines if line.arrived_at is None]
+    if not outstanding:
+        raise ToolError(f"Order #{order_id} has no outstanding lines; it already arrived.")
+
+    create_spools = arg_bool(args, "create_spools", default=True)
+    location = clean_str(args.get("location"))
+    await _resolve_location_id(ctx, location)  # fail before the user confirms, not after
+    units = sum(line.quantity for line in outstanding)
+    described = await _describe_lines(
+        ctx,
+        [{"filament_id": line.filament_id, "quantity": line.quantity} for line in outstanding],
+    )
+    summary = f"Marks {len(outstanding)} line(s) arrived: " + "; ".join(described) + "."
+    if create_spools:
+        summary += f" Creates {units} spool(s)" + (f" in {location}." if location else ".")
+    # There is no clean single call that reverses a partial arrival plus spool creation, so the
+    # card is where the user gets to see the whole effect. Undo is honestly absent.
+    summary += " This cannot be undone in one click."
+    return ConfirmCard(
+        tool="arrive_order",
+        title=f"Mark order #{order_id} arrived",
+        summary=summary,
+        before={"status": "open", "outstanding_units": units},
+        after={"status": "arrived", "spools_created": units if create_spools else 0},
+    )
+
+
+async def _execute_arrive_order(ctx: ToolContext, args: dict) -> ExecutionResult:
+    """Mark every outstanding line of an order arrived, optionally creating one spool per unit."""
+    require_write(ctx)
+    order_id = arg_int(args, "order_id")
+    location_id = await _resolve_location_id(ctx, clean_str(args.get("location")))
+    try:
+        spools = await order_db.arrive(
+            db=ctx.db,
+            order_id=order_id,
+            lines=None,
+            create_spools=arg_bool(args, "create_spools", default=True),
+            location_id=location_id,
+        )
+    except ValueError as exc:
+        raise ToolError(str(exc)) from exc
+    spool_ids = [spool.id for spool in spools]
+    summary = f"Marked order #{order_id} arrived."
+    if spool_ids:
+        summary += f" Created spool(s) {', '.join(f'#{spool_id}' for spool_id in spool_ids)}."
+    return ExecutionResult(summary=summary, data={"order_id": order_id, "spool_ids": spool_ids}, undo=None)
+
+
 WRITE_TOOLS: dict[str, WriteTool] = {
     "create_order": WriteTool(
         name="create_order",
@@ -288,5 +363,24 @@ WRITE_TOOLS: dict[str, WriteTool] = {
         preview=_preview_delete_order,
         execute=_execute_delete_order,
         model_facing=False,
+    ),
+    "arrive_order": WriteTool(
+        name="arrive_order",
+        description=(
+            "Mark every outstanding line of an order as arrived, by default creating one spool per "
+            "arriving unit in the given location. Use for 'my order arrived'. This cannot be undone. "
+            "Requires user confirmation."
+        ),
+        parameters={
+            "type": "object",
+            "properties": {
+                "order_id": {"type": "integer", "description": "The order that arrived."},
+                "create_spools": {"type": "boolean", "description": "Create a spool per unit (default true)."},
+                "location": {"type": "string", "description": "Existing location name for the new spools."},
+            },
+            "required": ["order_id"],
+        },
+        preview=_preview_arrive_order,
+        execute=_execute_arrive_order,
     ),
 }

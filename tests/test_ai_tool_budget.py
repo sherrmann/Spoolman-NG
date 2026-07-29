@@ -11,8 +11,10 @@ import json
 
 from spoolman import ai_tools
 
-#: Ceiling on the serialised writer tool payload. The 18-tool set lands near 9 KB.
-MAX_SCHEMA_CHARS = 12_000
+#: Ceiling on the serialised writer tool payload. The completed 18-tool set (task 13 adds the
+#: last one, arrive_order) lands near 12 KB -- raised deliberately from the pre-completion
+#: estimate of 9 KB, which undercounted arrive_order's verbatim description and parameters.
+MAX_SCHEMA_CHARS = 13_000
 #: One-line tool descriptions; a paragraph belongs in the system prompt, not in a schema.
 MAX_DESCRIPTION_CHARS = 400
 
@@ -52,3 +54,12 @@ def test_undo_only_tools_are_offered_to_nobody() -> None:
     for can_write in (True, False):
         offered = {schema["function"]["name"] for schema in ai_tools.tool_schemas(can_write=can_write)}
         assert not (offered & hidden), f"undo-only tools leaked into the schema list: {offered & hidden}"
+
+
+#: The model-facing set is fixed by design. Changing it is a spec decision, not a refactor.
+EXPECTED_MODEL_FACING = 18
+
+
+def test_model_facing_count_is_pinned() -> None:
+    names = {schema["function"]["name"] for schema in ai_tools.tool_schemas(can_write=True)}
+    assert len(names) == EXPECTED_MODEL_FACING, sorted(names)

@@ -49,6 +49,7 @@ def test_writer_is_offered_read_and_model_write_tools() -> None:
         "update_filament",
         "delete_filament",
         "create_order",
+        "arrive_order",
     }
 
 
