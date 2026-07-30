@@ -34,6 +34,33 @@ CASES_PATH = Path(__file__).with_name("ai_eval_cases.json")
 NO_CALL = "<none>"
 
 
+#: Mirrors spoolman.ai_tools.base.arg_bool's accepted strings exactly, so a value this eval
+#: scores as a boolean match is one the real tool would also have accepted.
+_TRUE_STRINGS = ("true", "yes", "1")
+_FALSE_STRINGS = ("false", "no", "0", "")
+
+
+def _coerce_bool(value: object) -> bool | None:
+    """Best-effort read of a model's boolean-ish value; None when it isn't recognizably one.
+
+    ``bool(value)`` is not this: ``bool("nope")`` and ``bool("false")`` are both ``True``, since
+    any non-empty string is truthy in Python regardless of its content. That would score a
+    garbage string as a match against ``want=True`` and a *correct* ``"false"`` as a mismatch
+    against ``want=False`` -- exactly backwards. None (not a recognized bool at all) matches
+    neither True nor False, so an unrecognized value is always scored as a mismatch rather than
+    passing by accident.
+    """
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        lowered = value.strip().lower()
+        if lowered in _TRUE_STRINGS:
+            return True
+        if lowered in _FALSE_STRINGS:
+            return False
+    return None
+
+
 def _value_matches(want: object, got: object) -> bool:
     """Whether one expected argument value plausibly matches what the model sent.
 
@@ -46,7 +73,7 @@ def _value_matches(want: object, got: object) -> bool:
     if isinstance(want, str):
         return str(want).strip().lower() in str(got).strip().lower()
     if isinstance(want, bool):
-        return bool(got) is want
+        return _coerce_bool(got) is want
     if isinstance(want, (int, float)):
         try:
             return float(got) == float(want)
