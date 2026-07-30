@@ -159,10 +159,12 @@ its confirm-card spells out exactly what will be created before you confirm. A *
 account can use the assistant to ask questions but is offered no write actions at all.
 
 When updating a filament or a spool, an omitted field is left unchanged and an explicit
-`null` clears it — so "clear the comment" and a request that just doesn't mention the
+`null` clears it — except a filament's density and diameter, which can never be null and
+are rejected with an error rather than cleared, since a spool's weight math depends on
+both. Everywhere else, "clear the comment" and a request that just doesn't mention the
 comment behave differently, as they should, and undoing an edit can restore a field that
-was previously empty. The assistant never invents a filament's density or diameter — it
-looks them up in the SpoolmanDB catalog or asks you.
+was previously empty. The assistant never invents a filament's density or diameter in the
+first place — it looks them up in the SpoolmanDB catalog or asks you.
 
 The assistant replies in the interface language and never uses emoji. Each turn sends the
 current conversation and a short note of which page you are on to the configured endpoint;
