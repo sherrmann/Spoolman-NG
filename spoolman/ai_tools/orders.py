@@ -385,6 +385,7 @@ WRITE_TOOLS: dict[str, WriteTool] = {
         preview=_preview_delete_order,
         execute=_execute_delete_order,
         model_facing=False,
+        destructive=True,
     ),
     "arrive_order": WriteTool(
         name="arrive_order",
@@ -404,5 +405,6 @@ WRITE_TOOLS: dict[str, WriteTool] = {
         },
         preview=_preview_arrive_order,
         execute=_execute_arrive_order,
+        destructive=True,
     ),
 }

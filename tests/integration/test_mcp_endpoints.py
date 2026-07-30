@@ -157,6 +157,22 @@ async def test_admin_is_offered_read_and_curated_write_tools_and_can_create(clie
     assert spool_id in listed
 
 
+async def test_mcp_flags_arrive_order_as_destructive_but_ordinary_writes_as_safe(client: AsyncClient) -> None:
+    """The destructiveHint annotation must reflect each tool's own declaration, not a hard-coded False.
+
+    arrive_order is the one non-delete write with no undo; an MCP client has no confirm-card of
+    its own, so this annotation is the only signal it gets that the action cannot be undone.
+    """
+    await _enable_mcp(client)
+
+    async with _mcp_session() as session:
+        tools = {tool.name: tool for tool in (await session.list_tools()).tools}
+        assert tools["arrive_order"].annotations.destructiveHint is True
+        assert tools["create_spool"].annotations.destructiveHint is False
+        assert tools["update_spool"].annotations.destructiveHint is False
+        assert tools["create_order"].annotations.destructiveHint is False
+
+
 async def test_find_spools_tool_returns_remaining_weight(client: AsyncClient) -> None:
     await _enable_mcp(client)
     filament = await _seed_filament(client)

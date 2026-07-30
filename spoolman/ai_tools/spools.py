@@ -391,5 +391,6 @@ WRITE_TOOLS: dict[str, WriteTool] = {
         },
         preview=_preview_delete_spool,
         execute=_execute_delete_spool,
+        destructive=True,
     ),
 }

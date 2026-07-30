@@ -162,6 +162,10 @@ class WriteTool:
     #: False for undo-only primitives (set_spool_used_weight, delete_order/location/vendor):
     #: they exist so a create can be reversed, but the model must never reach for them.
     model_facing: bool = True
+    #: This tool's confirm-card is always destructive and it carries no undo. Set on every
+    #: delete plus arrive_order (the one non-delete write with no undo). MCP has no confirm-card
+    #: of its own, so this is what its destructiveHint annotation reports to the client.
+    destructive: bool = False
 
 
 # --- Shared helpers ----------------------------------------------------------------

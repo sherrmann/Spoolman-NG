@@ -399,8 +399,8 @@ WRITE_TOOLS: dict[str, WriteTool] = {
         name="update_filament",
         description=(
             "Update fields of an existing filament type. Omit any field you don't want to change; pass "
-            "null only to clear that field, not as a placeholder for 'nothing to set'. density and "
-            "diameter are validated if given, but not required. Requires user confirmation."
+            "null only to clear that field (density and diameter are the exception: they cannot be "
+            "null, so give a real number or omit them). Requires user confirmation."
         ),
         parameters={
             "type": "object",
@@ -439,5 +439,6 @@ WRITE_TOOLS: dict[str, WriteTool] = {
         },
         preview=_preview_delete_filament,
         execute=_execute_delete_filament,
+        destructive=True,
     ),
 }

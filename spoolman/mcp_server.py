@@ -40,8 +40,11 @@ logger = logging.getLogger(__name__)
 
 SERVER_NAME = "spoolman-ng"
 
-#: The write tools exposed over MCP: curated, non-destructive changes only. Deletes are never
-#: offered here — an MCP client's user does not see Spoolman's confirm-cards.
+#: The write tools exposed over MCP. Deletes are never offered here — an MCP client's user does
+#: not see Spoolman's confirm-cards, so a destructive tool with no undo and no card has no
+#: safeguard at all. arrive_order is the one exception that is included: it is also destructive
+#: (no undo), but it is annotated honestly (see ``_list_tools``) so a client can prompt its own
+#: user, and it is the highest-value action an MCP client can take.
 _MCP_WRITE_TOOLS = (
     "create_spool",
     "update_spool",
@@ -75,10 +78,17 @@ def _tool_def(tool: object, *, read_only: bool, destructive: bool = False) -> ty
 
 
 async def _list_tools() -> list[types.Tool]:
-    """Offer read tools to everyone; curated write tools only to a writer."""
+    """Offer read tools to everyone; curated write tools only to a writer.
+
+    Each write tool's own ``destructive`` flag is passed through to ``destructiveHint`` rather
+    than a hard-coded ``False``: arrive_order is exposed here and it is destructive (no undo),
+    so an MCP client — which has no confirm-card of its own — must be told that honestly.
+    """
     tools = [_tool_def(tool, read_only=True) for tool in ai_tools.READ_TOOLS.values()]
     if _can_write.get():
-        tools.extend(_tool_def(ai_tools.WRITE_TOOLS[name], read_only=False) for name in _MCP_WRITE_TOOLS)
+        for name in _MCP_WRITE_TOOLS:
+            tool = ai_tools.WRITE_TOOLS[name]
+            tools.append(_tool_def(tool, read_only=False, destructive=tool.destructive))
     return tools
 
 

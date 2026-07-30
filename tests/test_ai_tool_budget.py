@@ -111,6 +111,20 @@ def test_every_write_tool_without_an_undo_is_marked_destructive() -> None:
         )
 
 
+def test_declared_destructive_flag_agrees_with_the_confirm_card() -> None:
+    # There are two notions of "destructive" in the tool layer: WriteTool.destructive (a plain
+    # field MCP reads to set destructiveHint, since an MCP client has no confirm-card of its own)
+    # and what preview's ConfirmCard actually sets for the in-app card. They must never drift
+    # apart in either direction -- a declared flag that disagrees with the card is a lie to
+    # whichever surface trusts the wrong one.
+    for name, tool in ai_tools.WRITE_TOOLS.items():
+        card_is_destructive = _every_call_sets_keyword_to(tool.preview, "ConfirmCard", "destructive", value=True)
+        assert tool.destructive == card_is_destructive, (
+            f"{name}: WriteTool.destructive is {tool.destructive} but its ConfirmCard sets "
+            f"destructive={card_is_destructive}"
+        )
+
+
 #: The model-facing set is fixed by design. Changing it is a spec decision, not a refactor.
 EXPECTED_MODEL_FACING = 18
 

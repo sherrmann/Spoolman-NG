@@ -63,3 +63,15 @@ def test_curated_fields_clears_a_nullable_column_on_explicit_none_but_ignores_ab
     # partial update would silently null out every other nullable column it didn't touch.
     assert filaments.curated_fields({"comment": None}, require_physics=False) == {"comment": None}
     assert filaments.curated_fields({}, require_physics=False) == {}
+
+
+def test_update_cannot_clear_density_or_diameter_with_null() -> None:
+    # Unlike every other curated field, density/diameter route through arg_float, not the
+    # None-means-clear branch _coerce_curated_entry gives every other field -- so an explicit
+    # null for either must error, not clear the column. This is exactly what update_filament's
+    # tool description promises the model: density and diameter are the one exception to
+    # "null clears the field".
+    with pytest.raises(ToolError, match="density"):
+        filaments.changes_for_update({"filament_id": 1, "density": None})
+    with pytest.raises(ToolError, match="diameter"):
+        filaments.changes_for_update({"filament_id": 1, "diameter": None})

@@ -283,6 +283,7 @@ WRITE_TOOLS: dict[str, WriteTool] = {
         preview=_preview_delete_location,
         execute=_execute_delete_location,
         model_facing=False,
+        destructive=True,
     ),
     "create_vendor": WriteTool(
         name="create_vendor",
@@ -312,5 +313,6 @@ WRITE_TOOLS: dict[str, WriteTool] = {
         preview=_preview_delete_vendor,
         execute=_execute_delete_vendor,
         model_facing=False,
+        destructive=True,
     ),
 }
