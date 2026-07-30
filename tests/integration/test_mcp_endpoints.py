@@ -143,9 +143,27 @@ async def test_admin_is_offered_read_and_curated_write_tools_and_can_create(clie
 
     async with _mcp_session() as session:
         tools = {tool.name for tool in (await session.list_tools()).tools}
-        assert {"find_spools", "find_filaments"} <= tools
-        assert {"create_spool", "update_spool", "consume_spool"} <= tools
-        assert "delete_spool" not in tools  # delete is deliberately not exposed over MCP
+        assert tools == {
+            # Read tools: offered to everyone.
+            "find_spools",
+            "find_filaments",
+            "get_usage_stats",
+            "find_locations",
+            "find_vendors",
+            "find_orders",
+            "catalog_lookup",
+            # Curated write tools: offered only to a writer. Delete is deliberately not exposed
+            # over MCP -- see _MCP_WRITE_TOOLS's own docstring.
+            "create_spool",
+            "update_spool",
+            "consume_spool",
+            "create_filament",
+            "update_filament",
+            "create_order",
+            "arrive_order",
+            "create_location",
+            "create_vendor",
+        }
 
         created = await session.call_tool("create_spool", {"filament_id": filament["id"], "location": "Shelf B"})
         payload = json.loads(_tool_text(created))

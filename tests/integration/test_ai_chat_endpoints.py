@@ -643,6 +643,83 @@ async def test_location_weight_aggregates_sum_remaining_by_name(client: AsyncCli
     assert weights[shelf.id] == 1400.0
 
 
+async def test_location_weight_aggregates_excludes_archived_spools(client: AsyncClient) -> None:  # noqa: ARG001
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    # An archived spool is still physically on the shelf but is deliberately not "in stock" for
+    # this report -- get_aggregates (the count sibling) already excludes it; this must too.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        shelf = await location_db.create(db=session, name="Shelf B")
+        filament = await filament_db.create(db=session, density=1.24, diameter=1.75, weight=1000)
+        await spool_db.create(db=session, filament_id=filament.id, location="Shelf B", initial_weight=500)
+        archived = await spool_db.create(db=session, filament_id=filament.id, location="Shelf B", initial_weight=999)
+        await spool_db.update(db=session, spool_id=archived.id, data={"archived": True})
+
+        weights = await location_db.get_weight_aggregates(session, [shelf.id])
+
+    assert weights[shelf.id] == 500.0
+
+
+async def test_location_weight_aggregates_falls_back_to_filament_weight_when_initial_weight_is_null(
+    client: AsyncClient,  # noqa: ARG001
+) -> None:
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    # A spool with no initial_weight of its own must value at its filament's nominal weight,
+    # matching remaining_weight() (ai_tools/base.py) and the API's own spool model.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        shelf = await location_db.create(db=session, name="Shelf B")
+        filament = await filament_db.create(db=session, density=1.24, diameter=1.75, weight=750)
+        spool = await spool_db.create(db=session, filament_id=filament.id, location="Shelf B", initial_weight=1.0)
+        # spool_db.build() backfills initial_weight from the filament at creation time when it's
+        # omitted, so creating with none set wouldn't leave a NULL column to fall back from at
+        # all. update() has no such backfill, so it's used here to force a genuine NULL and
+        # exercise get_weight_aggregates' own coalesce, not the create-time one.
+        await spool_db.update(db=session, spool_id=spool.id, data={"initial_weight": None})
+
+        weights = await location_db.get_weight_aggregates(session, [shelf.id])
+
+    assert weights[shelf.id] == 750.0
+
+
+async def test_location_weight_aggregates_reports_zero_for_a_location_with_no_spools(
+    client: AsyncClient,  # noqa: ARG001
+) -> None:
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    # A location with zero matching spools has no row in the grouped query at all; it must still
+    # be reported as 0.0 rather than silently missing from the returned mapping.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        empty_shelf = await location_db.create(db=session, name="Empty Shelf")
+
+        weights = await location_db.get_weight_aggregates(session, [empty_shelf.id])
+
+    assert weights[empty_shelf.id] == 0.0
+
+
+async def test_location_weight_aggregates_clamps_overused_spools_to_zero_not_negative(
+    client: AsyncClient,  # noqa: ARG001
+) -> None:
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    # A spool used past its initial weight (a manual correction, a bad reading) must clamp to 0,
+    # not report negative remaining weight and drag the location's total below zero.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        shelf = await location_db.create(db=session, name="Shelf B")
+        filament = await filament_db.create(db=session, density=1.24, diameter=1.75, weight=1000)
+        await spool_db.create(
+            db=session,
+            filament_id=filament.id,
+            location="Shelf B",
+            initial_weight=100,
+            used_weight=250,
+        )
+
+        weights = await location_db.get_weight_aggregates(session, [shelf.id])
+
+    assert weights[shelf.id] == 0.0
+
+
 async def test_find_locations_ranks_by_weight_before_truncating(client: AsyncClient) -> None:  # noqa: ARG001
     # `client` isn't called directly but its fixture wires up db_module's session maker.
     #
@@ -1434,7 +1511,7 @@ async def test_delete_filament_preview_counts_every_spool_including_archived(
     # cascade exactly like an active one (it is not just hidden inventory), so it must count too.
     session_maker = db_module.get_session_maker()
     async with session_maker() as session:
-        created = await filament_db.create(db=session, density=1.24, diameter=1.75, name="Doomed")
+        created = await filament_db.create(db=session, density=1.24, diameter=1.75, name="Doomed", material="PLA")
         filament_id = created.id
         await spool_db.create(db=session, filament_id=filament_id)
         archived = await spool_db.create(db=session, filament_id=filament_id)
@@ -1445,6 +1522,9 @@ async def test_delete_filament_preview_counts_every_spool_including_archived(
 
     assert card.destructive is True
     assert "2 spool" in card.summary
+    # The before payload is the only thing that tells the user what they're about to destroy --
+    # dropping a key here breaks no other assertion in this suite.
+    assert card.before == {"name": "Doomed", "material": "PLA", "spool_count": 2}
 
 
 async def test_delete_filament_refuses_while_an_order_line_references_it(
