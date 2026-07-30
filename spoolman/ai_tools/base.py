@@ -15,7 +15,6 @@ it — so the UI can offer a one-click undo. Deletes are the honest exception: t
 """
 
 import json
-import logging
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 
@@ -25,8 +24,6 @@ from spoolman.database import models
 from spoolman.database import spool as spool_db
 from spoolman.exceptions import ItemNotFoundError
 from spoolman.settings import SETTINGS
-
-logger = logging.getLogger(__name__)
 
 #: Bounds on how much a single read tool may return, so a chatty query can't pull the
 #: whole database into the model's context (or the response).

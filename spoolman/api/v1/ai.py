@@ -435,9 +435,9 @@ class ChatActionResponse(BaseModel):
     "/chat/action",
     name="Run a curated write action",
     description=(
-        "Execute a single curated write tool directly — used for the one-click undo after a confirmed "
-        "chat mutation. Admin only, and limited to the same curated tools the chat agent can call, so it "
-        "grants no capability beyond chat itself."
+        "Execute any curated write tool by name, including undo-only primitives the chat model is never "
+        "offered (e.g. delete_order) — this is how one-click undo runs. Admin only, gated by the same "
+        "write permission as chat."
     ),
     responses={400: {"model": Message}, 404: {"model": Message}, 422: {"model": Message}},
 )

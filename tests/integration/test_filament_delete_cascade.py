@@ -14,11 +14,13 @@ resource 500s here rather than 404ing -- a pre-existing harness gap, unrelated t
 """
 
 import pytest
+import sqlalchemy
 from httpx import AsyncClient
 
 from spoolman.api.v1 import filament as filament_api
 from spoolman.database import database as db_module
 from spoolman.database import filament as filament_db
+from spoolman.database import models
 from spoolman.database import spool as spool_db
 from spoolman.exceptions import ItemNotFoundError
 
@@ -134,3 +136,45 @@ async def test_order_line_refusal_is_the_endpoints_own_check_not_only_the_db_lay
 
     assert resp.status_code == 409, resp.text
     assert "order line" in resp.json()["message"]
+
+
+# --- The usage-event cascade must not bind one SQL parameter per spool -------------
+
+
+async def test_usage_event_cascade_uses_a_correlated_subquery_not_a_python_list_of_ids(
+    client: AsyncClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Regression test for the cascade's SQL shape, not just its observable outcome.
+
+    A filament with more spools than a SQLite build's bound-variable limit (older builds cap
+    it around 999) must not blow that limit. `.in_(<python list of ids>)` binds one SQL parameter
+    per id; `.in_(<correlated subquery>)` binds exactly one (the filament_id) no matter how many
+    spools it resolves to. This inspects the actual DELETE statement's shape rather than creating
+    999+ spools, which the cascade would visibly need to survive but which nothing forces it to
+    exercise below the exact threshold that triggers the limit.
+    """
+    fil = await _add_filament(client, name="Cascade shape")
+    await _add_spool(client, fil["id"])
+    await _add_spool(client, fil["id"])
+
+    captured_deletes: list[sqlalchemy.sql.dml.Delete] = []
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        original_execute = session.execute
+
+        async def _spy_execute(statement: object, *args: object, **kwargs: object) -> object:
+            if isinstance(statement, sqlalchemy.sql.dml.Delete):
+                captured_deletes.append(statement)
+            return await original_execute(statement, *args, **kwargs)
+
+        monkeypatch.setattr(session, "execute", _spy_execute)
+        await filament_db.delete(session, fil["id"])
+
+    usage_event_deletes = [stmt for stmt in captured_deletes if stmt.table.name == models.SpoolUsageEvent.__tablename__]
+    assert usage_event_deletes, "expected a DELETE against spool_usage_event"
+    membership_test = usage_event_deletes[0].whereclause.right
+    assert isinstance(membership_test, (sqlalchemy.sql.selectable.Select, sqlalchemy.sql.selectable.ScalarSelect)), (
+        "spool_id IN (...) must be built from a correlated subquery, not a Python list of ids bound "
+        f"one SQL parameter each; got {type(membership_test)!r} instead"
+    )

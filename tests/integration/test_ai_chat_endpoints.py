@@ -106,6 +106,19 @@ def _tool_call_response(call_id: str, name: str, args: dict) -> Response:
     return Response(200, json={"choices": [{"message": message}]})
 
 
+def _multi_tool_call_response(calls: list[tuple[str, str, dict]]) -> Response:
+    """Like `_tool_call_response`, but for several tool calls in a single assistant turn."""
+    message = {
+        "role": "assistant",
+        "content": None,
+        "tool_calls": [
+            {"id": call_id, "type": "function", "function": {"name": name, "arguments": json.dumps(args)}}
+            for call_id, name, args in calls
+        ],
+    }
+    return Response(200, json={"choices": [{"message": message}]})
+
+
 def _message_response(content: str) -> Response:
     return Response(200, json={"choices": [{"message": {"role": "assistant", "content": content}}]})
 
@@ -289,6 +302,71 @@ async def test_update_confirm_card_shows_before_after_and_undo(client: AsyncClie
     action = await client.post("/api/v1/ai/chat/action", json=undo)
     assert action.status_code == 200
     assert (await client.get(f"/api/v1/spool/{spool_id}")).json()["location"] == "Shelf B"
+
+
+# --- A commit-level failure must not poison the rest of the confirmed turn ---------
+
+
+@respx.mock
+async def test_a_commit_level_failure_does_not_poison_the_next_pending_write(
+    client: AsyncClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Regression test for a poisoned session leaking across pending writes.
+
+    _resolve_pending runs every pending write on one shared session. If the first one leaves
+    that session needing a rollback (a real commit-level failure, not a ToolError), the second
+    call must still get its own session and succeed -- not inherit a misleading generic failure
+    for arguments that were perfectly valid.
+    """
+    await _enable_chat(client)
+
+    async def _boom_execute(ctx: ai_tools.ToolContext, _args: dict) -> ai_tools.ExecutionResult:
+        # A genuine commit-level failure: a duplicate insert against a real unique constraint
+        # (Shop.name), raised from inside db.commit() -- not a ToolError, and not caught by the
+        # tool itself. This is what actually leaves an ORM session needing db.rollback().
+        ctx.db.add(models.Shop(name="dup-seed", registered=datetime.utcnow()))
+        await ctx.db.commit()
+        ctx.db.add(models.Shop(name="dup-seed", registered=datetime.utcnow()))
+        await ctx.db.commit()  # IntegrityError here
+        return ai_tools.ExecutionResult(summary="unreachable")  # pragma: no cover
+
+    monkeypatch.setattr(ai_tools.WRITE_TOOLS["create_vendor"], "execute", _boom_execute)
+
+    respx.post(_PROVIDER).mock(
+        side_effect=[
+            _multi_tool_call_response(
+                [
+                    ("c1", "create_vendor", {"name": "Boom"}),
+                    ("c2", "create_location", {"name": "Shelf Z"}),
+                ],
+            ),
+            _message_response("Done."),
+        ],
+    )
+
+    first = await client.post(
+        "/api/v1/ai/chat",
+        json={"messages": [{"role": "user", "content": "create a vendor and a location"}]},
+    )
+    confirm = _events_of(_parse_sse(first.text), "confirm")[0]
+    assert {card["tool"] for card in confirm["cards"]} == {"create_vendor", "create_location"}
+
+    confirmed = await client.post("/api/v1/ai/chat", json={"messages": confirm["messages"], "decision": "confirm"})
+    events = _parse_sse(confirmed.text)
+
+    # The second write must still have succeeded and reported its own result -- not the generic
+    # "That tool failed unexpectedly" a poisoned session would produce for it too.
+    executed = _events_of(events, "executed")
+    assert executed, "the surviving write must still produce an executed card"
+    executed_tools = {card["tool"] for card in executed[0]["cards"]}
+    assert executed_tools == {"create_location"}
+
+    # And it is really there -- not just reported as executed. (Note: /api/v1/locations is the
+    # location-registry list; the singular /api/v1/location is an unrelated endpoint that lists
+    # distinct Spool.location strings, see spoolman/api/v1/location.py's module docstring.)
+    locations = (await client.get("/api/v1/locations")).json()
+    assert any(loc["name"] == "Shelf Z" for loc in locations)
 
 
 # --- Read-only principal owns zero write tools -------------------------------------
@@ -478,6 +556,16 @@ async def test_a_write_call_missing_its_id_is_fed_back_not_fatal(client: AsyncCl
     assert _events_of(events, "error") == []
     assert _events_of(events, "confirm") == []  # nothing to confirm — it never previewed
     assert _events_of(events, "message")[0]["content"] == "Which spool did you mean?"
+
+
+def test_chat_action_docstring_states_its_real_contract() -> None:
+    # The route actually resolves ANY name in WRITE_TOOLS and calls execute() directly -- including
+    # model_facing=False undo-only primitives (e.g. delete_order) the chat model is never offered.
+    # That's by design (it's how one-click undo runs), but the docs must say so, not claim this
+    # "grants no capability beyond chat itself" when it plainly reaches tools chat cannot call.
+    route = next(r for r in ai_api.router.routes if "/chat/action" in getattr(r, "path", ""))
+    assert "no capability beyond chat itself" not in route.description
+    assert "undo-only" in route.description
 
 
 async def test_chat_action_rejects_bad_arguments_with_422(client: AsyncClient) -> None:

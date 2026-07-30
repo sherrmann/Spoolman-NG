@@ -52,7 +52,7 @@ def _rank(extraction: dict, limit: int) -> list[dict]:
             vendor=entry.get("manufacturer"),
             name=entry.get("name"),
             material=entry.get("material"),
-            weight_g=entry.get("weight"),
+            weight_g=spoolintake.coerce_number(entry.get("weight")),
         )
         if score >= MIN_SCORE:
             scored.append(entry_row(entry, score=score))
@@ -82,7 +82,7 @@ READ_TOOLS: dict[str, ReadTool] = {
                 "vendor": {"type": "string", "description": "Manufacturer name, e.g. Sunlu, Prusament."},
                 "name": {"type": "string", "description": "Product name, e.g. 'PLA Meta'."},
                 "material": {"type": "string", "description": "Material, e.g. PLA, PETG, ASA."},
-                "limit": {"type": "integer", "description": "Max matches to return (default 25, capped at 10)."},
+                "limit": {"type": "integer", "description": "Max matches to return, capped at 10 (also the default)."},
             },
         },
         run=_run_catalog_lookup,

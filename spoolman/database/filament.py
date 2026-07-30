@@ -420,9 +420,12 @@ async def delete(db: AsyncSession, filament_id: int) -> None:
     )
     spools = spools_result.unique().scalars().all()
     if spools:
-        spool_ids = [spool.id for spool in spools]
+        # A correlated subquery rather than a Python list of ids bound one-per-parameter: SQLite
+        # builds older than ~2021 cap bound variables around 999, which a filament with more spools
+        # than that would exceed.
+        spool_ids_subq = select(models.Spool.id).where(models.Spool.filament_id == filament_id)
         await db.execute(
-            sqlalchemy.delete(models.SpoolUsageEvent).where(models.SpoolUsageEvent.spool_id.in_(spool_ids)),
+            sqlalchemy.delete(models.SpoolUsageEvent).where(models.SpoolUsageEvent.spool_id.in_(spool_ids_subq)),
         )
         for spool in spools:
             await db.delete(spool)

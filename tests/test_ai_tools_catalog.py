@@ -17,6 +17,36 @@ def test_extraction_maps_tool_args_onto_the_scorer_shape() -> None:
     assert extraction == {"vendor": "Sunlu", "name": "Meta PLA", "material": "pla", "weight_g": None}
 
 
+def test_rank_coerces_a_string_catalog_weight_like_the_sibling_scorer_does(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # spoolintake.match_catalog (the sibling scorer Scan-to-Spool uses against this same catalog)
+    # runs a catalog entry's "weight" through coerce_number before scoring; _rank must match, or a
+    # string weight straight from the JSON-synced catalog would reach _weight_closeness's
+    # `b <= 0` comparison uncoerced and raise TypeError the moment a caller ever supplies a real
+    # weight_g. build_extraction hardcodes weight_g=None today (so this never fires through the
+    # registered tool), but _rank is a shared scoring path, not a private implementation detail of
+    # today's one caller -- it must not crash if that ever changes.
+    catalog_entries = [
+        {"id": "x", "manufacturer": "Sunlu", "name": "PLA Meta", "material": "PLA", "weight": "1000"},
+    ]
+    monkeypatch.setattr(spoolintake, "load_catalog", lambda: catalog_entries)
+    extraction = {"vendor": "Sunlu", "name": "PLA Meta", "material": "PLA", "weight_g": 1000.0}
+
+    rows = catalog._rank(extraction, limit=10)  # noqa: SLF001 -- build_extraction always masks weight_g
+
+    assert rows[0]["external_id"] == "x"
+
+
+def test_limit_description_does_not_oversell_the_true_default() -> None:
+    # arg_limit's own default (25) is immediately capped to 10 in _run_catalog_lookup, so the
+    # *effective* default a caller who omits 'limit' actually gets is 10, not 25. The model-facing
+    # schema text must say that, not repeat the pre-cap number that a caller never really gets.
+    description = catalog.READ_TOOLS["catalog_lookup"].parameters["properties"]["limit"]["description"]
+    assert "25" not in description
+    assert "10" in description
+
+
 def test_entry_row_exposes_the_fields_create_filament_needs() -> None:
     entry = {
         "id": "sunlu-pla-black",

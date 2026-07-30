@@ -217,10 +217,17 @@ async def _resolve_pending(ctx: ToolContext, convo: list[dict], *, decision: str
             try:
                 result = await ai_tools.WRITE_TOOLS[name].execute(ctx, _call_args(call))
             except ToolError as exc:
+                # A commit-level failure (e.g. an IntegrityError raised from inside execute())
+                # leaves the shared session needing an explicit rollback; without one, the next
+                # pending call in this same confirmed turn would fail with PendingRollbackError
+                # instead of running normally. Rolling back here is a no-op when nothing was
+                # actually dirtied, so it's safe for the ordinary validation-only ToolError too.
+                await ctx.db.rollback()
                 convo.append(_tool_result_entry(call, {"error": str(exc)}))
                 continue
             except Exception:
                 logger.exception("Write tool %r raised an unexpected error during execution.", name)
+                await ctx.db.rollback()
                 convo.append(_tool_result_entry(call, {"error": _TOOL_FAILED}))
                 continue
             convo.append(_tool_result_entry(call, {"ok": True, "summary": result.summary, **result.data}))

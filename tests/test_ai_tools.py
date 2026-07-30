@@ -12,7 +12,7 @@ from types import SimpleNamespace
 import pytest
 
 from spoolman import ai_tools
-from spoolman.ai_tools import ToolError, spools
+from spoolman.ai_tools import ToolError, base, spools
 
 
 def test_readonly_is_offered_only_read_tools() -> None:
@@ -215,3 +215,10 @@ def test_update_descriptions_warn_that_explicit_null_clears_a_field() -> None:
     for name in ("update_spool", "update_filament"):
         description = ai_tools.WRITE_TOOLS[name].description.lower()
         assert "clear" in description, f"{name}'s description no longer warns that null clears a field"
+
+
+def test_base_module_carries_no_dead_logger() -> None:
+    # base.py's `logger` was a verbatim, unused carry-over from the pre-split monolith (where it
+    # was also unused). Nothing in the package imports it, so it must stay gone rather than
+    # reappear via a careless copy-paste from a sibling module that does log.
+    assert not hasattr(base, "logger")
