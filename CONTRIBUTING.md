@@ -49,6 +49,7 @@ uv run poe scenario test-all        # realistic deployments: DB×auth×proxy×ar
 uv run poe scenario chaos <name>    # kill -9 durability + DB-outage recovery contracts
 uv run poe scenario load <name>     # concurrent load smoke with a p95 latency budget
 cd client && npm run test:visual    # visual regression against committed local baselines
+uv run poe ai-eval                  # AI tool-selection accuracy against a live endpoint (see docs/ai.md)
 ```
 
 CI runs all of the above plus lint (`ruff`, `eslint`, `prettier`, `tsc`),
