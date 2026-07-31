@@ -61,6 +61,18 @@ function malformedCascadeError(spoolCount: unknown) {
   };
 }
 
+// An auth-layer refusal (e.g. a FastAPI `HTTPException` in front of this endpoint): the body is
+// `{"detail": ...}`, not this endpoint's own `{"message": ...}` shape, so the axios interceptor
+// (see spoolCascadeError's comment above) has nothing to copy into `error.message` -- it comes out
+// `undefined`, same as if the field were dropped entirely.
+function authErrorNoMessage() {
+  return {
+    statusCode: 403,
+    message: undefined,
+    response: { data: { detail: "Not authenticated" } },
+  };
+}
+
 describe("getFilamentCascadeSpoolCount", () => {
   it("returns null for a non-409 error", () => {
     expect(getFilamentCascadeSpoolCount({ statusCode: 404, response: { data: { spool_count: 3 } } })).toBeNull();
@@ -208,6 +220,25 @@ describe("FilamentDeleteButton", () => {
     // The mocked useTranslate (top of file) echoes back the interpolation params as JSON, so the
     // server's real message surviving into the built notification proves it wasn't dropped.
     expect(result.message).toContain("Cannot delete filament 5: 2 order line(s) reference it.");
+  });
+
+  it("errorNotification degrades to the plain error text, with no dangling 'undefined', when the error body has no message", async () => {
+    deleteMutate.mockImplementation(() => {});
+    render(<FilamentDeleteButton filamentId={5} filamentName="Prusament PETG Black" />);
+    await openSimplePopconfirm();
+
+    const [firstParams] = deleteMutate.mock.calls[0];
+    const result = firstParams.errorNotification(authErrorNoMessage());
+
+    expect(result).not.toBe(false);
+    expect(result.type).toBe("error");
+    expect(result.message).not.toContain("undefined");
+    // Not just an absence of the literal word: the plain "deleteError" key (no {{message}}
+    // placeholder at all) must be the one used, proving the fallback branch actually ran rather
+    // than "deleteErrorDetail" happening to interpolate an empty value.
+    expect(result.message).toBe(
+      `notifications.deleteError ${JSON.stringify({ resource: "filament", statusCode: 403 })}`,
+    );
   });
 
   it("a failed cascade retry keeps the dialog open and its own errorNotification still surfaces a real message", async () => {

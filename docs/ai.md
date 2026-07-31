@@ -150,7 +150,7 @@ the SpoolmanDB catalog. It never runs raw queries.
 **Changes are never silent.** When the assistant wants to create, update, consume, or
 delete something, it renders a **confirm-card** showing the before/after values with
 **Confirm** / **Cancel** buttons — nothing happens until you confirm. After a change runs,
-a one-click **Undo** restores the previous state — with two exceptions. Deletes cannot be
+a one-click **Undo** restores the previous state — with three exceptions. Deletes cannot be
 undone in one click and require an explicit request; deleting a filament also deletes its
 spools and their usage history, and the confirm-card states exactly how many. Marking an
 order arrived also cannot be undone in one click: it can create a spool per unit in the same

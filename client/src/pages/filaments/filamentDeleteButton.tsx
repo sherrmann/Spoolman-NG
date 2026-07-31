@@ -96,16 +96,24 @@ export function FilamentDeleteButton({
           // notificationProvider.tsx only ever renders `message`, silently dropping `description`.
           // Building an explicit message here (folding the server detail into `message` itself)
           // is what actually gets it in front of the user, instead of relying on a field that is
-          // never read.
+          // never read. Not every error body has a `message` (e.g. an auth-layer HTTPException
+          // returns FastAPI's `{"detail": ...}`, which the axios interceptor doesn't map to
+          // `error.message`), so an empty/missing message falls back to the plain "deleteError"
+          // text instead of interpolating "undefined" into the toast.
           if (!cascade && getFilamentCascadeSpoolCount(error) !== null) {
             return false;
           }
           return {
-            message: t("notifications.deleteErrorDetail", {
-              resource: "filament",
-              statusCode: error?.statusCode,
-              message: error?.message,
-            }),
+            message: error?.message
+              ? t("notifications.deleteErrorDetail", {
+                  resource: "filament",
+                  statusCode: error?.statusCode,
+                  message: error.message,
+                })
+              : t("notifications.deleteError", {
+                  resource: "filament",
+                  statusCode: error?.statusCode,
+                }),
             type: "error",
           };
         },
