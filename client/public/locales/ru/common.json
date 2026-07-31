@@ -48,6 +48,7 @@
     "createError": "Произошла ошибка при создании {{resource}} (status code: {{statusCode}})",
     "deleteSuccess": "Успешно удалено {{resource}}",
     "deleteError": "Ошибка при удалении {{resource}} (status code: {{statusCode}})",
+    "deleteErrorDetail": "Ошибка при удалении {{resource}} (status code: {{statusCode}}): {{message}}",
     "editSuccess": "Успешно отредактировано {{resource}}",
     "editError": "Ошибка при редактировании {{resource}} (status code: {{statusCode}})",
     "importProgress": "Импорт: {{processed}}/{{total}}",

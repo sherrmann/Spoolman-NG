@@ -48,6 +48,7 @@
     "createError": "Hubo un error al crear {{resource}} (status code: {{statusCode}})",
     "deleteSuccess": "Has borrado {{resource}} con éxito",
     "deleteError": "Error al borrar {{resource}} (status code: {{statusCode}})",
+    "deleteErrorDetail": "Error al borrar {{resource}} (status code: {{statusCode}}): {{message}}",
     "editSuccess": "Has editado {{resource}} con éxito",
     "editError": "Error al editar {{resource}} (status code: {{statusCode}})",
     "importProgress": "Importando: {{processed}}/{{total}}",

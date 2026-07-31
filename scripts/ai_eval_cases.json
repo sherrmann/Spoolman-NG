@@ -55,8 +55,8 @@
   {"prompt": "Delete filament 9 and all its spools", "tool": "delete_filament", "args": {"filament_id": 9}},
   {"prompt": "I don't stock filament 15 any more, remove it entirely", "tool": "delete_filament", "args": {"filament_id": 15}},
 
-  {"prompt": "I ordered 3 spools of filament 2", "tool": "create_order", "args": {}},
-  {"prompt": "Record an order of 2x filament 6 at 19.50 each", "tool": "create_order", "args": {}},
+  {"prompt": "I ordered 3 spools of filament 2", "tool": "create_order", "args": {"lines": [{"filament_id": 2, "quantity": 3}]}},
+  {"prompt": "Record an order of 2x filament 6 at 19.50 each", "tool": "create_order", "args": {"lines": [{"filament_id": 6, "quantity": 2, "price_per_unit": 19.5}]}},
   {"prompt": "I just placed an order with Prusa for 2 of filament 3 and 1 of filament 7", "tool": "create_order", "args": {"shop": "prusa"}},
   {"prompt": "Log an order: 4 spools of filament 10 from Filastruder, order number PO-2291", "tool": "create_order", "args": {"order_number": "PO-2291"}},
 

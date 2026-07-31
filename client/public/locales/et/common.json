@@ -47,6 +47,7 @@
     "createError": "Tekkis viga {{resource}} loomisel. (staatuse kood: {{statusCode}})",
     "deleteSuccess": "Edukalt kustutatud {{resource}}",
     "deleteError": "Viga {{resource}} kustutamisel. (staatuse kood: {{statusCode}})",
+    "deleteErrorDetail": "Viga {{resource}} kustutamisel. (staatuse kood: {{statusCode}}): {{message}}",
     "editSuccess": "Edukalt muudetud {{resource}}",
     "editError": "Viga {{resource}} muutmisel (staatuse kood: {{statusCode}})",
     "importProgress": "Importimine: {{processed}}/{{total}}",

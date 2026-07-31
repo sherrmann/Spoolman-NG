@@ -624,6 +624,7 @@
     "success": "Riuscito",
     "editSuccess": "{{resource}} modificata con successo",
     "deleteError": "Errore nella cancellazione di {{resource}} (status code: {{statusCode}})",
+    "deleteErrorDetail": "Errore nella cancellazione di {{resource}} (status code: {{statusCode}}): {{message}}",
     "createSuccess": "{{resource}} creata correttamente",
     "saveSuccessful": "Salvataggio completato!",
     "validationError": "Errore di convalida: {{error}}"

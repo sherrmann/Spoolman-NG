@@ -383,6 +383,7 @@
     "createError": "Трапилась помилка при створенні {{resource}} (код помилки: {{statusCode}})",
     "editSuccess": "Успішно змінено {{resource}}",
     "deleteError": "Помилка при видаленні {{resource}} (код помилки: {{statusCode}})",
+    "deleteErrorDetail": "Помилка при видаленні {{resource}} (код помилки: {{statusCode}}): {{message}}",
     "saveSuccessful": "Успішно збережено!",
     "validationError": "Помилка перевірки: {{error}}"
   },

@@ -18,11 +18,13 @@ import sqlalchemy
 from httpx import AsyncClient
 
 from spoolman.api.v1 import filament as filament_api
+from spoolman.api.v1.models import EventType
 from spoolman.database import database as db_module
 from spoolman.database import filament as filament_db
 from spoolman.database import models
 from spoolman.database import spool as spool_db
 from spoolman.exceptions import ItemNotFoundError
+from spoolman.ws import websocket_manager
 
 FIL = "/api/v1/filament"
 SPOOL = "/api/v1/spool"
@@ -200,3 +202,41 @@ async def test_usage_event_cascade_uses_a_correlated_subquery_not_a_python_list_
         "spool_id IN (...) must be built from a correlated subquery, not a Python list of ids bound "
         f"one SQL parameter each; got {type(membership_test)!r} instead"
     )
+
+
+# --- Per-spool websocket notification ----------------------------------------------
+
+
+async def test_cascade_emits_one_deleted_websocket_event_per_spool(
+    client: AsyncClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The cascade must notify each spool's OWN subscribers too, not just the filament's.
+
+    Mirrors the ordinary single-spool delete path (spool.spool_changed) -- otherwise a client
+    already showing one of these spools never learns it was removed. spool_changed
+    (spoolman/database/spool.py) catches any exception and only logs, so a
+    regression here -- losing the per-spool notify loop, or losing the joinedload("*") that keeps
+    Spool.from_db from lazy-loading on an async session -- would otherwise be completely silent to
+    every other test in this suite. websocket_manager.send is spied on directly (rather than
+    stubbing spool_changed itself) so a missing/broken eager-load inside Spool.from_db would also
+    surface here as a missing event, not just a "was it called" check.
+    """
+    fil = await _add_filament(client, name="Doomed")
+    spool_a = await _add_spool(client, fil["id"])
+    spool_b = await _add_spool(client, fil["id"])
+
+    sent: list[tuple[tuple, object]] = []
+    original_send = websocket_manager.send
+
+    async def _spy_send(path: tuple, evt: object) -> None:
+        sent.append((path, evt))
+        await original_send(path, evt)
+
+    monkeypatch.setattr(websocket_manager, "send", _spy_send)
+
+    resp = await client.delete(f"{FIL}/{fil['id']}", params={"cascade": "true"})
+    assert resp.status_code == 200, resp.text
+
+    deleted_spool_ids = {evt.payload.id for path, evt in sent if path[0] == "spool" and evt.type == EventType.DELETED}
+    assert deleted_spool_ids == {spool_a["id"], spool_b["id"]}

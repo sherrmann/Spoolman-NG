@@ -204,6 +204,7 @@
     "createSuccess": "Pomyślnie utworzono {{resource}}",
     "deleteSuccess": "Pomyślnie usunięto {{resource}}",
     "deleteError": "Błąd podczas usuwania {{resource}} (kod statusu: {{statusCode}})",
+    "deleteErrorDetail": "Błąd podczas usuwania {{resource}} (kod statusu: {{statusCode}}): {{message}}",
     "editSuccess": "Pomyślnie edytowano {{resource}}",
     "editError": "Błąd podczas edycji {{resource}} (kod statusu: {{statusCode}})",
     "importProgress": "Importowanie: {{processed}}/{{total}}",

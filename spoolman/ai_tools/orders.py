@@ -73,22 +73,28 @@ def order_row(order: object) -> dict:
     }
 
 
-async def _resolve_shop_id(ctx: ToolContext, name: str | None) -> int | None:
+async def _resolve_shop_id(ctx: ToolContext, name: str | None) -> tuple[int | None, str | None]:
+    """Resolve a shop name to (id, canonical name), raising if it doesn't match any shop.
+
+    Returning the canonical name too lets a confirm-card state the shop that will actually be
+    used -- a user typing 'prusa' must see 'Prusa Research', the name the order actually links to,
+    not an echo of whatever casing they happened to type (mirrors _resolve_location_id, below).
+    """
     if name is None:
-        return None
+        return None, None
     items, _ = await shop_db.find(db=ctx.db, name=name)
     lowered = name.strip().lower()
     match = next((item for item in items if (item.name or "").strip().lower() == lowered), None)
     if match is None:
         raise ToolError(f"No shop named '{name}' exists.")
-    return match.id
+    return match.id, match.name
 
 
 async def _run_find_orders(ctx: ToolContext, args: dict) -> dict:
     """List orders with their derived status and outstanding units."""
     limit = arg_limit(args)
     status = parse_status(args)
-    shop_id = await _resolve_shop_id(ctx, clean_str(args.get("shop")))
+    shop_id, _resolved_shop = await _resolve_shop_id(ctx, clean_str(args.get("shop")))
     from_date, to_date = parse_date(args, "from_date"), parse_date(args, "to_date")
 
     # Status and date are post-filters (order.find only knows shop_id), so fetch unlimited and
@@ -184,15 +190,24 @@ async def _preview_create_order(ctx: ToolContext, args: dict) -> ConfirmCard:
     lines = parse_lines(args)
     described = await _describe_lines(ctx, lines)
     shop = clean_str(args.get("shop"))
+    # Resolve everything execute() would need up front: a shop name that doesn't exist or an
+    # unparseable ordered_at must fail HERE, before the user ever confirms a card that then blows
+    # up -- the same guarantee arrive_order's preview already gives, and create_vendor's duplicate
+    # check. _shop_id is discarded; it's resolved again in execute (matching arrive_order's own
+    # _resolve_location_id pattern), this call exists purely to validate and to get the canonical
+    # name for the card below.
+    _shop_id, resolved_shop = await _resolve_shop_id(ctx, shop)
+    ordered_at = parse_date(args, "ordered_at")
     after = {
-        "shop": shop,
+        "shop": resolved_shop,
         "order_number": clean_str(args.get("order_number")),
+        "ordered_at": ordered_at.isoformat() if ordered_at is not None else None,
         "lines": described,
         "units": sum(line["quantity"] for line in lines),
     }
     return ConfirmCard(
         tool="create_order",
-        title=f"Create an order of {after['units']} spool(s)" + (f" from {shop}" if shop else ""),
+        title=f"Create an order of {after['units']} spool(s)" + (f" from {resolved_shop}" if resolved_shop else ""),
         summary="; ".join(described),
         before={},
         after={key: value for key, value in after.items() if value is not None},
@@ -203,9 +218,10 @@ async def _execute_create_order(ctx: ToolContext, args: dict) -> ExecutionResult
     require_write(ctx)
     lines = parse_lines(args)
     await _describe_lines(ctx, lines)
+    shop_id, _resolved_shop = await _resolve_shop_id(ctx, clean_str(args.get("shop")))
     created = await order_db.create(
         db=ctx.db,
-        shop_id=await _resolve_shop_id(ctx, clean_str(args.get("shop"))),
+        shop_id=shop_id,
         ordered_at=parse_date(args, "ordered_at"),
         order_number=clean_str(args.get("order_number")),
         comment=clean_str(args.get("comment")),

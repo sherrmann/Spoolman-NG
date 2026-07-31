@@ -50,6 +50,7 @@
     "createError": "{{resource}} 생성 중 오류가 발생했습니다 (상태 코드: {{statusCode}})",
     "deleteSuccess": "삭제 완료 {{resource}}",
     "deleteError": "{{resource}} 삭제 중 오류 발생 (상태 코드: {{statusCode}})",
+    "deleteErrorDetail": "{{resource}} 삭제 중 오류 발생 (상태 코드: {{statusCode}}): {{message}}",
     "editSuccess": "수정 완료 {{resource}}",
     "editError": "{{resource}} 편집 중 오류 발생 (상태 코드: {{statusCode}})",
     "importProgress": "가져오기: {{processed}}/{{total}}"

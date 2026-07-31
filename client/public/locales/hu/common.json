@@ -607,6 +607,7 @@
     "success": "Sikeres",
     "editSuccess": "Sikeresen módosítva {{resource}}",
     "deleteError": "Hiba a(z) {{resource}} törlésekor (hibakód: {{statusCode}})",
+    "deleteErrorDetail": "Hiba a(z) {{resource}} törlésekor (hibakód: {{statusCode}}): {{message}}",
     "createSuccess": "Sikeresen létrehozva {{resource}}",
     "saveSuccessful": "Sikeres mentés!",
     "validationError": "Validációs hiba: {{error}}"

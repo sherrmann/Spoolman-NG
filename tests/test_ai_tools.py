@@ -11,7 +11,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from spoolman import ai_tools
+from spoolman import ai_tools, aichat
 from spoolman.ai_tools import ToolError, base, spools
 
 
@@ -222,3 +222,15 @@ def test_base_module_carries_no_dead_logger() -> None:
     # was also unused). Nothing in the package imports it, so it must stay gone rather than
     # reappear via a careless copy-paste from a sibling module that does log.
     assert not hasattr(base, "logger")
+
+
+def test_every_read_tool_produces_a_non_default_summary() -> None:
+    # aichat._read_summary is the chat drawer's one line of transparency about what the assistant
+    # actually looked at (the 'tool' SSE event). A read tool with no branch of its own there falls
+    # through to the generic "Done.", which tells the user nothing. An empty result dict is passed
+    # for every tool name in the registry (so each branch falls back to its own internal defaults,
+    # e.g. count=0) -- the point isn't that the numbers are meaningful, it's that a tool-specific
+    # sentence comes back at all, so the next new read tool cannot forget to add one.
+    for name in ai_tools.READ_TOOLS:
+        summary = aichat._read_summary(name, {})
+        assert summary != "Done.", f"{name} has no _read_summary branch of its own"

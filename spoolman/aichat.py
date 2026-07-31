@@ -156,12 +156,33 @@ def _tool_result_entry(call: dict, payload: dict) -> dict:
     return {"role": "tool", "tool_call_id": _call_id(call), "content": json.dumps(payload)}
 
 
-def _read_summary(name: str, result: dict) -> str:
-    """Return a short human line describing what a read tool found (for the 'tool' event)."""
+def _read_summary(name: str, result: dict) -> str:  # noqa: PLR0911
+    """Return a short human line describing what a read tool found (for the 'tool' event).
+
+    This is the drawer's transparency line: the one place the user can see what the assistant
+    actually looked at without opening the raw tool payload. Every READ_TOOLS entry needs a
+    branch here that reflects its own result shape -- a bare "Done." tells the user nothing they
+    couldn't already infer from the tool name alone, and test_ai_tools.py's
+    test_every_read_tool_produces_a_non_default_summary pins that a future read tool can't forget
+    to add one.
+    """
     if name == "find_spools":
         return f"Found {result.get('count', 0)} spool(s), {result.get('total_remaining_weight_g', 0)} g remaining."
     if name == "find_filaments":
         return f"Listed {result.get('count', 0)} filament(s)."
+    if name == "get_usage_stats":
+        return (
+            f"Summed {result.get('count', 0)} {result.get('bucket', 'month')} period(s): "
+            f"{result.get('total_consumed_weight_g', 0)} g, {result.get('total_cost', 0)} total cost."
+        )
+    if name == "find_orders":
+        return f"Found {result.get('count', 0)} order(s), {result.get('returned', 0)} shown."
+    if name == "find_locations":
+        return f"Listed {result.get('count', 0)} location(s)."
+    if name == "find_vendors":
+        return f"Listed {result.get('count', 0)} vendor(s)."
+    if name == "catalog_lookup":
+        return f"Found {result.get('count', 0)} catalog match(es)."
     return "Done."
 
 

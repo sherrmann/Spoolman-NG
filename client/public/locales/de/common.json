@@ -48,6 +48,7 @@
     "createError": "Fehler beim erstellen von {{resource}} (status code: {{statusCode}})",
     "deleteSuccess": "{{resource}} erfolgreich gelöscht",
     "deleteError": "Fehler beim löschen von {{resource}} (status code: {{statusCode}})",
+    "deleteErrorDetail": "Fehler beim löschen von {{resource}} (status code: {{statusCode}}): {{message}}",
     "editSuccess": "{{resource}} erfolgreich bearbeitet",
     "editError": "Fehler beim bearbeiten von {{resource}} (status code: {{statusCode}})",
     "importProgress": "{{processed}}/{{total}} importiert",

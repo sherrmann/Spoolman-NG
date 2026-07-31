@@ -595,6 +595,7 @@
     "success": "Réussite",
     "editSuccess": "Modification réussie de {{resource}}",
     "deleteError": "Erreur lors de la suppression de {{resource}} (status code : {{statusCode}})",
+    "deleteErrorDetail": "Erreur lors de la suppression de {{resource}} (status code : {{statusCode}}) : {{message}}",
     "createSuccess": "Création réussie de {{resource}}",
     "saveSuccessful": "Sauvegarde réussie !",
     "validationError": "Erreur de validation : {{error}}"

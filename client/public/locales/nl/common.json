@@ -222,6 +222,7 @@
     "success": "Succesvol",
     "editSuccess": "{{resource}} succesvol bewerkt",
     "deleteError": "Fout opgetreden bij het verwijderen van {{resource}} (status code {{statusCode}})",
+    "deleteErrorDetail": "Fout opgetreden bij het verwijderen van {{resource}} (status code {{statusCode}}): {{message}}",
     "createSuccess": "{{resource}} succesvol aangemaakt",
     "saveSuccessful": "Succesvol opgeslagen!",
     "validationError": "Validatiefout: {{error}}"

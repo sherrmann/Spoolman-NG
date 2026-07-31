@@ -124,6 +124,7 @@
     "createError": "{{resource}} banane mein error hua (status code: {{statusCode}})",
     "deleteSuccess": "{{resource}} safaltapoorvak delete kiya gaya",
     "deleteError": "{{resource}} delete karne mein error hua (status code: {{statusCode}})",
+    "deleteErrorDetail": "{{resource}} delete karne mein error hua (status code: {{statusCode}}): {{message}}",
     "editSuccess": "{{resource}} safaltapoorvak edit kiya gaya",
     "editError": "{{resource}} edit karne mein error hua (status code: {{statusCode}})",
     "importProgress": "Import ho raha hai: {{processed}}/{{total}}",

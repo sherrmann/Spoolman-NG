@@ -49,6 +49,7 @@
     "undoable": "برای برگشت به حالت قبل {{seconds}} ثانیه فرصت دارید...",
     "createError": "در زمان ساخت {{resource}} مشکل {{statusCode}} رخ داد",
     "deleteError": "حذف {{resource}} با خطای {{statusCode}} مواجه شد",
+    "deleteErrorDetail": "حذف {{resource}} با خطای {{statusCode}} مواجه شد‏: {{message}}",
     "editSuccess": "{{resource}} با موفقیت ویرایش شد",
     "importProgress": "در حال وارد کردن {{processed}} از مجموع {{total}}",
     "saveSuccessful": "با موفقیت ثبت شد!"

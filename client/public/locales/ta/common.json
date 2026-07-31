@@ -620,6 +620,7 @@
     "createError": "{{resource}} (நிலைக் குறியீடு: {{statusCode}}) உருவாக்கும் பிழை இருந்தது",
     "deleteSuccess": "வெற்றிகரமாக நீக்கப்பட்டது {{resource}}",
     "deleteError": "{{resource}} நீக்கும்போது பிழை (நிலைக் குறியீடு: {{statusCode}})",
+    "deleteErrorDetail": "{{resource}} நீக்கும்போது பிழை (நிலைக் குறியீடு: {{statusCode}}): {{message}}",
     "editSuccess": "வெற்றிகரமாக திருத்தப்பட்டது {{resource}}",
     "editError": "{{resource}} திருத்தும்போது பிழை (நிலை குறியீடு: {{statusCode}})",
     "importProgress": "இறக்குமதி: {{processed}}/{{total}}",

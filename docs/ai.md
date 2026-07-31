@@ -155,8 +155,11 @@ undone in one click and require an explicit request; deleting a filament also de
 spools and their usage history, and the confirm-card states exactly how many. Marking an
 order arrived also cannot be undone in one click: it can create a spool per unit in the same
 step, and because that splits order lines there is no clean single call that reverses it, so
-its confirm-card spells out exactly what will be created before you confirm. A **read-only**
-account can use the assistant to ask questions but is offered no write actions at all.
+its confirm-card spells out exactly what will be created before you confirm. Undoing a filament
+**creation** is also refused, rather than silently deleting, if you've added spools to it since —
+you'll be told how many, and can delete the filament explicitly (with its own confirm-card) if
+that is really what you want. A **read-only** account can use the assistant to ask questions but
+is offered no write actions at all.
 
 When updating a filament or a spool, an omitted field is left unchanged and an explicit
 `null` clears it — except a filament's density and diameter, which can never be null and
@@ -276,10 +279,17 @@ SPOOLMAN_AI_BASE_URL=http://localhost:11434/v1 SPOOLMAN_AI_MODEL=<model> uv run 
 ```
 
 It needs a live endpoint, so it is **not part of CI** — run it before a release and whenever
-the tool set changes. Measured baseline against a local Ollama 7.6B tool-tuned model
-(`hhao/qwen2.5-coder-tools`) on 53 fixture prompts: **49/53 (92%)** tool selection, **46/53
-(87%)** with correct arguments too. Treat that as one data point for one small local model, not
-a guarantee for whatever endpoint you point Spoolman at.
+the tool set changes. The harness's own system prompt is built from the same
+`_system_prompt` the in-app chat agent actually sends (writer posture, English locale, no page
+context), so the eval measures the configuration Spoolman ships, not a thinner stand-in.
+
+Measured across 2 runs against a local Ollama 7.6B tool-tuned model
+(`hhao/qwen2.5-coder-tools`) on the same 53 fixture prompts: **47-48/53 (89-91%)** tool
+selection, **44-46/53 (83-87%)** with correct arguments too, run to run. Treat that range as one
+small local model's variance on one machine, not a guarantee for whatever endpoint you point
+Spoolman at, and expect the exact numbers to drift a little between any two runs — a single
+best-of-N figure understates that. The dominant failure mode across both runs is the model
+declining to call any tool at all, not calling the wrong one.
 
 ## Privacy
 

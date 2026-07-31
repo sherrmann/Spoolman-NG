@@ -11,7 +11,8 @@
     "saveSuccessful": "保存完了!",
     "createError": "{{resource}}を作成中にエラーが発生しました。 (status code: {{statusCode}})",
     "validationError": "検証エラー: {{error}}",
-    "deleteError": "{{resource}}を削除中にエラーが発生しました (status code: {{statusCode}})"
+    "deleteError": "{{resource}}を削除中にエラーが発生しました (status code: {{statusCode}})",
+    "deleteErrorDetail": "{{resource}}を削除中にエラーが発生しました (status code: {{statusCode}})：{{message}}"
   },
   "actions": {
     "create": "作成",

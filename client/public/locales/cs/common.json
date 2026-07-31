@@ -48,6 +48,7 @@
     "createError": "Při vytváření došlo k chybě {{resource}} (kód chyby: {{statusCode}})",
     "deleteSuccess": "Úspěšně vymazáno {{resource}}",
     "deleteError": "Chyba při odstranění {{resource}} (kód chyby: {{statusCode}})",
+    "deleteErrorDetail": "Chyba při odstranění {{resource}} (kód chyby: {{statusCode}}): {{message}}",
     "editSuccess": "Úspěšně upraveno {{resource}}",
     "editError": "Chyba při úpravě {{resource}} (kód chyby: {{statusCode}})",
     "importProgress": "Importování: {{processed}}/{{total}}",

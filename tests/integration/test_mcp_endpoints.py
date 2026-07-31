@@ -24,7 +24,7 @@ from mcp.client.streamable_http import streamablehttp_client
 from starlette.applications import Starlette
 from starlette.routing import Route
 
-from spoolman import mcp_server
+from spoolman import ai_tools, mcp_server
 from spoolman.auth import AuthState
 from spoolman.users import ROLE_READONLY, mint_token
 
@@ -264,6 +264,20 @@ async def test_low_stock_resource_and_restock_prompt(client: AsyncClient) -> Non
 
 
 def test_mcp_never_offers_a_destructive_tool() -> None:
-    """No name in the curated MCP write set may be a delete: no confirm-card exists over MCP."""
+    """No tool exposed over MCP may be destructive, with one explicit exception: arrive_order.
+
+    See test_mcp_flags_arrive_order_as_destructive_but_ordinary_writes_as_safe -- it is annotated
+    honestly via destructiveHint so a client can prompt its own user, since no confirm-card exists
+    over MCP. A ``not name.startswith("delete_")`` heuristic would pass arrive_order silently: it IS
+    destructive=True and it is NOT named delete_*, so that check never actually looks at it. This
+    checks each tool's own declared WriteTool.destructive flag instead -- the field this branch
+    added precisely to make this checkable -- so a future non-delete destructive write (a
+    purge_history-style tool, say) can't sail through unnoticed the same way.
+    """
+    allowed_destructive = {"arrive_order"}
     for name in mcp_server._MCP_WRITE_TOOLS:  # noqa: SLF001 -- unit-testing the module's own invariant
-        assert not name.startswith("delete_"), f"{name} must not be exposed over MCP"
+        tool = ai_tools.WRITE_TOOLS[name]
+        if name in allowed_destructive:
+            assert tool.destructive is True, f"{name} was expected to be destructive but isn't"
+            continue
+        assert tool.destructive is False, f"{name} must not be exposed over MCP (it is destructive)"

@@ -48,6 +48,7 @@
     "createError": "建立 {{resource}} 時發生錯誤（狀態碼：{{statusCode}}）",
     "deleteSuccess": "成功刪除 {{resource}}",
     "deleteError": "刪除 {{resource}} 時發生錯誤（狀態碼：{{statusCode}}）",
+    "deleteErrorDetail": "刪除 {{resource}} 時發生錯誤（狀態碼：{{statusCode}}）：{{message}}",
     "editSuccess": "成功編輯{{resource}}",
     "editError": "編輯 {{resource}} 時發生錯誤（狀態碼：{{statusCode}}）",
     "importProgress": "匯入中：{{processed}}/{{total}}",

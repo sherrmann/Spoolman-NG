@@ -48,6 +48,7 @@
     "createError": "{{resource}} oluşturulurken bir hata ile karşılaşıldı (durum kodu :{{statusCode}})",
     "deleteSuccess": "{{resource}} başarılı şekilde silindi",
     "deleteError": "{{resource}} silinirken hata ile karşılaşıldı(durum kodu:{{statusCode}})",
+    "deleteErrorDetail": "{{resource}} silinirken hata ile karşılaşıldı(durum kodu:{{statusCode}}): {{message}}",
     "editSuccess": "{{resource}} başarılı şekilde düzenlendi",
     "editError": "{{resource}} düzenlenirken hata ile karşılaşıldı(durum kodu:{{statusCode}})",
     "importProgress": "İçe aktarılıyor: {{processed}}/{{total}}",

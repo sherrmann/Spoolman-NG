@@ -547,6 +547,7 @@
     "editSuccess": "แก้ไข {{resource}} สำเร็จ",
     "validationError": "เกิดข้อผิดพลาดในการตรวจสอบ: {{error}}",
     "deleteError": "เกิดข้อผิดพลาดในการลบ {{resource}} (รหัสสถานะ: {{statusCode}})",
+    "deleteErrorDetail": "เกิดข้อผิดพลาดในการลบ {{resource}} (รหัสสถานะ: {{statusCode}}): {{message}}",
     "success": "สำเร็จ",
     "createSuccess": "สร้าง {{resource}} สำเร็จ",
     "saveSuccessful": "บันทึกสำเร็จ!",

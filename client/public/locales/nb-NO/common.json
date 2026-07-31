@@ -580,6 +580,7 @@
     "createError": "Kunne ikke opprette {{resource}} (statuskode: {{statusCode}})",
     "editSuccess": "{{resource}} redigert",
     "deleteError": "Kunne ikke slette {{resource}} (statuskode: {{statusCode}})",
+    "deleteErrorDetail": "Kunne ikke slette {{resource}} (statuskode: {{statusCode}}): {{message}}",
     "createSuccess": "Opprettet {{resource}}",
     "saveSuccessful": "Lagring vellykket!",
     "validationError": "Valideringsfeil: {{error}}"

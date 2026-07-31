@@ -22,24 +22,27 @@ const mockedUseDelete = vi.mocked(useDelete);
 // FilamentCascadeRequired in spoolman/api/v1/models.py): `message` is human prose, `spool_count` is
 // the structured integer -- and this is what the axios interceptor in @refinedev/simple-rest hangs
 // the parsed JSON body off of (`error.response.data`), verified against the real running server.
+// The interceptor (client/node_modules/@refinedev/simple-rest/src/utils/axios.ts) also copies that
+// same `message` up to the error's own top-level `message` field (and `statusCode` from
+// `response.status`) -- that top-level field is what HttpError.message actually is by the time
+// component code ever sees the error, and what errorNotification below reads.
 function spoolCascadeError(spoolCount: number) {
+  const message = `Filament 5 still has ${spoolCount} spool(s). Deleting it also permanently deletes those spools and their usage history, and this cannot be undone. Pass cascade=true to proceed.`;
   return {
     statusCode: 409,
-    response: {
-      data: {
-        message: `Filament 5 still has ${spoolCount} spool(s). Deleting it also permanently deletes those spools and their usage history, and this cannot be undone. Pass cascade=true to proceed.`,
-        spool_count: spoolCount,
-      },
-    },
+    message,
+    response: { data: { message, spool_count: spoolCount } },
   };
 }
 
 // The sibling "N order line(s) reference it" refusal (#298): a plain Message, no spool_count key
 // at all -- cascade cannot fix this one, so it must never trigger the escalation dialog.
 function orderLineError() {
+  const message = "Cannot delete filament 5: 2 order line(s) reference it.";
   return {
     statusCode: 409,
-    response: { data: { message: "Cannot delete filament 5: 2 order line(s) reference it." } },
+    message,
+    response: { data: { message } },
   };
 }
 
@@ -50,14 +53,11 @@ function orderLineError() {
 // happily extract 9 from this prose and this test would keep passing unless it can actually fail
 // that way -- so the message is never number-free like "still has some spool(s)" would be.
 function malformedCascadeError(spoolCount: unknown) {
+  const message = "Filament 5 still has 9 spool(s). Deleting it also permanently deletes those spools...";
   return {
     statusCode: 409,
-    response: {
-      data: {
-        message: "Filament 5 still has 9 spool(s). Deleting it also permanently deletes those spools...",
-        spool_count: spoolCount,
-      },
-    },
+    message,
+    response: { data: { message, spool_count: spoolCount } },
   };
 }
 
@@ -171,10 +171,74 @@ describe("FilamentDeleteButton", () => {
     render(<FilamentDeleteButton filamentId={5} filamentName="Prusament PETG Black" />);
     await openSimplePopconfirm();
 
-    // No dialog with a wrong or absent count -- the failure surfaces as a normal error instead
-    // (the default error notification, left to fire since errorNotification returns undefined).
+    // No dialog with a wrong or absent count -- the failure surfaces as a normal error instead,
+    // via the errorNotification callback's own explicit message (see the tests below).
     expect(screen.queryByText(/filament\.delete_cascade\.title/)).not.toBeInTheDocument();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  // --- errorNotification: the server's real message must actually reach the user -----
+  //
+  // notificationProvider.tsx (client/src/components/notificationProvider.tsx) renders only
+  // `message`, never Refine's `description` -- so a bare `return undefined` here (falling back to
+  // Refine's default notification, which puts the server's actual text in `description`) would
+  // silently drop it. These drive the `errorNotification` callback directly, the only way to prove
+  // what it returns; mocking `useDelete` (as every test above does) means `mutate`'s own
+  // implementation never calls it on its own.
+
+  it("errorNotification suppresses the default toast when our own dialog can resolve the 409", async () => {
+    deleteMutate.mockImplementation(() => {});
+    render(<FilamentDeleteButton filamentId={5} filamentName="Prusament PETG Black" />);
+    await openSimplePopconfirm();
+
+    const [firstParams] = deleteMutate.mock.calls[0];
+    expect(firstParams.errorNotification(spoolCascadeError(3))).toBe(false);
+  });
+
+  it("errorNotification builds an explicit message carrying the server's real text for a 409 our dialog can't fix", async () => {
+    deleteMutate.mockImplementation(() => {});
+    render(<FilamentDeleteButton filamentId={5} filamentName="Prusament PETG Black" />);
+    await openSimplePopconfirm();
+
+    const [firstParams] = deleteMutate.mock.calls[0];
+    const result = firstParams.errorNotification(orderLineError());
+
+    expect(result).not.toBe(false);
+    expect(result.type).toBe("error");
+    // The mocked useTranslate (top of file) echoes back the interpolation params as JSON, so the
+    // server's real message surviving into the built notification proves it wasn't dropped.
+    expect(result.message).toContain("Cannot delete filament 5: 2 order line(s) reference it.");
+  });
+
+  it("a failed cascade retry keeps the dialog open and its own errorNotification still surfaces a real message", async () => {
+    // The cascade (cascade=true) attempt itself fails -- e.g. a spool was added to the filament in
+    // the window between the first 409 and the user confirming the dialog. Unlike the very first
+    // attempt, this failure is never resolved by re-showing the same dialog (there is nothing left
+    // to escalate to); it must not be silently swallowed either.
+    deleteMutate.mockImplementation((params, options) => {
+      if (params.meta?.queryParams?.cascade) {
+        options.onError(orderLineError());
+      } else {
+        options.onError(spoolCascadeError(3));
+      }
+    });
+
+    render(<FilamentDeleteButton filamentId={5} filamentName="Prusament PETG Black" />);
+    await openSimplePopconfirm();
+
+    const dialog = screen.getByRole("dialog");
+    await userEvent.click(within(dialog).getByRole("button", { name: /filament\.delete_cascade\.confirm/ }));
+
+    expect(deleteMutate).toHaveBeenCalledTimes(2);
+    // The dialog stays open (onError, unlike onSuccess, never calls closeCascadeDialog) -- a failed
+    // retry must not look like nothing happened, but it must also not just vanish.
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByRole("dialog").className).not.toMatch(/-leave/);
+
+    const [, secondCallArgs] = deleteMutate.mock.calls;
+    const result = secondCallArgs[0].errorNotification(orderLineError());
+    expect(result).not.toBe(false);
+    expect(result.message).toContain("Cannot delete filament 5: 2 order line(s) reference it.");
   });
 
   it("confirming the cascade dialog re-sends the delete with cascade=true", async () => {

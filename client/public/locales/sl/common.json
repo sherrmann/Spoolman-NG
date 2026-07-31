@@ -48,6 +48,7 @@
     "createError": "Pri ustvarjanju {{resource}} je prišlo do napake (status code: {{statusCode}})",
     "deleteSuccess": "{{resource}} uspešno izbrisano",
     "deleteError": "Napaka pri brisanju {{resource}} (status code: {{statusCode}})",
+    "deleteErrorDetail": "Napaka pri brisanju {{resource}} (status code: {{statusCode}}): {{message}}",
     "editSuccess": "{{resource}} uspešno urejeno",
     "editError": "Napaka pri urejanju {{resource}} (status code:{{statusCode}})",
     "importProgress": "Uvažanje: {{processed}}/{{total}}",

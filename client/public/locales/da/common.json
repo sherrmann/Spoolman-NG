@@ -607,6 +607,7 @@
     "success": "Succes",
     "editSuccess": "Redigering af {{resource}} var succesfuld(t)",
     "deleteError": "Fejl ved sletning af {{resource}} (statuskode: {{statusCode}})",
+    "deleteErrorDetail": "Fejl ved sletning af {{resource}} (statuskode: {{statusCode}}): {{message}}",
     "createSuccess": "Oprettelse af {{resource}} var succesfuld(t)",
     "saveSuccessful": "Gemt!",
     "validationError": "Kunne ikke gennemføres: {{error}}"

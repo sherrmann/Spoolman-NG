@@ -607,6 +607,7 @@
     "success": "Επιτυχής",
     "editSuccess": "Επιτυχής τροποποίηση του {{resource}}",
     "deleteError": "Σφάλμα κατά τη διαγραφή του {{resource}} (status code: {{statusCode}})",
+    "deleteErrorDetail": "Σφάλμα κατά τη διαγραφή του {{resource}} (status code: {{statusCode}}): {{message}}",
     "createSuccess": "Δημιουργήθηκε επιτυχώς {{resource}}",
     "saveSuccessful": "Επιτυχής Αποθήκευση!",
     "validationError": "Σφάλμα επικύρωσης: {{error}}"

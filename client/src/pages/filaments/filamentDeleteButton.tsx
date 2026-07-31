@@ -1,5 +1,5 @@
 import { DeleteOutlined } from "@ant-design/icons";
-import { type BaseKey, useDelete, useTranslate } from "@refinedev/core";
+import { type BaseKey, type HttpError, useDelete, useTranslate } from "@refinedev/core";
 import { Button, Modal, Popconfirm } from "antd";
 import { useState } from "react";
 
@@ -10,9 +10,11 @@ import { useState } from "react";
 // replaced: reword the server message (or hit a genuinely different 409, like a future server that
 // hasn't shipped the field yet) and the dialog would show a guessed or wrong count with nothing
 // failing anywhere. Absence of the field is treated as "this isn't a spool-cascade 409" and falls
-// through to the default error notification instead -- which still surfaces the real `message`, so
-// the user is never left without any explanation, even though the one-click escalation dialog can
-// only appear when the structured count is actually present and valid.
+// through to the errorNotification callback below instead, which builds its own message from the
+// error body (see the comment there for why: Refine's default notification alone would silently
+// drop the server's real text), so the user is never left without any explanation, even though the
+// one-click escalation dialog can only appear when the structured count is actually present and
+// valid.
 //
 // This also doubles as the discriminator between the two 409 shapes this endpoint can return: the
 // sibling "N order line(s) reference it" refusal (#298) is a plain Message with no spool_count at
@@ -84,15 +86,28 @@ export function FilamentDeleteButton({
         resource: "filament",
         id: filamentId,
         meta: cascade ? { queryParams: { cascade: true } } : undefined,
-        errorNotification: (error) => {
+        errorNotification: (error: HttpError | undefined) => {
           // Only the plain (non-cascade) attempt can be resolved by our own dialog; suppress the
-          // default toast for exactly that case. Every other failure -- including a cascade retry
-          // that still fails, or the order-line-reference refusal cascade can't fix -- falls
-          // through to the default error notification unchanged.
+          // default toast for exactly that case. Every other failure -- the order-line-reference
+          // refusal cascade can't fix, a malformed 409, or a failed cascade retry -- must still
+          // surface the server's real message. Refine's own default notification puts that text
+          // in `description` (built from `error.message`, which the axios interceptor in
+          // dataProvider.ts already sets from the server's response body), but
+          // notificationProvider.tsx only ever renders `message`, silently dropping `description`.
+          // Building an explicit message here (folding the server detail into `message` itself)
+          // is what actually gets it in front of the user, instead of relying on a field that is
+          // never read.
           if (!cascade && getFilamentCascadeSpoolCount(error) !== null) {
             return false;
           }
-          return undefined;
+          return {
+            message: t("notifications.deleteErrorDetail", {
+              resource: "filament",
+              statusCode: error?.statusCode,
+              message: error?.message,
+            }),
+            type: "error",
+          };
         },
       },
       {

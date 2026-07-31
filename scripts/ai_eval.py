@@ -25,9 +25,16 @@ from pathlib import Path
 # before the local-package import below can resolve.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from spoolman import ai, ai_tools
+from spoolman import ai, ai_tools, aichat
 
 CASES_PATH = Path(__file__).with_name("ai_eval_cases.json")
+
+#: The eval must measure what the product actually ships: a writer-capable admin, English UI
+#: locale (the fixtures are all English prompts), no page context (a fixture is asked cold, not
+#: from a page that already narrows the intent). Building this from aichat._system_prompt itself,
+#: rather than a hand-written one-liner, means a prompt change (e.g. new disambiguation guidance)
+#: is automatically measured here too instead of silently drifting out of what's actually tested.
+_EVAL_SYSTEM_PROMPT = aichat._system_prompt(context=None, locale="en", can_write=True)  # noqa: SLF001
 
 #: Value returned in the confusion table / "called" slot when the model made no tool call,
 #: called something unknown, or the request itself failed.
@@ -61,14 +68,17 @@ def _coerce_bool(value: object) -> bool | None:
     return None
 
 
-def _value_matches(want: object, got: object) -> bool:
+def _value_matches(want: object, got: object) -> bool:  # noqa: PLR0911
     """Whether one expected argument value plausibly matches what the model sent.
 
     Defensive against exactly the failure modes a small local model produces: a numeric-looking
     expectation compared against a non-numeric or missing value must not raise, it must fail the
-    match. ``want`` values that are themselves lists/dicts (e.g. create_order's ``lines``) fall
-    back to plain equality rather than the numeric coercion below, which would otherwise raise
-    ``TypeError`` on ``float(list)`` and abort the whole run over one fixture.
+    match. ``want`` values that are themselves lists/dicts (e.g. create_order's ``lines``, a list
+    of {filament_id, quantity, price_per_unit} objects -- the hardest argument shape in the tool
+    set) recurse with the same partial-match semantics ``_args_match`` uses at the top level: only
+    the keys named in ``want`` have to match, and each of those recurses through this same
+    function, so a nested int/bool/string still gets its own tolerant comparison rather than a
+    brittle exact-equality check that would fail on "3" vs 3 or an extra key the model added.
     """
     if isinstance(want, str):
         return str(want).strip().lower() in str(got).strip().lower()
@@ -81,6 +91,14 @@ def _value_matches(want: object, got: object) -> bool:
             # The model emitted something non-numeric ("twenty" instead of 20): a mismatch, not
             # a crash.
             return False
+    if isinstance(want, list):
+        return (
+            isinstance(got, list)
+            and len(got) == len(want)
+            and all(_value_matches(w_item, g_item) for w_item, g_item in zip(want, got, strict=True))
+        )
+    if isinstance(want, dict):
+        return isinstance(got, dict) and _args_match(want, got)
     return got == want
 
 
@@ -115,7 +133,7 @@ async def _run_case(config: ai.AIConfig, tools: list[dict], case: dict) -> tuple
     raised: one flaky request must not abort the rest of the eval.
     """
     messages = [
-        {"role": "system", "content": "You are Spoolman's assistant. Use the tools to answer."},
+        {"role": "system", "content": _EVAL_SYSTEM_PROMPT},
         {"role": "user", "content": case["prompt"]},
     ]
     try:

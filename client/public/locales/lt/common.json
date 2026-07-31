@@ -48,6 +48,7 @@
     "createError": "Kūrimo klaida {{resource}} (kodas: {{statusCode}})",
     "deleteSuccess": "Sėkmingai ištrinta {{resource}}",
     "deleteError": "Klaida trinant {{resource}} (kodas: {{statusCode}})",
+    "deleteErrorDetail": "Klaida trinant {{resource}} (kodas: {{statusCode}}): {{message}}",
     "editSuccess": "Sėkmingai redaguota {{resource}}",
     "editError": "Redagavimo klaida {{resource}} (kodas: {{statusCode}})",
     "importProgress": "Importuojama: {{processed}}/{{total}}",

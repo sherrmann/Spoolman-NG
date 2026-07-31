@@ -14,8 +14,11 @@ The provider is mocked at the transport with respx; the agent's own outbound cal
 {base_url}/chat/completions return scripted tool-call / message responses.
 """
 
+import ast
 import asyncio
+import inspect
 import json
+import textwrap
 from datetime import datetime
 
 import pytest
@@ -578,6 +581,158 @@ async def test_chat_action_rejects_bad_arguments_with_422(client: AsyncClient) -
     assert "spool_id" in response.json()["detail"]
 
 
+# --- C1: one-click Undo must never perform an unconfirmed cascading delete ---------
+#
+# Three individually-correct pieces used to compose into silent data loss: create_filament's
+# undo descriptor named delete_filament; /ai/chat/action resolved a tool and called .execute()
+# directly, so the blast-radius preview never ran; and filament delete cascades to every spool
+# and its usage history. Reachable in one chat session: create a filament, add spools to it,
+# then click the still-visible creation card's Undo button believing it only reverts the
+# creation.
+
+
+async def test_chat_action_rejects_a_tool_outside_the_undo_allowlist(client: AsyncClient) -> None:
+    # create_spool is a real WRITE_TOOLS entry, but no undo descriptor in the registry ever names
+    # it (a create's own undo is always the matching delete) -- /ai/chat/action is reached only by
+    # the Undo button replaying a previously-returned descriptor, so anything outside that
+    # allowlist must be refused outright, not executed with arbitrary caller-supplied arguments.
+    await _enable_chat(client)
+    response = await client.post(
+        "/api/v1/ai/chat/action",
+        json={"tool": "create_spool", "args": {"filament_id": 1}},
+    )
+    assert response.status_code == 400
+    assert "Unknown action" in response.json()["detail"]
+
+
+def _undo_descriptor_tool_names(func: object) -> set[str] | None:
+    """Every literal tool name a write tool's ``execute`` can put in an ``undo={...}`` descriptor.
+
+    Mirrors tests/test_ai_tool_budget.py's AST-based static checks: every ExecutionResult(...)
+    return site in this codebase builds ``undo`` as a literal ``None`` or a literal
+    ``{"tool": "...", ...}`` dict, never a value computed from a condition. Returns None
+    (undeterminable) rather than guessing when that assumption doesn't hold for some future tool
+    -- a caller must treat that as a failure to verify, never as "no undo tool names found".
+    """
+    tree = ast.parse(textwrap.dedent(inspect.getsource(func)))
+    names: set[str] = set()
+    for node in ast.walk(tree):
+        if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "ExecutionResult"):
+            continue
+        undo_kw = next((kw for kw in node.keywords if kw.arg == "undo"), None)
+        if undo_kw is None:
+            continue  # undo defaults to None
+        value = undo_kw.value
+        if isinstance(value, ast.Constant) and value.value is None:
+            continue
+        if not isinstance(value, ast.Dict):
+            return None
+        tool_name_node = next(
+            (
+                val
+                for key, val in zip(value.keys, value.values, strict=True)
+                if isinstance(key, ast.Constant) and key.value == "tool"
+            ),
+            None,
+        )
+        if not (isinstance(tool_name_node, ast.Constant) and isinstance(tool_name_node.value, str)):
+            return None
+        names.add(tool_name_node.value)
+    return names
+
+
+def test_chat_action_allowlist_matches_every_undo_descriptor_tool_name() -> None:
+    # The allowlist in spoolman/api/v1/ai.py is hand-written; this proves it can never silently
+    # drift from the registry it mirrors, in either direction -- missing a real undo tool would
+    # break one-click undo for it, and an extra one would widen /ai/chat/action beyond its actual
+    # job of replaying undo descriptors.
+    all_names: set[str] = set()
+    for name, tool in ai_tools.WRITE_TOOLS.items():
+        found = _undo_descriptor_tool_names(tool.execute)
+        assert found is not None, f"{name}: could not statically determine its undo descriptor tool names"
+        all_names |= found
+    assert all_names == ai_api._CHAT_ACTION_ALLOWLIST  # noqa: SLF001 -- unit-testing the module's own invariant
+
+
+async def test_undo_a_creation_refuses_to_cascade_once_spools_were_added(client: AsyncClient) -> None:
+    """The C1 sequence end-to-end.
+
+    Create a filament, add a spool to it, then execute the creation's own undo descriptor exactly
+    as the Undo button would. It must refuse, name the spool count, and destroy nothing -- not
+    silently cascade-delete the filament, its spool, and that spool's usage history.
+    """
+    await _enable_chat(client)
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+        created = await ai_tools.WRITE_TOOLS["create_filament"].execute(
+            ctx,
+            {"name": "Undo Me", "density": 1.24, "diameter": 1.75},
+        )
+        filament_id = created.data["filament_id"]
+        undo = created.undo
+        assert undo == {"tool": "delete_filament", "args": {"filament_id": filament_id, "only_if_empty": True}}
+
+        # A spool is added to the filament before anyone clicks Undo -- the exact one-session
+        # sequence the finding describes (create -> confirm -> add spools -> confirm -> Undo).
+        spool = await spool_db.create(db=session, filament_id=filament_id)
+        spool_id = spool.id
+
+    response = await client.post("/api/v1/ai/chat/action", json=undo)
+
+    assert response.status_code == 422
+    assert "1 spool" in response.json()["detail"]
+
+    # Nothing was destroyed: the filament and its spool are both still there.
+    async with session_maker() as session:
+        still_filament = await filament_db.get_by_id(session, filament_id)
+        assert still_filament.id == filament_id
+        still_spool = await spool_db.get_by_id(session, spool_id)
+        assert still_spool.id == spool_id
+
+
+async def test_undo_a_creation_still_deletes_cleanly_when_nothing_was_added(client: AsyncClient) -> None:
+    # The refusal above must not turn one-click undo into a no-op for the ordinary case: a
+    # creation undone before anything else touched the filament must still delete it.
+    await _enable_chat(client)
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+        created = await ai_tools.WRITE_TOOLS["create_filament"].execute(
+            ctx,
+            {"name": "Undo Me Cleanly", "density": 1.24, "diameter": 1.75},
+        )
+        filament_id = created.data["filament_id"]
+        undo = created.undo
+
+    response = await client.post("/api/v1/ai/chat/action", json=undo)
+    assert response.status_code == 200
+
+    async with session_maker() as session:
+        with pytest.raises(ItemNotFoundError, match="No filament with ID"):
+            await filament_db.get_by_id(session, filament_id)
+
+
+async def test_plain_delete_filament_via_the_confirmed_chat_path_still_cascades(client: AsyncClient) -> None:
+    # The normal, previewed delete_filament path (the model calling it directly, then the user
+    # confirming) never sets only_if_empty, so it must still cascade exactly as before -- the C1
+    # fix must not turn every delete_filament call into a refusal.
+    await _enable_chat(client)
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        filament = await filament_db.create(db=session, density=1.24, diameter=1.75, name="Doomed")
+        spool = await spool_db.create(db=session, filament_id=filament.id)
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+
+        result = await ai_tools.WRITE_TOOLS["delete_filament"].execute(ctx, {"filament_id": filament.id})
+        assert result.undo is None
+
+        with pytest.raises(ItemNotFoundError, match="No filament with ID"):
+            await filament_db.get_by_id(session, filament.id)
+        with pytest.raises(ItemNotFoundError, match="No spool with ID"):
+            await spool_db.get_by_id(session, spool.id)
+
+
 async def test_chat_refuses_a_turn_when_every_slot_is_busy(
     client: AsyncClient,
     monkeypatch: pytest.MonkeyPatch,
@@ -949,6 +1104,75 @@ async def test_create_order_refuses_a_nonexistent_filament(client: AsyncClient) 
             await ai_tools.WRITE_TOOLS["create_order"].preview(ctx, {"lines": [{"filament_id": 999999}]})
 
 
+async def test_create_order_preview_refuses_a_nonexistent_shop_without_mutating(
+    client: AsyncClient,  # noqa: ARG001
+) -> None:
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    # Before this fix, preview never resolved 'shop' at all: a user would confirm a card, and only
+    # THEN would execute's own _resolve_shop_id raise "No shop named 'X' exists" -- the exact
+    # confirm-then-fail sequence arrive_order's preview is written to avoid. This must fail here,
+    # before any confirmation, and nothing may be created in the meantime.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        filament = await filament_db.create(db=session, density=1.24, diameter=1.75, weight=1000)
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+
+        with pytest.raises(ai_tools.ToolError, match="No shop named 'Nonexistent Shop' exists"):
+            await ai_tools.WRITE_TOOLS["create_order"].preview(
+                ctx,
+                {"lines": [{"filament_id": filament.id}], "shop": "Nonexistent Shop"},
+            )
+
+        orders_after, count_after = await order_db.find(db=session)
+    assert count_after == 0
+    assert orders_after == []
+
+
+async def test_create_order_preview_refuses_an_unparseable_ordered_at_without_mutating(
+    client: AsyncClient,  # noqa: ARG001
+) -> None:
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    # Same failure mode as the nonexistent-shop case above, for the other field execute() parses
+    # that preview used to skip: parse_date(args, "ordered_at").
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        filament = await filament_db.create(db=session, density=1.24, diameter=1.75, weight=1000)
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+
+        with pytest.raises(ai_tools.ToolError, match="'ordered_at' argument must be an ISO date"):
+            await ai_tools.WRITE_TOOLS["create_order"].preview(
+                ctx,
+                {"lines": [{"filament_id": filament.id}], "ordered_at": "not-a-date"},
+            )
+
+        orders_after, count_after = await order_db.find(db=session)
+    assert count_after == 0
+    assert orders_after == []
+
+
+async def test_create_order_preview_shows_the_resolved_shop_name_and_parsed_date(
+    client: AsyncClient,  # noqa: ARG001
+) -> None:
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    # A user typing 'prusa research' must see the canonical shop name the order actually links
+    # to -- the same disclosure arrive_order's preview gives for a resolved location -- and the
+    # card must show the date that will actually be recorded, not silently drop it.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        filament = await filament_db.create(db=session, density=1.24, diameter=1.75, weight=1000)
+        await shop_db.create(db=session, name="Prusa Research")
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+
+        card = await ai_tools.WRITE_TOOLS["create_order"].preview(
+            ctx,
+            {"lines": [{"filament_id": filament.id}], "shop": "prusa research", "ordered_at": "2026-01-15"},
+        )
+
+    assert card.after["shop"] == "Prusa Research"
+    assert "prusa research" not in card.title
+    assert card.after["ordered_at"].startswith("2026-01-15")
+
+
 async def test_delete_order_execute_raises_a_clean_error_for_a_double_undo(
     client: AsyncClient,  # noqa: ARG001
 ) -> None:
@@ -1302,9 +1526,12 @@ async def test_create_filament_execute_creates_both_filament_and_vendor(
 
         # Pin the undo descriptor's shape here, alongside the vendor-creation assertions above;
         # the full WRITE_TOOLS["delete_filament"] round trip is exercised separately by
-        # test_create_filament_undo_round_trip_actually_deletes_the_filament.
+        # test_create_filament_undo_round_trip_actually_deletes_the_filament. Setting the
+        # only_if_empty flag is C1's fix: it never reaches the model (absent from delete_filament's
+        # JSON schema) and is only ever set here, so a click on this creation's Undo button after
+        # spools were added refuses instead of silently cascading.
         undo = result.undo
-        assert undo == {"tool": "delete_filament", "args": {"filament_id": filament_id}}
+        assert undo == {"tool": "delete_filament", "args": {"filament_id": filament_id, "only_if_empty": True}}
         await filament_db.delete(session, undo["args"]["filament_id"])
 
         with pytest.raises(ItemNotFoundError, match="No filament with ID"):
@@ -1626,7 +1853,7 @@ async def test_create_filament_undo_round_trip_actually_deletes_the_filament(
         )
         filament_id = result.data["filament_id"]
         undo = result.undo
-        assert undo == {"tool": "delete_filament", "args": {"filament_id": filament_id}}
+        assert undo == {"tool": "delete_filament", "args": {"filament_id": filament_id, "only_if_empty": True}}
 
         await ai_tools.WRITE_TOOLS[undo["tool"]].execute(ctx, undo["args"])
 
@@ -1756,29 +1983,50 @@ async def test_delete_vendor_execute_raises_a_clean_error_for_a_double_undo(
             await ai_tools.WRITE_TOOLS[undo["tool"]].execute(ctx, undo["args"])
 
 
-@pytest.mark.parametrize(
-    ("tool_name", "args"),
-    [
-        ("create_location", {"name": "Shelf Z"}),
-        ("delete_location", {"location_id": 1}),
-        ("create_vendor", {"name": "NewCo"}),
-        ("delete_vendor", {"vendor_id": 1}),
-        ("delete_filament", {"filament_id": 1}),
-        ("create_order", {"lines": [{"filament_id": 1}]}),
-        ("delete_order", {"order_id": 1}),
-        ("arrive_order", {"order_id": 1}),
-    ],
-)
+#: Minimal, individually-valid args for every write tool in the registry -- just enough to reach
+#: each one's own require_write(ctx) call (its first statement) without raising for some unrelated
+#: reason first (a missing/invalid id, say). A hand-maintained *list of tool names* is exactly what
+#: let Tasks 8, 9 and 12 add create_filament, update_filament and the five spool writes without
+#: this guard ever growing to cover them (I4) -- keying this by tool name and asserting it below
+#: against the live registry makes an ungated write tool structurally impossible to ship unnoticed.
+_WRITE_TOOL_MINIMAL_ARGS: dict[str, dict] = {
+    "create_location": {"name": "Shelf Z"},
+    "delete_location": {"location_id": 1},
+    "create_vendor": {"name": "NewCo"},
+    "delete_vendor": {"vendor_id": 1},
+    "create_filament": {"density": 1.24, "diameter": 1.75},
+    "update_filament": {"filament_id": 1, "name": "New name"},
+    "delete_filament": {"filament_id": 1},
+    "create_spool": {"filament_id": 1},
+    "update_spool": {"spool_id": 1, "location": "Shelf A"},
+    "consume_spool": {"spool_id": 1, "use_weight_g": 10},
+    "set_spool_used_weight": {"spool_id": 1, "used_weight_g": 10},
+    "delete_spool": {"spool_id": 1},
+    "create_order": {"lines": [{"filament_id": 1}]},
+    "delete_order": {"order_id": 1},
+    "arrive_order": {"order_id": 1},
+}
+
+
+def test_write_tool_minimal_args_map_is_complete() -> None:
+    # A future write tool that forgets to add an entry here must fail this test loudly, rather
+    # than silently never being exercised by the parametrized guard below -- this is what keeps
+    # the parametrization derived from the registry instead of a hand-maintained tool-name list.
+    assert set(_WRITE_TOOL_MINIMAL_ARGS) == set(ai_tools.WRITE_TOOLS)
+
+
+@pytest.mark.parametrize(("tool_name", "args"), sorted(_WRITE_TOOL_MINIMAL_ARGS.items()))
 async def test_readonly_execute_is_refused_for_every_inventory_write_tool(
     client: AsyncClient,  # noqa: ARG001
     tool_name: str,
     args: dict,
 ) -> None:
     # `client` isn't called directly but its fixture wires up db_module's session maker.
-    # require_write(ctx) must be the first statement of every execute here -- parametrized over
-    # all eight tools so a missing call in any one of them (not just create_location) fails this
-    # test rather than slipping through untested. delete_filament is the most destructive tool in
-    # the registry, so it belongs here more than any of the others.
+    # require_write(ctx) must be the first statement of every execute here -- parametrized over the
+    # FULL write-tool registry (test_write_tool_minimal_args_map_is_complete pins that against
+    # ai_tools.WRITE_TOOLS), so a missing call in any one of them fails this test rather than
+    # slipping through untested. delete_filament is the most destructive tool in the registry, so
+    # it belongs here more than any of the others.
     session_maker = db_module.get_session_maker()
     async with session_maker() as session:
         ctx = ai_tools.ToolContext(db=session, can_write=False)

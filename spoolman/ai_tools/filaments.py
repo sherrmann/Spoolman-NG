@@ -253,7 +253,14 @@ async def _execute_create_filament(ctx: ToolContext, args: dict) -> ExecutionRes
     return ExecutionResult(
         summary=summary,
         data={"filament_id": created.id, "vendor_id": vendor_id},
-        undo={"tool": "delete_filament", "args": {"filament_id": created.id}},
+        # only_if_empty is never in this tool's model-facing schema -- it exists purely so this
+        # undo descriptor can refuse to cascade. Between this create and a click on the resulting
+        # Undo button, the user may have added spools to the filament; a bare delete_filament call
+        # would destroy them (and their usage history) with no count and no confirmation, the exact
+        # silent-cascade-via-undo failure this flag exists to close off. The normal, previewed
+        # delete_filament path (the model calling it directly, or a confirmed chat write) never
+        # sets this flag, so it still discloses and cascades exactly as before.
+        undo={"tool": "delete_filament", "args": {"filament_id": created.id, "only_if_empty": True}},
     )
 
 
@@ -332,6 +339,18 @@ async def _execute_delete_filament(ctx: ToolContext, args: dict) -> ExecutionRes
     require_write(ctx)
     filament_id = arg_int(args, "filament_id")
     await _get_filament(ctx, filament_id)
+    if arg_bool(args, "only_if_empty"):
+        # Set only by create_filament's own undo descriptor (never by the model -- this argument
+        # is deliberately absent from the tool's JSON schema). /ai/chat/action reaches execute()
+        # directly with no preview and no confirm-card, so this is the only guard standing between
+        # "Undo" on a creation card and a silent cascading delete of every spool added since.
+        spool_count = await filament_db.count_spools(ctx.db, filament_id)
+        if spool_count:
+            raise ToolError(
+                f"Cannot undo: filament {filament_id} now has {spool_count} spool(s) that would be "
+                "permanently destroyed, including their usage history. Delete it explicitly (not "
+                "via Undo) if that is really what you want.",
+            )
     try:
         await filament_db.delete(ctx.db, filament_id)
     except ItemDeleteError as exc:

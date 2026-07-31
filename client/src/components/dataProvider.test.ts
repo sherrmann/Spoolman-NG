@@ -32,6 +32,10 @@ describe("dataProvider.deleteOne", () => {
     await provider.deleteOne({ resource: "filament", id: 5 });
 
     const [, config] = vi.mocked(httpClient.delete).mock.calls[0];
-    expect(config).toMatchObject({ params: {} });
+    // toMatchObject only checks that the listed keys are present with matching values -- an
+    // object matches `{ params: {} }` regardless of what else `params` contains, so a leaked
+    // `{ params: { cascade: true } }` would pass this assertion too. toEqual on `config.params`
+    // itself requires an exact match, so a leaked param actually fails it.
+    expect(config?.params).toEqual({});
   });
 });
