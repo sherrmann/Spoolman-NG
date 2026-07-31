@@ -549,6 +549,15 @@
       "removed": "Fotot borttaget",
       "remove_error": "Det gick inte att ta bort fotot",
       "prepare_error": "Det gick inte att läsa den bildfilen"
+    },
+    "delete_cascade": {
+      "title": "Ta bort {{name}}?",
+      "intro": "Detta tar även bort permanent:",
+      "spool_count_one": "{{count}} spole",
+      "spool_count_other": "{{count}} spolar",
+      "history": "deras användningshistorik",
+      "irreversible": "Detta går inte att ångra.",
+      "confirm": "Ta bort alla {{count}}"
     }
   },
   "vendor": {

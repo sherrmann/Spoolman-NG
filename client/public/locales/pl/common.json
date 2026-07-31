@@ -564,6 +564,16 @@
       "removed": "Zdjęcie usunięte",
       "remove_error": "Nie udało się usunąć zdjęcia",
       "prepare_error": "Nie udało się odczytać tego pliku obrazu"
+    },
+    "delete_cascade": {
+      "title": "Usunąć {{name}}?",
+      "intro": "To również trwale usunie:",
+      "spool_count_one": "{{count}} szpulę",
+      "spool_count_few": "{{count}} szpule",
+      "spool_count_many": "{{count}} szpul",
+      "history": "ich historię użycia",
+      "irreversible": "Tej czynności nie można cofnąć.",
+      "confirm": "Usuń wszystko ({{count}})"
     }
   },
   "vendor": {

@@ -522,6 +522,14 @@
       "removed": "사진이 제거되었습니다",
       "remove_error": "사진을 제거하지 못했습니다",
       "prepare_error": "해당 이미지 파일을 읽지 못했습니다"
+    },
+    "delete_cascade": {
+      "title": "{{name}}을(를) 삭제하시겠습니까?",
+      "intro": "이 작업은 다음 항목도 영구적으로 삭제합니다:",
+      "spool_count_other": "스풀 {{count}}개",
+      "history": "사용 기록",
+      "irreversible": "이 작업은 되돌릴 수 없습니다.",
+      "confirm": "전체 {{count}}개 삭제"
     }
   },
   "vendor": {

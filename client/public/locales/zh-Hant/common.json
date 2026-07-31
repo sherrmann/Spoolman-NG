@@ -522,6 +522,14 @@
       "removed": "照片已移除",
       "remove_error": "無法移除照片",
       "prepare_error": "無法讀取該圖片檔案"
+    },
+    "delete_cascade": {
+      "title": "刪除{{name}}？",
+      "intro": "此操作也會永久刪除：",
+      "spool_count_other": "{{count}} 個料盤",
+      "history": "它們的使用紀錄",
+      "irreversible": "此操作無法復原。",
+      "confirm": "全部刪除（{{count}}）"
     }
   },
   "vendor": {

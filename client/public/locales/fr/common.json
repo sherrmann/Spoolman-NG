@@ -552,6 +552,16 @@
       "removed": "Photo supprimée",
       "remove_error": "Impossible de supprimer la photo",
       "prepare_error": "Impossible de lire ce fichier image"
+    },
+    "delete_cascade": {
+      "title": "Supprimer {{name}} ?",
+      "intro": "Cela supprime également définitivement :",
+      "spool_count_one": "{{count}} bobine",
+      "spool_count_many": "{{count}} bobines",
+      "spool_count_other": "{{count}} bobines",
+      "history": "leur historique d'utilisation",
+      "irreversible": "Cette action est irréversible.",
+      "confirm": "Tout supprimer ({{count}})"
     }
   },
   "actions": {

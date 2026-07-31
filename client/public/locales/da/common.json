@@ -536,6 +536,15 @@
       "removed": "Foto fjernet",
       "remove_error": "Kunne ikke fjerne fotoet",
       "prepare_error": "Kunne ikke læse den billedfil"
+    },
+    "delete_cascade": {
+      "title": "Slet {{name}}?",
+      "intro": "Dette sletter også permanent:",
+      "spool_count_one": "{{count}} spole",
+      "spool_count_other": "{{count}} spoler",
+      "history": "deres brugshistorik",
+      "irreversible": "Dette kan ikke fortrydes.",
+      "confirm": "Slet alle {{count}}"
     }
   },
   "actions": {

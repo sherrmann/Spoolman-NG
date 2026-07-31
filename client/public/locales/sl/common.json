@@ -784,6 +784,17 @@
       "removed": "Fotografija odstranjena",
       "remove_error": "Fotografije ni bilo mogoče odstraniti",
       "prepare_error": "Te slikovne datoteke ni bilo mogoče prebrati"
+    },
+    "delete_cascade": {
+      "title": "Izbrišem {{name}}?",
+      "intro": "S tem bodo trajno izbrisani tudi:",
+      "spool_count_one": "{{count}} kolut",
+      "spool_count_two": "{{count}} koluta",
+      "spool_count_few": "{{count}} koluti",
+      "spool_count_other": "{{count}} kolutov",
+      "history": "njihova zgodovina uporabe",
+      "irreversible": "Tega dejanja ni mogoče razveljaviti.",
+      "confirm": "Izbriši vse ({{count}})"
     }
   },
   "vendor": {

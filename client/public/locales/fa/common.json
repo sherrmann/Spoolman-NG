@@ -538,6 +538,15 @@
       "removed": "عکس حذف شد",
       "remove_error": "حذف عکس ممکن نبود.",
       "prepare_error": "خواندن آن فایل تصویر ممکن نبود."
+    },
+    "delete_cascade": {
+      "title": "{{name}} حذف شود؟",
+      "intro": "این کار موارد زیر را نیز برای همیشه حذف می‌کند:",
+      "spool_count_one": "{{count}} رول",
+      "spool_count_other": "{{count}} رول",
+      "history": "تاریخچه مصرف آن‌ها",
+      "irreversible": "این عمل قابل بازگشت نیست.",
+      "confirm": "حذف همه ({{count}})"
     }
   },
   "vendor": {

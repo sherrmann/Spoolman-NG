@@ -614,6 +614,15 @@
       "removed": "Foto eemaldatud",
       "remove_error": "Foto eemaldamine ebaõnnestus",
       "prepare_error": "Selle pildifaili lugemine ebaõnnestus"
+    },
+    "delete_cascade": {
+      "title": "Kas kustutada {{name}}?",
+      "intro": "See kustutab jäädavalt ka:",
+      "spool_count_one": "{{count}} pool",
+      "spool_count_other": "{{count}} pooli",
+      "history": "nende kasutusajaloo",
+      "irreversible": "Seda ei saa hiljem tagasi võtta.",
+      "confirm": "Kustuta kõik ({{count}})"
     }
   },
   "vendor": {

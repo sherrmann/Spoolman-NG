@@ -614,6 +614,15 @@
       "removed": "Photo hata di gayi",
       "remove_error": "Photo hata nahi payi",
       "prepare_error": "Woh image file padhi nahi ja saki"
+    },
+    "delete_cascade": {
+      "title": "{{name}} delete karein?",
+      "intro": "Isse ye bhi hamesha ke liye delete ho jayega:",
+      "spool_count_one": "{{count}} spool",
+      "spool_count_other": "{{count}} spools",
+      "history": "unki istemal history",
+      "irreversible": "Ise wapas nahi laya ja sakta.",
+      "confirm": "Sabhi {{count}} delete karein"
     }
   },
   "vendor": {

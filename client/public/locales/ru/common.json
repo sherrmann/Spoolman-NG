@@ -565,6 +565,16 @@
       "removed": "Фото удалено",
       "remove_error": "Не удалось удалить фото",
       "prepare_error": "Не удалось прочитать этот файл изображения"
+    },
+    "delete_cascade": {
+      "title": "Удалить {{name}}?",
+      "intro": "Это также приведёт к безвозвратному удалению:",
+      "spool_count_one": "{{count}} катушка",
+      "spool_count_few": "{{count}} катушки",
+      "spool_count_many": "{{count}} катушек",
+      "history": "их историю использования",
+      "irreversible": "Это действие нельзя отменить.",
+      "confirm": "Удалить всё ({{count}})"
     }
   },
   "vendor": {

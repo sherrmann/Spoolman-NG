@@ -565,6 +565,16 @@
       "removed": "Fotografie odebrána",
       "remove_error": "Fotografii se nepodařilo odebrat",
       "prepare_error": "Tento soubor obrázku se nepodařilo přečíst"
+    },
+    "delete_cascade": {
+      "title": "Smazat {{name}}?",
+      "intro": "Tím se také trvale smaže:",
+      "spool_count_one": "{{count}} cívka",
+      "spool_count_few": "{{count}} cívky",
+      "spool_count_other": "{{count}} cívek",
+      "history": "jejich historie použití",
+      "irreversible": "Tuto akci nelze vrátit zpět.",
+      "confirm": "Smazat vše ({{count}})"
     }
   },
   "vendor": {

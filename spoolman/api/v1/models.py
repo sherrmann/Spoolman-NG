@@ -66,6 +66,23 @@ class Message(BaseModel):
     message: str = Field()
 
 
+class FilamentCascadeRequired(Message):
+    """409 response for DELETE /filament/{id} when spools exist and cascade=true was not passed.
+
+    ``message`` is unchanged human-readable prose -- other API consumers may already depend on its
+    exact wording. ``spool_count`` is the same number, structured, so a client never has to parse it
+    back out of that sentence to build a confirmation UI (#10b).
+    """
+
+    spool_count: int = Field(
+        description=(
+            "Number of spools -- archived included, the true blast radius -- that would also be "
+            "permanently deleted if this request were repeated with cascade=true."
+        ),
+        examples=[3],
+    )
+
+
 class SettingResponse(BaseModel):
     value: str = Field(description="Setting value.")
     is_set: bool = Field(description="Whether the setting has been set. If false, 'value' contains the default value.")

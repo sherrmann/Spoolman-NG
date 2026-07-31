@@ -554,6 +554,16 @@
       "removed": "Foto removida",
       "remove_error": "Não foi possível remover a foto",
       "prepare_error": "Não foi possível ler esse arquivo de imagem"
+    },
+    "delete_cascade": {
+      "title": "Excluir {{name}}?",
+      "intro": "Isso também exclui permanentemente:",
+      "spool_count_one": "{{count}} carretel",
+      "spool_count_many": "{{count}} carretéis",
+      "spool_count_other": "{{count}} carretéis",
+      "history": "o histórico de uso deles",
+      "irreversible": "Essa ação não pode ser desfeita.",
+      "confirm": "Excluir tudo ({{count}})"
     }
   },
   "vendor": {

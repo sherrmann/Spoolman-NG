@@ -557,6 +557,16 @@
       "removed": "Фото видалено",
       "remove_error": "Не вдалося видалити фото",
       "prepare_error": "Не вдалося прочитати цей файл зображення"
+    },
+    "delete_cascade": {
+      "title": "Видалити {{name}}?",
+      "intro": "Це також остаточно видалить:",
+      "spool_count_one": "{{count}} котушка",
+      "spool_count_few": "{{count}} котушки",
+      "spool_count_many": "{{count}} котушок",
+      "history": "їхню історію використання",
+      "irreversible": "Цю дію не можна скасувати.",
+      "confirm": "Видалити все ({{count}})"
     }
   },
   "unknown": "Невідомий",

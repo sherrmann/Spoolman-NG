@@ -374,6 +374,16 @@
       "removed": "Foto eliminada",
       "remove_error": "No se pudo eliminar la foto",
       "prepare_error": "No se pudo leer ese archivo de imagen"
+    },
+    "delete_cascade": {
+      "title": "¿Borrar {{name}}?",
+      "intro": "Esto también borra permanentemente:",
+      "spool_count_one": "{{count}} bobina",
+      "spool_count_many": "{{count}} bobinas",
+      "spool_count_other": "{{count}} bobinas",
+      "history": "su historial de uso",
+      "irreversible": "Esto no se puede deshacer.",
+      "confirm": "Borrar todo ({{count}})"
     }
   },
   "vendor": {

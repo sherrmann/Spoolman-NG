@@ -569,6 +569,15 @@
       "removed": "Foto verwijderd",
       "remove_error": "Kon de foto niet verwijderen",
       "prepare_error": "Kon dat afbeeldingsbestand niet lezen"
+    },
+    "delete_cascade": {
+      "title": "{{name}} verwijderen?",
+      "intro": "Dit verwijdert ook permanent:",
+      "spool_count_one": "{{count}} spoel",
+      "spool_count_other": "{{count}} spoelen",
+      "history": "hun gebruiksgeschiedenis",
+      "irreversible": "Dit kan niet ongedaan worden gemaakt.",
+      "confirm": "Alles verwijderen ({{count}})"
     }
   },
   "scanner": {

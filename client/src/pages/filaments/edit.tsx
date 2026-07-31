@@ -1,6 +1,6 @@
 import { DATE_TIME_FORMAT } from "../../utils/dateFormat";
 import { Edit, useForm, useSelect } from "@refinedev/antd";
-import { HttpError, useTranslate, useInvalidate } from "@refinedev/core";
+import { HttpError, useTranslate, useInvalidate, useNavigation } from "@refinedev/core";
 import {
   Alert,
   ColorPicker,
@@ -28,6 +28,8 @@ import { IVendor } from "../vendors/model";
 import { getOrCreateVendorFromExternal } from "../vendors/functions";
 import { ExternalFilament, fetchExternalProfile } from "../../utils/queryExternalDB";
 import { FilamentCatalogFields } from "./catalogFields";
+import { FilamentDeleteButton } from "./filamentDeleteButton";
+import { filamentDisplayName } from "./functions";
 import { IFilament, IFilamentParsedExtras } from "./model";
 
 /*
@@ -46,8 +48,9 @@ export const FilamentEdit = () => {
   const [colorType, setColorType] = useState<"single" | "multi">("single");
   const [profileId, setProfileId] = useState("");
   const invalidate = useInvalidate();
+  const { list } = useNavigation();
 
-  const { formProps, saveButtonProps } = useForm<IFilament, HttpError, IFilament, IFilament>({
+  const { formProps, saveButtonProps, id } = useForm<IFilament, HttpError, IFilament, IFilament>({
     liveMode: "manual",
     onLiveEvent() {
       // Warn the user if the filament has been updated since the form was opened
@@ -144,7 +147,27 @@ export const FilamentEdit = () => {
   };
 
   return (
-    <Edit saveButtonProps={saveButtonProps}>
+    <Edit
+      saveButtonProps={saveButtonProps}
+      canDelete={false}
+      footerButtons={({ defaultButtons }) => (
+        <>
+          {/* Replaces Refine's default DeleteButton (disabled above via canDelete={false}): a
+              filament with spools can't be deleted with a plain confirm -- the server 409s and
+              names the spool count, which this dialog escalates to instead (#10b). Kept first,
+              matching the original Delete-then-Save order of Refine's default footer. */}
+          <FilamentDeleteButton
+            filamentId={id}
+            filamentName={
+              formProps.initialValues ? filamentDisplayName(formProps.initialValues as IFilament) : undefined
+            }
+            disabled={!id}
+            onSuccess={() => list("filament")}
+          />
+          {defaultButtons}
+        </>
+      )}
+    >
       {contextHolder}
       <Form {...formProps} layout="vertical">
         <Form.Item

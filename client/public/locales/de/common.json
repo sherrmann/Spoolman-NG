@@ -549,6 +549,15 @@
       "removed": "Foto entfernt",
       "remove_error": "Foto konnte nicht entfernt werden",
       "prepare_error": "Bilddatei konnte nicht gelesen werden"
+    },
+    "delete_cascade": {
+      "title": "{{name}} löschen?",
+      "intro": "Dadurch werden auch dauerhaft gelöscht:",
+      "spool_count_one": "{{count}} Spule",
+      "spool_count_other": "{{count}} Spulen",
+      "history": "deren Nutzungsverlauf",
+      "irreversible": "Dies kann nicht rückgängig gemacht werden.",
+      "confirm": "Alle {{count}} löschen"
     }
   },
   "vendor": {

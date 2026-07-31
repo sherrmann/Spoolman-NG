@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from spoolman.api.v1.models import (
     Filament,
+    FilamentCascadeRequired,
     FilamentEvent,
     Finish,
     Message,
@@ -648,7 +649,10 @@ async def update(  # noqa: ANN201
     response_model=Message,
     responses={
         404: {"model": Message},
-        409: {"model": Message},
+        # Two distinct 409 shapes share this status code: the order-line-reference refusal and the
+        # ItemDeleteError catch-all are plain Message; the spool-cascade refusal additionally carries
+        # spool_count (FilamentCascadeRequired) so the client never has to parse it out of the prose.
+        409: {"model": Message | FilamentCascadeRequired},
     },
 )
 async def delete(  # noqa: ANN201
@@ -681,12 +685,13 @@ async def delete(  # noqa: ANN201
         if spool_count:
             return JSONResponse(
                 status_code=409,
-                content=Message(
+                content=FilamentCascadeRequired(
                     message=(
                         f"Filament {filament_id} still has {spool_count} spool(s). Deleting it also "
                         "permanently deletes those spools and their usage history, and this cannot be "
                         "undone. Pass cascade=true to proceed."
                     ),
+                    spool_count=spool_count,
                 ).model_dump(),
             )
     try:

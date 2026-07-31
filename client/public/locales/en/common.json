@@ -690,6 +690,15 @@
     },
     "messages": {
       "update_error": "Could not save changes. Please try again."
+    },
+    "delete_cascade": {
+      "title": "Delete {{name}}?",
+      "intro": "This also permanently deletes:",
+      "spool_count_one": "{{count}} spool",
+      "spool_count_other": "{{count}} spools",
+      "history": "their usage history",
+      "irreversible": "This cannot be undone.",
+      "confirm": "Delete all {{count}}"
     }
   },
   "vendor": {

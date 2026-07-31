@@ -66,15 +66,37 @@ async def test_delete_with_spools_and_no_cascade_refuses_and_leaves_everything_i
     resp = await client.delete(f"{FIL}/{fil['id']}")
 
     assert resp.status_code == 409, resp.text
-    message = resp.json()["message"]
+    body = resp.json()
+    message = body["message"]
     assert "2 spool" in message
     assert "usage history" in message
     assert "cascade" in message
+    # Structured count (#10b follow-up): a client must be able to read this directly rather than
+    # parse it back out of the prose above -- reword the message and this field must not move.
+    assert body["spool_count"] == 2
     # The refusal must not have destroyed anything -- a refusal that already deleted something is
     # the worst outcome, worse than the silent cascade it exists to prevent.
     assert (await client.get(f"{FIL}/{fil['id']}")).status_code == 200
     assert (await client.get(f"{SPOOL}/{spool_a['id']}")).status_code == 200
     assert (await client.get(f"{SPOOL}/{spool_b['id']}")).status_code == 200
+
+
+async def test_delete_refusal_spool_count_includes_archived_spools(client: AsyncClient) -> None:
+    # count_spools (spoolman/database/filament.py) is deliberately the *unfiltered* count -- the
+    # true blast radius of a cascade delete, unlike the "in stock" aggregate which excludes archived
+    # spools. The structured spool_count on the 409 must carry that same unfiltered number.
+    fil = await _add_filament(client, name="Doomed with an archive")
+    active = await _add_spool(client, fil["id"])
+    await _add_spool(client, fil["id"], archived=True)
+    await _add_spool(client, fil["id"], archived=True)
+
+    resp = await client.delete(f"{FIL}/{fil['id']}")
+
+    assert resp.status_code == 409, resp.text
+    body = resp.json()
+    assert body["spool_count"] == 3
+    assert "3 spool" in body["message"]
+    assert (await client.get(f"{SPOOL}/{active['id']}")).status_code == 200
 
 
 async def test_delete_with_cascade_true_succeeds_and_removes_filament_and_spools(

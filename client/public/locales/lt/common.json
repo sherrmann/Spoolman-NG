@@ -554,6 +554,16 @@
       "removed": "Nuotrauka pašalinta",
       "remove_error": "Nepavyko pašalinti nuotraukos",
       "prepare_error": "Nepavyko nuskaityti šio paveikslėlio failo"
+    },
+    "delete_cascade": {
+      "title": "Ištrinti „{{name}}“?",
+      "intro": "Tai taip pat visam laikui ištrins:",
+      "spool_count_one": "{{count}} ritė",
+      "spool_count_few": "{{count}} ritės",
+      "spool_count_other": "{{count}} ričių",
+      "history": "jų naudojimo istoriją",
+      "irreversible": "Šio veiksmo negalima atšaukti.",
+      "confirm": "Ištrinti viską ({{count}})"
     }
   },
   "vendor": {

@@ -536,6 +536,15 @@
       "removed": "Fénykép eltávolítva",
       "remove_error": "Nem sikerült eltávolítani a fényképet",
       "prepare_error": "Nem sikerült beolvasni a képfájlt"
+    },
+    "delete_cascade": {
+      "title": "Törlöd ezt: {{name}}?",
+      "intro": "Ez véglegesen törli az alábbiakat is:",
+      "spool_count_one": "{{count}} tekercs",
+      "spool_count_other": "{{count}} tekercs",
+      "history": "használati előzményeiket",
+      "irreversible": "Ez nem vonható vissza.",
+      "confirm": "Mind törlése ({{count}})"
     }
   },
   "actions": {

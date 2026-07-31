@@ -533,6 +533,14 @@
       "removed": "照片已移除",
       "remove_error": "无法移除照片",
       "prepare_error": "无法读取该图片文件"
+    },
+    "delete_cascade": {
+      "title": "删除{{name}}？",
+      "intro": "此操作还会永久删除：",
+      "spool_count_other": "{{count}} 个料盘",
+      "history": "它们的使用记录",
+      "irreversible": "此操作无法撤销。",
+      "confirm": "全部删除（{{count}}）"
     }
   },
   "vendor": {

@@ -522,6 +522,14 @@
       "removed": "写真を削除しました",
       "remove_error": "写真を削除できませんでした",
       "prepare_error": "その画像ファイルを読み込めませんでした"
+    },
+    "delete_cascade": {
+      "title": "{{name}} を削除しますか?",
+      "intro": "これにより、以下も完全に削除されます:",
+      "spool_count_other": "スプール {{count}} 本",
+      "history": "その使用履歴",
+      "irreversible": "この操作は元に戻せません。",
+      "confirm": "{{count}} 件をすべて削除"
     }
   },
   "vendor": {

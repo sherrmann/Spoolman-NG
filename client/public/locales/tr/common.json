@@ -538,6 +538,15 @@
       "removed": "Fotoğraf kaldırıldı",
       "remove_error": "Fotoğraf kaldırılamadı",
       "prepare_error": "Bu görüntü dosyası okunamadı"
+    },
+    "delete_cascade": {
+      "title": "{{name}} silinsin mi?",
+      "intro": "Bu işlem ayrıca şunları da kalıcı olarak siler:",
+      "spool_count_one": "{{count}} makara",
+      "spool_count_other": "{{count}} makara",
+      "history": "kullanım geçmişlerini",
+      "irreversible": "Bu işlem geri alınamaz.",
+      "confirm": "Tümünü sil ({{count}})"
     }
   },
   "vendor": {

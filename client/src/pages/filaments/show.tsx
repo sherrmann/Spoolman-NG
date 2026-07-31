@@ -18,6 +18,8 @@ import { downloadSlicerProfile, type SlicerFormat } from "../../utils/importExpo
 import { enrichText } from "../../utils/parsing";
 import { EntityType, useGetFields } from "../../utils/queryFields";
 import { useCurrencyFormatter, useUnitScaling } from "../../utils/settings";
+import { FilamentDeleteButton } from "./filamentDeleteButton";
+import { filamentDisplayName } from "./functions";
 import { IFilament } from "./model";
 dayjs.extend(utc);
 
@@ -286,6 +288,7 @@ export const FilamentShow = () => {
     <Show
       isLoading={isLoading}
       title={record ? formatTitle(record) : ""}
+      canDelete={false}
       headerButtons={({ defaultButtons }) => (
         <>
           <Button onClick={gotoSpools}>{t("filament.fields.spools")}</Button>
@@ -298,6 +301,15 @@ export const FilamentShow = () => {
             </Button>
           </Dropdown>
           {defaultButtons}
+          {/* Replaces Refine's default DeleteButton (disabled above via canDelete={false}): a
+              filament with spools can't be deleted with a plain confirm -- the server 409s and
+              names the spool count, which this dialog escalates to instead (#10b). */}
+          <FilamentDeleteButton
+            filamentId={record?.id}
+            filamentName={record ? filamentDisplayName(record) : undefined}
+            disabled={isLoading || !record?.id}
+            onSuccess={() => navigate("/filament")}
+          />
         </>
       )}
     >

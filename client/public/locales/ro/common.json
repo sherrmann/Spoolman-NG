@@ -592,6 +592,16 @@
       "removed": "Fotografia a fost eliminată",
       "remove_error": "Fotografia nu a putut fi eliminată",
       "prepare_error": "Fișierul imagine nu a putut fi citit"
+    },
+    "delete_cascade": {
+      "title": "Ștergi {{name}}?",
+      "intro": "Aceasta va șterge definitiv și:",
+      "spool_count_one": "{{count}} bobină",
+      "spool_count_few": "{{count}} bobine",
+      "spool_count_other": "{{count}} de bobine",
+      "history": "istoricul lor de utilizare",
+      "irreversible": "Această acțiune nu poate fi anulată.",
+      "confirm": "Șterge tot ({{count}})"
     }
   },
   "vendor": {
