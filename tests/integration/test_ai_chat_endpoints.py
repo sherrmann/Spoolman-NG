@@ -1170,7 +1170,81 @@ async def test_create_order_preview_shows_the_resolved_shop_name_and_parsed_date
 
     assert card.after["shop"] == "Prusa Research"
     assert "prusa research" not in card.title
-    assert card.after["ordered_at"].startswith("2026-01-15")
+    # Exact match, not startswith: a midnight ordered_at must render as a bare date, not the raw
+    # "2026-01-15T00:00:00" ISO datetime a person would have to squint at to parse.
+    assert card.after["ordered_at"] == "2026-01-15"
+
+
+async def test_create_order_preview_formats_a_time_bearing_ordered_at(client: AsyncClient) -> None:  # noqa: ARG001
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    # A midnight ordered_at collapses to a bare date (previous test); a real time component must
+    # not be silently dropped, but it must also never reach the card as a raw "T"-separated
+    # ISO-8601 string -- it should read like something a person wrote down.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        filament = await filament_db.create(db=session, density=1.24, diameter=1.75, weight=1000)
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+
+        card = await ai_tools.WRITE_TOOLS["create_order"].preview(
+            ctx,
+            {"lines": [{"filament_id": filament.id}], "ordered_at": "2026-01-15T14:30:00"},
+        )
+
+    assert card.after["ordered_at"] == "2026-01-15 14:30"
+
+
+async def test_create_order_execute_passes_a_real_datetime_to_the_database_layer(
+    client: AsyncClient,  # noqa: ARG001
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    # The regression this guards: the card's ordered_at is now a formatted display string, but
+    # execute() must still hand order_db.create the real parsed datetime, never that string --
+    # order.create's utc_timezone_naive() reads .tzinfo off its ordered_at argument, so a
+    # stringified one would not just be wrong, it would break downstream. Capture the exact
+    # kwarg the tool layer passes rather than trusting a round-trip through storage to prove
+    # its type, since sqlite may happily store either.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        filament = await filament_db.create(db=session, density=1.24, diameter=1.75, weight=1000)
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+
+        captured: dict[str, object] = {}
+        real_create = order_db.create
+
+        async def _spy_create(**kwargs: object) -> object:
+            captured.update(kwargs)
+            return await real_create(**kwargs)
+
+        monkeypatch.setattr(order_db, "create", _spy_create)
+
+        await ai_tools.WRITE_TOOLS["create_order"].execute(
+            ctx,
+            {"lines": [{"filament_id": filament.id}], "ordered_at": "2026-01-15T14:30:00"},
+        )
+
+    assert isinstance(captured["ordered_at"], datetime)
+    assert not isinstance(captured["ordered_at"], str)
+
+
+async def test_delete_order_preview_formats_ordered_at_for_display(client: AsyncClient) -> None:  # noqa: ARG001
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    # order_row (also used by find_orders, which sorts on its raw ISO string) feeds this card's
+    # `before` -- it must still be reformatted for a person here, the same as create_order's card,
+    # via the shared helper rather than a second copy of the formatting logic.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        filament = await filament_db.create(db=session, density=1.24, diameter=1.75, weight=1000)
+        order = await order_db.create(
+            db=session,
+            lines=[{"filament_id": filament.id}],
+            ordered_at=datetime(2026, 1, 15),  # noqa: DTZ001 -- naive UTC, matches ordered_at storage
+        )
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+
+        card = await ai_tools.WRITE_TOOLS["delete_order"].preview(ctx, {"order_id": order.id})
+
+    assert card.before["ordered_at"] == "2026-01-15"
 
 
 async def test_delete_order_execute_raises_a_clean_error_for_a_double_undo(

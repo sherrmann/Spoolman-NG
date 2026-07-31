@@ -5,6 +5,8 @@ An order links to a Shop (not a Vendor), and its open/arrived state is DERIVED f
 database layer returns, because ``order.find`` filters only by shop.
 """
 
+from datetime import datetime
+
 from spoolman.ai_tools.base import (
     ConfirmCard,
     ExecutionResult,
@@ -71,6 +73,24 @@ def order_row(order: object) -> dict:
         "outstanding_units": sum(line.quantity for line in order.lines if line.arrived_at is None),
         "lines": lines,
     }
+
+
+def _format_order_date(value: datetime | None) -> str | None:
+    """Format an order date for a confirm-card: a bare date at midnight, else date and time.
+
+    A confirm-card is read by a person deciding whether to click confirm, not machine-parsed --
+    a raw ISO-8601 datetime like ``2026-01-15T00:00:00`` reads like a database dump, not a date
+    someone placed an order on. An order date is date-granular in practice, so the midnight
+    ``parse_date`` produces for a bare date like "2026-01-15" collapses to just the date; a real
+    time component is kept, human-readable, rather than silently dropped. This is display-only --
+    every write still passes ``parse_date``'s own ``datetime`` to the database layer, never this
+    string, so ``create``/``arrive`` are untouched by this formatting.
+    """
+    if value is None:
+        return None
+    if value.hour == 0 and value.minute == 0 and value.second == 0 and value.microsecond == 0:
+        return value.strftime("%Y-%m-%d")
+    return value.strftime("%Y-%m-%d %H:%M")
 
 
 async def _resolve_shop_id(ctx: ToolContext, name: str | None) -> tuple[int | None, str | None]:
@@ -201,7 +221,7 @@ async def _preview_create_order(ctx: ToolContext, args: dict) -> ConfirmCard:
     after = {
         "shop": resolved_shop,
         "order_number": clean_str(args.get("order_number")),
-        "ordered_at": ordered_at.isoformat() if ordered_at is not None else None,
+        "ordered_at": _format_order_date(ordered_at),
         "lines": described,
         "units": sum(line["quantity"] for line in lines),
     }
@@ -240,11 +260,16 @@ async def _preview_delete_order(ctx: ToolContext, args: dict) -> ConfirmCard:
         item = await order_db.get_by_id(ctx.db, order_id)
     except ItemNotFoundError as exc:
         raise ToolError(f"No order with ID {order_id} exists.") from exc
+    # order_row's ordered_at is the raw ISO string find_orders sorts by (see _run_find_orders) --
+    # reformat it for this card the same way _preview_create_order's does, via the shared helper,
+    # rather than changing order_row itself and breaking that sort.
+    before = order_row(item)
+    before["ordered_at"] = _format_order_date(item.ordered_at)
     return ConfirmCard(
         tool="delete_order",
         title=f"Delete order #{order_id}",
         summary="The order and its lines are removed. Spools already created from it are kept.",
-        before=order_row(item),
+        before=before,
         after={},
         destructive=True,
     )
