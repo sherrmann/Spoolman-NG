@@ -563,6 +563,11 @@ jobs:
       matrix:
         dbtype: ["postgres", "sqlite", "mariadb", "cockroachdb"]
     runs-on: ubuntu-latest
+    # The `secrets` context is not available in a step-level `if`, so the token
+    # is hoisted here where the login step can both test it and use it. It is
+    # empty on fork PRs, which is exactly the case the step needs to skip.
+    env:
+      DOCKERHUB_TOKEN: ${{ secrets.REMOTE_REGISTRY_PASSWORD }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -577,6 +582,39 @@ jobs:
         run: |
           docker load --input /tmp/spoolman-image/spoolman.tar
           docker load --input /tmp/spoolman-tester-image/spoolman-tester.tar
+
+      # Anonymous Docker Hub pulls are rate-limited per source IP, and GitHub's
+      # hosted runners share theirs with everyone else on the fleet -- so the
+      # database images (postgres, mariadb, cockroachdb) can start failing for
+      # reasons that have nothing to do with the commit under test. The same
+      # credentials the publish job already uses lift the limit to the
+      # authenticated quota. Skipped when the secret is absent (fork PRs), which
+      # leaves those runs exactly as they are today rather than failing on a
+      # missing secret.
+      - name: Log in to Docker Hub for base-image pulls
+        if: ${{ env.DOCKERHUB_TOKEN != '' }}
+        uses: docker/login-action@v4.2.0
+        with:
+          registry: docker.io
+          username: cookiemonster95
+          password: ${{ env.DOCKERHUB_TOKEN }}
+
+      # Pull the database image as its own step. compose-action reports only
+      # "Docker Compose command failed with exit code 1" and echoes the pull
+      # progress lines, swallowing the message that says *why* -- which cost a
+      # full diagnosis cycle when cockroachdb started failing here. Pulling
+      # first puts the real error in the log, and leaves nothing for `up` to
+      # fetch. The sqlite matrix leg has no `db` service (it runs against a
+      # file), so the service list decides whether there is anything to pull
+      # rather than the matrix name.
+      - name: Pre-pull database image
+        run: |
+          compose_file="./tests_integration/docker-compose-${{ matrix.dbtype }}.yml"
+          if docker compose -f "$compose_file" config --services | grep -qx db; then
+            docker compose -f "$compose_file" pull db
+          else
+            echo "No 'db' service in $compose_file (${{ matrix.dbtype }} runs in-process) -- nothing to pull."
+          fi
 
       - name: Perform integration tests
         uses: hoverkraft-tech/compose-action@v3.0.0
