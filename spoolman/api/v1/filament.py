@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from spoolman.api.v1.models import (
     Filament,
+    FilamentCascadeRequired,
     FilamentEvent,
     Finish,
     Message,
@@ -640,17 +641,59 @@ async def update(  # noqa: ANN201
 @router.delete(
     "/{filament_id}",
     name="Delete filament",
-    description="Delete a filament. Rejected with 409 while any order line references it.",
+    description=(
+        "Delete a filament. Rejected with 409 while any order line references it -- cascade cannot "
+        "override that. If the filament still has spools, also rejected with 409 unless cascade=true "
+        "is passed, since deleting it permanently deletes those spools and their usage history too."
+    ),
     response_model=Message,
     responses={
         404: {"model": Message},
-        409: {"model": Message},
+        # Two distinct 409 shapes share this status code: the order-line-reference refusal and the
+        # ItemDeleteError catch-all are plain Message; the spool-cascade refusal additionally carries
+        # spool_count (FilamentCascadeRequired) so the client never has to parse it out of the prose.
+        409: {"model": Message | FilamentCascadeRequired},
     },
 )
 async def delete(  # noqa: ANN201
+    *,
     db: Annotated[AsyncSession, Depends(get_db_session)],
     filament_id: int,
+    cascade: Annotated[
+        bool,
+        Query(
+            description=(
+                "Required (true) to delete a filament that still has spools. Also permanently deletes "
+                "those spools and their usage history -- this cannot be undone."
+            ),
+        ),
+    ] = False,
 ):
+    # Order-line references are a hard refusal (#298): cascade can never override this one.
+    line_count = await filament.count_order_line_references(db, filament_id)
+    if line_count:
+        return JSONResponse(
+            status_code=409,
+            content=Message(
+                message=f"Cannot delete filament {filament_id}: {line_count} order line(s) reference it.",
+            ).model_dump(),
+        )
+    # Deleting a filament with spools destroys those spools and their usage history, permanently --
+    # never silent. Without an explicit cascade=true, refuse and say exactly what would be lost.
+    if not cascade:
+        spool_count = await filament.count_spools(db, filament_id)
+        if spool_count:
+            return JSONResponse(
+                status_code=409,
+                content=FilamentCascadeRequired(
+                    message=(
+                        f"Filament {filament_id} still has {spool_count} spool(s). Deleting it also "
+                        "permanently deletes those spools and their usage history, and this cannot be "
+                        "undone. Pass cascade=true to proceed."
+                    ),
+                    spool_count=spool_count,
+                ).model_dump(),
+            )
     try:
         await filament.delete(db, filament_id)
     except ItemDeleteError as e:

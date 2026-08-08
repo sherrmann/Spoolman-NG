@@ -14,8 +14,17 @@ from spoolman.database import models
 
 
 def utc_timezone_naive(dt: datetime) -> datetime:
-    """Convert a datetime object to UTC and remove timezone info."""
-    return dt.astimezone(tz=timezone.utc).replace(tzinfo=None)
+    """Coerce a datetime to the naive-UTC form every datetime column in this codebase stores.
+
+    A naive ``dt`` already means UTC here, so it is returned unchanged: calling
+    ``astimezone()`` on it would have Python interpret it as system-local time and shift it
+    by the host's offset (silently, and only on a non-UTC host). An offset-aware ``dt`` is
+    genuinely converted to UTC before its tzinfo is dropped, so its instant in time is
+    preserved. Same fix as :func:`spoolman.ai_tools.stats.parse_date`.
+    """
+    if dt.tzinfo is not None:
+        dt = dt.astimezone(tz=timezone.utc)
+    return dt.replace(tzinfo=None)
 
 
 class SortOrder(Enum):

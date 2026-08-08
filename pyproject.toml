@@ -134,6 +134,10 @@ help = "Local deployment-scenario harness: list/up/down/test/ps/logs."
 cmd = "python scripts/coverage_all.py"
 help = "Combined backend coverage: fast suite + tests_integration against an instrumented local server."
 
+[tool.poe.tasks.ai-eval]
+cmd = "python scripts/ai_eval.py"
+help = "Tool-selection accuracy for the curated AI tool layer. Needs a configured AI endpoint."
+
 [tool.ruff]
 line-length = 120
 target-version = "py310"

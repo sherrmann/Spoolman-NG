@@ -48,6 +48,7 @@
     "createError": "Při vytváření došlo k chybě {{resource}} (kód chyby: {{statusCode}})",
     "deleteSuccess": "Úspěšně vymazáno {{resource}}",
     "deleteError": "Chyba při odstranění {{resource}} (kód chyby: {{statusCode}})",
+    "deleteErrorDetail": "Chyba při odstranění {{resource}} (kód chyby: {{statusCode}}): {{message}}",
     "editSuccess": "Úspěšně upraveno {{resource}}",
     "editError": "Chyba při úpravě {{resource}} (kód chyby: {{statusCode}})",
     "importProgress": "Importování: {{processed}}/{{total}}",
@@ -565,6 +566,16 @@
       "removed": "Fotografie odebrána",
       "remove_error": "Fotografii se nepodařilo odebrat",
       "prepare_error": "Tento soubor obrázku se nepodařilo přečíst"
+    },
+    "delete_cascade": {
+      "title": "Smazat {{name}}?",
+      "intro": "Tím se také trvale smaže:",
+      "spool_count_one": "{{count}} cívka",
+      "spool_count_few": "{{count}} cívky",
+      "spool_count_other": "{{count}} cívek",
+      "history": "jejich historie použití",
+      "irreversible": "Tuto akci nelze vrátit zpět.",
+      "confirm": "Smazat vše ({{count}})"
     }
   },
   "vendor": {
@@ -1341,13 +1352,28 @@
     "empty": "Zeptejte se mě na vaše cívky a filament — například „kolik mi zbývá černého PETG?“ nebo „co bych měl doobjednat?“.",
     "viewInList": "Zobrazit v seznamu cívek",
     "confirm": {
-      "before": "Před",
-      "after": "Po",
       "confirm": "Potvrdit",
       "cancel": "Zrušit",
       "confirmed": "Potvrzeno",
       "cancelled": "Zrušeno",
-      "destructive": "Nelze vrátit zpět"
+      "destructive": "Nelze vrátit zpět",
+      "not_set": "nenastaveno",
+      "status_open": "Otevřeno",
+      "color": {
+        "black": "Černá",
+        "white": "Bílá",
+        "grey": "Šedá",
+        "red": "Červená",
+        "orange": "Oranžová",
+        "yellow": "Žlutá",
+        "green": "Zelená",
+        "cyan": "Azurová",
+        "blue": "Modrá",
+        "purple": "Fialová",
+        "pink": "Růžová",
+        "brown": "Hnědá",
+        "beige": "Béžová"
+      }
     },
     "executed": {
       "undo": "Vrátit zpět",

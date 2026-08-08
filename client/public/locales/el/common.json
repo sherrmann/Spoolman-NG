@@ -536,6 +536,15 @@
       "removed": "Η φωτογραφία αφαιρέθηκε",
       "remove_error": "Δεν ήταν δυνατή η αφαίρεση της φωτογραφίας",
       "prepare_error": "Δεν ήταν δυνατή η ανάγνωση αυτού του αρχείου εικόνας"
+    },
+    "delete_cascade": {
+      "title": "Διαγραφή {{name}};",
+      "intro": "Αυτό διαγράφει επίσης οριστικά:",
+      "spool_count_one": "{{count}} καρούλι",
+      "spool_count_other": "{{count}} καρούλια",
+      "history": "το ιστορικό χρήσης τους",
+      "irreversible": "Αυτό δεν μπορεί να αναιρεθεί.",
+      "confirm": "Διαγραφή όλων ({{count}})"
     }
   },
   "actions": {
@@ -598,6 +607,7 @@
     "success": "Επιτυχής",
     "editSuccess": "Επιτυχής τροποποίηση του {{resource}}",
     "deleteError": "Σφάλμα κατά τη διαγραφή του {{resource}} (status code: {{statusCode}})",
+    "deleteErrorDetail": "Σφάλμα κατά τη διαγραφή του {{resource}} (status code: {{statusCode}}): {{message}}",
     "createSuccess": "Δημιουργήθηκε επιτυχώς {{resource}}",
     "saveSuccessful": "Επιτυχής Αποθήκευση!",
     "validationError": "Σφάλμα επικύρωσης: {{error}}"
@@ -1324,13 +1334,28 @@
     "empty": "Ρωτήστε με για τα καρούλια και τα νήματά σας — για παράδειγμα «πόσο μαύρο PETG μου έχει απομείνει;» ή «τι πρέπει να παραγγείλω ξανά;».",
     "viewInList": "Προβολή στη λίστα καρουλιών",
     "confirm": {
-      "before": "Πριν",
-      "after": "Μετά",
       "confirm": "Επιβεβαίωση",
       "cancel": "Ακύρωση",
       "confirmed": "Επιβεβαιώθηκε",
       "cancelled": "Ακυρώθηκε",
-      "destructive": "Δεν μπορεί να αναιρεθεί"
+      "destructive": "Δεν μπορεί να αναιρεθεί",
+      "not_set": "δεν έχει οριστεί",
+      "status_open": "Ανοιχτή",
+      "color": {
+        "black": "Μαύρο",
+        "white": "Λευκό",
+        "grey": "Γκρι",
+        "red": "Κόκκινο",
+        "orange": "Πορτοκαλί",
+        "yellow": "Κίτρινο",
+        "green": "Πράσινο",
+        "cyan": "Κυανό",
+        "blue": "Μπλε",
+        "purple": "Μοβ",
+        "pink": "Ροζ",
+        "brown": "Καφέ",
+        "beige": "Μπεζ"
+      }
     },
     "executed": {
       "undo": "Αναίρεση",

@@ -48,6 +48,7 @@
     "createError": "Eroare la crearea {{resource}} (status code: {{statusCode}})",
     "deleteSuccess": "{{resource}} ștearsă cu succes",
     "deleteError": "Eroare la ștergerea {{resource}} (status code: {{statusCode}})",
+    "deleteErrorDetail": "Eroare la ștergerea {{resource}} (status code: {{statusCode}}): {{message}}",
     "editSuccess": "{{resource}} editată cu succes",
     "editError": "Eroare la editarea {{resource}} (status code: {{statusCode}})",
     "importProgress": "Importare: {{processed}}/{{total}}",
@@ -592,6 +593,16 @@
       "removed": "Fotografia a fost eliminată",
       "remove_error": "Fotografia nu a putut fi eliminată",
       "prepare_error": "Fișierul imagine nu a putut fi citit"
+    },
+    "delete_cascade": {
+      "title": "Ștergi {{name}}?",
+      "intro": "Aceasta va șterge definitiv și:",
+      "spool_count_one": "{{count}} bobină",
+      "spool_count_few": "{{count}} bobine",
+      "spool_count_other": "{{count}} de bobine",
+      "history": "istoricul lor de utilizare",
+      "irreversible": "Această acțiune nu poate fi anulată.",
+      "confirm": "Șterge tot ({{count}})"
     }
   },
   "vendor": {
@@ -1341,13 +1352,28 @@
     "empty": "Întreabă-mă despre bobinele și filamentele tale — de exemplu „cât PETG negru mai am?” sau „ce ar trebui să reaprovizionez?”.",
     "viewInList": "Vezi în lista de bobine",
     "confirm": {
-      "before": "Înainte",
-      "after": "După",
       "confirm": "Confirmă",
       "cancel": "Anulează",
       "confirmed": "Confirmat",
       "cancelled": "Anulat",
-      "destructive": "Nu poate fi revocat"
+      "destructive": "Nu poate fi revocat",
+      "not_set": "nesetat",
+      "status_open": "Deschisă",
+      "color": {
+        "black": "Negru",
+        "white": "Alb",
+        "grey": "Gri",
+        "red": "Roșu",
+        "orange": "Portocaliu",
+        "yellow": "Galben",
+        "green": "Verde",
+        "cyan": "Cyan",
+        "blue": "Albastru",
+        "purple": "Violet",
+        "pink": "Roz",
+        "brown": "Maro",
+        "beige": "Bej"
+      }
     },
     "executed": {
       "undo": "Revocă",

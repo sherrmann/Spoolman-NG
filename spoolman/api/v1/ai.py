@@ -431,13 +431,39 @@ class ChatActionResponse(BaseModel):
     undo: dict | None = None
 
 
+#: This endpoint is reached ONLY by the one-click Undo button, which replays a previously-returned
+#: undo descriptor — never an arbitrary model-chosen call, and never previewed. Restricting it to
+#: exactly the tool names that a write's own `undo=` descriptor can ever name keeps it from also
+#: accepting, say, delete_filament with arbitrary caller-supplied arguments and no confirm-card at
+#: all (that was C1: create_filament's undo descriptor named delete_filament, this endpoint called
+#: delete_filament's execute() directly with no preview, and filament delete cascades to every spool
+#: -- three individually-correct pieces composing into a silent, unconfirmed cascading delete).
+#: tests/integration/test_ai_chat_endpoints.py asserts this set equals the union of tool names every
+#: WRITE_TOOLS.execute actually emits in an undo descriptor, so the two cannot drift apart.
+_CHAT_ACTION_ALLOWLIST = frozenset(
+    {
+        "update_spool",
+        "update_filament",
+        "set_spool_used_weight",
+        "delete_spool",
+        "delete_filament",
+        "delete_filament_and_vendor",
+        "delete_location",
+        "delete_vendor",
+        "delete_order",
+    },
+)
+
+
 @router.post(
     "/chat/action",
     name="Run a curated write action",
     description=(
-        "Execute a single curated write tool directly — used for the one-click undo after a confirmed "
-        "chat mutation. Admin only, and limited to the same curated tools the chat agent can call, so it "
-        "grants no capability beyond chat itself."
+        "Execute one of the curated write tools that an undo descriptor can name (e.g. "
+        "set_spool_used_weight, an undo-only primitive the chat model is never offered) — this is "
+        "how one-click undo runs, "
+        "and it is the only caller of this endpoint. Restricted to that fixed allowlist: it is never a "
+        "general-purpose tool invoker. Admin only, gated by the same write permission as chat."
     ),
     responses={400: {"model": Message}, 404: {"model": Message}, 422: {"model": Message}},
 )
@@ -447,6 +473,8 @@ async def chat_action(
     body: ChatActionRequest,
 ) -> ChatActionResponse:
     await _require_chat_feature(db)
+    if body.tool not in _CHAT_ACTION_ALLOWLIST:
+        raise HTTPException(status_code=400, detail=f"Unknown action '{body.tool}'.")
     tool = ai_tools.WRITE_TOOLS.get(body.tool)
     if tool is None:
         raise HTTPException(status_code=400, detail=f"Unknown action '{body.tool}'.")

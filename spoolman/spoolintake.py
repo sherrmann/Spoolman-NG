@@ -103,7 +103,15 @@ def parse_json_block(text: str) -> dict:
     raise ExtractionParseError("The model returned truncated JSON.")
 
 
-def _coerce_number(value: object) -> float | None:
+def coerce_number(value: object) -> float | None:
+    """Coerce a raw extraction/catalog value to a float, or None if it isn't numeric-ish.
+
+    Public because both this module's own scoring path and the curated ai_tools.catalog tool
+    (a sibling that reuses this scorer against the same catalog) need the identical coercion:
+    a bare bool is rejected (bool is an int subclass, but True/False are never a real
+    measurement), an int/float passes through, and a string has its first number pulled out
+    (tolerating a comma decimal separator).
+    """
     if isinstance(value, bool):
         return None
     if isinstance(value, (int, float)):
@@ -123,7 +131,7 @@ def normalize_extraction(raw: dict) -> dict:
         if isinstance(value, str) and value.strip():
             out[key] = value.strip()
     for key in _NUMBER_KEYS:
-        out[key] = _coerce_number(raw.get(key))
+        out[key] = coerce_number(raw.get(key))
 
     if out["weight_g"] is not None and out["weight_g"] < _MIN_PLAUSIBLE_WEIGHT_G:
         out["weight_g"] = round(out["weight_g"] * 1000, 1)
@@ -317,7 +325,7 @@ def match_catalog(extraction: dict) -> list[dict]:
             vendor=entry.get("manufacturer"),
             name=entry.get("name"),
             material=entry.get("material"),
-            weight_g=_coerce_number(entry.get("weight")),
+            weight_g=coerce_number(entry.get("weight")),
         )
         if score < _CATALOG_MIN_SCORE:
             continue

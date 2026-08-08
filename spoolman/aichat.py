@@ -62,10 +62,29 @@ def _system_prompt(*, context: str | None, locale: str, can_write: bool) -> str:
     if context:
         lines.append(f"The user is currently viewing: {context}.")
     if can_write:
+        # The interface already gates every write behind a confirm-card the user has to click, so a
+        # model that also asks "shall I go ahead?" in prose costs the user a turn and confirms
+        # nothing extra. The old wording ("only applied after the user confirms them in the
+        # interface") described that gate without saying what the model should therefore do, and the
+        # observed behaviour was three turns of asking before any card appeared -- the same failure
+        # the eval measured, where the dominant error was declining to call any tool at all. The
+        # safety property that matters (do not touch things the user did not ask about) is kept, and
+        # is now paired with the never-substitute rule below rather than with a prose round-trip.
         lines.append(
-            "Changes (updating, creating, deleting, or consuming spools) are only applied after the user "
-            "confirms them in the interface. Call the write tool with the intended change; do not claim a "
-            "change has happened until a tool result confirms it. Never delete without being clearly asked.",
+            "Changes (creating, updating, deleting, consuming) are applied only after the user clicks "
+            "Confirm on a card the interface shows them, so that card IS the confirmation: call the write "
+            "tool directly with the intended change instead of asking the user to confirm in chat. Do not "
+            "claim a change has happened until a tool result confirms it. Only ever change or delete the "
+            "records the user actually asked about.",
+        )
+        lines.append(
+            "If the user names a kind of record (order, spool, filament, location, vendor) and no tool "
+            "acts on that kind, say so plainly. Never act on a different kind of record instead.",
+        )
+        lines.append(
+            "Never invent a filament's density or diameter. Call catalog_lookup for real values, or ask "
+            "the user. Prefer arrive_order over creating spools by hand when an order arrives, and check "
+            "find_vendors or find_locations before creating a vendor or location that may already exist.",
         )
     else:
         lines.append("This user has read-only access. You can answer questions but cannot make any changes.")
@@ -151,12 +170,33 @@ def _tool_result_entry(call: dict, payload: dict) -> dict:
     return {"role": "tool", "tool_call_id": _call_id(call), "content": json.dumps(payload)}
 
 
-def _read_summary(name: str, result: dict) -> str:
-    """Return a short human line describing what a read tool found (for the 'tool' event)."""
+def _read_summary(name: str, result: dict) -> str:  # noqa: PLR0911
+    """Return a short human line describing what a read tool found (for the 'tool' event).
+
+    This is the drawer's transparency line: the one place the user can see what the assistant
+    actually looked at without opening the raw tool payload. Every READ_TOOLS entry needs a
+    branch here that reflects its own result shape -- a bare "Done." tells the user nothing they
+    couldn't already infer from the tool name alone, and test_ai_tools.py's
+    test_every_read_tool_produces_a_non_default_summary pins that a future read tool can't forget
+    to add one.
+    """
     if name == "find_spools":
         return f"Found {result.get('count', 0)} spool(s), {result.get('total_remaining_weight_g', 0)} g remaining."
     if name == "find_filaments":
-        return f"Listed {result.get('count', 0)} filament(s)."
+        return f"Listed {result.get('count', 0)} filament(s), {result.get('returned', 0)} shown."
+    if name == "get_usage_stats":
+        return (
+            f"Summed {result.get('count', 0)} {result.get('bucket', 'month')} period(s): "
+            f"{result.get('total_consumed_weight_g', 0)} g, {result.get('total_cost', 0)} total cost."
+        )
+    if name == "find_orders":
+        return f"Found {result.get('count', 0)} order(s), {result.get('returned', 0)} shown."
+    if name == "find_locations":
+        return f"Listed {result.get('count', 0)} location(s)."
+    if name == "find_vendors":
+        return f"Listed {result.get('count', 0)} vendor(s)."
+    if name == "catalog_lookup":
+        return f"Found {result.get('count', 0)} catalog match(es)."
     return "Done."
 
 
@@ -212,10 +252,17 @@ async def _resolve_pending(ctx: ToolContext, convo: list[dict], *, decision: str
             try:
                 result = await ai_tools.WRITE_TOOLS[name].execute(ctx, _call_args(call))
             except ToolError as exc:
+                # A commit-level failure (e.g. an IntegrityError raised from inside execute())
+                # leaves the shared session needing an explicit rollback; without one, the next
+                # pending call in this same confirmed turn would fail with PendingRollbackError
+                # instead of running normally. Rolling back here is a no-op when nothing was
+                # actually dirtied, so it's safe for the ordinary validation-only ToolError too.
+                await ctx.db.rollback()
                 convo.append(_tool_result_entry(call, {"error": str(exc)}))
                 continue
             except Exception:
                 logger.exception("Write tool %r raised an unexpected error during execution.", name)
+                await ctx.db.rollback()
                 convo.append(_tool_result_entry(call, {"error": _TOOL_FAILED}))
                 continue
             convo.append(_tool_result_entry(call, {"ok": True, "summary": result.summary, **result.data}))

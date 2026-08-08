@@ -146,10 +146,15 @@ const dataProvider = (
 
     const { headers, method } = meta ?? {};
     const requestMethod = (method as MethodTypesWithBody) ?? "delete";
+    // Same convention as getList: callers opt into extra query-string params (e.g. filament
+    // delete's `cascade=true` escalation, #10b) via meta.queryParams rather than folding them
+    // into the URL themselves.
+    const queryParams: Record<string, string | number | boolean> = meta?.queryParams ?? {};
 
     const { data } = await httpClient[requestMethod](url, {
       data: variables,
       headers,
+      params: queryParams,
     });
 
     return {

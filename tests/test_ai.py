@@ -307,3 +307,71 @@ async def test_probe_cache_holds_latest_result() -> None:
     second = await ai.probe(ai.AIConfig(base_url="https://api.example.com/v1", model="m"))
     assert ai.get_cached_probe() is second
     assert second.ok is True
+
+
+# --- System prompt -------------------------------------------------------------------
+
+
+def test_system_prompt_forbids_guessing_filament_physics() -> None:
+    from spoolman.aichat import _system_prompt  # noqa: PLC0415
+
+    prompt = _system_prompt(context=None, locale="en", can_write=True)
+
+    assert "catalog_lookup" in prompt
+    assert "density" in prompt
+
+
+def test_readonly_prompt_still_says_nothing_about_writing() -> None:
+    from spoolman.aichat import _system_prompt  # noqa: PLC0415
+
+    prompt = _system_prompt(context=None, locale="en", can_write=False)
+
+    assert "read-only" in prompt
+    assert "catalog_lookup" not in prompt
+    # The write guidance added for the confirm-card posture must stay on the writer branch too:
+    # a read-only principal is offered no write tools at all, so telling it how to call one is
+    # wasted context at best and an invitation to try at worst. The never-substitute rule rides
+    # along on the same branch for the same reason -- the substitution it prevents is a write.
+    for phrase in ("Confirm", "confirmation", "write tool", "delete", "act on a different kind"):
+        assert phrase not in prompt, f"read-only prompt leaked write guidance: {phrase!r}"
+
+
+def test_writer_prompt_sends_the_model_straight_to_the_write_tool() -> None:
+    """The confirm-card is the confirmation; asking again in prose costs the user a turn.
+
+    Observed on the real app: asked to delete an order, the assistant spent three turns asking
+    for confirmation in chat before any card appeared -- while nothing is applied until the user
+    clicks Confirm on the card. The prompt must therefore say what to *do* (call the tool), not
+    merely describe the gate.
+    """
+    from spoolman.aichat import _system_prompt  # noqa: PLC0415
+
+    prompt = _system_prompt(context=None, locale="en", can_write=True)
+
+    assert "call the write tool directly" in prompt
+    assert "instead of asking the user to confirm in chat" in prompt
+    # ...without losing the two properties that wording replaced: no claiming a change that has
+    # not run, and no touching records the user never mentioned.
+    assert "until a tool result confirms it" in prompt
+    assert "the records the user actually asked about" in prompt
+
+
+def test_writer_prompt_forbids_substituting_a_different_kind_of_record() -> None:
+    """The prompt-side counterpart to exposing delete_order.
+
+    With no tool for the kind of record the user named, the model reached for a destructive tool
+    on a neighbouring kind (delete_spool for "delete the order"). Naming every kind the tool layer
+    knows about is the point: a rule that listed only some of them would leave the same hole open
+    for the rest.
+    """
+    from spoolman.aichat import _system_prompt  # noqa: PLC0415
+
+    prompt = _system_prompt(context=None, locale="en", can_write=True)
+
+    # Scoped to the rule's own sentence, not the whole prompt: every one of these words appears
+    # elsewhere in the prompt anyway (arrive_order, find_vendors, "spools"), so a whole-prompt
+    # search would pass while the rule named none of them.
+    rule = next((line for line in prompt.splitlines() if "Never act on a different kind of record" in line), None)
+    assert rule is not None, "the writer prompt has no never-substitute rule"
+    for kind in ("order", "spool", "filament", "location", "vendor"):
+        assert kind in rule, f"the never-substitute rule does not name {kind}"

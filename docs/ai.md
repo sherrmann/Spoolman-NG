@@ -142,15 +142,38 @@ language:
   answers from your low-stock, reserve, and on-order data combined with general
   3D-printing knowledge.
 
-The assistant reads your data through a small **curated tool layer** — the same set of
-read/write actions a person has in the web UI, nothing more. It never runs raw queries.
+The assistant reads and writes your data through a small **curated tool layer** — the same
+set of read/write actions a person has in the web UI, nothing more. It can reach spools and
+filaments, usage statistics and spend, orders and their arrival, locations and vendors, and
+the SpoolmanDB catalog. It never runs raw queries.
 
-**Changes are never silent.** When the assistant wants to update, create, consume, or
-delete a spool, it renders a **confirm-card** showing the before/after values with
+**Changes are never silent.** When the assistant wants to create, update, consume, or
+delete something, it renders a **confirm-card** showing the before/after values with
 **Confirm** / **Cancel** buttons — nothing happens until you confirm. After a change runs,
-a one-click **Undo** restores the previous state (deletes are the exception: they are
-marked as unable to be undone and require an explicit request). A **read-only** account
-can use the assistant to ask questions but is offered no write actions at all.
+a one-click **Undo** restores the previous state — with three exceptions. Deletes cannot be
+undone in one click and require an explicit request; deleting a filament also deletes its
+spools and their usage history, and the confirm-card states exactly how many. Marking an
+order arrived also cannot be undone in one click: it can create a spool per unit in the same
+step, and because that splits order lines there is no clean single call that reverses it, so
+its confirm-card spells out exactly what will be created before you confirm. Undoing a
+**creation** is also refused, rather than destroying what came after it: a filament creation
+whose filament has since gained spools, or a spool creation whose spool has since recorded
+usage, tells you how many and leaves everything in place — delete it explicitly (with its own
+confirm-card) if that is really what you want. A **read-only** account can use the assistant to
+ask questions but is offered no write actions at all.
+
+When creating a filament also creates its vendor — the confirm-card says so — undoing that
+creation removes the vendor as well, so nothing is left behind. The one exception is a vendor
+you have since filed other filaments under: those would lose their vendor link, so the vendor
+is kept and only the filament is removed.
+
+When updating a filament or a spool, an omitted field is left unchanged and an explicit
+`null` clears it — except a filament's density and diameter, which can never be null and
+are rejected with an error rather than cleared, since a spool's weight math depends on
+both. Everywhere else, "clear the comment" and a request that just doesn't mention the
+comment behave differently, as they should, and undoing an edit can restore a field that
+was previously empty. The assistant never invents a filament's density or diameter in the
+first place — it looks them up in the SpoolmanDB catalog or asks you.
 
 The assistant replies in the interface language and never uses emoji. Each turn sends the
 current conversation and a short note of which page you are on to the configured endpoint;
@@ -231,9 +254,13 @@ mutating tools appear at all.
 What the client gets:
 
 - **Tools** — the same curated set the in-app chat assistant uses (one tool surface, two
-  consumers): search spools, list filaments with low-stock/on-order status, and — for a
-  writer — create a spool, log usage, and edit/archive a spool. It is a curated layer, not
-  raw database access; deletes are not exposed over MCP.
+  consumers): search spools, list filaments with low-stock/on-order status, usage statistics
+  and spend, orders, locations, vendors, and SpoolmanDB catalog lookup — and, for a writer,
+  create a spool, log usage, edit a spool, create or edit a filament, record an order, mark
+  an order arrived, and create a location or vendor. It is a curated layer, not raw database
+  access; deletes are not exposed over MCP. Marking an order arrived has no undo and no
+  confirm-card here, so it is the one write flagged `destructive` in its tool annotation —
+  a client can use that to prompt its own user before running it.
 - A **low-stock resource** the client can read for the current reorder picture.
 - A **restock-advisor prompt** that turns that data into "what should I reorder?".
 
@@ -244,6 +271,37 @@ coexist.
 
 Voice and vision come for free here: talking to Spoolman through claude.ai or ChatGPT voice
 mode is an audio interface Spoolman never has to build.
+
+## Tool-selection eval (maintainers)
+
+Growing the tool surface trades reach for tool-selection accuracy on small local models, and
+Spoolman's whole premise is "point it at your own Ollama". `poe ai-eval` turns that trade into
+a number: it sends a fixed set of fixture prompts through the real tool schemas to a live
+OpenAI-compatible endpoint and checks which tool the model reached for, then reports overall
+and per-tool accuracy plus a confusion table.
+
+```bash
+SPOOLMAN_AI_BASE_URL=http://localhost:11434/v1 SPOOLMAN_AI_MODEL=<model> uv run poe ai-eval
+```
+
+It needs a live endpoint, so it is **not part of CI** — run it before a release and whenever
+the tool set changes. The harness's own system prompt is built from the same
+`_system_prompt` the in-app chat agent actually sends (writer posture, English locale, no page
+context), so the eval measures the configuration Spoolman ships, not a thinner stand-in.
+
+Measured across 2 runs against a local Ollama 7.6B tool-tuned model
+(`hhao/qwen2.5-coder-tools`) on 53 fixture prompts: **47-48/53 (89-91%)** tool
+selection, **44-46/53 (83-87%)** with correct arguments too, run to run. Treat that range as one
+small local model's variance on one machine, not a guarantee for whatever endpoint you point
+Spoolman at, and expect the exact numbers to drift a little between any two runs — a single
+best-of-N figure understates that. The dominant failure mode across both runs is the model
+declining to call any tool at all, not calling the wrong one.
+
+**Those figures were measured against the 18-tool set, before `delete_order` was made
+model-facing.** The tool set is 19 tools now and the fixture set has grown to match, so the
+range above is the last measurement taken, not a current one — it has not been re-run since
+(the eval needs a live model endpoint). Re-run it before the next release and replace these
+numbers rather than reading them as today's accuracy.
 
 ## Privacy
 

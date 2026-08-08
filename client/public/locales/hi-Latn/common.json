@@ -124,6 +124,7 @@
     "createError": "{{resource}} banane mein error hua (status code: {{statusCode}})",
     "deleteSuccess": "{{resource}} safaltapoorvak delete kiya gaya",
     "deleteError": "{{resource}} delete karne mein error hua (status code: {{statusCode}})",
+    "deleteErrorDetail": "{{resource}} delete karne mein error hua (status code: {{statusCode}}): {{message}}",
     "editSuccess": "{{resource}} safaltapoorvak edit kiya gaya",
     "editError": "{{resource}} edit karne mein error hua (status code: {{statusCode}})",
     "importProgress": "Import ho raha hai: {{processed}}/{{total}}",
@@ -614,6 +615,15 @@
       "removed": "Photo hata di gayi",
       "remove_error": "Photo hata nahi payi",
       "prepare_error": "Woh image file padhi nahi ja saki"
+    },
+    "delete_cascade": {
+      "title": "{{name}} delete karein?",
+      "intro": "Isse ye bhi hamesha ke liye delete ho jayega:",
+      "spool_count_one": "{{count}} spool",
+      "spool_count_other": "{{count}} spools",
+      "history": "unki istemal history",
+      "irreversible": "Ise wapas nahi laya ja sakta.",
+      "confirm": "Sabhi {{count}} delete karein"
     }
   },
   "vendor": {
@@ -1312,13 +1322,28 @@
     "empty": "Apne spools aur filament ke baare mein mujhse poochein — jaise \"mere paas kitna black PETG bacha hai?\" ya \"mujhe kya reorder karna chahiye?\".",
     "viewInList": "Spools list mein dekhein",
     "confirm": {
-      "before": "Pehle",
-      "after": "Baad",
       "confirm": "Confirm karein",
       "cancel": "Cancel karein",
       "confirmed": "Confirm ho gaya",
       "cancelled": "Cancel ho gaya",
-      "destructive": "Ise undo nahi kiya ja sakta"
+      "destructive": "Ise undo nahi kiya ja sakta",
+      "not_set": "set nahi hai",
+      "status_open": "Open",
+      "color": {
+        "black": "Kaala",
+        "white": "Safed",
+        "grey": "Grey",
+        "red": "Laal",
+        "orange": "Orange",
+        "yellow": "Peela",
+        "green": "Hara",
+        "cyan": "Cyan",
+        "blue": "Neela",
+        "purple": "Baingani",
+        "pink": "Gulaabi",
+        "brown": "Bhoora",
+        "beige": "Beige"
+      }
     },
     "executed": {
       "undo": "Undo karein",

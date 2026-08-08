@@ -48,6 +48,7 @@
     "createError": "Kūrimo klaida {{resource}} (kodas: {{statusCode}})",
     "deleteSuccess": "Sėkmingai ištrinta {{resource}}",
     "deleteError": "Klaida trinant {{resource}} (kodas: {{statusCode}})",
+    "deleteErrorDetail": "Klaida trinant {{resource}} (kodas: {{statusCode}}): {{message}}",
     "editSuccess": "Sėkmingai redaguota {{resource}}",
     "editError": "Redagavimo klaida {{resource}} (kodas: {{statusCode}})",
     "importProgress": "Importuojama: {{processed}}/{{total}}",
@@ -554,6 +555,16 @@
       "removed": "Nuotrauka pašalinta",
       "remove_error": "Nepavyko pašalinti nuotraukos",
       "prepare_error": "Nepavyko nuskaityti šio paveikslėlio failo"
+    },
+    "delete_cascade": {
+      "title": "Ištrinti „{{name}}“?",
+      "intro": "Tai taip pat visam laikui ištrins:",
+      "spool_count_one": "{{count}} ritė",
+      "spool_count_few": "{{count}} ritės",
+      "spool_count_other": "{{count}} ričių",
+      "history": "jų naudojimo istoriją",
+      "irreversible": "Šio veiksmo negalima atšaukti.",
+      "confirm": "Ištrinti viską ({{count}})"
     }
   },
   "vendor": {
@@ -1329,13 +1340,28 @@
     "empty": "Klauskite manęs apie savo rites ir gijas — pavyzdžiui, „kiek juodo PETG dar turiu?“ arba „ką turėčiau užsisakyti?“.",
     "viewInList": "Peržiūrėti ričių sąraše",
     "confirm": {
-      "before": "Prieš",
-      "after": "Po",
       "confirm": "Patvirtinti",
       "cancel": "Atšaukti",
       "confirmed": "Patvirtinta",
       "cancelled": "Atšaukta",
-      "destructive": "Neatšaukiama"
+      "destructive": "Neatšaukiama",
+      "not_set": "nenustatyta",
+      "status_open": "Atviras",
+      "color": {
+        "black": "Juoda",
+        "white": "Balta",
+        "grey": "Pilka",
+        "red": "Raudona",
+        "orange": "Oranžinė",
+        "yellow": "Geltona",
+        "green": "Žalia",
+        "cyan": "Žydra",
+        "blue": "Mėlyna",
+        "purple": "Violetinė",
+        "pink": "Rožinė",
+        "brown": "Ruda",
+        "beige": "Smėlio"
+      }
     },
     "executed": {
       "undo": "Grąžinti",

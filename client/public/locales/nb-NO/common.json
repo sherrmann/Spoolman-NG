@@ -181,6 +181,15 @@
       "removed": "Foto fjernet",
       "remove_error": "Kunne ikke fjerne fotoet",
       "prepare_error": "Kunne ikke lese den bildefilen"
+    },
+    "delete_cascade": {
+      "title": "Slette {{name}}?",
+      "intro": "Dette sletter også permanent:",
+      "spool_count_one": "{{count}} spole",
+      "spool_count_other": "{{count}} spoler",
+      "history": "brukshistorikken deres",
+      "irreversible": "Dette kan ikke angres.",
+      "confirm": "Slett alle {{count}}"
     }
   },
   "printing": {
@@ -571,6 +580,7 @@
     "createError": "Kunne ikke opprette {{resource}} (statuskode: {{statusCode}})",
     "editSuccess": "{{resource}} redigert",
     "deleteError": "Kunne ikke slette {{resource}} (statuskode: {{statusCode}})",
+    "deleteErrorDetail": "Kunne ikke slette {{resource}} (statuskode: {{statusCode}}): {{message}}",
     "createSuccess": "Opprettet {{resource}}",
     "saveSuccessful": "Lagring vellykket!",
     "validationError": "Valideringsfeil: {{error}}"
@@ -1324,13 +1334,28 @@
     "empty": "Spør meg om spolene og filamentet ditt — for eksempel «hvor mye svart PETG har jeg igjen?» eller «hva bør jeg etterbestille?».",
     "viewInList": "Vis i spolelisten",
     "confirm": {
-      "before": "Før",
-      "after": "Etter",
       "confirm": "Bekreft",
       "cancel": "Avbryt",
       "confirmed": "Bekreftet",
       "cancelled": "Avbrutt",
-      "destructive": "Kan ikke angres"
+      "destructive": "Kan ikke angres",
+      "not_set": "ikke angitt",
+      "status_open": "Åpen",
+      "color": {
+        "black": "Svart",
+        "white": "Hvit",
+        "grey": "Grå",
+        "red": "Rød",
+        "orange": "Oransje",
+        "yellow": "Gul",
+        "green": "Grønn",
+        "cyan": "Cyan",
+        "blue": "Blå",
+        "purple": "Lilla",
+        "pink": "Rosa",
+        "brown": "Brun",
+        "beige": "Beige"
+      }
     },
     "executed": {
       "undo": "Angre",

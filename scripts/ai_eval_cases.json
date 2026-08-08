@@ -1,0 +1,75 @@
+[
+  {"prompt": "How much black PETG do I have left?", "tool": "find_spools", "args": {"material": "PETG"}},
+  {"prompt": "What's in shelf B?", "tool": "find_spools", "args": {"location": "shelf b"}},
+  {"prompt": "Show me every spool I've got from Sunlu", "tool": "find_spools", "args": {"vendor": "sunlu"}},
+  {"prompt": "Do I have any spools with lot number 4471?", "tool": "find_spools", "args": {"lot_nr": "4471"}},
+
+  {"prompt": "What should I reorder?", "tool": "find_filaments", "args": {"low_stock_only": true}},
+  {"prompt": "Which of my filaments survive outdoors?", "tool": "find_filaments", "args": {}},
+  {"prompt": "Which of my own filaments are almost out?", "tool": "find_filaments", "args": {"low_stock_only": true}},
+  {"prompt": "List every PLA I actually own", "tool": "find_filaments", "args": {"material": "PLA"}},
+
+  {"prompt": "How much filament did I use last month?", "tool": "get_usage_stats", "args": {"bucket": "month"}},
+  {"prompt": "What did filament cost me this year?", "tool": "get_usage_stats", "args": {}},
+  {"prompt": "Break down my filament usage by week", "tool": "get_usage_stats", "args": {"bucket": "week"}},
+
+  {"prompt": "What's on order?", "tool": "find_orders", "args": {"status": "open"}},
+  {"prompt": "Did my Prusa order arrive?", "tool": "find_orders", "args": {}},
+  {"prompt": "Show me every order I've ever placed, arrived or not", "tool": "find_orders", "args": {"status": "all"}},
+
+  {"prompt": "Where do I keep my filament?", "tool": "find_locations", "args": {}},
+  {"prompt": "Which shelf has the most left?", "tool": "find_locations", "args": {}},
+  {"prompt": "Do I already have a location called Dry box 1?", "tool": "find_locations", "args": {"query": "dry box 1"}},
+
+  {"prompt": "Who do I buy most of my filament from?", "tool": "find_vendors", "args": {}},
+  {"prompt": "Do I already have Sunlu as a vendor?", "tool": "find_vendors", "args": {"query": "sunlu"}},
+  {"prompt": "List every manufacturer I've bought from", "tool": "find_vendors", "args": {}},
+
+  {"prompt": "What's the density of Prusament PETG?", "tool": "catalog_lookup", "args": {"material": "PETG"}},
+  {"prompt": "Look up the specs for Sunlu PLA Meta", "tool": "catalog_lookup", "args": {"vendor": "sunlu"}},
+  {"prompt": "What temperature does eSun PETG print at?", "tool": "catalog_lookup", "args": {"vendor": "esun"}},
+  {"prompt": "I'm about to buy some Polymaker PolyLite, what's its diameter?", "tool": "catalog_lookup", "args": {"vendor": "polymaker"}},
+
+  {"prompt": "Log 20 grams used on spool 12", "tool": "consume_spool", "args": {"spool_id": 12, "use_weight_g": 20}},
+  {"prompt": "I just used half a kilo from spool 3", "tool": "consume_spool", "args": {"spool_id": 3}},
+  {"prompt": "Put 15g back on spool 6, I misprinted the weigh-in", "tool": "consume_spool", "args": {"spool_id": 6, "use_weight_g": -15}},
+
+  {"prompt": "Move spool 7 to shelf C", "tool": "update_spool", "args": {"spool_id": 7, "location": "shelf c"}},
+  {"prompt": "Archive spool 19", "tool": "update_spool", "args": {"spool_id": 19, "archived": true}},
+  {"prompt": "Spool 22 actually cost me 24.99, can you fix that?", "tool": "update_spool", "args": {"spool_id": 22, "price": 24.99}},
+
+  {"prompt": "Add a new spool of filament 4", "tool": "create_spool", "args": {"filament_id": 4}},
+  {"prompt": "I just opened a fresh spool of filament 9, put it on shelf A", "tool": "create_spool", "args": {"filament_id": 9, "location": "shelf a"}},
+
+  {"prompt": "Delete spool 21", "tool": "delete_spool", "args": {"spool_id": 21}},
+  {"prompt": "Get rid of spool 14, I threw the empty roll away", "tool": "delete_spool", "args": {"spool_id": 14}},
+
+  {"prompt": "Add the Sunlu PLA Meta black I just bought as a new filament", "tool": "create_filament", "args": {"vendor_name": "sunlu"}},
+  {"prompt": "Create a filament: Prusament PETG, 1.75mm, density 1.27", "tool": "create_filament", "args": {"diameter": 1.75, "density": 1.27}},
+  {"prompt": "Register a new filament type, eSun ABS+, density 1.04, diameter 1.75", "tool": "create_filament", "args": {"vendor_name": "esun", "density": 1.04, "diameter": 1.75}},
+
+  {"prompt": "Rename filament 5 to PLA Matte", "tool": "update_filament", "args": {"filament_id": 5, "name": "PLA Matte"}},
+  {"prompt": "Set the low stock threshold on filament 8 to 300g", "tool": "update_filament", "args": {"filament_id": 8, "low_stock_threshold_g": 300}},
+  {"prompt": "Filament 11 is actually ASA, not ABS, fix the material", "tool": "update_filament", "args": {"filament_id": 11, "material": "ASA"}},
+
+  {"prompt": "Delete filament 9 and all its spools", "tool": "delete_filament", "args": {"filament_id": 9}},
+  {"prompt": "I don't stock filament 15 any more, remove it entirely", "tool": "delete_filament", "args": {"filament_id": 15}},
+
+  {"prompt": "I ordered 3 spools of filament 2", "tool": "create_order", "args": {"lines": [{"filament_id": 2, "quantity": 3}]}},
+  {"prompt": "Record an order of 2x filament 6 at 19.50 each", "tool": "create_order", "args": {"lines": [{"filament_id": 6, "quantity": 2, "price_per_unit": 19.5}]}},
+  {"prompt": "I just placed an order with Prusa for 2 of filament 3 and 1 of filament 7", "tool": "create_order", "args": {"shop": "prusa"}},
+  {"prompt": "Log an order: 4 spools of filament 10 from Filastruder, order number PO-2291", "tool": "create_order", "args": {"order_number": "PO-2291"}},
+
+  {"prompt": "Delete order 5", "tool": "delete_order", "args": {"order_id": 5}},
+  {"prompt": "I cancelled that order, remove order 12 from my records", "tool": "delete_order", "args": {"order_id": 12}},
+
+  {"prompt": "My order 4 arrived", "tool": "arrive_order", "args": {"order_id": 4}},
+  {"prompt": "Order 7 turned up, put them in shelf A", "tool": "arrive_order", "args": {"order_id": 7, "location": "shelf a"}},
+  {"prompt": "The Sunlu order (order 9) just showed up, don't create spools yet", "tool": "arrive_order", "args": {"order_id": 9, "create_spools": false}},
+
+  {"prompt": "Add a location called Dry box 2", "tool": "create_location", "args": {"name": "dry box 2"}},
+  {"prompt": "Set up a new spot called Garage Shelf", "tool": "create_location", "args": {"name": "garage shelf"}},
+
+  {"prompt": "Add Polymaker as a vendor", "tool": "create_vendor", "args": {"name": "polymaker"}},
+  {"prompt": "I need to add eSun as a new manufacturer", "tool": "create_vendor", "args": {"name": "esun"}}
+]

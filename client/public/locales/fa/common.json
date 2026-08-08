@@ -49,6 +49,7 @@
     "undoable": "برای برگشت به حالت قبل {{seconds}} ثانیه فرصت دارید...",
     "createError": "در زمان ساخت {{resource}} مشکل {{statusCode}} رخ داد",
     "deleteError": "حذف {{resource}} با خطای {{statusCode}} مواجه شد",
+    "deleteErrorDetail": "حذف {{resource}} با خطای {{statusCode}} مواجه شد‏: {{message}}",
     "editSuccess": "{{resource}} با موفقیت ویرایش شد",
     "importProgress": "در حال وارد کردن {{processed}} از مجموع {{total}}",
     "saveSuccessful": "با موفقیت ثبت شد!"
@@ -538,6 +539,15 @@
       "removed": "عکس حذف شد",
       "remove_error": "حذف عکس ممکن نبود.",
       "prepare_error": "خواندن آن فایل تصویر ممکن نبود."
+    },
+    "delete_cascade": {
+      "title": "{{name}} حذف شود؟",
+      "intro": "این کار موارد زیر را نیز برای همیشه حذف می‌کند:",
+      "spool_count_one": "{{count}} رول",
+      "spool_count_other": "{{count}} رول",
+      "history": "تاریخچه مصرف آن‌ها",
+      "irreversible": "این عمل قابل بازگشت نیست.",
+      "confirm": "حذف همه ({{count}})"
     }
   },
   "vendor": {
@@ -1312,13 +1322,28 @@
     "empty": "درباره قرقره‌ها و فیلامنت‌های خود از من بپرسید — برای مثال «چقدر PETG مشکی برایم مانده؟» یا «چه چیزی را باید دوباره سفارش بدهم؟».",
     "viewInList": "نمایش در لیست رول‌های فیلامنت",
     "confirm": {
-      "before": "قبل",
-      "after": "بعد",
       "confirm": "تأیید",
       "cancel": "انصراف",
       "confirmed": "تأیید شد",
       "cancelled": "لغو شد",
-      "destructive": "غیرقابل بازگشت"
+      "destructive": "غیرقابل بازگشت",
+      "not_set": "تنظیم نشده",
+      "status_open": "باز",
+      "color": {
+        "black": "مشکی",
+        "white": "سفید",
+        "grey": "خاکستری",
+        "red": "قرمز",
+        "orange": "نارنجی",
+        "yellow": "زرد",
+        "green": "سبز",
+        "cyan": "فیروزه‌ای",
+        "blue": "آبی",
+        "purple": "بنفش",
+        "pink": "صورتی",
+        "brown": "قهوه‌ای",
+        "beige": "بژ"
+      }
     },
     "executed": {
       "undo": "بازگشت به حالت قبلی",

@@ -48,6 +48,7 @@
     "createError": "There was an error creating {{resource}} (status code: {{statusCode}})",
     "deleteSuccess": "Successfully deleted {{resource}}",
     "deleteError": "Error when deleting {{resource}} (status code: {{statusCode}})",
+    "deleteErrorDetail": "Error when deleting {{resource}} (status code: {{statusCode}}): {{message}}",
     "editSuccess": "Successfully edited {{resource}}",
     "editError": "Error when editing {{resource}} (status code: {{statusCode}})",
     "importProgress": "Importing: {{processed}}/{{total}}",
@@ -361,13 +362,28 @@
     "empty": "Ask me about your spools and filament — for example \"how much black PETG do I have left?\" or \"what should I reorder?\".",
     "viewInList": "View in Spools list",
     "confirm": {
-      "before": "Before",
-      "after": "After",
       "confirm": "Confirm",
       "cancel": "Cancel",
       "confirmed": "Confirmed",
       "cancelled": "Cancelled",
-      "destructive": "Cannot be undone"
+      "destructive": "Cannot be undone",
+      "not_set": "not set",
+      "status_open": "Open",
+      "color": {
+        "black": "Black",
+        "white": "White",
+        "grey": "Gray",
+        "red": "Red",
+        "orange": "Orange",
+        "yellow": "Yellow",
+        "green": "Green",
+        "cyan": "Cyan",
+        "blue": "Blue",
+        "purple": "Purple",
+        "pink": "Pink",
+        "brown": "Brown",
+        "beige": "Beige"
+      }
     },
     "executed": {
       "undo": "Undo",
@@ -690,6 +706,15 @@
     },
     "messages": {
       "update_error": "Could not save changes. Please try again."
+    },
+    "delete_cascade": {
+      "title": "Delete {{name}}?",
+      "intro": "This also permanently deletes:",
+      "spool_count_one": "{{count}} spool",
+      "spool_count_other": "{{count}} spools",
+      "history": "their usage history",
+      "irreversible": "This cannot be undone.",
+      "confirm": "Delete all {{count}}"
     }
   },
   "vendor": {

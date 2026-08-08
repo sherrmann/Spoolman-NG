@@ -48,6 +48,7 @@
     "createError": "Det gick inte att skapa {{resource}} (statuskod: {{statusCode}})",
     "deleteSuccess": "Lyckades ta bort {{resource}}",
     "deleteError": "Det gick inte att ta bort {{resource}} (statuskod: {{statusCode}})",
+    "deleteErrorDetail": "Det gick inte att ta bort {{resource}} (statuskod: {{statusCode}}): {{message}}",
     "editSuccess": "Lyckades ändra {{resource}}",
     "editError": "Det gick inte att ändra {{resource}} (statuskod: {{statusCode}})",
     "importProgress": "Importerar: {{processed}}/{{total}}",
@@ -549,6 +550,15 @@
       "removed": "Fotot borttaget",
       "remove_error": "Det gick inte att ta bort fotot",
       "prepare_error": "Det gick inte att läsa den bildfilen"
+    },
+    "delete_cascade": {
+      "title": "Ta bort {{name}}?",
+      "intro": "Detta tar även bort permanent:",
+      "spool_count_one": "{{count}} spole",
+      "spool_count_other": "{{count}} spolar",
+      "history": "deras användningshistorik",
+      "irreversible": "Detta går inte att ångra.",
+      "confirm": "Ta bort alla {{count}}"
     }
   },
   "vendor": {
@@ -1324,13 +1334,28 @@
     "empty": "Fråga mig om dina spolar och ditt filament — till exempel \"hur mycket svart PETG har jag kvar?\" eller \"vad borde jag beställa mer av?\".",
     "viewInList": "Visa i spollistan",
     "confirm": {
-      "before": "Före",
-      "after": "Efter",
       "confirm": "Bekräfta",
       "cancel": "Avbryt",
       "confirmed": "Bekräftad",
       "cancelled": "Avbruten",
-      "destructive": "Kan inte ångras"
+      "destructive": "Kan inte ångras",
+      "not_set": "inte angivet",
+      "status_open": "Öppen",
+      "color": {
+        "black": "Svart",
+        "white": "Vit",
+        "grey": "Grå",
+        "red": "Röd",
+        "orange": "Orange",
+        "yellow": "Gul",
+        "green": "Grön",
+        "cyan": "Cyan",
+        "blue": "Blå",
+        "purple": "Lila",
+        "pink": "Rosa",
+        "brown": "Brun",
+        "beige": "Beige"
+      }
     },
     "executed": {
       "undo": "Ångra",

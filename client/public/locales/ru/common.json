@@ -48,6 +48,7 @@
     "createError": "Произошла ошибка при создании {{resource}} (status code: {{statusCode}})",
     "deleteSuccess": "Успешно удалено {{resource}}",
     "deleteError": "Ошибка при удалении {{resource}} (status code: {{statusCode}})",
+    "deleteErrorDetail": "Ошибка при удалении {{resource}} (status code: {{statusCode}}): {{message}}",
     "editSuccess": "Успешно отредактировано {{resource}}",
     "editError": "Ошибка при редактировании {{resource}} (status code: {{statusCode}})",
     "importProgress": "Импорт: {{processed}}/{{total}}",
@@ -565,6 +566,16 @@
       "removed": "Фото удалено",
       "remove_error": "Не удалось удалить фото",
       "prepare_error": "Не удалось прочитать этот файл изображения"
+    },
+    "delete_cascade": {
+      "title": "Удалить {{name}}?",
+      "intro": "Это также приведёт к безвозвратному удалению:",
+      "spool_count_one": "{{count}} катушка",
+      "spool_count_few": "{{count}} катушки",
+      "spool_count_many": "{{count}} катушек",
+      "history": "их историю использования",
+      "irreversible": "Это действие нельзя отменить.",
+      "confirm": "Удалить всё ({{count}})"
     }
   },
   "vendor": {
@@ -1341,13 +1352,28 @@
     "empty": "Спросите меня о своих катушках и филаменте — например «сколько чёрного PETG у меня осталось?» или «что нужно дозаказать?».",
     "viewInList": "Показать в списке катушек",
     "confirm": {
-      "before": "До",
-      "after": "После",
       "confirm": "Подтвердить",
       "cancel": "Отмена",
       "confirmed": "Подтверждено",
       "cancelled": "Отменено",
-      "destructive": "Нельзя отменить"
+      "destructive": "Нельзя отменить",
+      "not_set": "не задано",
+      "status_open": "Открыт",
+      "color": {
+        "black": "Чёрный",
+        "white": "Белый",
+        "grey": "Серый",
+        "red": "Красный",
+        "orange": "Оранжевый",
+        "yellow": "Жёлтый",
+        "green": "Зелёный",
+        "cyan": "Голубой",
+        "blue": "Синий",
+        "purple": "Фиолетовый",
+        "pink": "Розовый",
+        "brown": "Коричневый",
+        "beige": "Бежевый"
+      }
     },
     "executed": {
       "undo": "Отменить",

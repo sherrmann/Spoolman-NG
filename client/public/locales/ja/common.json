@@ -11,7 +11,8 @@
     "saveSuccessful": "保存完了!",
     "createError": "{{resource}}を作成中にエラーが発生しました。 (status code: {{statusCode}})",
     "validationError": "検証エラー: {{error}}",
-    "deleteError": "{{resource}}を削除中にエラーが発生しました (status code: {{statusCode}})"
+    "deleteError": "{{resource}}を削除中にエラーが発生しました (status code: {{statusCode}})",
+    "deleteErrorDetail": "{{resource}}を削除中にエラーが発生しました (status code: {{statusCode}})：{{message}}"
   },
   "actions": {
     "create": "作成",
@@ -522,6 +523,14 @@
       "removed": "写真を削除しました",
       "remove_error": "写真を削除できませんでした",
       "prepare_error": "その画像ファイルを読み込めませんでした"
+    },
+    "delete_cascade": {
+      "title": "{{name}} を削除しますか?",
+      "intro": "これにより、以下も完全に削除されます:",
+      "spool_count_other": "スプール {{count}} 本",
+      "history": "その使用履歴",
+      "irreversible": "この操作は元に戻せません。",
+      "confirm": "{{count}} 件をすべて削除"
     }
   },
   "vendor": {
@@ -1295,13 +1304,28 @@
     "empty": "スプールやフィラメントについて何でも聞いてください — 例えば「黒のPETGはあとどれくらい残ってる?」や「そろそろ買い足したほうがいいのは?」など。",
     "viewInList": "スプール一覧で表示",
     "confirm": {
-      "before": "変更前",
-      "after": "変更後",
       "confirm": "確認",
       "cancel": "キャンセル",
       "confirmed": "確認済み",
       "cancelled": "キャンセル済み",
-      "destructive": "元に戻せません"
+      "destructive": "元に戻せません",
+      "not_set": "未設定",
+      "status_open": "未完了",
+      "color": {
+        "black": "黒",
+        "white": "白",
+        "grey": "グレー",
+        "red": "赤",
+        "orange": "オレンジ",
+        "yellow": "黄",
+        "green": "緑",
+        "cyan": "シアン",
+        "blue": "青",
+        "purple": "紫",
+        "pink": "ピンク",
+        "brown": "茶",
+        "beige": "ベージュ"
+      }
     },
     "executed": {
       "undo": "元に戻す",

@@ -383,6 +383,7 @@
     "createError": "Трапилась помилка при створенні {{resource}} (код помилки: {{statusCode}})",
     "editSuccess": "Успішно змінено {{resource}}",
     "deleteError": "Помилка при видаленні {{resource}} (код помилки: {{statusCode}})",
+    "deleteErrorDetail": "Помилка при видаленні {{resource}} (код помилки: {{statusCode}}): {{message}}",
     "saveSuccessful": "Успішно збережено!",
     "validationError": "Помилка перевірки: {{error}}"
   },
@@ -557,6 +558,16 @@
       "removed": "Фото видалено",
       "remove_error": "Не вдалося видалити фото",
       "prepare_error": "Не вдалося прочитати цей файл зображення"
+    },
+    "delete_cascade": {
+      "title": "Видалити {{name}}?",
+      "intro": "Це також остаточно видалить:",
+      "spool_count_one": "{{count}} котушка",
+      "spool_count_few": "{{count}} котушки",
+      "spool_count_many": "{{count}} котушок",
+      "history": "їхню історію використання",
+      "irreversible": "Цю дію не можна скасувати.",
+      "confirm": "Видалити все ({{count}})"
     }
   },
   "unknown": "Невідомий",
@@ -1341,13 +1352,28 @@
     "empty": "Запитайте мене про ваші котушки та філамент — наприклад, \"скільки чорного PETG у мене залишилось?\" або \"що варто дозамовити?\".",
     "viewInList": "Показати у списку котушок",
     "confirm": {
-      "before": "До",
-      "after": "Після",
       "confirm": "Підтвердити",
       "cancel": "Скасувати",
       "confirmed": "Підтверджено",
       "cancelled": "Скасовано",
-      "destructive": "Неможливо відмінити"
+      "destructive": "Неможливо відмінити",
+      "not_set": "не задано",
+      "status_open": "Відкрито",
+      "color": {
+        "black": "Чорний",
+        "white": "Білий",
+        "grey": "Сірий",
+        "red": "Червоний",
+        "orange": "Помаранчевий",
+        "yellow": "Жовтий",
+        "green": "Зелений",
+        "cyan": "Блакитний",
+        "blue": "Синій",
+        "purple": "Фіолетовий",
+        "pink": "Рожевий",
+        "brown": "Коричневий",
+        "beige": "Бежевий"
+      }
     },
     "executed": {
       "undo": "Відмінити",

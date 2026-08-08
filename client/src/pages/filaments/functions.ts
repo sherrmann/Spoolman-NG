@@ -6,6 +6,16 @@ import { getOrCreateVendorFromExternal } from "../vendors/functions";
 import { IFilament } from "./model";
 
 /**
+ * Human-readable label for a filament, "<vendor> - <name>" when both are known, falling back to
+ * an ID when the filament has no name (name is optional on IFilament). Shared by the delete
+ * confirmation flows (show/edit) so the blast-radius dialog names the same filament being deleted.
+ */
+export function filamentDisplayName(item: Pick<IFilament, "id" | "name"> & { vendor?: { name?: string } }): string {
+  const vendorPrefix = item.vendor?.name ? `${item.vendor.name} - ` : "";
+  return item.name ? `${vendorPrefix}${item.name}` : `#${item.id}`;
+}
+
+/**
  * Create a new internal filament given an external filament object.
  * Returns the created internal filament.
  */

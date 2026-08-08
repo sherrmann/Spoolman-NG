@@ -24,7 +24,7 @@ from mcp.client.streamable_http import streamablehttp_client
 from starlette.applications import Starlette
 from starlette.routing import Route
 
-from spoolman import mcp_server
+from spoolman import ai_tools, mcp_server
 from spoolman.auth import AuthState
 from spoolman.users import ROLE_READONLY, mint_token
 
@@ -143,9 +143,27 @@ async def test_admin_is_offered_read_and_curated_write_tools_and_can_create(clie
 
     async with _mcp_session() as session:
         tools = {tool.name for tool in (await session.list_tools()).tools}
-        assert {"find_spools", "find_filaments"} <= tools
-        assert {"create_spool", "update_spool", "consume_spool"} <= tools
-        assert "delete_spool" not in tools  # delete is deliberately not exposed over MCP
+        assert tools == {
+            # Read tools: offered to everyone.
+            "find_spools",
+            "find_filaments",
+            "get_usage_stats",
+            "find_locations",
+            "find_vendors",
+            "find_orders",
+            "catalog_lookup",
+            # Curated write tools: offered only to a writer. Delete is deliberately not exposed
+            # over MCP -- see _MCP_WRITE_TOOLS's own docstring.
+            "create_spool",
+            "update_spool",
+            "consume_spool",
+            "create_filament",
+            "update_filament",
+            "create_order",
+            "arrive_order",
+            "create_location",
+            "create_vendor",
+        }
 
         created = await session.call_tool("create_spool", {"filament_id": filament["id"], "location": "Shelf B"})
         payload = json.loads(_tool_text(created))
@@ -155,6 +173,22 @@ async def test_admin_is_offered_read_and_curated_write_tools_and_can_create(clie
     # The spool really exists in the DB.
     listed = {item["id"] for item in (await client.get("/api/v1/spool")).json()}
     assert spool_id in listed
+
+
+async def test_mcp_flags_arrive_order_as_destructive_but_ordinary_writes_as_safe(client: AsyncClient) -> None:
+    """The destructiveHint annotation must reflect each tool's own declaration, not a hard-coded False.
+
+    arrive_order is the one non-delete write with no undo; an MCP client has no confirm-card of
+    its own, so this annotation is the only signal it gets that the action cannot be undone.
+    """
+    await _enable_mcp(client)
+
+    async with _mcp_session() as session:
+        tools = {tool.name: tool for tool in (await session.list_tools()).tools}
+        assert tools["arrive_order"].annotations.destructiveHint is True
+        assert tools["create_spool"].annotations.destructiveHint is False
+        assert tools["update_spool"].annotations.destructiveHint is False
+        assert tools["create_order"].annotations.destructiveHint is False
 
 
 async def test_find_spools_tool_returns_remaining_weight(client: AsyncClient) -> None:
@@ -187,7 +221,15 @@ async def test_readonly_is_offered_no_write_tools_and_write_is_refused(
 
     async with _mcp_session(token=token) as session:
         tools = {tool.name for tool in (await session.list_tools()).tools}
-        assert tools == {"find_spools", "find_filaments"}  # zero write tools
+        assert tools == {
+            "find_spools",
+            "find_filaments",
+            "get_usage_stats",
+            "find_locations",
+            "find_vendors",
+            "find_orders",
+            "catalog_lookup",
+        }  # zero write tools
 
         # A forced write (the tool wasn't even offered) is refused, not executed.
         forced = await session.call_tool("create_spool", {"filament_id": filament["id"]})
@@ -216,3 +258,26 @@ async def test_low_stock_resource_and_restock_prompt(client: AsyncClient) -> Non
         assert mcp_server.RESTOCK_PROMPT in prompts
         prompt = await session.get_prompt(mcp_server.RESTOCK_PROMPT, {})
         assert "find_filaments" in prompt.messages[0].content.text
+
+
+# --- Write-set invariant -------------------------------------------------------------
+
+
+def test_mcp_never_offers_a_destructive_tool() -> None:
+    """No tool exposed over MCP may be destructive, with one explicit exception: arrive_order.
+
+    See test_mcp_flags_arrive_order_as_destructive_but_ordinary_writes_as_safe -- it is annotated
+    honestly via destructiveHint so a client can prompt its own user, since no confirm-card exists
+    over MCP. A ``not name.startswith("delete_")`` heuristic would pass arrive_order silently: it IS
+    destructive=True and it is NOT named delete_*, so that check never actually looks at it. This
+    checks each tool's own declared WriteTool.destructive flag instead -- the field this branch
+    added precisely to make this checkable -- so a future non-delete destructive write (a
+    purge_history-style tool, say) can't sail through unnoticed the same way.
+    """
+    allowed_destructive = {"arrive_order"}
+    for name in mcp_server._MCP_WRITE_TOOLS:  # noqa: SLF001 -- unit-testing the module's own invariant
+        tool = ai_tools.WRITE_TOOLS[name]
+        if name in allowed_destructive:
+            assert tool.destructive is True, f"{name} was expected to be destructive but isn't"
+            continue
+        assert tool.destructive is False, f"{name} must not be exposed over MCP (it is destructive)"

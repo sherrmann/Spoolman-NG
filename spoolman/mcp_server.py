@@ -40,9 +40,30 @@ logger = logging.getLogger(__name__)
 
 SERVER_NAME = "spoolman-ng"
 
-#: The write tools exposed over MCP — the curated set from #360 (log usage, create, archive
-#: via update). delete_spool is intentionally excluded: destructive and outside MCP scope.
-_MCP_WRITE_TOOLS = ("create_spool", "update_spool", "consume_spool")
+#: The write tools exposed over MCP. Deletes are never offered here — an MCP client's user does
+#: not see Spoolman's confirm-cards, so a destructive tool with no undo and no card has no
+#: safeguard at all. arrive_order is the one exception that is included: it is also destructive
+#: (no undo), but it is annotated honestly (see ``_list_tools``) so a client can prompt its own
+#: user, and it is the highest-value action an MCP client can take.
+#:
+#: This tuple is deliberately hand-written rather than derived from ``WriteTool.model_facing``:
+#: the two surfaces gate on different things. ``model_facing`` asks "may the chat model choose
+#: this?", where every write still lands behind a confirm-card the user must click; this tuple
+#: asks "may an arbitrary MCP client run this outright?", where nothing stands behind it. So
+#: making delete_order model-facing (it answers "delete that order", which the model otherwise
+#: answered with delete_spool) changed the chat surface only, and left MCP delete-free — an MCP
+#: delete would be an unconfirmed, un-undoable destruction, which is exactly what this excludes.
+_MCP_WRITE_TOOLS = (
+    "create_spool",
+    "update_spool",
+    "consume_spool",
+    "create_filament",
+    "update_filament",
+    "create_order",
+    "arrive_order",
+    "create_location",
+    "create_vendor",
+)
 
 #: URI of the low-stock report resource.
 LOW_STOCK_URI = "spoolman://low-stock"
@@ -65,10 +86,17 @@ def _tool_def(tool: object, *, read_only: bool, destructive: bool = False) -> ty
 
 
 async def _list_tools() -> list[types.Tool]:
-    """Offer read tools to everyone; curated write tools only to a writer."""
+    """Offer read tools to everyone; curated write tools only to a writer.
+
+    Each write tool's own ``destructive`` flag is passed through to ``destructiveHint`` rather
+    than a hard-coded ``False``: arrive_order is exposed here and it is destructive (no undo),
+    so an MCP client — which has no confirm-card of its own — must be told that honestly.
+    """
     tools = [_tool_def(tool, read_only=True) for tool in ai_tools.READ_TOOLS.values()]
     if _can_write.get():
-        tools.extend(_tool_def(ai_tools.WRITE_TOOLS[name], read_only=False) for name in _MCP_WRITE_TOOLS)
+        for name in _MCP_WRITE_TOOLS:
+            tool = ai_tools.WRITE_TOOLS[name]
+            tools.append(_tool_def(tool, read_only=False, destructive=tool.destructive))
     return tools
 
 

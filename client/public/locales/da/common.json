@@ -536,6 +536,15 @@
       "removed": "Foto fjernet",
       "remove_error": "Kunne ikke fjerne fotoet",
       "prepare_error": "Kunne ikke læse den billedfil"
+    },
+    "delete_cascade": {
+      "title": "Slet {{name}}?",
+      "intro": "Dette sletter også permanent:",
+      "spool_count_one": "{{count}} spole",
+      "spool_count_other": "{{count}} spoler",
+      "history": "deres brugshistorik",
+      "irreversible": "Dette kan ikke fortrydes.",
+      "confirm": "Slet alle {{count}}"
     }
   },
   "actions": {
@@ -598,6 +607,7 @@
     "success": "Succes",
     "editSuccess": "Redigering af {{resource}} var succesfuld(t)",
     "deleteError": "Fejl ved sletning af {{resource}} (statuskode: {{statusCode}})",
+    "deleteErrorDetail": "Fejl ved sletning af {{resource}} (statuskode: {{statusCode}}): {{message}}",
     "createSuccess": "Oprettelse af {{resource}} var succesfuld(t)",
     "saveSuccessful": "Gemt!",
     "validationError": "Kunne ikke gennemføres: {{error}}"
@@ -1324,13 +1334,28 @@
     "empty": "Spørg mig om dine spoler og filamenter — for eksempel \"hvor meget sort PETG har jeg tilbage?\" eller \"hvad skal jeg genbestille?\".",
     "viewInList": "Vis i spolelisten",
     "confirm": {
-      "before": "Før",
-      "after": "Efter",
       "confirm": "Bekræft",
       "cancel": "Annuller",
       "confirmed": "Bekræftet",
       "cancelled": "Annulleret",
-      "destructive": "Kan ikke fortrydes"
+      "destructive": "Kan ikke fortrydes",
+      "not_set": "ikke angivet",
+      "status_open": "Åben",
+      "color": {
+        "black": "Sort",
+        "white": "Hvid",
+        "grey": "Grå",
+        "red": "Rød",
+        "orange": "Orange",
+        "yellow": "Gul",
+        "green": "Grøn",
+        "cyan": "Cyan",
+        "blue": "Blå",
+        "purple": "Lilla",
+        "pink": "Pink",
+        "brown": "Brun",
+        "beige": "Beige"
+      }
     },
     "executed": {
       "undo": "Fortryd",

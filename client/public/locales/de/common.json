@@ -48,6 +48,7 @@
     "createError": "Fehler beim erstellen von {{resource}} (status code: {{statusCode}})",
     "deleteSuccess": "{{resource}} erfolgreich gelöscht",
     "deleteError": "Fehler beim löschen von {{resource}} (status code: {{statusCode}})",
+    "deleteErrorDetail": "Fehler beim löschen von {{resource}} (status code: {{statusCode}}): {{message}}",
     "editSuccess": "{{resource}} erfolgreich bearbeitet",
     "editError": "Fehler beim bearbeiten von {{resource}} (status code: {{statusCode}})",
     "importProgress": "{{processed}}/{{total}} importiert",
@@ -549,6 +550,15 @@
       "removed": "Foto entfernt",
       "remove_error": "Foto konnte nicht entfernt werden",
       "prepare_error": "Bilddatei konnte nicht gelesen werden"
+    },
+    "delete_cascade": {
+      "title": "{{name}} löschen?",
+      "intro": "Dadurch werden auch dauerhaft gelöscht:",
+      "spool_count_one": "{{count}} Spule",
+      "spool_count_other": "{{count}} Spulen",
+      "history": "deren Nutzungsverlauf",
+      "irreversible": "Dies kann nicht rückgängig gemacht werden.",
+      "confirm": "Alle {{count}} löschen"
     }
   },
   "vendor": {
@@ -1324,13 +1334,28 @@
     "empty": "Frag mich nach deinen Spulen und deinem Filament — zum Beispiel „Wie viel schwarzes PETG habe ich noch?“ oder „Was sollte ich nachbestellen?“.",
     "viewInList": "In der Spulenliste anzeigen",
     "confirm": {
-      "before": "Vorher",
-      "after": "Nachher",
       "confirm": "Bestätigen",
       "cancel": "Abbrechen",
       "confirmed": "Bestätigt",
       "cancelled": "Abgebrochen",
-      "destructive": "Kann nicht rückgängig gemacht werden"
+      "destructive": "Kann nicht rückgängig gemacht werden",
+      "not_set": "nicht gesetzt",
+      "status_open": "Offen",
+      "color": {
+        "black": "Schwarz",
+        "white": "Weiß",
+        "grey": "Grau",
+        "red": "Rot",
+        "orange": "Orange",
+        "yellow": "Gelb",
+        "green": "Grün",
+        "cyan": "Cyan",
+        "blue": "Blau",
+        "purple": "Lila",
+        "pink": "Rosa",
+        "brown": "Braun",
+        "beige": "Beige"
+      }
     },
     "executed": {
       "undo": "Rückgängig",

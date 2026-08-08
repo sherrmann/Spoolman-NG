@@ -48,6 +48,7 @@
     "createError": "{{resource}} oluşturulurken bir hata ile karşılaşıldı (durum kodu :{{statusCode}})",
     "deleteSuccess": "{{resource}} başarılı şekilde silindi",
     "deleteError": "{{resource}} silinirken hata ile karşılaşıldı(durum kodu:{{statusCode}})",
+    "deleteErrorDetail": "{{resource}} silinirken hata ile karşılaşıldı(durum kodu:{{statusCode}}): {{message}}",
     "editSuccess": "{{resource}} başarılı şekilde düzenlendi",
     "editError": "{{resource}} düzenlenirken hata ile karşılaşıldı(durum kodu:{{statusCode}})",
     "importProgress": "İçe aktarılıyor: {{processed}}/{{total}}",
@@ -538,6 +539,15 @@
       "removed": "Fotoğraf kaldırıldı",
       "remove_error": "Fotoğraf kaldırılamadı",
       "prepare_error": "Bu görüntü dosyası okunamadı"
+    },
+    "delete_cascade": {
+      "title": "{{name}} silinsin mi?",
+      "intro": "Bu işlem ayrıca şunları da kalıcı olarak siler:",
+      "spool_count_one": "{{count}} makara",
+      "spool_count_other": "{{count}} makara",
+      "history": "kullanım geçmişlerini",
+      "irreversible": "Bu işlem geri alınamaz.",
+      "confirm": "Tümünü sil ({{count}})"
     }
   },
   "vendor": {
@@ -1312,13 +1322,28 @@
     "empty": "Makaralarınız ve filamentiniz hakkında bana soru sorun — örneğin \"elimde ne kadar siyah PETG kaldı?\" veya \"neyi yeniden sipariş etmeliyim?\".",
     "viewInList": "Makaralar listesinde göster",
     "confirm": {
-      "before": "Önce",
-      "after": "Sonra",
       "confirm": "Onayla",
       "cancel": "İptal et",
       "confirmed": "Onaylandı",
       "cancelled": "İptal edildi",
-      "destructive": "Geri alınamaz"
+      "destructive": "Geri alınamaz",
+      "not_set": "ayarlanmadı",
+      "status_open": "Açık",
+      "color": {
+        "black": "Siyah",
+        "white": "Beyaz",
+        "grey": "Gri",
+        "red": "Kırmızı",
+        "orange": "Turuncu",
+        "yellow": "Sarı",
+        "green": "Yeşil",
+        "cyan": "Camgöbeği",
+        "blue": "Mavi",
+        "purple": "Mor",
+        "pink": "Pembe",
+        "brown": "Kahverengi",
+        "beige": "Bej"
+      }
     },
     "executed": {
       "undo": "Geri al",

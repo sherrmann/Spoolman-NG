@@ -1,8 +1,9 @@
 import { AudioOutlined, CommentOutlined, SendOutlined, SoundOutlined, UnorderedListOutlined } from "@ant-design/icons";
 import { useGetLocale, useTranslate } from "@refinedev/core";
 import { Alert, Button, Drawer, FloatButton, Input, Space, Spin, Switch, Tag, Tooltip, Typography } from "antd";
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router";
+import { cardDiffRows, cardFieldLabel, cardValueMode, cardValueRows, formatCardValue } from "../utils/chatCardFields";
 import {
   ChatConfirmCard,
   ChatExecutedCard,
@@ -15,6 +16,7 @@ import {
   useTranscribe,
 } from "../utils/queryAI";
 import { parseBooleanSettingValue, useGetSettings } from "../utils/querySettings";
+import { useCurrencyFormatter } from "../utils/settings";
 
 const { Text, Paragraph } = Typography;
 
@@ -46,20 +48,60 @@ type DistributiveOmit<T, K extends keyof T> = T extends unknown ? Omit<T, K> : n
 let nextId = 1;
 const makeId = () => nextId++;
 
-/** A before/after key/value block for a confirm-card. */
-function ValueBlock({ label, values }: { label: string; values: Record<string, unknown> }) {
-  const entries = Object.entries(values);
-  if (entries.length === 0) return null;
+const CARD_ROW_GRID: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "max-content 1fr",
+  gap: "6px 18px",
+  alignItems: "baseline",
+  margin: "8px 0",
+  fontSize: 13,
+};
+
+/**
+ * A confirm-card's values (#378). A create or delete lists what is being added or removed, with
+ * the rows that decide nothing left off; an update is a diff — one row per changed field, the
+ * old value struck through beside the new one, so the reader is never asked to compare a
+ * "Before" block against an "After" block by eye.
+ */
+function CardValues({ card }: { card: ChatConfirmCard }) {
+  const t = useTranslate();
+  const currency = useCurrencyFormatter();
+  const context = { t, currency };
+
+  const mode = cardValueMode(card.before, card.after);
+  const rows =
+    mode === "diff"
+      ? cardDiffRows(card.before, card.after)
+      : cardValueRows(mode === "create" ? card.after : mode === "delete" ? card.before : {});
+  if (rows.length === 0) return null;
+
   return (
-    <div>
-      <Text type="secondary" style={{ fontSize: 12 }}>
-        {label}
-      </Text>
-      {entries.map(([key, value]) => (
-        <div key={key} style={{ fontSize: 13 }}>
-          <Text type="secondary">{key}:</Text> <Text code>{value === null ? "∅" : String(value)}</Text>
-        </div>
-      ))}
+    <div style={CARD_ROW_GRID} data-testid="chat-card-values">
+      {rows.map((row) => {
+        const key = Array.isArray(row) ? row[0] : row.key;
+        return (
+          <React.Fragment key={key}>
+            <Text type="secondary" data-testid={`chat-card-label-${key}`}>
+              {cardFieldLabel(key, t)}
+            </Text>
+            <div data-testid={`chat-card-value-${key}`}>
+              {Array.isArray(row) ? (
+                formatCardValue(key, row[1], context)
+              ) : (
+                <>
+                  <Text delete type="secondary">
+                    {formatCardValue(key, row.before, context)}
+                  </Text>
+                  <Text type="secondary" style={{ margin: "0 7px" }}>
+                    →
+                  </Text>
+                  {formatCardValue(key, row.after, context)}
+                </>
+              )}
+            </div>
+          </React.Fragment>
+        );
+      })}
     </div>
   );
 }
@@ -313,10 +355,7 @@ export function ChatDrawer() {
                 <Paragraph type="secondary" style={{ margin: "4px 0", fontSize: 13 }}>
                   {card.summary}
                 </Paragraph>
-                <Space size="large" align="start">
-                  <ValueBlock label={t("chat.confirm.before")} values={card.before} />
-                  <ValueBlock label={t("chat.confirm.after")} values={card.after} />
-                </Space>
+                <CardValues card={card} />
               </div>
             ))}
             <Space style={{ marginTop: 10 }}>

@@ -48,6 +48,7 @@
     "createError": "建立 {{resource}} 時發生錯誤（狀態碼：{{statusCode}}）",
     "deleteSuccess": "成功刪除 {{resource}}",
     "deleteError": "刪除 {{resource}} 時發生錯誤（狀態碼：{{statusCode}}）",
+    "deleteErrorDetail": "刪除 {{resource}} 時發生錯誤（狀態碼：{{statusCode}}）：{{message}}",
     "editSuccess": "成功編輯{{resource}}",
     "editError": "編輯 {{resource}} 時發生錯誤（狀態碼：{{statusCode}}）",
     "importProgress": "匯入中：{{processed}}/{{total}}",
@@ -522,6 +523,14 @@
       "removed": "照片已移除",
       "remove_error": "無法移除照片",
       "prepare_error": "無法讀取該圖片檔案"
+    },
+    "delete_cascade": {
+      "title": "刪除{{name}}？",
+      "intro": "此操作也會永久刪除：",
+      "spool_count_other": "{{count}} 個料盤",
+      "history": "它們的使用紀錄",
+      "irreversible": "此操作無法復原。",
+      "confirm": "全部刪除（{{count}}）"
     }
   },
   "vendor": {
@@ -1295,13 +1304,28 @@
     "empty": "詢問我關於您的料盤與線材的問題 — 例如「我還剩多少黑色 PETG？」或「我該補什麼貨？」。",
     "viewInList": "在料盤列表中檢視",
     "confirm": {
-      "before": "之前",
-      "after": "之後",
       "confirm": "確認",
       "cancel": "取消",
       "confirmed": "已確認",
       "cancelled": "已取消",
-      "destructive": "無法復原"
+      "destructive": "無法復原",
+      "not_set": "未設定",
+      "status_open": "未結",
+      "color": {
+        "black": "黑色",
+        "white": "白色",
+        "grey": "灰色",
+        "red": "紅色",
+        "orange": "橙色",
+        "yellow": "黃色",
+        "green": "綠色",
+        "cyan": "青色",
+        "blue": "藍色",
+        "purple": "紫色",
+        "pink": "粉紅色",
+        "brown": "棕色",
+        "beige": "米色"
+      }
     },
     "executed": {
       "undo": "復原",

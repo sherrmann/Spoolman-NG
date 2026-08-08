@@ -48,6 +48,7 @@
     "createError": "Pri ustvarjanju {{resource}} je prišlo do napake (status code: {{statusCode}})",
     "deleteSuccess": "{{resource}} uspešno izbrisano",
     "deleteError": "Napaka pri brisanju {{resource}} (status code: {{statusCode}})",
+    "deleteErrorDetail": "Napaka pri brisanju {{resource}} (status code: {{statusCode}}): {{message}}",
     "editSuccess": "{{resource}} uspešno urejeno",
     "editError": "Napaka pri urejanju {{resource}} (status code:{{statusCode}})",
     "importProgress": "Uvažanje: {{processed}}/{{total}}",
@@ -784,6 +785,17 @@
       "removed": "Fotografija odstranjena",
       "remove_error": "Fotografije ni bilo mogoče odstraniti",
       "prepare_error": "Te slikovne datoteke ni bilo mogoče prebrati"
+    },
+    "delete_cascade": {
+      "title": "Izbrišem {{name}}?",
+      "intro": "S tem bodo trajno izbrisani tudi:",
+      "spool_count_one": "{{count}} kolut",
+      "spool_count_two": "{{count}} koluta",
+      "spool_count_few": "{{count}} koluti",
+      "spool_count_other": "{{count}} kolutov",
+      "history": "njihova zgodovina uporabe",
+      "irreversible": "Tega dejanja ni mogoče razveljaviti.",
+      "confirm": "Izbriši vse ({{count}})"
     }
   },
   "vendor": {
@@ -1346,13 +1358,28 @@
     "empty": "Vprašajte me o svojih kolutih in filamentu — na primer »koliko črnega PETG mi je še ostalo?« ali »kaj naj ponovno naročim?«.",
     "viewInList": "Prikaži v seznamu kolutov",
     "confirm": {
-      "before": "Pred",
-      "after": "Po",
       "confirm": "Potrdi",
       "cancel": "Prekliči",
       "confirmed": "Potrjeno",
       "cancelled": "Preklicano",
-      "destructive": "Ni mogoče razveljaviti"
+      "destructive": "Ni mogoče razveljaviti",
+      "not_set": "ni nastavljeno",
+      "status_open": "Odprto",
+      "color": {
+        "black": "Črna",
+        "white": "Bela",
+        "grey": "Siva",
+        "red": "Rdeča",
+        "orange": "Oranžna",
+        "yellow": "Rumena",
+        "green": "Zelena",
+        "cyan": "Cijan",
+        "blue": "Modra",
+        "purple": "Vijolična",
+        "pink": "Roza",
+        "brown": "Rjava",
+        "beige": "Bež"
+      }
     },
     "executed": {
       "undo": "Razveljavi",

@@ -204,6 +204,7 @@
     "createSuccess": "Pomyślnie utworzono {{resource}}",
     "deleteSuccess": "Pomyślnie usunięto {{resource}}",
     "deleteError": "Błąd podczas usuwania {{resource}} (kod statusu: {{statusCode}})",
+    "deleteErrorDetail": "Błąd podczas usuwania {{resource}} (kod statusu: {{statusCode}}): {{message}}",
     "editSuccess": "Pomyślnie edytowano {{resource}}",
     "editError": "Błąd podczas edycji {{resource}} (kod statusu: {{statusCode}})",
     "importProgress": "Importowanie: {{processed}}/{{total}}",
@@ -564,6 +565,16 @@
       "removed": "Zdjęcie usunięte",
       "remove_error": "Nie udało się usunąć zdjęcia",
       "prepare_error": "Nie udało się odczytać tego pliku obrazu"
+    },
+    "delete_cascade": {
+      "title": "Usunąć {{name}}?",
+      "intro": "To również trwale usunie:",
+      "spool_count_one": "{{count}} szpulę",
+      "spool_count_few": "{{count}} szpule",
+      "spool_count_many": "{{count}} szpul",
+      "history": "ich historię użycia",
+      "irreversible": "Tej czynności nie można cofnąć.",
+      "confirm": "Usuń wszystko ({{count}})"
     }
   },
   "vendor": {
@@ -1341,13 +1352,28 @@
     "empty": "Zapytaj mnie o swoje szpule i filament — na przykład „Ile zostało mi czarnego PETG?” lub „Co powinienem zamówić ponownie?”.",
     "viewInList": "Zobacz na liście szpul",
     "confirm": {
-      "before": "Przed",
-      "after": "Po",
       "confirm": "Potwierdź",
       "cancel": "Anuluj",
       "confirmed": "Potwierdzono",
       "cancelled": "Anulowano",
-      "destructive": "Nie można cofnąć"
+      "destructive": "Nie można cofnąć",
+      "not_set": "nie ustawiono",
+      "status_open": "Otwarte",
+      "color": {
+        "black": "Czarny",
+        "white": "Biały",
+        "grey": "Szary",
+        "red": "Czerwony",
+        "orange": "Pomarańczowy",
+        "yellow": "Żółty",
+        "green": "Zielony",
+        "cyan": "Cyjan",
+        "blue": "Niebieski",
+        "purple": "Fioletowy",
+        "pink": "Różowy",
+        "brown": "Brązowy",
+        "beige": "Beżowy"
+      }
     },
     "executed": {
       "undo": "Cofnij",

@@ -47,6 +47,7 @@
     "createError": "Tekkis viga {{resource}} loomisel. (staatuse kood: {{statusCode}})",
     "deleteSuccess": "Edukalt kustutatud {{resource}}",
     "deleteError": "Viga {{resource}} kustutamisel. (staatuse kood: {{statusCode}})",
+    "deleteErrorDetail": "Viga {{resource}} kustutamisel. (staatuse kood: {{statusCode}}): {{message}}",
     "editSuccess": "Edukalt muudetud {{resource}}",
     "editError": "Viga {{resource}} muutmisel (staatuse kood: {{statusCode}})",
     "importProgress": "Importimine: {{processed}}/{{total}}",
@@ -614,6 +615,15 @@
       "removed": "Foto eemaldatud",
       "remove_error": "Foto eemaldamine ebaõnnestus",
       "prepare_error": "Selle pildifaili lugemine ebaõnnestus"
+    },
+    "delete_cascade": {
+      "title": "Kas kustutada {{name}}?",
+      "intro": "See kustutab jäädavalt ka:",
+      "spool_count_one": "{{count}} pool",
+      "spool_count_other": "{{count}} pooli",
+      "history": "nende kasutusajaloo",
+      "irreversible": "Seda ei saa hiljem tagasi võtta.",
+      "confirm": "Kustuta kõik ({{count}})"
     }
   },
   "vendor": {
@@ -1312,13 +1322,28 @@
     "empty": "Küsi minult oma poolide ja filamendi kohta — näiteks \"kui palju musta PETG-d mul veel alles on?\" või \"mida peaksin juurde tellima?\".",
     "viewInList": "Vaata poolide loendis",
     "confirm": {
-      "before": "Enne",
-      "after": "Pärast",
       "confirm": "Kinnita",
       "cancel": "Tühista",
       "confirmed": "Kinnitatud",
       "cancelled": "Tühistatud",
-      "destructive": "Ei saa tagasi võtta"
+      "destructive": "Ei saa tagasi võtta",
+      "not_set": "määramata",
+      "status_open": "Avatud",
+      "color": {
+        "black": "Must",
+        "white": "Valge",
+        "grey": "Hall",
+        "red": "Punane",
+        "orange": "Oranž",
+        "yellow": "Kollane",
+        "green": "Roheline",
+        "cyan": "Tsüaan",
+        "blue": "Sinine",
+        "purple": "Lilla",
+        "pink": "Roosa",
+        "brown": "Pruun",
+        "beige": "Beež"
+      }
     },
     "executed": {
       "undo": "Võta tagasi",

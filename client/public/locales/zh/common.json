@@ -48,6 +48,7 @@
     "createError": "创建 {{resource}} 时出现错误 (状态码：{{statusCode}})",
     "deleteSuccess": "成功删除 {{resource}}",
     "deleteError": "删除 {{resource}} 时出现错误 (状态码：{{statusCode}})",
+    "deleteErrorDetail": "删除 {{resource}} 时出现错误 (状态码：{{statusCode}})：{{message}}",
     "editSuccess": "成功修改 {{resource}}",
     "editError": "修改 {{resource}} 时出现错误 (状态码：{{statusCode}})",
     "importProgress": "导入中： {{processed}}/{{total}}",
@@ -533,6 +534,14 @@
       "removed": "照片已移除",
       "remove_error": "无法移除照片",
       "prepare_error": "无法读取该图片文件"
+    },
+    "delete_cascade": {
+      "title": "删除{{name}}？",
+      "intro": "此操作还会永久删除：",
+      "spool_count_other": "{{count}} 个料盘",
+      "history": "它们的使用记录",
+      "irreversible": "此操作无法撤销。",
+      "confirm": "全部删除（{{count}}）"
     }
   },
   "vendor": {
@@ -1307,13 +1316,28 @@
     "empty": "问我关于您的料盘和耗材的问题——例如“我还剩多少黑色 PETG？”或“我该补货什么了？”。",
     "viewInList": "在料盘列表中查看",
     "confirm": {
-      "before": "之前",
-      "after": "之后",
       "confirm": "确认",
       "cancel": "取消",
       "confirmed": "已确认",
       "cancelled": "已取消",
-      "destructive": "无法撤销"
+      "destructive": "无法撤销",
+      "not_set": "未设置",
+      "status_open": "进行中",
+      "color": {
+        "black": "黑色",
+        "white": "白色",
+        "grey": "灰色",
+        "red": "红色",
+        "orange": "橙色",
+        "yellow": "黄色",
+        "green": "绿色",
+        "cyan": "青色",
+        "blue": "蓝色",
+        "purple": "紫色",
+        "pink": "粉色",
+        "brown": "棕色",
+        "beige": "米色"
+      }
     },
     "executed": {
       "undo": "撤销",

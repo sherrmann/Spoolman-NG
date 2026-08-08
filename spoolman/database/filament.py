@@ -379,18 +379,56 @@ async def update(
     return filament
 
 
+async def count_order_line_references(db: AsyncSession, filament_id: int) -> int:
+    """How many order lines reference this filament. Deletion is restricted while any do (#298)."""
+    return (
+        await db.scalar(select(func.count(models.OrderLine.id)).where(models.OrderLine.filament_id == filament_id))
+    ) or 0
+
+
+async def count_spools(db: AsyncSession, filament_id: int) -> int:
+    """Total spool count for this filament, archived included -- the true blast radius of a delete.
+
+    Unlike get_aggregates (which deliberately excludes archived spools to answer "what's in stock"),
+    this counts every spool row that a delete's cascade will destroy.
+    """
+    return (await db.scalar(select(func.count(models.Spool.id)).where(models.Spool.filament_id == filament_id))) or 0
+
+
 async def delete(db: AsyncSession, filament_id: int) -> None:
-    """Delete a filament object.
+    """Delete a filament object, and every spool (archived included) that belongs to it.
 
     Restricted while any order line references the filament (#298). FKs are not enforced on SQLite in
-    this codebase, so the reference is checked explicitly rather than via a DB IntegrityError.
+    this codebase, so that reference is checked explicitly rather than via a DB IntegrityError. Spools
+    are a different story: Spool.filament_id is NOT NULL and the ORM relationship carries no delete
+    cascade, so leaving them in place would make the ORM try to null that column on flush and fail
+    with an IntegrityError the instant the filament has any spool at all -- the ordinary case for a
+    real delete, not an edge case. Their usage events are cleaned up explicitly first, same as
+    spool.delete: SQLite doesn't enforce the FK's ON DELETE CASCADE, and there is no ORM relationship
+    (see models.SpoolUsageEvent) to cascade them. Spools are fetched with an explicit query rather
+    than via the ``spools`` relationship: on an async session, touching an unloaded relationship
+    attribute tries to lazy-load synchronously and raises ``MissingGreenlet``.
     """
     filament = await get_by_id(db, filament_id)
-    line_count = await db.scalar(
-        select(func.count(models.OrderLine.id)).where(models.OrderLine.filament_id == filament_id),
-    )
+    line_count = await count_order_line_references(db, filament_id)
     if line_count:
         raise ItemDeleteError(f"Cannot delete filament {filament_id}: {line_count} order line(s) reference it.")
+    # joinedload("*") mirrors spool.get_by_id: Spool.from_db (needed below, to notify per-spool
+    # subscribers) reads spool.filament/.printer, and those are unloaded on a plain select().
+    spools_result = await db.execute(
+        select(models.Spool).options(joinedload("*")).where(models.Spool.filament_id == filament_id),
+    )
+    spools = spools_result.unique().scalars().all()
+    if spools:
+        # A correlated subquery rather than a Python list of ids bound one-per-parameter: SQLite
+        # builds older than ~2021 cap bound variables around 999, which a filament with more spools
+        # than that would exceed.
+        spool_ids_subq = select(models.Spool.id).where(models.Spool.filament_id == filament_id)
+        await db.execute(
+            sqlalchemy.delete(models.SpoolUsageEvent).where(models.SpoolUsageEvent.spool_id.in_(spool_ids_subq)),
+        )
+        for spool in spools:
+            await db.delete(spool)
     # The reference photo (#88) has no ORM relationship (see models.Image), so its row is cleaned up
     # explicitly here; a failed commit rolls both deletes back together.
     if filament.image_id is not None:
@@ -401,6 +439,14 @@ async def delete(db: AsyncSession, filament_id: int) -> None:
     try:
         await db.commit()  # Flush immediately so any errors are propagated in this request.
         await filament_changed(filament, EventType.DELETED)
+        # Every cascaded spool is its own websocket resource (mirrors spool.delete's own DELETED
+        # event): without this, a live client keeps showing rows for spools that no longer exist.
+        # Safe post-commit because the session maker sets expire_on_commit=False, same as spool.delete
+        # relies on. Lazy import because spool.py imports this module (matches update, above).
+        from spoolman.database import spool  # noqa: PLC0415
+
+        for deleted_spool in spools:
+            await spool.spool_changed(deleted_spool, EventType.DELETED)
     except IntegrityError as exc:
         await db.rollback()
         raise ItemDeleteError("Failed to delete filament.") from exc

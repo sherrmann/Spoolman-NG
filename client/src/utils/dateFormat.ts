@@ -21,3 +21,18 @@ export const DATE_TIME_FORMAT = "L HH:mm:ss";
 
 /** Locale date + 24h time without seconds, used in dense table cells. */
 export const DATE_TIME_FORMAT_SHORT = "L HH:mm";
+
+/**
+ * Locale date with the month spelled out, e.g. "8. Juli 2026" (de) or "July 8, 2026" (en).
+ *
+ * The numeric `L` form is right for dense tables, where the column header already says what the
+ * number is and every row shares the same order. It is the wrong form for the AI chat's
+ * confirm-cards (#378): a single date sits alone in a card the user reads once, while deciding
+ * whether to destroy something, and "07/08/2026" is genuinely ambiguous between two continents.
+ * Spelling the month out removes that ambiguity without giving up locale awareness — dayjs's
+ * `LL` token still orders and translates the parts per the active locale.
+ */
+export const DATE_FORMAT_LONG = "LL";
+
+/** Long date + 24h time without seconds, for a card date whose clock is meaningful. */
+export const DATE_TIME_FORMAT_LONG = "LL HH:mm";

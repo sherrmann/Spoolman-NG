@@ -536,6 +536,15 @@
       "removed": "Fénykép eltávolítva",
       "remove_error": "Nem sikerült eltávolítani a fényképet",
       "prepare_error": "Nem sikerült beolvasni a képfájlt"
+    },
+    "delete_cascade": {
+      "title": "Törlöd ezt: {{name}}?",
+      "intro": "Ez véglegesen törli az alábbiakat is:",
+      "spool_count_one": "{{count}} tekercs",
+      "spool_count_other": "{{count}} tekercs",
+      "history": "használati előzményeiket",
+      "irreversible": "Ez nem vonható vissza.",
+      "confirm": "Mind törlése ({{count}})"
     }
   },
   "actions": {
@@ -598,6 +607,7 @@
     "success": "Sikeres",
     "editSuccess": "Sikeresen módosítva {{resource}}",
     "deleteError": "Hiba a(z) {{resource}} törlésekor (hibakód: {{statusCode}})",
+    "deleteErrorDetail": "Hiba a(z) {{resource}} törlésekor (hibakód: {{statusCode}}): {{message}}",
     "createSuccess": "Sikeresen létrehozva {{resource}}",
     "saveSuccessful": "Sikeres mentés!",
     "validationError": "Validációs hiba: {{error}}"
@@ -1324,13 +1334,28 @@
     "empty": "Kérdezz a tekercseidről és filamentjeidről — például: „mennyi fekete PETG-m maradt?” vagy „mit kellene újrarendelnem?”.",
     "viewInList": "Megnyitás a Tekercsek listában",
     "confirm": {
-      "before": "Előtte",
-      "after": "Utána",
       "confirm": "Megerősítés",
       "cancel": "Mégse",
       "confirmed": "Megerősítve",
       "cancelled": "Megszakítva",
-      "destructive": "Nem vonható vissza"
+      "destructive": "Nem vonható vissza",
+      "not_set": "nincs megadva",
+      "status_open": "Nyitott",
+      "color": {
+        "black": "Fekete",
+        "white": "Fehér",
+        "grey": "Szürke",
+        "red": "Piros",
+        "orange": "Narancs",
+        "yellow": "Sárga",
+        "green": "Zöld",
+        "cyan": "Ciánkék",
+        "blue": "Kék",
+        "purple": "Lila",
+        "pink": "Rózsaszín",
+        "brown": "Barna",
+        "beige": "Bézs"
+      }
     },
     "executed": {
       "undo": "Visszavonás",

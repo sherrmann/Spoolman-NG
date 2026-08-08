@@ -552,6 +552,16 @@
       "removed": "Foto rimossa",
       "remove_error": "Impossibile rimuovere la foto",
       "prepare_error": "Impossibile leggere il file immagine"
+    },
+    "delete_cascade": {
+      "title": "Eliminare {{name}}?",
+      "intro": "Questa operazione elimina definitivamente anche:",
+      "spool_count_one": "{{count}} bobina",
+      "spool_count_many": "{{count}} bobine",
+      "spool_count_other": "{{count}} bobine",
+      "history": "la loro cronologia di utilizzo",
+      "irreversible": "Questa azione non può essere annullata.",
+      "confirm": "Elimina tutto ({{count}})"
     }
   },
   "actions": {
@@ -614,6 +624,7 @@
     "success": "Riuscito",
     "editSuccess": "{{resource}} modificata con successo",
     "deleteError": "Errore nella cancellazione di {{resource}} (status code: {{statusCode}})",
+    "deleteErrorDetail": "Errore nella cancellazione di {{resource}} (status code: {{statusCode}}): {{message}}",
     "createSuccess": "{{resource}} creata correttamente",
     "saveSuccessful": "Salvataggio completato!",
     "validationError": "Errore di convalida: {{error}}"
@@ -1341,13 +1352,28 @@
     "empty": "Chiedimi qualcosa sulle tue bobine e sui tuoi filamenti — per esempio \"quanto PETG nero mi rimane?\" oppure \"cosa dovrei riordinare?\".",
     "viewInList": "Vedi nella lista Bobine",
     "confirm": {
-      "before": "Prima",
-      "after": "Dopo",
       "confirm": "Conferma",
       "cancel": "Cancella",
       "confirmed": "Confermato",
       "cancelled": "Annullato",
-      "destructive": "Non può essere annullata"
+      "destructive": "Non può essere annullata",
+      "not_set": "non impostato",
+      "status_open": "Aperto",
+      "color": {
+        "black": "Nero",
+        "white": "Bianco",
+        "grey": "Grigio",
+        "red": "Rosso",
+        "orange": "Arancione",
+        "yellow": "Giallo",
+        "green": "Verde",
+        "cyan": "Ciano",
+        "blue": "Blu",
+        "purple": "Viola",
+        "pink": "Rosa",
+        "brown": "Marrone",
+        "beige": "Beige"
+      }
     },
     "executed": {
       "undo": "Annulla",

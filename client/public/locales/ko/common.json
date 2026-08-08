@@ -50,6 +50,7 @@
     "createError": "{{resource}} 생성 중 오류가 발생했습니다 (상태 코드: {{statusCode}})",
     "deleteSuccess": "삭제 완료 {{resource}}",
     "deleteError": "{{resource}} 삭제 중 오류 발생 (상태 코드: {{statusCode}})",
+    "deleteErrorDetail": "{{resource}} 삭제 중 오류 발생 (상태 코드: {{statusCode}}): {{message}}",
     "editSuccess": "수정 완료 {{resource}}",
     "editError": "{{resource}} 편집 중 오류 발생 (상태 코드: {{statusCode}})",
     "importProgress": "가져오기: {{processed}}/{{total}}"
@@ -522,6 +523,14 @@
       "removed": "사진이 제거되었습니다",
       "remove_error": "사진을 제거하지 못했습니다",
       "prepare_error": "해당 이미지 파일을 읽지 못했습니다"
+    },
+    "delete_cascade": {
+      "title": "{{name}}을(를) 삭제하시겠습니까?",
+      "intro": "이 작업은 다음 항목도 영구적으로 삭제합니다:",
+      "spool_count_other": "스풀 {{count}}개",
+      "history": "사용 기록",
+      "irreversible": "이 작업은 되돌릴 수 없습니다.",
+      "confirm": "전체 {{count}}개 삭제"
     }
   },
   "vendor": {
@@ -1295,13 +1304,28 @@
     "empty": "스풀과 필라멘트에 대해 무엇이든 물어보세요 — 예를 들어 \"검은색 PETG가 얼마나 남았어?\" 또는 \"뭘 재주문해야 해?\".",
     "viewInList": "스풀 목록에서 보기",
     "confirm": {
-      "before": "변경 전",
-      "after": "변경 후",
       "confirm": "확인",
       "cancel": "취소",
       "confirmed": "확인됨",
       "cancelled": "취소됨",
-      "destructive": "되돌릴 수 없음"
+      "destructive": "되돌릴 수 없음",
+      "not_set": "설정 안 됨",
+      "status_open": "진행 중",
+      "color": {
+        "black": "검정",
+        "white": "흰색",
+        "grey": "회색",
+        "red": "빨강",
+        "orange": "주황",
+        "yellow": "노랑",
+        "green": "초록",
+        "cyan": "청록",
+        "blue": "파랑",
+        "purple": "보라",
+        "pink": "분홍",
+        "brown": "갈색",
+        "beige": "베이지"
+      }
     },
     "executed": {
       "undo": "되돌리기",

@@ -4,7 +4,7 @@ import logging
 from datetime import datetime
 
 import sqlalchemy
-from sqlalchemy import func, select
+from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from spoolman.api.v1.models import EventType, Location, LocationEvent
@@ -72,6 +72,40 @@ async def get_aggregates(db: AsyncSession, location_ids: list[int]) -> dict[int,
     counts_by_name = {loc: int(count) for loc, count in (await db.execute(count_stmt)).all()}
 
     return {lid: counts_by_name.get(name, 0) for lid, name in names.items()}
+
+
+async def get_weight_aggregates(db: AsyncSession, location_ids: list[int]) -> dict[int, float]:
+    """Return {location_id: total remaining net weight in grams} for the given locations.
+
+    Like :func:`get_aggregates`, spools are matched by name against the plain ``Spool.location``
+    string (locations are a name registry; there is no FK). Remaining weight falls back to the
+    filament's nominal weight when a spool has no initial weight of its own, matching the API
+    model, and never goes negative. One grouped query, no N+1.
+    """
+    if not location_ids:
+        return {}
+
+    name_rows = (
+        await db.execute(select(models.Location.id, models.Location.name).where(models.Location.id.in_(location_ids)))
+    ).all()
+    names = {int(lid): name for lid, name in name_rows}
+    if not names:
+        return {}
+
+    active_spool = sqlalchemy.or_(models.Spool.archived.is_(False), models.Spool.archived.is_(None))
+    # Two-argument func.max(expr, 0.0) is not portable (PostgreSQL's MAX is aggregate-only); a
+    # CASE expression clamps the same way and compiles to plain SQL on every supported dialect.
+    remaining = func.coalesce(models.Spool.initial_weight, models.Filament.weight) - models.Spool.used_weight
+    clamped_remaining = case((remaining > 0, remaining), else_=0.0)
+    weight_stmt = (
+        select(models.Spool.location, func.sum(clamped_remaining))
+        .join(models.Filament, models.Filament.id == models.Spool.filament_id)
+        .where(models.Spool.location.in_(list(names.values())), active_spool)
+        .group_by(models.Spool.location)
+    )
+    weights_by_name = {loc: round(float(total or 0.0), 1) for loc, total in (await db.execute(weight_stmt)).all()}
+
+    return {lid: weights_by_name.get(name, 0.0) for lid, name in names.items()}
 
 
 async def find(
