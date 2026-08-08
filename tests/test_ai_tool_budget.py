@@ -14,11 +14,13 @@ import textwrap
 
 from spoolman import ai_tools
 
-#: Ceiling on the serialised writer tool payload. The completed 18-tool set lands at 12,057
-#: chars -- arrive_order itself is only 618 of that; the other 17 tools were already at 11,437,
-#: so the old 9 KB estimate was ~2.4 KB low before this task, not because of arrive_order. Raised
-#: deliberately, with headroom, now that the set is frozen at 18.
-MAX_SCHEMA_CHARS = 12_500
+#: Ceiling on the serialised writer tool payload. The 19-tool set measures 12,676 chars: the
+#: 18-tool set was at 12,271 and exposing delete_order to the model added 405 (a real
+#: description and an argument description, replacing the 239-char stub it carried while it was
+#: an undo-only helper). That breached the previous 12,500 ceiling, so it is raised here
+#: deliberately rather than trimmed around -- 13,000 keeps roughly the same headroom the 12,500
+#: figure had. Not a target: the next tool must justify itself against the measured number above.
+MAX_SCHEMA_CHARS = 13_000
 #: One-line tool descriptions; a paragraph belongs in the system prompt, not in a schema.
 MAX_DESCRIPTION_CHARS = 400
 
@@ -217,7 +219,8 @@ def test_declared_destructive_flag_agrees_with_the_confirm_card() -> None:
 
 
 #: The model-facing set is fixed by design. Changing it is a spec decision, not a refactor.
-EXPECTED_MODEL_FACING = 18
+#: 18 until delete_order was exposed (a request the model otherwise answered with delete_spool).
+EXPECTED_MODEL_FACING = 19
 
 
 def test_model_facing_count_is_pinned() -> None:

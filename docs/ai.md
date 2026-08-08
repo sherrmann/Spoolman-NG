@@ -290,12 +290,18 @@ the tool set changes. The harness's own system prompt is built from the same
 context), so the eval measures the configuration Spoolman ships, not a thinner stand-in.
 
 Measured across 2 runs against a local Ollama 7.6B tool-tuned model
-(`hhao/qwen2.5-coder-tools`) on the same 53 fixture prompts: **47-48/53 (89-91%)** tool
+(`hhao/qwen2.5-coder-tools`) on 53 fixture prompts: **47-48/53 (89-91%)** tool
 selection, **44-46/53 (83-87%)** with correct arguments too, run to run. Treat that range as one
 small local model's variance on one machine, not a guarantee for whatever endpoint you point
 Spoolman at, and expect the exact numbers to drift a little between any two runs — a single
 best-of-N figure understates that. The dominant failure mode across both runs is the model
 declining to call any tool at all, not calling the wrong one.
+
+**Those figures were measured against the 18-tool set, before `delete_order` was made
+model-facing.** The tool set is 19 tools now and the fixture set has grown to match, so the
+range above is the last measurement taken, not a current one — it has not been re-run since
+(the eval needs a live model endpoint). Re-run it before the next release and replace these
+numbers rather than reading them as today's accuracy.
 
 ## Privacy
 

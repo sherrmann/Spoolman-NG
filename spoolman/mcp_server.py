@@ -45,6 +45,14 @@ SERVER_NAME = "spoolman-ng"
 #: safeguard at all. arrive_order is the one exception that is included: it is also destructive
 #: (no undo), but it is annotated honestly (see ``_list_tools``) so a client can prompt its own
 #: user, and it is the highest-value action an MCP client can take.
+#:
+#: This tuple is deliberately hand-written rather than derived from ``WriteTool.model_facing``:
+#: the two surfaces gate on different things. ``model_facing`` asks "may the chat model choose
+#: this?", where every write still lands behind a confirm-card the user must click; this tuple
+#: asks "may an arbitrary MCP client run this outright?", where nothing stands behind it. So
+#: making delete_order model-facing (it answers "delete that order", which the model otherwise
+#: answered with delete_spool) changed the chat surface only, and left MCP delete-free — an MCP
+#: delete would be an unconfirmed, un-undoable destruction, which is exactly what this excludes.
 _MCP_WRITE_TOOLS = (
     "create_spool",
     "update_spool",

@@ -51,8 +51,31 @@ def test_writer_is_offered_read_and_model_write_tools() -> None:
         "update_filament",
         "delete_filament",
         "create_order",
+        "delete_order",
         "arrive_order",
     }
+
+
+def test_deleting_an_order_has_a_model_facing_tool_of_its_own() -> None:
+    """ "Delete order 3" must have a right answer inside the offered tool list.
+
+    While delete_order was ``model_facing=False`` the model was offered no tool that deletes an
+    order at all, and it substituted ``delete_spool`` -- rendering a confirm-card that destroyed
+    an unrelated spool while the order survived (reproduced three times out of three). Which tool
+    a model actually picks cannot be asserted deterministically here; what can be asserted is that
+    the correct choice exists, and that no *other* offered delete tool could absorb the request.
+    """
+    offered = {schema["function"]["name"]: schema["function"] for schema in ai_tools.tool_schemas(can_write=True)}
+    assert "delete_order" in offered, "the model is offered no way to delete an order"
+    deletes = {
+        name: set(schema["parameters"]["properties"]) for name, schema in offered.items() if name.startswith("delete_")
+    }
+    assert deletes["delete_order"] == {"order_id"}
+    # No other offered delete tool takes an order_id, so "delete order 3" has exactly one correct
+    # answer rather than several -- and, while delete_order was hidden, none at all.
+    for name, params in deletes.items():
+        if name != "delete_order":
+            assert "order_id" not in params, f"{name} also accepts an order_id"
 
 
 def test_internal_undo_tool_is_never_offered_to_the_model() -> None:

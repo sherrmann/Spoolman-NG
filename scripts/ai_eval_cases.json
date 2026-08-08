@@ -60,6 +60,9 @@
   {"prompt": "I just placed an order with Prusa for 2 of filament 3 and 1 of filament 7", "tool": "create_order", "args": {"shop": "prusa"}},
   {"prompt": "Log an order: 4 spools of filament 10 from Filastruder, order number PO-2291", "tool": "create_order", "args": {"order_number": "PO-2291"}},
 
+  {"prompt": "Delete order 5", "tool": "delete_order", "args": {"order_id": 5}},
+  {"prompt": "I cancelled that order, remove order 12 from my records", "tool": "delete_order", "args": {"order_id": 12}},
+
   {"prompt": "My order 4 arrived", "tool": "arrive_order", "args": {"order_id": 4}},
   {"prompt": "Order 7 turned up, put them in shelf A", "tool": "arrive_order", "args": {"order_id": 7, "location": "shelf a"}},
   {"prompt": "The Sunlu order (order 9) just showed up, don't create spools yet", "tool": "arrive_order", "args": {"order_id": 9, "create_spools": false}},

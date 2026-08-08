@@ -458,8 +458,9 @@ _CHAT_ACTION_ALLOWLIST = frozenset(
     "/chat/action",
     name="Run a curated write action",
     description=(
-        "Execute one of the curated write tools that an undo descriptor can name (e.g. delete_order, "
-        "an undo-only primitive the chat model is never offered) — this is how one-click undo runs, "
+        "Execute one of the curated write tools that an undo descriptor can name (e.g. "
+        "set_spool_used_weight, an undo-only primitive the chat model is never offered) — this is "
+        "how one-click undo runs, "
         "and it is the only caller of this endpoint. Restricted to that fixed allowlist: it is never a "
         "general-purpose tool invoker. Admin only, gated by the same write permission as chat."
     ),

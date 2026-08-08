@@ -428,15 +428,24 @@ WRITE_TOOLS: dict[str, WriteTool] = {
     ),
     "delete_order": WriteTool(
         name="delete_order",
-        description="Delete an order and its lines (internal undo helper).",
+        description=(
+            "Permanently delete an order and its lines. Spools already created from it are kept. "
+            "Destructive and cannot be undone. Only do this when clearly asked. Requires user "
+            "confirmation."
+        ),
         parameters={
             "type": "object",
-            "properties": {"order_id": {"type": "integer"}},
+            "properties": {"order_id": {"type": "integer", "description": "The order to delete."}},
             "required": ["order_id"],
         },
         preview=_preview_delete_order,
         execute=_execute_delete_order,
-        model_facing=False,
+        # Model-facing, unlike the other undo-only deletes it used to sit beside: a user asking
+        # "delete that order" needs a tool that answers the request. While it was hidden, the model
+        # had no right answer and substituted delete_spool -- offering a confirm-card that destroyed
+        # an unrelated spool while the order survived (reproduced three times out of three). A
+        # destructive request with no matching tool makes the model improvise with a destructive
+        # neighbour, so the fix is to give the request a correct answer, not to hide it harder.
         destructive=True,
     ),
     "arrive_order": WriteTool(

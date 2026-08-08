@@ -156,8 +156,11 @@ class WriteTool:
     preview: Callable[[ToolContext, dict], Awaitable[ConfirmCard]]
     execute: Callable[[ToolContext, dict], Awaitable[ExecutionResult]]
     mutating: bool = True
-    #: False for undo-only primitives (set_spool_used_weight, delete_order/location/vendor):
-    #: they exist so a create can be reversed, but the model must never reach for them.
+    #: False for undo-only primitives (set_spool_used_weight, delete_location, delete_vendor,
+    #: delete_filament_and_vendor): they exist so a create can be reversed, but the model must
+    #: never reach for them. Hiding a tool is only safe when the model has no *request* it
+    #: answers -- delete_order was hidden and the model substituted delete_spool for "delete the
+    #: order", so it is model-facing now (see orders.py).
     model_facing: bool = True
     #: This tool's confirm-card is always destructive and it carries no undo. Set on every
     #: delete plus arrive_order (the one non-delete write with no undo). MCP has no confirm-card

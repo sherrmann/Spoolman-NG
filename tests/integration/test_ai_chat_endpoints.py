@@ -596,11 +596,11 @@ async def test_a_write_call_missing_its_id_is_fed_back_not_fatal(client: AsyncCl
 
 
 def test_chat_action_docstring_states_its_real_contract() -> None:
-    # The route resolves one of the eight names on _CHAT_ACTION_ALLOWLIST and calls that tool's
-    # execute() directly, with no preview -- and the allowlist includes model_facing=False undo-only
-    # primitives (e.g. delete_order) the chat model is never offered. That's by design (it's how
-    # one-click undo runs), but the docs must say so, not claim this "grants no capability beyond
-    # chat itself" when it plainly reaches tools chat cannot call.
+    # The route resolves one of the names on _CHAT_ACTION_ALLOWLIST and calls that tool's execute()
+    # directly, with no preview -- and the allowlist includes model_facing=False undo-only
+    # primitives (e.g. set_spool_used_weight) the chat model is never offered. That's by design
+    # (it's how one-click undo runs), but the docs must say so, not claim this "grants no capability
+    # beyond chat itself" when it plainly reaches tools chat cannot call.
     route = next(r for r in ai_api.router.routes if "/chat/action" in getattr(r, "path", ""))
     assert "no capability beyond chat itself" not in route.description
     assert "undo-only" in route.description
@@ -1304,9 +1304,9 @@ async def test_create_order_undo_round_trip_actually_deletes_the_order(
     client: AsyncClient,  # noqa: ARG001
 ) -> None:
     # `client` isn't called directly but its fixture wires up db_module's session maker.
-    # delete_order exists only so create_order is reversible: it must be registered
-    # model_facing=False (the model is never told about it) and its execute must genuinely
-    # remove the order created above, not just report success.
+    # delete_order is create_order's undo (as well as a tool the model may call in its own right,
+    # see test_deleting_an_order_has_a_tool_of_its_own): its execute must genuinely remove the
+    # order created above, not just report success.
     session_maker = db_module.get_session_maker()
     async with session_maker() as session:
         filament = await filament_db.create(db=session, density=1.24, diameter=1.75, weight=1000)
@@ -1325,7 +1325,6 @@ async def test_create_order_undo_round_trip_actually_deletes_the_order(
 
         undo = result.undo
         assert undo == {"tool": "delete_order", "args": {"order_id": order_id}}
-        assert ai_tools.WRITE_TOOLS["delete_order"].model_facing is False
 
         await ai_tools.WRITE_TOOLS[undo["tool"]].execute(ctx, undo["args"])
 
