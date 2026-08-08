@@ -18,6 +18,7 @@ import ast
 import asyncio
 import inspect
 import json
+import logging
 import textwrap
 from datetime import datetime
 
@@ -26,7 +27,7 @@ import respx
 from httpx import AsyncClient, Response
 from sqlalchemy import select
 
-from spoolman import ai, ai_tools, aichat, spoolintake
+from spoolman import ai, ai_tools, aichat, mcp_server, spoolintake
 from spoolman.ai_tools import filaments, orders
 from spoolman.api.v1 import ai as ai_api
 from spoolman.database import database as db_module
@@ -1870,21 +1871,17 @@ async def test_create_filament_execute_creates_both_filament_and_vendor(
         assert any(item.name == "BrandNew" for item in found_vendor)
 
         # Pin the undo descriptor's shape here, alongside the vendor-creation assertions above;
-        # the full WRITE_TOOLS["delete_filament"] round trip is exercised separately by
-        # test_create_filament_undo_round_trip_actually_deletes_the_filament. Setting the
-        # only_if_empty flag is C1's fix: it never reaches the model (absent from delete_filament's
-        # JSON schema) and is only ever set here, so a click on this creation's Undo button after
-        # spools were added refuses instead of silently cascading. also_delete_vendor_id is the
-        # same idea for I3: this call created the vendor, so undoing it must take that vendor back
-        # out too (see test_undo_a_filament_creation_also_deletes_the_vendor_it_created).
+        # the full round trip is exercised separately by
+        # test_create_filament_undo_round_trip_actually_deletes_the_filament. Because this call
+        # created the vendor, the descriptor names delete_filament_and_vendor (I3: undoing the
+        # creation must take that vendor back out too), which is undo-only and enforces C1's
+        # no-cascade refusal unconditionally -- so no only_if_empty flag rides along here. A
+        # creation that resolved to an existing vendor gets the plain delete_filament descriptor,
+        # with the flag (test_undo_a_filament_creation_never_deletes_a_pre_existing_vendor).
         undo = result.undo
         assert undo == {
-            "tool": "delete_filament",
-            "args": {
-                "filament_id": filament_id,
-                "only_if_empty": True,
-                "also_delete_vendor_id": result.data["vendor_id"],
-            },
+            "tool": "delete_filament_and_vendor",
+            "args": {"filament_id": filament_id, "vendor_id": result.data["vendor_id"]},
         }
         await filament_db.delete(session, undo["args"]["filament_id"])
 
@@ -2022,7 +2019,10 @@ async def test_create_filament_still_passes_through_an_already_curated_error(
 # create_filament creates a vendor when vendor_name is unknown and says so on the card ("This also
 # creates the vendor 'BrandNewCo'."). Its undo used to delete only the filament, leaving the vendor
 # behind -- an unlisted fourth exception to docs/ai.md's "Undo restores the previous state".
-# /ai/chat/action runs exactly one tool per call, so the id rides along on delete_filament instead.
+# /ai/chat/action runs exactly one tool per call, so the undo names delete_filament_and_vendor, a
+# model_facing=False tool that does both -- rather than an undeclared vendor argument riding along
+# on model-facing delete_filament, which was N1: an *extra deletion* reachable by any caller that
+# guessed the key, behind a confirm-card that mentioned no vendor at all.
 
 
 async def test_undo_a_filament_creation_also_deletes_the_vendor_it_created(client: AsyncClient) -> None:
@@ -2037,9 +2037,12 @@ async def test_undo_a_filament_creation_also_deletes_the_vendor_it_created(clien
         filament_id = created.data["filament_id"]
         vendor_id = created.data["vendor_id"]
         assert created.undo == {
-            "tool": "delete_filament",
-            "args": {"filament_id": filament_id, "only_if_empty": True, "also_delete_vendor_id": vendor_id},
+            "tool": "delete_filament_and_vendor",
+            "args": {"filament_id": filament_id, "vendor_id": vendor_id},
         }
+        # The tool that takes a vendor is not one the model is ever offered -- that is the gate,
+        # rather than the model merely not being told an argument name (N1).
+        assert ai_tools.WRITE_TOOLS["delete_filament_and_vendor"].model_facing is False
         undo = created.undo
 
     response = await client.post("/api/v1/ai/chat/action", json=undo)
@@ -2069,7 +2072,10 @@ async def test_undo_a_filament_creation_never_deletes_a_pre_existing_vendor(clie
             ctx,
             {"name": "PLA Meta", "vendor_name": "existingco", "density": 1.24, "diameter": 1.75},
         )
-        assert "also_delete_vendor_id" not in created.undo["args"]
+        # The vendor-taking tool is not named at all: the descriptor is the plain delete_filament
+        # undo, so no code path in this replay can even reach a vendor delete.
+        assert created.undo["tool"] == "delete_filament"
+        assert "vendor_id" not in created.undo["args"]
         undo = created.undo
 
     response = await client.post("/api/v1/ai/chat/action", json=undo)
@@ -2138,6 +2144,130 @@ async def test_undoing_the_same_filament_creation_twice_is_a_clean_error_not_a_c
 
         with pytest.raises(ai_tools.ToolError, match="No filament with ID"):
             await ai_tools.WRITE_TOOLS[undo["tool"]].execute(ctx, undo["args"])
+
+
+# --- N1: the vendor delete is a tool of its own, not an argument on a model-facing one ---
+#
+# I3's first fix carried the vendor id as `also_delete_vendor_id`, an argument absent from
+# delete_filament's schema. Absence from a schema stops the *model* guessing it; it stops nothing
+# else. An ordinary delete_filament call carrying that key destroyed an unrelated pre-existing
+# vendor behind a confirm-card that said only "deletes the filament and its 0 spool(s)". Unlike
+# only_if_empty/only_if_untouched, which can only make a call REFUSE, this one made a call delete
+# MORE than its card disclosed. The vendor-taking variant is now its own model_facing=False tool.
+
+
+async def test_an_ordinary_delete_filament_call_cannot_reach_a_vendor(client: AsyncClient) -> None:
+    # N1 reproduced, then closed: the exact call the re-reviewer used -- a plain delete_filament
+    # with a vendor id bolted on -- must leave that vendor alone. delete_filament's execute has no
+    # vendor branch left to reach, whatever arguments a caller invents.
+    await _enable_chat(client)
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        victim = await vendor_db.create(db=session, name="VictimCo", comment="nothing to do with this")
+        victim_id = victim.id
+        unrelated = await filament_db.create(db=session, density=1.24, diameter=1.75, name="F")
+        filament_id = unrelated.id
+
+    response = await client.post(
+        "/api/v1/ai/chat/action",
+        json={"tool": "delete_filament", "args": {"filament_id": filament_id, "also_delete_vendor_id": victim_id}},
+    )
+
+    assert response.status_code == 200, response.text
+    assert "VictimCo" not in response.json()["summary"]
+    assert "deleted_vendor_id" not in response.json()["data"]
+    async with session_maker() as session:
+        survivor = await vendor_db.get_by_id(session, victim_id)
+        assert survivor.name == "VictimCo"
+        assert survivor.comment == "nothing to do with this"
+
+
+async def test_the_vendor_taking_delete_is_never_offered_to_the_model(client: AsyncClient) -> None:  # noqa: ARG001
+    # The structural half of the fix: no principal, on either surface, is ever shown a tool that
+    # takes a vendor id alongside a filament id -- so no model can call it, correctly or otherwise.
+    assert ai_tools.WRITE_TOOLS["delete_filament_and_vendor"].model_facing is False
+    for can_write in (True, False):
+        payload = json.dumps(ai_tools.tool_schemas(can_write=can_write))
+        assert "delete_filament_and_vendor" not in payload
+    # ...and MCP, which builds its own list, does not carry it either.
+    assert "delete_filament_and_vendor" not in mcp_server._MCP_WRITE_TOOLS  # noqa: SLF001
+
+
+async def test_the_vendor_taking_undo_still_refuses_to_cascade_once_spools_were_added(
+    client: AsyncClient,
+) -> None:
+    # C1's guard has to hold on the new tool too. delete_filament gets it via the schema-absent
+    # only_if_empty flag its undo descriptor sets; delete_filament_and_vendor is undo-only, so it
+    # enforces the same refusal unconditionally -- and nothing is destroyed, vendor included.
+    await _enable_chat(client)
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+        created = await ai_tools.WRITE_TOOLS["create_filament"].execute(
+            ctx,
+            {"name": "PLA Meta", "vendor_name": "CascadeCo", "density": 1.24, "diameter": 1.75},
+        )
+        filament_id = created.data["filament_id"]
+        vendor_id = created.data["vendor_id"]
+        undo = created.undo
+        await spool_db.create(db=session, filament_id=filament_id)
+
+    response = await client.post("/api/v1/ai/chat/action", json=undo)
+
+    assert response.status_code == 422
+    assert "1 spool" in response.json()["detail"]
+    async with session_maker() as session:
+        assert (await filament_db.get_by_id(session, filament_id)).id == filament_id
+        assert (await vendor_db.get_by_id(session, vendor_id)).name == "CascadeCo"
+
+
+async def test_a_failing_vendor_delete_still_reports_the_undo_that_did_happen(
+    client: AsyncClient,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """The deliberate best-effort branch, exercised rather than reasoned about.
+
+    The filament delete has already committed by the time the vendor delete runs, so raising here
+    would tell the user their undo failed for a change that did happen -- and the retry would then
+    hit "No filament with ID ...", a second error for the same successful operation. A leftover
+    empty vendor row they can delete by hand is the better failure. What makes that honest rather
+    than merely convenient is that the summary claims no vendor deletion, the data carries no
+    deleted_vendor_id, and the failure is logged -- so this pins all three.
+    """
+    await _enable_chat(client)
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+        created = await ai_tools.WRITE_TOOLS["create_filament"].execute(
+            ctx,
+            {"name": "PLA Meta", "vendor_name": "FlakyCo", "density": 1.24, "diameter": 1.75},
+        )
+        filament_id = created.data["filament_id"]
+        vendor_id = created.data["vendor_id"]
+        undo = created.undo
+
+    async def _boom(*_args: object, **_kwargs: object) -> None:
+        raise RuntimeError("the vendor delete blew up")
+
+    monkeypatch.setattr(filaments.vendor_db, "delete", _boom)
+
+    with caplog.at_level(logging.ERROR, logger="spoolman.ai_tools.filaments"):
+        response = await client.post("/api/v1/ai/chat/action", json=undo)
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["summary"] == f"Deleted filament #{filament_id}."  # no vendor claimed
+    assert "FlakyCo" not in body["summary"]
+    assert "deleted_vendor_id" not in body["data"]
+    assert any("Failed to delete vendor" in record.getMessage() for record in caplog.records), (
+        "the failure was swallowed silently"
+    )
+    async with session_maker() as session:
+        with pytest.raises(ItemNotFoundError, match="No filament with ID"):
+            await filament_db.get_by_id(session, filament_id)
+        orphan = await vendor_db.get_by_id(session, vendor_id)  # the strictly better failure
+        assert orphan.name == "FlakyCo"
 
 
 # --- update_filament: before/after diff and a genuinely reversible undo ------------
@@ -2559,6 +2689,7 @@ _WRITE_TOOL_MINIMAL_ARGS: dict[str, dict] = {
     "create_filament": {"density": 1.24, "diameter": 1.75},
     "update_filament": {"filament_id": 1, "name": "New name"},
     "delete_filament": {"filament_id": 1},
+    "delete_filament_and_vendor": {"filament_id": 1, "vendor_id": 1},
     "create_spool": {"filament_id": 1},
     "update_spool": {"spool_id": 1, "location": "Shelf A"},
     "consume_spool": {"spool_id": 1, "use_weight_g": 10},

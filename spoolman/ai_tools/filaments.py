@@ -276,6 +276,23 @@ async def _execute_create_filament(ctx: ToolContext, args: dict) -> ExecutionRes
         logger.exception("create_filament failed while creating a filament with fields %r.", sorted(fields))
         raise ToolError("Could not create the filament. Check the values and try again.") from exc
     summary = f"Created filament #{created.id}."
+    if created_vendor_id is not None:
+        # Undoing this creation must also take that vendor back out, or Undo would leave behind a
+        # registry entry the user never asked for. /ai/chat/action runs exactly one tool per call,
+        # so this cannot be a second action -- it names delete_filament_and_vendor, an undo-only
+        # tool that does both. That tool exists rather than an extra argument on delete_filament
+        # because a vendor delete is an *extra deletion*: as an undeclared argument on a
+        # model-facing tool it was one hallucinated key away from destroying an unrelated vendor
+        # behind a confirm-card that mentioned no vendor at all (N1). model_facing=False is a
+        # structural gate; "the model was never told the argument's name" is not.
+        return ExecutionResult(
+            summary=f"{summary} Also created the vendor '{vendor_to_create}'.",
+            data={"filament_id": created.id, "vendor_id": vendor_id},
+            undo={
+                "tool": "delete_filament_and_vendor",
+                "args": {"filament_id": created.id, "vendor_id": created_vendor_id},
+            },
+        )
     # only_if_empty is never in delete_filament's model-facing schema -- it exists purely so this
     # undo descriptor can refuse to cascade. Between this create and a click on the resulting
     # Undo button, the user may have added spools to the filament; a bare delete_filament call
@@ -283,20 +300,10 @@ async def _execute_create_filament(ctx: ToolContext, args: dict) -> ExecutionRes
     # silent-cascade-via-undo failure this flag exists to close off. The normal, previewed
     # delete_filament path (the model calling it directly, or a confirmed chat write) never
     # sets this flag, so it still discloses and cascades exactly as before.
-    undo_args: dict = {"filament_id": created.id, "only_if_empty": True}
-    if created_vendor_id is not None:
-        summary = f"{summary} Also created the vendor '{vendor_to_create}'."
-        # ...and undoing this creation must also take that vendor back out, or Undo would leave
-        # behind a registry entry the user never asked for. /ai/chat/action runs exactly one tool
-        # per call, so this cannot be a second action: delete_filament carries the id and removes
-        # the vendor itself, after the filament and only while the vendor has no other filaments.
-        # Like only_if_empty, this argument is absent from delete_filament's schema and is only
-        # ever set here, on a vendor id this very call brought into existence.
-        undo_args["also_delete_vendor_id"] = created_vendor_id
     return ExecutionResult(
         summary=summary,
         data={"filament_id": created.id, "vendor_id": vendor_id},
-        undo={"tool": "delete_filament", "args": undo_args},
+        undo={"tool": "delete_filament", "args": {"filament_id": created.id, "only_if_empty": True}},
     )
 
 
@@ -374,9 +381,9 @@ async def _preview_delete_filament(ctx: ToolContext, args: dict) -> ConfirmCard:
 async def _delete_vendor_created_with_the_filament(ctx: ToolContext, vendor_id: int) -> str | None:
     """Delete the vendor create_filament auto-created, now that its filament is gone. Returns its name.
 
-    Reached only through ``also_delete_vendor_id``, which is absent from delete_filament's
-    model-facing schema and is set only by create_filament's own undo descriptor -- so the vendor
-    named here is always one that same call brought into existence, never one the user already had.
+    Reached only through ``delete_filament_and_vendor``, a ``model_facing=False`` tool named only by
+    create_filament's own undo descriptor -- so the vendor named here is always one that same call
+    brought into existence, never one the user already had.
     It is still checked, not trusted: if the vendor has gained other filaments since (the user could
     have filed more under it before clicking Undo), deleting it would silently unlink them, and undo
     must restore the previous state rather than go further than it. Returns None in that case.
@@ -401,38 +408,99 @@ async def _delete_vendor_created_with_the_filament(ctx: ToolContext, vendor_id: 
     return name
 
 
+async def _refuse_an_undo_that_would_cascade(ctx: ToolContext, filament_id: int) -> None:
+    """Raise unless the filament is still empty, so replaying a creation's undo can't cascade.
+
+    /ai/chat/action reaches execute() directly with no preview and no confirm-card, so this is the
+    only guard standing between "Undo" on a creation card and a silent cascading delete of every
+    spool added since. Shared by delete_filament (behind the schema-absent ``only_if_empty`` flag
+    its undo descriptor sets) and by delete_filament_and_vendor, which is undo-only and so enforces
+    it unconditionally.
+    """
+    spool_count = await filament_db.count_spools(ctx.db, filament_id)
+    if spool_count:
+        raise ToolError(
+            f"Cannot undo: filament {filament_id} now has {spool_count} spool(s) that would be "
+            "permanently destroyed, including their usage history. Delete it explicitly (not "
+            "via Undo) if that is really what you want.",
+        )
+
+
 async def _execute_delete_filament(ctx: ToolContext, args: dict) -> ExecutionResult:
     require_write(ctx)
     filament_id = arg_int(args, "filament_id")
     await _get_filament(ctx, filament_id)
     if arg_bool(args, "only_if_empty"):
         # Set only by create_filament's own undo descriptor (never by the model -- this argument
-        # is deliberately absent from the tool's JSON schema). /ai/chat/action reaches execute()
-        # directly with no preview and no confirm-card, so this is the only guard standing between
-        # "Undo" on a creation card and a silent cascading delete of every spool added since.
-        spool_count = await filament_db.count_spools(ctx.db, filament_id)
-        if spool_count:
-            raise ToolError(
-                f"Cannot undo: filament {filament_id} now has {spool_count} spool(s) that would be "
-                "permanently destroyed, including their usage history. Delete it explicitly (not "
-                "via Undo) if that is really what you want.",
-            )
-    # Read before the delete so a junk value is a ToolError *before* anything is destroyed, and
-    # absent/None means "no vendor to take back" -- fail-safe in the same direction as only_if_empty.
-    vendor_to_delete = args.get("also_delete_vendor_id")
-    if vendor_to_delete is not None:
-        vendor_to_delete = arg_int(args, "also_delete_vendor_id")
+        # is deliberately absent from the tool's JSON schema). It can only make a delete *refuse*,
+        # never do more than it says: a model that somehow guessed the name could cost itself a
+        # call, nothing else. That is the whole reason it is allowed to be an undeclared argument.
+        await _refuse_an_undo_that_would_cascade(ctx, filament_id)
+    try:
+        await filament_db.delete(ctx.db, filament_id)
+    except ItemDeleteError as exc:
+        raise ToolError(str(exc)) from exc
+    return ExecutionResult(summary=f"Deleted filament #{filament_id}.", data={"filament_id": filament_id}, undo=None)
+
+
+async def _vendor_name(ctx: ToolContext, vendor_id: int) -> str | None:
+    """Return the vendor's name, or None if it no longer exists (a replayed undo, say)."""
+    try:
+        vendor = await vendor_db.get_by_id(ctx.db, vendor_id)
+    except ItemNotFoundError:
+        return None
+    return vendor.name
+
+
+async def _preview_delete_filament_and_vendor(ctx: ToolContext, args: dict) -> ConfirmCard:
+    """Card for the vendor-taking undo. Never rendered in the chat loop, but it must not lie.
+
+    delete_filament's card could not disclose the vendor even in principle while the vendor rode
+    along as an undeclared argument, which is what made N1 a disclosure bug and not just a
+    reachability one. Here the vendor is a declared argument of a tool of its own, so a card for
+    it can name what it removes.
+    """
+    filament_id = arg_int(args, "filament_id")
+    vendor_id = arg_int(args, "vendor_id")
+    item = await _get_filament(ctx, filament_id)
+    spool_count = await filament_db.count_spools(ctx.db, filament_id)
+    name = await _vendor_name(ctx, vendor_id)
+    return ConfirmCard(
+        tool="delete_filament_and_vendor",
+        title=f"Delete filament #{filament_id} ({item.name or item.material or 'unnamed'}) and its vendor",
+        summary=(
+            f"This permanently deletes the filament and its {spool_count} spool(s), including their "
+            f"usage history, and the vendor '{name or vendor_id}' that was created with it (kept if "
+            "other filaments have since been filed under it). It cannot be undone."
+        ),
+        before={"name": item.name, "material": item.material, "spool_count": spool_count, "vendor": name},
+        after={},
+        destructive=True,
+    )
+
+
+async def _execute_delete_filament_and_vendor(ctx: ToolContext, args: dict) -> ExecutionResult:
+    """Undo a create_filament that also created its vendor: remove both, in that order.
+
+    Both ids are read (and coerced) before anything is destroyed, so a junk value is a ToolError
+    rather than a half-done undo. The vendor delete is conditional on the vendor still being
+    empty and is best-effort -- see ``_delete_vendor_created_with_the_filament``.
+    """
+    require_write(ctx)
+    filament_id = arg_int(args, "filament_id")
+    vendor_id = arg_int(args, "vendor_id")
+    await _get_filament(ctx, filament_id)
+    await _refuse_an_undo_that_would_cascade(ctx, filament_id)
     try:
         await filament_db.delete(ctx.db, filament_id)
     except ItemDeleteError as exc:
         raise ToolError(str(exc)) from exc
     summary = f"Deleted filament #{filament_id}."
     data = {"filament_id": filament_id}
-    if vendor_to_delete is not None:
-        deleted_vendor = await _delete_vendor_created_with_the_filament(ctx, vendor_to_delete)
-        if deleted_vendor is not None:
-            summary = f"{summary} Also deleted the vendor '{deleted_vendor}'."
-            data["deleted_vendor_id"] = vendor_to_delete
+    deleted_vendor = await _delete_vendor_created_with_the_filament(ctx, vendor_id)
+    if deleted_vendor is not None:
+        summary = f"{summary} Also deleted the vendor '{deleted_vendor}'."
+        data["deleted_vendor_id"] = vendor_id
     return ExecutionResult(summary=summary, data=data, undo=None)
 
 
@@ -536,6 +604,30 @@ WRITE_TOOLS: dict[str, WriteTool] = {
         },
         preview=_preview_delete_filament,
         execute=_execute_delete_filament,
+        destructive=True,
+    ),
+    "delete_filament_and_vendor": WriteTool(
+        name="delete_filament_and_vendor",
+        description=(
+            "Delete a filament and the vendor that was created alongside it (internal undo helper "
+            "for create_filament; the vendor is kept if other filaments now reference it)."
+        ),
+        parameters={
+            "type": "object",
+            "properties": {
+                "filament_id": {"type": "integer"},
+                "vendor_id": {"type": "integer"},
+            },
+            "required": ["filament_id", "vendor_id"],
+        },
+        preview=_preview_delete_filament_and_vendor,
+        execute=_execute_delete_filament_and_vendor,
+        # Undo-only, like delete_location and delete_vendor: nothing but create_filament's own undo
+        # descriptor ever names it, and the model is never offered it. Being a separate tool is the
+        # point -- a vendor delete hanging off model-facing delete_filament as an undeclared
+        # argument was reachable by any caller that guessed the key, and its confirm-card said
+        # nothing about a vendor.
+        model_facing=False,
         destructive=True,
     ),
 }

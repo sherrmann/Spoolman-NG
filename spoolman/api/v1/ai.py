@@ -447,6 +447,7 @@ _CHAT_ACTION_ALLOWLIST = frozenset(
         "set_spool_used_weight",
         "delete_spool",
         "delete_filament",
+        "delete_filament_and_vendor",
         "delete_location",
         "delete_vendor",
         "delete_order",

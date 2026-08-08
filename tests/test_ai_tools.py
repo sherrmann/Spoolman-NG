@@ -271,13 +271,16 @@ def test_every_read_tool_produces_a_non_default_summary() -> None:
         assert summary != "Done.", f"{name} has no _read_summary branch of its own"
 
 
-#: Arguments a write tool's own undo descriptor may set but the model must never see: each one
-#: makes an otherwise-ordinary write *refuse* in a situation the model has no way to reason about,
-#: and each is read by an execute() that /ai/chat/action reaches with no preview at all. A model
-#: that could pass them could only ever make a legitimate call fail -- but the safety argument for
-#: all three rests on them being unreachable, and that argument currently lives only in comments.
+#: Arguments a write tool's own undo descriptor may set but the model must never see. Each one can
+#: only make an otherwise-ordinary write *refuse*, in a situation the model has no way to reason
+#: about, and each is read by an execute() that /ai/chat/action reaches with no preview at all. A
+#: model that could pass one could only ever make a legitimate call fail -- which is what earns
+#: them the right to be undeclared. A flag that could make a call do MORE than its schema says
+#: does not belong here and does not belong on a model-facing tool: the vendor delete that briefly
+#: rode along on delete_filament as ``also_delete_vendor_id`` is now its own model_facing=False
+#: tool (delete_filament_and_vendor) precisely because it failed that test.
 _SCHEMA_ABSENT_UNDO_ARGS = {
-    "delete_filament": ("only_if_empty", "also_delete_vendor_id"),
+    "delete_filament": ("only_if_empty",),
     "delete_spool": ("only_if_untouched",),
 }
 
