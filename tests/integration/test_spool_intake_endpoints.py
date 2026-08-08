@@ -215,3 +215,27 @@ async def test_match_penalizes_material_mismatch(client: AsyncClient, monkeypatc
     )
 
     assert response.json()["matches"]["library"] == []
+
+
+@respx.mock
+async def test_extraction_asks_ollama_for_strict_json(client: AsyncClient) -> None:
+    """Capable vision models return prose without it (#380).
+
+    Measured on real label photos: qwen2.5vl:7b failed 2 of 6 on unparseable output and
+    completed all six once response_format was sent, at roughly half the latency -- the failing
+    runs were spending their time generating text we then threw away.
+    """
+    await _enable_feature(client)
+    respx.get("http://ollama:11434/api/tags").mock(
+        return_value=Response(200, json={"models": [{"name": "qwen2.5-vl:7b"}]}),
+    )
+    respx.post("http://ollama:11434/api/show").mock(
+        return_value=Response(200, json={"capabilities": ["completion", "vision"]}),
+    )
+    route = _mock_provider()
+
+    response = await client.post("/api/v1/ai/spool-intake/extract", json=_extract_body())
+
+    assert response.status_code == 200, response.text
+    payload = json.loads(route.calls.last.request.content)
+    assert payload["response_format"] == {"type": "json_object"}

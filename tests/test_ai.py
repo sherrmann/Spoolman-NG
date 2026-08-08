@@ -375,3 +375,151 @@ def test_writer_prompt_forbids_substituting_a_different_kind_of_record() -> None
     assert rule is not None, "the writer prompt has no never-substitute rule"
     for kind in ("order", "spool", "filament", "location", "vendor"):
         assert kind in rule, f"the never-substitute rule does not name {kind}"
+
+
+# --- Ollama request tuning (#380) --------------------------------------------------
+#
+# Ollama auto-enables thinking for any model whose capabilities include "thinking" when the
+# request carries no reasoning control, which measured 15-21 points of tool-selection accuracy
+# and 3-7x latency on current models. `reasoning_effort: "none"` is the only knob that works
+# against its OpenAI-compatible surface (`think` and chat_template_kwargs are ignored there).
+#
+# The safety contract these tests exist to protect: a *generic* OpenAI-compatible endpoint must
+# keep receiving exactly the body it receives today. Both keys are Ollama-specific, so they are
+# gated on positively identifying Ollama AND on the model's own advertised capabilities.
+
+
+def _mock_ollama_chat(base: str, model: str, capabilities: list[str], *, show_status: int = 200) -> respx.Route:
+    """Mock an Ollama endpoint: tags (identity), show (capabilities), and chat completions."""
+    origin = base.removesuffix("/v1")
+    respx.get(f"{origin}/api/tags").mock(return_value=Response(200, json={"models": [{"name": model}]}))
+    show = Response(show_status, json={"capabilities": capabilities} if show_status == 200 else {})
+    respx.post(f"{origin}/api/show").mock(return_value=show)
+    return respx.post(f"{base}/chat/completions").mock(
+        return_value=Response(200, json={"choices": [{"message": {"role": "assistant", "content": "hi"}}]}),
+    )
+
+
+def _sent_body(route: respx.Route) -> dict:
+    import json as _json  # noqa: PLC0415
+
+    return _json.loads(route.calls.last.request.content)
+
+
+@respx.mock
+async def test_tool_call_suppresses_thinking_on_a_thinking_capable_ollama_model() -> None:
+    route = _mock_ollama_chat("http://ollama:11434/v1", "qwen3.5:4b", ["completion", "tools", "thinking"])
+    config = ai.AIConfig(base_url="http://ollama:11434/v1", model="qwen3.5:4b")
+
+    await ai.chat_completion_tools(config, [{"role": "user", "content": "hi"}], tools=[{"type": "function"}])
+
+    assert _sent_body(route)["reasoning_effort"] == "none"
+
+
+@respx.mock
+async def test_tool_call_to_ollama_model_without_thinking_sends_no_reasoning_effort() -> None:
+    """Only models that advertise the capability get the key -- nothing else changes."""
+    route = _mock_ollama_chat("http://ollama:11434/v1", "granite4.1:3b", ["completion", "tools"])
+    config = ai.AIConfig(base_url="http://ollama:11434/v1", model="granite4.1:3b")
+
+    await ai.chat_completion_tools(config, [{"role": "user", "content": "hi"}])
+
+    assert "reasoning_effort" not in _sent_body(route)
+
+
+@respx.mock
+async def test_generic_endpoint_body_is_unchanged() -> None:
+    """The safety contract: a non-Ollama endpoint must see exactly today's payload.
+
+    `reasoning_effort` and `response_format` are both Ollama-specific here; a strict
+    OpenAI-compatible server is entitled to reject an unknown key, so a setup that works
+    today must not start failing.
+    """
+    base = "https://api.example.com/v1"
+    respx.get("https://api.example.com/api/tags").mock(return_value=Response(404))
+    route = respx.post(f"{base}/chat/completions").mock(
+        return_value=Response(200, json={"choices": [{"message": {"role": "assistant", "content": "hi"}}]}),
+    )
+    config = ai.AIConfig(base_url=base, model="gpt-x")
+
+    await ai.chat_completion_tools(config, [{"role": "user", "content": "hi"}], tools=[{"type": "function"}])
+
+    assert set(_sent_body(route)) == {"model", "messages", "max_tokens", "tools", "tool_choice"}
+
+
+@respx.mock
+async def test_json_caller_on_ollama_requests_a_json_object() -> None:
+    """Extraction asks for strict JSON; without it, capable vision models return prose.
+
+    Measured: qwen2.5vl:7b failed 2 of 6 label photos on unparseable output and completed all
+    six once response_format was sent.
+    """
+    route = _mock_ollama_chat("http://ollama:11434/v1", "qwen2.5vl:7b", ["completion", "vision"])
+    config = ai.AIConfig(base_url="http://ollama:11434/v1", model="qwen2.5vl:7b")
+
+    await ai.chat_completion(config, [{"role": "user", "content": "read this"}], want_json=True)
+
+    assert _sent_body(route)["response_format"] == {"type": "json_object"}
+
+
+@respx.mock
+async def test_json_caller_on_a_generic_endpoint_sends_no_response_format() -> None:
+    base = "https://api.example.com/v1"
+    respx.get("https://api.example.com/api/tags").mock(return_value=Response(404))
+    route = respx.post(f"{base}/chat/completions").mock(
+        return_value=Response(200, json={"choices": [{"message": {"role": "assistant", "content": "{}"}}]}),
+    )
+
+    await ai.chat_completion(
+        ai.AIConfig(base_url=base, model="gpt-x"), [{"role": "user", "content": "x"}], want_json=True
+    )
+
+    assert "response_format" not in _sent_body(route)
+
+
+@respx.mock
+async def test_capability_lookup_failure_leaves_the_payload_alone() -> None:
+    """Fail closed: the tuning is a best-effort optimisation, never a hard dependency.
+
+    If /api/show cannot answer, we must send today's body rather than guess -- a wrong guess
+    would either lose the fix silently or add a key the server rejects.
+    """
+    route = _mock_ollama_chat("http://ollama:11434/v1", "qwen3.5:4b", [], show_status=500)
+    config = ai.AIConfig(base_url="http://ollama:11434/v1", model="qwen3.5:4b")
+
+    await ai.chat_completion_tools(config, [{"role": "user", "content": "hi"}])
+
+    assert "reasoning_effort" not in _sent_body(route)
+
+
+@respx.mock
+async def test_vision_requests_get_a_longer_timeout_than_chat() -> None:
+    """A photo is a bigger, slower request than a chat turn, on much slower hardware.
+
+    A 1568 px label costs ~1,800 image tokens before generation starts. This box has a GPU and
+    peaks at ~32 s, but Spoolman targets CPU-only NASes and Pis where the same request is far
+    slower -- and the failure mode is a hard timeout with nothing to show the user.
+
+    Fails if the vision path stops resolving its own timeout: the assertion is on the value
+    handed to the HTTP layer, which is what actually bounds the request.
+    """
+    seen: list[float] = []
+
+    async def _capture(config: ai.AIConfig, payload: dict, timeout: float) -> dict:  # noqa: ARG001
+        seen.append(timeout)
+        return {"role": "assistant", "content": "{}"}
+
+    respx.get("https://api.example.com/api/tags").mock(return_value=Response(404))
+    config = ai.AIConfig(base_url="https://api.example.com/v1", model="chat-m", vision_model="vision-m")
+
+    original = ai._post_chat  # noqa: SLF001
+    ai._post_chat = _capture  # type: ignore[assignment]  # noqa: SLF001
+    try:
+        await ai.chat_completion(config, [{"role": "user", "content": "x"}])
+        await ai.chat_completion(config, [{"role": "user", "content": "x"}], use_vision_model=True)
+    finally:
+        ai._post_chat = original  # type: ignore[assignment]  # noqa: SLF001
+
+    chat_timeout, vision_timeout = seen
+    assert chat_timeout == ai._CHAT_TIMEOUT  # noqa: SLF001
+    assert vision_timeout > chat_timeout

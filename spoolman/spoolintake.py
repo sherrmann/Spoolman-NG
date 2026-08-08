@@ -162,7 +162,7 @@ async def extract(config: ai.AIConfig, image_base64: str, mime: str) -> dict:
             ],
         },
     ]
-    reply = await ai.chat_completion(config, messages, use_vision_model=True)
+    reply = await ai.chat_completion(config, messages, use_vision_model=True, want_json=True)
     return normalize_extraction(parse_json_block(reply))
 
 
