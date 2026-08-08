@@ -132,6 +132,23 @@ describe("formatWeight", () => {
     // Default precision is 2, so 1234 g rounds to 1.23 kg.
     expect(formatWeight(1234)).toBe("1.23 kg");
   });
+
+  // #377: weightInGrams can arrive as a string despite the declared `number` type (an upstream
+  // JSON-parsing bug mistook a noisy float for an oversized integer and stringified it), and
+  // `"...".toFixed` throwing crashed the whole home page. formatWeight must coerce defensively
+  // rather than propagate the crash.
+  it("coerces a numeric string instead of crashing", () => {
+    expect(formatWeight("500")).toBe("500 g");
+    expect(formatWeight("0.30000000000000004")).toBe("0.3 g");
+    expect(formatWeight("1500")).toBe("1.5 kg");
+  });
+
+  it("degrades non-finite input to a benign 0 instead of throwing", () => {
+    expect(formatWeight(NaN)).toBe("0 g");
+    expect(formatWeight("not a number")).toBe("0 g");
+    expect(formatWeight(undefined)).toBe("0 g");
+    expect(formatWeight(null)).toBe("0 g");
+  });
 });
 
 describe("formatWeightCompact", () => {
@@ -160,6 +177,12 @@ describe("formatWeightCompact", () => {
     expect(formatWeightCompact(1240)).toBe("1.2 kg");
     expect(formatWeightCompact(1260)).toBe("1.3 kg");
   });
+
+  it("coerces a numeric string and degrades non-finite input to 0 (#377)", () => {
+    expect(formatWeightCompact("500")).toBe("500 g");
+    expect(formatWeightCompact("1500")).toBe("1.5 kg");
+    expect(formatWeightCompact("not a number")).toBe("0 g");
+  });
 });
 
 describe("formatLength", () => {
@@ -177,6 +200,20 @@ describe("formatLength", () => {
 
   it("respects the precision argument", () => {
     expect(formatLength(2500, 3)).toBe("2.5 m");
+  });
+
+  // #377: the mm branch used to interpolate its raw input unrounded, both skipping any
+  // coercion and letting float64 noise render verbatim instead of at the requested precision.
+  it("rounds a noisy sub-meter float to the requested precision instead of rendering it verbatim", () => {
+    expect(formatLength(999.9999999999999)).toBe("1000 mm");
+    expect(formatLength(500.567)).toBe("500.57 mm");
+  });
+
+  it("coerces a numeric string and degrades non-finite input to 0 instead of throwing", () => {
+    expect(formatLength("500")).toBe("500 mm");
+    expect(formatLength("1500")).toBe("1.5 m");
+    expect(formatLength("not a number")).toBe("0 mm");
+    expect(formatLength(undefined)).toBe("0 mm");
   });
 });
 
