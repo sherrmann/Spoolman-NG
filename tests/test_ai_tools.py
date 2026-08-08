@@ -7,8 +7,10 @@ keeps a sloppy model from crashing a turn.
 """
 # ruff: noqa: SLF001 -- this module deliberately unit-tests ai_tools' internal helpers.
 
+import ast
 import inspect
 import json
+import textwrap
 from types import SimpleNamespace
 
 import pytest
@@ -285,6 +287,35 @@ _SCHEMA_ABSENT_UNDO_ARGS = {
 }
 
 
+def _string_literals_the_code_uses_as_keys(func: object) -> set[str]:
+    """Every string literal ``func`` passes to a call or uses as a subscript key.
+
+    Deliberately narrower than ``inspect.getsource``: comments and docstrings must not be able to
+    satisfy the staleness check below. ``ast.parse`` already drops comments, and restricting the
+    walk to call arguments and subscript keys drops docstrings too (a docstring is a bare
+    ``ast.Expr``, never a call argument), so what comes back is names the running code really uses.
+    This matters concretely -- both flag names appear in prose inside the very functions inspected,
+    so the previous substring check stayed green when the live key was renamed.
+    """
+    tree = ast.parse(textwrap.dedent(inspect.getsource(func)))
+    found: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            for value in (*node.args, *(kw.value for kw in node.keywords)):
+                if isinstance(value, ast.Constant) and isinstance(value.value, str):
+                    found.add(value.value)
+        elif (
+            isinstance(node, ast.Subscript)
+            and isinstance(node.slice, ast.Constant)
+            and isinstance(
+                node.slice.value,
+                str,
+            )
+        ):
+            found.add(node.slice.value)
+    return found
+
+
 def test_undo_only_safety_arguments_are_absent_from_the_model_facing_schema() -> None:
     for tool_name, arg_names in _SCHEMA_ABSENT_UNDO_ARGS.items():
         declared = ai_tools.WRITE_TOOLS[tool_name].parameters["properties"]
@@ -298,8 +329,9 @@ def test_undo_only_safety_arguments_are_absent_from_the_model_facing_schema() ->
             for arg_name in arg_names:
                 assert arg_name not in payload, f"{arg_name} reached the model's tool schemas"
     # Renaming a flag in the code without renaming it here would leave this test passing while
-    # guarding an argument that no longer exists, so pin each name against the execute that reads it.
+    # guarding an argument that no longer exists, so pin each name against the execute that reads
+    # it -- against the parsed code, not the source text (see the helper's docstring).
     for tool_name, arg_names in _SCHEMA_ABSENT_UNDO_ARGS.items():
-        source = inspect.getsource(ai_tools.WRITE_TOOLS[tool_name].execute)
+        used = _string_literals_the_code_uses_as_keys(ai_tools.WRITE_TOOLS[tool_name].execute)
         for arg_name in arg_names:
-            assert arg_name in source, f"{tool_name}'s execute no longer reads {arg_name!r}"
+            assert arg_name in used, f"{tool_name}'s execute no longer reads {arg_name!r}"
