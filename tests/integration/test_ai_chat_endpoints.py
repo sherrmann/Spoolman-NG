@@ -311,9 +311,9 @@ async def test_update_confirm_card_shows_before_after_and_undo(client: AsyncClie
 @respx.mock
 async def test_the_undo_descriptor_never_reaches_the_model(client: AsyncClient) -> None:
     # Half of the safety argument for the schema-absent undo flags (only_if_empty,
-    # only_if_untouched, also_delete_vendor_id) is that the model never sees an undo descriptor at
-    # all: the executed write's tool result fed back into the conversation carries the summary and
-    # data, and the descriptor travels only to the browser. Nothing pinned that.
+    # only_if_untouched) is that the model never sees an undo descriptor at all: the executed
+    # write's tool result fed back into the conversation carries the summary and data, and the
+    # descriptor travels only to the browser. Nothing pinned that.
     #
     # create_location's undo names delete_location, which is model_facing=False and therefore
     # absent from every schema -- so that name appearing anywhere in the outbound payload could
@@ -1298,7 +1298,7 @@ async def test_every_read_tool_summary_reads_keys_the_tool_really_returns(
             )
 
 
-# --- create_order / delete_order: hidden undo delete --------------------------------
+# --- create_order / delete_order: create's undo, and a model-facing tool of its own ------
 
 
 async def test_create_order_undo_round_trip_actually_deletes_the_order(
@@ -1540,6 +1540,42 @@ async def test_delete_order_execute_raises_a_clean_error_for_a_double_undo(
 
         with pytest.raises(ai_tools.ToolError, match="No order with ID"):
             await ai_tools.WRITE_TOOLS[undo["tool"]].execute(ctx, undo["args"])
+
+
+async def test_delete_order_actually_keeps_the_spools_the_card_promises_to_keep(
+    client: AsyncClient,  # noqa: ARG001
+) -> None:
+    # The card's summary says "Spools already created from it are kept." delete_order is now
+    # model-facing (test_deleting_an_order_has_a_model_facing_tool_of_its_own,
+    # tests/test_ai_tools.py), so this sentence is user-facing text on an ordinary chat path, not
+    # prose that only ever appeared behind an undo nobody rendered. Pin the promise against real
+    # behaviour: arrive the order into actual spools, delete the order, and confirm the spools are
+    # still there -- and that the card actually makes the claim being pinned.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        filament = await filament_db.create(db=session, density=1.24, diameter=1.75, weight=1000)
+        order = await order_db.create(db=session, lines=[{"filament_id": filament.id, "quantity": 2}])
+        order_id = order.id
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+
+        card = await ai_tools.WRITE_TOOLS["delete_order"].preview(ctx, {"order_id": order_id})
+        assert "kept" in card.summary.lower(), f"the card no longer promises to keep the spools: {card.summary!r}"
+        assert "spool" in card.summary.lower()
+
+        arrived = await ai_tools.WRITE_TOOLS["arrive_order"].execute(ctx, {"order_id": order_id})
+        spool_ids = arrived.data["spool_ids"]
+        assert len(spool_ids) == 2  # one spool per unit ordered
+
+        await ai_tools.WRITE_TOOLS["delete_order"].execute(ctx, {"order_id": order_id})
+
+    async with session_maker() as session:
+        with pytest.raises(ItemNotFoundError, match="No order with ID"):
+            await order_db.get_by_id(session, order_id)
+        # The order and its lines are gone, but the spools created from it are not FK-linked to
+        # the order at all (Spool has no order column) -- deleting the order must not touch them.
+        for spool_id in spool_ids:
+            surviving = await spool_db.get_by_id(session, spool_id)
+            assert surviving.id == spool_id
 
 
 # --- arrive_order: the highest-value write, honestly undo-less --------------------
@@ -2268,6 +2304,57 @@ async def test_a_failing_vendor_delete_still_reports_the_undo_that_did_happen(
             await filament_db.get_by_id(session, filament_id)
         orphan = await vendor_db.get_by_id(session, vendor_id)  # the strictly better failure
         assert orphan.name == "FlakyCo"
+
+
+async def test_the_vendor_taking_delete_card_discloses_the_vendor_by_name(
+    client: AsyncClient,  # noqa: ARG001
+) -> None:
+    # delete_filament_and_vendor is model_facing=False and undo-only, so its confirm-card is the
+    # one and only surface that could ever tell a person a vendor is also being destroyed. Pin
+    # that the summary sentence itself says so -- not just that the vendor's name sits somewhere
+    # in the card's structured 'before' fields, which a person reading the summary would never see.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+        created = await ai_tools.WRITE_TOOLS["create_filament"].execute(
+            ctx,
+            {"name": "PLA Meta", "vendor_name": "DiscloseCo", "density": 1.24, "diameter": 1.75},
+        )
+        undo = created.undo
+        assert undo["tool"] == "delete_filament_and_vendor"
+
+        card = await ai_tools.WRITE_TOOLS["delete_filament_and_vendor"].preview(ctx, undo["args"])
+
+    assert "DiscloseCo" in card.summary, f"the card never names the vendor it is about to delete: {card.summary!r}"
+    assert "vendor" in card.summary.lower()
+
+
+async def test_a_junk_vendor_id_fails_before_the_filament_is_touched(
+    client: AsyncClient,  # noqa: ARG001
+) -> None:
+    # _execute_delete_filament_and_vendor's docstring promises both ids are read (and coerced)
+    # before anything is destroyed, so a bad vendor_id must be a clean ToolError with the filament
+    # still standing -- not a half-done undo that deletes the filament and only then discovers the
+    # vendor id was junk. Pin the promise against actual behaviour, not the docstring's word for it.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+        created = await ai_tools.WRITE_TOOLS["create_filament"].execute(
+            ctx,
+            {"name": "PLA Meta", "vendor_name": "OrderCo", "density": 1.24, "diameter": 1.75},
+        )
+        filament_id = created.data["filament_id"]
+
+        with pytest.raises(ai_tools.ToolError, match="vendor_id"):
+            await ai_tools.WRITE_TOOLS["delete_filament_and_vendor"].execute(
+                ctx,
+                {"filament_id": filament_id, "vendor_id": "not-a-number"},
+            )
+
+    async with session_maker() as session:
+        # The filament must still be there: a bad vendor_id may not destroy anything by itself.
+        surviving = await filament_db.get_by_id(session, filament_id)
+        assert surviving.id == filament_id
 
 
 # --- update_filament: before/after diff and a genuinely reversible undo ------------
