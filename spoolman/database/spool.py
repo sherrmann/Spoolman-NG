@@ -37,6 +37,12 @@ logger = logging.getLogger(__name__)
 # orders of magnitude above this floor (#377).
 WEIGHT_ROUND_DECIMALS = 6
 
+# The SQL type every rounded weight expression carries. 18 total digits leaves 12 for the integer
+# part — orders of magnitude more than any real spool weight in grams — with WEIGHT_ROUND_DECIMALS
+# digits after the point. Shared by _round6 and by the zero-clamp literal in
+# _used_weight_after_refill so that both branches of that CASE have the same type (see _round6).
+WEIGHT_NUMERIC = Numeric(18, WEIGHT_ROUND_DECIMALS)
+
 
 def _round6(expr: sqlalchemy.ColumnElement[float]) -> sqlalchemy.ColumnElement[float]:
     """Round a float SQL expression to WEIGHT_ROUND_DECIMALS places, portable across dialects.
@@ -49,14 +55,39 @@ def _round6(expr: sqlalchemy.ColumnElement[float]) -> sqlalchemy.ColumnElement[f
     ``func.max`` (see location.py's ``get_weight_aggregates``); the fix is the same idea — cast to
     Numeric first, so ``round`` resolves to the two-argument overload on every backend.
 
-    There is deliberately no cast back to Float. It would be a no-op at best: MySQL/MariaDB cannot
-    CAST to FLOAT at all (SQLAlchemy drops it and emits a warning), and on SQLite/PostgreSQL the
-    ``UPDATE ... SET used_weight = ...`` assignment already coerces the value to the column's type.
-    Compiling all three dialects with and without it produces byte-identical SQL, so the cast only
-    ever bought a warning.
+    The value this returns is therefore NUMERIC-typed, not double precision, and there is
+    deliberately no cast back to Float. Where the rounded value is assigned straight to the column
+    (``UPDATE ... SET used_weight = round(...)`` — the consumption path in use_weight_safe) that
+    outer cast really is redundant: the assignment coerces to the column's type on every backend
+    anyway, and on MySQL/MariaDB ``CAST(... AS FLOAT)`` isn't supported at all, so SQLAlchemy drops
+    it from the compiled SQL and emits a warning for nothing.
+
+    It is *not* redundant when the rounded value sits inside a ``CASE`` alongside another branch,
+    which is what the refill path in _used_weight_after_refill builds. CockroachDB requires every
+    branch of a ``CASE`` to resolve to the same type and rejects a mixed NUMERIC/FLOAT8 one outright
+    ("incompatible value type: expected $5::FLOAT8 to be of type decimal, found type float");
+    PostgreSQL, SQLite and MySQL/MariaDB all accept the mismatch, so only the CockroachDB leg of the
+    integration matrix ever catches it. Rather than reintroduce the outer cast (and the MySQL
+    warning) purely to reconcile the branches, _used_weight_after_refill casts its zero-clamp
+    literal to WEIGHT_NUMERIC so both branches agree at the source — do not "simplify" that cast
+    away. tests/test_spool_weight_sql_types.py guards both halves of this.
     """
-    numeric_expr = sqlalchemy.cast(expr, Numeric(18, WEIGHT_ROUND_DECIMALS))
+    numeric_expr = sqlalchemy.cast(expr, WEIGHT_NUMERIC)
     return func.round(numeric_expr, WEIGHT_ROUND_DECIMALS)
+
+
+def _used_weight_after_refill(weight: float) -> sqlalchemy.ColumnElement[float]:
+    """Build the used_weight expression for a refill (``weight < 0``), clamped at zero.
+
+    Both branches are deliberately WEIGHT_NUMERIC-typed: the rounded one because _round6 produces
+    NUMERIC, the zero-clamp because CockroachDB rejects a ``CASE`` whose branches disagree on type.
+    See _round6's docstring for the full reasoning.
+    """
+    new_used_weight = models.Spool.used_weight + weight
+    return case(
+        (new_used_weight >= 0.0, _round6(new_used_weight)),
+        else_=sqlalchemy.cast(0.0, WEIGHT_NUMERIC),  # Set used_weight to 0 if the result would be negative
+    )
 
 
 async def build(
@@ -553,12 +584,7 @@ async def use_weight_safe(db: AsyncSession, spool_id: int, weight: float) -> flo
     await db.execute(
         sqlalchemy.update(models.Spool)
         .where(models.Spool.id == spool_id)
-        .values(
-            used_weight=case(
-                (models.Spool.used_weight + weight >= 0.0, _round6(models.Spool.used_weight + weight)),
-                else_=0.0,  # Set used_weight to 0 if the result would be negative
-            ),
-        ),
+        .values(used_weight=_used_weight_after_refill(weight)),
     )
     if used_before is None:
         return weight  # Spool not found; caller's get_by_id will raise ItemNotFoundError.
