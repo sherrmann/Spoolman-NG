@@ -48,6 +48,7 @@ def is_open(order: object) -> bool:
 
 
 def _line_row(line: object) -> dict:
+    """Shape one order line, with its filament resolved to a 'Vendor - Name' label for the model."""
     filament = line.filament
     vendor = filament.vendor.name if filament is not None and filament.vendor is not None else None
     name = " - ".join(part for part in (vendor, filament.name if filament else None) if part)
@@ -59,6 +60,12 @@ def _line_row(line: object) -> dict:
         "price_per_unit": line.price_per_unit,
         "arrived": line.arrived_at is not None,
     }
+
+
+def _describe_line_row(line: dict) -> str:
+    """Render one ``_line_row`` dict as the human line a confirm-card shows, e.g. '2 x Acme - PLA'."""
+    name = line["filament"] or f"filament #{line['filament_id']}"
+    return f"{line['quantity']} x {name}"
 
 
 def order_row(order: object) -> dict:
@@ -265,6 +272,10 @@ async def _preview_delete_order(ctx: ToolContext, args: dict) -> ConfirmCard:
     # rather than changing order_row itself and breaking that sort.
     before = order_row(item)
     before["ordered_at"] = _format_order_date(item.ordered_at)
+    # order_row's lines are dicts, shaped for the model; the confirm-card is rendered by a person
+    # (chatDrawer renders each value with String(value), which turns a list of dicts into
+    # "[object Object],[object Object]"). Same one-line-per-line wording create_order's card uses.
+    before["lines"] = [_describe_line_row(line) for line in before["lines"]]
     return ConfirmCard(
         tool="delete_order",
         title=f"Delete order #{order_id}",

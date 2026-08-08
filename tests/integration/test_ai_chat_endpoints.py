@@ -307,6 +307,40 @@ async def test_update_confirm_card_shows_before_after_and_undo(client: AsyncClie
     assert (await client.get(f"/api/v1/spool/{spool_id}")).json()["location"] == "Shelf B"
 
 
+@respx.mock
+async def test_the_undo_descriptor_never_reaches_the_model(client: AsyncClient) -> None:
+    # Half of the safety argument for the schema-absent undo flags (only_if_empty,
+    # only_if_untouched, also_delete_vendor_id) is that the model never sees an undo descriptor at
+    # all: the executed write's tool result fed back into the conversation carries the summary and
+    # data, and the descriptor travels only to the browser. Nothing pinned that.
+    #
+    # create_location's undo names delete_location, which is model_facing=False and therefore
+    # absent from every schema -- so that name appearing anywhere in the outbound payload could
+    # only have come from the undo descriptor leaking into the conversation.
+    await _enable_chat(client)
+    route = respx.post(_PROVIDER).mock(
+        side_effect=[
+            _tool_call_response("c1", "create_location", {"name": "Dry box 9"}),
+            _message_response("Created it."),
+        ],
+    )
+
+    first = await client.post(
+        "/api/v1/ai/chat",
+        json={"messages": [{"role": "user", "content": "create the location Dry box 9"}]},
+    )
+    confirm = _events_of(_parse_sse(first.text), "confirm")[0]
+    confirmed = await client.post("/api/v1/ai/chat", json={"messages": confirm["messages"], "decision": "confirm"})
+
+    executed = _events_of(_parse_sse(confirmed.text), "executed")[0]
+    assert executed["cards"][0]["undo"]["tool"] == "delete_location"  # the browser does get it
+
+    outbound = route.calls[-1].request.content.decode()  # the turn that reports the write's result
+    assert "delete_location" not in outbound, "the undo descriptor's tool name reached the model"
+    # '"undo"' with its quotes, not the bare word: tool descriptions legitimately say "undone".
+    assert '"undo"' not in outbound, "an undo key reached the model's conversation"
+
+
 # --- A commit-level failure must not poison the rest of the confirmed turn ---------
 
 
@@ -562,10 +596,11 @@ async def test_a_write_call_missing_its_id_is_fed_back_not_fatal(client: AsyncCl
 
 
 def test_chat_action_docstring_states_its_real_contract() -> None:
-    # The route actually resolves ANY name in WRITE_TOOLS and calls execute() directly -- including
-    # model_facing=False undo-only primitives (e.g. delete_order) the chat model is never offered.
-    # That's by design (it's how one-click undo runs), but the docs must say so, not claim this
-    # "grants no capability beyond chat itself" when it plainly reaches tools chat cannot call.
+    # The route resolves one of the eight names on _CHAT_ACTION_ALLOWLIST and calls that tool's
+    # execute() directly, with no preview -- and the allowlist includes model_facing=False undo-only
+    # primitives (e.g. delete_order) the chat model is never offered. That's by design (it's how
+    # one-click undo runs), but the docs must say so, not claim this "grants no capability beyond
+    # chat itself" when it plainly reaches tools chat cannot call.
     route = next(r for r in ai_api.router.routes if "/chat/action" in getattr(r, "path", ""))
     assert "no capability beyond chat itself" not in route.description
     assert "undo-only" in route.description
@@ -1450,6 +1485,38 @@ async def test_delete_order_preview_formats_ordered_at_for_display(client: Async
         card = await ai_tools.WRITE_TOOLS["delete_order"].preview(ctx, {"order_id": order.id})
 
     assert card.before["ordered_at"] == "2026-01-15"
+
+
+async def test_delete_order_card_renders_its_lines_for_a_person_not_as_objects(
+    client: AsyncClient,  # noqa: ARG001
+) -> None:
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    # chatDrawer renders every confirm-card value with String(value), so order_row's list of dicts
+    # came out as "[object Object],[object Object]" on the one card whose whole job is telling a
+    # person what they are about to delete. create_order's card gets this right (a list of
+    # strings); this pins that delete_order matches it, in the same wording.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        vendor = await vendor_db.create(db=session, name="Acme")
+        filament = await filament_db.create(
+            db=session,
+            density=1.24,
+            diameter=1.75,
+            name="PLA Meta",
+            vendor_id=vendor.id,
+            weight=1000,
+        )
+        order = await order_db.create(db=session, lines=[{"filament_id": filament.id, "quantity": 2}])
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+
+        card = await ai_tools.WRITE_TOOLS["delete_order"].preview(ctx, {"order_id": order.id})
+        create_card = await ai_tools.WRITE_TOOLS["create_order"].preview(
+            ctx,
+            {"lines": [{"filament_id": filament.id, "quantity": 2}]},
+        )
+
+    assert card.before["lines"] == ["2 x Acme - PLA Meta"]
+    assert card.before["lines"] == create_card.after["lines"]  # the two cards say it the same way
 
 
 async def test_delete_order_execute_raises_a_clean_error_for_a_double_undo(

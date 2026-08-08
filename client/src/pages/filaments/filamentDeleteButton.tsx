@@ -41,7 +41,6 @@ export interface FilamentDeleteButtonProps {
   filamentName?: string;
   onSuccess?: () => void;
   disabled?: boolean;
-  hideText?: boolean;
 }
 
 /**
@@ -55,13 +54,7 @@ export interface FilamentDeleteButtonProps {
  * count is never computed client-side -- it's read from the 409 body's structured `spool_count`
  * field (see getFilamentCascadeSpoolCount above).
  */
-export function FilamentDeleteButton({
-  filamentId,
-  filamentName,
-  onSuccess,
-  disabled,
-  hideText,
-}: FilamentDeleteButtonProps) {
+export function FilamentDeleteButton({ filamentId, filamentName, onSuccess, disabled }: FilamentDeleteButtonProps) {
   const t = useTranslate();
   const { mutate, mutation } = useDelete();
   const [cascadeSpoolCount, setCascadeSpoolCount] = useState<number | null>(null);
@@ -149,7 +142,7 @@ export function FilamentDeleteButton({
         disabled={disabled}
       >
         <Button danger loading={busy} icon={<DeleteOutlined />} disabled={disabled} title={t("buttons.delete")}>
-          {!hideText && t("buttons.delete")}
+          {t("buttons.delete")}
         </Button>
       </Popconfirm>
       <Modal

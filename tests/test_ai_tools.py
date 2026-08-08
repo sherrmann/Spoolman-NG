@@ -7,6 +7,8 @@ keeps a sloppy model from crashing a turn.
 """
 # ruff: noqa: SLF001 -- this module deliberately unit-tests ai_tools' internal helpers.
 
+import inspect
+import json
 from types import SimpleNamespace
 
 import pytest
@@ -212,9 +214,14 @@ def test_update_descriptions_warn_that_explicit_null_clears_a_field() -> None:
     # that field, so undo can restore a previously-empty one. A model that lazily emits null
     # for "nothing to set here" would silently wipe a column, so the description must spell
     # out the omit-vs-null distinction, not just "only the fields you pass are changed".
+    # Checking for the whole omit/null/clear triple rather than the single word "clear": one common
+    # English word could survive a rewrite that dropped the actual distinction (e.g. "this clears
+    # nothing you don't name"), and this branch's history is exactly tests that keep passing while
+    # no longer testing anything.
     for name in ("update_spool", "update_filament"):
         description = ai_tools.WRITE_TOOLS[name].description.lower()
-        assert "clear" in description, f"{name}'s description no longer warns that null clears a field"
+        for word in ("omit", "null", "clear"):
+            assert word in description, f"{name}'s description no longer warns that null clears a field ({word!r})"
 
 
 def test_base_module_carries_no_dead_logger() -> None:
@@ -227,10 +234,46 @@ def test_base_module_carries_no_dead_logger() -> None:
 def test_every_read_tool_produces_a_non_default_summary() -> None:
     # aichat._read_summary is the chat drawer's one line of transparency about what the assistant
     # actually looked at (the 'tool' SSE event). A read tool with no branch of its own there falls
-    # through to the generic "Done.", which tells the user nothing. An empty result dict is passed
-    # for every tool name in the registry (so each branch falls back to its own internal defaults,
-    # e.g. count=0) -- the point isn't that the numbers are meaningful, it's that a tool-specific
-    # sentence comes back at all, so the next new read tool cannot forget to add one.
+    # through to the generic "Done.", which tells the user nothing, so this pins that every
+    # registered read tool has one.
+    #
+    # This check alone cannot tell whether a branch reads the RIGHT keys -- passing {} makes every
+    # branch fall back to its own defaults, so one built on result.get("totals") when the tool
+    # really returns "total_cost" still produces a tool-specific sentence full of zeros and still
+    # passes. That half is covered by
+    # tests/integration/test_ai_chat_endpoints.py::test_every_read_tool_summary_reads_keys_the_tool_really_returns,
+    # which runs each read tool against a real database and feeds its actual result dict through.
     for name in ai_tools.READ_TOOLS:
         summary = aichat._read_summary(name, {})
         assert summary != "Done.", f"{name} has no _read_summary branch of its own"
+
+
+#: Arguments a write tool's own undo descriptor may set but the model must never see: each one
+#: makes an otherwise-ordinary write *refuse* in a situation the model has no way to reason about,
+#: and each is read by an execute() that /ai/chat/action reaches with no preview at all. A model
+#: that could pass them could only ever make a legitimate call fail -- but the safety argument for
+#: all three rests on them being unreachable, and that argument currently lives only in comments.
+_SCHEMA_ABSENT_UNDO_ARGS = {
+    "delete_filament": ("only_if_empty", "also_delete_vendor_id"),
+    "delete_spool": ("only_if_untouched",),
+}
+
+
+def test_undo_only_safety_arguments_are_absent_from_the_model_facing_schema() -> None:
+    for tool_name, arg_names in _SCHEMA_ABSENT_UNDO_ARGS.items():
+        declared = ai_tools.WRITE_TOOLS[tool_name].parameters["properties"]
+        for arg_name in arg_names:
+            assert arg_name not in declared, f"{tool_name}.{arg_name} is declared in its parameter schema"
+    # ...and not via any other route into the serialised payload either (MCP builds its input
+    # schemas from the same .parameters, so this covers both surfaces).
+    for can_write in (True, False):
+        payload = json.dumps(ai_tools.tool_schemas(can_write=can_write))
+        for arg_names in _SCHEMA_ABSENT_UNDO_ARGS.values():
+            for arg_name in arg_names:
+                assert arg_name not in payload, f"{arg_name} reached the model's tool schemas"
+    # Renaming a flag in the code without renaming it here would leave this test passing while
+    # guarding an argument that no longer exists, so pin each name against the execute that reads it.
+    for tool_name, arg_names in _SCHEMA_ABSENT_UNDO_ARGS.items():
+        source = inspect.getsource(ai_tools.WRITE_TOOLS[tool_name].execute)
+        for arg_name in arg_names:
+            assert arg_name in source, f"{tool_name}'s execute no longer reads {arg_name!r}"
