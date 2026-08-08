@@ -1322,13 +1322,28 @@
     "empty": "Küsi minult oma poolide ja filamendi kohta — näiteks \"kui palju musta PETG-d mul veel alles on?\" või \"mida peaksin juurde tellima?\".",
     "viewInList": "Vaata poolide loendis",
     "confirm": {
-      "before": "Enne",
-      "after": "Pärast",
       "confirm": "Kinnita",
       "cancel": "Tühista",
       "confirmed": "Kinnitatud",
       "cancelled": "Tühistatud",
-      "destructive": "Ei saa tagasi võtta"
+      "destructive": "Ei saa tagasi võtta",
+      "not_set": "määramata",
+      "status_open": "Avatud",
+      "color": {
+        "black": "Must",
+        "white": "Valge",
+        "grey": "Hall",
+        "red": "Punane",
+        "orange": "Oranž",
+        "yellow": "Kollane",
+        "green": "Roheline",
+        "cyan": "Tsüaan",
+        "blue": "Sinine",
+        "purple": "Lilla",
+        "pink": "Roosa",
+        "brown": "Pruun",
+        "beige": "Beež"
+      }
     },
     "executed": {
       "undo": "Võta tagasi",

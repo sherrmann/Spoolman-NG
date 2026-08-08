@@ -1340,13 +1340,28 @@
     "empty": "Pergunte-me sobre seus carretéis e filamentos — por exemplo \"quanto de PETG preto ainda tenho?\" ou \"o que eu preciso repor?\".",
     "viewInList": "Ver na lista de Carretéis",
     "confirm": {
-      "before": "Antes",
-      "after": "Depois",
       "confirm": "Confirmar",
       "cancel": "Cancelar",
       "confirmed": "Confirmado",
       "cancelled": "Cancelado",
-      "destructive": "Não pode ser desfeito"
+      "destructive": "Não pode ser desfeito",
+      "not_set": "não definido",
+      "status_open": "Aberto",
+      "color": {
+        "black": "Preto",
+        "white": "Branco",
+        "grey": "Cinza",
+        "red": "Vermelho",
+        "orange": "Laranja",
+        "yellow": "Amarelo",
+        "green": "Verde",
+        "cyan": "Ciano",
+        "blue": "Azul",
+        "purple": "Roxo",
+        "pink": "Rosa",
+        "brown": "Marrom",
+        "beige": "Bege"
+      }
     },
     "executed": {
       "undo": "Desfazer",

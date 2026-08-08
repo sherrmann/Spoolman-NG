@@ -1334,13 +1334,28 @@
     "empty": "Kérdezz a tekercseidről és filamentjeidről — például: „mennyi fekete PETG-m maradt?” vagy „mit kellene újrarendelnem?”.",
     "viewInList": "Megnyitás a Tekercsek listában",
     "confirm": {
-      "before": "Előtte",
-      "after": "Utána",
       "confirm": "Megerősítés",
       "cancel": "Mégse",
       "confirmed": "Megerősítve",
       "cancelled": "Megszakítva",
-      "destructive": "Nem vonható vissza"
+      "destructive": "Nem vonható vissza",
+      "not_set": "nincs megadva",
+      "status_open": "Nyitott",
+      "color": {
+        "black": "Fekete",
+        "white": "Fehér",
+        "grey": "Szürke",
+        "red": "Piros",
+        "orange": "Narancs",
+        "yellow": "Sárga",
+        "green": "Zöld",
+        "cyan": "Ciánkék",
+        "blue": "Kék",
+        "purple": "Lila",
+        "pink": "Rózsaszín",
+        "brown": "Barna",
+        "beige": "Bézs"
+      }
     },
     "executed": {
       "undo": "Visszavonás",

@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import en from "../../public/locales/en/common.json";
 import type { ChatEvent, ChatTurnRequest } from "../utils/queryAI";
 
 // The drawer is exercised hermetically: the SSE stream is behind streamChat, mocked here so
@@ -21,6 +22,12 @@ vi.mock("react-router", () => ({ useLocation: () => ({ pathname: "/spool" }) }))
 vi.mock("../utils/querySettings", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../utils/querySettings")>()),
   useGetSettings: () => ({ data: settingsMock() }),
+}));
+// The currency formatter reads a setting through react-query; the drawer is rendered bare here,
+// so stub it with a predictable formatter instead of standing up a QueryClientProvider.
+vi.mock("../utils/settings", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../utils/settings")>()),
+  useCurrencyFormatter: () => ({ format: (value: number) => `€${value.toFixed(2)}` }),
 }));
 vi.mock("../utils/queryAI", () => ({
   streamChat: (body: ChatTurnRequest, onEvent: (e: ChatEvent) => void) => streamChat(body, onEvent),
@@ -113,6 +120,133 @@ describe("ChatDrawer (#362)", () => {
       expect.objectContaining({ context: "Spools list", messages: [{ role: "user", content: "how much petg?" }] }),
       expect.any(Function),
     );
+  });
+});
+
+// The redesigned confirm-card (#378). A card is what a user reads while deciding whether to
+// destroy something, so what is pinned here is that it reads like the rest of the UI: human
+// labels, formatted values, and — for an update — a diff instead of two blocks to compare by eye.
+describe("ChatDrawer confirm-card rendering (#378)", () => {
+  /** Resolve a dotted key against the real English catalog. */
+  function lookupEnglish(key: string): unknown {
+    return key.split(".").reduce<unknown>((node, part) => {
+      if (node !== null && typeof node === "object" && part in node) {
+        return (node as Record<string, unknown>)[part];
+      }
+      return undefined;
+    }, en);
+  }
+
+  async function showCard(card: Record<string, unknown>) {
+    streamChat.mockImplementation(async (_body, onEvent) => {
+      onEvent({
+        event: "confirm",
+        data: { messages: [{ role: "user", content: "do it" }], cards: [card as never] },
+      });
+    });
+    const user = userEvent.setup();
+    const view = render(<ChatDrawer />);
+    await user.click(screen.getByLabelText("chat.open"));
+    await user.type(screen.getByTestId("chat-input"), "do it");
+    await user.keyboard("{Enter}");
+    await waitFor(() => expect(screen.getByTestId("chat-card-values")).toBeInTheDocument());
+    return view;
+  }
+
+  const deleteOrderCard = {
+    tool: "delete_order",
+    title: "Delete order #2",
+    summary: "The order and its lines are removed.",
+    before: {
+      id: 2,
+      shop: "FilaShop",
+      order_number: null,
+      ordered_at: "2026-07-20 09:00",
+      status: "open",
+      outstanding_units: 5,
+      lines: ["5 x Acme - PLA Meta"],
+    },
+    after: {},
+    destructive: true,
+  };
+
+  it("labels every row with a translation instead of the schema key", async () => {
+    await showCard(deleteOrderCard);
+    expect(screen.getByTestId("chat-card-label-shop")).toHaveTextContent("orders.shop");
+    expect(screen.getByTestId("chat-card-label-ordered_at")).toHaveTextContent("orders.ordered_at");
+    expect(screen.getByTestId("chat-card-label-outstanding_units")).toHaveTextContent("orders.outstanding");
+    expect(screen.getByTestId("chat-card-label-lines")).toHaveTextContent("orders.lines_summary_title");
+    // Every visible label is a key the English catalog really defines — so no row can be showing
+    // a raw schema key, nor the de-underscored fallback that only an unmapped field would hit.
+    // (useTranslate is stubbed to the identity here, so a label renders as its catalog key.)
+    for (const label of screen.getAllByTestId(/^chat-card-label-/)) {
+      expect(lookupEnglish(label.textContent ?? ""), label.textContent ?? "").toBeTypeOf("string");
+    }
+  });
+
+  it("formats each value by what it is", async () => {
+    await showCard(deleteOrderCard);
+    expect(screen.getByTestId("chat-card-value-ordered_at")).toHaveTextContent("July 20, 2026");
+    expect(screen.getByTestId("chat-card-value-status")).toHaveTextContent("chat.confirm.status_open");
+    expect(screen.getByTestId("chat-card-value-lines")).toHaveTextContent("5 x Acme - PLA Meta");
+  });
+
+  it("hides the rows that decide nothing about a delete", async () => {
+    await showCard(deleteOrderCard);
+    // The title already says #2, and an absent order number is not part of what is being deleted.
+    expect(screen.queryByTestId("chat-card-value-id")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("chat-card-value-order_number")).not.toBeInTheDocument();
+    expect(screen.getByTestId("chat-card-values").textContent).not.toContain("∅");
+  });
+
+  it("hides an unset field and an uninformative default on a create", async () => {
+    await showCard({
+      tool: "create_spool",
+      title: "Create spool",
+      summary: "Adds one spool.",
+      before: {},
+      after: {
+        filament: "Acme - PLA Meta",
+        initial_weight_g: 1000.0,
+        location: "Shelf A",
+        lot_nr: null,
+        archived: false,
+      },
+      destructive: false,
+    });
+    expect(screen.getByTestId("chat-card-value-initial_weight_g")).toHaveTextContent("1 kg");
+    expect(screen.queryByTestId("chat-card-value-lot_nr")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("chat-card-value-archived")).not.toBeInTheDocument();
+  });
+
+  it("renders an update as a diff of only the changed fields", async () => {
+    await showCard({
+      tool: "update_filament",
+      title: "Update filament #1",
+      summary: "Change colour and extruder temperature.",
+      before: { color_hex: "FF0000CC", settings_extruder_temp: 210, comment: null, material: "PLA" },
+      after: { color_hex: "0066CC", settings_extruder_temp: 215, comment: "winter batch", material: "PLA" },
+      destructive: false,
+    });
+
+    // Unchanged fields are not part of the decision.
+    expect(screen.queryByTestId("chat-card-value-material")).not.toBeInTheDocument();
+
+    const temp = screen.getByTestId("chat-card-value-settings_extruder_temp");
+    expect(temp).toHaveTextContent("210 °C");
+    expect(temp).toHaveTextContent("215 °C");
+    expect(temp.querySelector("del")).toHaveTextContent("210 °C");
+
+    // The 8-digit before-colour keeps its hex; the 6-digit after-colour does not need one.
+    const colour = screen.getByTestId("chat-card-value-color_hex");
+    expect(colour).toHaveTextContent("chat.confirm.color.red (#FF0000CC)");
+    expect(colour).toHaveTextContent("chat.confirm.color.blue");
+    expect(screen.getAllByTestId("chat-card-swatch")).toHaveLength(2);
+
+    // A field going from unset to set keeps the null visible — that IS the change.
+    const comment = screen.getByTestId("chat-card-value-comment");
+    expect(comment.querySelector("del")).toHaveTextContent("chat.confirm.not_set");
+    expect(comment).toHaveTextContent("winter batch");
   });
 });
 

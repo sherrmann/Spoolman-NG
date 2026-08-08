@@ -362,13 +362,28 @@
     "empty": "Ask me about your spools and filament — for example \"how much black PETG do I have left?\" or \"what should I reorder?\".",
     "viewInList": "View in Spools list",
     "confirm": {
-      "before": "Before",
-      "after": "After",
       "confirm": "Confirm",
       "cancel": "Cancel",
       "confirmed": "Confirmed",
       "cancelled": "Cancelled",
-      "destructive": "Cannot be undone"
+      "destructive": "Cannot be undone",
+      "not_set": "not set",
+      "status_open": "Open",
+      "color": {
+        "black": "Black",
+        "white": "White",
+        "grey": "Gray",
+        "red": "Red",
+        "orange": "Orange",
+        "yellow": "Yellow",
+        "green": "Green",
+        "cyan": "Cyan",
+        "blue": "Blue",
+        "purple": "Purple",
+        "pink": "Pink",
+        "brown": "Brown",
+        "beige": "Beige"
+      }
     },
     "executed": {
       "undo": "Undo",

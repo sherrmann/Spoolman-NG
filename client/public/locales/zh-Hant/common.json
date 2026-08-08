@@ -1304,13 +1304,28 @@
     "empty": "詢問我關於您的料盤與線材的問題 — 例如「我還剩多少黑色 PETG？」或「我該補什麼貨？」。",
     "viewInList": "在料盤列表中檢視",
     "confirm": {
-      "before": "之前",
-      "after": "之後",
       "confirm": "確認",
       "cancel": "取消",
       "confirmed": "已確認",
       "cancelled": "已取消",
-      "destructive": "無法復原"
+      "destructive": "無法復原",
+      "not_set": "未設定",
+      "status_open": "未結",
+      "color": {
+        "black": "黑色",
+        "white": "白色",
+        "grey": "灰色",
+        "red": "紅色",
+        "orange": "橙色",
+        "yellow": "黃色",
+        "green": "綠色",
+        "cyan": "青色",
+        "blue": "藍色",
+        "purple": "紫色",
+        "pink": "粉紅色",
+        "brown": "棕色",
+        "beige": "米色"
+      }
     },
     "executed": {
       "undo": "復原",

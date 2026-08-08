@@ -1304,13 +1304,28 @@
     "empty": "スプールやフィラメントについて何でも聞いてください — 例えば「黒のPETGはあとどれくらい残ってる?」や「そろそろ買い足したほうがいいのは?」など。",
     "viewInList": "スプール一覧で表示",
     "confirm": {
-      "before": "変更前",
-      "after": "変更後",
       "confirm": "確認",
       "cancel": "キャンセル",
       "confirmed": "確認済み",
       "cancelled": "キャンセル済み",
-      "destructive": "元に戻せません"
+      "destructive": "元に戻せません",
+      "not_set": "未設定",
+      "status_open": "未完了",
+      "color": {
+        "black": "黒",
+        "white": "白",
+        "grey": "グレー",
+        "red": "赤",
+        "orange": "オレンジ",
+        "yellow": "黄",
+        "green": "緑",
+        "cyan": "シアン",
+        "blue": "青",
+        "purple": "紫",
+        "pink": "ピンク",
+        "brown": "茶",
+        "beige": "ベージュ"
+      }
     },
     "executed": {
       "undo": "元に戻す",

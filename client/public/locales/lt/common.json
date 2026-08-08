@@ -1340,13 +1340,28 @@
     "empty": "Klauskite manęs apie savo rites ir gijas — pavyzdžiui, „kiek juodo PETG dar turiu?“ arba „ką turėčiau užsisakyti?“.",
     "viewInList": "Peržiūrėti ričių sąraše",
     "confirm": {
-      "before": "Prieš",
-      "after": "Po",
       "confirm": "Patvirtinti",
       "cancel": "Atšaukti",
       "confirmed": "Patvirtinta",
       "cancelled": "Atšaukta",
-      "destructive": "Neatšaukiama"
+      "destructive": "Neatšaukiama",
+      "not_set": "nenustatyta",
+      "status_open": "Atviras",
+      "color": {
+        "black": "Juoda",
+        "white": "Balta",
+        "grey": "Pilka",
+        "red": "Raudona",
+        "orange": "Oranžinė",
+        "yellow": "Geltona",
+        "green": "Žalia",
+        "cyan": "Žydra",
+        "blue": "Mėlyna",
+        "purple": "Violetinė",
+        "pink": "Rožinė",
+        "brown": "Ruda",
+        "beige": "Smėlio"
+      }
     },
     "executed": {
       "undo": "Grąžinti",

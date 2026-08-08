@@ -1334,13 +1334,28 @@
     "empty": "Fråga mig om dina spolar och ditt filament — till exempel \"hur mycket svart PETG har jag kvar?\" eller \"vad borde jag beställa mer av?\".",
     "viewInList": "Visa i spollistan",
     "confirm": {
-      "before": "Före",
-      "after": "Efter",
       "confirm": "Bekräfta",
       "cancel": "Avbryt",
       "confirmed": "Bekräftad",
       "cancelled": "Avbruten",
-      "destructive": "Kan inte ångras"
+      "destructive": "Kan inte ångras",
+      "not_set": "inte angivet",
+      "status_open": "Öppen",
+      "color": {
+        "black": "Svart",
+        "white": "Vit",
+        "grey": "Grå",
+        "red": "Röd",
+        "orange": "Orange",
+        "yellow": "Gul",
+        "green": "Grön",
+        "cyan": "Cyan",
+        "blue": "Blå",
+        "purple": "Lila",
+        "pink": "Rosa",
+        "brown": "Brun",
+        "beige": "Beige"
+      }
     },
     "executed": {
       "undo": "Ångra",

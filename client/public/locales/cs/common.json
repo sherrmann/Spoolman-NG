@@ -1352,13 +1352,28 @@
     "empty": "Zeptejte se mě na vaše cívky a filament — například „kolik mi zbývá černého PETG?“ nebo „co bych měl doobjednat?“.",
     "viewInList": "Zobrazit v seznamu cívek",
     "confirm": {
-      "before": "Před",
-      "after": "Po",
       "confirm": "Potvrdit",
       "cancel": "Zrušit",
       "confirmed": "Potvrzeno",
       "cancelled": "Zrušeno",
-      "destructive": "Nelze vrátit zpět"
+      "destructive": "Nelze vrátit zpět",
+      "not_set": "nenastaveno",
+      "status_open": "Otevřeno",
+      "color": {
+        "black": "Černá",
+        "white": "Bílá",
+        "grey": "Šedá",
+        "red": "Červená",
+        "orange": "Oranžová",
+        "yellow": "Žlutá",
+        "green": "Zelená",
+        "cyan": "Azurová",
+        "blue": "Modrá",
+        "purple": "Fialová",
+        "pink": "Růžová",
+        "brown": "Hnědá",
+        "beige": "Béžová"
+      }
     },
     "executed": {
       "undo": "Vrátit zpět",

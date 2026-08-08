@@ -1322,13 +1322,28 @@
     "empty": "Apne spools aur filament ke baare mein mujhse poochein — jaise \"mere paas kitna black PETG bacha hai?\" ya \"mujhe kya reorder karna chahiye?\".",
     "viewInList": "Spools list mein dekhein",
     "confirm": {
-      "before": "Pehle",
-      "after": "Baad",
       "confirm": "Confirm karein",
       "cancel": "Cancel karein",
       "confirmed": "Confirm ho gaya",
       "cancelled": "Cancel ho gaya",
-      "destructive": "Ise undo nahi kiya ja sakta"
+      "destructive": "Ise undo nahi kiya ja sakta",
+      "not_set": "set nahi hai",
+      "status_open": "Open",
+      "color": {
+        "black": "Kaala",
+        "white": "Safed",
+        "grey": "Grey",
+        "red": "Laal",
+        "orange": "Orange",
+        "yellow": "Peela",
+        "green": "Hara",
+        "cyan": "Cyan",
+        "blue": "Neela",
+        "purple": "Baingani",
+        "pink": "Gulaabi",
+        "brown": "Bhoora",
+        "beige": "Beige"
+      }
     },
     "executed": {
       "undo": "Undo karein",

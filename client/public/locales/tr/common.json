@@ -1322,13 +1322,28 @@
     "empty": "Makaralarınız ve filamentiniz hakkında bana soru sorun — örneğin \"elimde ne kadar siyah PETG kaldı?\" veya \"neyi yeniden sipariş etmeliyim?\".",
     "viewInList": "Makaralar listesinde göster",
     "confirm": {
-      "before": "Önce",
-      "after": "Sonra",
       "confirm": "Onayla",
       "cancel": "İptal et",
       "confirmed": "Onaylandı",
       "cancelled": "İptal edildi",
-      "destructive": "Geri alınamaz"
+      "destructive": "Geri alınamaz",
+      "not_set": "ayarlanmadı",
+      "status_open": "Açık",
+      "color": {
+        "black": "Siyah",
+        "white": "Beyaz",
+        "grey": "Gri",
+        "red": "Kırmızı",
+        "orange": "Turuncu",
+        "yellow": "Sarı",
+        "green": "Yeşil",
+        "cyan": "Camgöbeği",
+        "blue": "Mavi",
+        "purple": "Mor",
+        "pink": "Pembe",
+        "brown": "Kahverengi",
+        "beige": "Bej"
+      }
     },
     "executed": {
       "undo": "Geri al",

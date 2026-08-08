@@ -1352,13 +1352,28 @@
     "empty": "Zapytaj mnie o swoje szpule i filament — na przykład „Ile zostało mi czarnego PETG?” lub „Co powinienem zamówić ponownie?”.",
     "viewInList": "Zobacz na liście szpul",
     "confirm": {
-      "before": "Przed",
-      "after": "Po",
       "confirm": "Potwierdź",
       "cancel": "Anuluj",
       "confirmed": "Potwierdzono",
       "cancelled": "Anulowano",
-      "destructive": "Nie można cofnąć"
+      "destructive": "Nie można cofnąć",
+      "not_set": "nie ustawiono",
+      "status_open": "Otwarte",
+      "color": {
+        "black": "Czarny",
+        "white": "Biały",
+        "grey": "Szary",
+        "red": "Czerwony",
+        "orange": "Pomarańczowy",
+        "yellow": "Żółty",
+        "green": "Zielony",
+        "cyan": "Cyjan",
+        "blue": "Niebieski",
+        "purple": "Fioletowy",
+        "pink": "Różowy",
+        "brown": "Brązowy",
+        "beige": "Beżowy"
+      }
     },
     "executed": {
       "undo": "Cofnij",

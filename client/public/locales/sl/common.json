@@ -1358,13 +1358,28 @@
     "empty": "Vprašajte me o svojih kolutih in filamentu — na primer »koliko črnega PETG mi je še ostalo?« ali »kaj naj ponovno naročim?«.",
     "viewInList": "Prikaži v seznamu kolutov",
     "confirm": {
-      "before": "Pred",
-      "after": "Po",
       "confirm": "Potrdi",
       "cancel": "Prekliči",
       "confirmed": "Potrjeno",
       "cancelled": "Preklicano",
-      "destructive": "Ni mogoče razveljaviti"
+      "destructive": "Ni mogoče razveljaviti",
+      "not_set": "ni nastavljeno",
+      "status_open": "Odprto",
+      "color": {
+        "black": "Črna",
+        "white": "Bela",
+        "grey": "Siva",
+        "red": "Rdeča",
+        "orange": "Oranžna",
+        "yellow": "Rumena",
+        "green": "Zelena",
+        "cyan": "Cijan",
+        "blue": "Modra",
+        "purple": "Vijolična",
+        "pink": "Roza",
+        "brown": "Rjava",
+        "beige": "Bež"
+      }
     },
     "executed": {
       "undo": "Razveljavi",

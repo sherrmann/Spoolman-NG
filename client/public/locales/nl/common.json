@@ -1334,13 +1334,28 @@
     "empty": "Vraag me iets over uw spoelen en filament — bijvoorbeeld \"hoeveel zwart PETG heb ik nog over?\" of \"wat moet ik bijbestellen?\".",
     "viewInList": "Bekijken in spoelenlijst",
     "confirm": {
-      "before": "Voor",
-      "after": "Na",
       "confirm": "Bevestigen",
       "cancel": "Annuleren",
       "confirmed": "Bevestigd",
       "cancelled": "Geannuleerd",
-      "destructive": "Kan niet ongedaan worden gemaakt"
+      "destructive": "Kan niet ongedaan worden gemaakt",
+      "not_set": "niet ingesteld",
+      "status_open": "Open",
+      "color": {
+        "black": "Zwart",
+        "white": "Wit",
+        "grey": "Grijs",
+        "red": "Rood",
+        "orange": "Oranje",
+        "yellow": "Geel",
+        "green": "Groen",
+        "cyan": "Cyaan",
+        "blue": "Blauw",
+        "purple": "Paars",
+        "pink": "Roze",
+        "brown": "Bruin",
+        "beige": "Beige"
+      }
     },
     "executed": {
       "undo": "Ongedaan maken",

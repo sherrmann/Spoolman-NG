@@ -1316,13 +1316,28 @@
     "empty": "问我关于您的料盘和耗材的问题——例如“我还剩多少黑色 PETG？”或“我该补货什么了？”。",
     "viewInList": "在料盘列表中查看",
     "confirm": {
-      "before": "之前",
-      "after": "之后",
       "confirm": "确认",
       "cancel": "取消",
       "confirmed": "已确认",
       "cancelled": "已取消",
-      "destructive": "无法撤销"
+      "destructive": "无法撤销",
+      "not_set": "未设置",
+      "status_open": "进行中",
+      "color": {
+        "black": "黑色",
+        "white": "白色",
+        "grey": "灰色",
+        "red": "红色",
+        "orange": "橙色",
+        "yellow": "黄色",
+        "green": "绿色",
+        "cyan": "青色",
+        "blue": "蓝色",
+        "purple": "紫色",
+        "pink": "粉色",
+        "brown": "棕色",
+        "beige": "米色"
+      }
     },
     "executed": {
       "undo": "撤销",

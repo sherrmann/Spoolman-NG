@@ -1352,13 +1352,28 @@
     "empty": "Întreabă-mă despre bobinele și filamentele tale — de exemplu „cât PETG negru mai am?” sau „ce ar trebui să reaprovizionez?”.",
     "viewInList": "Vezi în lista de bobine",
     "confirm": {
-      "before": "Înainte",
-      "after": "După",
       "confirm": "Confirmă",
       "cancel": "Anulează",
       "confirmed": "Confirmat",
       "cancelled": "Anulat",
-      "destructive": "Nu poate fi revocat"
+      "destructive": "Nu poate fi revocat",
+      "not_set": "nesetat",
+      "status_open": "Deschisă",
+      "color": {
+        "black": "Negru",
+        "white": "Alb",
+        "grey": "Gri",
+        "red": "Roșu",
+        "orange": "Portocaliu",
+        "yellow": "Galben",
+        "green": "Verde",
+        "cyan": "Cyan",
+        "blue": "Albastru",
+        "purple": "Violet",
+        "pink": "Roz",
+        "brown": "Maro",
+        "beige": "Bej"
+      }
     },
     "executed": {
       "undo": "Revocă",

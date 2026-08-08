@@ -1352,13 +1352,28 @@
     "empty": "Pergunte-me sobre as suas bobines e filamentos — por exemplo, \"quanto PETG preto ainda tenho?\" ou \"o que devo repor?\".",
     "viewInList": "Ver na lista de Bobines",
     "confirm": {
-      "before": "Antes",
-      "after": "Depois",
       "confirm": "Confirmar",
       "cancel": "Cancelar",
       "confirmed": "Confirmado",
       "cancelled": "Cancelado",
-      "destructive": "Não pode ser desfeito"
+      "destructive": "Não pode ser desfeito",
+      "not_set": "não definido",
+      "status_open": "Aberta",
+      "color": {
+        "black": "Preto",
+        "white": "Branco",
+        "grey": "Cinzento",
+        "red": "Vermelho",
+        "orange": "Laranja",
+        "yellow": "Amarelo",
+        "green": "Verde",
+        "cyan": "Ciano",
+        "blue": "Azul",
+        "purple": "Roxo",
+        "pink": "Rosa",
+        "brown": "Castanho",
+        "beige": "Bege"
+      }
     },
     "executed": {
       "undo": "Desfazer",

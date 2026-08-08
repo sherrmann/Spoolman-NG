@@ -1334,13 +1334,28 @@
     "empty": "Spør meg om spolene og filamentet ditt — for eksempel «hvor mye svart PETG har jeg igjen?» eller «hva bør jeg etterbestille?».",
     "viewInList": "Vis i spolelisten",
     "confirm": {
-      "before": "Før",
-      "after": "Etter",
       "confirm": "Bekreft",
       "cancel": "Avbryt",
       "confirmed": "Bekreftet",
       "cancelled": "Avbrutt",
-      "destructive": "Kan ikke angres"
+      "destructive": "Kan ikke angres",
+      "not_set": "ikke angitt",
+      "status_open": "Åpen",
+      "color": {
+        "black": "Svart",
+        "white": "Hvit",
+        "grey": "Grå",
+        "red": "Rød",
+        "orange": "Oransje",
+        "yellow": "Gul",
+        "green": "Grønn",
+        "cyan": "Cyan",
+        "blue": "Blå",
+        "purple": "Lilla",
+        "pink": "Rosa",
+        "brown": "Brun",
+        "beige": "Beige"
+      }
     },
     "executed": {
       "undo": "Angre",

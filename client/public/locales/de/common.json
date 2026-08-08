@@ -1334,13 +1334,28 @@
     "empty": "Frag mich nach deinen Spulen und deinem Filament — zum Beispiel „Wie viel schwarzes PETG habe ich noch?“ oder „Was sollte ich nachbestellen?“.",
     "viewInList": "In der Spulenliste anzeigen",
     "confirm": {
-      "before": "Vorher",
-      "after": "Nachher",
       "confirm": "Bestätigen",
       "cancel": "Abbrechen",
       "confirmed": "Bestätigt",
       "cancelled": "Abgebrochen",
-      "destructive": "Kann nicht rückgängig gemacht werden"
+      "destructive": "Kann nicht rückgängig gemacht werden",
+      "not_set": "nicht gesetzt",
+      "status_open": "Offen",
+      "color": {
+        "black": "Schwarz",
+        "white": "Weiß",
+        "grey": "Grau",
+        "red": "Rot",
+        "orange": "Orange",
+        "yellow": "Gelb",
+        "green": "Grün",
+        "cyan": "Cyan",
+        "blue": "Blau",
+        "purple": "Lila",
+        "pink": "Rosa",
+        "brown": "Braun",
+        "beige": "Beige"
+      }
     },
     "executed": {
       "undo": "Rückgängig",
