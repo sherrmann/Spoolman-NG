@@ -49,11 +49,16 @@ def _round6(expr: sqlalchemy.ColumnElement[float]) -> sqlalchemy.ColumnElement[f
     ``func.max`` (see location.py's ``get_weight_aggregates``); the fix is the same idea — cast to
     Numeric first, so ``round`` resolves to the two-argument overload on every backend.
 
-    There is deliberately no cast back to Float. It would be a no-op at best: MySQL/MariaDB cannot
-    CAST to FLOAT at all (SQLAlchemy drops it and emits a warning), and on SQLite/PostgreSQL the
-    ``UPDATE ... SET used_weight = ...`` assignment already coerces the value to the column's type.
-    Compiling all three dialects with and without it produces byte-identical SQL, so the cast only
-    ever bought a warning.
+    There is deliberately no cast back to Float. On MySQL/MariaDB it would be a byte-identical
+    no-op: CAST to FLOAT isn't supported there at all, so SQLAlchemy silently drops it from the
+    compiled SQL and only emits a warning. On PostgreSQL, CockroachDB and SQLite the cast is *not*
+    dropped — it does show up in the compiled SQL (``CAST(round(...) AS FLOAT)``) — but it is still
+    a no-op in effect, because the ``UPDATE ... SET used_weight = ...`` assignment already coerces
+    the result to the column's type on those backends regardless of the extra cast. Compiled and
+    diffed against all four supported dialects: PostgreSQL, CockroachDB and SQLite differ textually
+    with and without the cast (but are equivalent in the value actually stored); MySQL/MariaDB is
+    the only one where the SQL text itself is byte-identical either way. So the cast never changes
+    what ends up in the database on any backend — it just bought a warning on MySQL/MariaDB.
     """
     numeric_expr = sqlalchemy.cast(expr, Numeric(18, WEIGHT_ROUND_DECIMALS))
     return func.round(numeric_expr, WEIGHT_ROUND_DECIMALS)
