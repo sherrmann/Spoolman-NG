@@ -5,7 +5,7 @@ from collections.abc import Sequence
 from datetime import datetime
 
 import sqlalchemy
-from sqlalchemy import case, func
+from sqlalchemy import Numeric, case, func
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import contains_eager, joinedload
@@ -30,6 +30,64 @@ from spoolman.math import weight_from_length
 from spoolman.ws import websocket_manager
 
 logger = logging.getLogger(__name__)
+
+# Weights are rounded to 6 decimal places (1 microgram) wherever they're written, to strip float64
+# representation noise (e.g. 0.30000000000000004 from summing 0.1 + 0.2) without discarding real
+# sub-gram increments — a slicer can legitimately report ~0.03 g per layer, which is still six
+# orders of magnitude above this floor (#377).
+WEIGHT_ROUND_DECIMALS = 6
+
+# The SQL type every rounded weight expression carries. 18 total digits leaves 12 for the integer
+# part — orders of magnitude more than any real spool weight in grams — with WEIGHT_ROUND_DECIMALS
+# digits after the point. Shared by _round6 and by the zero-clamp literal in
+# _used_weight_after_refill so that both branches of that CASE have the same type (see _round6).
+WEIGHT_NUMERIC = Numeric(18, WEIGHT_ROUND_DECIMALS)
+
+
+def _round6(expr: sqlalchemy.ColumnElement[float]) -> sqlalchemy.ColumnElement[float]:
+    """Round a float SQL expression to WEIGHT_ROUND_DECIMALS places, portable across dialects.
+
+    PostgreSQL (and CockroachDB, which follows PostgreSQL semantics here) has no two-argument
+    ``round(double precision, integer)`` overload — only ``round(numeric, integer)`` — so a bare
+    ``func.round(expr, 6)`` compiles and passes on SQLite/MySQL/MariaDB, then fails on
+    PostgreSQL/CockroachDB with "function round(double precision, integer) does not exist". This
+    codebase already hit this exact class of non-portable-two-argument-function bug once with
+    ``func.max`` (see location.py's ``get_weight_aggregates``); the fix is the same idea — cast to
+    Numeric first, so ``round`` resolves to the two-argument overload on every backend.
+
+    The value this returns is therefore NUMERIC-typed, not double precision, and there is
+    deliberately no cast back to Float. Where the rounded value is assigned straight to the column
+    (``UPDATE ... SET used_weight = round(...)`` — the consumption path in use_weight_safe) that
+    outer cast really is redundant: the assignment coerces to the column's type on every backend
+    anyway, and on MySQL/MariaDB ``CAST(... AS FLOAT)`` isn't supported at all, so SQLAlchemy drops
+    it from the compiled SQL and emits a warning for nothing.
+
+    It is *not* redundant when the rounded value sits inside a ``CASE`` alongside another branch,
+    which is what the refill path in _used_weight_after_refill builds. CockroachDB requires every
+    branch of a ``CASE`` to resolve to the same type and rejects a mixed NUMERIC/FLOAT8 one outright
+    ("incompatible value type: expected $5::FLOAT8 to be of type decimal, found type float");
+    PostgreSQL, SQLite and MySQL/MariaDB all accept the mismatch, so only the CockroachDB leg of the
+    integration matrix ever catches it. Rather than reintroduce the outer cast (and the MySQL
+    warning) purely to reconcile the branches, _used_weight_after_refill casts its zero-clamp
+    literal to WEIGHT_NUMERIC so both branches agree at the source — do not "simplify" that cast
+    away. tests/test_spool_weight_sql_types.py guards both halves of this.
+    """
+    numeric_expr = sqlalchemy.cast(expr, WEIGHT_NUMERIC)
+    return func.round(numeric_expr, WEIGHT_ROUND_DECIMALS)
+
+
+def _used_weight_after_refill(weight: float) -> sqlalchemy.ColumnElement[float]:
+    """Build the used_weight expression for a refill (``weight < 0``), clamped at zero.
+
+    Both branches are deliberately WEIGHT_NUMERIC-typed: the rounded one because _round6 produces
+    NUMERIC, the zero-clamp because CockroachDB rejects a ``CASE`` whose branches disagree on type.
+    See _round6's docstring for the full reasoning.
+    """
+    new_used_weight = models.Spool.used_weight + weight
+    return case(
+        (new_used_weight >= 0.0, _round6(new_used_weight)),
+        else_=sqlalchemy.cast(0.0, WEIGHT_NUMERIC),  # Set used_weight to 0 if the result would be negative
+    )
 
 
 async def build(
@@ -84,6 +142,10 @@ async def build(
             used_weight = max(initial_weight - remaining_weight, 0)
         else:
             used_weight = 0
+
+    # Strip float64 representation noise regardless of which branch above set used_weight —
+    # including a caller-supplied value, which can carry the same noise (#377).
+    used_weight = round(used_weight, WEIGHT_ROUND_DECIMALS)
 
     # Convert datetime values to UTC and remove timezone info
     if first_used is not None:
@@ -347,6 +409,13 @@ async def find(  # noqa: C901, PLR0912
     return result, total_count
 
 
+def _used_weight_from_remaining(initial_weight: float | None, remaining_weight: float) -> float:
+    """Derive used_weight from a caller-supplied remaining_weight, as used by update()'s PATCH handling."""
+    if initial_weight is None:
+        raise ItemCreateError("remaining_weight can only be used if initial_weight is set.")
+    return max(initial_weight - remaining_weight, 0)
+
+
 async def update(
     *,
     db: AsyncSession,
@@ -364,9 +433,13 @@ async def update(
                 spool.initial_weight = spool.filament.weight
 
         elif k == "remaining_weight":
-            if spool.initial_weight is None:
-                raise ItemCreateError("remaining_weight can only be used if initial_weight is set.")
-            spool.used_weight = max(spool.initial_weight - v, 0)
+            new_used_weight = _used_weight_from_remaining(spool.initial_weight, v)
+            # Rounded like every other used_weight write path (#377): the subtraction can carry
+            # the same float64 noise as the SQL accumulator in use_weight_safe does.
+            spool.used_weight = round(new_used_weight, WEIGHT_ROUND_DECIMALS)
+        elif k == "used_weight":
+            # A caller can also set used_weight directly (#377): round it the same way.
+            spool.used_weight = round(v, WEIGHT_ROUND_DECIMALS)
         elif isinstance(v, datetime):
             setattr(spool, k, utc_timezone_naive(v))
         elif k == "extra":
@@ -493,11 +566,13 @@ async def use_weight_safe(db: AsyncSession, spool_id: int, weight: float) -> flo
     # equals the requested weight. Keep this path a single atomic UPDATE with no preceding read:
     # adding a read-before-write here turns concurrent uses into read/write transactions that
     # deadlock (MariaDB) or hit serialization retries (CockroachDB SERIALIZABLE), losing updates.
+    # The accumulator is rounded in SQL (see _round6) rather than read back and rounded in Python,
+    # for the same reason: rounding here must not turn this into a read-then-write (#377).
     if weight >= 0:
         await db.execute(
             sqlalchemy.update(models.Spool)
             .where(models.Spool.id == spool_id)
-            .values(used_weight=models.Spool.used_weight + weight),
+            .values(used_weight=_round6(models.Spool.used_weight + weight)),
         )
         return weight
 
@@ -509,12 +584,7 @@ async def use_weight_safe(db: AsyncSession, spool_id: int, weight: float) -> flo
     await db.execute(
         sqlalchemy.update(models.Spool)
         .where(models.Spool.id == spool_id)
-        .values(
-            used_weight=case(
-                (models.Spool.used_weight + weight >= 0.0, models.Spool.used_weight + weight),
-                else_=0.0,  # Set used_weight to 0 if the result would be negative
-            ),
-        ),
+        .values(used_weight=_used_weight_after_refill(weight)),
     )
     if used_before is None:
         return weight  # Spool not found; caller's get_by_id will raise ItemNotFoundError.

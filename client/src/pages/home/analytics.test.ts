@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 import { describe, expect, it } from "vitest";
+import { parseJsonWithBigIntIds } from "../../utils/bigintJson";
 import { IFilament } from "../filaments/model";
 import { ISpool } from "../spools/model";
 import { IVendor } from "../vendors/model";
@@ -78,6 +79,35 @@ describe("totalRemainingWeight", () => {
       spool({ filament: filament() }), // contributes 0
     ];
     expect(totalRemainingWeight(spools)).toBe(500 + 800 + 1000 + 0);
+  });
+});
+
+// #377: the home page crashed with `e.toFixed is not a function`. All the fixtures above build
+// ISpool objects directly, so weights are always genuine JS numbers — `used_weight: 0` everywhere
+// — and never exercise how a value actually arrives in the browser: JSON text run through
+// parseJsonWithBigIntIds. Round-tripping through the real deserializer here is what catches it:
+// a weight carrying float64 noise (e.g. `0.30000000000000004`, from accumulated `used_weight +
+// weight` arithmetic) used to come out of the old parser as a *string* (json-bigint's
+// storeAsString gates on raw literal length, not integer-ness), which silently flips this file's
+// `sum + spoolStockWeight(s)` reduce into string concatenation instead of addition.
+describe("totalRemainingWeight (Layer 1 end-to-end, #377)", () => {
+  it("sums correctly through the real JSON deserialization pipeline when a weight carries float64 noise", () => {
+    const filamentJson = `{"id":1,"registered":"2024-01-01","density":1.24,"diameter":1.75,"extra":{}}`;
+    const spoolsJson = `[
+      {"id":1,"registered":"2024-01-01T00:00:00Z","filament":${filamentJson},"used_weight":0,
+       "used_length":0,"archived":false,"extra":{},"remaining_weight":0.30000000000000004},
+      {"id":2,"registered":"2024-01-01T00:00:00Z","filament":${filamentJson},"used_weight":0,
+       "used_length":0,"archived":false,"extra":{},"remaining_weight":500}
+    ]`;
+
+    const spools = parseJsonWithBigIntIds(spoolsJson) as ISpool[];
+    const total = totalRemainingWeight(spools);
+
+    expect(typeof total).toBe("number");
+    // 500 + 0.30000000000000004. Written as 500.3 because the long form is not representable as a
+    // JS literal anyway — it parses to exactly this — and spelling it out would only imply a
+    // precision the language cannot hold.
+    expect(total).toBeCloseTo(500.3, 6);
   });
 });
 
