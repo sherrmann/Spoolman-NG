@@ -46,14 +46,17 @@ def _round6(expr: sqlalchemy.ColumnElement[float]) -> sqlalchemy.ColumnElement[f
     ``func.round(expr, 6)`` compiles and passes on SQLite/MySQL/MariaDB, then fails on
     PostgreSQL/CockroachDB with "function round(double precision, integer) does not exist". This
     codebase already hit this exact class of non-portable-two-argument-function bug once with
-    ``func.max`` (see location.py's ``get_weight_aggregates``); the fix there was a portable
-    rewrite, and the fix here is the same idea: cast to Numeric first so ``round`` resolves to the
-    two-argument overload on every backend, then cast back to Float to match the ``used_weight``
-    column. Verified directly against SQLite, PostgreSQL, MariaDB and CockroachDB (not just
-    reasoned about) — see the #377 fix report for the exact SQL exercised on each.
+    ``func.max`` (see location.py's ``get_weight_aggregates``); the fix is the same idea — cast to
+    Numeric first, so ``round`` resolves to the two-argument overload on every backend.
+
+    There is deliberately no cast back to Float. It would be a no-op at best: MySQL/MariaDB cannot
+    CAST to FLOAT at all (SQLAlchemy drops it and emits a warning), and on SQLite/PostgreSQL the
+    ``UPDATE ... SET used_weight = ...`` assignment already coerces the value to the column's type.
+    Compiling all three dialects with and without it produces byte-identical SQL, so the cast only
+    ever bought a warning.
     """
     numeric_expr = sqlalchemy.cast(expr, Numeric(18, WEIGHT_ROUND_DECIMALS))
-    return sqlalchemy.cast(func.round(numeric_expr, WEIGHT_ROUND_DECIMALS), sqlalchemy.Float)
+    return func.round(numeric_expr, WEIGHT_ROUND_DECIMALS)
 
 
 async def build(
