@@ -130,17 +130,24 @@ export function enrichText(text: string | undefined) {
 /**
  * Formats the weight in grams to either kilograms or grams based on the provided precision.
  *
- * @param {number} weightInGrams - The weight in grams to be formatted.
+ * Defensive coercion (#377): weights can arrive as a string (e.g. an upstream JSON-parsing bug
+ * that mistakes a noisy float for an oversized integer) despite the declared `number` type, and
+ * `"...".toFixed` throwing crashed the whole home page. Coerce once up front, following the same
+ * `Number(value)` + `Number.isFinite` pattern as `numberFormatter` above; non-finite input
+ * degrades to a benign 0 instead of throwing.
+ *
+ * @param {number|string|null|undefined} weightInGrams - The weight in grams to be formatted.
  * @param {number} [precision=2] - The precision of the formatting (number of decimal places).
  * @return {string} The formatted weight with the appropriate unit (kg or g).
  */
-export function formatWeight(weightInGrams: number, precision: number = 2): string {
-  if (weightInGrams >= 1000) {
-    const kilograms = removeTrailingZeros((weightInGrams / 1000).toFixed(precision));
+export function formatWeight(weightInGrams: number | string | null | undefined, precision: number = 2): string {
+  const numeric = weightInGrams == null ? NaN : Number(weightInGrams);
+  const grams = Number.isFinite(numeric) ? numeric : 0;
+  if (grams >= 1000) {
+    const kilograms = removeTrailingZeros((grams / 1000).toFixed(precision));
     return `${kilograms} kg`;
   } else {
-    const grams = removeTrailingZeros(weightInGrams.toFixed(precision));
-    return `${grams} g`;
+    return `${removeTrailingZeros(grams.toFixed(precision))} g`;
   }
 }
 
@@ -151,26 +158,36 @@ export function formatWeight(weightInGrams: number, precision: number = 2): stri
  * precision for both branches, which can't give grams 0 decimals and kilograms 1 at the same
  * time — this is a thin wrapper that just picks the right precision per branch.
  *
- * @param {number} weightInGrams - The weight in grams to be formatted.
+ * @param {number|string|null|undefined} weightInGrams - The weight in grams to be formatted.
  * @return {string} The formatted weight with the appropriate unit (kg or g).
  */
-export function formatWeightCompact(weightInGrams: number): string {
-  return formatWeight(weightInGrams, weightInGrams >= 1000 ? 1 : 0);
+export function formatWeightCompact(weightInGrams: number | string | null | undefined): string {
+  // Same defensive coercion as formatWeight (#377) — needed here too since the branch precision
+  // is picked before delegating, based on a `>=` comparison that a garbage string would fail silently.
+  const numeric = weightInGrams == null ? NaN : Number(weightInGrams);
+  const grams = Number.isFinite(numeric) ? numeric : 0;
+  return formatWeight(grams, grams >= 1000 ? 1 : 0);
 }
 
 /**
  * Formats the length in millimeters to either meters or millimeters based on the provided precision.
  *
- * @param {number} lengthInMillimeter - The length in millimeters to be formatted.
+ * Defensive coercion (#377): same rationale as formatWeight above. The mm branch also used to
+ * interpolate its raw input unrounded, which both skipped the coercion and let float64 noise
+ * (e.g. `999.9999999999999`) render verbatim instead of at the requested precision.
+ *
+ * @param {number|string|null|undefined} lengthInMillimeter - The length in millimeters to be formatted.
  * @param {number} [precision=2] - The precision of the formatting (number of decimal places).
  * @return {string} The formatted length with the appropriate unit (m or mm).
  */
-export function formatLength(lengthInMillimeter: number, precision: number = 2): string {
-  if (lengthInMillimeter >= 1000) {
-    const meters = removeTrailingZeros((lengthInMillimeter / 1000).toFixed(precision));
+export function formatLength(lengthInMillimeter: number | string | null | undefined, precision: number = 2): string {
+  const numeric = lengthInMillimeter == null ? NaN : Number(lengthInMillimeter);
+  const mm = Number.isFinite(numeric) ? numeric : 0;
+  if (mm >= 1000) {
+    const meters = removeTrailingZeros((mm / 1000).toFixed(precision));
     return `${meters} m`;
   } else {
-    return `${lengthInMillimeter} mm`;
+    return `${removeTrailingZeros(mm.toFixed(precision))} mm`;
   }
 }
 

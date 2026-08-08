@@ -138,6 +138,58 @@ def test_use_spool_not_found():
     assert "123456789" in message
 
 
+def test_use_spool_weight_repeated_small_increments(random_filament: dict[str, Any]):
+    """Repeated small `use` calls must not accumulate float64 noise, nor lose real sub-gram usage.
+
+    #377: used_weight is accumulated server-side as `used_weight = used_weight + weight` on every
+    call. Doing that in float64 many times accumulates representation noise -- 100 additions of
+    0.03 land on 2.999999999999995 in plain Python, not 3.0 -- which used to reach the client as a
+    long noisy literal, and a (since-fixed) client-side bug turned that into string concatenation
+    instead of addition, crashing the home page. The server-side fix rounds the accumulator to 6
+    decimal places (1 microgram) on every write, which is far below any real increment: a slicer
+    legitimately reporting ~0.03 g per layer must keep accumulating normally, not get rounded away.
+
+    The noise from repeated float64 addition alone is around 1e-15 here -- far smaller than any
+    tolerance that would still be a meaningful "no drift" check -- so this compares for exact
+    equality rather than pytest.approx with a workable-looking tolerance; a loose tolerance would
+    pass on both the rounded and the unrounded accumulator and catch nothing.
+    """
+    # Setup
+    start_weight = 1000
+    result = httpx.post(
+        f"{URL}/api/v1/spool",
+        json={
+            "filament_id": random_filament["id"],
+            "remaining_weight": start_weight,
+        },
+    )
+    result.raise_for_status()
+    spool = result.json()
+
+    # Execute: 100 calls of 0.03g -- individually far too small to lose to a 0.1g-scale rounding
+    # rule, but exactly the kind of repeated small increment that accumulates float noise.
+    per_use = 0.03
+    uses = 100
+    for _ in range(uses):
+        result = httpx.put(
+            f"{URL}/api/v1/spool/{spool['id']}/use",
+            json={"use_weight": per_use},
+        )
+        result.raise_for_status()
+
+    # Verify: the accumulated total is exactly correct (no float64 drift) ...
+    spool = result.json()
+    expected_used = round(per_use * uses, 6)
+    assert spool["used_weight"] == expected_used
+    # ... and, crucially, the 100 individual 0.03g increments were not lost to rounding: 100 * 0.03
+    # is meaningfully more than a single increment, so a bug that rounded each accumulation down to
+    # the nearest 0.1g (or coarser) would fail this by a wide margin, not just a float epsilon.
+    assert spool["used_weight"] > per_use * (uses - 1)
+
+    # Clean up
+    httpx.delete(f"{URL}/api/v1/spool/{spool['id']}").raise_for_status()
+
+
 @pytest.mark.asyncio
 async def test_use_spool_concurrent(random_filament: dict[str, Any]):
     """Test using a spool with many concurrent requests."""
