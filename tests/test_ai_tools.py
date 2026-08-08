@@ -57,7 +57,7 @@ def test_writer_is_offered_read_and_model_write_tools() -> None:
 
 
 def test_deleting_an_order_has_a_model_facing_tool_of_its_own() -> None:
-    """ "Delete order 3" must have a right answer inside the offered tool list.
+    """A request to delete order 3 must have a right answer inside the offered tool list.
 
     While delete_order was ``model_facing=False`` the model was offered no tool that deletes an
     order at all, and it substituted ``delete_spool`` -- rendering a confirm-card that destroyed

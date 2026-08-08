@@ -62,10 +62,24 @@ def _system_prompt(*, context: str | None, locale: str, can_write: bool) -> str:
     if context:
         lines.append(f"The user is currently viewing: {context}.")
     if can_write:
+        # The interface already gates every write behind a confirm-card the user has to click, so a
+        # model that also asks "shall I go ahead?" in prose costs the user a turn and confirms
+        # nothing extra. The old wording ("only applied after the user confirms them in the
+        # interface") described that gate without saying what the model should therefore do, and the
+        # observed behaviour was three turns of asking before any card appeared -- the same failure
+        # the eval measured, where the dominant error was declining to call any tool at all. The
+        # safety property that matters (do not touch things the user did not ask about) is kept, and
+        # is now paired with the never-substitute rule below rather than with a prose round-trip.
         lines.append(
-            "Changes (updating, creating, deleting, or consuming spools) are only applied after the user "
-            "confirms them in the interface. Call the write tool with the intended change; do not claim a "
-            "change has happened until a tool result confirms it. Never delete without being clearly asked.",
+            "Changes (creating, updating, deleting, consuming) are applied only after the user clicks "
+            "Confirm on a card the interface shows them, so that card IS the confirmation: call the write "
+            "tool directly with the intended change instead of asking the user to confirm in chat. Do not "
+            "claim a change has happened until a tool result confirms it. Only ever change or delete the "
+            "records the user actually asked about.",
+        )
+        lines.append(
+            "If the user names a kind of record (order, spool, filament, location, vendor) and no tool "
+            "acts on that kind, say so plainly. Never act on a different kind of record instead.",
         )
         lines.append(
             "Never invent a filament's density or diameter. Call catalog_lookup for real values, or ask "
