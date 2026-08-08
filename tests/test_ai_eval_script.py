@@ -53,3 +53,85 @@ def test_ai_eval_cases_name_tools_that_still_exist(ai_eval_module: ModuleType) -
     known = set(ai_tools.READ_TOOLS) | set(ai_tools.WRITE_TOOLS)
     unknown = sorted({case["tool"] for case in cases} - known)
     assert not unknown, f"ai_eval_cases.json expects tools that no longer exist: {unknown}"
+
+
+# --- Two-turn scoring (#380) -------------------------------------------------------
+#
+# The system prompt tells the model to look before it writes ("check find_vendors or
+# find_locations before creating a vendor or location that may already exist", and to call
+# catalog_lookup rather than invent a density). A single-turn harness scores that instructed
+# behaviour as a failure and never reaches the write, which penalises careful models hardest --
+# Sonnet 5 lost all five of its misses this way while following the prompt exactly.
+#
+# So a fixture may declare the precursor calls that legitimately come first. When the model opens
+# with one, the harness feeds back a synthetic result and scores the *second* call, reporting
+# "went straight there" and "completed the task" separately.
+
+
+def test_precursor_results_leave_exactly_one_sensible_next_step(ai_eval_module: ModuleType) -> None:
+    """A lookup that returns a hit would make *not* creating the record correct.
+
+    The fixtures expect a create, so the synthetic answer has to say "no such record yet";
+    otherwise turn two measures nothing and the model is right to stop.
+    """
+    for tool in ("find_vendors", "find_locations"):
+        reply = json.loads(ai_eval_module._precursor_result(tool))  # noqa: SLF001
+        assert reply, f"{tool} needs a result payload"
+        assert not any(value for value in reply.values() if isinstance(value, list)), (
+            f"{tool}'s synthetic result must be empty, or creating the record is no longer correct"
+        )
+
+
+def test_catalog_lookup_result_supplies_what_the_prompt_forbids_guessing(ai_eval_module: ModuleType) -> None:
+    """create_filament is blocked on density/diameter the model is told never to invent."""
+    reply = json.loads(ai_eval_module._precursor_result("catalog_lookup"))  # noqa: SLF001
+    assert "density" in json.dumps(reply)
+    assert "diameter" in json.dumps(reply)
+
+
+async def test_a_precursor_then_the_expected_tool_counts_as_completed_but_not_direct(
+    ai_eval_module: ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    replies = [
+        {"tool_calls": [{"function": {"name": "find_vendors", "arguments": "{}"}}]},
+        {"tool_calls": [{"function": {"name": "create_vendor", "arguments": '{"name": "polymaker"}'}}]},
+    ]
+
+    async def _fake(*_args: object, **_kwargs: object) -> dict:
+        return replies.pop(0)
+
+    monkeypatch.setattr(ai_eval_module.ai, "chat_completion_tools", _fake)
+    case = {
+        "prompt": "Add Polymaker as a vendor",
+        "tool": "create_vendor",
+        "args": {"name": "polymaker"},
+        "precursors": ["find_vendors"],
+    }
+
+    outcome = await ai_eval_module._run_case(ai_eval_module.ai.AIConfig(), [], case)  # noqa: SLF001
+
+    assert outcome.direct is False, "it did not go straight to the write"
+    assert outcome.completed is True, "but it did finish the task"
+    assert outcome.args_ok is True
+
+
+async def test_a_wrong_first_tool_never_gets_a_second_turn(
+    ai_eval_module: ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The second turn must not become a retry that launders bad tool selection into a pass."""
+    calls: list[object] = []
+
+    async def _fake(*_args: object, **_kwargs: object) -> dict:
+        calls.append(object())
+        return {"tool_calls": [{"function": {"name": "delete_spool", "arguments": "{}"}}]}
+
+    monkeypatch.setattr(ai_eval_module.ai, "chat_completion_tools", _fake)
+    case = {"prompt": "Add Polymaker as a vendor", "tool": "create_vendor", "precursors": ["find_vendors"]}
+
+    outcome = await ai_eval_module._run_case(ai_eval_module.ai.AIConfig(), [], case)  # noqa: SLF001
+
+    assert len(calls) == 1, "a wrong tool must not earn another turn"
+    assert outcome.direct is False
+    assert outcome.completed is False

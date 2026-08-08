@@ -1,0 +1,13 @@
+[
+  {
+    "file": "synthetic_label.jpg",
+    "what": "flat synthetic label, perfect framing - the floor test",
+    "want": {
+      "vendor": ["Prusa", "Prusament"],
+      "name": ["Jet Black", "Black"],
+      "material": "PETG",
+      "weight_g": 1000,
+      "diameter_mm": 1.75
+    }
+  }
+]

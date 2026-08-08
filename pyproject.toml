@@ -138,6 +138,10 @@ help = "Combined backend coverage: fast suite + tests_integration against an ins
 cmd = "python scripts/ai_eval.py"
 help = "Tool-selection accuracy for the curated AI tool layer. Needs a configured AI endpoint."
 
+[tool.poe.tasks.ai-eval-vision]
+cmd = "python scripts/ai_eval_vision.py"
+help = "Scan-to-Spool extraction accuracy on label photos. Needs a configured AI endpoint."
+
 [tool.ruff]
 line-length = 120
 target-version = "py310"

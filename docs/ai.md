@@ -289,19 +289,52 @@ the tool set changes. The harness's own system prompt is built from the same
 `_system_prompt` the in-app chat agent actually sends (writer posture, English locale, no page
 context), so the eval measures the configuration Spoolman ships, not a thinner stand-in.
 
-Measured across 2 runs against a local Ollama 7.6B tool-tuned model
-(`hhao/qwen2.5-coder-tools`) on 53 fixture prompts: **47-48/53 (89-91%)** tool
-selection, **44-46/53 (83-87%)** with correct arguments too, run to run. Treat that range as one
-small local model's variance on one machine, not a guarantee for whatever endpoint you point
-Spoolman at, and expect the exact numbers to drift a little between any two runs — a single
-best-of-N figure understates that. The dominant failure mode across both runs is the model
-declining to call any tool at all, not calling the wrong one.
+It reports **two** numbers, not one. *Completed task* is whether the model got the job
+done; *directly* is whether it went straight there. The system prompt tells the model to
+look before it writes — check `find_vendors` before creating a vendor, call
+`catalog_lookup` rather than invent a density — so a model that does exactly that is not
+wrong, it just took two turns. When a fixture declares the precursor calls that
+legitimately come first, the harness feeds back a synthetic result and scores the second
+call. A *wrong* tool never earns a second turn; that would turn the follow-up into a retry
+that launders bad tool selection into a pass.
 
-**Those figures were measured against the 18-tool set, before `delete_order` was made
-model-facing.** The tool set is 19 tools now and the fixture set has grown to match, so the
-range above is the last measurement taken, not a current one — it has not been re-run since
-(the eval needs a live model endpoint). Re-run it before the next release and replace these
-numbers rather than reading them as today's accuracy.
+Measured on 55 fixture prompts against the 19-tool set, on one machine (RTX 3050 Laptop,
+4 GB VRAM), Ollama 0.32.5:
+
+| Model | Completed | Directly | With args |
+|---|---|---|---|
+| `qwen3:4b-instruct` | — | 50/55 (91%) | 47/55 (85%) |
+| `granite4.1:3b` | — | 47-48/55 (85-87%) | 43/55 (78%) |
+| `gemma4:e2b` | 45/55 (82%) | 43/55 (78%) | 43/55 (78%) |
+
+Treat these as one machine's numbers, not a guarantee for whatever endpoint you point
+Spoolman at, and expect drift between runs — re-running `granite4.1:3b` back to back gave
+47 then 48, so roughly ±1 case is normal.
+
+> Avoid community Modelfiles that hand-roll the tool-calling template. This section
+> previously quoted 89-91% for `hhao/qwen2.5-coder-tools`; on Ollama 0.32.5 that model now
+> scores an effective **zero** — not because it got worse, but because it emits a perfectly
+> correct tool call as ordinary text that Ollama no longer parses into `tool_calls`. There
+> is no error and nothing in the logs; the assistant just quietly stops being able to look
+> anything up. Prefer official library models whose `capabilities` include `tools`.
+
+## Scan-to-Spool eval (maintainers)
+
+```bash
+SPOOLMAN_AI_BASE_URL=http://localhost:11434/v1 SPOOLMAN_AI_MODEL=<vision model> uv run poe ai-eval-vision
+```
+
+Runs label photos through the same `spoolintake.extract` the feature uses. Only a synthetic
+label ships with the repo — a deliberate *floor* test: flat, perfectly framed, high
+contrast, so a model that fails it cannot read a real spool either (one measured model
+completed every photo and still scored 0/10 on it). Real photos are the harder and more
+informative half; point the harness at your own directory with `--photos DIR`, containing a
+`cases.json` in the same shape as `scripts/ai_eval_vision_cases/cases.json`.
+
+It reports field accuracy twice: overall, and for the four fields that actually decide
+whether a scan finds the right filament — `name`, `vendor`, `material`, `weight_g`, which
+are the only ones `score_candidate` weights. A wrong value in those is worse than a blank
+one, because it drags the match toward the wrong record.
 
 ## Privacy
 
