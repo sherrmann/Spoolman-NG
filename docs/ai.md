@@ -155,11 +155,17 @@ undone in one click and require an explicit request; deleting a filament also de
 spools and their usage history, and the confirm-card states exactly how many. Marking an
 order arrived also cannot be undone in one click: it can create a spool per unit in the same
 step, and because that splits order lines there is no clean single call that reverses it, so
-its confirm-card spells out exactly what will be created before you confirm. Undoing a filament
-**creation** is also refused, rather than silently deleting, if you've added spools to it since —
-you'll be told how many, and can delete the filament explicitly (with its own confirm-card) if
-that is really what you want. A **read-only** account can use the assistant to ask questions but
-is offered no write actions at all.
+its confirm-card spells out exactly what will be created before you confirm. Undoing a
+**creation** is also refused, rather than destroying what came after it: a filament creation
+whose filament has since gained spools, or a spool creation whose spool has since recorded
+usage, tells you how many and leaves everything in place — delete it explicitly (with its own
+confirm-card) if that is really what you want. A **read-only** account can use the assistant to
+ask questions but is offered no write actions at all.
+
+When creating a filament also creates its vendor — the confirm-card says so — undoing that
+creation removes the vendor as well, so nothing is left behind. The one exception is a vendor
+you have since filed other filaments under: those would lose their vendor link, so the vendor
+is kept and only the filament is removed.
 
 When updating a filament or a spool, an omitted field is left unchanged and an explicit
 `null` clears it — except a filament's density and diameter, which can never be null and

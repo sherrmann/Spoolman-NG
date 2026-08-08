@@ -26,7 +26,7 @@ import respx
 from httpx import AsyncClient, Response
 from sqlalchemy import select
 
-from spoolman import ai, ai_tools, aichat
+from spoolman import ai, ai_tools, aichat, spoolintake
 from spoolman.ai_tools import filaments, orders
 from spoolman.api.v1 import ai as ai_api
 from spoolman.database import database as db_module
@@ -733,6 +733,91 @@ async def test_plain_delete_filament_via_the_confirmed_chat_path_still_cascades(
             await spool_db.get_by_id(session, spool.id)
 
 
+# --- The same shape one entity down: create_spool's undo vs. usage recorded since ---
+#
+# create_spool's undo names delete_spool, delete_spool is on the /ai/chat/action allowlist, and
+# spool.delete removes every usage event the spool has. Reachable in one session exactly like C1:
+# "create a spool of filament 3" -> Confirm -> "I used 200 g from spool 12" (consume_spool) ->
+# Confirm -> click Undo on the still-visible creation card. Before the only_if_untouched guard that
+# returned a clean 200 with the usage history silently emptied.
+
+
+async def _usage_event_count(session: object, spool_id: int) -> int:
+    rows = await session.execute(select(models.SpoolUsageEvent).where(models.SpoolUsageEvent.spool_id == spool_id))
+    return len(rows.all())
+
+
+async def test_undo_a_spool_creation_refuses_once_usage_was_recorded(client: AsyncClient) -> None:
+    await _enable_chat(client)
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        filament = await filament_db.create(db=session, density=1.24, diameter=1.75, name="PLA", weight=1000)
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+        created = await ai_tools.WRITE_TOOLS["create_spool"].execute(ctx, {"filament_id": filament.id})
+        spool_id = created.data["spool_id"]
+        undo = created.undo
+        assert undo == {"tool": "delete_spool", "args": {"spool_id": spool_id, "only_if_untouched": True}}
+
+        # The user records usage against the spool before clicking Undo on the creation card.
+        await ai_tools.WRITE_TOOLS["consume_spool"].execute(ctx, {"spool_id": spool_id, "use_weight_g": 200})
+        assert await _usage_event_count(session, spool_id) == 1
+
+    response = await client.post("/api/v1/ai/chat/action", json=undo)
+
+    assert response.status_code == 422
+    assert "1 usage event" in response.json()["detail"]
+
+    # Nothing was destroyed: the spool and its usage history are both still there.
+    async with session_maker() as session:
+        still_there = await spool_db.get_by_id(session, spool_id)
+        assert still_there.id == spool_id
+        assert await _usage_event_count(session, spool_id) == 1
+
+
+async def test_undo_a_spool_creation_still_deletes_cleanly_when_no_usage_was_recorded(client: AsyncClient) -> None:
+    # The refusal above must not turn one-click undo into a no-op for the ordinary case: a spool
+    # creation undone before anything else touched it must still delete it. (spool.create itself
+    # records no usage event, so this is the common path, not an edge case.)
+    await _enable_chat(client)
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        filament = await filament_db.create(db=session, density=1.24, diameter=1.75, name="PLA", weight=1000)
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+        created = await ai_tools.WRITE_TOOLS["create_spool"].execute(ctx, {"filament_id": filament.id})
+        spool_id = created.data["spool_id"]
+        undo = created.undo
+
+    response = await client.post("/api/v1/ai/chat/action", json=undo)
+    assert response.status_code == 200
+
+    async with session_maker() as session:
+        with pytest.raises(ItemNotFoundError, match="No spool with ID"):
+            await spool_db.get_by_id(session, spool_id)
+
+
+async def test_plain_delete_spool_via_the_confirmed_chat_path_still_deletes_usage_history(
+    client: AsyncClient,  # noqa: ARG001
+) -> None:
+    # The dangerous inverse: an ordinary delete_spool (the model calling it, then the user
+    # confirming the "and its usage history" card) never sets only_if_untouched, so it must still
+    # delete a spool that has usage events. If the guard defaulted on, every real delete would
+    # start refusing.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        filament = await filament_db.create(db=session, density=1.24, diameter=1.75, name="PLA", weight=1000)
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+        spool = await spool_db.create(db=session, filament_id=filament.id)
+        await ai_tools.WRITE_TOOLS["consume_spool"].execute(ctx, {"spool_id": spool.id, "use_weight_g": 100})
+        assert await _usage_event_count(session, spool.id) == 1
+
+        result = await ai_tools.WRITE_TOOLS["delete_spool"].execute(ctx, {"spool_id": spool.id})
+        assert result.undo is None
+
+        with pytest.raises(ItemNotFoundError, match="No spool with ID"):
+            await spool_db.get_by_id(session, spool.id)
+        assert await _usage_event_count(session, spool.id) == 0
+
+
 async def test_chat_refuses_a_turn_when_every_slot_is_busy(
     client: AsyncClient,
     monkeypatch: pytest.MonkeyPatch,
@@ -1055,6 +1140,126 @@ async def test_find_orders_derives_status_and_filters_by_shop_and_date(client: A
     assert result["orders"][0]["status"] == "open"
     assert result["orders"][0]["outstanding_units"] == 2
     assert arrived_order.id != open_order.id  # sanity: the arrived order was excluded, not coincidentally absent
+
+
+# --- Read-tool result contract: count is the TRUE total, returned is this page -----
+#
+# find_filaments used to return {"count": len(rows)} with no "returned" key at all, so with 60
+# filaments and the default cap it answered "how many filament types do I have?" with 25 -- and the
+# drawer's transparency line repeated the wrong number. Its four siblings all reported the true
+# total plus "returned". These pin the shared contract across every find_* tool in the registry, so
+# the next one cannot diverge either.
+
+
+async def _seed_three_of_each_findable_entity(session: object) -> None:
+    """Create exactly three vendors, filaments, spools, locations and (open) orders."""
+    for index in range(3):
+        vendor = await vendor_db.create(db=session, name=f"Vendor {index}")
+        filament = await filament_db.create(
+            db=session,
+            density=1.24,
+            diameter=1.75,
+            name=f"Filament {index}",
+            vendor_id=vendor.id,
+            weight=1000,
+        )
+        await spool_db.create(db=session, filament_id=filament.id, location=f"Shelf {index}", initial_weight=1000)
+        await location_db.create(db=session, name=f"Shelf {index}")
+        await order_db.create(db=session, lines=[{"filament_id": filament.id, "quantity": 1}])
+
+
+async def test_every_find_tool_reports_the_true_total_and_how_many_it_returned(
+    client: AsyncClient,  # noqa: ARG001
+) -> None:
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    # Three of everything, asked for one: count must be 3 (what the user has) and returned 1 (what
+    # the model was handed), with the payload list matching returned. A tool that reports the page
+    # size as the total fails on count; one that forgets "returned" fails on the KeyError.
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        await _seed_three_of_each_findable_entity(session)
+        ctx = ai_tools.ToolContext(db=session, can_write=False)
+        find_tools = sorted(name for name in ai_tools.READ_TOOLS if name.startswith("find_"))
+        assert find_tools, "no find_* read tools found -- this guard would silently check nothing"
+        for name in find_tools:
+            result = await ai_tools.READ_TOOLS[name].run(ctx, {"limit": 1})
+            assert result["count"] == 3, f"{name} reported count={result['count']}, not the true total of 3"
+            assert result["returned"] == 1, f"{name} reported returned={result.get('returned')}, not 1"
+            # Each find tool returns exactly one list payload (find_spools' "filters" is a dict),
+            # derived rather than named per tool so a new one is covered without editing this.
+            payloads = [key for key, value in result.items() if isinstance(value, list)]
+            assert len(payloads) == 1, f"{name} returned {len(payloads)} list payloads: {payloads}"
+            assert len(result[payloads[0]]) == result["returned"], f"{name}'s {payloads[0]} disagrees with returned"
+            # ...and the drawer's transparency line must repeat the true total, not the page size:
+            # that line is where the user sees what the assistant actually looked at. Asserted by
+            # changing count and requiring the sentence to change with it, rather than by looking
+            # for "3" in the text -- other numbers in these summaries are 3 often enough (three
+            # 1000 g spools sum to 3000.0) that a substring check would pass on the wrong number.
+            summary = aichat._read_summary(name, result)  # noqa: SLF001 -- the drawer's own line
+            assert aichat._read_summary(name, {**result, "count": 999}) != summary, (  # noqa: SLF001
+                f"{name}'s drawer summary does not report count, so it cannot be reporting the true total: {summary!r}"
+            )
+
+
+#: Arguments that make every read tool return real, non-empty results against the seed below.
+#: Keyed by tool name and pinned against the live registry, like _WRITE_TOOL_MINIMAL_ARGS: a new
+#: read tool must be given real arguments here rather than silently skipping the summary check.
+_READ_TOOL_ARGS: dict[str, dict] = {
+    "find_spools": {},
+    "find_filaments": {},
+    "find_locations": {},
+    "find_vendors": {},
+    "find_orders": {"status": "all"},
+    "get_usage_stats": {"bucket": "month"},
+    "catalog_lookup": {"vendor": "Sunlu", "name": "PLA Meta", "material": "PLA"},
+}
+
+#: Stands in for the locally-synced SpoolmanDB catalog, which a test host need not have.
+_FAKE_CATALOG = [
+    {
+        "id": "sunlu-pla-meta",
+        "manufacturer": "Sunlu",
+        "name": "PLA Meta",
+        "material": "PLA",
+        "density": 1.24,
+        "diameter": 1.75,
+        "weight": 1000,
+    },
+]
+
+
+def test_read_tool_args_map_is_complete() -> None:
+    assert set(_READ_TOOL_ARGS) == set(ai_tools.READ_TOOLS)
+
+
+async def test_every_read_tool_summary_reads_keys_the_tool_really_returns(
+    client: AsyncClient,  # noqa: ARG001
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    # tests/test_ai_tools.py's sibling proves every read tool HAS a _read_summary branch, by passing
+    # {}. That alone can't prove the branch reads the right keys: one built on result.get("totals")
+    # when the tool returns "total_cost" still returns a tool-specific sentence full of zeros.
+    # Here each tool runs against a real database with real data, and the summary built from its
+    # actual result must differ from the one built from {} -- which it can only do by reading a key
+    # the tool genuinely returns.
+    monkeypatch.setattr(spoolintake, "load_catalog", lambda: _FAKE_CATALOG)
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        await _seed_three_of_each_findable_entity(session)
+        spools, _ = await spool_db.find(db=session, limit=1)
+        # A real consumption event, so get_usage_stats has a non-empty bucket to summarise.
+        await spool_db.use_weight(session, spools[0].id, 42.5)
+        ctx = ai_tools.ToolContext(db=session, can_write=False)
+
+        for name, args in sorted(_READ_TOOL_ARGS.items()):
+            result = await ai_tools.READ_TOOLS[name].run(ctx, args)
+            summary = aichat._read_summary(name, result)  # noqa: SLF001 -- the drawer's own line
+            assert summary != "Done.", f"{name} has no _read_summary branch of its own"
+            assert summary != aichat._read_summary(name, {}), (  # noqa: SLF001
+                f"{name}'s summary is identical to the one built from an empty dict, so its branch "
+                f"reads no key this tool actually returns: {sorted(result)}"
+            )
 
 
 # --- create_order / delete_order: hidden undo delete --------------------------------
@@ -1603,9 +1808,18 @@ async def test_create_filament_execute_creates_both_filament_and_vendor(
         # test_create_filament_undo_round_trip_actually_deletes_the_filament. Setting the
         # only_if_empty flag is C1's fix: it never reaches the model (absent from delete_filament's
         # JSON schema) and is only ever set here, so a click on this creation's Undo button after
-        # spools were added refuses instead of silently cascading.
+        # spools were added refuses instead of silently cascading. also_delete_vendor_id is the
+        # same idea for I3: this call created the vendor, so undoing it must take that vendor back
+        # out too (see test_undo_a_filament_creation_also_deletes_the_vendor_it_created).
         undo = result.undo
-        assert undo == {"tool": "delete_filament", "args": {"filament_id": filament_id, "only_if_empty": True}}
+        assert undo == {
+            "tool": "delete_filament",
+            "args": {
+                "filament_id": filament_id,
+                "only_if_empty": True,
+                "also_delete_vendor_id": result.data["vendor_id"],
+            },
+        }
         await filament_db.delete(session, undo["args"]["filament_id"])
 
         with pytest.raises(ItemNotFoundError, match="No filament with ID"):
@@ -1645,7 +1859,8 @@ async def test_create_filament_cleans_up_the_vendor_it_created_when_the_filament
     session_maker = db_module.get_session_maker()
     async with session_maker() as session:
         ctx = ai_tools.ToolContext(db=session, can_write=True)
-        with pytest.raises(ai_tools.ToolError, match="simulated filament creation failure"):
+        # The message is the curated one (see the leak test below); what this pins is the cleanup.
+        with pytest.raises(ai_tools.ToolError, match="Could not create the filament"):
             await ai_tools.WRITE_TOOLS["create_filament"].execute(
                 ctx,
                 {"name": "PLA Meta", "vendor_name": "OrphanCo", "density": 1.24, "diameter": 1.75},
@@ -1672,7 +1887,8 @@ async def test_create_filament_never_deletes_a_pre_existing_vendor_when_the_fila
     async with session_maker() as session:
         await vendor_db.create(db=session, name="ExistingCo")
         ctx = ai_tools.ToolContext(db=session, can_write=True)
-        with pytest.raises(ai_tools.ToolError, match="simulated filament creation failure"):
+        # The message is the curated one (see the leak test below); what this pins is the cleanup.
+        with pytest.raises(ai_tools.ToolError, match="Could not create the filament"):
             await ai_tools.WRITE_TOOLS["create_filament"].execute(
                 ctx,
                 {"name": "PLA Meta", "vendor_name": "ExistingCo", "density": 1.24, "diameter": 1.75},
@@ -1681,6 +1897,181 @@ async def test_create_filament_never_deletes_a_pre_existing_vendor_when_the_fila
         found, _ = await vendor_db.find(db=session, name="ExistingCo")
     assert len(found) == 1
     assert found[0].name == "ExistingCo"
+
+
+async def test_create_filament_reports_a_curated_message_not_the_raw_exception_text(
+    client: AsyncClient,  # noqa: ARG001
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    # ToolError's message is shown to the user, fed back to the model, AND returned over MCP,
+    # whose _call_tool docstring promises no internal detail crosses that boundary. A raw
+    # SQLAlchemy IntegrityError embeds the failing SQL with table and column names, so the broad
+    # except (which the orphan-vendor cleanup genuinely needs) must not forward str(exc).
+    async def _boom(**_kwargs: object) -> None:
+        raise RuntimeError('INSERT INTO filament (name, vendor_id) VALUES (?, ?) -- constraint "uq_secret" failed')
+
+    monkeypatch.setattr(filaments.filament_db, "create", _boom)
+
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+        with pytest.raises(ai_tools.ToolError) as excinfo:
+            await ai_tools.WRITE_TOOLS["create_filament"].execute(
+                ctx,
+                {"name": "PLA Meta", "vendor_name": "LeakyCo", "density": 1.24, "diameter": 1.75},
+            )
+
+    message = str(excinfo.value)
+    assert "INSERT INTO" not in message
+    assert "uq_secret" not in message
+    assert "Could not create the filament" in message
+
+
+async def test_create_filament_still_passes_through_an_already_curated_error(
+    client: AsyncClient,  # noqa: ARG001
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # `client` isn't called directly but its fixture wires up db_module's session maker.
+    # The inverse of the test above: ItemNotFoundError/ItemCreateError carry messages written for a
+    # person ("No vendor with ID 999 found."), and the model can act on them. Curating those away
+    # into one generic sentence would be a regression, not a fix.
+    async def _boom(**_kwargs: object) -> None:
+        raise ItemNotFoundError("No vendor with ID 999 found.")
+
+    monkeypatch.setattr(filaments.filament_db, "create", _boom)
+
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+        with pytest.raises(ai_tools.ToolError, match=r"No vendor with ID 999 found\."):
+            await ai_tools.WRITE_TOOLS["create_filament"].execute(
+                ctx,
+                {"name": "PLA Meta", "density": 1.24, "diameter": 1.75},
+            )
+
+
+# --- I3: undoing a creation must also take back the vendor that creation added -----
+#
+# create_filament creates a vendor when vendor_name is unknown and says so on the card ("This also
+# creates the vendor 'BrandNewCo'."). Its undo used to delete only the filament, leaving the vendor
+# behind -- an unlisted fourth exception to docs/ai.md's "Undo restores the previous state".
+# /ai/chat/action runs exactly one tool per call, so the id rides along on delete_filament instead.
+
+
+async def test_undo_a_filament_creation_also_deletes_the_vendor_it_created(client: AsyncClient) -> None:
+    await _enable_chat(client)
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+        created = await ai_tools.WRITE_TOOLS["create_filament"].execute(
+            ctx,
+            {"name": "PLA Meta", "vendor_name": "BrandNewCo", "density": 1.24, "diameter": 1.75},
+        )
+        filament_id = created.data["filament_id"]
+        vendor_id = created.data["vendor_id"]
+        assert created.undo == {
+            "tool": "delete_filament",
+            "args": {"filament_id": filament_id, "only_if_empty": True, "also_delete_vendor_id": vendor_id},
+        }
+        undo = created.undo
+
+    response = await client.post("/api/v1/ai/chat/action", json=undo)
+
+    assert response.status_code == 200, response.text
+    # The user is told, in the one line the drawer shows for this action, that the vendor went too.
+    assert "BrandNewCo" in response.json()["summary"]
+
+    async with session_maker() as session:
+        with pytest.raises(ItemNotFoundError, match="No filament with ID"):
+            await filament_db.get_by_id(session, filament_id)
+        with pytest.raises(ItemNotFoundError, match="No vendor with ID"):
+            await vendor_db.get_by_id(session, vendor_id)
+
+
+async def test_undo_a_filament_creation_never_deletes_a_pre_existing_vendor(client: AsyncClient) -> None:
+    # The first dangerous inverse: a vendor the user already had is not this creation's to remove.
+    # It is never named in the undo descriptor at all -- the id is set only when THIS call created
+    # the vendor -- and the vendor (with its comment, empty-spool weight and history) survives.
+    await _enable_chat(client)
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        existing = await vendor_db.create(db=session, name="ExistingCo", comment="my usual supplier")
+        existing_id = existing.id
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+        created = await ai_tools.WRITE_TOOLS["create_filament"].execute(
+            ctx,
+            {"name": "PLA Meta", "vendor_name": "existingco", "density": 1.24, "diameter": 1.75},
+        )
+        assert "also_delete_vendor_id" not in created.undo["args"]
+        undo = created.undo
+
+    response = await client.post("/api/v1/ai/chat/action", json=undo)
+    assert response.status_code == 200, response.text
+
+    async with session_maker() as session:
+        survivor = await vendor_db.get_by_id(session, existing_id)
+        assert survivor.name == "ExistingCo"
+        assert survivor.comment == "my usual supplier"
+
+
+async def test_undo_a_filament_creation_keeps_a_self_created_vendor_that_gained_other_filaments(
+    client: AsyncClient,
+) -> None:
+    # The second dangerous inverse: the vendor was created by this call, but the user has since
+    # filed another filament under it. Deleting it now would silently unlink that filament (vendor
+    # delete leaves filaments in place with a null vendor) -- undo must restore the previous state,
+    # not go further than it. The filament this undo owns still goes.
+    await _enable_chat(client)
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+        created = await ai_tools.WRITE_TOOLS["create_filament"].execute(
+            ctx,
+            {"name": "PLA Meta", "vendor_name": "BrandNewCo", "density": 1.24, "diameter": 1.75},
+        )
+        filament_id = created.data["filament_id"]
+        vendor_id = created.data["vendor_id"]
+        undo = created.undo
+
+        # A second filament is filed under that same vendor before anyone clicks Undo.
+        other = await filament_db.create(db=session, density=1.24, diameter=1.75, name="PETG", vendor_id=vendor_id)
+        other_id = other.id
+
+    response = await client.post("/api/v1/ai/chat/action", json=undo)
+
+    assert response.status_code == 200, response.text
+    assert "BrandNewCo" not in response.json()["summary"]  # nothing claimed about a vendor that stayed
+
+    async with session_maker() as session:
+        with pytest.raises(ItemNotFoundError, match="No filament with ID"):
+            await filament_db.get_by_id(session, filament_id)
+        kept_vendor = await vendor_db.get_by_id(session, vendor_id)
+        assert kept_vendor.id == vendor_id
+        # ...and the other filament still points at it, rather than having been quietly unlinked.
+        still_linked = await filament_db.get_by_id(session, other_id)
+        assert still_linked.vendor is not None
+        assert still_linked.vendor.id == vendor_id
+
+
+async def test_undoing_the_same_filament_creation_twice_is_a_clean_error_not_a_crash(
+    client: AsyncClient,  # noqa: ARG001
+) -> None:
+    # A double-click on Undo replays the same descriptor, now naming a vendor that is already gone.
+    # The filament lookup refuses first, with a model-facing ToolError; the vendor branch must never
+    # be the thing that raises (it is best-effort by design, since the filament delete has committed).
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+        created = await ai_tools.WRITE_TOOLS["create_filament"].execute(
+            ctx,
+            {"name": "PLA Meta", "vendor_name": "TwiceCo", "density": 1.24, "diameter": 1.75},
+        )
+        undo = created.undo
+        await ai_tools.WRITE_TOOLS[undo["tool"]].execute(ctx, undo["args"])
+
+        with pytest.raises(ai_tools.ToolError, match="No filament with ID"):
+            await ai_tools.WRITE_TOOLS[undo["tool"]].execute(ctx, undo["args"])
 
 
 # --- update_filament: before/after diff and a genuinely reversible undo ------------
@@ -1717,6 +2108,37 @@ async def test_update_filament_undo_round_trip(client: AsyncClient) -> None:  # 
         reverted = await filament_db.get_by_id(session, filament_id)
     assert reverted.name == "Old"
     assert reverted.weight == 1000.0
+
+
+async def test_update_filament_undo_replays_an_eight_digit_color_hex(client: AsyncClient) -> None:
+    # color_hex is 6 OR 8 characters (the API model declares max_length=8, "Supports alpha channel
+    # at the end"), and an update's undo descriptor carries the STORED before-value. While the tool
+    # accepted only 6, a filament stored as FF0000CC produced an undo whose replay raised
+    # ToolError -> 422 from /ai/chat/action: the user clicked Undo and nothing happened. Replayed
+    # through the real endpoint, not the tool directly, because the 422 was what the user saw.
+    await _enable_chat(client)
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        created = await filament_db.create(db=session, density=1.24, diameter=1.75, color_hex="FF0000CC")
+        filament_id = created.id
+        ctx = ai_tools.ToolContext(db=session, can_write=True)
+
+        result = await ai_tools.WRITE_TOOLS["update_filament"].execute(
+            ctx,
+            {"filament_id": filament_id, "color_hex": "00FF00"},
+        )
+        undo = result.undo
+        assert undo == {"tool": "update_filament", "args": {"filament_id": filament_id, "color_hex": "FF0000CC"}}
+
+        updated = await filament_db.get_by_id(session, filament_id)
+        assert updated.color_hex == "00FF00"
+
+    response = await client.post("/api/v1/ai/chat/action", json=undo)
+    assert response.status_code == 200, response.text
+
+    async with session_maker() as session:
+        reverted = await filament_db.get_by_id(session, filament_id)
+    assert reverted.color_hex == "FF0000CC"
 
 
 async def test_update_filament_undo_restores_a_field_whose_before_value_was_none(

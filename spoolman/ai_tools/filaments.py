@@ -25,7 +25,7 @@ from spoolman.ai_tools.base import (
 )
 from spoolman.database import filament as filament_db
 from spoolman.database import vendor as vendor_db
-from spoolman.exceptions import ItemDeleteError, ItemNotFoundError
+from spoolman.exceptions import ItemCreateError, ItemDeleteError, ItemNotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ async def _run_find_filaments(ctx: ToolContext, args: dict) -> dict:
     limit = arg_limit(args)
     low_stock_only = arg_bool(args, "low_stock_only")
 
-    items, _ = await filament_db.find(
+    items, total = await filament_db.find(
         db=ctx.db,
         search=clean_str(args.get("query")),
         material=clean_str(args.get("material")),
@@ -72,7 +72,14 @@ async def _run_find_filaments(ctx: ToolContext, args: dict) -> dict:
             },
         )
     rows.sort(key=lambda row: row["total_remaining_weight_g"])
-    return {"count": len(rows), "filaments": rows[:limit]}
+    # count is the TRUE total, returned is how many of them are in this page -- the contract every
+    # sibling find_* tool follows (tests/integration/test_ai_chat_endpoints.py pins it across all of
+    # them). Reporting len(rows) as the count made "how many filament types do I have?" answer with
+    # the page size, confidently and with no signal that anything was truncated. With low_stock_only
+    # the fetch is unlimited and the filtering happens here, so rows IS the complete match set and
+    # its length is the true total; otherwise the database's own total counts the rows past the cap.
+    count = len(rows) if low_stock_only else total
+    return {"count": count, "returned": min(len(rows), limit), "filaments": rows[:limit]}
 
 
 # --- Write tools -------------------------------------------------------------------
@@ -97,17 +104,27 @@ _COLUMN_TO_ARG = {column: arg for arg, (column, _kind) in _CURATED.items()}
 _COLUMN_TO_ARG.update({"density": "density", "diameter": "diameter", "color_hex": "color_hex"})
 
 
-_HEX_COLOR_LENGTH = 6
+#: RRGGBB or RRGGBBAA -- the exact band the rest of the codebase uses: the API model declares
+#: min_length=6, max_length=8 ("Supports alpha channel at the end") and _normalize_stored_color_hex
+#: accepts len(clr) in (6, 8). Accepting only 6 here broke two live paths, not a hypothetical one:
+#: update_filament's undo descriptor is built from the *stored* before-value, so a filament stored
+#: with an alpha colour produced an undo that raised on replay (a 422 from /ai/chat/action -- Undo
+#: simply did not work), and find_filaments hands the model raw stored colours, so echoing one back
+#: failed the whole call.
+_HEX_COLOR_LENGTHS = (6, 8)
 
 
 def _color_hex(args: dict) -> str | None:
-    """Normalise a colour argument to a bare 6-digit hex, or raise."""
+    """Normalise a colour argument to a bare 6- or 8-digit hex, or raise."""
     raw = clean_str(args.get("color_hex"))
     if raw is None:
         return None
     candidate = raw.lstrip("#").upper()
-    if len(candidate) != _HEX_COLOR_LENGTH or any(char not in "0123456789ABCDEF" for char in candidate):
-        raise ToolError(f"The 'color_hex' argument must be a 6-digit hex colour, got {args['color_hex']!r}.")
+    if len(candidate) not in _HEX_COLOR_LENGTHS or any(char not in "0123456789ABCDEF" for char in candidate):
+        raise ToolError(
+            "The 'color_hex' argument must be a 6-digit hex colour, or 8 digits with an alpha "
+            f"channel, got {args['color_hex']!r}.",
+        )
     return candidate
 
 
@@ -244,23 +261,42 @@ async def _execute_create_filament(ctx: ToolContext, args: dict) -> ExecutionRes
         created_vendor_id = created_vendor.id
     try:
         created = await filament_db.create(db=ctx.db, vendor_id=vendor_id, **fields)
-    except Exception as exc:  # Any failure here must not leave an orphaned vendor behind.
+    except (ItemNotFoundError, ItemCreateError) as exc:
+        # These two carry messages written for a person (e.g. "No vendor with ID 7 found."), so
+        # they pass through verbatim -- the model can act on them.
         await _cleanup_orphaned_vendor(ctx, created_vendor_id)
         raise ToolError(str(exc)) from exc
+    except Exception as exc:  # Any failure here must not leave an orphaned vendor behind.
+        # ToolError's message is shown to the user, fed back to the model, and (via mcp_server,
+        # whose _call_tool docstring promises no internal detail crosses the MCP boundary) returned
+        # to an arbitrary MCP client. A raw SQLAlchemy IntegrityError string is none of those
+        # things: it embeds the failing SQL with table and column names. Log the real one, hand out
+        # a curated one -- the same split aichat's _TOOL_FAILED already makes.
+        await _cleanup_orphaned_vendor(ctx, created_vendor_id)
+        logger.exception("create_filament failed while creating a filament with fields %r.", sorted(fields))
+        raise ToolError("Could not create the filament. Check the values and try again.") from exc
     summary = f"Created filament #{created.id}."
+    # only_if_empty is never in delete_filament's model-facing schema -- it exists purely so this
+    # undo descriptor can refuse to cascade. Between this create and a click on the resulting
+    # Undo button, the user may have added spools to the filament; a bare delete_filament call
+    # would destroy them (and their usage history) with no count and no confirmation, the exact
+    # silent-cascade-via-undo failure this flag exists to close off. The normal, previewed
+    # delete_filament path (the model calling it directly, or a confirmed chat write) never
+    # sets this flag, so it still discloses and cascades exactly as before.
+    undo_args: dict = {"filament_id": created.id, "only_if_empty": True}
     if created_vendor_id is not None:
         summary = f"{summary} Also created the vendor '{vendor_to_create}'."
+        # ...and undoing this creation must also take that vendor back out, or Undo would leave
+        # behind a registry entry the user never asked for. /ai/chat/action runs exactly one tool
+        # per call, so this cannot be a second action: delete_filament carries the id and removes
+        # the vendor itself, after the filament and only while the vendor has no other filaments.
+        # Like only_if_empty, this argument is absent from delete_filament's schema and is only
+        # ever set here, on a vendor id this very call brought into existence.
+        undo_args["also_delete_vendor_id"] = created_vendor_id
     return ExecutionResult(
         summary=summary,
         data={"filament_id": created.id, "vendor_id": vendor_id},
-        # only_if_empty is never in this tool's model-facing schema -- it exists purely so this
-        # undo descriptor can refuse to cascade. Between this create and a click on the resulting
-        # Undo button, the user may have added spools to the filament; a bare delete_filament call
-        # would destroy them (and their usage history) with no count and no confirmation, the exact
-        # silent-cascade-via-undo failure this flag exists to close off. The normal, previewed
-        # delete_filament path (the model calling it directly, or a confirmed chat write) never
-        # sets this flag, so it still discloses and cascades exactly as before.
-        undo={"tool": "delete_filament", "args": {"filament_id": created.id, "only_if_empty": True}},
+        undo={"tool": "delete_filament", "args": undo_args},
     )
 
 
@@ -335,6 +371,36 @@ async def _preview_delete_filament(ctx: ToolContext, args: dict) -> ConfirmCard:
     )
 
 
+async def _delete_vendor_created_with_the_filament(ctx: ToolContext, vendor_id: int) -> str | None:
+    """Delete the vendor create_filament auto-created, now that its filament is gone. Returns its name.
+
+    Reached only through ``also_delete_vendor_id``, which is absent from delete_filament's
+    model-facing schema and is set only by create_filament's own undo descriptor -- so the vendor
+    named here is always one that same call brought into existence, never one the user already had.
+    It is still checked, not trusted: if the vendor has gained other filaments since (the user could
+    have filed more under it before clicking Undo), deleting it would silently unlink them, and undo
+    must restore the previous state rather than go further than it. Returns None in that case.
+
+    Never raises. The filament delete has already committed by the time this runs, so a failure here
+    would otherwise turn a successful undo into an error about something the user cannot act on; a
+    leftover vendor row is the strictly better failure. Logged so it is not invisible.
+    """
+    try:
+        vendor = await vendor_db.get_by_id(ctx.db, vendor_id)
+    except ItemNotFoundError:
+        return None  # Already gone (a double-undo, or deleted elsewhere) -- nothing to do.
+    name = vendor.name
+    filament_count, _spool_count = (await vendor_db.get_aggregates(ctx.db, [vendor_id])).get(vendor_id, (0, 0))
+    if filament_count:
+        return None
+    try:
+        await vendor_db.delete(ctx.db, vendor_id)
+    except Exception:  # Best-effort: the filament delete already committed and must stand.
+        logger.exception("Failed to delete vendor %s alongside the filament whose creation added it.", vendor_id)
+        return None
+    return name
+
+
 async def _execute_delete_filament(ctx: ToolContext, args: dict) -> ExecutionResult:
     require_write(ctx)
     filament_id = arg_int(args, "filament_id")
@@ -351,11 +417,23 @@ async def _execute_delete_filament(ctx: ToolContext, args: dict) -> ExecutionRes
                 "permanently destroyed, including their usage history. Delete it explicitly (not "
                 "via Undo) if that is really what you want.",
             )
+    # Read before the delete so a junk value is a ToolError *before* anything is destroyed, and
+    # absent/None means "no vendor to take back" -- fail-safe in the same direction as only_if_empty.
+    vendor_to_delete = args.get("also_delete_vendor_id")
+    if vendor_to_delete is not None:
+        vendor_to_delete = arg_int(args, "also_delete_vendor_id")
     try:
         await filament_db.delete(ctx.db, filament_id)
     except ItemDeleteError as exc:
         raise ToolError(str(exc)) from exc
-    return ExecutionResult(summary=f"Deleted filament #{filament_id}.", data={"filament_id": filament_id}, undo=None)
+    summary = f"Deleted filament #{filament_id}."
+    data = {"filament_id": filament_id}
+    if vendor_to_delete is not None:
+        deleted_vendor = await _delete_vendor_created_with_the_filament(ctx, vendor_to_delete)
+        if deleted_vendor is not None:
+            summary = f"{summary} Also deleted the vendor '{deleted_vendor}'."
+            data["deleted_vendor_id"] = vendor_to_delete
+    return ExecutionResult(summary=summary, data=data, undo=None)
 
 
 # --- Registry ----------------------------------------------------------------------
@@ -401,7 +479,7 @@ WRITE_TOOLS: dict[str, WriteTool] = {
                 "diameter": {"type": "number", "description": "mm, e.g. 1.75. Required. Never guess."},
                 "weight_g": {"type": "number", "description": "Net filament weight of a full spool."},
                 "spool_weight_g": {"type": "number", "description": "Weight of the empty spool."},
-                "color_hex": {"type": "string", "description": "6-digit hex without '#'."},
+                "color_hex": {"type": "string", "description": "6-digit hex without '#' (8 with an alpha channel)."},
                 "price": {"type": "number"},
                 "extruder_temp": {"type": "integer"},
                 "bed_temp": {"type": "integer"},
@@ -431,7 +509,7 @@ WRITE_TOOLS: dict[str, WriteTool] = {
                 "diameter": {"type": "number", "description": "mm, e.g. 1.75."},
                 "weight_g": {"type": "number", "description": "Net filament weight of a full spool."},
                 "spool_weight_g": {"type": "number", "description": "Weight of the empty spool."},
-                "color_hex": {"type": "string", "description": "6-digit hex without '#'."},
+                "color_hex": {"type": "string", "description": "6-digit hex without '#' (8 with an alpha channel)."},
                 "price": {"type": "number"},
                 "extruder_temp": {"type": "integer"},
                 "bed_temp": {"type": "integer"},

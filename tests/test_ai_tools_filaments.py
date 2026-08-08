@@ -46,6 +46,24 @@ def test_color_hex_is_normalised_and_validated() -> None:
         filaments.curated_fields({"density": 1, "diameter": 1, "color_hex": "black"})
 
 
+def test_color_hex_accepts_the_eight_digit_alpha_form_the_rest_of_the_codebase_stores() -> None:
+    # color_hex is 6 OR 8 characters everywhere else: the API model declares min_length=6,
+    # max_length=8 ("Supports alpha channel at the end") and _normalize_stored_color_hex accepts
+    # both. A 6-only rule here made every alpha-carrying filament un-updatable AND un-undoable --
+    # update_filament's undo descriptor carries the stored before-value, so replaying it raised.
+    fields = filaments.curated_fields({"density": 1, "diameter": 1, "color_hex": "#ff0000cc"})
+    assert fields["color_hex"] == "FF0000CC"
+
+
+@pytest.mark.parametrize("value", ["FF00", "FF0000C", "FF0000CCC", "GG0000CC"])
+def test_color_hex_still_rejects_lengths_outside_six_and_eight(value: str) -> None:
+    # The inverse of the test above: widening to 8 must not turn the validator into "any hex-ish
+    # string". 7 and 9 digits bracket the accepted 8 on both sides, and a non-hex character in an
+    # otherwise 8-long value proves the character check still runs on the new length.
+    with pytest.raises(ToolError, match="color_hex"):
+        filaments.curated_fields({"density": 1, "diameter": 1, "color_hex": value})
+
+
 def test_update_does_not_require_physics_but_still_validates_it() -> None:
     assert filaments.curated_fields({"name": "New name"}, require_physics=False) == {"name": "New name"}
     with pytest.raises(ToolError, match="density"):

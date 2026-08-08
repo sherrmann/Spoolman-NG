@@ -253,7 +253,15 @@ async def _execute_create_spool(ctx: ToolContext, args: dict) -> ExecutionResult
     return ExecutionResult(
         summary=f"Created spool #{created.id}.",
         data={"spool_id": created.id},
-        undo={"tool": "delete_spool", "args": {"spool_id": created.id}},
+        # only_if_untouched is never in delete_spool's model-facing schema -- it exists purely so
+        # this undo descriptor can refuse. Between this create and a click on the resulting Undo
+        # button, the user may have recorded usage against the spool (consume_spool is one confirmed
+        # write away); spool.delete removes every usage event the spool has, and /ai/chat/action
+        # reaches execute() directly, so delete_spool's own "and its usage history" preview never
+        # renders. Same shape as delete_filament's only_if_empty, one entity down. An ordinary
+        # delete_spool -- the model calling it, or a confirmed chat write -- never sets this flag
+        # and still deletes exactly as before, having shown its preview first.
+        undo={"tool": "delete_spool", "args": {"spool_id": created.id, "only_if_untouched": True}},
     )
 
 
@@ -273,6 +281,18 @@ async def _execute_delete_spool(ctx: ToolContext, args: dict) -> ExecutionResult
     require_write(ctx)
     spool_id = arg_int(args, "spool_id")
     await get_spool(ctx, spool_id)  # 404s as a clean ToolError before deleting
+    if arg_bool(args, "only_if_untouched"):
+        # Set only by create_spool's own undo descriptor (never by the model -- this argument is
+        # deliberately absent from the tool's JSON schema). /ai/chat/action reaches execute()
+        # directly with no preview and no confirm-card, so this is the only guard standing between
+        # "Undo" on a creation card and a silent delete of every usage event recorded since.
+        _events, event_count = await spool_db.get_usage_events(ctx.db, spool_id, limit=1)
+        if event_count:
+            raise ToolError(
+                f"Cannot undo: spool {spool_id} now has {event_count} usage event(s) that would be "
+                "permanently destroyed with it. Delete it explicitly (not via Undo) if that is "
+                "really what you want.",
+            )
     await spool_db.delete(ctx.db, spool_id)
     return ExecutionResult(summary=f"Deleted spool #{spool_id}.", data={"spool_id": spool_id}, undo=None)
 

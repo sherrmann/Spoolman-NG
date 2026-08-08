@@ -169,7 +169,7 @@ def _read_summary(name: str, result: dict) -> str:  # noqa: PLR0911
     if name == "find_spools":
         return f"Found {result.get('count', 0)} spool(s), {result.get('total_remaining_weight_g', 0)} g remaining."
     if name == "find_filaments":
-        return f"Listed {result.get('count', 0)} filament(s)."
+        return f"Listed {result.get('count', 0)} filament(s), {result.get('returned', 0)} shown."
     if name == "get_usage_stats":
         return (
             f"Summed {result.get('count', 0)} {result.get('bucket', 'month')} period(s): "
