@@ -15,9 +15,10 @@ import argparse
 import asyncio
 import json
 import os
+import re
 import sys
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 # Run directly as `python scripts/ai_eval.py` (poe's invocation, and the documented one) rather
@@ -108,6 +109,47 @@ def _args_match(expected: dict, actual: dict) -> bool:
     return all(key in actual and _value_matches(want, actual[key]) for key, want in expected.items())
 
 
+#: Argument names the tool schemas define as enums. A model picking a valid enum member is
+#: choosing from a menu we gave it, not inventing anything, so these are exempt below.
+_ENUM_ARG_NAMES = {
+    name
+    for schema in ai_tools.tool_schemas(can_write=True)
+    for name, spec in schema.get("function", {}).get("parameters", {}).get("properties", {}).items()
+    if isinstance(spec, dict) and "enum" in spec
+}
+
+#: Values a model legitimately *derives* rather than reads: a date range computed from "last
+#: month", a hex code from a colour word. Neither can appear in the prompt verbatim, and flagging
+#: them buries the real fabrications in noise.
+_DERIVED_VALUE = re.compile(r"^(?:\d{4}-\d{2}-\d{2}|#?[0-9a-fA-F]{6})")
+
+
+def _invented_args(prompt: str, args: dict) -> list[str]:
+    """Names of string arguments whose value appears nowhere in the prompt.
+
+    `_args_match` only asks whether the *expected* arguments are present, so a call carrying the
+    right ones plus fabricated extras scores as a clean pass. Observed: "Record an order of 2x
+    filament 6 at 19.50 each" produced the correct lines alongside an invented shop, order number,
+    date and comment -- and dropped the 19.50 that really was in the prompt. Creating an order
+    attributed to a shop the user never named is worse than calling the wrong tool, because it
+    looks right.
+
+    Deliberately narrow. Only free-text values are judged: a string the user never typed cannot
+    have come from them. Numbers are excluded (defaults and unit conversions legitimately produce
+    values absent from the prompt) and so are booleans, and nested structures are left alone.
+    """
+    haystack = re.sub(r"[^a-z0-9]", "", prompt.lower())
+    return [
+        key
+        for key, value in args.items()
+        if isinstance(value, str)
+        and value.strip()
+        and key not in _ENUM_ARG_NAMES
+        and not _DERIVED_VALUE.match(value.strip())
+        and re.sub(r"[^a-z0-9]", "", value.lower()) not in haystack
+    ]
+
+
 def _parse_tool_arguments(raw: object) -> dict:
     """Best-effort decode of a tool call's ``arguments`` payload into a dict.
 
@@ -163,6 +205,10 @@ class CaseOutcome:
     completed: bool
     args_ok: bool
     called: str
+    #: Names of string arguments the model supplied that appear nowhere in the prompt. Tracked
+    #: separately from correctness because a call can be entirely right about the tool and its
+    #: required arguments while also fabricating optional ones.
+    invented: list[str] = field(default_factory=list)
 
 
 def _first_call(assistant: dict) -> tuple[str, dict]:
@@ -196,7 +242,8 @@ async def _run_case(config: ai.AIConfig, tools: list[dict], case: dict) -> CaseO
     called, parsed = _first_call(assistant)
     if called == case["tool"]:
         args_ok = _args_match(case.get("args", {}), parsed)
-        return CaseOutcome(direct=True, completed=True, args_ok=args_ok, called=called)
+        invented = _invented_args(case["prompt"], parsed)
+        return CaseOutcome(direct=True, completed=True, args_ok=args_ok, called=called, invented=invented)
 
     # One follow-up turn, and only when the model opened with a precursor this fixture declares.
     # Any other wrong tool ends here: the second turn exists to let instructed lookups finish the
@@ -225,6 +272,7 @@ async def _run_case(config: ai.AIConfig, tools: list[dict], case: dict) -> CaseO
         completed=completed,
         args_ok=completed and _args_match(case.get("args", {}), parsed),
         called=called if not completed else f"{called} -> {second}",
+        invented=_invented_args(case["prompt"], parsed) if completed else [],
     )
 
 
@@ -263,6 +311,14 @@ def _print_report(per_tool: dict[str, list[CaseOutcome]], confusion: Counter, to
         straight = sum(outcome.direct for outcome in results)
         suffix = "" if done == straight else f"  ({straight} directly)"
         print(f"  {done}/{len(results)}  {tool}{suffix}")
+    fabricated = [(tool, o) for tool, results in per_tool.items() for o in results if o.invented]
+    if fabricated:
+        # Counted apart from accuracy on purpose: these calls are *correct* by every other
+        # measure, which is exactly why they are dangerous -- an order attributed to a shop the
+        # user never named looks like a clean success in every other column.
+        print(f"\nInvented arguments ({len(fabricated)} of {total} calls carried values the user never gave):")
+        for tool, outcome in fabricated:
+            print(f"  {tool}: {', '.join(sorted(outcome.invented))}")
     if confusion:
         print("\nConfusions (expected -> called):")
         for pair, count in confusion.most_common():

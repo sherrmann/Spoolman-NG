@@ -396,9 +396,17 @@ WRITE_TOOLS: dict[str, WriteTool] = {
     "create_order": WriteTool(
         name="create_order",
         description=(
+            # "the filaments must already exist" used to sit where the create_filament clause now
+            # does, and measurably caused the failure it was meant to prevent: both models read it
+            # as an instruction to go and verify, so "I ordered 3 spools of filament 2" produced a
+            # find_orders/find_filaments lookup or a request for the ID the user had just given.
+            # Scoping the lookup to the case that actually needs it took gemma4:e2b from 1/4 to 4/4
+            # on these fixtures; restoring the old phrasing put it straight back to 2/4.
             "Record a filament order the user has placed. 'lines' is a list of "
-            "{filament_id, quantity, price_per_unit} objects; every filament must already exist "
-            "(use create_filament first). Requires user confirmation."
+            "{filament_id, quantity, price_per_unit} objects. When the user writes 'filament 6', "
+            "6 is the filament_id - use it directly, do not look it up. Only call create_filament "
+            "first if the user described a filament by name that does not exist yet. "
+            "Requires user confirmation."
         ),
         parameters={
             "type": "object",

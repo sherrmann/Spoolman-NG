@@ -135,3 +135,73 @@ async def test_a_wrong_first_tool_never_gets_a_second_turn(
     assert len(calls) == 1, "a wrong tool must not earn another turn"
     assert outcome.direct is False
     assert outcome.completed is False
+
+
+# --- Invented arguments (#380) -----------------------------------------------------
+#
+# `_args_match` only checks that the *expected* arguments are present, so a call that carries
+# the right ones plus a pile of fabricated extras scores as a clean pass. Observed on
+# qwen3:4b-instruct: "Record an order of 2x filament 6 at 19.50 each" produced the correct
+# lines together with an invented shop, order number, date and comment -- and dropped the 19.50
+# that was actually in the prompt. That would create a real order attributed to a shop the user
+# never named.
+#
+# The heuristic is deliberately narrow: a *string* argument whose value does not appear in the
+# prompt at all cannot have come from the user. Numbers are excluded (too many legitimate
+# defaults and unit conversions) and so are booleans.
+
+
+def test_a_string_argument_absent_from_the_prompt_is_reported_as_invented(ai_eval_module: ModuleType) -> None:
+    invented = ai_eval_module._invented_args(  # noqa: SLF001
+        "Record an order of 2x filament 6 at 19.50 each",
+        {"lines": [{"filament_id": 6}], "shop": "PrintRight", "order_number": "ORD-2023-004"},
+    )
+    assert sorted(invented) == ["order_number", "shop"]
+
+
+def test_arguments_the_user_actually_said_are_not_reported(ai_eval_module: ModuleType) -> None:
+    """Matching must survive the casing and punctuation a model normalises away."""
+    invented = ai_eval_module._invented_args(  # noqa: SLF001
+        "Log an order: 4 spools of filament 10 from Filastruder, order number PO-2291",
+        {"shop": "Filastruder", "order_number": "PO-2291"},
+    )
+    assert invented == []
+
+
+def test_a_location_restated_with_different_capitalisation_is_not_invented(ai_eval_module: ModuleType) -> None:
+    invented = ai_eval_module._invented_args("Order 7 turned up, put them in shelf A", {"location": "Shelf A"})  # noqa: SLF001
+    assert invented == []
+
+
+def test_numbers_and_booleans_are_never_reported(ai_eval_module: ModuleType) -> None:
+    """A default quantity or a unit conversion is not fabrication; only free text is judged."""
+    invented = ai_eval_module._invented_args("My order 4 arrived", {"order_id": 4, "create_spools": True})  # noqa: SLF001
+    assert invented == []
+
+
+def test_values_derived_from_the_prompt_are_not_called_invented(ai_eval_module: ModuleType) -> None:
+    """The point is to catch fabrication, not derivation.
+
+    A date range computed from "last month", a hex code derived from a colour word, and an enum
+    the schema itself defines are all the model doing its job with values that cannot appear in
+    the prompt verbatim. Flagging them buries the two real cases in six false ones.
+    """
+    enums = ai_eval_module._ENUM_ARG_NAMES  # noqa: SLF001
+    assert "status" in enums, "find_orders.status is an enum and must be exempt"
+
+    dates = ai_eval_module._invented_args(  # noqa: SLF001
+        "How much did I use last month?",
+        {"from_date": "2026-07-01", "to_date": "2026-07-31"},
+    )
+    assert dates == []
+    assert ai_eval_module._invented_args("Show me my red spools", {"color_hex": "ff0000"}) == []  # noqa: SLF001
+    assert ai_eval_module._invented_args("What is on order?", {"status": "open"}) == []  # noqa: SLF001
+
+
+def test_a_fabricated_shop_is_still_reported(ai_eval_module: ModuleType) -> None:
+    """The exemptions must not swallow the case this exists for."""
+    invented = ai_eval_module._invented_args(  # noqa: SLF001
+        "Record an order of 2x filament 6 at 19.50 each",
+        {"shop": "PrintRight", "comment": "Replacement for outdoor project"},
+    )
+    assert sorted(invented) == ["comment", "shop"]
