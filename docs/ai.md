@@ -101,9 +101,18 @@ reason shown inline.
 ## Scan-to-Spool
 
 Turn on **Scan-to-Spool** under Settings → AI (it needs a vision-capable model —
-`qwen2.5-vl`, `llama3.2-vision`, `gpt-4o-mini`, Claude, ... — set as the vision or
+`qwen2.5vl:7b`, `llama3.2-vision`, `gpt-4o-mini`, Claude, ... — set as the vision or
 chat model). The scan dialog on the Spools page then gains a **Photo** tab next to
 QR and barcode scanning.
+
+For a local setup, **`qwen2.5vl:7b` is the one to use**: measured on real label photos it
+read every one, and it was the only local model that never put a wrong value in the
+fields that decide which filament a scan matches (`name`, `vendor`, `material`,
+`weight_g`) — it leaves them blank instead, which you can correct, rather than
+confidently filling in the colour name as the vendor. Expect roughly 20-30 s per photo on
+a GPU and longer on CPU; the request timeout allows for that. Set it as the **vision
+model** and keep a separate chat model — no local model that does both jobs did either of
+them well enough (#380).
 
 The flow:
 

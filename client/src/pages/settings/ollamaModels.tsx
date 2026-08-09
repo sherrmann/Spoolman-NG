@@ -45,7 +45,7 @@ export function OllamaModelsSection() {
     }
   };
 
-  const renderAction = (model: string, sizeGb: number) => {
+  const renderAction = (model: string, downloadSizeGb: number) => {
     if (installed.has(model)) {
       return (
         <Tag color="success" icon={<CheckCircleOutlined />}>
@@ -63,7 +63,7 @@ export function OllamaModelsSection() {
     }
     return (
       <Button size="small" icon={<DownloadOutlined />} onClick={() => pull(model)} data-testid={`pull-${model}`}>
-        {t("settings.ai.models.pull")} · {sizeGb} GB
+        {t("settings.ai.models.pull")} · {downloadSizeGb} GB
       </Button>
     );
   };
@@ -78,7 +78,7 @@ export function OllamaModelsSection() {
         dataSource={RECOMMENDED_MODELS}
         rowKey="model"
         renderItem={(entry) => (
-          <List.Item actions={[renderAction(entry.model, entry.sizeGb)]}>
+          <List.Item actions={[renderAction(entry.model, entry.downloadSizeGb)]}>
             <List.Item.Meta
               title={
                 <Space>
