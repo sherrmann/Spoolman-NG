@@ -51,6 +51,92 @@ _NUMBER_KEYS = ("weight_g", "spool_weight_g", "diameter_mm", "extruder_temp_c", 
 #: spool) — no real spool holds less than 20 g of filament.
 _MIN_PLAUSIBLE_WEIGHT_G = 20
 
+# --- Domain validation -------------------------------------------------------------
+#
+# A vision model reading a label produces confidently wrong values as readily as blank ones, and
+# wrong is the more damaging of the two: name/vendor/material/weight_g are the only fields
+# score_candidate weights, so a mistake there drags the match toward the wrong record, and the
+# temperatures land in the spool the user saves. Filament has narrow, well-known constraints, so
+# the obviously-impossible can be rejected before any of that.
+#
+# Every rule below drops rather than guesses -- a blank field is corrected on the confirm card, a
+# wrong one is not noticed -- and every one is aimed at a value a model actually returned during
+# the #380 measurements, not at a hypothetical.
+
+#: The only diameters filament is sold in.
+_REAL_DIAMETERS_MM = (1.75, 2.85, 3.0)
+#: How far a reading may sit from a real diameter and still be treated as that diameter. Tight,
+#: because these three values are far apart and a label states one of them exactly.
+_DIAMETER_TOLERANCE_MM = 0.05
+
+#: (nozzle_min, nozzle_max, bed_min, bed_max) per material family, in Celsius. Deliberately wider
+#: than any vendor's recommended range: the job is to catch a misread, not to police unusual but
+#: real profiles, so a value only dies when no printer would use it for that material.
+_TEMP_WINDOWS: dict[str, tuple[float, float, float, float]] = {
+    "PETG": (210, 275, 40, 105),
+    "PLA": (170, 240, 0, 80),
+    "ABS": (220, 290, 70, 125),
+    "ASA": (220, 290, 70, 125),
+    "TPU": (190, 250, 0, 70),
+    "NYLON": (230, 300, 30, 110),
+    "PC": (250, 320, 70, 130),
+    "PVA": (180, 230, 0, 70),
+}
+
+#: A weight unit embedded in a string that is supposed to be a brand -- "SILVER-1KG(N.W)".
+_WEIGHT_TOKEN = re.compile(r"\d\s*(?:kg|g)\b", re.IGNORECASE)
+
+
+def _material_window(material: str | None) -> tuple[float, float, float, float] | None:
+    """Temperature window for a material string, or None when it isn't recognised.
+
+    Matches on a cleaned prefix so real-world variants land on their family: "PLA+HS" and
+    "PLA Filament" are both PLA. Longest key first, so a family whose name starts with another's
+    cannot be shadowed.
+    """
+    if not material:
+        return None
+    cleaned = re.sub(r"[^A-Z]", "", material.upper())
+    for family in sorted(_TEMP_WINDOWS, key=len, reverse=True):
+        if cleaned.startswith(family):
+            return _TEMP_WINDOWS[family]
+    return None
+
+
+def _validate_domain(out: dict) -> None:
+    """Drop extracted values that filament physics or the label's own fields rule out."""
+    # "1.75MM" read as a weight. 1750 g is not absurd on its own -- which is why a plausibility
+    # band misses it -- but a weight that equals the diameter x 1000 is the diameter.
+    weight, diameter = out["weight_g"], out["diameter_mm"]
+    if weight is not None and diameter is not None and abs(weight - diameter * 1000) < 1:
+        out["weight_g"] = None
+
+    if diameter is not None and not any(abs(diameter - real) < _DIAMETER_TOLERANCE_MM for real in _REAL_DIAMETERS_MM):
+        out["diameter_mm"] = None
+
+    window = _material_window(out["material"])
+    if window is not None:
+        nozzle_min, nozzle_max, bed_min, bed_max = window
+        if out["extruder_temp_c"] is not None and not nozzle_min <= out["extruder_temp_c"] <= nozzle_max:
+            out["extruder_temp_c"] = None
+        if out["bed_temp_c"] is not None and not bed_min <= out["bed_temp_c"] <= bed_max:
+            out["bed_temp_c"] = None
+
+    # The material echoed back as the product name ("PETG" for a spool called "Jet Black").
+    if out["name"] and out["material"] and out["name"].strip().lower() == out["material"].strip().lower():
+        out["name"] = None
+
+    # A brand field holding the colour or the net weight. Note what is deliberately *not* here:
+    # a check that the vendor exists in the catalog. "Prusa Polymers" is the correct vendor on a
+    # Prusament label but not the catalog's spelling, and small brands are absent altogether, so
+    # requiring membership would discard right answers to catch wrong ones.
+    vendor = out["vendor"]
+    if vendor and (
+        (out["name"] and vendor.strip().lower() == out["name"].strip().lower()) or _WEIGHT_TOKEN.search(vendor)
+    ):
+        out["vendor"] = None
+
+
 EXTRACTION_PROMPT = (
     "You are reading a photo of a 3D-printing filament spool label or box. Extract what the "
     "label actually shows and answer with STRICT JSON only - no prose, no code fences.\n"
@@ -145,6 +231,10 @@ def normalize_extraction(raw: dict) -> dict:
     confidence = raw.get("confidence")
     if isinstance(confidence, str) and confidence.lower() in ("high", "medium", "low"):
         out["confidence"] = confidence.lower()
+
+    # Last, so it sees fully coerced values. Note that `confidence` is not consulted: a model
+    # reported "high" while putting a colour name in the vendor field, so it is not a usable filter.
+    _validate_domain(out)
     return out
 
 
@@ -162,7 +252,7 @@ async def extract(config: ai.AIConfig, image_base64: str, mime: str) -> dict:
             ],
         },
     ]
-    reply = await ai.chat_completion(config, messages, use_vision_model=True)
+    reply = await ai.chat_completion(config, messages, use_vision_model=True, want_json=True)
     return normalize_extraction(parse_json_block(reply))
 
 

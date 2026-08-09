@@ -76,6 +76,11 @@ STT_API_KEY_DB_KEY = "ai_stt_api_key"
 _PROBE_TIMEOUT = 10.0
 #: Vision inference on local hardware is legitimately slow; give it room.
 _CHAT_TIMEOUT = 120.0
+#: Photo extraction is a bigger, slower request than a chat turn: a 1568 px label costs roughly
+#: 1,800 image tokens to decode before generation even starts, and Spoolman targets CPU-only
+#: NASes and Pis where that is far slower than on a GPU box. The failure mode of getting this
+#: wrong is a hard timeout with nothing to show the user, so it is generous by design.
+_VISION_TIMEOUT = 300.0
 
 TriState = Literal["yes", "no", "unknown"]
 
@@ -136,6 +141,10 @@ class _AIState:
     """
 
     last_probe: ProbeResult | None = None
+    #: (ollama origin, model) -> advertised capability set, memoised so the request path pays
+    #: at most one /api/show per model per process. Only successful lookups are stored; a
+    #: transient failure must not permanently disable the tuning below.
+    capabilities: dict[tuple[str, str], set[str]] = field(default_factory=dict)
 
 
 _state = _AIState()
@@ -457,6 +466,62 @@ def _remember(result: ProbeResult) -> ProbeResult:
     return result
 
 
+# --- Ollama request tuning ---------------------------------------------------------
+#
+# Ollama turns thinking *on* for any model whose capabilities include "thinking" when the request
+# carries no reasoning control. Measured against the curated tool layer, that default costs 15-21
+# points of tool-selection accuracy and runs 3-7x slower, and on the photo path it pushes every
+# extraction past the request timeout. `reasoning_effort: "none"` is the only control that reaches
+# Ollama's OpenAI-compatible surface -- the native `think` flag and chat_template_kwargs are
+# accepted and ignored there.
+#
+# Both keys below are Ollama-specific, so they are gated on positively identifying an Ollama
+# endpoint *and* on the model's own advertised capabilities. A generic OpenAI-compatible server
+# keeps receiving exactly the body it receives today: it is entitled to reject an unknown key, and
+# a setup that works must not start failing because we guessed.
+
+
+async def _ollama_capability_set(config: AIConfig, model: str) -> set[str]:
+    """Best-effort capability set for one model; empty when not Ollama or unanswerable.
+
+    Every failure resolves to the empty set, which means "send today's payload". This lookup is
+    an optimisation on the request path and must never be able to fail a real chat request --
+    hence the broad except, which also covers test transports that reject unmocked requests.
+    """
+    origin = _ollama_origin(config.base_url or "")
+    if origin is None:
+        return set()
+    cached = _state.capabilities.get((origin, model))
+    if cached is not None:
+        return cached
+    try:
+        headers = {"Authorization": f"Bearer {config.api_key}"} if config.api_key else {}
+        async with httpx.AsyncClient(timeout=_PROBE_TIMEOUT, headers=headers) as client:
+            if await _detect_ollama(client, config.base_url or "") is None:
+                capabilities: set[str] | None = set()
+            else:
+                capabilities = await _ollama_capabilities(client, origin, model)
+    except Exception:  # noqa: BLE001 - never let a capability sniff break a real request
+        return set()
+    if capabilities is None:  # could not check; retry next time rather than caching a guess
+        return set()
+    _state.capabilities[(origin, model)] = capabilities
+    return capabilities
+
+
+async def _ollama_tuning(config: AIConfig, model: str, *, want_json: bool) -> dict:
+    """Extra payload keys for a known Ollama model; empty dict for everything else."""
+    capabilities = await _ollama_capability_set(config, model)
+    if not capabilities:
+        return {}
+    tuning: dict = {}
+    if "thinking" in capabilities:
+        tuning["reasoning_effort"] = "none"
+    if want_json:
+        tuning["response_format"] = {"type": "json_object"}
+    return tuning
+
+
 # --- Chat completions --------------------------------------------------------------
 
 
@@ -501,15 +566,18 @@ async def chat_completion(
     messages: list[dict],
     *,
     use_vision_model: bool = False,
+    want_json: bool = False,
     max_tokens: int = 2000,
-    timeout: float = _CHAT_TIMEOUT,
+    timeout: float | None = None,
 ) -> str:
     """Run one chat completion against the configured endpoint and return the reply text.
 
     Raises AIRequestError with a user-safe message on any failure (unconfigured,
-    unreachable, HTTP error, unexpected response shape). No response_format is sent —
-    not every OpenAI-compatible server accepts it, so callers that need JSON instruct
-    the model in the prompt and parse defensively.
+    unreachable, HTTP error, unexpected response shape).
+
+    ``want_json`` asks the endpoint to constrain the reply to a JSON object where we know it
+    is supported (see _ollama_tuning). It is a hint, not a guarantee: generic endpoints get no
+    such key, so callers must still instruct the model in the prompt and parse defensively.
     """
     if not config.base_url:
         raise AIRequestError("No AI endpoint is configured.")
@@ -518,6 +586,9 @@ async def chat_completion(
         raise AIRequestError("No model is configured.")
 
     payload = {"model": model, "messages": messages, "max_tokens": max_tokens}
+    payload.update(await _ollama_tuning(config, model, want_json=want_json))
+    if timeout is None:
+        timeout = _VISION_TIMEOUT if use_vision_model else _CHAT_TIMEOUT
     message = await _post_chat(config, payload, timeout)
     content = message.get("content")
     if not isinstance(content, str):
@@ -551,4 +622,5 @@ async def chat_completion_tools(
     if tools:
         payload["tools"] = tools
         payload["tool_choice"] = "auto"
+    payload.update(await _ollama_tuning(config, config.model, want_json=False))
     return await _post_chat(config, payload, timeout)

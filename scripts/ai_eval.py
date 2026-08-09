@@ -15,8 +15,10 @@ import argparse
 import asyncio
 import json
 import os
+import re
 import sys
 from collections import Counter
+from dataclasses import dataclass, field
 from pathlib import Path
 
 # Run directly as `python scripts/ai_eval.py` (poe's invocation, and the documented one) rather
@@ -107,6 +109,47 @@ def _args_match(expected: dict, actual: dict) -> bool:
     return all(key in actual and _value_matches(want, actual[key]) for key, want in expected.items())
 
 
+#: Argument names the tool schemas define as enums. A model picking a valid enum member is
+#: choosing from a menu we gave it, not inventing anything, so these are exempt below.
+_ENUM_ARG_NAMES = {
+    name
+    for schema in ai_tools.tool_schemas(can_write=True)
+    for name, spec in schema.get("function", {}).get("parameters", {}).get("properties", {}).items()
+    if isinstance(spec, dict) and "enum" in spec
+}
+
+#: Values a model legitimately *derives* rather than reads: a date range computed from "last
+#: month", a hex code from a colour word. Neither can appear in the prompt verbatim, and flagging
+#: them buries the real fabrications in noise.
+_DERIVED_VALUE = re.compile(r"^(?:\d{4}-\d{2}-\d{2}|#?[0-9a-fA-F]{6})")
+
+
+def _invented_args(prompt: str, args: dict) -> list[str]:
+    """Names of string arguments whose value appears nowhere in the prompt.
+
+    `_args_match` only asks whether the *expected* arguments are present, so a call carrying the
+    right ones plus fabricated extras scores as a clean pass. Observed: "Record an order of 2x
+    filament 6 at 19.50 each" produced the correct lines alongside an invented shop, order number,
+    date and comment -- and dropped the 19.50 that really was in the prompt. Creating an order
+    attributed to a shop the user never named is worse than calling the wrong tool, because it
+    looks right.
+
+    Deliberately narrow. Only free-text values are judged: a string the user never typed cannot
+    have come from them. Numbers are excluded (defaults and unit conversions legitimately produce
+    values absent from the prompt) and so are booleans, and nested structures are left alone.
+    """
+    haystack = re.sub(r"[^a-z0-9]", "", prompt.lower())
+    return [
+        key
+        for key, value in args.items()
+        if isinstance(value, str)
+        and value.strip()
+        and key not in _ENUM_ARG_NAMES
+        and not _DERIVED_VALUE.match(value.strip())
+        and re.sub(r"[^a-z0-9]", "", value.lower()) not in haystack
+    ]
+
+
 def _parse_tool_arguments(raw: object) -> dict:
     """Best-effort decode of a tool call's ``arguments`` payload into a dict.
 
@@ -126,28 +169,111 @@ def _parse_tool_arguments(raw: object) -> dict:
     return parsed if isinstance(parsed, dict) else {}
 
 
-async def _run_case(config: ai.AIConfig, tools: list[dict], case: dict) -> tuple[bool, bool, str]:
-    """Return (tool_correct, args_correct, tool_called) for one fixture case.
+#: Synthetic tool results for a legitimate precursor call, each chosen to leave exactly one
+#: sensible next step. The empty lists are load-bearing: returning an *existing* vendor would make
+#: "don't create it" the correct behaviour, and the fixtures expect a create — turn two would then
+#: measure nothing. catalog_lookup returns the density/diameter the system prompt forbids inventing,
+#: which is what unblocks create_filament.
+_PRECURSOR_RESULTS = {
+    "find_vendors": {"vendors": [], "total": 0},
+    "find_locations": {"locations": [], "total": 0},
+    "find_filaments": {"filaments": [{"id": 1, "name": "Example", "vendor": "Example"}], "total": 1},
+    "find_spools": {"spools": [{"id": 1, "filament_id": 1, "remaining_weight": 500}], "total": 1},
+    "find_orders": {"orders": [{"id": 1, "status": "ordered"}], "total": 1},
+    "catalog_lookup": {
+        "matches": [{"vendor": "Example", "name": "Example", "material": "PLA", "density": 1.24, "diameter": 1.75}],
+    },
+}
+
+
+def _precursor_result(tool: str) -> str:
+    """Tool-result content for a precursor call, as the JSON string the API expects."""
+    return json.dumps(_PRECURSOR_RESULTS.get(tool, {}))
+
+
+@dataclass
+class CaseOutcome:
+    """How one fixture went.
+
+    ``direct`` and ``completed`` are deliberately separate. The system prompt tells the model to
+    look before it writes; a model that follows that instruction is not wrong, it just did not go
+    straight there. Collapsing both into one number scores instructed behaviour as failure and
+    ranks careful models below eager ones.
+    """
+
+    direct: bool
+    completed: bool
+    args_ok: bool
+    called: str
+    #: Names of string arguments the model supplied that appear nowhere in the prompt. Tracked
+    #: separately from correctness because a call can be entirely right about the tool and its
+    #: required arguments while also fabricating optional ones.
+    invented: list[str] = field(default_factory=list)
+
+
+def _first_call(assistant: dict) -> tuple[str, dict]:
+    """Name and parsed arguments of the assistant's first tool call, or (NO_CALL, {}).
+
+    Only the first call is scored, but a model may legitimately emit several in parallel; the
+    fixtures all describe a single intended action, so extras are ignored rather than failed.
+    """
+    calls = assistant.get("tool_calls") or []
+    if not calls:
+        return NO_CALL, {}
+    function = calls[0].get("function", {})
+    return function.get("name") or NO_CALL, _parse_tool_arguments(function.get("arguments"))
+
+
+async def _run_case(config: ai.AIConfig, tools: list[dict], case: dict) -> CaseOutcome:
+    """Score one fixture, allowing one follow-up turn after a declared precursor call.
 
     A request failure (endpoint hiccup, timeout) is scored as an incorrect call rather than
     raised: one flaky request must not abort the rest of the eval.
     """
-    messages = [
+    messages: list[dict] = [
         {"role": "system", "content": _EVAL_SYSTEM_PROMPT},
         {"role": "user", "content": case["prompt"]},
     ]
     try:
         assistant = await ai.chat_completion_tools(config, messages, tools=tools)
     except ai.AIRequestError as exc:
-        return False, False, f"<request error: {exc}>"
+        return CaseOutcome(direct=False, completed=False, args_ok=False, called=f"<request error: {exc}>")
 
-    calls = assistant.get("tool_calls") or []
-    if not calls:
-        return False, False, NO_CALL
-    called = calls[0].get("function", {}).get("name") or NO_CALL
-    parsed = _parse_tool_arguments(calls[0].get("function", {}).get("arguments"))
-    tool_ok = called == case["tool"]
-    return tool_ok, tool_ok and _args_match(case.get("args", {}), parsed), called
+    called, parsed = _first_call(assistant)
+    if called == case["tool"]:
+        args_ok = _args_match(case.get("args", {}), parsed)
+        invented = _invented_args(case["prompt"], parsed)
+        return CaseOutcome(direct=True, completed=True, args_ok=args_ok, called=called, invented=invented)
+
+    # One follow-up turn, and only when the model opened with a precursor this fixture declares.
+    # Any other wrong tool ends here: the second turn exists to let instructed lookups finish the
+    # task, not to become a retry that launders bad tool selection into a pass.
+    if called not in case.get("precursors", []):
+        return CaseOutcome(direct=False, completed=False, args_ok=False, called=called)
+
+    messages.append({"role": "assistant", "content": None, "tool_calls": assistant.get("tool_calls")})
+    messages.extend(
+        {
+            "role": "tool",
+            "tool_call_id": call.get("id", "call_0"),
+            "content": _precursor_result(call.get("function", {}).get("name", "")),
+        }
+        for call in assistant.get("tool_calls") or []
+    )
+    try:
+        assistant = await ai.chat_completion_tools(config, messages, tools=tools)
+    except ai.AIRequestError:
+        return CaseOutcome(direct=False, completed=False, args_ok=False, called=called)
+
+    second, parsed = _first_call(assistant)
+    completed = second == case["tool"]
+    return CaseOutcome(
+        direct=False,
+        completed=completed,
+        args_ok=completed and _args_match(case.get("args", {}), parsed),
+        called=called if not completed else f"{called} -> {second}",
+        invented=_invented_args(case["prompt"], parsed) if completed else [],
+    )
 
 
 def _config_from_env() -> ai.AIConfig | None:
@@ -165,18 +291,39 @@ def _config_from_env() -> ai.AIConfig | None:
     return config if config.configured else None
 
 
-def _print_report(per_tool: dict[str, list[bool]], confusion: Counter, args_ok: int, total: int) -> int:
-    """Print the headline numbers, per-tool table and confusion table; return the correct count."""
-    correct = sum(sum(results) for results in per_tool.values())
-    print(f"\nTool selection: {correct}/{total} ({correct / total:.0%})")
-    print(f"Arguments too:  {args_ok}/{total} ({args_ok / total:.0%})\n")
-    for tool, results in sorted(per_tool.items(), key=lambda item: sum(item[1]) / len(item[1])):
-        print(f"  {sum(results)}/{len(results)}  {tool}")
+def _print_report(per_tool: dict[str, list[CaseOutcome]], confusion: Counter, total: int) -> int:
+    """Print the headline numbers, per-tool table and confusion table; return the completed count.
+
+    Two headline numbers, not one. *Completed* is the honest measure of whether the assistant does
+    the job; *direct* says whether it went straight there. A model that follows the prompt's
+    look-before-you-write instruction scores lower on direct and full marks on completed, and
+    reporting only the first would rank careful models below eager ones.
+    """
+    outcomes = [outcome for results in per_tool.values() for outcome in results]
+    completed = sum(outcome.completed for outcome in outcomes)
+    direct = sum(outcome.direct for outcome in outcomes)
+    args_ok = sum(outcome.args_ok for outcome in outcomes)
+    print(f"\nCompleted task:  {completed}/{total} ({completed / total:.0%})")
+    print(f"  ...directly:   {direct}/{total} ({direct / total:.0%})")
+    print(f"  ...with args:  {args_ok}/{total} ({args_ok / total:.0%})\n")
+    for tool, results in sorted(per_tool.items(), key=lambda item: sum(o.completed for o in item[1]) / len(item[1])):
+        done = sum(outcome.completed for outcome in results)
+        straight = sum(outcome.direct for outcome in results)
+        suffix = "" if done == straight else f"  ({straight} directly)"
+        print(f"  {done}/{len(results)}  {tool}{suffix}")
+    fabricated = [(tool, o) for tool, results in per_tool.items() for o in results if o.invented]
+    if fabricated:
+        # Counted apart from accuracy on purpose: these calls are *correct* by every other
+        # measure, which is exactly why they are dangerous -- an order attributed to a shop the
+        # user never named looks like a clean success in every other column.
+        print(f"\nInvented arguments ({len(fabricated)} of {total} calls carried values the user never gave):")
+        for tool, outcome in fabricated:
+            print(f"  {tool}: {', '.join(sorted(outcome.invented))}")
     if confusion:
         print("\nConfusions (expected -> called):")
         for pair, count in confusion.most_common():
             print(f"  {count}x  {pair}")
-    return correct
+    return completed
 
 
 async def _main(min_accuracy: float) -> int:
@@ -191,21 +338,21 @@ async def _main(min_accuracy: float) -> int:
         return 2
 
     tools = ai_tools.tool_schemas(can_write=True)
-    per_tool: dict[str, list[bool]] = {}
+    per_tool: dict[str, list[CaseOutcome]] = {}
     confusion: Counter = Counter()
-    args_ok = 0
 
     for case in cases:
-        tool_ok, arg_ok, called = await _run_case(config, tools, case)
-        per_tool.setdefault(case["tool"], []).append(tool_ok)
-        args_ok += int(arg_ok)
-        if not tool_ok:
-            confusion[f"{case['tool']} -> {called}"] += 1
+        outcome = await _run_case(config, tools, case)
+        per_tool.setdefault(case["tool"], []).append(outcome)
+        if not outcome.completed:
+            confusion[f"{case['tool']} -> {outcome.called}"] += 1
 
     total = len(cases)
-    correct = _print_report(per_tool, confusion, args_ok, total)
+    completed = _print_report(per_tool, confusion, total)
 
-    return 0 if correct / total >= min_accuracy else 1
+    # Gate on completion: finishing the task is the product-relevant behaviour, and a model that
+    # looks something up first is still doing its job.
+    return 0 if completed / total >= min_accuracy else 1
 
 
 def main() -> None:

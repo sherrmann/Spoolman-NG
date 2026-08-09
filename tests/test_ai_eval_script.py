@@ -53,3 +53,155 @@ def test_ai_eval_cases_name_tools_that_still_exist(ai_eval_module: ModuleType) -
     known = set(ai_tools.READ_TOOLS) | set(ai_tools.WRITE_TOOLS)
     unknown = sorted({case["tool"] for case in cases} - known)
     assert not unknown, f"ai_eval_cases.json expects tools that no longer exist: {unknown}"
+
+
+# --- Two-turn scoring (#380) -------------------------------------------------------
+#
+# The system prompt tells the model to look before it writes ("check find_vendors or
+# find_locations before creating a vendor or location that may already exist", and to call
+# catalog_lookup rather than invent a density). A single-turn harness scores that instructed
+# behaviour as a failure and never reaches the write, which penalises careful models hardest --
+# Sonnet 5 lost all five of its misses this way while following the prompt exactly.
+#
+# So a fixture may declare the precursor calls that legitimately come first. When the model opens
+# with one, the harness feeds back a synthetic result and scores the *second* call, reporting
+# "went straight there" and "completed the task" separately.
+
+
+def test_precursor_results_leave_exactly_one_sensible_next_step(ai_eval_module: ModuleType) -> None:
+    """A lookup that returns a hit would make *not* creating the record correct.
+
+    The fixtures expect a create, so the synthetic answer has to say "no such record yet";
+    otherwise turn two measures nothing and the model is right to stop.
+    """
+    for tool in ("find_vendors", "find_locations"):
+        reply = json.loads(ai_eval_module._precursor_result(tool))  # noqa: SLF001
+        assert reply, f"{tool} needs a result payload"
+        assert not any(value for value in reply.values() if isinstance(value, list)), (
+            f"{tool}'s synthetic result must be empty, or creating the record is no longer correct"
+        )
+
+
+def test_catalog_lookup_result_supplies_what_the_prompt_forbids_guessing(ai_eval_module: ModuleType) -> None:
+    """create_filament is blocked on density/diameter the model is told never to invent."""
+    reply = json.loads(ai_eval_module._precursor_result("catalog_lookup"))  # noqa: SLF001
+    assert "density" in json.dumps(reply)
+    assert "diameter" in json.dumps(reply)
+
+
+async def test_a_precursor_then_the_expected_tool_counts_as_completed_but_not_direct(
+    ai_eval_module: ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    replies = [
+        {"tool_calls": [{"function": {"name": "find_vendors", "arguments": "{}"}}]},
+        {"tool_calls": [{"function": {"name": "create_vendor", "arguments": '{"name": "polymaker"}'}}]},
+    ]
+
+    async def _fake(*_args: object, **_kwargs: object) -> dict:
+        return replies.pop(0)
+
+    monkeypatch.setattr(ai_eval_module.ai, "chat_completion_tools", _fake)
+    case = {
+        "prompt": "Add Polymaker as a vendor",
+        "tool": "create_vendor",
+        "args": {"name": "polymaker"},
+        "precursors": ["find_vendors"],
+    }
+
+    outcome = await ai_eval_module._run_case(ai_eval_module.ai.AIConfig(), [], case)  # noqa: SLF001
+
+    assert outcome.direct is False, "it did not go straight to the write"
+    assert outcome.completed is True, "but it did finish the task"
+    assert outcome.args_ok is True
+
+
+async def test_a_wrong_first_tool_never_gets_a_second_turn(
+    ai_eval_module: ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The second turn must not become a retry that launders bad tool selection into a pass."""
+    calls: list[object] = []
+
+    async def _fake(*_args: object, **_kwargs: object) -> dict:
+        calls.append(object())
+        return {"tool_calls": [{"function": {"name": "delete_spool", "arguments": "{}"}}]}
+
+    monkeypatch.setattr(ai_eval_module.ai, "chat_completion_tools", _fake)
+    case = {"prompt": "Add Polymaker as a vendor", "tool": "create_vendor", "precursors": ["find_vendors"]}
+
+    outcome = await ai_eval_module._run_case(ai_eval_module.ai.AIConfig(), [], case)  # noqa: SLF001
+
+    assert len(calls) == 1, "a wrong tool must not earn another turn"
+    assert outcome.direct is False
+    assert outcome.completed is False
+
+
+# --- Invented arguments (#380) -----------------------------------------------------
+#
+# `_args_match` only checks that the *expected* arguments are present, so a call that carries
+# the right ones plus a pile of fabricated extras scores as a clean pass. Observed on
+# qwen3:4b-instruct: "Record an order of 2x filament 6 at 19.50 each" produced the correct
+# lines together with an invented shop, order number, date and comment -- and dropped the 19.50
+# that was actually in the prompt. That would create a real order attributed to a shop the user
+# never named.
+#
+# The heuristic is deliberately narrow: a *string* argument whose value does not appear in the
+# prompt at all cannot have come from the user. Numbers are excluded (too many legitimate
+# defaults and unit conversions) and so are booleans.
+
+
+def test_a_string_argument_absent_from_the_prompt_is_reported_as_invented(ai_eval_module: ModuleType) -> None:
+    invented = ai_eval_module._invented_args(  # noqa: SLF001
+        "Record an order of 2x filament 6 at 19.50 each",
+        {"lines": [{"filament_id": 6}], "shop": "PrintRight", "order_number": "ORD-2023-004"},
+    )
+    assert sorted(invented) == ["order_number", "shop"]
+
+
+def test_arguments_the_user_actually_said_are_not_reported(ai_eval_module: ModuleType) -> None:
+    """Matching must survive the casing and punctuation a model normalises away."""
+    invented = ai_eval_module._invented_args(  # noqa: SLF001
+        "Log an order: 4 spools of filament 10 from Filastruder, order number PO-2291",
+        {"shop": "Filastruder", "order_number": "PO-2291"},
+    )
+    assert invented == []
+
+
+def test_a_location_restated_with_different_capitalisation_is_not_invented(ai_eval_module: ModuleType) -> None:
+    invented = ai_eval_module._invented_args("Order 7 turned up, put them in shelf A", {"location": "Shelf A"})  # noqa: SLF001
+    assert invented == []
+
+
+def test_numbers_and_booleans_are_never_reported(ai_eval_module: ModuleType) -> None:
+    """A default quantity or a unit conversion is not fabrication; only free text is judged."""
+    invented = ai_eval_module._invented_args("My order 4 arrived", {"order_id": 4, "create_spools": True})  # noqa: SLF001
+    assert invented == []
+
+
+def test_values_derived_from_the_prompt_are_not_called_invented(ai_eval_module: ModuleType) -> None:
+    """The point is to catch fabrication, not derivation.
+
+    A date range computed from "last month", a hex code derived from a colour word, and an enum
+    the schema itself defines are all the model doing its job with values that cannot appear in
+    the prompt verbatim. Flagging them buries the two real cases in six false ones.
+    """
+    enums = ai_eval_module._ENUM_ARG_NAMES  # noqa: SLF001
+    assert "status" in enums, "find_orders.status is an enum and must be exempt"
+
+    dates = ai_eval_module._invented_args(  # noqa: SLF001
+        "How much did I use last month?",
+        {"from_date": "2026-07-01", "to_date": "2026-07-31"},
+    )
+    assert dates == []
+    assert ai_eval_module._invented_args("Show me my red spools", {"color_hex": "ff0000"}) == []  # noqa: SLF001
+    assert ai_eval_module._invented_args("What is on order?", {"status": "open"}) == []  # noqa: SLF001
+
+
+def test_a_fabricated_shop_is_still_reported(ai_eval_module: ModuleType) -> None:
+    """The exemptions must not swallow the case this exists for."""
+    invented = ai_eval_module._invented_args(  # noqa: SLF001
+        "Record an order of 2x filament 6 at 19.50 each",
+        {"shop": "PrintRight", "comment": "Replacement for outdoor project"},
+    )
+    assert sorted(invented) == ["comment", "shop"]
