@@ -8,14 +8,12 @@ from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse
-from starlette.requests import Request
-from starlette.responses import Response
 
 from spoolman import env, updateaction, updatecheck
 from spoolman.api.v1.bodylimit import BodyLimitMiddleware
+from spoolman.api.v1.errors import install_exception_handlers
 from spoolman.auth import Principal, install_auth
 from spoolman.database.database import backup_global_db
-from spoolman.exceptions import ItemNotFoundError
 from spoolman.updateaction import InstallType
 from spoolman.ws import websocket_manager
 
@@ -58,13 +56,7 @@ app = FastAPI(
 )
 
 
-@app.exception_handler(ItemNotFoundError)
-async def itemnotfounderror_exception_handler(_request: Request, exc: ItemNotFoundError) -> Response:
-    logger.debug(exc)
-    return JSONResponse(
-        status_code=404,
-        content={"message": exc.args[0]},
-    )
+install_exception_handlers(app)
 
 
 # Add a general info endpoint

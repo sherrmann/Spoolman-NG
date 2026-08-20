@@ -111,3 +111,93 @@ def test_location_backfill_populates_from_spools(tmp_path: Path):
         assert names == ["Shelf A", "Shelf B"]
     finally:
         engine.dispose()
+
+
+def test_oversized_weight_repair_clears_poisoned_rows_and_leaves_healthy_ones(tmp_path: Path):
+    """The #377 follow-up repairs weights that no write path can produce any more.
+
+    #383 stopped the client turning a noisy float into a string and concatenating weight totals,
+    and rounds ``used_weight`` on every write — but it shipped no repair, so a row poisoned before
+    that release is still there. Anything past ``Number.MAX_SAFE_INTEGER`` is both physically
+    absurd (9e15 g is nine billion tonnes) and the exact class the browser still deserializes as a
+    string, which flips the dashboard's `+` back into concatenation.
+
+    Upgrade to the revision before the repair, insert one poisoned row per weight column plus a
+    healthy row, then upgrade through and assert the poisoned values were cleared while every
+    legitimate value survived untouched.
+    """
+    _run_alembic(tmp_path, "upgrade", "c1f7a9e4d2b8")
+
+    poisoned = 123456789012345678901.0
+
+    engine = _engine(tmp_path)
+    try:
+        with engine.begin() as conn:
+            conn.execute(
+                sqlalchemy.text(
+                    "INSERT INTO vendor (id, registered, name, empty_spool_weight) "
+                    "VALUES (1, '2024-01-01 00:00:00', 'Poisoned', :w)",
+                ),
+                {"w": poisoned},
+            )
+            conn.execute(
+                sqlalchemy.text(
+                    "INSERT INTO filament (id, registered, density, diameter, weight, spool_weight) "
+                    "VALUES (1, '2024-01-01 00:00:00', 1.24, 1.75, :w, :w)",
+                ),
+                {"w": poisoned},
+            )
+            # id=2 is entirely legitimate and must come through unchanged.
+            conn.execute(
+                sqlalchemy.text(
+                    "INSERT INTO filament (id, registered, density, diameter, weight, spool_weight) "
+                    "VALUES (2, '2024-01-01 00:00:00', 1.24, 1.75, 1000, 200)",
+                ),
+            )
+            conn.execute(
+                sqlalchemy.text(
+                    "INSERT INTO spool (id, registered, filament_id, used_weight, initial_weight, spool_weight) "
+                    "VALUES (1, '2024-01-01 00:00:00', 1, :w, :w, :w)",
+                ),
+                {"w": poisoned},
+            )
+            conn.execute(
+                sqlalchemy.text(
+                    "INSERT INTO spool (id, registered, filament_id, used_weight, initial_weight, spool_weight) "
+                    "VALUES (2, '2024-01-01 00:00:00', 2, 250.5, 1000, 200)",
+                ),
+            )
+            conn.execute(
+                sqlalchemy.text(
+                    "INSERT INTO spool_usage_event (id, spool_id, time, event_type, delta, measured_weight) "
+                    "VALUES (1, 1, '2024-01-01 00:00:00', 'measure', :w, :w)",
+                ),
+                {"w": poisoned},
+            )
+
+        _run_alembic(tmp_path, "upgrade", "head")
+
+        with engine.connect() as conn:
+            # Nullable weight columns become NULL — "unknown" is honest; the true value is
+            # unrecoverable and inventing one would be worse than admitting it is gone.
+            assert conn.execute(sqlalchemy.text("SELECT empty_spool_weight FROM vendor WHERE id=1")).scalar() is None
+            assert conn.execute(sqlalchemy.text("SELECT weight FROM filament WHERE id=1")).scalar() is None
+            assert conn.execute(sqlalchemy.text("SELECT spool_weight FROM filament WHERE id=1")).scalar() is None
+            assert conn.execute(sqlalchemy.text("SELECT initial_weight FROM spool WHERE id=1")).scalar() is None
+            assert conn.execute(sqlalchemy.text("SELECT spool_weight FROM spool WHERE id=1")).scalar() is None
+            assert (
+                conn.execute(sqlalchemy.text("SELECT measured_weight FROM spool_usage_event WHERE id=1")).scalar()
+                is None
+            )
+            # NOT NULL columns fall back to the column's natural zero rather than NULL.
+            assert conn.execute(sqlalchemy.text("SELECT used_weight FROM spool WHERE id=1")).scalar() == 0
+            assert conn.execute(sqlalchemy.text("SELECT delta FROM spool_usage_event WHERE id=1")).scalar() == 0
+
+            # Every legitimate value is untouched — the repair must not widen into real data.
+            assert conn.execute(sqlalchemy.text("SELECT weight FROM filament WHERE id=2")).scalar() == 1000
+            assert conn.execute(sqlalchemy.text("SELECT spool_weight FROM filament WHERE id=2")).scalar() == 200
+            assert conn.execute(sqlalchemy.text("SELECT used_weight FROM spool WHERE id=2")).scalar() == 250.5
+            assert conn.execute(sqlalchemy.text("SELECT initial_weight FROM spool WHERE id=2")).scalar() == 1000
+            assert conn.execute(sqlalchemy.text("SELECT spool_weight FROM spool WHERE id=2")).scalar() == 200
+    finally:
+        engine.dispose()

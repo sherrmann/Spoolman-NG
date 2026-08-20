@@ -109,6 +109,28 @@ describe("totalRemainingWeight (Layer 1 end-to-end, #377)", () => {
     // precision the language cannot hold.
     expect(total).toBeCloseTo(500.3, 6);
   });
+
+  // #383 closed the path that *created* these values, but not the one that reads them back. A
+  // weight that is a whole number beyond Number.MAX_SAFE_INTEGER is the single case the reviver
+  // still turns into a string on purpose — that is the CockroachDB large-id rule (#69), and it is
+  // applied per value, not per field, so it catches a weight column just the same. No write path
+  // can produce such a row any more, but a row poisoned before the upgrade is still sitting in the
+  // database, and reading it flips this reduce back into concatenation.
+  it("sums numerically when a stored weight is an oversized whole number", () => {
+    const filamentJson = `{"id":1,"registered":"2024-01-01","density":1.24,"diameter":1.75,"extra":{}}`;
+    const spoolsJson = `[
+      {"id":1,"registered":"2024-01-01T00:00:00Z","filament":${filamentJson},"used_weight":0,
+       "used_length":0,"archived":false,"extra":{},"remaining_weight":123456789012345678901},
+      {"id":2,"registered":"2024-01-01T00:00:00Z","filament":${filamentJson},"used_weight":0,
+       "used_length":0,"archived":false,"extra":{},"remaining_weight":500}
+    ]`;
+
+    const spools = parseJsonWithBigIntIds(spoolsJson) as ISpool[];
+    const total = totalRemainingWeight(spools);
+
+    expect(typeof total).toBe("number");
+    expect(total).toBe(Number("123456789012345678901") + 500);
+  });
 });
 
 describe("totalValue", () => {
