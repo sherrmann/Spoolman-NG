@@ -10,6 +10,16 @@ from spoolman.database import models
 from spoolman.math import length_from_weight
 from spoolman.settings import SettingDefinition, SettingType
 
+# JavaScript's Number.MAX_SAFE_INTEGER, used as the upper bound on weight inputs (#377).
+#
+# Not an arbitrary sanity limit: it is exactly where the web client stops deserializing a numeric
+# literal as a number and returns a *string* instead, because that is the rule which keeps oversized
+# CockroachDB ids exact (#69) and it is applied per value rather than per field. A stored weight past
+# this point therefore reappears in the browser as a string and turns the dashboard's `sum + weight`
+# into concatenation. It is also physically absurd — 9e15 grams is nine billion tonnes — so no real
+# spool is excluded by it.
+MAX_SAFE_INTEGER = 9007199254740991
+
 
 def datetime_to_str(dt: datetime) -> str:
     """Convert a datetime object to a string."""

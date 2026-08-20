@@ -15,9 +15,20 @@ export interface MaterialStat {
   weight: number;
 }
 
-/** Effective stock weight of one spool, using the remaining→initial→filament fallback. */
+/**
+ * Effective stock weight of one spool, using the remaining→initial→filament fallback.
+ *
+ * Defensive coercion (#377): the deserializer still hands back a *string* for a weight that is a
+ * whole number beyond Number.MAX_SAFE_INTEGER, because that is the rule which keeps oversized
+ * CockroachDB ids exact (#69) and it applies per value rather than per field. Every aggregate below
+ * funnels through here and sums with `+`, which silently becomes concatenation on a single string
+ * operand — so this is the one place the coercion has to happen. Same `Number()` +
+ * `Number.isFinite` pattern as the formatters in utils/parsing; non-finite input degrades to 0.
+ */
 export function spoolStockWeight(spool: ISpool): number {
-  return spool.remaining_weight ?? spool.initial_weight ?? spool.filament.weight ?? 0;
+  const raw = spool.remaining_weight ?? spool.initial_weight ?? spool.filament.weight ?? 0;
+  const numeric = Number(raw);
+  return Number.isFinite(numeric) ? numeric : 0;
 }
 
 /** Total remaining filament weight across all spools (headline KPI). */

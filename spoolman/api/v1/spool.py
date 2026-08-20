@@ -8,11 +8,11 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Header, Query, Request, Response, WebSocket, WebSocketDisconnect
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from spoolman.api.v1.models import Message, Spool, SpoolEvent
+from spoolman.api.v1.models import MAX_SAFE_INTEGER, Message, Spool, SpoolEvent
 from spoolman.api.v1.models import SpoolUsageEvent as SpoolUsageEventModel
 from spoolman.database import filament, spool
 from spoolman.database.database import get_db_session
@@ -38,6 +38,12 @@ router = APIRouter(
 
 
 class SpoolParameters(BaseModel):
+    # Infinity/NaN are not valid JSON, but Starlette reads bodies with json.loads, which
+    # accepts the bare literals; pydantic would then take them because allow_inf_nan defaults
+    # to True. A stored non-finite weight makes json.dumps(allow_nan=False) raise on the way
+    # back out, 500ing every response that contains the spool until the row is repaired (#377).
+    model_config = ConfigDict(allow_inf_nan=False)
+
     first_used: datetime | None = Field(None, description="First logged occurence of spool usage.")
     last_used: datetime | None = Field(None, description="Last logged occurence of spool usage.")
     filament_id: int = Field(description="The ID of the filament type of this spool.")
@@ -50,18 +56,21 @@ class SpoolParameters(BaseModel):
     initial_weight: float | None = Field(
         None,
         ge=0,
+        le=MAX_SAFE_INTEGER,
         description="The initial weight of the filament on the spool, in grams. (net weight)",
         examples=[200],
     )
     spool_weight: float | None = Field(
         None,
         ge=0,
+        le=MAX_SAFE_INTEGER,
         description="The weight of an empty spool, in grams. (tare weight)",
         examples=[200],
     )
     remaining_weight: float | None = Field(
         None,
         ge=0,
+        le=MAX_SAFE_INTEGER,
         description=(
             "Remaining weight of filament on the spool. Can only be used if the filament type has a weight set."
         ),
@@ -70,6 +79,7 @@ class SpoolParameters(BaseModel):
     used_weight: float | None = Field(
         None,
         ge=0,
+        le=MAX_SAFE_INTEGER,
         description="Used weight of filament on the spool.",
         examples=[200],
     )
@@ -139,13 +149,42 @@ class SpoolUpdateParameters(SpoolParameters):
 
 
 class SpoolUseParameters(BaseModel):
-    use_length: float | None = Field(None, description="Length of filament to reduce by, in mm.", examples=[2.2])
-    use_weight: float | None = Field(None, description="Filament weight to reduce by, in g.", examples=[5.3])
+    # Infinity/NaN are not valid JSON, but Starlette reads bodies with json.loads, which
+    # accepts the bare literals; pydantic would then take them because allow_inf_nan defaults
+    # to True. A stored non-finite weight makes json.dumps(allow_nan=False) raise on the way
+    # back out, 500ing every response that contains the spool until the row is repaired (#377).
+    model_config = ConfigDict(allow_inf_nan=False)
+
+    use_length: float | None = Field(
+        None,
+        ge=-MAX_SAFE_INTEGER,
+        le=MAX_SAFE_INTEGER,
+        description="Length of filament to reduce by, in mm.",
+        examples=[2.2],
+    )
+    use_weight: float | None = Field(
+        None,
+        ge=-MAX_SAFE_INTEGER,
+        le=MAX_SAFE_INTEGER,
+        description="Filament weight to reduce by, in g.",
+        examples=[5.3],
+    )
     comment: str | None = Field(None, description="Optional comment recorded with the usage event.")
 
 
 class SpoolMeasureParameters(BaseModel):
-    weight: float = Field(description="Current gross weight of the spool, in g.", examples=[200])
+    # Infinity/NaN are not valid JSON, but Starlette reads bodies with json.loads, which
+    # accepts the bare literals; pydantic would then take them because allow_inf_nan defaults
+    # to True. A stored non-finite weight makes json.dumps(allow_nan=False) raise on the way
+    # back out, 500ing every response that contains the spool until the row is repaired (#377).
+    model_config = ConfigDict(allow_inf_nan=False)
+
+    weight: float = Field(
+        ge=-MAX_SAFE_INTEGER,
+        le=MAX_SAFE_INTEGER,
+        description="Current gross weight of the spool, in g.",
+        examples=[200],
+    )
     comment: str | None = Field(None, description="Optional comment recorded with the usage event.")
 
 

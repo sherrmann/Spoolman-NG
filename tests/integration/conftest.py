@@ -11,6 +11,7 @@ from pathlib import Path
 
 import pytest_asyncio
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import event
 from sqlalchemy.engine import URL
@@ -35,6 +36,7 @@ from spoolman.api.v1 import (
     stats,
     vendor,
 )
+from spoolman.api.v1.errors import validation_exception_handler
 from spoolman.database import database as db_module
 from spoolman.database.models import Base
 
@@ -59,6 +61,10 @@ async def client(tmp_path: Path) -> AsyncIterator[AsyncClient]:
     extra_field_registry.extra_field_cache.clear()
 
     app = FastAPI()
+    # Render validation errors the way the real app does, so a 422 that production can
+    # serialize but the bare harness cannot (or vice versa) is caught here (#377).
+    # ItemNotFoundError is deliberately NOT installed: several tests assert it propagates.
+    app.add_exception_handler(RequestValidationError, validation_exception_handler)
     app.include_router(filament.router, prefix="/api/v1")
     app.include_router(vendor.router, prefix="/api/v1")
     app.include_router(shop.router, prefix="/api/v1")
