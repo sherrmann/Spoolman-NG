@@ -72,7 +72,19 @@ class SubscriptionTree:
                 # websocket payloads and REST responses have an identical shape. Without this, unset
                 # fields arrive as explicit `null` over the websocket but are omitted over REST, which
                 # trips up clients that distinguish the two (e.g. the spool list's price fallback).
-                await websocket.send_text(evt.json(exclude_none=True))
+                try:
+                    await websocket.send_text(evt.json(exclude_none=True))
+                except Exception:  # noqa: BLE001 - any write failure means this socket is done
+                    # The state check above is a TOCTOU: a socket can start closing between the
+                    # check and the write, and starlette then raises "connection is closing". If
+                    # that escaped, it would skip every remaining subscriber on this node, the
+                    # cleanup below, and the descent into the child nodes - one dying client
+                    # starving the whole pool for that event.
+                    logger.debug(
+                        "Dropping a subscriber that could not be written to",
+                        exc_info=True,
+                    )
+                    dead.append(websocket)
 
         for websocket in dead:
             self.subscribers.discard(websocket)

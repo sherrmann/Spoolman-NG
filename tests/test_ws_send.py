@@ -17,13 +17,17 @@ class _FakeWS:
 
     client = None
 
-    def __init__(self, *, dead: bool = False) -> None:
+    def __init__(self, *, dead: bool = False, fail: bool = False) -> None:
         state = WebSocketState.DISCONNECTED if dead else WebSocketState.CONNECTED
         self.client_state = state
         self.application_state = state
+        self.fail = fail
         self.sent: list[str] = []
 
     async def send_text(self, text: str) -> None:
+        if self.fail:
+            # What starlette raises when the socket began closing after the state check above.
+            raise RuntimeError("connection is closing")
         self.sent.append(text)
 
 
@@ -82,3 +86,61 @@ async def test_dead_socket_stops_reappearing_on_subsequent_sends():
     await m.send(("spool", "5"), _FakeEvent())  # old code: leaked and re-triggered every send
 
     assert m.has_subscribers(("spool",)) is False
+
+
+class _OrderedSubscribers(list):
+    """Quacks like the subscriber set, but iterates in insertion order.
+
+    Set iteration order is unspecified, so a same-node starvation test that relies on the
+    failing socket being visited *before* the live one would pass by luck half the time.
+    Swapping in this stand-in makes that ordering deterministic.
+    """
+
+    def add(self, item: object) -> None:
+        if item not in self:
+            self.append(item)
+
+    def discard(self, item: object) -> None:
+        if item in self:
+            self.remove(item)
+
+
+async def test_failing_write_is_swallowed_and_drops_the_subscriber():
+    """A socket reporting CONNECTED can still raise on write; that must not escape send()."""
+    m = WebsocketManager()
+    failing = _FakeWS(fail=True)
+    m.connect(("spool", "5"), failing)
+
+    await m.send(("spool", "5"), _FakeEvent())  # old code: RuntimeError escapes the loop
+
+    assert m.has_subscribers(("spool", "5")) is False  # and it does not fail again next time
+
+
+async def test_failing_write_does_not_starve_deeper_subscribers():
+    """The descent into child nodes happens after the loop, so an escaping error skipped it."""
+    m = WebsocketManager()
+    failing = _FakeWS(fail=True)
+    deeper = _FakeWS()
+    m.connect(("spool",), failing)
+    m.connect(("spool", "5"), deeper)
+
+    await m.send(("spool", "5"), _FakeEvent())
+
+    assert deeper.sent == ["{}"]
+
+
+async def test_failing_write_does_not_starve_live_siblings_on_the_same_node():
+    m = WebsocketManager()
+    failing = _FakeWS(fail=True)
+    live = _FakeWS()
+    m.connect(("spool", "5"), failing)
+    m.connect(("spool", "5"), live)
+
+    # Force the failing socket to be visited first (see _OrderedSubscribers).
+    node = m.tree.children["spool"].children["5"]
+    node.subscribers = _OrderedSubscribers([failing, live])
+
+    await m.send(("spool", "5"), _FakeEvent())
+
+    assert live.sent == ["{}"]
+    assert list(node.subscribers) == [live]
