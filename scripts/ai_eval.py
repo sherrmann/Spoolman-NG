@@ -38,6 +38,10 @@ CASES_PATH = Path(__file__).with_name("ai_eval_cases.json")
 #: is automatically measured here too instead of silently drifting out of what's actually tested.
 _EVAL_SYSTEM_PROMPT = aichat._system_prompt(context=None, locale="en", can_write=True)  # noqa: SLF001
 
+#: How much of a stalled turn-two reply to print. Long enough to show whether the model asked a
+#: question, refused, or merely narrated the lookup result; short enough to keep the report scannable.
+_PROSE_EXCERPT = 160
+
 #: Value returned in the confusion table / "called" slot when the model made no tool call,
 #: called something unknown, or the request itself failed.
 NO_CALL = "<none>"
@@ -209,6 +213,11 @@ class CaseOutcome:
     #: separately from correctness because a call can be entirely right about the tool and its
     #: required arguments while also fabricating optional ones.
     invented: list[str] = field(default_factory=list)
+    #: What the model said instead of finishing, after a precursor call handed it everything it
+    #: asked for (#387). Without this the two ways of failing turn two -- answering in prose, and
+    #: calling some other tool -- are indistinguishable in the report, which shows only the
+    #: precursor's name either way. Set only when the second turn did not complete.
+    stalled_prose: str | None = None
 
 
 def _first_call(assistant: dict) -> tuple[str, dict]:
@@ -273,6 +282,7 @@ async def _run_case(config: ai.AIConfig, tools: list[dict], case: dict) -> CaseO
         args_ok=completed and _args_match(case.get("args", {}), parsed),
         called=called if not completed else f"{called} -> {second}",
         invented=_invented_args(case["prompt"], parsed) if completed else [],
+        stalled_prose=None if completed else (assistant.get("content") or "").strip() or None,
     )
 
 
@@ -319,6 +329,20 @@ def _print_report(per_tool: dict[str, list[CaseOutcome]], confusion: Counter, to
         print(f"\nInvented arguments ({len(fabricated)} of {total} calls carried values the user never gave):")
         for tool, outcome in fabricated:
             print(f"  {tool}: {', '.join(sorted(outcome.invented))}")
+    stalled = [(tool, o) for tool, results in per_tool.items() for o in results if o.stalled_prose]
+    if stalled:
+        # The failure mode this exists to name (#387): the model makes the instructed lookup,
+        # gets the density and diameter back, and then *talks* instead of writing. That is a
+        # different defect from picking the wrong tool, and the confusion table below cannot
+        # tell them apart -- it records the precursor's name for both.
+        print(
+            f"\nStalled after a lookup ({len(stalled)} of {total} answered in prose instead of finishing):",
+        )
+        for tool, outcome in stalled:
+            prose = " ".join((outcome.stalled_prose or "").split())
+            if len(prose) > _PROSE_EXCERPT:
+                prose = prose[:_PROSE_EXCERPT] + "..."
+            print(f"  {tool}: {prose}")
     if confusion:
         print("\nConfusions (expected -> called):")
         for pair, count in confusion.most_common():
