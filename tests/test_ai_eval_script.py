@@ -205,3 +205,61 @@ def test_a_fabricated_shop_is_still_reported(ai_eval_module: ModuleType) -> None
         {"shop": "PrintRight", "comment": "Replacement for outdoor project"},
     )
     assert sorted(invented) == ["comment", "shop"]
+
+
+# --- Turn-two prose (#387) ----------------------------------------------------------
+
+
+async def test_prose_after_a_precursor_is_captured_when_the_model_stalls(
+    ai_eval_module: ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Stalling in prose is a different failure from calling the wrong tool.
+
+    #387.3: both scored identically and both showed only the precursor in the confusion table,
+    because the harness discarded the one thing that tells them apart - what the model said.
+    """
+    replies = [
+        {"tool_calls": [{"function": {"name": "catalog_lookup", "arguments": "{}"}}]},
+        {"content": "I found PLA at 1.24 g/cm3 and 1.75 mm. Shall I create it?", "tool_calls": []},
+    ]
+
+    async def _fake(*_args: object, **_kwargs: object) -> dict:
+        return replies.pop(0)
+
+    monkeypatch.setattr(ai_eval_module.ai, "chat_completion_tools", _fake)
+    case = {
+        "prompt": "Add Polymaker PolyLite PLA",
+        "tool": "create_filament",
+        "precursors": ["catalog_lookup"],
+    }
+
+    outcome = await ai_eval_module._run_case(ai_eval_module.ai.AIConfig(), [], case)  # noqa: SLF001
+
+    assert outcome.completed is False
+    assert outcome.stalled_prose is not None, "the prose that explains the stall must survive"
+    assert "1.24" in outcome.stalled_prose
+
+
+async def test_no_prose_is_recorded_when_the_model_completes(
+    ai_eval_module: ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    replies = [
+        {"tool_calls": [{"function": {"name": "find_vendors", "arguments": "{}"}}]},
+        {
+            "content": "Creating it now.",
+            "tool_calls": [{"function": {"name": "create_vendor", "arguments": '{"name": "polymaker"}'}}],
+        },
+    ]
+
+    async def _fake(*_args: object, **_kwargs: object) -> dict:
+        return replies.pop(0)
+
+    monkeypatch.setattr(ai_eval_module.ai, "chat_completion_tools", _fake)
+    case = {"prompt": "Add Polymaker as a vendor", "tool": "create_vendor", "precursors": ["find_vendors"]}
+
+    outcome = await ai_eval_module._run_case(ai_eval_module.ai.AIConfig(), [], case)  # noqa: SLF001
+
+    assert outcome.completed is True
+    assert outcome.stalled_prose is None, "prose alongside a correct call is not a stall"
