@@ -69,7 +69,7 @@ export const Header = ({ sticky }: RefineThemedLayoutHeaderProps) => {
           icon={<img src={getBasePath() + "/kofi_s_logo_nolabel.png"} alt="" aria-hidden style={{ height: "1.4em" }} />}
           type="text"
           size="small"
-          href="https://ko-fi.com/donkie"
+          href="https://ko-fi.com/sherrmann"
           target="_blank"
           rel="noopener noreferrer"
           style={{ fontSize: 12, opacity: 0.7, padding: "0 4px" }}
