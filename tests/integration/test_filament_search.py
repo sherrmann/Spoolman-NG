@@ -67,3 +67,10 @@ async def test_malformed_search_does_not_500(client: AsyncClient):
     for weird in ['"', ",,,", "%_\\", '"unterminated']:
         resp = await client.get(API, params={"search": weird})
         assert resp.status_code == 200, f"{weird!r} -> {resp.status_code}: {resp.text}"
+
+
+@pytest.mark.usefixtures("_seed")
+async def test_wildcards_in_search_are_matched_literally(client: AsyncClient):
+    """A search of "%" or "_" must not act as a SQL LIKE wildcard and match every row."""
+    assert await _search_names(client, "%") == set()
+    assert await _search_names(client, "_") == set()

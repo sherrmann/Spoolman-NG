@@ -76,3 +76,9 @@ async def test_empty_search_returns_everything(client: AsyncClient, seeded: dict
 async def test_malformed_search_is_200_not_500(client: AsyncClient):
     resp = await client.get(SPOOL, params={"search": '"unterminated'})
     assert resp.status_code == 200, resp.text
+
+
+async def test_wildcards_in_search_are_matched_literally(client: AsyncClient, seeded: dict[str, int]):  # noqa: ARG001
+    """A search of "%" or "_" must not act as a SQL LIKE wildcard and match every row."""
+    assert await _search_ids(client, "%") == set()
+    assert await _search_ids(client, "_") == set()

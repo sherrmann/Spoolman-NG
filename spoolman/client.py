@@ -99,17 +99,20 @@ def build_configjs(base_path: str, ingress_base_path: str | None = None) -> str:
     pointed at the per-session ingress prefix and told it runs under HA ingress — the flag
     makes it skip service-worker registration, since a SW scope cannot follow a rotating
     token path. Without it, the output is byte-identical to what has always been served.
+
+    Both paths are JSON-encoded rather than hand-quoted. Checking only for `"` (the old
+    approach) missed a trailing backslash, which would escape the closing quote and break out
+    of the string literal; JSON is a subset of JS here, so json.dumps always produces a
+    correct, safely-embeddable JS string literal.
     """
     if ingress_base_path is not None:
         return f"""
-window.SPOOLMAN_BASE_PATH = "{ingress_base_path}";
+window.SPOOLMAN_BASE_PATH = {json.dumps(ingress_base_path)};
 window.SPOOLMAN_HA_INGRESS = true;
 """
-    if '"' in base_path:
-        raise ValueError("Base path contains quotes, which are not allowed.")
 
     return f"""
-window.SPOOLMAN_BASE_PATH = "{base_path}";
+window.SPOOLMAN_BASE_PATH = {json.dumps(base_path)};
 """
 
 

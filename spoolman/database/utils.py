@@ -157,7 +157,7 @@ def add_where_clause_str_opt(
                 conditions.append(field == value_part[1:-1])
             # Do fuzzy match if value_part is not surrounded by quotes
             else:
-                conditions.append(field.ilike(f"%{value_part}%"))
+                conditions.append(field.ilike(f"%{escape_like(value_part)}%", escape=LIKE_ESCAPE))
 
         stmt = stmt.where(sqlalchemy.or_(*conditions))
     return stmt
@@ -180,7 +180,7 @@ def add_where_clause_str(
                 conditions.append(field == value_part[1:-1])
             # Do fuzzy match if value_part is not surrounded by quotes
             else:
-                conditions.append(field.ilike(f"%{value_part}%"))
+                conditions.append(field.ilike(f"%{escape_like(value_part)}%", escape=LIKE_ESCAPE))
 
         stmt = stmt.where(sqlalchemy.or_(*conditions))
     return stmt

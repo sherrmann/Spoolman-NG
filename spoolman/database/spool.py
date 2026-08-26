@@ -23,11 +23,13 @@ from spoolman.database.extra_field_query import (
     extra_field_value_text,
 )
 from spoolman.database.utils import (
+    LIKE_ESCAPE,
     SortOrder,
     add_where_clause_int,
     add_where_clause_int_opt,
     add_where_clause_str,
     add_where_clause_str_opt,
+    escape_like,
     order_by_clauses,
     order_by_expression,
     parse_nested_field,
@@ -274,17 +276,19 @@ def _build_search_filters(search: str) -> list:
             if exact_value.lstrip("-").isdigit():
                 search_conditions.append(models.Spool.id == int(exact_value))
         else:
-            fuzzy_value = f"%{value_part}%"
+            # Wildcards in value_part are escaped, so a search of "%" looks for a literal
+            # percent sign instead of matching every row.
+            fuzzy_value = f"%{escape_like(value_part)}%"
             search_conditions.extend(
                 [
-                    models.Vendor.name.ilike(fuzzy_value),
-                    models.Filament.name.ilike(fuzzy_value),
-                    models.Filament.material.ilike(fuzzy_value),
-                    models.Filament.article_number.ilike(fuzzy_value),
-                    models.Spool.comment.ilike(fuzzy_value),
-                    models.Spool.lot_nr.ilike(fuzzy_value),
-                    models.Spool.location.ilike(fuzzy_value),
-                    sqlalchemy.cast(models.Spool.id, sqlalchemy.String).ilike(fuzzy_value),
+                    models.Vendor.name.ilike(fuzzy_value, escape=LIKE_ESCAPE),
+                    models.Filament.name.ilike(fuzzy_value, escape=LIKE_ESCAPE),
+                    models.Filament.material.ilike(fuzzy_value, escape=LIKE_ESCAPE),
+                    models.Filament.article_number.ilike(fuzzy_value, escape=LIKE_ESCAPE),
+                    models.Spool.comment.ilike(fuzzy_value, escape=LIKE_ESCAPE),
+                    models.Spool.lot_nr.ilike(fuzzy_value, escape=LIKE_ESCAPE),
+                    models.Spool.location.ilike(fuzzy_value, escape=LIKE_ESCAPE),
+                    sqlalchemy.cast(models.Spool.id, sqlalchemy.String).ilike(fuzzy_value, escape=LIKE_ESCAPE),
                 ],
             )
 
