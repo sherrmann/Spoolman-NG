@@ -12,6 +12,26 @@ from sqlalchemy.sql import ColumnElement
 
 from spoolman.database import models
 
+# Escape character for LIKE patterns. Deliberately not backslash: a backslash ESCAPE clause is
+# ambiguous under MySQL/MariaDB string parsing. '/' renders safely on all four dialects.
+LIKE_ESCAPE = "/"
+
+
+def escape_like(value: str) -> str:
+    """Escape LIKE wildcards so user input is matched literally, not as a wildcard pattern.
+
+    Pair it with ``escape=LIKE_ESCAPE`` on the ``like``/``ilike`` call, or the escape character
+    means nothing to the database and the wildcards are still live.
+
+    Args:
+        value: The raw user input to be embedded in a LIKE pattern.
+
+    Returns:
+        str: The input with the escape character and both wildcards escaped.
+
+    """
+    return value.replace(LIKE_ESCAPE, LIKE_ESCAPE * 2).replace("%", f"{LIKE_ESCAPE}%").replace("_", f"{LIKE_ESCAPE}_")
+
 
 def utc_timezone_naive(dt: datetime) -> datetime:
     """Coerce a datetime to the naive-UTC form every datetime column in this codebase stores.
@@ -30,6 +50,37 @@ def utc_timezone_naive(dt: datetime) -> datetime:
 class SortOrder(Enum):
     ASC = 1
     DESC = 2
+
+
+def order_by_clauses(
+    exprs: Sequence[Any],
+    order: "SortOrder",
+) -> list[Any]:
+    """Build ORDER BY clauses for one sort field, always placing NULLs last.
+
+    The databases disagree on where a NULL goes: SQLite and MySQL treat NULL as the lowest
+    value (so it lands last on DESC, first on ASC), while PostgreSQL and CockroachDB default
+    to NULLS LAST on ASC and NULLS FIRST on DESC. A NULL means "no value recorded", which
+    belongs at the bottom whichever way the list is pointing, so this orders on an explicit
+    "is it null" flag first.
+
+    It is written as a boolean expression rather than SQLAlchemy's ``nullslast()`` on purpose:
+    that renders a literal NULLS LAST, which MySQL and MariaDB do not support, whereas
+    ``expr IS NULL`` sorts false-before-true on all four supported databases.
+
+    Args:
+        exprs: The expressions to sort by, in priority order. A field usually contributes one.
+        order: The requested direction, applied to every expression.
+
+    Returns:
+        list[Any]: Clauses to hand to ``Select.order_by()``.
+
+    """
+    clauses: list[Any] = []
+    for expr in exprs:
+        clauses.append(expr.is_(None).asc())
+        clauses.append(expr.asc() if order == SortOrder.ASC else expr.desc())
+    return clauses
 
 
 def parse_sort(sort: str | None) -> dict[str, "SortOrder"]:
@@ -133,6 +184,31 @@ def add_where_clause_str(
 
         stmt = stmt.where(sqlalchemy.or_(*conditions))
     return stmt
+
+
+# Separates the two ends of a datetime range. Not ':', which ISO 8601 timestamps are full of —
+# the same reason the extra-field datetime filters use this character (see add_where_clause_extra_field).
+DATETIME_RANGE_SEPARATOR = "|"
+
+
+def split_datetime_range_filter(value: str, field_name: str) -> tuple[str, str] | None:
+    """Split a `<start>|<end>` datetime filter into its two ends, or None if it isn't a range.
+
+    Either end may be empty, leaving that side open; a range with neither end asks nothing and is
+    rejected. Shared by any built-in datetime columns and the datetime extra fields so that the
+    one documented grammar is parsed in exactly one place. Only the parsing is common: what each
+    caller then does with the ends differs, because a typed column would be compared as a datetime
+    while an extra field is compared as its decoded JSON text (see add_where_clause_extra_field).
+    """
+    if DATETIME_RANGE_SEPARATOR not in value:
+        return None
+    start, _, end = value.partition(DATETIME_RANGE_SEPARATOR)
+    if not start and not end:
+        raise ValueError(
+            f"Invalid datetime range filter for '{field_name}': '{value}'. "
+            f"Expected '<start>{DATETIME_RANGE_SEPARATOR}<end>' with at least one end given.",
+        )
+    return start, end
 
 
 def add_where_clause_int(

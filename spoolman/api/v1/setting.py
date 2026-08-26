@@ -13,6 +13,7 @@ from spoolman.api.v1.models import Message, SettingEvent, SettingResponse
 from spoolman.database import setting
 from spoolman.database.database import get_db_session
 from spoolman.exceptions import ItemNotFoundError
+from spoolman.extra_field_registry import invalidate_extra_field_cache, validate_extra_field_setting
 from spoolman.settings import SETTINGS, parse_setting
 from spoolman.ws import websocket_manager
 
@@ -168,6 +169,10 @@ async def update(
     if body and body != "null":
         try:
             definition.validate_type(body)
+            # The extra-field settings feed a registry that the /field endpoints and every entity
+            # response depend on. Writing a malformed one through here used to be accepted and then
+            # wedged GET /field/{entity} into a permanent 500, so validate the shape up front.
+            validate_extra_field_setting(key, body)
         except ValueError as e:
             return JSONResponse(status_code=400, content=Message(message=str(e)).dict())
 
@@ -186,6 +191,10 @@ async def update(
         await setting.delete(db=db, definition=definition)
         logger.info('Setting "%s" has been unset.', key)
         await db.commit()
+
+    # The registry caches extra fields in memory and is otherwise only refreshed by the /field
+    # endpoints, so without this the two paths disagree until the next restart.
+    invalidate_extra_field_cache(key)
 
     # Get the new value of the setting.
     try:

@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, Field
+from pydantic import ValidationError as PydanticValidationError
 
 from spoolman.database import setting as db_setting
 from spoolman.exceptions import ItemNotFoundError
@@ -78,8 +79,24 @@ class ExtraField(ExtraFieldParameters):
     entity_type: EntityType = Field(description="Entity type this field is for")
 
 
+# Matches the settings cap in spoolman/database/setting.py. The columns are Text(), so nothing
+# stopped a single request storing megabytes: unbounded database growth, and the resulting
+# websocket event overflowed the 1 MiB default frame limit, killing live updates for every client.
+EXTRA_FIELD_VALUE_MAX_LENGTH = 2**16 - 1
+
+# Extra fields are a per-entity schema, not a data store. A few dozen is already generous, and a
+# bound keeps the registry -- which is cached in memory and embedded in every entity response --
+# from being grown without limit.
+MAX_EXTRA_FIELDS_PER_ENTITY = 128
+
+
 def validate_extra_field_value(field: ExtraFieldParameters, value: str) -> None:  # noqa: C901, PLR0912, PLR0915
     """Validate that the value has the correct type."""
+    if len(value) > EXTRA_FIELD_VALUE_MAX_LENGTH:
+        raise ValueError(
+            f"Value is too big, max size is {EXTRA_FIELD_VALUE_MAX_LENGTH} characters.",
+        )
+
     try:
         data = json.loads(value)
     except json.JSONDecodeError:
@@ -183,6 +200,93 @@ def validate_extra_field_dict(all_fields: list[ExtraField], fields_input: dict[s
 
 extra_field_cache: dict[EntityType, list[ExtraField]] = {}
 
+# Settings named extra_fields_<entity> hold the serialized registry for that entity type.
+_EXTRA_FIELDS_SETTING_PREFIX = "extra_fields_"
+
+
+def entity_type_of_setting(key: str) -> EntityType | None:
+    """Get the entity type whose extra fields a setting key holds, if it holds any.
+
+    Args:
+        key: A setting key, e.g. ``extra_fields_spool``.
+
+    Returns:
+        Optional[EntityType]: The entity type, or None if this is not an extra-fields setting.
+
+    """
+    if not key.startswith(_EXTRA_FIELDS_SETTING_PREFIX):
+        return None
+    try:
+        return EntityType(key.removeprefix(_EXTRA_FIELDS_SETTING_PREFIX))
+    except ValueError:
+        return None
+
+
+def validate_extra_field_setting(key: str, value: str) -> None:
+    """Validate the serialized extra-field registry written to an ``extra_fields_*`` setting.
+
+    The /field endpoints validate what they write, but the generic settings endpoint did not, so a
+    malformed array written through it would be accepted and then fail to parse on every later
+    read -- leaving GET /field/{entity} permanently returning 500.
+
+    Does nothing for any other setting key.
+
+    Args:
+        key: The setting key being written.
+        value: The JSON-encoded setting value.
+
+    Raises:
+        ValueError: If the value is not a valid list of extra fields.
+
+    """
+    entity_type = entity_type_of_setting(key)
+    if entity_type is None:
+        return
+
+    fields = json.loads(value)
+    if not isinstance(fields, list):
+        # ValueError, not TypeError: this is a validation failure the caller turns into a 400.
+        raise ValueError(f"Setting {key} must be an array of extra fields.")  # noqa: TRY004
+
+    if len(fields) > MAX_EXTRA_FIELDS_PER_ENTITY:
+        raise ValueError(
+            f"Setting {key} has {len(fields)} extra fields, the maximum is {MAX_EXTRA_FIELDS_PER_ENTITY}.",
+        )
+
+    for index, obj in enumerate(fields):
+        try:
+            field = ExtraField.model_validate(obj)
+        except PydanticValidationError as e:
+            raise ValueError(f"Extra field at index {index} is not valid: {e.error_count()} errors. {e}") from None
+        if field.entity_type != entity_type:
+            raise ValueError(
+                f"Extra field at index {index} has entity type {field.entity_type.value!r}, expected "
+                f"{entity_type.value!r}.",
+            )
+        try:
+            validate_extra_field(field)
+        except ValueError as e:
+            raise ValueError(f"Extra field at index {index} is not valid: {e}") from None
+
+    keys = [field["key"] for field in fields if isinstance(field, dict) and "key" in field]
+    if len(set(keys)) != len(keys):
+        raise ValueError(f"Setting {key} contains duplicate extra field keys.")
+
+
+def invalidate_extra_field_cache(key: str) -> None:
+    """Drop the cached extra fields for the entity type a setting key belongs to.
+
+    Does nothing for any other setting key.
+
+    Args:
+        key: The setting key that was written.
+
+    """
+    entity_type = entity_type_of_setting(key)
+    if entity_type is not None:
+        extra_field_cache.pop(entity_type, None)
+        logger.info("Extra field cache for entity type %s invalidated.", entity_type.name)
+
 
 async def get_extra_fields(db: AsyncSession, entity_type: EntityType) -> list[ExtraField]:
     """Get all extra fields for a specific entity type."""
@@ -229,6 +333,10 @@ async def add_or_update_extra_field(db: AsyncSession, entity_type: EntityType, e
                 raise ValueError("Cannot remove existing choices.")
 
     extra_fields = [field for field in extra_fields if field.key != extra_field.key]
+    if len(extra_fields) >= MAX_EXTRA_FIELDS_PER_ENTITY:
+        raise ValueError(
+            f"Cannot add another extra field for {entity_type.name}, the maximum is {MAX_EXTRA_FIELDS_PER_ENTITY}.",
+        )
     extra_fields.append(extra_field)
 
     setting_def = parse_setting(f"extra_fields_{entity_type.name}")
