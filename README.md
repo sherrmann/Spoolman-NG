@@ -227,6 +227,13 @@ Authentication is **opt-in** (choose either or both):
 * For federated auth (SSO/OIDC) or another layer, put it behind an authenticating reverse proxy (e.g. [Authelia](https://www.authelia.com/), [OAuth2 Proxy](https://oauth2-proxy.github.io/oauth2-proxy/), Caddy/nginx basic auth) or access it over a VPN such as WireGuard or Tailscale.
 * Don't run with `SPOOLMAN_DEBUG_MODE=TRUE` in production — it relaxes CORS to allow all origins.
 
+Independently of whether authentication is configured, two guards run by default and don't need any setup for the common case:
+
+* **Cross-origin writes and websockets are refused.** A browser page on another site can't POST, PUT, PATCH or DELETE to your Spoolman instance, or open a websocket to it, unless its origin is your instance's own or is listed in `SPOOLMAN_CORS_ORIGIN`. Non-browser clients (Moonraker, OctoPrint, curl) send no `Origin` header and are unaffected. Set `SPOOLMAN_CORS_ORIGIN=*` (or `SPOOLMAN_DEBUG_MODE=TRUE`) to opt out entirely.
+* **DNS rebinding is closed off, opt-in.** Set `SPOOLMAN_ALLOWED_HOSTS` (comma-separated hostnames, `*.example.com` wildcards allowed) if you reach Spoolman by a public domain name behind a reverse proxy, and a request addressed to any other hostname gets refused. Off by default because the hostnames it would need to refuse otherwise — IP addresses, single-label names, `*.local` — are exactly the ones nobody can point at your LAN from the outside, so most deployments need nothing here.
+
+See `spoolman/security.py` for the full reasoning, and [`docs/installation.md`](docs/installation.md#security-relevant) for the environment variables.
+
 To report a security vulnerability, see [SECURITY.md](SECURITY.md).
 
 ## Source mirror & CI

@@ -407,8 +407,9 @@ shown locked in the UI when set. Full guide: [ai.md](ai.md).
 |---|---|---|
 | `SPOOLMAN_API_TOKEN` | — | When set, all `/api/v1` requests require `Authorization: Bearer <token>` (websockets use a `?token=` query parameter), except `GET /api/v1/health` and the OpenAPI docs. `/metrics` and the web assets are not gated. A single shared machine secret; for per-user logins use accounts (below). See [Security & exposure](../README.md#security--exposure). |
 | `SPOOLMAN_AUTH_SECRET` | — | Optional signing key for user-account login tokens (below). When set (or when `SPOOLMAN_API_TOKEN` is set), logins survive restarts; otherwise a fresh key is generated per process and users log in again after a restart. Never written to disk. |
-| `SPOOLMAN_DEBUG_MODE` | `FALSE` | Relaxes CORS to all origins. Never enable in production. |
-| `SPOOLMAN_CORS_ORIGIN` | — | Comma-separated allowed CORS origins (or `*`). |
+| `SPOOLMAN_DEBUG_MODE` | `FALSE` | Relaxes CORS to all origins, and disables the origin-trust guard below. Never enable in production. |
+| `SPOOLMAN_CORS_ORIGIN` | — | Comma-separated allowed CORS origins (or `*`). Also declares which origins the CSRF/websocket origin-trust guard trusts in addition to the instance's own — unset means "same-origin only", `*` disables the guard entirely. See `spoolman/security.py`. |
+| `SPOOLMAN_ALLOWED_HOSTS` | — | Comma-separated hostnames (leading `*.` for subdomains) this instance answers to. Enables the DNS-rebinding `Host`-header guard, off by default; see [Security & exposure](../README.md#security--exposure). |
 
 ### Authentication & user accounts
 
