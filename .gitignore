@@ -224,6 +224,8 @@ mutants/
 # e2e real-backend temp DB + client coverage output
 .e2e-data/
 .e2e-data-ingress/
+# tests_frontend_v2 (Playwright, client_v2) real-backend temp DB
+.tests-frontend-v2-data/
 **/coverage-e2e/
 **/.coverage-raw/
 
