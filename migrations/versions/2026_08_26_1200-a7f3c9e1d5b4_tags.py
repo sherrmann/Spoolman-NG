@@ -11,8 +11,9 @@ reused. The table shape (columns, indexes, FK ondelete behaviour) is identical t
 Purely additive: one new table, no existing column touched. See spoolman.database.models.Tag
 for the full reasoning behind the schema.
 
-This table is intentionally NOT wired to this fork's existing NFC subsystem, which links a
-tag to a spool via the `nfc_tag_uid` extra field instead. The two coexist for now.
+At the time this table was created it was NOT yet wired to this fork's existing NFC subsystem,
+which linked a tag to a spool via the `nfc_tag_uid` extra field instead. d6f2a8c4e1b9 re-homes
+that subsystem onto this table (and migrates what data it can); see that revision.
 """
 
 import sqlalchemy as sa

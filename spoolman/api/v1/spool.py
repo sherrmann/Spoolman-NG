@@ -1089,9 +1089,9 @@ class SpoolTagParameters(BaseModel):
         "returns 409 with that spool's id, so a client can offer to move it instead. "
         "Re-linking a tag to the spool that already holds it succeeds and changes nothing, "
         "except that a format sent now refines one recorded earlier.\n\n"
-        "This is a separate mechanism from this instance's existing NFC/RFID tag support "
-        "(POST /nfc/write and friends, which bind a tag via the spool's nfc_tag_uid extra "
-        "field): the two do not interact."
+        "This instance's NFC/RFID tag support (POST /nfc/write and friends) also matches and "
+        "binds tags through this same table, keyed on the UID: a tag linked here is a tag an "
+        "NFC scan can already resolve, and vice versa."
     ),
     status_code=201,
     response_model_exclude_none=True,

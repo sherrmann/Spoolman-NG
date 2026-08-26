@@ -423,12 +423,11 @@ class PrinterField(Base):
 class Tag(Base):
     """A physical NFC/RFID tag, and the thing tapping it should bring up.
 
-    Ported from upstream Donkie/Spoolman (fe4970567bb3). Deliberately NOT wired to this
-    fork's existing NFC subsystem (spoolman/api/v1/nfc.py, nfc_service.py, the *_codec.py and
-    *_lookup.py modules), which binds a tag to a spool via the `nfc_tag_uid` extra field
-    instead. Re-homing that subsystem onto this table is a separate, later task; for now the
-    two coexist and this table is populated only by spoolman/api/v1/tag.py and the
-    POST/DELETE /spool/{id}/tag endpoints.
+    Ported from upstream Donkie/Spoolman (fe4970567bb3). This fork's existing NFC subsystem
+    (spoolman/api/v1/nfc.py, nfc_service.py, the *_codec.py and *_lookup.py modules) now reads
+    and writes through this table too, exclusively keyed on `uid` -- the fork does not add its
+    own column here, by design (see migration d6f2a8c4e1b9). Rows are populated both by
+    spoolman/api/v1/tag.py's POST/DELETE /spool/{id}/tag endpoints and by the NFC subsystem.
 
     Many tags per target is a real case rather than a hypothetical: copying a Prusa NFC-V
     tag's payload onto an NTAG215 so a PN532 can read it leaves one spool carrying two

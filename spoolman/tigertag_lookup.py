@@ -7,96 +7,97 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from spoolman.database.models import Filament, Spool, SpoolField
+from spoolman.database import tag as tag_db
+from spoolman.database.models import Filament, Spool
+from spoolman.tags import normalize_uid
 from spoolman.tigertag_codec import TigerTagData
 
 logger = logging.getLogger(__name__)
 
+TIGERTAG_FORMAT = "tigertag"
+
 
 def make_nfc_tag_id(tag_data: TigerTagData) -> str | None:
-    """Build a spool-level NFC tag identifier from TigerTag data.
+    """Build a human-readable TigerTag identity string from (id_product, timestamp).
 
-    Uses (id_product, timestamp) as a composite key. Both tags on the same
-    spool share the same timestamp, so both sides resolve to the same spool.
+    Historically this composite key was also how Spoolman matched and bound tags, stored as a
+    `SpoolField(key="nfc_tag_id")`. That is no longer true: this fork's NFC subsystem now reads
+    and writes exclusively through the upstream `tag` table (spoolman.database.tag), which is
+    keyed on a tag's real hardware UID and nothing else -- see `find_spool_by_tigertag` and
+    `bind_spool_to_tigertag` below. This function survives purely to label a decoded tag for
+    humans/API consumers (`NfcBindResponse.nfc_tag_id`, `NfcCreateFromTagResponse`'s retry
+    guard used to key off it too, and no longer does); it plays no part in matching or binding.
 
-    Returns None if the tag doesn't have a usable timestamp.
+    Returns None if the tag doesn't carry a usable product id and timestamp.
     """
     if tag_data.id_product > 0 and tag_data.timestamp > 0:
         return f"tigertag_{tag_data.id_product}_{tag_data.timestamp}"
     return None
 
 
-async def bind_spool_to_tigertag(db: AsyncSession, spool: Spool, tag_data: TigerTagData) -> bool:
-    """Bind a spool to a specific TigerTag by storing the (id_product, timestamp) key.
+async def bind_spool_to_tigertag(db: AsyncSession, spool: Spool, uid_hex: str) -> bool:
+    """Bind a spool to a specific physical TigerTag by its hardware UID.
 
-    Stores a SpoolField with key="nfc_tag_id" so future scans resolve to this
-    exact spool. Both sides of a spool produce the same key (shared timestamp).
+    Returns True if a new tag row was created, False if this spool already held this exact
+    physical tag (idempotent re-bind).
 
-    Returns True if a new binding was created, False if already bound or no usable key.
+    Raises:
+        ValueError: If uid_hex is not a valid hexadecimal tag UID.
+        TagConflictError: If the UID is already linked to a different spool.
+
     """
-    nfc_tag_id = make_nfc_tag_id(tag_data)
-    if nfc_tag_id is None:
+    uid = normalize_uid(uid_hex)
+    already = await tag_db.find_spool_by_uid(db, uid)
+    if already is not None and already.id == spool.id:
         return False
-
-    for field in spool.extra:
-        if field.key == "nfc_tag_id":
-            if field.value == nfc_tag_id:
-                return False  # Already bound to this tag
-            # Spool is bound to a different tag — don't overwrite
-            logger.debug("Spool %d already bound to %s, not rebinding to %s", spool.id, field.value, nfc_tag_id)
-            return False
-
-    db.add(SpoolField(spool_id=spool.id, key="nfc_tag_id", value=nfc_tag_id))
-    await db.flush()
-    logger.info("Bound spool %d to TigerTag %s", spool.id, nfc_tag_id)
+    await tag_db.link(db=db, spool_id=spool.id, uid=uid, tag_format=TIGERTAG_FORMAT)
+    logger.info("Bound spool %d to TigerTag uid %s", spool.id, uid)
     return True
 
 
 async def find_spool_by_tigertag(
     db: AsyncSession,
     tag_data: TigerTagData,
+    uid_hex: str | None = None,
     auto_bind: bool = True,
 ) -> Spool | None:
     """Find a Spoolman spool matching decoded TigerTag data.
 
     Matching strategies (tried in order):
-    1. Exact match by nfc_tag_id SpoolField == "tigertag_{id_product}_{timestamp}"
-       (identifies a specific spool, works for both sides of paired tags)
+    1. Exact match by this tag's own hardware UID, via the `tag` table. Requires the reader
+       (or caller) to have reported a UID; without one this strategy is skipped entirely.
     2. Fuzzy match by Filament.external_id == "tigertag_{id_product}"
        (returns most recent non-archived spool for that filament)
     3. Direct match by Spool.id == id_product (for tags written by Spoolman)
 
-    When auto_bind is True and a spool is found via strategy 2 or 3 (not yet
-    bound), the tag is automatically bound to that spool for future exact matches.
+    When auto_bind is True and a spool is found via strategy 2 (not yet bound) and a UID is
+    known, that UID is bound to the spool for future exact matches.
 
     Args:
         db: Database session.
         tag_data: Decoded TigerTag data.
-        auto_bind: Automatically bind unbound tags to matched spools.
+        uid_hex: The scanned tag's hardware UID, if known.
+        auto_bind: Automatically bind an unbound UID to a spool matched by strategy 2.
 
     Returns:
         Optional[Spool]: The matched spool, or None if no match found.
 
     """
-    nfc_tag_id = make_nfc_tag_id(tag_data)
+    uid = None
+    if uid_hex:
+        try:
+            uid = normalize_uid(uid_hex)
+        except ValueError:
+            uid = None
+
+    if uid is not None:
+        # Strategy 1: exact match by this physical tag's own UID.
+        spool = await tag_db.find_spool_by_uid(db, uid)
+        if spool is not None:
+            logger.debug("TigerTag exact match: spool %d via tag uid %s", spool.id, uid)
+            return spool
 
     if tag_data.id_product > 0:
-        # Strategy 1: Exact match by nfc_tag_id on spool
-        if nfc_tag_id is not None:
-            stmt = (
-                select(Spool)
-                .join(Spool.extra)
-                .options(selectinload(Spool.filament).selectinload(Filament.vendor))
-                .where(SpoolField.key == "nfc_tag_id")
-                .where(SpoolField.value == nfc_tag_id)
-                .limit(1)
-            )
-            result = await db.execute(stmt)
-            spool = result.unique().scalar_one_or_none()
-            if spool is not None:
-                logger.debug("TigerTag exact match: spool %d via nfc_tag_id %s", spool.id, nfc_tag_id)
-                return spool
-
         # Strategy 2: Match by external_id on filament
         external_id = f"tigertag_{tag_data.id_product}"
         stmt = (
@@ -114,8 +115,8 @@ async def find_spool_by_tigertag(
         result = await db.execute(stmt)
         spool = result.unique().scalar_one_or_none()
         if spool is not None:
-            if auto_bind:
-                await bind_spool_to_tigertag(db, spool, tag_data)
+            if auto_bind and uid is not None:
+                await tag_db.try_link(db=db, spool_id=spool.id, uid=uid, tag_format=TIGERTAG_FORMAT)
             return spool
 
         # Strategy 3: Last-resort match by spool ID, for home-grown tags Spoolman wrote without a

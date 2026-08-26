@@ -8,34 +8,76 @@ from sqlalchemy.orm import selectinload
 
 from spoolman.database import filament as filament_db
 from spoolman.database import spool as spool_db
+from spoolman.database import tag as tag_db
 from spoolman.database import vendor as vendor_db
 from spoolman.database.models import Filament, Spool
+from spoolman.exceptions import TagConflictError
 from spoolman.openprinttag_codec import OpenPrintTagData
+from spoolman.tags import normalize_uid
 
 logger = logging.getLogger(__name__)
 
+OPENPRINTTAG_FORMAT = "openprinttag"
 
-async def find_spool_by_openprinttag(db: AsyncSession, tag_data: OpenPrintTagData) -> Spool | None:
+
+def _uid_hex(tag_data: OpenPrintTagData) -> str | None:
+    """Return the physical NFC-V tag UID reported alongside this tag's memory, if any."""
+    return tag_data.nfc_tag_uid.hex() if tag_data.nfc_tag_uid else None
+
+
+async def _bind_uid(db: AsyncSession, spool_id: int, uid_hex: str) -> None:
+    """Best-effort: remember this physical tag's UID against the spool it resolved to."""
+    try:
+        uid = normalize_uid(uid_hex)
+    except ValueError:
+        return
+    await tag_db.try_link(db=db, spool_id=spool_id, uid=uid, tag_format=OPENPRINTTAG_FORMAT)
+
+
+async def find_spool_by_openprinttag(
+    db: AsyncSession,
+    tag_data: OpenPrintTagData,
+    auto_bind: bool = True,
+) -> Spool | None:
     """Find a Spoolman spool matching OpenPrintTag data.
 
     Matching strategy (in order):
-    1. Match by external_id == "opt_{instance_uuid}" — exact physical spool
-    2. Match by external_id == "opt_pkg_{package_uuid}" — same product
+    1. Exact match by this tag's own hardware UID, via the `tag` table.
+    2. Match by external_id == "opt_{instance_uuid}" — exact physical spool
+    3. Match by external_id == "opt_pkg_{package_uuid}" — same product
 
-    Returns the most recent non-archived spool for the matched filament.
+    Strategies 2 and 3 return the most recent non-archived spool for the matched filament. When
+    auto_bind is True and either matches, this tag's UID -- if known -- is bound to that spool
+    for future exact matches.
     """
-    instance_uuid = tag_data.effective_instance_uuid
+    uid_hex = _uid_hex(tag_data)
 
+    if uid_hex:
+        try:
+            uid = normalize_uid(uid_hex)
+        except ValueError:
+            uid = None
+        if uid is not None:
+            spool = await tag_db.find_spool_by_uid(db, uid)
+            if spool is not None:
+                logger.debug("OpenPrintTag exact match: spool %d via tag uid %s", spool.id, uid)
+                return spool
+
+    instance_uuid = tag_data.effective_instance_uuid
     if instance_uuid:
         external_id = f"opt_{instance_uuid}"
         spool = await _find_spool_by_filament_external_id(db, external_id)
         if spool is not None:
+            if auto_bind and uid_hex:
+                await _bind_uid(db, spool.id, uid_hex)
             return spool
 
     if tag_data.package_uuid:
         external_id = f"opt_pkg_{tag_data.package_uuid}"
         spool = await _find_spool_by_filament_external_id(db, external_id)
         if spool is not None:
+            if auto_bind and uid_hex:
+                await _bind_uid(db, spool.id, uid_hex)
             return spool
 
     return None
@@ -45,10 +87,12 @@ async def create_spool_from_openprinttag(db: AsyncSession, tag_data: OpenPrintTa
     """Create a filament and spool from OpenPrintTag data.
 
     Creates or finds the vendor, creates a filament with the tag's material data,
-    and creates a spool linked to it.
+    and creates a spool linked to it. Binds this tag's physical UID if known.
     """
     instance_uuid = tag_data.effective_instance_uuid
     external_id = f"opt_{instance_uuid}" if instance_uuid else None
+
+    db_spool: Spool | None = None
 
     # Check if filament already exists (shouldn't if find didn't match, but be safe)
     if external_id:
@@ -57,41 +101,57 @@ async def create_spool_from_openprinttag(db: AsyncSession, tag_data: OpenPrintTa
         existing = result.scalar_one_or_none()
         if existing:
             # Filament exists but no spool — create spool only
-            return await _create_spool_for_filament(db, existing.id, tag_data)
+            db_spool = await _create_spool_for_filament(db, existing.id, tag_data)
 
-    vendor_id = None
-    if tag_data.brand_name:
-        vendor_id = await _find_or_create_vendor(db, tag_data.brand_name)
+    if db_spool is None:
+        vendor_id = None
+        if tag_data.brand_name:
+            vendor_id = await _find_or_create_vendor(db, tag_data.brand_name)
 
-    if tag_data.material_name:
-        name = tag_data.material_name
-    elif tag_data.material_type and tag_data.brand_name:
-        name = f"{tag_data.brand_name} {tag_data.material_type}"
-    elif tag_data.material_type:
-        name = tag_data.material_type
-    else:
-        name = "OpenPrintTag Unknown"
+        if tag_data.material_name:
+            name = tag_data.material_name
+        elif tag_data.material_type and tag_data.brand_name:
+            name = f"{tag_data.brand_name} {tag_data.material_type}"
+        elif tag_data.material_type:
+            name = tag_data.material_type
+        else:
+            name = "OpenPrintTag Unknown"
 
-    # Determine extruder temp (use min as the setting)
-    extruder_temp = tag_data.min_print_temperature
-    bed_temp = tag_data.min_bed_temperature
+        # Determine extruder temp (use min as the setting)
+        extruder_temp = tag_data.min_print_temperature
+        bed_temp = tag_data.min_bed_temperature
 
-    db_filament = await filament_db.create(
-        db=db,
-        density=tag_data.density or 1.24,
-        diameter=tag_data.effective_diameter,
-        name=name,
-        vendor_id=vendor_id,
-        material=tag_data.material_type,
-        weight=tag_data.effective_weight,
-        spool_weight=tag_data.empty_container_weight,
-        color_hex=tag_data.primary_color_hex,
-        settings_extruder_temp=extruder_temp,
-        settings_bed_temp=bed_temp,
-        external_id=external_id,
-    )
+        db_filament = await filament_db.create(
+            db=db,
+            density=tag_data.density or 1.24,
+            diameter=tag_data.effective_diameter,
+            name=name,
+            vendor_id=vendor_id,
+            material=tag_data.material_type,
+            weight=tag_data.effective_weight,
+            spool_weight=tag_data.empty_container_weight,
+            color_hex=tag_data.primary_color_hex,
+            settings_extruder_temp=extruder_temp,
+            settings_bed_temp=bed_temp,
+            external_id=external_id,
+        )
 
-    return await _create_spool_for_filament(db, db_filament.id, tag_data)
+        db_spool = await _create_spool_for_filament(db, db_filament.id, tag_data)
+
+    uid_hex = _uid_hex(tag_data)
+    if uid_hex:
+        try:
+            uid = normalize_uid(uid_hex)
+        except ValueError:
+            uid = None
+        if uid is not None:
+            try:
+                await tag_db.link(db=db, spool_id=db_spool.id, uid=uid, tag_format=OPENPRINTTAG_FORMAT)
+                logger.info("Bound new spool %d to OpenPrintTag uid %s", db_spool.id, uid)
+            except TagConflictError:
+                logger.warning("Could not bind new spool %d to uid %s: already claimed", db_spool.id, uid)
+
+    return db_spool
 
 
 async def _create_spool_for_filament(db: AsyncSession, filament_id: int, tag_data: OpenPrintTagData) -> Spool:

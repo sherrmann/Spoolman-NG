@@ -120,6 +120,37 @@ async def link(
     return tag
 
 
+async def try_link(
+    *,
+    db: AsyncSession,
+    spool_id: int,
+    uid: str,
+    tag_format: str | None = None,
+) -> models.Tag | None:
+    """Best-effort variant of `link`, for opportunistic binding.
+
+    Used by the fork's NFC lookup modules (spoolman.tigertag_lookup, qidi_lookup,
+    openprinttag_lookup) when a spool was matched some other way -- a fuzzy filament match,
+    say -- and the read that found it also carries a fresh physical tag UID worth remembering
+    for next time. That binding is a nice-to-have, not the point of the request: a UID already
+    claimed by a different spool (a stale scan, a losing race) must not turn a successful read
+    into a failed one, so the conflict is swallowed and logged rather than raised.
+
+    Returns:
+        models.Tag | None: The linked tag, or None if the UID was not valid or was already
+            linked to something else.
+
+    """
+    try:
+        return await link(db=db, spool_id=spool_id, uid=uid, tag_format=tag_format)
+    except ValueError:
+        logger.debug('Not auto-binding: "%s" is not a valid tag UID.', uid)
+        return None
+    except TagConflictError:
+        logger.debug("Not auto-binding: uid %s is already linked to something else.", uid)
+        return None
+
+
 async def unlink(*, db: AsyncSession, spool_id: int, uid: str) -> None:
     """Unlink a tag from a spool.
 
