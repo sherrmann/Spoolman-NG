@@ -758,6 +758,30 @@ def is_ha_ingress() -> bool:
     )
 
 
+def is_legacy_client_enabled() -> bool:
+    """Get whether the legacy (React) client should be served instead of the new one.
+
+    Upstream Spoolman serves the new Svelte client by default and treats this variable as
+    opt-in to the legacy one. This fork inverts the *default* only: the React client still
+    covers far more of the app (13 page groups vs. the Svelte client's 5), so it stays the
+    default here and SPOOLMAN_LEGACY_CLIENT=FALSE opts into the newer, thinner Svelte client
+    instead. The variable name and its TRUE/FALSE semantics (TRUE = React) are unchanged from
+    upstream, so only the default flips between the two projects.
+
+    Returns:
+        bool: Whether the legacy client is enabled.
+
+    """
+    legacy_client = os.getenv("SPOOLMAN_LEGACY_CLIENT", "TRUE").upper()
+    if legacy_client in {"FALSE", "0"}:
+        return False
+    if legacy_client in {"TRUE", "1"}:
+        return True
+    raise ValueError(
+        f"Failed to parse SPOOLMAN_LEGACY_CLIENT variable: Unknown value '{legacy_client}'.",
+    )
+
+
 def get_base_path() -> str:
     """Get the base path.
 

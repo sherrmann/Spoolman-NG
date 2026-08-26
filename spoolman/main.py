@@ -122,11 +122,33 @@ register_assetlinks_route(app)
 # below so it isn't swallowed by it.
 app.router.routes.append(Route(env.get_base_path() + "/mcp", endpoint=mcp_server.mcp_app))
 
-# Mount the client side app
-app.mount(
-    base_path,
-    app=SinglePageApplication(directory="client/dist", base_path=env.get_base_path(), ha_ingress=ha_ingress),
-)
+# Mount the client side app. The React client is served by default in this fork (it still
+# covers far more of the app than the newer one); set SPOOLMAN_LEGACY_CLIENT=FALSE to opt
+# into the Svelte client instead. See env.is_legacy_client_enabled().
+if env.is_legacy_client_enabled():
+    logger.info("Serving the legacy (React) client.")
+    app.mount(
+        base_path,
+        app=SinglePageApplication(
+            directory="client/dist",
+            base_path=env.get_base_path(),
+            ha_ingress=ha_ingress,
+            fallback_document="index.html",
+            rewrite_asset_paths=True,
+        ),
+    )
+else:
+    logger.info("Serving the new (Svelte) client.")
+    app.mount(
+        base_path,
+        app=SinglePageApplication(
+            directory="client_v2/build",
+            base_path=env.get_base_path(),
+            ha_ingress=ha_ingress,
+            fallback_document="200.html",
+            rewrite_asset_paths=False,
+        ),
+    )
 
 
 def add_trusted_origin_middleware() -> None:

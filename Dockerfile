@@ -15,6 +15,19 @@ RUN npm ci
 COPY client/ ./
 RUN echo "VITE_APIURL=/api/v1" > .env.production && npm run build
 
+# Build the new (Svelte) client in the same stage/base image as the legacy one above, rather
+# than a second FROM node:22-slim stage: the two clients have separate package.json/node_modules
+# and build independently of each other, but sharing the base image layer keeps the extra stage
+# cheap. Served only when SPOOLMAN_LEGACY_CLIENT=FALSE opts into it (env.is_legacy_client_enabled,
+# default TRUE in this fork). No VITE_APIURL needed here: unlike the legacy client, client_v2
+# derives its API base from the deploy path at runtime (see client_v2/src/lib/api/config.ts).
+WORKDIR /client_v2
+COPY client_v2/package.json client_v2/package-lock.json client_v2/.npmrc ./
+RUN npm ci
+
+COPY client_v2/ ./
+RUN npm run build
+
 FROM python:3.14-slim-trixie AS python-builder
 
 ENV UV_COMPILE_BYTECODE=1
@@ -89,8 +102,11 @@ RUN useradd -u 1000 -U app \
     && mkdir -p /home/app/.local/share/spoolman \
     && chown -R app:app /home/app/.local/share/spoolman
 
-# Copy the client bundle built in the client-builder stage above (#111).
+# Copy the client bundles built in the client-builder stage above (#111). client_v2/build is
+# always copied in (cheap — ~1-2MB) even though SPOOLMAN_LEGACY_CLIENT defaults to TRUE, so the
+# Svelte client is available to opt into at runtime without rebuilding the image.
 COPY --chown=app:app --from=client-builder /client/dist /home/app/spoolman/client/dist
+COPY --chown=app:app --from=client-builder /client_v2/build /home/app/spoolman/client_v2/build
 
 # Copy built app
 COPY --chown=app:app --from=python-builder /home/app/spoolman /home/app/spoolman

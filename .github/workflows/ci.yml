@@ -78,6 +78,11 @@ jobs:
           cd client
           npm ci
 
+      - name: Install client_v2 dependencies
+        run: |
+          cd client_v2
+          npm ci
+
       - name: Run pre-commit
         run: uv run lefthook run ci
 
@@ -133,6 +138,33 @@ jobs:
         run: |
           cd client
           npm run test:coverage
+  #
+  # Frontend unit tests (Vitest) for client_v2, the new opt-in Svelte client -- 23
+  # colocated *.test.ts files. See TESTING_STRATEGY.md. Playwright (tests_frontend_v2)
+  # is deliberately not wired up here -- a separate follow-up.
+  #
+  client-v2-tests:
+    needs: [meta]
+    if: ${{ needs.meta.outputs.skip_build != 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install node
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: '22'
+
+      - name: Install client_v2 dependencies
+        run: |
+          cd client_v2
+          npm ci
+
+      - name: Run client_v2 unit tests
+        run: |
+          cd client_v2
+          npm test
   #
   # Mobile companion app (mobile/): typecheck + pure-logic unit tests. Native
   # Android/iOS builds are deliberately not part of PR CI (slow, SDK-heavy) —
@@ -843,7 +875,20 @@ jobs:
     # push minted :latest images (and the GitHub release + deploy downstream) even when
     # those suites were red — they ran as siblings, and a failing sibling doesn't stop
     # independent jobs.
-    needs: [test, unit-tests, client-tests, e2e, build-amd64, build-arm64, build-armv7, style, build-client, verify-artifact]
+    needs:
+      [
+        test,
+        unit-tests,
+        client-tests,
+        client-v2-tests,
+        e2e,
+        build-amd64,
+        build-arm64,
+        build-armv7,
+        style,
+        build-client,
+        verify-artifact,
+      ]
     runs-on: ubuntu-latest
     permissions:
       packages: write
