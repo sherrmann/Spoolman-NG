@@ -11,6 +11,7 @@ property the issue demands. All three responses always carry ``Cache-Control: no
 so no cache can pin a dead session token.
 """
 
+import json
 from pathlib import Path
 
 import pytest
@@ -101,9 +102,36 @@ def test_configjs_ingress_base_wins_over_the_env_base():
     assert "/spoolman" not in body
 
 
-def test_configjs_rejects_quotes_in_the_env_base():
-    with pytest.raises(ValueError, match="quotes"):
-        build_configjs('/spool"man')
+@pytest.mark.parametrize(
+    ("base_path", "expected"),
+    [
+        ('/spool"man', '/spool"man'),
+        # The old `'"' in base_path` guard missed this: a trailing backslash escapes the
+        # closing quote and breaks out of the string literal, e.g. `"...\\";` reads as an
+        # unterminated string followed by a bare `;`.
+        ("/spoolman\\", "/spoolman\\"),
+        ('/spoolman\\";alert(1);//', '/spoolman\\";alert(1);//'),
+        ("</script><script>alert(1)</script>", "</script><script>alert(1)</script>"),
+        ("/spool\nman", "/spool\nman"),
+    ],
+)
+def test_configjs_embeds_any_base_path_safely(base_path: str, expected: str):
+    """No base path can escape the JS string literal or inject a second statement.
+
+    Superseded `'"' in base_path` guard, which only ever refused to serve rather than
+    guaranteeing safety, and missed the trailing-backslash case entirely (above). json.dumps
+    is a correct JS string literal for any Python str, so the guarantee is now unconditional:
+    the value always round-trips, and the generated line is exactly one statement.
+    """
+    rendered = build_configjs(base_path)
+    line = next(line for line in rendered.splitlines() if "SPOOLMAN_BASE_PATH" in line)
+
+    # Exactly one JS statement, ending the line — nothing after the literal can execute.
+    assert line.startswith('window.SPOOLMAN_BASE_PATH = "')
+    assert line.endswith('";')
+
+    literal = line[len("window.SPOOLMAN_BASE_PATH = ") : -1]
+    assert json.loads(literal) == expected
 
 
 # --- SinglePageApplication: per-request rendering ----------------------------

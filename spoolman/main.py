@@ -14,7 +14,7 @@ from prometheus_client import generate_latest
 from scheduler.asyncio.scheduler import Scheduler
 from starlette.routing import Route
 
-from spoolman import env, externaldb, mcp_server, tigertagdb, updatecheck
+from spoolman import env, externaldb, mcp_server, security, tigertagdb, updatecheck
 from spoolman.api.v1.router import app as v1_app
 from spoolman.assetlinks import register_assetlinks_route
 from spoolman.auth import auth_state, initialize_auth_state
@@ -122,11 +122,58 @@ register_assetlinks_route(app)
 # below so it isn't swallowed by it.
 app.router.routes.append(Route(env.get_base_path() + "/mcp", endpoint=mcp_server.mcp_app))
 
-# Mount the client side app
-app.mount(
-    base_path,
-    app=SinglePageApplication(directory="client/dist", base_path=env.get_base_path(), ha_ingress=ha_ingress),
-)
+# Mount the client side app. The React client is served by default in this fork (it still
+# covers far more of the app than the newer one); set SPOOLMAN_LEGACY_CLIENT=FALSE to opt
+# into the Svelte client instead. See env.is_legacy_client_enabled().
+if env.is_legacy_client_enabled():
+    logger.info("Serving the legacy (React) client.")
+    app.mount(
+        base_path,
+        app=SinglePageApplication(
+            directory="client/dist",
+            base_path=env.get_base_path(),
+            ha_ingress=ha_ingress,
+            fallback_document="index.html",
+            rewrite_asset_paths=True,
+        ),
+    )
+else:
+    logger.info("Serving the new (Svelte) client.")
+    app.mount(
+        base_path,
+        app=SinglePageApplication(
+            directory="client_v2/build",
+            base_path=env.get_base_path(),
+            ha_ingress=ha_ingress,
+            fallback_document="200.html",
+            rewrite_asset_paths=False,
+        ),
+    )
+
+
+def add_trusted_origin_middleware() -> None:
+    """Refuse writes and websocket handshakes from browser origins we do not trust."""
+    if security.trusts_all_origins():
+        # Already warned about by trusts_all_origins(); adding the middleware would be a no-op.
+        return
+    trusted = security.get_trusted_origins()
+    if trusted:
+        logger.info("Trusting writes and websockets from this instance's own origin, plus: %s", sorted(trusted))
+    else:
+        logger.info("Trusting writes and websockets from this instance's own origin only.")
+    app.add_middleware(security.TrustedOriginMiddleware)
+
+
+def add_trusted_host_middleware() -> None:
+    """Refuse requests addressed to a hostname this instance has no reason to answer to.
+
+    Opt-in, so a deployment that configures nothing is unaffected; see
+    security.is_host_checking_enabled for why this guard alone is not on by default.
+    """
+    if not security.is_host_checking_enabled():
+        return
+    logger.info("Answering to these hostnames: %s.", security.describe_allowed_hosts())
+    app.add_middleware(security.TrustedHostMiddleware)
 
 
 def add_cors_middleware() -> None:
@@ -138,24 +185,43 @@ def add_cors_middleware() -> None:
     elif env.is_cors_defined():
         cors_origins = env.get_cors_origin()
         if cors_origins:
-            logger.info("CORS origins defined: %s", cors_origins)
+            # Log the raw value alongside the parsed one so a typo in the operator's list is visible.
+            logger.info("CORS origins defined: %s (parsed from %r)", cors_origins, env.get_cors_origin_raw())
             origins = cors_origins
         else:
-            logger.warning("CORS origins are not defined, no CORS will be applied.")
+            logger.warning(
+                "SPOOLMAN_CORS_ORIGIN is set to %r but contains no origins, no CORS will be applied.",
+                env.get_cors_origin_raw(),
+            )
 
     if not origins:
         return
 
+    # Starlette resolves allow_origins=["*"] with allow_credentials=True by echoing the caller's
+    # origin back and setting Access-Control-Allow-Credentials, which tells the browser it may
+    # send cookies to any site that asks. Spoolman NG has no cookies of its own (its bearer
+    # tokens are sent explicitly, not carried automatically like a cookie), but plenty of
+    # instances sit behind a reverse proxy that does the authentication with one -- and there,
+    # this combination lets any website the user visits make authenticated requests as them.
+    allow_credentials = security.WILDCARD_ORIGIN not in origins
+    if not allow_credentials:
+        logger.warning("Allowing all CORS origins, so credentialed cross-origin requests are refused.")
+
     app.add_middleware(
         CORSMiddleware,
         allow_origins=origins,
-        allow_credentials=True,
+        allow_credentials=allow_credentials,
         allow_methods=["*"],
         allow_headers=["*"],
         expose_headers=["X-Total-Count"],
     )
 
 
+# Order matters: middleware added last is outermost. CORS wraps both guards, so that a legitimate
+# cross-origin client can read the 403 body instead of an opaque CORS error, and the host guard
+# wraps the origin guard, because a rebound host makes the origin check agree with the attacker.
+add_trusted_origin_middleware()
+add_trusted_host_middleware()
 add_cors_middleware()
 
 

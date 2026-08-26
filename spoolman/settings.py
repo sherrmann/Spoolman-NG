@@ -65,6 +65,9 @@ register_setting("currency", SettingType.STRING, json.dumps("EUR"))
 register_setting("round_prices", SettingType.BOOLEAN, json.dumps(obj=False))
 register_setting("print_presets", SettingType.ARRAY, json.dumps([]))
 register_setting("print_presets_filament", SettingType.ARRAY, json.dumps([]))
+# Konva label-designer layouts for the client_v2 (Svelte) /labels page (upstream #label-designer).
+# Stored as a JSON array of designs, mirroring how print_presets stores the v1 designer's presets.
+register_setting("label_designs", SettingType.ARRAY, json.dumps([]))
 # Default style for the 3D-printable filament swatch download; empty means the
 # client-side default style. The known style keys live in the client
 # (client/src/utils/swatch/styles.ts), so the backend only stores the string.
@@ -85,6 +88,14 @@ register_setting("spool_action_links", SettingType.ARRAY, json.dumps([]))
 
 register_setting("locations", SettingType.ARRAY, json.dumps([]))
 register_setting("locations_spoolorders", SettingType.OBJECT, json.dumps({}))
+
+# The client_v2 (Svelte) dashboard groups spools by a field the user picks (location, lot_nr,
+# material, or a spool extra field), so its layout is stored per field rather than per location
+# like the two settings above. dashboard_groups maps a field key to its ordered group keys (""
+# being the unset group); dashboard_spoolorders maps a field key to a group key to its ordered
+# spool ids.
+register_setting("dashboard_groups", SettingType.OBJECT, json.dumps({}))
+register_setting("dashboard_spoolorders", SettingType.OBJECT, json.dumps({}))
 
 # When enabled, large weights/lengths are shown auto-scaled (e.g. 1.5 kg / 64.37 m) instead of raw
 # grams/millimeters in the list and detail views (#85). Default off preserves the current display and

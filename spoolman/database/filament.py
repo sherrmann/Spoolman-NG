@@ -16,11 +16,13 @@ from spoolman.api.v1.models import EventType, Filament, FilamentEvent, Finish, M
 from spoolman.database import models, vendor
 from spoolman.database.extra_field_query import apply_extra_field_filters_and_sort
 from spoolman.database.utils import (
+    LIKE_ESCAPE,
     SortOrder,
     add_where_clause_int_in,
     add_where_clause_int_opt,
     add_where_clause_str,
     add_where_clause_str_opt,
+    escape_like,
     order_by_expression,
     parse_nested_field,
     utc_timezone_naive,
@@ -152,14 +154,16 @@ def _build_search_filters(search: str) -> list:
             if exact_value.lstrip("-").isdigit():
                 search_conditions.append(models.Filament.id == int(exact_value))
         else:
-            fuzzy_value = f"%{value_part}%"
+            # Wildcards in value_part are escaped, so a search of "%" looks for a literal
+            # percent sign instead of matching every row.
+            fuzzy_value = f"%{escape_like(value_part)}%"
             search_conditions.extend(
                 [
-                    models.Vendor.name.ilike(fuzzy_value),
-                    models.Filament.name.ilike(fuzzy_value),
-                    models.Filament.material.ilike(fuzzy_value),
-                    models.Filament.article_number.ilike(fuzzy_value),
-                    sqlalchemy.cast(models.Filament.id, sqlalchemy.String).ilike(fuzzy_value),
+                    models.Vendor.name.ilike(fuzzy_value, escape=LIKE_ESCAPE),
+                    models.Filament.name.ilike(fuzzy_value, escape=LIKE_ESCAPE),
+                    models.Filament.material.ilike(fuzzy_value, escape=LIKE_ESCAPE),
+                    models.Filament.article_number.ilike(fuzzy_value, escape=LIKE_ESCAPE),
+                    sqlalchemy.cast(models.Filament.id, sqlalchemy.String).ilike(fuzzy_value, escape=LIKE_ESCAPE),
                 ],
             )
 

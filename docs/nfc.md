@@ -21,6 +21,34 @@ either by an in-browser scanner or by an optional server-side USB reader.
 - **External lookup** — `POST /api/v1/nfc/lookup` lets Klipper NFC daemons and
   other clients POST raw tag memory and get back the matching spool.
 
+## How tags are stored
+
+Every binding between a physical tag and a spool — TigerTag, Qidi, or
+OpenPrintTag, however it was made — lives in one table, keyed on the tag's
+**physical hardware UID** (the same UID `nfc_tag_uid` carries through the API,
+and the same table used by `POST /spool/{id}/tag` and the tag-scan-relay
+endpoints). Nothing about a tag's *content* — a TigerTag product id, a Qidi
+material/color code, an OpenPrintTag instance UUID — is used to key a binding
+any more; content is only ever used for the one-time *fuzzy* match that finds
+a spool the first time an unbound tag is seen, after which the UID itself is
+what gets remembered.
+
+A consequence worth knowing: **a spool can carry several physical tags (e.g.
+both sides of a TigerTag pair), but each one has to be scanned and matched (or
+explicitly bound) at least once before Spoolman recognizes it on its own** —
+scanning one tag no longer teaches Spoolman about a second, different-UID tag
+on the same spool automatically.
+
+> **Upgrading from an older Spoolman NG release?** Bindings made before this
+> change were stored differently, and only Qidi's could be carried forward
+> automatically (a migration converts them on upgrade, since a Qidi binding's
+> stored value already *is* its hardware UID). TigerTag and OpenPrintTag
+> bindings, and any auto-created spool with no stable tag identity at all,
+> could not be — those spools aren't lost or re-created, but Spoolman no
+> longer recognizes the tag on its own. **Scan and re-bind (or auto-create
+> again, which resolves to the existing spool by its filament/product match)
+> each such spool once** and it's remembered by UID from then on.
+
 ## Supported tag standards
 
 | Standard | Chip / transport | Read via USB reader | Read in browser (Web NFC) | Write |

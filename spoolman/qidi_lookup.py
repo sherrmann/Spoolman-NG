@@ -8,49 +8,52 @@ from sqlalchemy.orm import selectinload
 
 from spoolman.database import filament as filament_db
 from spoolman.database import spool as spool_db
+from spoolman.database import tag as tag_db
 from spoolman.database import vendor as vendor_db
-from spoolman.database.models import Filament, Spool, SpoolField
+from spoolman.database.models import Filament, Spool
+from spoolman.exceptions import TagConflictError
 from spoolman.qidi_codec import (
     MATERIAL_CODE_MAP,
     QidiTagData,
     color_code_from_hex,
     material_code_from_name,
 )
+from spoolman.tags import normalize_uid
 
 logger = logging.getLogger(__name__)
 
 QIDI_VENDOR_NAME = "Qidi"
+QIDI_FORMAT = "qidi"
 
 
 def make_nfc_tag_id(tag_uid_hex: str) -> str:
-    """Build a spool-level NFC tag identifier from the MIFARE Classic UID.
+    """Build a human-readable Qidi tag identity string from its MIFARE Classic UID.
 
-    Since Qidi tags only store material+color (not a unique spool ID),
-    we use the hardware UID as the binding key.
+    Kept only for API-response continuity (`NfcBindResponse.nfc_tag_id`) and for reading
+    pre-existing `SpoolField(key="nfc_tag_id")` data during the one-time migration that
+    converts it into real `tag` rows. Matching and binding now go entirely through the
+    upstream `tag` table, keyed on the UID itself -- see `find_spool_by_qidi_tag` and
+    `bind_spool_to_qidi_tag`.
     """
     return f"qidi_{tag_uid_hex.lower()}"
 
 
 async def bind_spool_to_qidi_tag(db: AsyncSession, spool: Spool, tag_uid_hex: str) -> bool:
-    """Bind a spool to a specific Qidi tag by storing its hardware UID.
+    """Bind a spool to a specific Qidi tag by its hardware UID.
 
-    Stores a SpoolField with key="nfc_tag_id" so future scans resolve to this
-    exact spool.
+    Returns True if a new tag row was created, False if this spool already held it.
 
-    Returns True if a new binding was created, False if already bound.
+    Raises:
+        ValueError: If tag_uid_hex is not a valid hexadecimal tag UID.
+        TagConflictError: If the UID is already linked to a different spool.
+
     """
-    nfc_tag_id = make_nfc_tag_id(tag_uid_hex)
-
-    for field in spool.extra:
-        if field.key == "nfc_tag_id":
-            if field.value == nfc_tag_id:
-                return False  # Already bound to this tag
-            logger.debug("Spool %d already bound to %s, not rebinding to %s", spool.id, field.value, nfc_tag_id)
-            return False
-
-    db.add(SpoolField(spool_id=spool.id, key="nfc_tag_id", value=nfc_tag_id))
-    await db.flush()
-    logger.info("Bound spool %d to Qidi tag %s", spool.id, nfc_tag_id)
+    uid = normalize_uid(tag_uid_hex)
+    already = await tag_db.find_spool_by_uid(db, uid)
+    if already is not None and already.id == spool.id:
+        return False
+    await tag_db.link(db=db, spool_id=spool.id, uid=uid, tag_format=QIDI_FORMAT)
+    logger.info("Bound spool %d to Qidi tag uid %s", spool.id, uid)
     return True
 
 
@@ -63,11 +66,11 @@ async def find_spool_by_qidi_tag(
     """Find a Spoolman spool matching a Qidi tag.
 
     Matching strategies (tried in order):
-    1. Exact match by nfc_tag_id SpoolField == "qidi_{uid}" (bound tag)
+    1. Exact match by this tag's own hardware UID, via the `tag` table.
     2. Fuzzy match by material type + color hex on filament
 
-    When auto_bind is True and a spool is found via strategy 2,
-    the tag is automatically bound for future exact matches.
+    When auto_bind is True and a spool is found via strategy 2, and a UID is known, that UID
+    is bound to the spool for future exact matches.
 
     Args:
         db: Database session.
@@ -79,24 +82,18 @@ async def find_spool_by_qidi_tag(
         The matched spool, or None if no match found.
 
     """
-    # Strategy 1: Exact match by UID binding
+    uid = None
     if tag_uid_hex:
-        nfc_tag_id = make_nfc_tag_id(tag_uid_hex)
-        stmt = (
-            select(Spool)
-            .join(Spool.extra)
-            .options(
-                selectinload(Spool.filament).selectinload(Filament.vendor),
-                selectinload(Spool.extra),
-            )
-            .where(SpoolField.key == "nfc_tag_id")
-            .where(SpoolField.value == nfc_tag_id)
-            .limit(1)
-        )
-        result = await db.execute(stmt)
-        spool = result.unique().scalar_one_or_none()
+        try:
+            uid = normalize_uid(tag_uid_hex)
+        except ValueError:
+            uid = None
+
+    if uid is not None:
+        # Strategy 1: exact match by this physical tag's own UID.
+        spool = await tag_db.find_spool_by_uid(db, uid)
         if spool is not None:
-            logger.debug("Qidi exact match: spool %d via nfc_tag_id %s", spool.id, nfc_tag_id)
+            logger.debug("Qidi exact match: spool %d via tag uid %s", spool.id, uid)
             return spool
 
     # Strategy 2: Fuzzy match by material + color on filament
@@ -123,8 +120,8 @@ async def find_spool_by_qidi_tag(
     spool = result.unique().scalar_one_or_none()
     if spool is not None:
         logger.debug("Qidi fuzzy match: spool %d via material=%s color=%s", spool.id, material_type, color_hex)
-        if auto_bind and tag_uid_hex:
-            await bind_spool_to_qidi_tag(db, spool, tag_uid_hex)
+        if auto_bind and uid is not None:
+            await tag_db.try_link(db=db, spool_id=spool.id, uid=uid, tag_format=QIDI_FORMAT)
         return spool
 
     return None
@@ -195,10 +192,16 @@ async def create_spool_from_qidi_tag(
     db_spool = await spool_db.create(db=db, filament_id=db_filament.id)
 
     if tag_uid_hex:
-        nfc_tag_id = make_nfc_tag_id(tag_uid_hex)
-        db.add(SpoolField(spool_id=db_spool.id, key="nfc_tag_id", value=nfc_tag_id))
-        await db.flush()
-        logger.info("Bound new spool %d to Qidi tag %s", db_spool.id, nfc_tag_id)
+        try:
+            uid = normalize_uid(tag_uid_hex)
+        except ValueError:
+            uid = None
+        if uid is not None:
+            try:
+                await tag_db.link(db=db, spool_id=db_spool.id, uid=uid, tag_format=QIDI_FORMAT)
+                logger.info("Bound new spool %d to Qidi tag uid %s", db_spool.id, uid)
+            except TagConflictError:
+                logger.warning("Could not bind new spool %d to uid %s: already claimed", db_spool.id, uid)
 
     return db_spool
 

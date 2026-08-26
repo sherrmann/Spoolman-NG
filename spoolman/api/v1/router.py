@@ -14,6 +14,7 @@ from spoolman.api.v1.bodylimit import BodyLimitMiddleware
 from spoolman.api.v1.errors import install_exception_handlers
 from spoolman.auth import Principal, install_auth
 from spoolman.database.database import backup_global_db
+from spoolman.externaldb import get_external_db_name
 from spoolman.updateaction import InstallType
 from spoolman.ws import websocket_manager
 
@@ -32,10 +33,12 @@ from . import (
     order,
     other,
     printer,
+    search,
     setting,
     shop,
     spool,
     stats,
+    tag,
     vendor,
 )
 
@@ -81,6 +84,7 @@ async def info() -> models.Info:
         release_url=update_status.release_url,
         install_type=gate.install_type.value,
         update_action_available=gate.action_available,
+        external_db_name=get_external_db_name(),
     )
 
 
@@ -100,13 +104,13 @@ async def health() -> models.HealthCheck:
 )
 async def backup():  # noqa: ANN201
     """Trigger a database backup."""
-    path = await backup_global_db()
-    if path is None:
+    result = await backup_global_db()
+    if result.path is None:
         return JSONResponse(
             status_code=500,
             content={"message": "Backup failed. See server logs for more information."},
         )
-    return models.BackupResponse(path=str(path))
+    return models.BackupResponse(path=str(result.path), created=result.created)
 
 
 # Trigger a native self-update (#294). This runs bundled code (scripts/update.sh), so it is
@@ -198,6 +202,8 @@ app.include_router(import_.router)
 app.include_router(stats.router)
 app.include_router(ai.router)
 app.include_router(auth.router)
+app.include_router(tag.router)
+app.include_router(search.router)
 
 # Opt-in bearer-token auth (#48): installed only when SPOOLMAN_API_TOKEN is set, so the default
 # deployment is unchanged. Guards this sub-app's HTTP routes and the websocket handshake uniformly.

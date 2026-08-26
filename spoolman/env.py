@@ -290,19 +290,96 @@ def is_cors_defined() -> bool:
     return cors not in {"FALSE", "0"}
 
 
+def normalize_origin(origin: str) -> str:
+    """Normalize a browser origin so that two spellings of the same origin compare equal.
+
+    Surrounding whitespace and any trailing slashes are removed and the value is lower-cased.
+    An origin has no path component, so lower-casing the whole string is safe: both the scheme
+    and the host are case-insensitive.
+
+    Args:
+        origin: The raw origin, from either an environment variable or an ``Origin`` header.
+
+    Returns:
+        str: The normalized origin.
+
+    """
+    return origin.strip().rstrip("/").lower()
+
+
+def get_cors_origin_raw() -> str | None:
+    """Get the unparsed value of the CORS origin environment variable.
+
+    Useful for logging, so that a typo in the operator's configuration stays visible.
+
+    Returns:
+        Optional[str]: The raw environment variable value, or None if it was not set.
+
+    """
+    return os.getenv("SPOOLMAN_CORS_ORIGIN")
+
+
 def get_cors_origin() -> list[str] | None:
-    """Get the CORS origin from environment variables.
+    """Get the CORS origins from environment variables.
+
+    The variable holds a comma-separated list of origins. Entries are normalized with
+    :func:`normalize_origin`, and empty entries and duplicates are dropped, so that a list
+    written as ``"https://a, https://b/"`` still matches the ``Origin`` headers browsers send.
 
     Returns None if no environment variable was set for the origin.
 
     Returns:
-        Optional[str]: The origin.
+        Optional[list[str]]: The normalized origins.
 
     """
-    cors = os.getenv("SPOOLMAN_CORS_ORIGIN")
+    cors = get_cors_origin_raw()
     if cors is None:
         return None
-    return cors.split(",")
+    origins: list[str] = []
+    for entry in cors.split(","):
+        origin = normalize_origin(entry)
+        if origin and origin not in origins:
+            origins.append(origin)
+    return origins
+
+
+def get_allowed_hosts_raw() -> str | None:
+    """Get the unparsed value of the allowed-hosts environment variable.
+
+    Useful for logging, so that a typo in the operator's configuration stays visible.
+
+    Returns:
+        Optional[str]: The raw environment variable value, or None if it was not set.
+
+    """
+    return os.getenv("SPOOLMAN_ALLOWED_HOSTS")
+
+
+def get_allowed_hosts() -> list[str] | None:
+    """Get the extra hostnames this instance may be addressed by, from environment variables.
+
+    The variable holds a comma-separated list of hostnames -- not origins, so no scheme and no
+    port. A leading ``*.`` matches any subdomain, and a bare ``*`` matches everything. Entries are
+    trimmed and lower-cased, and empty entries and duplicates are dropped.
+
+    Used by spoolman/security.py's DNS-rebinding (Host header) guard, which is opt-in: see
+    security.is_host_checking_enabled.
+
+    Returns None if no environment variable was set.
+
+    Returns:
+        Optional[list[str]]: The normalized hostnames.
+
+    """
+    raw = get_allowed_hosts_raw()
+    if raw is None:
+        return None
+    hosts: list[str] = []
+    for entry in raw.split(","):
+        host = entry.strip().rstrip(".").lower()
+        if host and host not in hosts:
+            hosts.append(host)
+    return hosts
 
 
 def is_automatic_backup_enabled() -> bool:
@@ -678,6 +755,30 @@ def is_ha_ingress() -> bool:
         return True
     raise ValueError(
         f"Failed to parse SPOOLMAN_HA_INGRESS variable: Unknown value '{enabled}'.",
+    )
+
+
+def is_legacy_client_enabled() -> bool:
+    """Get whether the legacy (React) client should be served instead of the new one.
+
+    Upstream Spoolman serves the new Svelte client by default and treats this variable as
+    opt-in to the legacy one. This fork inverts the *default* only: the React client still
+    covers far more of the app (13 page groups vs. the Svelte client's 5), so it stays the
+    default here and SPOOLMAN_LEGACY_CLIENT=FALSE opts into the newer, thinner Svelte client
+    instead. The variable name and its TRUE/FALSE semantics (TRUE = React) are unchanged from
+    upstream, so only the default flips between the two projects.
+
+    Returns:
+        bool: Whether the legacy client is enabled.
+
+    """
+    legacy_client = os.getenv("SPOOLMAN_LEGACY_CLIENT", "TRUE").upper()
+    if legacy_client in {"FALSE", "0"}:
+        return False
+    if legacy_client in {"TRUE", "1"}:
+        return True
+    raise ValueError(
+        f"Failed to parse SPOOLMAN_LEGACY_CLIENT variable: Unknown value '{legacy_client}'.",
     )
 
 

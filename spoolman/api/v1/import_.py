@@ -103,7 +103,9 @@ async def _build_spool(db: AsyncSession, data: dict[str, Any], existing: models.
     for time_key in ("first_used", "last_used"):
         if isinstance(data.get(time_key), datetime):
             data[time_key] = utc_timezone_naive(data[time_key])
-    obj = existing or models.Spool(registered=_now(), used_weight=0)
+    # tags=[] for the same reason extra is always assigned below: an unset relationship on a
+    # freshly-constructed object is a pending lazy-load, not an already-loaded empty collection.
+    obj = existing or models.Spool(registered=_now(), used_weight=0, tags=[])
     for key, value in data.items():
         setattr(obj, key, value)
     if filament_id is not None:

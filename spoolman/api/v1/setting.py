@@ -4,7 +4,7 @@ import asyncio
 import logging
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Depends, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Body, Depends, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,6 +13,7 @@ from spoolman.api.v1.models import Message, SettingEvent, SettingResponse
 from spoolman.database import setting
 from spoolman.database.database import get_db_session
 from spoolman.exceptions import ItemNotFoundError
+from spoolman.extra_field_registry import invalidate_extra_field_cache, validate_extra_field_setting
 from spoolman.settings import SETTINGS, parse_setting
 from spoolman.ws import websocket_manager
 
@@ -24,6 +25,36 @@ router = APIRouter(
 # ruff: noqa: D103
 
 logger = logging.getLogger(__name__)
+
+
+async def require_json_content_type(request: Request) -> None:
+    """Reject a request body that is not declared as JSON.
+
+    This endpoint takes a bare ``str`` body, and FastAPI only JSON-parses ``application/*json``;
+    anything else arrives as raw bytes that lax-mode ``str`` happily coerces. That makes a
+    ``text/plain`` body acceptable, which is exactly what ``<form enctype="text/plain">`` sends --
+    so any website could silently rewrite settings through the visitor's browser. HTML forms can
+    only send ``text/plain``, ``application/x-www-form-urlencoded`` or ``multipart/form-data``, so
+    insisting on JSON here removes the whole class of form-driven writes.
+
+    Note that ``Body(media_type=...)`` does *not* do this: it only annotates the OpenAPI schema
+    and is not enforced at runtime.
+
+    Args:
+        request: The incoming request.
+
+    Raises:
+        HTTPException: 415 if the content type is not JSON.
+
+    """
+    media_type = request.headers.get("content-type", "").split(";")[0].strip().lower()
+    if media_type != "application/json" and not media_type.endswith("+json"):
+        raise HTTPException(
+            status_code=415,
+            detail=(
+                f"Unsupported content type {media_type!r}. The body of this endpoint must be sent as application/json."
+            ),
+        )
 
 
 @router.websocket(
@@ -153,12 +184,13 @@ async def notify(
     ),
     response_model_exclude_none=True,
     response_model=SettingResponse,
-    responses={404: {"model": Message}},
+    responses={404: {"model": Message}, 415: {"model": Message}},
+    dependencies=[Depends(require_json_content_type)],
 )
 async def update(
     db: Annotated[AsyncSession, Depends(get_db_session)],
     key: str,
-    body: Annotated[str, Body()],
+    body: Annotated[str, Body(media_type="application/json")],
 ) -> SettingResponse | JSONResponse:
     try:
         definition = parse_setting(key)
@@ -168,24 +200,36 @@ async def update(
     if body and body != "null":
         try:
             definition.validate_type(body)
+            # The extra-field settings feed a registry that the /field endpoints and every entity
+            # response depend on. Writing a malformed one through here used to be accepted and then
+            # wedged GET /field/{entity} into a permanent 500, so validate the shape up front.
+            validate_extra_field_setting(key, body)
         except ValueError as e:
             return JSONResponse(status_code=400, content=Message(message=str(e)).dict())
 
         try:
-            await setting.update(db=db, definition=definition, value=body)
-            await db.commit()
-        except IntegrityError:
-            # Two concurrent first-time saves of the same key can both miss the
-            # merge's SELECT and both INSERT; the loser hits the unique key.
-            # Retry once — the row now exists, so the merge becomes an UPDATE.
-            await db.rollback()
-            await setting.update(db=db, definition=definition, value=body)
-            await db.commit()
+            try:
+                await setting.update(db=db, definition=definition, value=body)
+                await db.commit()
+            except IntegrityError:
+                # Two concurrent first-time saves of the same key can both miss the
+                # merge's SELECT and both INSERT; the loser hits the unique key.
+                # Retry once — the row now exists, so the merge becomes an UPDATE.
+                await db.rollback()
+                await setting.update(db=db, definition=definition, value=body)
+                await db.commit()
+        except ValueError as e:
+            # Raised when the value exceeds the column limit; a client error, not a server one.
+            return JSONResponse(status_code=400, content=Message(message=str(e)).dict())
         logger.info('Setting "%s" has been set to "%s".', key, body)
     else:
         await setting.delete(db=db, definition=definition)
         logger.info('Setting "%s" has been unset.', key)
         await db.commit()
+
+    # The registry caches extra fields in memory and is otherwise only refreshed by the /field
+    # endpoints, so without this the two paths disagree until the next restart.
+    invalidate_extra_field_cache(key)
 
     # Get the new value of the setting.
     try:

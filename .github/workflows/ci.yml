@@ -78,6 +78,11 @@ jobs:
           cd client
           npm ci
 
+      - name: Install client_v2 dependencies
+        run: |
+          cd client_v2
+          npm ci
+
       - name: Run pre-commit
         run: uv run lefthook run ci
 
@@ -133,6 +138,33 @@ jobs:
         run: |
           cd client
           npm run test:coverage
+  #
+  # Frontend unit tests (Vitest) for client_v2, the new opt-in Svelte client -- 23
+  # colocated *.test.ts files. See TESTING_STRATEGY.md. Playwright (tests_frontend_v2)
+  # is deliberately not wired up here -- a separate follow-up.
+  #
+  client-v2-tests:
+    needs: [meta]
+    if: ${{ needs.meta.outputs.skip_build != 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install node
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: '22'
+
+      - name: Install client_v2 dependencies
+        run: |
+          cd client_v2
+          npm ci
+
+      - name: Run client_v2 unit tests
+        run: |
+          cd client_v2
+          npm test
   #
   # Mobile companion app (mobile/): typecheck + pure-logic unit tests. Native
   # Android/iOS builds are deliberately not part of PR CI (slow, SDK-heavy) —
@@ -616,12 +648,34 @@ jobs:
             echo "No 'db' service in $compose_file (${{ matrix.dbtype }} runs in-process) -- nothing to pull."
           fi
 
+      # Run compose inline rather than through compose-action. The action buffers every
+      # container's output and, when the run fails, emits only a byte-capped excerpt taken
+      # from the *start* of it -- so the message saying what actually broke is truncated
+      # away. That has now cost two full diagnosis cycles (the cockroachdb pull above, and
+      # an unmarked async test whose failure never reached the log at all). Running compose
+      # directly streams all of it into the job log as it happens, uncapped.
+      #
+      # --exit-code-from tester makes the job's result the *test* result: without it the
+      # exit code comes from whichever container happened to stop first.
       - name: Perform integration tests
-        uses: hoverkraft-tech/compose-action@v3.0.0
-        with:
-          compose-file: "./tests_integration/docker-compose-${{ matrix.dbtype }}.yml"
-          up-flags: "--abort-on-container-exit"
-          down-flags: "--volumes"
+        run: |
+          docker compose -f "./tests_integration/docker-compose-${{ matrix.dbtype }}.yml" \
+            up --abort-on-container-exit --exit-code-from tester
+
+      # Belt and braces: if the tests failed, the streamed output above is already in the
+      # log, but a crashed container can lose its tail to interleaving. This re-reads each
+      # container's full log from the daemon, timestamped.
+      - name: Dump container logs
+        if: failure()
+        run: |
+          docker compose -f "./tests_integration/docker-compose-${{ matrix.dbtype }}.yml" \
+            logs --no-color --timestamps
+
+      - name: Tear down
+        if: always()
+        run: |
+          docker compose -f "./tests_integration/docker-compose-${{ matrix.dbtype }}.yml" \
+            down --volumes
   #
   # Non-root smoke tests (#239): the image must boot under --user (Kubernetes
   # runAsNonRoot, OpenShift arbitrary UIDs), ignore PUID/PGID with a notice when
@@ -843,7 +897,20 @@ jobs:
     # push minted :latest images (and the GitHub release + deploy downstream) even when
     # those suites were red — they ran as siblings, and a failing sibling doesn't stop
     # independent jobs.
-    needs: [test, unit-tests, client-tests, e2e, build-amd64, build-arm64, build-armv7, style, build-client, verify-artifact]
+    needs:
+      [
+        test,
+        unit-tests,
+        client-tests,
+        client-v2-tests,
+        e2e,
+        build-amd64,
+        build-arm64,
+        build-armv7,
+        style,
+        build-client,
+        verify-artifact,
+      ]
     runs-on: ubuntu-latest
     permissions:
       packages: write

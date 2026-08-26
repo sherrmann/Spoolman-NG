@@ -5,19 +5,33 @@ import logging
 from datetime import datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Header, Query, Request, Response, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, Header, Path, Query, Request, Response, WebSocket, WebSocketDisconnect
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.datastructures import QueryParams
 
-from spoolman.api.v1.models import MAX_SAFE_INTEGER, Message, Spool, SpoolEvent
+from spoolman.api.v1.models import (
+    MAX_SAFE_INTEGER,
+    Filament,
+    Message,
+    Spool,
+    SpoolEvent,
+    SpoolGroup,
+    SpoolTag,
+    TagConflictMessage,
+    Vendor,
+)
 from spoolman.api.v1.models import SpoolUsageEvent as SpoolUsageEventModel
 from spoolman.database import filament, spool
+
+# Aliased: `tag` is taken by the find endpoint's query parameter, whose name is API surface.
+from spoolman.database import tag as tag_db
 from spoolman.database.database import get_db_session
 from spoolman.database.utils import parse_sort
-from spoolman.exceptions import ItemCreateError, SpoolMeasureError
+from spoolman.exceptions import ItemCreateError, SpoolMeasureError, TagConflictError
 from spoolman.extra_fields import (
     EXTRA_FIELD_PREFIX,
     EntityType,
@@ -25,6 +39,7 @@ from spoolman.extra_fields import (
     inherit_filament_extra_fields,
     validate_extra_field_dict,
 )
+from spoolman.tags import FORMAT_MAX_LENGTH, KNOWN_FORMATS, UID_MAX_LENGTH
 from spoolman.ws import websocket_manager
 
 logger = logging.getLogger(__name__)
@@ -336,6 +351,19 @@ async def find(
             ),
         ),
     ] = None,
+    tag: Annotated[
+        str | None,
+        Query(
+            title="Tag UID",
+            description=(
+                "Match the spool that an NFC/RFID tag with this UID is linked to. Exact match on the "
+                "normalized UID: separators are ignored and case does not matter, so 04:A2:B3:C4, "
+                "04-A2-B3-C4 and 04a2b3c4 all find the same spool. A tag is linked to at most one "
+                "spool, so this returns at most one result."
+            ),
+            examples=["04A2B3C4D5E6F7"],
+        ),
+    ] = None,
     allow_archived: Annotated[
         bool,
         Query(title="Allow Archived", description="Whether to include archived spools in the search results."),
@@ -432,6 +460,7 @@ async def find(
             vendor_id=filament_vendor_ids,
             location=location,
             lot_nr=lot_nr,
+            tag=tag,
             allow_archived=allow_archived,
             archived=archived,
             extra_field_filters=extra_field_filters if extra_field_filters else None,
@@ -468,6 +497,232 @@ async def notify_any(
                 await websocket.send_json({"status": "healthy"})
     except WebSocketDisconnect:
         websocket_manager.disconnect(("spool",), websocket)
+
+
+# Query-param prefixes for the group endpoint's extra-field filters, longest first so the most
+# specific one wins (mirrors the find endpoint's own extra.<key> handling, generalised the same
+# way upstream's spool.py does for filament/vendor extra fields).
+_GROUP_EXTRA_FILTER_PREFIXES = (
+    ("filament.vendor.extra.", "vendor"),
+    ("filament.extra.", "filament"),
+    ("extra.", "spool"),
+)
+
+
+def _parse_group_extra_field_filters(
+    query_params: QueryParams,
+) -> tuple[dict[str, str], dict[str, str], dict[str, str]]:
+    """Split extra-field filter query params into (spool, filament, vendor) dicts keyed by field key."""
+    buckets: dict[str, dict[str, str]] = {"spool": {}, "filament": {}, "vendor": {}}
+    for key, value in query_params.items():
+        for prefix, bucket in _GROUP_EXTRA_FILTER_PREFIXES:
+            if key.startswith(prefix):
+                buckets[bucket][key[len(prefix) :]] = value
+                break
+    return buckets["spool"], buckets["filament"], buckets["vendor"]
+
+
+@router.get(
+    "/group",
+    name="Find spool groups",
+    description=(
+        "Group spools that match the search query by one axis (filament, vendor, material, "
+        "location, or a spool extra field) and return per-group aggregates: spool count, "
+        "in-use count, total remaining weight and most recent usage. Pagination is over groups, "
+        "so a group is never split and its aggregates are always complete. Uses the same "
+        "built-in filters as the spool search endpoint (plus filament/vendor extra field "
+        "filters). The total number of matching groups is returned in the x-total-count header."
+    ),
+    response_model_exclude_none=True,
+    responses={
+        200: {"model": list[SpoolGroup]},
+        400: {"model": Message},
+    },
+)
+async def find_groups(
+    *,
+    request: Request,
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+    group_by: Annotated[
+        str,
+        Query(
+            title="Group By",
+            description=(
+                "The field to group spools by: filament, vendor, material, location, or "
+                "extra.<key> for one of the spool's custom fields (text and single-choice "
+                "fields only)."
+            ),
+            examples=["location", "extra.shelf"],
+        ),
+    ],
+    filament_name: Annotated[
+        str | None,
+        Query(alias="filament.name", title="Filament Name", description="See the spool search endpoint."),
+    ] = None,
+    filament_id: Annotated[
+        str | None,
+        Query(
+            alias="filament.id",
+            title="Filament ID",
+            description="Match an exact filament ID. Separate multiple IDs with a comma.",
+            pattern=r"^-?\d+(,-?\d+)*$",
+        ),
+    ] = None,
+    filament_material: Annotated[
+        str | None,
+        Query(alias="filament.material", title="Filament Material", description="See the spool search endpoint."),
+    ] = None,
+    filament_vendor_name: Annotated[
+        str | None,
+        Query(alias="filament.vendor.name", title="Vendor Name", description="See the spool search endpoint."),
+    ] = None,
+    filament_vendor_id: Annotated[
+        str | None,
+        Query(
+            alias="filament.vendor.id",
+            title="Vendor ID",
+            description=(
+                "Match an exact vendor ID. Separate multiple IDs with a comma. "
+                "Set it to -1 to match spools with filaments with no vendor."
+            ),
+            pattern=r"^-?\d+(,-?\d+)*$",
+        ),
+    ] = None,
+    location: Annotated[
+        str | None,
+        Query(title="Location", description="Partial case-insensitive search term for the spool location."),
+    ] = None,
+    lot_nr: Annotated[
+        str | None,
+        Query(title="Lot/Batch Number", description="Partial case-insensitive search term for the spool lot number."),
+    ] = None,
+    allow_archived: Annotated[
+        bool,
+        Query(title="Allow Archived", description="Whether to include archived spools in the aggregates."),
+    ] = False,
+    sort: Annotated[
+        str | None,
+        Query(
+            title="Sort",
+            description=(
+                'Sort the groups by the given field. Comma-separated "field:direction" items. '
+                "Available fields: group.title, group.total_remaining, group.last_used, "
+                "group.spool_count, group.in_use_count."
+            ),
+            examples=["group.last_used:desc"],
+        ),
+    ] = None,
+    limit: Annotated[
+        int | None,
+        Query(title="Limit", description="Maximum number of groups in the response."),
+    ] = None,
+    offset: Annotated[
+        int,
+        Query(title="Offset", description="Offset in the full group result set if a limit is set."),
+    ] = 0,
+) -> JSONResponse:
+    try:
+        sort_by = parse_sort(sort)
+    except ValueError as e:
+        return JSONResponse(status_code=400, content=Message(message=str(e)).dict())
+
+    filament_ids = [int(item) for item in filament_id.split(",")] if filament_id is not None else None
+    vendor_ids = [int(item) for item in filament_vendor_id.split(",")] if filament_vendor_id is not None else None
+
+    spool_extra, filament_extra, vendor_extra = _parse_group_extra_field_filters(request.query_params)
+
+    try:
+        groups, total_count = await spool.find_groups(
+            db=db,
+            group_by=group_by,
+            filament_name=filament_name,
+            filament_id=filament_ids,
+            filament_material=filament_material,
+            vendor_name=filament_vendor_name,
+            vendor_id=vendor_ids,
+            location=location,
+            lot_nr=lot_nr,
+            allow_archived=allow_archived,
+            extra_field_filters=spool_extra or None,
+            filament_extra_field_filters=filament_extra or None,
+            vendor_extra_field_filters=vendor_extra or None,
+            sort_by=sort_by,
+            limit=limit,
+            offset=offset,
+        )
+    except ValueError as e:
+        return JSONResponse(status_code=400, content=Message(message=str(e)).dict())
+
+    content = [
+        SpoolGroup(
+            group_by=group_by,
+            key=None if group.key is None else str(group.key),
+            spool_count=group.spool_count,
+            in_use_count=group.in_use_count,
+            total_remaining_weight=group.total_remaining_weight,
+            last_used=group.last_used,
+            filament=Filament.from_db(group.filament) if group.filament is not None else None,
+            vendor=Vendor.from_db(group.vendor) if group.vendor is not None else None,
+        )
+        for group in groups
+    ]
+    return JSONResponse(
+        content=jsonable_encoder(content, exclude_none=True),
+        headers={"x-total-count": str(total_count)},
+    )
+
+
+class RenameFieldValueParameters(BaseModel):
+    value: str = Field(min_length=1, description="The value to replace.", examples=["Shelf A"])
+    new_value: str = Field(min_length=1, description="The value to replace it with.", examples=["Shelf B"])
+
+
+class RenameFieldValueResult(BaseModel):
+    spools_updated: int = Field(description="How many spools held the old value.", examples=[6])
+
+
+@router.patch(
+    "/field/{field}",
+    name="Rename a spool field value",
+    description=(
+        "Replace one value of one spool field wherever it occurs. The general form of the "
+        "location rename endpoint: it lets a client rename, in a single request, a value shared "
+        "by any number of spools -- including ones it has not loaded. Archived spools are "
+        "included, so no spool is left holding the old value. Renaming onto a value that is "
+        "already in use merges the two. No websocket event is emitted per spool; other clients "
+        "see the change on their next load."
+    ),
+    response_model_exclude_none=True,
+    responses={200: {"model": RenameFieldValueResult}, 400: {"model": Message}},
+)
+async def rename_field_value(
+    *,
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+    field: Annotated[
+        str,
+        Path(
+            title="Field",
+            description=(
+                "The spool field to rename a value of: location, or extra.<key> for one of the "
+                "spool's custom text or single-choice fields. Fields belonging to the filament "
+                "or its vendor (material, vendor) cannot be renamed here."
+            ),
+            examples=["location", "extra.shelf"],
+        ),
+    ],
+    body: RenameFieldValueParameters,
+) -> JSONResponse:
+    logger.info('Renaming spool %s "%s" to "%s"', field, body.value, body.new_value)
+    try:
+        updated = await spool.rename_field_value(
+            db=db,
+            field=field,
+            value=body.value,
+            new_value=body.new_value,
+        )
+    except ValueError as e:
+        return JSONResponse(status_code=400, content=Message(message=str(e)).dict())
+    return JSONResponse(content=jsonable_encoder(RenameFieldValueResult(spools_updated=updated)))
 
 
 @router.get(
@@ -801,3 +1056,94 @@ async def usage_events(  # noqa: ANN201
         ),
         headers={"x-total-count": str(total_count)},
     )
+
+
+class SpoolTagParameters(BaseModel):
+    uid: str = Field(
+        min_length=1,
+        max_length=UID_MAX_LENGTH * 2,  # room for separators; the normalized UID is what must fit
+        description=(
+            "The tag's hardware UID, in whatever shape the reader reports it. Separators (:, -, _, "
+            "spaces) are stripped and the result is uppercased before storing, so every spelling of "
+            "one physical tag resolves to the same tag."
+        ),
+        examples=["04:a2:b3:c4:d5:e6:f7", "04A2B3C4D5E6F7"],
+    )
+    format: str | None = Field(
+        None,
+        max_length=FORMAT_MAX_LENGTH,
+        description=(
+            "What kind of tag this is. Informational; not validated against a fixed list, because new "
+            f"tag types appear faster than releases do. Commonly one of: {', '.join(KNOWN_FORMATS)}."
+        ),
+        examples=["ntag"],
+    )
+
+
+@router.post(
+    "/{spool_id}/tag",
+    name="Link a tag to a spool",
+    description=(
+        "Link a physical NFC/RFID tag to this spool, so that the tag's UID identifies it. "
+        "A tag belongs to exactly one spool; linking a UID that another spool already holds "
+        "returns 409 with that spool's id, so a client can offer to move it instead. "
+        "Re-linking a tag to the spool that already holds it succeeds and changes nothing, "
+        "except that a format sent now refines one recorded earlier.\n\n"
+        "This instance's NFC/RFID tag support (POST /nfc/write and friends) also matches and "
+        "binds tags through this same table, keyed on the UID: a tag linked here is a tag an "
+        "NFC scan can already resolve, and vice versa."
+    ),
+    status_code=201,
+    response_model_exclude_none=True,
+    response_model=SpoolTag,
+    responses={
+        400: {"model": Message},
+        404: {"model": Message},
+        409: {"model": TagConflictMessage},
+    },
+)
+async def link_tag(  # noqa: ANN201
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+    spool_id: int,
+    body: SpoolTagParameters,
+):
+    try:
+        db_item = await tag_db.link(db=db, spool_id=spool_id, uid=body.uid, tag_format=body.format)
+    except ValueError as e:
+        return JSONResponse(status_code=400, content=Message(message=str(e)).dict())
+    except TagConflictError as e:
+        return JSONResponse(
+            status_code=409,
+            content=TagConflictMessage(message=str(e), spool_id=e.spool_id).dict(),
+        )
+    return SpoolTag.from_db(db_item)
+
+
+@router.delete(
+    "/{spool_id}/tag/{uid}",
+    name="Unlink a tag from a spool",
+    description=(
+        "Unlink a physical NFC/RFID tag from this spool. The UID is matched the same way it is "
+        "stored: separators are ignored and case does not matter. Deleting a spool unlinks its "
+        "tags on its own, so this is only for taking one tag off a spool that keeps existing."
+    ),
+    status_code=204,
+    responses={400: {"model": Message}, 404: {"model": Message}},
+)
+async def unlink_tag(
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+    spool_id: int,
+    uid: Annotated[
+        str,
+        Path(
+            title="Tag UID",
+            description="The tag's UID, in any shape. Normalized before matching.",
+            examples=["04A2B3C4D5E6F7"],
+        ),
+    ],
+) -> Response:
+    try:
+        await tag_db.unlink(db=db, spool_id=spool_id, uid=uid)
+    except ValueError as e:
+        return JSONResponse(status_code=400, content=Message(message=str(e)).dict())
+    return Response(status_code=204)
