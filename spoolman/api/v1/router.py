@@ -32,6 +32,7 @@ from . import (
     order,
     other,
     printer,
+    search,
     setting,
     shop,
     spool,
@@ -200,6 +201,7 @@ app.include_router(stats.router)
 app.include_router(ai.router)
 app.include_router(auth.router)
 app.include_router(tag.router)
+app.include_router(search.router)
 
 # Opt-in bearer-token auth (#48): installed only when SPOOLMAN_API_TOKEN is set, so the default
 # deployment is unchanged. Guards this sub-app's HTTP routes and the websocket handshake uniformly.
