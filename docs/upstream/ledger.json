@@ -1780,5 +1780,153 @@
       "title": "SpoolmanDB-Community"
     }
   ],
-  "upstream_commits": []
+  "upstream_commits": [
+    {
+      "sha": "1b1dbbb7",
+      "verdict": "ported",
+      "reason": "",
+      "pr": 397,
+      "released_in": "v2026.8.2"
+    },
+    {
+      "sha": "33ad8d71",
+      "verdict": "ported",
+      "reason": "",
+      "pr": 397,
+      "released_in": "v2026.8.2"
+    },
+    {
+      "sha": "3f1d3b4c",
+      "verdict": "ported",
+      "reason": "",
+      "pr": 397,
+      "released_in": "v2026.8.2"
+    },
+    {
+      "sha": "404b0317",
+      "verdict": "ported",
+      "reason": "",
+      "pr": 397,
+      "released_in": "v2026.8.2"
+    },
+    {
+      "sha": "46beda22",
+      "verdict": "ported",
+      "reason": "",
+      "pr": 397,
+      "released_in": "v2026.8.2"
+    },
+    {
+      "sha": "72daa29c",
+      "verdict": "ported",
+      "reason": "",
+      "pr": 397,
+      "released_in": "v2026.8.2"
+    },
+    {
+      "sha": "7d4728ae",
+      "verdict": "ported",
+      "reason": "",
+      "pr": 397,
+      "released_in": "v2026.8.2"
+    },
+    {
+      "sha": "7d683eb2",
+      "verdict": "ported",
+      "reason": "",
+      "pr": 397,
+      "released_in": "v2026.8.2"
+    },
+    {
+      "sha": "7e953396",
+      "verdict": "ported",
+      "reason": "",
+      "pr": 397,
+      "released_in": "v2026.8.2"
+    },
+    {
+      "sha": "7ea89dc3",
+      "verdict": "ported",
+      "reason": "",
+      "pr": 397,
+      "released_in": "v2026.8.2"
+    },
+    {
+      "sha": "97524b11",
+      "verdict": "ported",
+      "reason": "",
+      "pr": 397,
+      "released_in": "v2026.8.2"
+    },
+    {
+      "sha": "9a93892a",
+      "verdict": "ported",
+      "reason": "",
+      "pr": 397,
+      "released_in": "v2026.8.2"
+    },
+    {
+      "sha": "a6512da5",
+      "verdict": "ported",
+      "reason": "",
+      "pr": 397,
+      "released_in": "v2026.8.2"
+    },
+    {
+      "sha": "ac7865ec",
+      "verdict": "ported",
+      "reason": "",
+      "pr": 397,
+      "released_in": "v2026.8.2"
+    },
+    {
+      "sha": "ae3208a9",
+      "verdict": "ported",
+      "reason": "",
+      "pr": 397,
+      "released_in": "v2026.8.2"
+    },
+    {
+      "sha": "c33f6524",
+      "verdict": "ported",
+      "reason": "",
+      "pr": 397,
+      "released_in": "v2026.8.2"
+    },
+    {
+      "sha": "d43552bd",
+      "verdict": "ported",
+      "reason": "",
+      "pr": 397,
+      "released_in": "v2026.8.2"
+    },
+    {
+      "sha": "dd16672a",
+      "verdict": "ported",
+      "reason": "",
+      "pr": 397,
+      "released_in": "v2026.8.2"
+    },
+    {
+      "sha": "dd39a11c",
+      "verdict": "ported",
+      "reason": "",
+      "pr": 397,
+      "released_in": "v2026.8.2"
+    },
+    {
+      "sha": "de533bc7",
+      "verdict": "ported",
+      "reason": "",
+      "pr": 397,
+      "released_in": "v2026.8.2"
+    },
+    {
+      "sha": "ecd43bd5",
+      "verdict": "ported",
+      "reason": "",
+      "pr": 397,
+      "released_in": "v2026.8.2"
+    }
+  ]
 }
