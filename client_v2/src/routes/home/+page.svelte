@@ -241,7 +241,7 @@
 	<title>{ng.home_home()} | Spoolman</title>
 </svelte:head>
 
-<div class="page">
+<div class="page scroll-y">
 	{#if !loaded}
 		<div class="state">{ng.loading()}</div>
 	{:else if loadError}
