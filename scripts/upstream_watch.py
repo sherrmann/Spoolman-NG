@@ -33,6 +33,27 @@ def filter_created_after(items: list[dict], watermark: str) -> list[dict]:
     return [i for i in items if i["created_at"] > watermark]
 
 
+VENDORED_SUBTREE = "client_v2"
+
+
+def partition_vendored(commits: list[dict]) -> tuple[list[dict], list[dict]]:
+    """Split commits into (vendored-subtree-only, everything else).
+
+    `client_v2` is vendored here as a git subtree, so a commit that touches only that
+    directory is picked up with `git subtree pull` rather than read and reimplemented by
+    hand. Listing those separately keeps the manual porting list honest -- upstream's Svelte
+    client is by far its busiest directory, and mixed into one list it buries the backend
+    commits that actually need a decision.
+
+    A commit touching `client_v2` *and* something else stays in the manual list: the subtree
+    pull would only bring half of it, so it needs a human either way.
+    """
+    vendored, other = [], []
+    for commit in commits:
+        (vendored if commit["dirs"] == [VENDORED_SUBTREE] else other).append(commit)
+    return vendored, other
+
+
 def render_watch_issue(commits: list[dict], issues: list[dict], prs: list[dict]) -> str | None:
     """Render the weekly watch issue body, or None when there is nothing to report."""
     if not (commits or issues or prs):
@@ -43,6 +64,7 @@ def render_watch_issue(commits: list[dict], issues: list[dict], prs: list[dict])
         "(Upstream refs are backticked on purpose — listings must not cross-link upstream.)",
         "",
     ]
+    vendored, commits = partition_vendored(commits)
     if commits:
         out += [f"### New upstream commits ({len(commits)})", ""]
         for c in commits:
@@ -52,6 +74,19 @@ def render_watch_issue(commits: list[dict], issues: list[dict], prs: list[dict])
             # against our repo, and a literal backtick in the subject must not escape the span.
             out.append(f"- [ ] `{c['sha'][:9]}` `{_sanitize(c['subject'])}` ({dirs}) — port / skip?")
         out.append("")
+    if vendored:
+        out += [
+            f"### New upstream `{VENDORED_SUBTREE}` commits ({len(vendored)})",
+            "",
+            f"Vendored as a subtree \u2014 take these with "
+            f"`git subtree pull --prefix={VENDORED_SUBTREE} upstream master --squash`,",
+            "not by hand. Listed so the pull is a decision rather than a surprise.",
+            "",
+        ]
+        for c in vendored:
+            out.append(f"- [ ] `{c['sha'][:9]}` `{_sanitize(c['subject'])}` — pull / skip?")
+        out.append("")
+
     if issues:
         out += [f"### New upstream issues ({len(issues)})", ""]
         # Title is backticked and sanitized too: an upstream title containing @user or

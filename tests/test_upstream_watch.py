@@ -10,7 +10,7 @@ import subprocess
 
 import pytest
 import upstream_watch
-from upstream_watch import filter_created_after, render_watch_issue
+from upstream_watch import filter_created_after, partition_vendored, render_watch_issue
 
 
 def test_render_empty_is_none() -> None:
@@ -90,3 +90,40 @@ def test_new_commits_signals_unreachable_watermark(monkeypatch: pytest.MonkeyPat
 
     monkeypatch.setattr(upstream_watch, "_git", _boom)
     assert upstream_watch.new_commits(tmp_path, "deadbeef") is None
+
+
+def test_partition_vendored_splits_subtree_only_commits() -> None:
+    """A commit confined to client_v2 is a subtree pull; anything wider is a manual port."""
+    only = {"sha": "a" * 40, "subject": "client_v2: tweak", "dirs": ["client_v2"]}
+    backend = {"sha": "b" * 40, "subject": "Fix api", "dirs": ["spoolman"]}
+    mixed = {"sha": "c" * 40, "subject": "Touch both", "dirs": ["client_v2", "spoolman"]}
+
+    vendored, other = partition_vendored([only, backend, mixed])
+
+    assert vendored == [only]
+    # A commit spanning the subtree and the backend cannot be taken by a pull alone, so it
+    # stays where a human will look at it.
+    assert other == [backend, mixed]
+
+
+def test_render_lists_client_v2_commits_in_their_own_section() -> None:
+    commits = [
+        {"sha": "a" * 40, "subject": "client_v2: tweak", "dirs": ["client_v2"]},
+        {"sha": "b" * 40, "subject": "Fix api", "dirs": ["spoolman"]},
+    ]
+    body = render_watch_issue(commits, [], [])
+
+    assert "### New upstream commits (1)" in body
+    assert "### New upstream `client_v2` commits (1)" in body
+    assert f"- [ ] `{'a' * 9}` `client_v2: tweak` \u2014 pull / skip?" in body
+    assert f"- [ ] `{'b' * 9}` `Fix api` (`spoolman`) \u2014 port / skip?" in body
+    assert "git subtree pull --prefix=client_v2" in body
+
+
+def test_render_omits_the_client_v2_section_when_nothing_touched_it() -> None:
+    body = render_watch_issue([{"sha": "b" * 40, "subject": "Fix api", "dirs": ["spoolman"]}], [], [])
+    assert "client_v2" not in body
+
+
+def test_render_is_still_none_when_only_vendored_commits_would_be_empty() -> None:
+    assert render_watch_issue([], [], []) is None
