@@ -158,7 +158,13 @@ def add_trusted_origin_middleware() -> None:
         return
     trusted = security.get_trusted_origins()
     if trusted:
-        logger.info("Trusting writes and websockets from this instance's own origin, plus: %s", sorted(trusted))
+        # The origins themselves are logged by add_cors_middleware below, alongside the raw
+        # SPOOLMAN_CORS_ORIGIN value so a typo stays visible. Naming them twice, a few lines
+        # apart in the same startup sequence, told the operator nothing the second time.
+        logger.info(
+            "Trusting writes and websockets from this instance's own origin, plus %d configured origin(s).",
+            len(trusted),
+        )
     else:
         logger.info("Trusting writes and websockets from this instance's own origin only.")
     app.add_middleware(security.TrustedOriginMiddleware)
