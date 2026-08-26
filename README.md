@@ -9,7 +9,7 @@
 _Keep track of your inventory of 3D-printer filament spools._
 
 > ### 🚀 Spoolman NG
-> **Spoolman NG** is a community-maintained continuation of the original [Spoolman](https://github.com/Donkie/Spoolman) by Donkie. It stays drop-in compatible while adding new features (NFC spool identification, QR-code label printing, a redesigned dashboard, and merged community PRs) and ships under its own Docker images and releases:
+> **Spoolman NG** is a community-maintained fork of [Spoolman](https://github.com/Donkie/Spoolman) by Donkie, started while upstream was dormant in early 2026. Upstream is actively developed again; Spoolman NG has meanwhile grown into a superset — NFC spool identification, orders and low-stock tracking, locations and printers, calibration sessions, optional authentication, QR-code label printing, a redesigned dashboard, and optional AI/MCP features. It stays drop-in compatible with the upstream API and ships under its own Docker images and releases:
 >
 > | | |
 > |---|---|

@@ -1,6 +1,6 @@
 # Upstream backlog triage — Donkie/Spoolman → Spoolman NG
 
-**Date:** 2026-07-06 · **Input:** all 265 open issues of the abandoned upstream [Donkie/Spoolman](https://github.com/Donkie/Spoolman) (dump kept locally as `docs/data/upstream_issues.json` — untracked/gitignored, re-fetchable from the upstream GitHub API; PRs excluded) · **Method:** one-time multi-agent sweep — every issue investigated against this fork's current code (56 bug reports by Opus agents, 209 requests by Sonnet agents, topic-batched; every verdict cites `path:line` evidence; duplicates merged by an Opus clustering pass). Completes the MASTERPLAN item "Upstream backlog sweep".
+**Date:** 2026-07-06 · **Input:** all 265 open issues of the then-dormant upstream [Donkie/Spoolman](https://github.com/Donkie/Spoolman) (dump kept locally as `docs/data/upstream_issues.json` — untracked/gitignored, re-fetchable from the upstream GitHub API; PRs excluded) · **Method:** one-time multi-agent sweep — every issue investigated against this fork's current code (56 bug reports by Opus agents, 209 requests by Sonnet agents, topic-batched; every verdict cites `path:line` evidence; duplicates merged by an Opus clustering pass). Completes the MASTERPLAN item "Upstream backlog sweep".
 
 **Result:** 24 FIX · 108 IMPLEMENT · 133 SKIP → **98 fork issues** filed covering 132 upstream issues (duplicates merged: 34).
 

@@ -2,9 +2,12 @@
 
 ## Supported versions
 
-Only the latest release of Spoolman NG receives security fixes. The original
-upstream project (Donkie/Spoolman ≤ 0.23.1) is no longer maintained; upgrade to
-a current Spoolman NG release to receive fixes.
+Only the latest release of Spoolman NG receives security fixes. Spoolman NG
+forked from Donkie/Spoolman at v0.23.1, so nothing at or below that point is
+covered by either project — upgrade to a current Spoolman NG release to receive
+fixes from us. Upstream resumed active development in July 2026 and issues its
+own advisories; if you run upstream Spoolman rather than Spoolman NG, report
+there instead.
 
 ## Threat model
 

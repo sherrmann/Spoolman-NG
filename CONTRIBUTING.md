@@ -1,9 +1,17 @@
 # Contributing to Spoolman NG
 
 Thanks for helping keep Spoolman alive! Spoolman NG is a community-maintained
-continuation of the original [Spoolman](https://github.com/Donkie/Spoolman) by
-Donkie, which is no longer actively maintained. Bug reports, features, filament
-data, and translations that used to go upstream should come here now.
+fork of the original [Spoolman](https://github.com/Donkie/Spoolman) by Donkie.
+
+Upstream went dormant in early 2026, which is why this fork exists, and became
+active again in July 2026. In the meantime Spoolman NG grew well past it — orders
+and low stock, locations, printers, calibration, optional authentication, NFC tag
+decoding, and optional AI/MCP features. The two are best understood as separate
+products that deliberately stay API-compatible.
+
+So: bug reports, features, filament data, and translations **for Spoolman NG**
+belong here. If something is really an upstream bug, upstream is maintained again
+and will want to hear about it.
 
 ## Development setup
 

@@ -4,6 +4,14 @@
 **Original state snapshot:** master = fork foundation merged (#37); PR #38 (review
 follow-ups, hermetic e2e, CI signal gates, race/flake fixes) fully green.
 
+> **Superseded premise (2026-08-26).** This document was written while upstream
+> Donkie/Spoolman was dormant, and its prose describes upstream as abandoned. That is no
+> longer true: upstream shipped ~470 commits in July–August 2026, rewrote its frontend in
+> Svelte (`client_v2`, now its default client), and releases roughly weekly. The
+> convergence strategy and feature triage that replace this framing are tracked
+> separately; treat the sections below as a dated snapshot of the fork's own state, not as
+> a current description of upstream.
+
 The assessment prose below is the 2026-07-02 snapshot and has not been rewritten; only the
 work-item checkboxes have been re-verified against the code. Items still unticked were
 confirmed open (or could not be verified from this repo — noted inline).
@@ -35,7 +43,7 @@ help links, and release pipeline are fully fork-owned.
 merged in #37/#38 — users on Moonraker one-click updates are running code without the
 i18n completion, the SpoolmanDB switch, the setting-race fix, or the security docs.
 And master's default `EXTERNAL_DB_URL` change means unreleased code points at the
-fork's SpoolmanDB while every released artifact still points at the abandoned
+fork's SpoolmanDB while every released artifact still points at the then-dormant
 upstream's Pages.
 
 - [x] **Cut release 2026.7.0 after #38 merges** — P0, ~15 min. **Done** — the release
@@ -210,7 +218,7 @@ has no funding channel at all: FUNDING.yml is an empty placeholder), and nobody
 outside this repo knows the fork exists. Upstream's ~800 open issues/PRs remain
 unswept for adoptable fixes. No Discussions, no announcement, and the ecosystem
 (Mainsail/Fluidd/Moonraker docs, OctoPrint plugin, Home Assistant integration) still
-links to the abandoned upstream.
+links to the then-dormant upstream.
 
 - [ ] **Enable GitHub Discussions + write the fork announcement** — P1, ~2 h.
   *Half done:* Discussions are enabled on the repo. The announcement and the pinned
