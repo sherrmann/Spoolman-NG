@@ -1072,7 +1072,12 @@ def _group_aggregates() -> tuple[ColumnElement, ColumnElement, ColumnElement, Co
         # spools, so every row already has one, but it keeps the two implementations comparable.
         func.count(models.Spool.id).label("spool_count"),
         func.count(case((models.Spool.used_weight > 0, models.Spool.id))).label("in_use_count"),
-        coalesce(func.sum(remaining_expr), 0.0).label("total_remaining_weight"),
+        # Rounded like every other weight expression in this file: summing floats across a
+        # group accumulates error, so an exact 1700 g can surface as 1699.9999999999998. Only
+        # the outermost sum is wrapped -- both coalesce branches above stay float, so no CASE
+        # or COALESCE ends up with one NUMERIC and one FLOAT8 branch, which CockroachDB
+        # rejects outright. See _round6's docstring.
+        _round6(coalesce(func.sum(remaining_expr), 0.0)).label("total_remaining_weight"),
         # Named apart from the `last_used` filter parameter: this is the group's aggregate.
         func.max(models.Spool.last_used).label("last_used"),
     )
