@@ -1,0 +1,21 @@
+# CodeQL configuration.
+#
+# The default behaviour — scan everything — is kept for all of this fork's own code,
+# including its own test suites (client/e2e, client_v2/e2e, tests/). Only vendored
+# third-party code is excluded, and only where we cannot act on a finding anyway.
+name: "Spoolman NG CodeQL"
+
+paths-ignore:
+  # Upstream's Playwright suite for the Svelte client, vendored verbatim as a subtree so
+  # `git subtree pull` keeps working. Editing anything in here conflicts on the next pull,
+  # so a finding in it is one we can neither fix nor usefully own.
+  #
+  # It also produces only noise: the suite generates fake NFC tag UIDs with
+  # `Math.random()` (tags.spec.ts's uniqueUid), which js/insecure-randomness reports as
+  # high severity because the value is UID-shaped. It is test data for a tag that does not
+  # exist, never a credential. Note that `Math.random()` elsewhere in this repo — e.g.
+  # client/src/components/multiColorPicker.tsx — is not flagged, so the query is reacting
+  # to the shape of the output rather than to the call.
+  #
+  # Deliberately narrow: this excludes the vendored suite, not testing in general.
+  - "tests_frontend_v2"
