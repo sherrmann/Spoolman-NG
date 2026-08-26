@@ -903,6 +903,53 @@ class SpoolUsageEvent(BaseModel):
         )
 
 
+class SpoolGroup(BaseModel):
+    """A group of spools with server-computed aggregates.
+
+    Returned by the ``/spool/group`` endpoint. Spools are grouped by one axis (``group_by``); the
+    aggregates are computed over the matching spools of each group so the client can paginate whole
+    groups without fetching every spool. Ported from upstream's SpoolGroup (see spoolman/database/spool.py's
+    find_groups) unchanged, aside from the fields upstream doesn't support in this fork's group query
+    (e.g. include_empty groups).
+    """
+
+    group_by: str = Field(
+        description="The field the spools are grouped by.",
+        examples=["filament"],
+    )
+    key: str | None = Field(
+        None,
+        description=(
+            "The group key. For group_by=filament/vendor this is the entity ID as a string; for "
+            "material/location and extra fields it is the value. Null when the grouped field is "
+            "unset (e.g. spools with no location or a filament with no vendor)."
+        ),
+        examples=["12"],
+    )
+    spool_count: int = Field(description="Number of matching spools in this group.", examples=[6])
+    in_use_count: int = Field(
+        description="Number of matching spools that have been used (used_weight > 0).",
+        examples=[2],
+    )
+    total_remaining_weight: float | None = Field(
+        None,
+        description="Sum of remaining filament weight across the group's matching spools, in grams.",
+        examples=[3120.0],
+    )
+    last_used: SpoolmanDateTime | None = Field(
+        None,
+        description="Most recent last_used across the group's matching spools. UTC Timezone.",
+    )
+    filament: Filament | None = Field(
+        None,
+        description="The filament, embedded for group_by=filament so the header needs no extra request.",
+    )
+    vendor: Vendor | None = Field(
+        None,
+        description="The vendor, embedded for group_by=vendor.",
+    )
+
+
 class SearchResultSpool(BaseModel):
     """A spool that matched a search, with which field matched."""
 
@@ -1079,6 +1126,11 @@ class Info(BaseModel):
     logs_dir: str = Field(examples=["/home/app/.local/share/spoolman"])
     backups_dir: str = Field(examples=["/home/app/.local/share/spoolman/backups"])
     db_type: str = Field(examples=["sqlite"])
+    external_db_name: str = Field(
+        default="SpoolmanDB",
+        description="Display name for the external filament library, configurable via EXTERNAL_DB_NAME.",
+        examples=["SpoolmanDB"],
+    )
     git_commit: str | None = Field(None, examples=["a1b2c3d"])
     build_date: SpoolmanDateTime | None = Field(None, examples=["2021-01-01T00:00:00Z"])
     # Release-update check (#293). Additive fields; all default to a "no update / not
@@ -1168,6 +1220,14 @@ class BackupResponse(BaseModel):
         default=None,
         description="Path to the created backup file.",
         examples=["/home/app/.local/share/spoolman/backups/spoolman.db"],
+    )
+    created: bool = Field(
+        default=True,
+        description=(
+            "Whether this call wrote a new backup. False means an existing one was returned "
+            "unchanged (e.g. the database has not changed, or backups were rotated too recently)."
+        ),
+        examples=[True],
     )
 
 
