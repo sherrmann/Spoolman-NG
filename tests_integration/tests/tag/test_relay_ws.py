@@ -57,6 +57,7 @@ async def _expect_nothing(ws: ClientConnection, why: str) -> None:
         pytest.fail(f"{why}: {event}")
 
 
+@pytest.mark.asyncio
 async def test_scan_reaches_the_readers_own_pool():
     """The subscription a browser holds after tap-to-pair."""
     uid, reader_id = _uid(), _reader_id()
@@ -74,6 +75,7 @@ async def test_scan_reaches_the_readers_own_pool():
     assert event["payload"]["name"] == "Voron spool holder"
 
 
+@pytest.mark.asyncio
 async def test_scan_does_not_reach_another_readers_pool():
     """A wall tablet by printer A must not jump when someone taps a tag at printer B."""
     uid, mine, theirs = _uid(), _reader_id(), _reader_id()
@@ -84,6 +86,7 @@ async def test_scan_does_not_reach_another_readers_pool():
         await _expect_nothing(ws, "a scan leaked into another reader's pool")
 
 
+@pytest.mark.asyncio
 async def test_root_scan_pool_follows_every_reader():
     """Pairing a scanner works by listening to everything until the first tap arrives."""
     reader_a, reader_b = _reader_id(), _reader_id()
@@ -100,6 +103,7 @@ async def test_root_scan_pool_follows_every_reader():
     assert (second["payload"]["uid"], second["payload"]["reader_id"]) == (uid_b, reader_b)
 
 
+@pytest.mark.asyncio
 async def test_scan_carries_the_match(random_filament: dict[str, Any]):
     """A subscriber navigates from the event alone, without a follow-up request."""
     uid, reader_id = _uid(), _reader_id()
@@ -121,6 +125,7 @@ async def test_scan_carries_the_match(random_filament: dict[str, Any]):
         httpx.delete(f"{URL}/api/v1/spool/{spool['id']}")
 
 
+@pytest.mark.asyncio
 async def test_scans_never_reach_the_entity_websockets():
     """THE API v1 compatibility guard.
 
@@ -143,6 +148,7 @@ async def test_scans_never_reach_the_entity_websockets():
         await _expect_nothing(spools, "a scan reached the spool websocket")
 
 
+@pytest.mark.asyncio
 async def test_repeated_scans_are_broadcast_once():
     """Readers re-detect a tag that is sitting still; subscribers should see one event."""
     uid, reader_id = _uid(), _reader_id()
@@ -158,6 +164,7 @@ async def test_repeated_scans_are_broadcast_once():
         await _expect_nothing(ws, "a debounced repeat scan was broadcast")
 
 
+@pytest.mark.asyncio
 async def test_debounce_suppresses_the_broadcast_not_the_response(random_filament: dict[str, Any]):
     """A de-duplicated scan must not look to the device like a failed lookup."""
     uid, reader_id = _uid(), _reader_id()
@@ -176,6 +183,7 @@ async def test_debounce_suppresses_the_broadcast_not_the_response(random_filamen
         httpx.delete(f"{URL}/api/v1/spool/{spool['id']}")
 
 
+@pytest.mark.asyncio
 async def test_a_scan_corrected_by_a_link_is_not_debounced(random_filament: dict[str, Any]):
     """The end-to-end shape of upstream #1115.
 
@@ -211,6 +219,7 @@ async def test_a_scan_corrected_by_a_link_is_not_debounced(random_filament: dict
         httpx.delete(f"{URL}/api/v1/spool/{spool['id']}")
 
 
+@pytest.mark.asyncio
 async def test_distinct_tags_from_one_reader_are_not_debounced():
     """Debouncing is per (uid, reader): moving from one spool to the next is two scans."""
     reader_id = _reader_id()
@@ -229,6 +238,7 @@ async def test_distinct_tags_from_one_reader_are_not_debounced():
     assert seen == {uid_a, uid_b}
 
 
+@pytest.mark.asyncio
 async def test_linking_a_tag_emits_a_spool_event(random_filament: dict[str, Any]):
     """Link and unlink ride the existing spool event.
 

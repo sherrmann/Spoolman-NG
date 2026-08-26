@@ -648,12 +648,34 @@ jobs:
             echo "No 'db' service in $compose_file (${{ matrix.dbtype }} runs in-process) -- nothing to pull."
           fi
 
+      # Run compose inline rather than through compose-action. The action buffers every
+      # container's output and, when the run fails, emits only a byte-capped excerpt taken
+      # from the *start* of it -- so the message saying what actually broke is truncated
+      # away. That has now cost two full diagnosis cycles (the cockroachdb pull above, and
+      # an unmarked async test whose failure never reached the log at all). Running compose
+      # directly streams all of it into the job log as it happens, uncapped.
+      #
+      # --exit-code-from tester makes the job's result the *test* result: without it the
+      # exit code comes from whichever container happened to stop first.
       - name: Perform integration tests
-        uses: hoverkraft-tech/compose-action@v3.0.0
-        with:
-          compose-file: "./tests_integration/docker-compose-${{ matrix.dbtype }}.yml"
-          up-flags: "--abort-on-container-exit"
-          down-flags: "--volumes"
+        run: |
+          docker compose -f "./tests_integration/docker-compose-${{ matrix.dbtype }}.yml" \
+            up --abort-on-container-exit --exit-code-from tester
+
+      # Belt and braces: if the tests failed, the streamed output above is already in the
+      # log, but a crashed container can lose its tail to interleaving. This re-reads each
+      # container's full log from the daemon, timestamped.
+      - name: Dump container logs
+        if: failure()
+        run: |
+          docker compose -f "./tests_integration/docker-compose-${{ matrix.dbtype }}.yml" \
+            logs --no-color --timestamps
+
+      - name: Tear down
+        if: always()
+        run: |
+          docker compose -f "./tests_integration/docker-compose-${{ matrix.dbtype }}.yml" \
+            down --volumes
   #
   # Non-root smoke tests (#239): the image must boot under --user (Kubernetes
   # runAsNonRoot, OpenShift arbitrary UIDs), ignore PUID/PGID with a notice when
