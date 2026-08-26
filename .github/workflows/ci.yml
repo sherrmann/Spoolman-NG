@@ -141,7 +141,8 @@ jobs:
   #
   # Frontend unit tests (Vitest) for client_v2, the new opt-in Svelte client -- 23
   # colocated *.test.ts files. See TESTING_STRATEGY.md. Playwright (tests_frontend_v2)
-  # is deliberately not wired up here -- a separate follow-up.
+  # is a separate job (tests-frontend-v2, below the legacy e2e job) since it needs a
+  # running backend rather than just node.
   #
   client-v2-tests:
     needs: [meta]
@@ -326,6 +327,113 @@ jobs:
         with:
           name: playwright-report
           path: client/playwright-report
+          retention-days: 7
+  #
+  # Browser e2e for client_v2 (tests_frontend_v2, vendored from upstream as a git
+  # subtree -- see client_v2's own history). Runs the real FastAPI backend (not the
+  # DB-free harness the legacy e2e job above uses) against a throwaway SQLite DB,
+  # with SPOOLMAN_LEGACY_CLIENT=FALSE so it serves client_v2 instead of the default
+  # React client, and drives it with Playwright/Chromium. Upstream's docker-compose
+  # + run.py wrapper (Postgres, a built image) isn't used here -- same idea as the
+  # client e2e job above, a plain uvicorn process is simpler in CI and needs no image
+  # build.
+  #
+  # One spec is excluded: search.spec.ts's "filtering the library by a date range" is
+  # a legitimate fork/upstream difference, not a bug -- see spoolman/database/spool.py
+  # (grep "this fork's filter surface") for the deliberate scope decision. It asserts
+  # first_used/last_used/registered range filtering, which this fork's spool query
+  # does not implement; client_v2 sends the filter, the backend silently ignores it,
+  # and the list doesn't narrow. Excluding it here does not touch the vendored spec.
+  #
+  tests-frontend-v2:
+    needs: [meta]
+    if: ${{ needs.meta.outputs.skip_build != 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install node
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: '22'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.2.0
+        with:
+          version: "0.11.26"
+
+      - name: "Set up Python"
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: "pyproject.toml"
+
+      - name: Sync Python deps
+        run: uv sync
+
+      - name: Install client_v2 dependencies
+        run: |
+          cd client_v2
+          npm ci
+
+      - name: Build client_v2
+        # No VITE_APIURL: mirrors how it's actually deployed, resolving the API
+        # relative to its own (same) origin.
+        run: |
+          cd client_v2
+          npm run build
+
+      - name: Migrate the throwaway database
+        run: |
+          rm -rf .tests-frontend-v2-data
+          mkdir -p .tests-frontend-v2-data
+          SPOOLMAN_DB_TYPE=sqlite SPOOLMAN_DIR_DATA=.tests-frontend-v2-data uv run alembic upgrade head
+
+      - name: Start the Spoolman backend (client_v2, SQLite)
+        run: |
+          SPOOLMAN_DB_TYPE=sqlite \
+          SPOOLMAN_DIR_DATA=.tests-frontend-v2-data \
+          SPOOLMAN_LEGACY_CLIENT=FALSE \
+          SPOOLMAN_LOGGING_LEVEL=INFO \
+            nohup uv run uvicorn spoolman.main:app --host 127.0.0.1 --port 8001 > spoolman.log 2>&1 &
+          for _ in $(seq 1 60); do
+            if curl -sf http://127.0.0.1:8001/api/v1/health > /dev/null; then
+              echo "Spoolman is up."
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Spoolman did not become healthy in time." >&2
+          cat spoolman.log
+          exit 1
+
+      - name: Install tests_frontend_v2 dependencies
+        run: |
+          cd tests_frontend_v2
+          npm ci
+
+      - name: Install Playwright browser
+        run: |
+          cd tests_frontend_v2
+          npx playwright install --with-deps chromium
+
+      - name: Run Playwright tests_frontend_v2
+        env:
+          SPOOLMAN_BASE_URL: http://127.0.0.1:8001
+        run: |
+          cd tests_frontend_v2
+          npx playwright test --grep-invert "filtering the library by a date range"
+
+      - name: Dump Spoolman backend log
+        if: ${{ failure() }}
+        run: cat spoolman.log
+
+      - name: Upload Playwright report
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: playwright-report-frontend-v2
+          path: tests_frontend_v2/playwright-report
           retention-days: 7
   #
   # Static analysis with CodeQL
@@ -904,6 +1012,7 @@ jobs:
         client-tests,
         client-v2-tests,
         e2e,
+        tests-frontend-v2,
         build-amd64,
         build-arm64,
         build-armv7,
