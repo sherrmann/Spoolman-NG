@@ -23,7 +23,7 @@ the subtree is a conflict this fork pays for on every pull, forever. The rule is
 
 ## What this fork edits, and why each is unavoidable
 
-Three files, all additive, all small. If a subtree pull conflicts, these are the only places it
+Five files, all additive, all small — three of them one-line entries in tool config. If a subtree pull conflicts, these are the only places it
 can happen — re-apply the fork side and move on.
 
 | File | Edit | Why it cannot be a new file |
@@ -31,6 +31,15 @@ can happen — re-apply the fork side and move on.
 | `vite.config.ts` | A second `paraglideVitePlugin({ project: './project-ng.inlang' })` | Vite reads exactly one config; a plugin cannot register itself |
 | `package.json` | `paraglide` also runs `paraglide:ng` | `npm run check` compiles messages before typechecking, and CI runs it |
 | `src/lib/components/NavTabs.svelte` | One entry per fork page in the `tabs` array | It is the single source of truth for the nav, on both desktop and mobile |
+| `.prettierignore` | `src/lib/paraglide-ng` and the `project-ng.inlang` generated files | Tool config is one file; the entries sit directly beside upstream's own for `src/lib/paraglide` and `project.inlang` |
+| `eslint.config.js` | `src/lib/paraglide-ng/` and `project-ng.inlang/` in `ignores` | Same reason, beside the same upstream entries |
+
+Every one of the last two is a copy of a line upstream already wrote for its own generated i18n
+output, with `-ng` appended — which is also what makes them cheap to re-apply after a conflict.
+
+`client_v2/locales-ng/` deliberately does **not** need a `.prettierignore` entry: the generator
+emits tab-indented JSON to match the client's `useTabs` config, so the generated catalogue passes
+`prettier --check` as written.
 
 ## Why fork strings are not in `client_v2/locales/`
 

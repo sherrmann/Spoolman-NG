@@ -12,14 +12,13 @@ import type { ForkFilament, Order, UsageBucket, UsageStat } from './types';
 
 type Json = Record<string, unknown>;
 
-const num = (v: unknown): number | undefined =>
-	v === null || v === undefined ? undefined : Number(v);
+const num = (v: unknown): number | undefined => (v === null || v === undefined ? undefined : Number(v));
 
 function mapForkFilament(f: Json): ForkFilament {
 	return {
 		...mapFilament(f),
 		lowStockThreshold: num(f.low_stock_threshold),
-		remainingWeight: num(f.remaining_weight),
+		remainingWeight: num(f.remaining_weight)
 	};
 }
 
@@ -38,8 +37,8 @@ function mapOrder(o: Json): Order {
 			filamentId: String(l.filament_id),
 			quantity: Number(l.quantity),
 			pricePerUnit: num(l.price_per_unit),
-			arrivedAt: l.arrived_at == null ? undefined : String(l.arrived_at),
-		})),
+			arrivedAt: l.arrived_at == null ? undefined : String(l.arrived_at)
+		}))
 	};
 }
 
@@ -69,7 +68,7 @@ export async function usageStats(bucket: UsageBucket, signal?: AbortSignal): Pro
 	return rows.map((r) => ({
 		period: String(r.period),
 		consumedWeight: Number(r.consumed_weight),
-		cost: Number(r.cost),
+		cost: Number(r.cost)
 	}));
 }
 

@@ -57,6 +57,9 @@ const KEYS = [
 	'low_stock.remaining_left',
 	'low_stock.section.explicit',
 	'low_stock.section.fallback',
+	// The React page renders no title of its own (the nav says where you are), so this key is
+	// unused there -- but it is exactly the nav label the Svelte client needs, already translated.
+	'home.home',
 	'home.load_error_title',
 	'home.load_error_desc',
 	'home.welcome',
@@ -151,7 +154,9 @@ for (const locale of locales) {
 		throw new Error(`en is the base locale and is missing: ${missing.join(', ')}`);
 	}
 	if (missing.length) missingReport.push(`${locale}: ${missing.length} untranslated`);
-	writeFileSync(join(OUT, `${locale}.json`), JSON.stringify(messages, null, 2) + '\n');
+	// Tab-indented to match client_v2's prettier config (useTabs), so `npm run lint` passes
+	// over the generated catalogue rather than needing it added to .prettierignore.
+	writeFileSync(join(OUT, `${locale}.json`), JSON.stringify(messages, null, '\t') + '\n');
 }
 
 const enCount = Object.keys(JSON.parse(readFileSync(join(OUT, 'en.json'), 'utf8'))).length - 1;
