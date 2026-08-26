@@ -244,3 +244,9 @@ docs/superpowers/
 !client_v2/src/lib/
 client_v2/src/lib/paraglide/
 client_v2/src/lib/paraglide-ng/
+
+# Screenshots captured to review a UI change before/after (see the running-spoolman
+# skill). Throwaway review artifacts, deleted once the change is approved -- they are
+# megabytes of PNG that describe one moment of one seeded fixture, so they never belong
+# in history.
+ui-review/
