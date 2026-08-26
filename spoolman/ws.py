@@ -148,3 +148,16 @@ class WebsocketManager:
 
 
 websocket_manager = WebsocketManager()
+
+# Tag scans get their own manager, and therefore their own subscription tree, rather than a
+# new resource in the one above.
+#
+# SubscriptionTree.send broadcasts to subscribers at every level along the path, and the root
+# endpoint /api/v1/ subscribes with pool () -- "listen to any changes". Putting scans in the
+# shared tree would push a novel resource into every existing root consumer's stream, which is
+# an API v1 compatibility problem for no benefit: a scan is not a change to any data, and the
+# clients that want scans want to filter them by reader rather than by entity.
+#
+# Pools here are (reader_id,) with () meaning "every reader", so the tree's propagate-along-the-
+# path behaviour gives "follow all readers" for free.
+scan_websocket_manager = WebsocketManager()

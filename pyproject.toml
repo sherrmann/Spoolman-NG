@@ -122,6 +122,10 @@ help = "Bump Spoolman version."
 cmd = "uvicorn spoolman.main:app"
 help = "Start Spoolman."
 
+[tool.poe.tasks.fake-reader]
+cmd = "python scripts/fake_reader.py"
+help = "Act as an NFC tag reader against a running instance, so the tag features need no hardware."
+
 [tool.poe.tasks.itest]
 cmd = "python tests_integration/run.py"
 help = "Builds Spoolman and runs integration tests on the backend against all supported databases."

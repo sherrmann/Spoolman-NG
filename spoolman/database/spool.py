@@ -27,6 +27,7 @@ from spoolman.database.utils import (
 from spoolman.exceptions import ItemCreateError, ItemNotFoundError, SpoolMeasureError
 from spoolman.extra_field_registry import EntityType
 from spoolman.math import weight_from_length
+from spoolman.tags import normalize_uid
 from spoolman.ws import websocket_manager
 
 logger = logging.getLogger(__name__)
@@ -169,6 +170,11 @@ async def build(
         diameter=diameter,
         printer=printer_item,
         extra=[models.SpoolField(key=k, value=v) for k, v in (extra or {}).items()],
+        # Explicitly populated (even empty), not left unset: an unset relationship on a
+        # freshly-constructed object stays a pending lazy-load rather than an already-loaded
+        # empty collection, and accessing it from the async post-commit path (spool_changed's
+        # Spool.from_db) would raise MissingGreenlet instead of a lazy DB round trip.
+        tags=[],
     )
     db.add(spool)
     return spool
@@ -276,7 +282,7 @@ def _build_search_filters(search: str) -> list:
     return search_conditions
 
 
-async def find(  # noqa: C901, PLR0912
+async def find(  # noqa: C901, PLR0912, PLR0915
     *,
     db: AsyncSession,
     search: str | None = None,
@@ -287,6 +293,7 @@ async def find(  # noqa: C901, PLR0912
     vendor_id: int | Sequence[int] | None = None,
     location: str | None = None,
     lot_nr: str | None = None,
+    tag: str | None = None,
     allow_archived: bool = False,
     archived: bool | None = None,
     extra_field_filters: dict[str, str] | None = None,
@@ -311,6 +318,19 @@ async def find(  # noqa: C901, PLR0912
             joinedload(models.Spool.printer),
         )
     )
+
+    if tag is not None:
+        # An inner join rather than a subquery, so the list query and the count query stay in
+        # sync automatically: they share this statement. `uid` is unique, so at most one tag row
+        # can match and the join cannot multiply result rows -- which is why the contains_eager
+        # chain for filament/vendor above is unaffected.
+        #
+        # The join condition also does the filtering: a tag that points at something other than a
+        # spool has a null `spool_id`, which matches no spool, so such a UID finds nothing here
+        # rather than finding the wrong thing.
+        stmt = stmt.join(models.Tag, models.Tag.spool_id == models.Spool.id).where(
+            models.Tag.uid == normalize_uid(tag),
+        )
 
     stmt = add_where_clause_int(stmt, models.Spool.filament_id, filament_id)
     stmt = add_where_clause_int_opt(stmt, models.Filament.vendor_id, vendor_id)
