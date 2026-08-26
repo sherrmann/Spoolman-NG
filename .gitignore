@@ -234,3 +234,13 @@ tests_scenarios/.state/
 
 # Superpowers process artifacts (specs/plans) are personal workflow docs, not repo content
 docs/superpowers/
+
+# --- Spoolman NG: the Svelte client's source tree ---
+# The Python-oriented `lib/` rule above matches any directory named lib at any depth, which
+# silently swallows new files under client_v2/src/lib -- where that client keeps its
+# components. The files already tracked there predate the rule and so survive; anything added
+# since would have been dropped by `git add` without a word. Re-include the directory, then
+# re-ignore the two generated Paraglide outputs that live inside it.
+!client_v2/src/lib/
+client_v2/src/lib/paraglide/
+client_v2/src/lib/paraglide-ng/

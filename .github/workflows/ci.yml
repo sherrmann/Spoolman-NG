@@ -162,6 +162,21 @@ jobs:
           cd client_v2
           npm ci
 
+      # The Svelte client's fork-only strings are generated out of the React client's
+      # catalogue (see docs/upstream/client-v2-fork-additions.md), and the generated files are
+      # committed so the Docker build needs no extra step. Regenerating here and failing on a
+      # dirty tree is what stops the committed copy drifting from the catalogue it came from --
+      # which would otherwise surface as one stale label in one language, silently.
+      - name: Check the generated fork messages are up to date
+        run: |
+          node scripts/build_ng_messages.mjs
+          if ! git diff --quiet -- client_v2/locales-ng; then
+            echo "::error::client_v2/locales-ng is stale."
+            echo "Run: node scripts/build_ng_messages.mjs -- then commit the result."
+            git diff --stat -- client_v2/locales-ng
+            exit 1
+          fi
+
       - name: Run client_v2 unit tests
         run: |
           cd client_v2

@@ -9,6 +9,16 @@ export default defineConfig({
 			project: './project.inlang',
 			outdir: './src/lib/paraglide',
 			strategy: ['localStorage', 'preferredLanguage', 'baseLocale']
+		}),
+		// Spoolman NG fork addition. This fork's own pages keep their strings in a second
+		// inlang project so nothing of ours lands in ./locales, which upstream's Weblate
+		// rewrites and `git subtree pull` would then conflict on. Same strategy list as
+		// above on purpose: both runtimes read the PARAGLIDE_LOCALE localStorage key, so
+		// the language picker in settings switches this fork's pages too.
+		paraglideVitePlugin({
+			project: './project-ng.inlang',
+			outdir: './src/lib/paraglide-ng',
+			strategy: ['localStorage', 'preferredLanguage', 'baseLocale']
 		})
 	],
 	server: { port: 5174 },
