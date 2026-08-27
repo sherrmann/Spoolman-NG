@@ -13,6 +13,11 @@
  * - `section`. It restated which array the field already sits in; verified across all 36
  *   fields that the two never disagreed, so it is derived rather than stored. `fieldSection`
  *   below is the one place that mapping lives.
+ * - `colSpan`. It carried Ant Design column widths for React's multi-column form. This client
+ *   lays fields out vertically with FieldGrid, so nothing read it -- and a number nothing reads
+ *   is the same trap `label` was: it looks authoritative and drifts in silence. If a
+ *   multi-column layout is ever wanted here, take the widths from this client's design, not
+ *   from the grid system of a different UI kit.
  *
  * Select options keep only their VALUES for the same reason: the option label comes from
  * `calibration.field_labels.options.{value}` (CalibrationWizard.tsx:51).
@@ -33,8 +38,6 @@ export interface StepField {
 	max?: number;
 	step?: number;
 	precision?: number;
-	/** Grid columns out of 24, matching the React layout's spans where it set one. */
-	colSpan?: number;
 	/** Permitted values for a `select`; each renders via calibration_field_labels_options_*. */
 	options?: string[];
 }
@@ -121,29 +124,27 @@ export const STEP_CONFIGS: Record<CalibrationStepType, StepConfig> = {
 			{
 				key: 'shaper_type_x',
 				type: 'select',
-				colSpan: 12,
 				options: ['mzv', 'ei', 'zv', '2hump_ei', '3hump_ei']
 			},
-			{ key: 'frequency_x', type: 'number', unit: 'Hz', min: 0, precision: 1, colSpan: 12 },
+			{ key: 'frequency_x', type: 'number', unit: 'Hz', min: 0, precision: 1 },
 			{
 				key: 'shaper_type_y',
 				type: 'select',
-				colSpan: 12,
 				options: ['mzv', 'ei', 'zv', '2hump_ei', '3hump_ei']
 			},
-			{ key: 'frequency_y', type: 'number', unit: 'Hz', min: 0, precision: 1, colSpan: 12 }
+			{ key: 'frequency_y', type: 'number', unit: 'Hz', min: 0, precision: 1 }
 		],
 		recommendedKeys: ['shaper_type_x', 'frequency_x', 'shaper_type_y', 'frequency_y']
 	},
 	vfa: {
 		inputFields: [
-			{ key: 'start_speed', type: 'number', unit: 'mm/s', min: 0, precision: 0, colSpan: 8 },
-			{ key: 'end_speed', type: 'number', unit: 'mm/s', min: 0, precision: 0, colSpan: 8 },
-			{ key: 'step_size', type: 'number', unit: 'mm/s', min: 0, precision: 0, colSpan: 8 }
+			{ key: 'start_speed', type: 'number', unit: 'mm/s', min: 0, precision: 0 },
+			{ key: 'end_speed', type: 'number', unit: 'mm/s', min: 0, precision: 0 },
+			{ key: 'step_size', type: 'number', unit: 'mm/s', min: 0, precision: 0 }
 		],
 		outputFields: [
-			{ key: 'min_avoidance_speed', type: 'number', unit: 'mm/s', min: 0, precision: 0, colSpan: 12 },
-			{ key: 'max_avoidance_speed', type: 'number', unit: 'mm/s', min: 0, precision: 0, colSpan: 12 }
+			{ key: 'min_avoidance_speed', type: 'number', unit: 'mm/s', min: 0, precision: 0 },
+			{ key: 'max_avoidance_speed', type: 'number', unit: 'mm/s', min: 0, precision: 0 }
 		],
 		recommendedKeys: ['min_avoidance_speed', 'max_avoidance_speed']
 	}
