@@ -108,3 +108,50 @@ export async function apiCounts(api: APIRequestContext) {
   );
   return { spools, filaments, vendors };
 }
+
+/**
+ * One filament that is low purely because of the global fallback, with its own vendor and spool.
+ *
+ * Write tests each seed their own rather than sharing the fixture above: they mutate what they
+ * touch (setting a threshold, placing an order), and a shared row would make the result depend
+ * on which test ran first.
+ */
+export async function seedLowFilament(
+	api: APIRequestContext,
+	prefix: string,
+): Promise<{ id: number; name: string }> {
+	const vendor = await post(api, "/vendor", { name: unique(`${prefix}Vendor`) });
+	const name = unique(prefix);
+	const filament = await post(api, "/filament", {
+		name,
+		vendor_id: vendor.id,
+		material: "PLA",
+		color_hex: "AA3355",
+		price: 20,
+		density: 1.24,
+		diameter: 1.75,
+		weight: 1000,
+		spool_weight: 190,
+	});
+	await post(api, "/spool", { filament_id: filament.id, used_weight: 950, location: "Shelf Z" });
+	return { id: filament.id, name };
+}
+
+/** Open orders that include a line for this filament. */
+export async function openOrdersFor(api: APIRequestContext, filamentId: number) {
+	const orders = (await (await api.get("/api/v1/order")).json()) as {
+		state: string;
+		lines: { filament_id: number }[];
+	}[];
+	return orders.filter(
+		(o) => o.state === "open" && o.lines.some((l) => l.filament_id === filamentId),
+	);
+}
+
+/** The filament's own low-stock threshold, straight from the API. */
+export async function thresholdOf(api: APIRequestContext, filamentId: number) {
+	const f = (await (await api.get(`/api/v1/filament/${filamentId}`)).json()) as {
+		low_stock_threshold?: number | null;
+	};
+	return f.low_stock_threshold ?? null;
+}

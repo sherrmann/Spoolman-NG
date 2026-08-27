@@ -11,21 +11,21 @@ describe('buildMarkOrderedBody', () => {
 				shopId: 3,
 				pricePerUnit: 24.99,
 				orderNumber: 'SO-4711',
-				url: 'https://shop.example/orders/4711',
-			}),
+				url: 'https://shop.example/orders/4711'
+			})
 		).toEqual({
 			ordered_at: '2026-08-20T09:00:00Z',
 			shop_id: 3,
 			order_number: 'SO-4711',
 			url: 'https://shop.example/orders/4711',
-			lines: [{ filament_id: 7, quantity: 2, price_per_unit: 24.99 }],
+			lines: [{ filament_id: 7, quantity: 2, price_per_unit: 24.99 }]
 		});
 	});
 
 	it('omits shop, price, number and url when not given', () => {
-		expect(
-			buildMarkOrderedBody({ filamentId: '7', quantity: 1, orderedAt: '2026-08-20T09:00:00Z' }),
-		).toEqual({ ordered_at: '2026-08-20T09:00:00Z', lines: [{ filament_id: 7, quantity: 1 }] });
+		expect(buildMarkOrderedBody({ filamentId: '7', quantity: 1, orderedAt: '2026-08-20T09:00:00Z' })).toEqual(
+			{ ordered_at: '2026-08-20T09:00:00Z', lines: [{ filament_id: 7, quantity: 1 }] }
+		);
 	});
 
 	// An empty string is what a cleared input yields. Sending it would store a blank order number
@@ -36,7 +36,7 @@ describe('buildMarkOrderedBody', () => {
 			quantity: 1,
 			orderedAt: '2026-08-20T09:00:00Z',
 			orderNumber: '',
-			url: '',
+			url: ''
 		});
 		expect(body).not.toHaveProperty('order_number');
 		expect(body).not.toHaveProperty('url');
@@ -49,18 +49,18 @@ describe('buildBulkOrderBody', () => {
 			buildBulkOrderBody(
 				[
 					{ filamentId: '1', quantity: 2, pricePerUnit: 19.9 },
-					{ filamentId: '2', quantity: 1 },
+					{ filamentId: '2', quantity: 1 }
 				],
 				'2026-08-21T10:00:00Z',
-				5,
-			),
+				5
+			)
 		).toEqual({
 			ordered_at: '2026-08-21T10:00:00Z',
 			shop_id: 5,
 			lines: [
 				{ filament_id: 1, quantity: 2, price_per_unit: 19.9 },
-				{ filament_id: 2, quantity: 1 },
-			],
+				{ filament_id: 2, quantity: 1 }
+			]
 		});
 	});
 
@@ -77,13 +77,13 @@ describe('buildNewOrderBody', () => {
 				orderedAt: '2026-08-22T08:00:00Z',
 				lines: [
 					{ filamentId: '4', quantity: 3, pricePerUnit: 12.5 },
-					{ filamentId: '9', quantity: 1 },
+					{ filamentId: '9', quantity: 1 }
 				],
 				shopId: 2,
 				orderNumber: 'PO-9',
 				url: 'https://shop.example/po/9',
-				comment: 'restock',
-			}),
+				comment: 'restock'
+			})
 		).toEqual({
 			ordered_at: '2026-08-22T08:00:00Z',
 			shop_id: 2,
@@ -92,19 +92,19 @@ describe('buildNewOrderBody', () => {
 			comment: 'restock',
 			lines: [
 				{ filament_id: 4, quantity: 3, price_per_unit: 12.5 },
-				{ filament_id: 9, quantity: 1 },
-			],
+				{ filament_id: 9, quantity: 1 }
+			]
 		});
 	});
 
 	it('omits the optional header fields when they are not given', () => {
 		const body = buildNewOrderBody({
 			orderedAt: '2026-08-22T08:00:00Z',
-			lines: [{ filamentId: '4', quantity: 1 }],
+			lines: [{ filamentId: '4', quantity: 1 }]
 		});
 		expect(body).toEqual({
 			ordered_at: '2026-08-22T08:00:00Z',
-			lines: [{ filament_id: 4, quantity: 1 }],
+			lines: [{ filament_id: 4, quantity: 1 }]
 		});
 	});
 
@@ -125,20 +125,19 @@ describe('buildNewOrderBody', () => {
 describe('filament id precision guard', () => {
 	it('rejects an id too large to be an exact integer', () => {
 		expect(() =>
-			buildBulkOrderBody([{ filamentId: '9007199254740993', quantity: 1 }], '2026-08-21T10:00:00Z'),
+			buildBulkOrderBody([{ filamentId: '9007199254740993', quantity: 1 }], '2026-08-21T10:00:00Z')
 		).toThrow(/precision/);
 	});
 
 	it('rejects an id that is not an integer at all', () => {
-		expect(() =>
-			buildBulkOrderBody([{ filamentId: 'abc', quantity: 1 }], '2026-08-21T10:00:00Z'),
-		).toThrow(/precision/);
+		expect(() => buildBulkOrderBody([{ filamentId: 'abc', quantity: 1 }], '2026-08-21T10:00:00Z')).toThrow(
+			/precision/
+		);
 	});
 
 	it('accepts an ordinary id', () => {
 		expect(
-			buildBulkOrderBody([{ filamentId: '42', quantity: 1 }], '2026-08-21T10:00:00Z').lines[0]
-				.filament_id,
+			buildBulkOrderBody([{ filamentId: '42', quantity: 1 }], '2026-08-21T10:00:00Z').lines[0].filament_id
 		).toBe(42);
 	});
 });

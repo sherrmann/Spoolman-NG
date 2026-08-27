@@ -25,9 +25,7 @@ export interface OrderLineInput {
 function toWireLine(line: OrderLineInput): NewOrderBody['lines'][number] {
 	const id = Number(line.filamentId);
 	if (!Number.isSafeInteger(id) || String(id) !== line.filamentId.trim()) {
-		throw new Error(
-			`Filament id ${line.filamentId} cannot be sent as an integer without losing precision.`,
-		);
+		throw new Error(`Filament id ${line.filamentId} cannot be sent as an integer without losing precision.`);
 	}
 	const wire: NewOrderBody['lines'][number] = { filament_id: id, quantity: line.quantity };
 	if (line.pricePerUnit !== undefined) wire.price_per_unit = line.pricePerUnit;
@@ -50,9 +48,9 @@ export function buildMarkOrderedBody(input: {
 			toWireLine({
 				filamentId: input.filamentId,
 				quantity: input.quantity,
-				pricePerUnit: input.pricePerUnit,
-			}),
-		],
+				pricePerUnit: input.pricePerUnit
+			})
+		]
 	};
 	if (input.shopId !== undefined) body.shop_id = input.shopId;
 	// Falsy rather than undefined: an empty string from a cleared input means "not given", and
@@ -66,7 +64,7 @@ export function buildMarkOrderedBody(input: {
 export function buildBulkOrderBody(
 	selected: OrderLineInput[],
 	orderedAt: string,
-	shopId?: number,
+	shopId?: number
 ): NewOrderBody {
 	const body: NewOrderBody = { ordered_at: orderedAt, lines: selected.map(toWireLine) };
 	if (shopId !== undefined) body.shop_id = shopId;
