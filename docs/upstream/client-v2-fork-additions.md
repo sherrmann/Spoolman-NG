@@ -55,7 +55,8 @@ upstream page rather than beside it.
 | `src/lib/components/labels/PrintLayoutPanel.svelte` | A third subject-selection path beside the spool and filament ones | Each kind's picker is written out in this one component |
 | `src/routes/labels/+page.svelte` | A third label-type button, and a location-specific hint | The segmented control is one element |
 | `src/lib/utils/spoolCode.ts` | `l`/`location` in both scan regexes, `ScannedRef.kind`, `normaliseKind` as a switch | The scanner's parser is one module, and printing a code the client then ignores is not a feature |
-| `src/lib/components/QrScannerModal.svelte` | A scanned location goes to `/location/show/<id>` | The Library has no location section to select into |
+| `src/lib/components/QrScannerModal.svelte` | A scanned location goes to `/location/show/<id>`; and each decode is offered to `$lib/ng/components/ScanExtras` before upstream's own handling | The scanner has one decode callback. The delegation is three lines and deliberately *declines* an ordinary entity scan, so upstream keeps owning navigation and keeps owning it after it changes |
+| `src/lib/components/AddSpoolModal.svelte`, `src/lib/stores/ui.svelte.ts`, `src/routes/+layout.svelte` | A third preset, `presetArticleNumber`, beside the existing `presetFilamentId` and `duplicateFilamentId` | A scanned retail barcode no filament claims (#97b) must open a new-filament form carrying it. This is upstream's own preset mechanism with one more entry, written in the same three places the other two are |
 | `src/lib/components/library/FilamentInspector.svelte` | One icon-button linking to `/calibration?filament=<id>` | Calibration belongs to a filament, and this panel is where a filament is looked at. React reaches it as a tab on `/filament/show/:id`; this client has no such page — that route is a redirect and this inspector has no tab strip |
 
 Two hazards specific to that page, both found by measuring rather than reading:

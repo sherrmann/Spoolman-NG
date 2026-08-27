@@ -98,6 +98,7 @@
 	open={ui.addModalOpen}
 	presetFilamentId={ui.addModalFilamentId}
 	duplicateFilamentId={ui.addModalDuplicateId}
+	presetArticleNumber={ui.addModalArticleNumber}
 	onclose={() => ui.closeAddModal()}
 />
 
