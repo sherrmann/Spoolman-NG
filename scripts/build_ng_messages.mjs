@@ -94,6 +94,9 @@ const KEYS = [
 	// cannot substitute components into; $lib/ng/trans parses it instead, so the string is
 	// transcribed verbatim and read at runtime rather than being split into a key per sentence.
 	{ prefix: 'help.' },
+	// Scan-to-move and the scan sentinels (#84 / #97b / #132). Upstream's own scanner covers
+	// QR-to-navigate and tag linking; these are the keys for what it has no notion of.
+	{ prefix: 'scan.' },
 	'buttons.save',
 	'buttons.cancel',
 	'buttons.delete',
