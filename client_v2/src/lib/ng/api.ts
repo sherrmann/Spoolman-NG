@@ -8,10 +8,12 @@
 import { getJson, getList, patchJson, postJson, deleteResource, HttpError } from '$lib/api/http';
 import { mapFilament, mapSpool } from '$lib/api/map';
 import type { Spool } from '$lib/types';
+import type { FieldDef } from '$lib/api/fields';
 import type {
 	ArriveBody,
 	ForkFilament,
 	Location,
+	LocationBody,
 	NewOrderBody,
 	Order,
 	OrderPatchBody,
@@ -186,5 +188,77 @@ export async function arriveOrder(orderId: number, body: ArriveBody): Promise<vo
  */
 export async function listLocations(signal?: AbortSignal): Promise<Location[]> {
 	const page = await getList('/locations', {}, signal);
-	return (page.items as Json[]).map((l) => ({ id: Number(l.id), name: String(l.name) }));
+	return (page.items as Json[]).map(mapLocation);
+}
+
+function mapLocation(l: Json): Location {
+	return {
+		id: Number(l.id),
+		name: String(l.name),
+		comment: l.comment == null ? undefined : String(l.comment),
+		registered: l.registered == null ? undefined : String(l.registered),
+		spoolCount: l.spool_count == null ? undefined : Number(l.spool_count),
+		extra: (l.extra as Record<string, string> | undefined) ?? {}
+	};
+}
+
+export async function getLocation(id: number, signal?: AbortSignal): Promise<Location> {
+	return mapLocation(await getJson<Json>(`/locations/${id}`, {}, signal));
+}
+
+export async function createLocation(body: LocationBody): Promise<Location> {
+	return mapLocation(await postJson<Json>('/locations', body));
+}
+
+export async function updateLocation(id: number, body: LocationBody): Promise<Location> {
+	return mapLocation(await patchJson<Json>(`/locations/${id}`, body));
+}
+
+export async function deleteLocation(id: number): Promise<void> {
+	await deleteResource(`/locations/${id}`);
+}
+
+/**
+ * The registry row for a location name, created empty on first use.
+ *
+ * Locations on the board are `Spool.location` STRINGS; an entity row only has to exist once
+ * someone wants to hang custom fields off that name. The name filter on `/locations` is a
+ * partial, case-insensitive match, so the exact-name row is picked out of whatever it returns
+ * rather than trusting the first hit.
+ *
+ * Measured, because it decides the shape of this function: the backend puts NO uniqueness
+ * constraint on `location.name` -- POSTing the same name twice returns 200 twice and leaves two
+ * rows. So there is no 409 to catch, and unlike ensureShop() this cannot lean on one. Two tabs
+ * racing here really can produce a duplicate; findLocationByName takes the LOWEST id so that
+ * every client afterwards converges on the same row rather than splitting custom-field values
+ * across both. Callers that create from user input (the registry page) reject a duplicate name
+ * up front, which is what keeps the race window down to genuinely concurrent writes.
+ */
+export async function getOrCreateLocationByName(name: string): Promise<Location> {
+	return (await findLocationByName(name)) ?? (await createLocation({ name }));
+}
+
+/** The exact-name row with the lowest id, or undefined. See getOrCreateLocationByName. */
+export async function findLocationByName(name: string, signal?: AbortSignal): Promise<Location | undefined> {
+	const page = await getList('/locations', { name }, signal);
+	return (page.items as Json[])
+		.map(mapLocation)
+		.filter((l) => l.name === name)
+		.sort((a, b) => a.id - b.id)[0];
+}
+
+/**
+ * A custom-field definition for an entity type only this fork has.
+ *
+ * Upstream's `$lib/api/fields` types `EntityType` as spool/filament/vendor -- those are the only
+ * entities upstream has. This fork's backend also registers `location` and `printer`
+ * (spoolman/extra_field_registry.py:27), and the rows it returns carry `entity_type: "location"`,
+ * which that union cannot express. Widening the vendored type would be an edit upstream conflicts
+ * on for no gain, so the field SHAPE is reused and only the discriminant is restated here.
+ */
+export type LocationFieldDef = Omit<FieldDef, 'entity_type'> & { entity_type: 'location' };
+
+/** Custom-field DEFINITIONS for locations (`GET /field/location`). */
+export async function listLocationFields(signal?: AbortSignal): Promise<LocationFieldDef[]> {
+	return getJson<LocationFieldDef[]>('/field/location', {}, signal);
 }

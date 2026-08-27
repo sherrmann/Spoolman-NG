@@ -105,8 +105,30 @@ export interface ArriveBody {
 	location_id?: number;
 }
 
-/** A storage location. Fork-only; needed here so arriving lines can create spools somewhere. */
+/**
+ * A Location ENTITY row (`/api/v1/locations`). Fork-only (#103).
+ *
+ * Not to be confused with `Spool.location`, which is a plain `String(64)` column holding a name.
+ * There is no foreign key between the two: this registry exists so a location name can carry
+ * custom fields and a scannable identity, and a spool is matched to it by string equality. That
+ * is also why upstream's /dashboard can be the location BOARD without knowing this table exists
+ * -- it only ever reads and writes the spool's own string.
+ *
+ * `spoolCount` is a server-computed aggregate present on the list and detail endpoints only.
+ */
 export interface Location {
 	id: number;
 	name: string;
+	comment?: string;
+	registered?: string;
+	spoolCount?: number;
+	/** Custom-field values, JSON-encoded per key, exactly as the API stores them. */
+	extra: Record<string, string>;
+}
+
+/** Write shape for POST /locations and PATCH /locations/{id}. */
+export interface LocationBody {
+	name?: string;
+	comment?: string | null;
+	extra?: Record<string, string>;
 }
