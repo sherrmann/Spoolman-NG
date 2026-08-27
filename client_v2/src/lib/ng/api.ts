@@ -5,10 +5,10 @@
  * base-URL resolution, the x-total-count paging header and the 401 forward-auth reload are all
  * handled there, and a second copy would drift from them.
  */
-import { getJson, getList } from '$lib/api/http';
+import { getJson, getList, patchJson, postJson, HttpError } from '$lib/api/http';
 import { mapFilament, mapSpool } from '$lib/api/map';
 import type { Spool } from '$lib/types';
-import type { ForkFilament, Order, UsageBucket, UsageStat } from './types';
+import type { ForkFilament, NewOrderBody, Order, Shop, UsageBucket, UsageStat } from './types';
 
 type Json = Record<string, unknown>;
 
@@ -85,4 +85,48 @@ export async function lowStockFallbackG(signal?: AbortSignal): Promise<number> {
 	} catch {
 		return 0;
 	}
+}
+
+/**
+ * Set or clear a filament's own low-stock threshold, in grams. `null` clears it, which drops the
+ * filament back to the global fallback rather than making it never-low.
+ */
+export async function setLowStockThreshold(filamentId: string, grams: number | null): Promise<void> {
+	await patchJson(`/filament/${filamentId}`, { low_stock_threshold: grams });
+}
+
+export async function listShops(signal?: AbortSignal): Promise<Shop[]> {
+	const page = await getList('/shop', {}, signal);
+	return (page.items as Json[]).map((s) => ({ id: Number(s.id), name: String(s.name) }));
+}
+
+/**
+ * Resolve a shop name typed into the picker to an id, creating the shop when it is new.
+ *
+ * Matching is case-insensitive on the trimmed name, so "Prusa" and " prusa " reuse one shop
+ * rather than quietly accumulating near-duplicates. A 409 means another tab created the same
+ * shop between the read and the write; refetching and matching by name is correct there, where
+ * failing would lose an order the user has already filled in.
+ */
+export async function ensureShop(name: string): Promise<number> {
+	const trimmed = name.trim();
+	const matches = (shops: Shop[]) => shops.find((s) => s.name.trim().toLowerCase() === trimmed.toLowerCase());
+
+	const existing = matches(await listShops());
+	if (existing) return existing.id;
+
+	try {
+		const created = await postJson<Json>('/shop', { name: trimmed });
+		return Number(created.id);
+	} catch (e) {
+		if (e instanceof HttpError && e.status === 409) {
+			const raced = matches(await listShops());
+			if (raced) return raced.id;
+		}
+		throw e;
+	}
+}
+
+export async function createOrder(body: NewOrderBody): Promise<Order> {
+	return mapOrder(await postJson<Json>('/order', body));
 }

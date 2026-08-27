@@ -43,3 +43,18 @@ export interface UsageStat {
 }
 
 export type UsageBucket = 'day' | 'week' | 'month' | 'year';
+
+/** A shop an order was placed with. Fork-only, like orders themselves. */
+export interface Shop {
+	id: number;
+	name: string;
+}
+
+/** Write shape for POST /order, as built by ./orderBody. */
+export interface NewOrderBody {
+	ordered_at: string;
+	shop_id?: number;
+	order_number?: string;
+	url?: string;
+	lines: { filament_id: number; quantity: number; price_per_unit?: number }[];
+}
