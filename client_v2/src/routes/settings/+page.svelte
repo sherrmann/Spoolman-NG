@@ -4,6 +4,7 @@
 	import SettingRow from '$components/settings/SettingRow.svelte';
 	import ExtraFieldsManager from '$components/settings/ExtraFieldsManager.svelte';
 	import ScannerSettings from '$components/settings/ScannerSettings.svelte';
+	import AiSettings from '$lib/ng/components/AiSettings.svelte';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import { settings } from '$lib/stores/settings.svelte';
 	import { theme, type ThemePref } from '$lib/stores/theme.svelte';
@@ -180,6 +181,10 @@
 			<p>{m['settings.extraFields.description.tableViews']()}</p>
 		</div>
 		<ExtraFieldsManager entity={fieldsEntity} onentity={gotoEntity} />
+
+		<!-- Spoolman NG fork addition: the assistant's configuration. Renders nothing at all for
+		     a non-administrator, who cannot use any of its endpoints. -->
+		<AiSettings />
 	</div>
 </div>
 

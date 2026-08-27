@@ -426,7 +426,12 @@
       "placeholder": "e.g. black PETG in shelf B",
       "hint": "Applied as editable filters",
       "search": "Search",
-      "error": "The search could not be translated. Try again or use the normal search box."
+      "error": "The search could not be translated. Try again or use the normal search box.",
+      "applied": "Applied {{count}} filter(s).",
+      "applied_none": "Nothing in that search matched a filter here.",
+      "unapplied_search": "The wording that was not a filter was left out: this list filters by chips, not free text.",
+      "unapplied_color": "The colour was left out: this list has no colour filter.",
+      "unapplied_sort": "That sort order is not available here."
     },
     "totals": {
       "shown_one": "{{count}} spool shown",
@@ -976,7 +981,9 @@
         "requires_vision": "The connection test reports no vision support for the configured model.",
         "requires_stt": "Configure and save a speech-to-text endpoint and model first.",
         "voice_autosend": "Send voice transcripts automatically instead of reviewing them first",
-        "voice_unavailable": "Not available yet - this arrives with the voice input feature."
+        "voice_unavailable": "Not available yet - this arrives with the voice input feature.",
+        "absent_here": "Available in the classic interface. Enabling it here switches it on for that client.",
+        "blocked": "Unavailable"
       },
       "mcp": {
         "title": "MCP server",

@@ -97,6 +97,12 @@ const KEYS = [
 	// Scan-to-move and the scan sentinels (#84 / #97b / #132). Upstream's own scanner covers
 	// QR-to-navigate and tag linking; these are the keys for what it has no notion of.
 	{ prefix: 'scan.' },
+	// Natural-language search: the AI button beside the Library's search box, which fills the
+	// ordinary filter chips in rather than replacing them.
+	{ prefix: 'spool.nlSearch.' },
+	// The operator's AI settings panel -- provider, speech-to-text, feature toggles, the
+	// capability probe and the Ollama model list.
+	{ prefix: 'settings.ai.' },
 	// The assistant drawer. Upstream's client has no AI surface of any kind, so every key under
 	// here is fork-only. The voice sub-feature's keys come along with the prefix but nothing
 	// renders them yet -- push-to-talk and spoken replies are a separate port.
