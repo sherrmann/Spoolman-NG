@@ -1002,6 +1002,10 @@
           "chat": "chat",
           "vision": "vision"
         }
+      },
+      "a11y": {
+        "base_url": "AI endpoint URL",
+        "stt_base_url": "Transcription endpoint URL"
       }
     },
     "swatch": {

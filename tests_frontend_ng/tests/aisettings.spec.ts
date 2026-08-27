@@ -100,7 +100,7 @@ test("saving an endpoint and model unblocks the features that needed them", asyn
   await page.goto("/settings", { waitUntil: "networkidle" });
 
   await panel(page)
-    .getByRole("textbox", { name: "Base URL", exact: true })
+    .getByRole("textbox", { name: "AI endpoint URL", exact: true })
     .fill("http://localhost:11434/v1");
   // The model field is a plain input with a datalist, not a select.
   await panel(page)
@@ -168,4 +168,18 @@ test("the API key field never shows a stored key", async ({
     exact: true,
   });
   await expect(key).toHaveValue("");
+});
+
+test("its fields do not collide with the settings page's own labels", async ({
+  page,
+}) => {
+  // This panel adds inputs to a page that already has a "Base URL" -- the server's own. Naming
+  // them identically is ambiguous to anyone navigating by label, and it takes any page-wide
+  // query for that name down with a strict-mode violation. That is not hypothetical: it broke
+  // upstream's own settings spec, which is the only reason it was noticed.
+  await page.goto("/settings", { waitUntil: "networkidle" });
+
+  await expect(page.getByLabel("Base URL")).toHaveCount(1);
+  await expect(page.getByLabel("Currency")).toHaveCount(1);
+  await expect(page.getByLabel("Round prices")).toHaveCount(1);
 });

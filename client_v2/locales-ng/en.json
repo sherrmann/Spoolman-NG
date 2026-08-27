@@ -303,6 +303,8 @@
 	"settings_ai_models_pulled": "Pulled {model}.",
 	"settings_ai_models_purpose_chat": "chat",
 	"settings_ai_models_purpose_vision": "vision",
+	"settings_ai_a11y_base_url": "AI endpoint URL",
+	"settings_ai_a11y_stt_base_url": "Transcription endpoint URL",
 	"chat_title": "Assistant",
 	"chat_open": "Ask the assistant",
 	"chat_placeholder": "Ask about your filament and spools…",

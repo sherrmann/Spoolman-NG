@@ -225,9 +225,12 @@
 <!-- Nothing is rendered until we know who is asking, so the panel never flashes into view for
      a user who may not use it. -->
 {#if loaded && admin}
-	<!-- A named region, because this panel's "Base URL" is not the only one on the page: the
-	     General section has one too, and without a region they are indistinguishable to anyone
-	     navigating by label. -->
+	<!-- The two URL fields are announced as "AI endpoint URL" and "Transcription endpoint URL"
+	     rather than by their visible row titles. The settings page already carries the server's
+	     own "Base URL", and a second field announced identically is ambiguous to anyone
+	     navigating by label -- it also breaks any page-wide query for that name, which is how
+	     this was found: it took upstream's own settings spec down with a strict-mode violation.
+	     The region below scopes the panel; the distinct names are what actually fix it. -->
 	<section aria-label={ng.settings_ai_tab()}>
 		<div class="sec-label">{ng.settings_ai_tab()}</div>
 		<p class="intro">{ng.settings_ai_description()}</p>
@@ -256,7 +259,7 @@
 			>
 				<input
 					class="ctl"
-					aria-label={ng.settings_ai_base_url_label()}
+					aria-label={ng.settings_ai_a11y_base_url()}
 					bind:value={baseUrl}
 					disabled={locked.has('base_url')}
 					placeholder="http://localhost:11434/v1"
@@ -326,7 +329,7 @@
 			>
 				<input
 					class="ctl"
-					aria-label={ng.settings_ai_stt_base_url_label()}
+					aria-label={ng.settings_ai_a11y_stt_base_url()}
 					bind:value={sttBaseUrl}
 					disabled={locked.has('stt_base_url')}
 					aria-invalid={!!sttBaseUrl && !/^https?:\/\/.+/.test(sttBaseUrl)}
