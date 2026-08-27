@@ -162,6 +162,21 @@ jobs:
           cd client_v2
           npm ci
 
+      # The Svelte client's fork-only strings are generated out of the React client's
+      # catalogue (see docs/upstream/client-v2-fork-additions.md), and the generated files are
+      # committed so the Docker build needs no extra step. Regenerating here and failing on a
+      # dirty tree is what stops the committed copy drifting from the catalogue it came from --
+      # which would otherwise surface as one stale label in one language, silently.
+      - name: Check the generated fork messages are up to date
+        run: |
+          node scripts/build_ng_messages.mjs
+          if ! git diff --quiet -- client_v2/locales-ng; then
+            echo "::error::client_v2/locales-ng is stale."
+            echo "Run: node scripts/build_ng_messages.mjs -- then commit the result."
+            git diff --stat -- client_v2/locales-ng
+            exit 1
+          fi
+
       - name: Run client_v2 unit tests
         run: |
           cd client_v2
@@ -438,6 +453,111 @@ jobs:
   #
   # Static analysis with CodeQL
   #
+
+  # This fork's own browser tests for the pages it adds to the Svelte client. Deliberately a
+  # separate job from tests-frontend-v2 rather than extra steps inside it: that suite is
+  # upstream's, vendored verbatim, so keeping them apart means a red run names its owner
+  # instead of leaving every future failure ambiguous. The cost is one more backend boot.
+  #
+  # It exists because the Home page shipped with a layout bug that svelte-check, eslint,
+  # prettier and 344 unit tests all passed over -- it was only visible in a browser.
+  tests-frontend-ng:
+    needs: [meta]
+    if: ${{ needs.meta.outputs.skip_build != 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install node
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: '22'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.2.0
+        with:
+          version: "0.11.26"
+
+      - name: "Set up Python"
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: "pyproject.toml"
+
+      - name: Sync Python deps
+        run: uv sync
+
+      - name: Install client_v2 dependencies
+        run: |
+          cd client_v2
+          npm ci
+
+      - name: Build client_v2
+        # No VITE_APIURL: mirrors how it is actually deployed, resolving the API relative to
+        # its own origin.
+        run: |
+          cd client_v2
+          npm run build
+
+      - name: Discard the locale churn the build leaves behind
+        # client_v2's prebuild hook rewrites the vendored Weblate locales in place. Harmless
+        # here, but restoring them keeps a `git diff` in a later step meaningful.
+        run: git checkout -- client_v2/locales
+
+      - name: Migrate the throwaway database
+        run: |
+          rm -rf .tests-frontend-ng-data
+          mkdir -p .tests-frontend-ng-data
+          SPOOLMAN_DB_TYPE=sqlite SPOOLMAN_DIR_DATA=.tests-frontend-ng-data uv run alembic upgrade head
+
+      - name: Start the Spoolman backend (client_v2, SQLite)
+        run: |
+          SPOOLMAN_DB_TYPE=sqlite \
+          SPOOLMAN_DIR_DATA=.tests-frontend-ng-data \
+          SPOOLMAN_LEGACY_CLIENT=FALSE \
+          SPOOLMAN_LOGGING_LEVEL=INFO \
+            nohup uv run uvicorn spoolman.main:app --host 127.0.0.1 --port 8002 > spoolman-ng.log 2>&1 &
+          for _ in $(seq 1 60); do
+            if curl -sf http://127.0.0.1:8002/api/v1/health > /dev/null; then
+              echo "Spoolman is up."
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Spoolman did not become healthy in time." >&2
+          cat spoolman-ng.log
+          exit 1
+
+      - name: Install tests_frontend_ng dependencies
+        run: |
+          cd tests_frontend_ng
+          npm ci
+
+      - name: Install Playwright browser
+        # Same pinned @playwright/test version as tests_frontend_v2, so this resolves to the
+        # browser build that suite already downloaded into the shared cache.
+        run: |
+          cd tests_frontend_ng
+          npx playwright install --with-deps chromium
+
+      - name: Run the fork's browser tests
+        env:
+          SPOOLMAN_BASE_URL: http://127.0.0.1:8002
+        run: |
+          cd tests_frontend_ng
+          npx playwright test
+
+      - name: Dump Spoolman backend log
+        if: ${{ failure() }}
+        run: cat spoolman-ng.log
+
+      - name: Upload Playwright report
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: playwright-report-frontend-ng
+          path: tests_frontend_ng/playwright-report
+          retention-days: 7
   codeql:
     needs: [meta]
     if: ${{ needs.meta.outputs.skip_build != 'true' }}
@@ -1015,6 +1135,7 @@ jobs:
         client-v2-tests,
         e2e,
         tests-frontend-v2,
+        tests-frontend-ng,
         build-amd64,
         build-arm64,
         build-armv7,

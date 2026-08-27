@@ -3,9 +3,13 @@
 	import type { Pathname } from '$app/types';
 	import { page } from '$app/stores';
 	import * as m from '$lib/paraglide/messages';
+	import { ng } from '$lib/ng/i18n';
 
 	const tabs = [
 		{ href: '/', label: m['nav.library'] },
+		// Spoolman NG fork addition. Its label comes from this fork's own message catalogue
+		// rather than upstream's, so no string of ours lands in ./locales.
+		{ href: '/home', label: ng.home_home },
 		{ href: '/dashboard', label: m['dashboard.dashboard'] },
 		{ href: '/labels', label: m['nav.labels'] },
 		{ href: '/settings', label: m['settings.header'] }
