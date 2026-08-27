@@ -54,6 +54,8 @@ upstream page rather than beside it.
 | `src/lib/components/labels/LabelDesigner.svelte` | Loads location field defs via `listLocationFields()` | The `fields` store is typed to upstream's `EntityType` and cannot be asked for `location` |
 | `src/lib/components/labels/PrintLayoutPanel.svelte` | A third subject-selection path beside the spool and filament ones | Each kind's picker is written out in this one component |
 | `src/routes/labels/+page.svelte` | A third label-type button, and a location-specific hint | The segmented control is one element |
+| `src/lib/utils/spoolCode.ts` | `l`/`location` in both scan regexes, `ScannedRef.kind`, `normaliseKind` as a switch | The scanner's parser is one module, and printing a code the client then ignores is not a feature |
+| `src/lib/components/QrScannerModal.svelte` | A scanned location goes to `/location/show/<id>` | The Library has no location section to select into |
 
 Two hazards specific to that page, both found by measuring rather than reading:
 

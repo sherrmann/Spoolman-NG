@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { qrContent, qrTemplate } from '$lib/labels/qr';
+import { parseSpoolCode } from '$lib/utils/spoolCode';
 import { resolveTemplate, getPlaceholderGroups } from '$lib/labels/template';
 import { setDesignKind, newDesign, DEFAULT_LOCATION_TEXT } from '$lib/labels/types';
 import type { LabelElement, QrElement, TextElement } from '$lib/labels/types';
@@ -148,5 +149,34 @@ describe('the location palette', () => {
 			'location'
 		);
 		expect(groups[0].items.map((i) => i.token)).toContain('location.extra.shelf_note');
+	});
+});
+
+describe('scanning a location label back', () => {
+	// The other half of the feature. Printing a code the client then ignores is not a
+	// feature, so these two are pinned against each other: whatever qrContent emits for a
+	// location, parseSpoolCode must resolve to that same location.
+	const el = qr('scheme');
+
+	it('round-trips the compact scheme', () => {
+		const payload = qrContent(el, 42, { baseUrl: '', kind: 'location' });
+		expect(parseSpoolCode(payload)).toEqual({ kind: 'location', id: 42 });
+	});
+
+	it('round-trips the URL form', () => {
+		const payload = qrContent(qr('url'), 42, { baseUrl: 'https://spool.example', kind: 'location' });
+		expect(parseSpoolCode(payload)).toEqual({ kind: 'location', id: 42 });
+	});
+
+	it('does not resolve a location code to the spool of the same id', () => {
+		// The pre-change normaliseKind asked `startsWith('f') ? filament : spool`, so a
+		// location code opened a real but WRONG record -- worse than ignoring it.
+		expect(parseSpoolCode('WEB+SPOOLMAN:L-42')).not.toEqual({ kind: 'spool', id: 42 });
+	});
+
+	it('still resolves spool and filament codes unchanged', () => {
+		expect(parseSpoolCode('WEB+SPOOLMAN:S-7')).toEqual({ kind: 'spool', id: 7 });
+		expect(parseSpoolCode('WEB+SPOOLMAN:F-7')).toEqual({ kind: 'filament', id: 7 });
+		expect(parseSpoolCode('https://x.test/filament/show/7')).toEqual({ kind: 'filament', id: 7 });
 	});
 });

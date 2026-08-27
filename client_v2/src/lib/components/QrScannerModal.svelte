@@ -22,11 +22,18 @@
 
 	// A scanned code that decodes to a Spoolman spool or filament opens it in the
 	// Library. Non-Spoolman codes are ignored so the camera keeps scanning.
+	//
+	// Spoolman NG fork addition: a location code goes to its own page instead. The
+	// Library has no location section to select into, so `?sel=location:<id>` would
+	// land on the Library with nothing selected -- a dead end that looks like a
+	// failed scan.
 	function onDecode(result: QrScanner.ScanResult) {
 		const ref = parseSpoolCode(result.data);
 		if (ref === null) return;
 		close();
-		goto(resolve(`/?sel=${ref.kind}:${ref.id}`));
+		goto(
+			ref.kind === 'location' ? resolve(`/location/show/${ref.id}`) : resolve(`/?sel=${ref.kind}:${ref.id}`)
+		);
 	}
 
 	/** Map a getUserMedia DOMException to a friendly reason (by its `name`). */
