@@ -50,11 +50,18 @@ export interface Shop {
 	name: string;
 }
 
-/** Write shape for POST /order, as built by ./orderBody. */
+/**
+ * Write shape for POST /order, as built by ./orderBody.
+ *
+ * Snake_case and numeric ids because this is the wire contract (see OrderParameters in
+ * spoolman/api/v1/models.py), not a domain type -- everything the components hold uses the
+ * camelCase, string-id `Order` above.
+ */
 export interface NewOrderBody {
 	ordered_at: string;
 	shop_id?: number;
 	order_number?: string;
 	url?: string;
+	comment?: string;
 	lines: { filament_id: number; quantity: number; price_per_unit?: number }[];
 }
