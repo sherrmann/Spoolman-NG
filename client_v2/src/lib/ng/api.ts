@@ -5,10 +5,20 @@
  * base-URL resolution, the x-total-count paging header and the 401 forward-auth reload are all
  * handled there, and a second copy would drift from them.
  */
-import { getJson, getList, patchJson, postJson, HttpError } from '$lib/api/http';
+import { getJson, getList, patchJson, postJson, deleteResource, HttpError } from '$lib/api/http';
 import { mapFilament, mapSpool } from '$lib/api/map';
 import type { Spool } from '$lib/types';
-import type { ForkFilament, NewOrderBody, Order, Shop, UsageBucket, UsageStat } from './types';
+import type {
+	ArriveBody,
+	ForkFilament,
+	Location,
+	NewOrderBody,
+	Order,
+	OrderPatchBody,
+	Shop,
+	UsageBucket,
+	UsageStat
+} from './types';
 
 type Json = Record<string, unknown>;
 
@@ -22,13 +32,26 @@ function mapForkFilament(f: Json): ForkFilament {
 	};
 }
 
+function mapShop(s: Json): Shop {
+	return {
+		id: Number(s.id),
+		name: String(s.name),
+		homepage: s.homepage == null ? undefined : String(s.homepage),
+		shipsTo: s.ships_to == null ? undefined : String(s.ships_to),
+		comment: s.comment == null ? undefined : String(s.comment)
+	};
+}
+
 function mapOrder(o: Json): Order {
 	const lines = Array.isArray(o.lines) ? (o.lines as Json[]) : [];
+	const shop = o.shop as Json | null | undefined;
 	return {
 		id: Number(o.id),
 		orderedAt: String(o.ordered_at),
 		orderNumber: o.order_number == null ? undefined : String(o.order_number),
 		url: o.url == null ? undefined : String(o.url),
+		comment: o.comment == null ? undefined : String(o.comment),
+		shop: shop == null ? undefined : mapShop(shop),
 		state: o.state === 'arrived' ? 'arrived' : 'open',
 		lines: lines.map((l) => ({
 			id: Number(l.id),
@@ -97,7 +120,7 @@ export async function setLowStockThreshold(filamentId: string, grams: number | n
 
 export async function listShops(signal?: AbortSignal): Promise<Shop[]> {
 	const page = await getList('/shop', {}, signal);
-	return (page.items as Json[]).map((s) => ({ id: Number(s.id), name: String(s.name) }));
+	return (page.items as Json[]).map(mapShop);
 }
 
 /**
@@ -129,4 +152,32 @@ export async function ensureShop(name: string): Promise<number> {
 
 export async function createOrder(body: NewOrderBody): Promise<Order> {
 	return mapOrder(await postJson<Json>('/order', body));
+}
+
+export async function getOrder(orderId: number, signal?: AbortSignal): Promise<Order> {
+	return mapOrder(await getJson<Json>(`/order/${orderId}`, {}, signal));
+}
+
+export async function updateOrder(orderId: number, body: OrderPatchBody): Promise<Order> {
+	return mapOrder(await patchJson<Json>(`/order/${orderId}`, body));
+}
+
+export async function deleteOrder(orderId: number): Promise<void> {
+	await deleteResource(`/order/${orderId}`);
+}
+
+/**
+ * Mark lines of an order arrived, optionally creating the spools they represent.
+ *
+ * Omitting `lines` arrives everything outstanding in full; a line with a quantity below its
+ * outstanding count is a partial arrival, which the server splits.
+ */
+export async function arriveOrder(orderId: number, body: ArriveBody): Promise<void> {
+	await postJson(`/order/${orderId}/arrive`, body);
+}
+
+/** Storage locations, for choosing where spools created on arrival should live. */
+export async function listLocations(signal?: AbortSignal): Promise<Location[]> {
+	const page = await getList('/location', {}, signal);
+	return (page.items as Json[]).map((l) => ({ id: Number(l.id), name: String(l.name) }));
 }

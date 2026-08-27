@@ -29,6 +29,9 @@ export interface Order {
 	orderedAt: string;
 	orderNumber?: string;
 	url?: string;
+	comment?: string;
+	/** The shop this was placed with, when one was recorded. */
+	shop?: Shop;
 	lines: OrderLine[];
 	/** Derived server-side: 'open' while any line is un-arrived. */
 	state: 'open' | 'arrived';
@@ -48,6 +51,9 @@ export type UsageBucket = 'day' | 'week' | 'month' | 'year';
 export interface Shop {
 	id: number;
 	name: string;
+	homepage?: string;
+	shipsTo?: string;
+	comment?: string;
 }
 
 /**
@@ -64,4 +70,40 @@ export interface NewOrderBody {
 	url?: string;
 	comment?: string;
 	lines: { filament_id: number; quantity: number; price_per_unit?: number }[];
+}
+
+/**
+ * Write shape for PATCH /order/{id}.
+ *
+ * Deliberately unlike NewOrderBody: blank optional fields are sent as explicit `null` because
+ * that is how the API clears them, where the create path omits them instead. And `lines`
+ * replaces the entire line set whenever it is present -- the API has no per-line endpoint -- so
+ * an edit must resend every line, arrived ones included.
+ */
+export interface OrderPatchBody {
+	shop_id: number | null;
+	ordered_at: string;
+	order_number: string | null;
+	url: string | null;
+	comment: string | null;
+	lines: {
+		filament_id: number;
+		quantity: number;
+		price_per_unit?: number;
+		arrived_at?: string;
+	}[];
+}
+
+/** Write shape for POST /order/{id}/arrive. */
+export interface ArriveBody {
+	/** Omitted entirely means "arrive everything outstanding, in full". */
+	lines?: { line_id: number; quantity?: number }[];
+	create_spools: boolean;
+	location_id?: number;
+}
+
+/** A storage location. Fork-only; needed here so arriving lines can create spools somewhere. */
+export interface Location {
+	id: number;
+	name: string;
 }
