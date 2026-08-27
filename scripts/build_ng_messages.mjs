@@ -97,6 +97,10 @@ const KEYS = [
 	// Scan-to-move and the scan sentinels (#84 / #97b / #132). Upstream's own scanner covers
 	// QR-to-navigate and tag linking; these are the keys for what it has no notion of.
 	{ prefix: 'scan.' },
+	// The assistant drawer. Upstream's client has no AI surface of any kind, so every key under
+	// here is fork-only. The voice sub-feature's keys come along with the prefix but nothing
+	// renders them yet -- push-to-talk and spoken replies are a separate port.
+	{ prefix: 'chat.' },
 	// Writing a spool's data ONTO an NFC tag. Upstream's client links a tag by its UID and
 	// never reads or writes what is stored on it, so every string under here describes
 	// something it has no counterpart for -- including the warning that a browser NDEF write
