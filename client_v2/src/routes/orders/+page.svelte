@@ -371,12 +371,15 @@
 		text-align: center;
 	}
 
-	.row-right,
-	.order-link {
+	/* `.order-link` must NOT be positioned: its ::after is what stretches over the whole row,
+	   and `position: relative` here would make the row's own box irrelevant and confine the
+	   ::after to the button's text -- which is exactly the bug this replaces (a mid-row click
+	   hit `.lines-summary` and did nothing). `.row` is the positioned ancestor; only the
+	   controls that must sit ABOVE the stretched ::after are positioned and raised.
+	   routes/lowstock/+page.svelte's `.name` / `.row-right` pair is the same arrangement. */
+	.row-right {
 		position: relative;
 		z-index: 1;
-	}
-	.row-right {
 		display: flex;
 		align-items: center;
 		gap: 12px;

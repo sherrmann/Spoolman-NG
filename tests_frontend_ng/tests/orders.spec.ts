@@ -185,3 +185,22 @@ test("arriving into a location creates the spools there", async ({ page, request
   const here = (await allSpools(request)).filter((s) => s.location === bay.name);
   expect(here).toHaveLength(7);
 });
+
+test("clicking anywhere on a row opens its details, not just the order number", async ({
+  page,
+  request,
+}) => {
+  // The row's whole area is a click target via the stretched-link pattern: the order-number
+  // button's ::after is absolutely positioned over the <li>. That only works while the button
+  // itself is UNPOSITIONED -- a `position: relative` on it confines the ::after to the text,
+  // and the row silently stops being clickable anywhere else. That is what shipped first, and
+  // no other test noticed, because every other test clicks the order number directly.
+  // Playwright clicks an element's centre, which here is the lines-summary in mid-row.
+  const seeded = await seedOrder(request, "Row");
+  await openOrders(page);
+
+  await row(page, seeded.orderNumber).click();
+
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(page.getByRole("dialog")).toContainText(seeded.orderNumber);
+});
