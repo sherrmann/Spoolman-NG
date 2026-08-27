@@ -220,8 +220,13 @@ export async function allSpools(api: APIRequestContext) {
   }[];
 }
 
-/** A filament with its own vendor, for a feature that hangs off one filament. */
-export async function seedFilament(api: APIRequestContext, prefix: string) {
+/**
+ * A filament with its own vendor, for a feature that hangs off one filament.
+ *
+ * `articleNumber` is the manufacturer's SKU. Passing it is what makes a filament findable by a
+ * scanned retail barcode, since that lookup filters on `article_number` and nothing else.
+ */
+export async function seedFilament(api: APIRequestContext, prefix: string, articleNumber?: string) {
   const vendor = await post(api, "/vendor", { name: unique(`${prefix}Vendor`) });
   const name = unique(prefix);
   const filament = await post(api, "/filament", {
@@ -234,8 +239,24 @@ export async function seedFilament(api: APIRequestContext, prefix: string) {
     diameter: 1.75,
     weight: 1000,
     spool_weight: 190,
+    ...(articleNumber ? { article_number: articleNumber } : {}),
   });
   return { id: filament.id, name, vendorName: vendor.name as string };
+}
+
+/** A filament with one spool of it, at a known starting location. */
+export async function seedSpool(api: APIRequestContext, prefix: string, location: string) {
+  const filament = await seedFilament(api, prefix);
+  const spool = await post(api, "/spool", { filament_id: filament.id, location });
+  return { spoolId: spool.id, filamentId: filament.id, filamentName: filament.name };
+}
+
+/** One spool straight from the API, for checking where a scan-to-move put it. */
+export async function spoolById(api: APIRequestContext, spoolId: number) {
+  return (await (await api.get(`/api/v1/spool/${spoolId}`)).json()) as {
+    id: number;
+    location?: string;
+  };
 }
 
 /** One calibration session with its steps, straight from the API. */

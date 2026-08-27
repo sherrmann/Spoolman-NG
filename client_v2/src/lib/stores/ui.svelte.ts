@@ -10,6 +10,11 @@ class UiState {
 	addModalFilamentId = $state<string | null>(null);
 	/** When set, the modal opens on a new-filament form copied from this filament. */
 	addModalDuplicateId = $state<string | null>(null);
+	// Spoolman NG fork addition: when set, the modal opens on a BLANK new-filament form with
+	// this article number filled in -- a retail barcode was scanned that no filament claims
+	// (#97b), and retyping thirteen digits off a toast is the friction that flow exists to
+	// remove.
+	addModalArticleNumber = $state<string | null>(null);
 
 	/** QR-code scanner modal (camera). */
 	scannerOpen = $state(false);
@@ -18,6 +23,14 @@ class UiState {
 	openAddModal(filamentId?: string) {
 		this.addModalFilamentId = filamentId ?? null;
 		this.addModalDuplicateId = null;
+		this.addModalArticleNumber = null;
+		this.addModalOpen = true;
+	}
+	/** Spoolman NG fork addition: open on a new filament that remembers a scanned barcode. */
+	openNewFilamentModal(articleNumber: string) {
+		this.addModalFilamentId = null;
+		this.addModalDuplicateId = null;
+		this.addModalArticleNumber = articleNumber;
 		this.addModalOpen = true;
 	}
 	/**
@@ -28,12 +41,14 @@ class UiState {
 	openDuplicateModal(filamentId: string) {
 		this.addModalFilamentId = null;
 		this.addModalDuplicateId = filamentId;
+		this.addModalArticleNumber = null;
 		this.addModalOpen = true;
 	}
 	closeAddModal() {
 		this.addModalOpen = false;
 		this.addModalFilamentId = null;
 		this.addModalDuplicateId = null;
+		this.addModalArticleNumber = null;
 	}
 
 	openScanner() {

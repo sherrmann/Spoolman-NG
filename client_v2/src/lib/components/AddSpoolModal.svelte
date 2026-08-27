@@ -37,9 +37,18 @@
 		presetFilamentId?: string | null;
 		/** When set, open straight to step 2 on a new filament copied from this one. */
 		duplicateFilamentId?: string | null;
+		// Spoolman NG fork addition: opens a blank new-filament form carrying this article
+		// number, for a scanned retail barcode no filament claims yet (#97b).
+		presetArticleNumber?: string | null;
 		onclose?: () => void;
 	}
-	let { open, presetFilamentId = null, duplicateFilamentId = null, onclose }: Props = $props();
+	let {
+		open,
+		presetFilamentId = null,
+		duplicateFilamentId = null,
+		presetArticleNumber = null,
+		onclose
+	}: Props = $props();
 
 	// A chosen filament is one from the local catalog, a SpoolmanDB entry, or —
 	// when `creating` — a brand-new filament described by the `nf` form.
@@ -155,6 +164,15 @@
 			} else if (duplicateFilamentId) {
 				const f = inventory.filamentById(duplicateFilamentId);
 				if (f) startDuplicate(f);
+			} else if (presetArticleNumber) {
+				// Spoolman NG fork addition (#97b). After startCreate() because it resets the
+				// draft; the rest of the form is the user's to fill in as usual.
+				startCreate();
+				nf.articleNumber = presetArticleNumber;
+				// The article number lives in the advanced block, which startCreate() leaves shut.
+				// Open it for the same reason startDuplicate does: a value the flow filled in
+				// behind a collapsed heading is one the user cannot check or correct.
+				showAdvanced = true;
 			}
 		} else if (!open) {
 			initialized = false;

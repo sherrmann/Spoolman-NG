@@ -395,6 +395,12 @@
       "speak": "Speak replies",
       "unsupported": "Voice recording is not supported in this browser.",
       "mic_error": "Could not access the microphone."
+    },
+    "error": {
+      "disabled": "The assistant is switched off on this server.",
+      "unconfigured": "The assistant has no AI endpoint configured yet. An administrator can set one in Settings.",
+      "busy": "The assistant is busy with other requests. Try again in a moment.",
+      "failed": "The assistant could not be reached."
     }
   },
   "scanner": {

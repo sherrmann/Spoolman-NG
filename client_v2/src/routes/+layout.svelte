@@ -4,6 +4,7 @@
 	import Footer from '$components/Footer.svelte';
 	import AddSpoolModal from '$components/AddSpoolModal.svelte';
 	import QrScannerModal from '$components/QrScannerModal.svelte';
+	import AiChatLauncher from '$lib/ng/components/AiChatLauncher.svelte';
 	import Toaster from '$components/Toaster.svelte';
 	import { ui } from '$lib/stores/ui.svelte';
 	import { settings } from '$lib/stores/settings.svelte';
@@ -98,10 +99,15 @@
 	open={ui.addModalOpen}
 	presetFilamentId={ui.addModalFilamentId}
 	duplicateFilamentId={ui.addModalDuplicateId}
+	presetArticleNumber={ui.addModalArticleNumber}
 	onclose={() => ui.closeAddModal()}
 />
 
 <QrScannerModal open={ui.scannerOpen} onclose={() => ui.closeScanner()} />
+
+<!-- Spoolman NG fork addition: the assistant. Renders nothing at all -- not even its button --
+     unless an operator has switched the feature on; see AiChatLauncher. -->
+<AiChatLauncher />
 
 <Toaster />
 

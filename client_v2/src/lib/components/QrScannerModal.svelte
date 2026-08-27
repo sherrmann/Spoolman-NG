@@ -5,6 +5,7 @@
 	import { parseSpoolCode } from '$lib/utils/spoolCode';
 	import * as m from '$lib/paraglide/messages';
 	import X from '@lucide/svelte/icons/x';
+	import ScanExtras from '$lib/ng/components/ScanExtras.svelte';
 
 	interface Props {
 		open: boolean;
@@ -13,6 +14,8 @@
 	let { open, onclose }: Props = $props();
 
 	let video = $state<HTMLVideoElement | null>(null);
+	// Spoolman NG fork addition: the scan cases upstream has no notion of. See ScanExtras.
+	let extras = $state<ReturnType<typeof ScanExtras> | null>(null);
 	let error = $state<string | null>(null);
 	let starting = $state(false);
 
@@ -27,7 +30,12 @@
 	// Library has no location section to select into, so `?sel=location:<id>` would
 	// land on the Library with nothing selected -- a dead end that looks like a
 	// failed scan.
-	function onDecode(result: QrScanner.ScanResult) {
+	async function onDecode(result: QrScanner.ScanResult) {
+		// Spoolman NG fork addition: offer the scan to the fork's handler first. It consumes the
+		// cases upstream has none -- the clear sentinel, the two-scan move flow, a retail
+		// barcode -- and declines everything else, so the navigation below stays upstream's.
+		if (await extras?.handleDecode(result.data)) return;
+
 		const ref = parseSpoolCode(result.data);
 		if (ref === null) return;
 		close();
@@ -142,6 +150,9 @@
 			</div>
 
 			<p class="hint">{m['scanner.description']()}</p>
+
+			<!-- Spoolman NG fork addition -->
+			<ScanExtras bind:this={extras} onclose={close} />
 
 			<div class="stage">
 				<video bind:this={video} playsinline></video>
