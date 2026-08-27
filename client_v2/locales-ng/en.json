@@ -35,6 +35,7 @@
 	"locations_print_description": "Select the locations to print scannable QR labels for.",
 	"locations_print_select_placeholder": "Select locations",
 	"locations_print_none_selected": "No locations selected",
+	"locations_print_label_hint": "Location labels carry only location fields, and their QR code opens the location page.",
 	"buttons_save": "Save",
 	"buttons_cancel": "Cancel",
 	"buttons_delete": "Delete",

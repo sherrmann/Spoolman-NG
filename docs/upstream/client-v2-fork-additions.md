@@ -47,6 +47,13 @@ upstream page rather than beside it.
 | File | Edit | Why it cannot be a new file |
 |---|---|---|
 | `src/routes/dashboard/+page.svelte` | A remaining-weight gauge on the spool chip (`.chip-gauge`, `gaugeColor()`, and the `getWeightPct` import) | `/dashboard` **is** this fork's locations board — upstream's page replaced the React one — and the gauge belongs on its chips. A separate board would duplicate a live upstream page |
+| `src/lib/labels/types.ts` | `'location'` in `LabelKind`, `DEFAULT_LOCATION_TEXT`, four `DEFAULT_TEXT_PAIRS` entries, `defaultTextTemplate` as a switch | The kind union is the seam the whole feature hangs off |
+| `src/lib/labels/qr.ts` | `showPath` → `location`, `schemePrefix` → `L` | The `L-<id>` scheme and `/location/show/<id>` URL are what this fork's React client already prints |
+| `src/lib/labels/template.ts` | `LabelBinding.location`, four resolvers, the extra-field regex, a `location` palette group, `PlaceholderEntity`, per-kind palette filtering | Resolvers and the palette are one table each |
+| `src/lib/labels/render.ts`, `print.ts` | Three-way subject id and export filename | Both were two-way ternaries |
+| `src/lib/components/labels/LabelDesigner.svelte` | Loads location field defs via `listLocationFields()` | The `fields` store is typed to upstream's `EntityType` and cannot be asked for `location` |
+| `src/lib/components/labels/PrintLayoutPanel.svelte` | A third subject-selection path beside the spool and filament ones | Each kind's picker is written out in this one component |
+| `src/routes/labels/+page.svelte` | A third label-type button, and a location-specific hint | The segmented control is one element |
 
 Two hazards specific to that page, both found by measuring rather than reading:
 
@@ -60,6 +67,19 @@ Two hazards specific to that page, both found by measuring rather than reading:
   `bodyReserve()`, which reserves each card's height before its spools load. Anything added to a
   chip must not change its height — which is why the gauge is absolutely positioned along the
   bottom edge rather than added as a row.
+
+And one about the label designer, worth knowing before touching it:
+
+- **Widening `LabelKind` only fails the build in one place.** `DEFAULT_TEXT_PAIRS` is typed
+  `Record<LabelKind, string>[]`, so it stops compiling — but four *ternaries* keyed on the kind
+  (`qr.ts` ×2, `render.ts`, `print.ts`) stayed silent, each meaning "spool" for anything that
+  isn't `'filament'`. Left alone they would have printed a spool QR on a location label and named
+  its export `spoolman-location-label-undefined`. All four are switches now; keep them that way.
+- `setDesignKind` retargets text templates and never adds or removes elements, which is upstream's
+  deliberate choice. A default design switched to `location` therefore keeps its colour swatch,
+  which a location cannot fill. Left as-is: dropping elements on a kind switch would destroy work
+  a user may have kept on purpose. `src/lib/ng/labelLocation.test.ts` (fork-owned, deliberately
+  outside the vendored tree) pins the QR payloads and the retargeting.
 
 `client_v2/locales-ng/` deliberately does **not** need a `.prettierignore` entry: the generator
 emits tab-indented JSON to match the client's `useTabs` config, so the generated catalogue passes

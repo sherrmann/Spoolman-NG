@@ -4,6 +4,9 @@
 	import NumberInput from '../NumberInput.svelte';
 	import { labelKind, type LabelDesign, type LabelElement } from '$lib/labels/types';
 	import { getPlaceholderGroups, type LabelBinding } from '$lib/labels/template';
+	// Spoolman NG fork addition -- see the locationFields effect below.
+	import { listLocationFields } from '$lib/ng/api';
+	import type { FieldDef } from '$lib/api/fields';
 	import { fields } from '$lib/stores/fields.svelte';
 	import { settings } from '$lib/stores/settings.svelte';
 	import { spoolSource } from '$lib/api/spoolSource';
@@ -95,12 +98,32 @@
 		fields.ensure('filament');
 		fields.ensure('vendor');
 	});
+
+	// Spoolman NG fork addition. The `fields` store is typed to upstream's spool/filament/vendor
+	// EntityType and cannot be asked for `location`, so a location label's custom fields are
+	// fetched directly. Loaded once, and only for the kind that can use them -- a spool or
+	// filament label's palette never shows location tokens (see getPlaceholderGroups).
+	let locationFields = $state<FieldDef[]>([]);
+	$effect(() => {
+		if (kind !== 'location') return;
+		let cancelled = false;
+		listLocationFields()
+			.then((defs) => {
+				if (!cancelled) locationFields = defs as unknown as FieldDef[];
+			})
+			.catch((e) => console.error('Failed to load location fields', e));
+		return () => {
+			cancelled = true;
+		};
+	});
+
 	const groups = $derived(
 		getPlaceholderGroups(
 			{
 				spool: fields.get('spool'),
 				filament: fields.get('filament'),
-				vendor: fields.get('vendor')
+				vendor: fields.get('vendor'),
+				location: locationFields
 			},
 			kind
 		)

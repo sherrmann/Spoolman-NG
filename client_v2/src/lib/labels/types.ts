@@ -12,8 +12,15 @@ export type ElementType = 'qr' | 'text' | 'swatch' | 'rect';
  * (and its filament/vendor); a `filament` label binds to a filament (and its
  * vendor) with no spool — spool-only fields are dropped and its QR links to the
  * filament instead of a spool. Defaults to `spool` when absent on older designs.
+ *
+ * Spoolman NG fork addition: `location` binds to a Location entity row and to
+ * nothing else — it has no filament or vendor, so every inventory field is
+ * dropped and its QR carries the fork's `L-<id>` scheme. See
+ * docs/upstream/client-v2-fork-additions.md; this union is the seam the rest of
+ * the change hangs off, and widening it is what makes the compiler point at
+ * every place that still assumes exactly two kinds.
  */
-export type LabelKind = 'spool' | 'filament';
+export type LabelKind = 'spool' | 'filament' | 'location';
 
 /** Fields common to every element: an id and a top-left position in mm. */
 interface BaseElement {
@@ -196,24 +203,66 @@ export const DEFAULT_SPOOL_TEXT = '{{filament.material} · }#{spool.id}';
 /** Same line for a fresh filament label — a spool id makes no sense here, so it
  * ends in the filament id instead. */
 export const DEFAULT_FILAMENT_TEXT = '{{filament.material} · }#{filament.id}';
+/**
+ * Spoolman NG fork addition. A location label has no filament at all, so neither
+ * of the lines above has anything to resolve. This is the single-block form, used
+ * when a design whose whole text is one combined block is switched to this kind;
+ * the multi-block default layout maps line by line (see DEFAULT_TEXT_PAIRS).
+ */
+export const DEFAULT_LOCATION_TEXT = '**{location.name}**\n#{location.id}';
 
 /**
- * Spool/filament template pairs that count as "still the default", newest first.
- * The trailing entries are the defaults shipped by earlier versions, kept so that
+ * Per-kind template sets that count as "still the default", newest first. The
+ * trailing entries are the defaults shipped by earlier versions, kept so that
  * designs created before the default was redesigned still get their id line
  * retargeted when their kind is switched.
+ *
+ * Spoolman NG fork addition: the `location` entries. Both older spool/filament
+ * variants map to the SAME current location default rather than to a historical
+ * one of their own — there is no earlier location default to be faithful to, so
+ * inventing one would only add a template nothing ever produced. Typing this as
+ * Record<LabelKind, string> is deliberate: widening LabelKind fails the build
+ * here until every kind has an answer.
  */
 const DEFAULT_TEXT_PAIRS: Record<LabelKind, string>[] = [
-	{ spool: DEFAULT_SPOOL_TEXT, filament: DEFAULT_FILAMENT_TEXT },
+	{ spool: DEFAULT_SPOOL_TEXT, filament: DEFAULT_FILAMENT_TEXT, location: '#{location.id}' },
 	{
 		spool: '**{filament.name}**\n{filament.material}\n#{spool.id}',
-		filament: '**{filament.name}**\n{filament.material}\n#{filament.id}'
+		filament: '**{filament.name}**\n{filament.material}\n#{filament.id}',
+		location: DEFAULT_LOCATION_TEXT
+	},
+	// Spoolman NG fork addition. newDesign() lays out THREE default text blocks -- a
+	// manufacturer line, the filament name, and the material-and-id line above -- but only the
+	// last was ever in this table, because a spool label and a filament label both want the
+	// other two unchanged. A location label wants none of them: it has no vendor and no
+	// filament, so an untouched design switched to `location` printed "?" for both lines.
+	// Mapping them keeps the same visual layout (subtitle, headline) with fields a location
+	// can actually fill. The spool and filament sides are identical, so switching between
+	// those two is unaffected.
+	{
+		spool: '{{vendor.name}}',
+		filament: '{{vendor.name}}',
+		location: '{{location.comment}}'
+	},
+	{
+		spool: '{filament.name}',
+		filament: '{filament.name}',
+		location: '{location.name}'
 	}
 ];
 
 /** The default text-block template for a given label kind. */
 export function defaultTextTemplate(kind: LabelKind): string {
-	return kind === 'filament' ? DEFAULT_FILAMENT_TEXT : DEFAULT_SPOOL_TEXT;
+	// A switch, not a ternary: this union has three members and a two-way test would
+	// silently hand a location label the spool default.
+	switch (kind) {
+		case 'filament':
+			return DEFAULT_FILAMENT_TEXT;
+		case 'location':
+			return DEFAULT_LOCATION_TEXT;
+		default:
+			return DEFAULT_SPOOL_TEXT;
+	}
 }
 
 /**

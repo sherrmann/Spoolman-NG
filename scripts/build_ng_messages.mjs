@@ -82,6 +82,7 @@ const KEYS = [
 	'locations.print.description',
 	'locations.print.select_placeholder',
 	'locations.print.none_selected',
+	'locations.print.label_hint',
 	'buttons.save',
 	'buttons.cancel',
 	'buttons.delete',

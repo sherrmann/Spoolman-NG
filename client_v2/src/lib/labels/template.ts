@@ -1,5 +1,8 @@
 import type { Spool, Filament, Vendor } from '$lib/types';
 import type { FieldDef, EntityType } from '$lib/api/fields';
+// Spoolman NG fork addition: location labels bind to this fork's own entity.
+import type { Location } from '$lib/ng/types';
+import { ng } from '$lib/ng/i18n';
 import type { LabelKind } from './types';
 import * as m from '$lib/paraglide/messages';
 
@@ -20,6 +23,13 @@ export interface LabelBinding {
 	spool?: Spool;
 	filament?: Filament;
 	vendor?: Vendor;
+	/**
+	 * Spoolman NG fork addition. Set only on location labels, and then it is the ONLY thing
+	 * set: a Location row has no filament and no vendor (`Spool.location` is a plain name
+	 * string with no foreign key, so there is nothing to join through), which is why the
+	 * location palette group below stands alone rather than adding to the others.
+	 */
+	location?: Location;
 }
 
 /** Sentinel returned for an absent value; drives conditional-block omission. */
@@ -69,16 +79,31 @@ const RESOLVERS: Record<string, (b: LabelBinding) => string | number | null | un
 	'vendor.emptyWeight': (b) => fmtNum(b.vendor?.emptyWeight),
 	'vendor.comment': (b) => b.vendor?.comment,
 	'vendor.externalId': (b) => b.vendor?.externalId,
-	'vendor.registered': (b) => b.vendor?.registeredLabel
+	'vendor.registered': (b) => b.vendor?.registeredLabel,
+
+	// Spoolman NG fork addition. `spoolCount` is a server-computed aggregate the list and
+	// detail endpoints return; it is absent on a row fetched any other way, and resolves to
+	// MISSING then rather than printing a wrong 0.
+	'location.id': (b) => b.location?.id,
+	'location.name': (b) => b.location?.name,
+	'location.comment': (b) => b.location?.comment,
+	'location.spoolCount': (b) => b.location?.spoolCount
 };
 
 /** Resolve a single placeholder path to a display string, or MISSING. */
 function resolvePath(path: string, b: LabelBinding): string {
 	// entity.extra.<key>
-	const extraMatch = path.match(/^(spool|filament|vendor)\.extra\.(.+)$/);
+	const extraMatch = path.match(/^(spool|filament|vendor|location)\.extra\.(.+)$/);
 	if (extraMatch) {
 		const [, entity, key] = extraMatch;
-		const src = entity === 'spool' ? b.spool : entity === 'filament' ? b.filament : b.vendor;
+		const src =
+			entity === 'spool'
+				? b.spool
+				: entity === 'filament'
+					? b.filament
+					: entity === 'location'
+						? b.location
+						: b.vendor;
 		const raw = src?.extra?.[key];
 		if (raw === undefined) return MISSING;
 		try {
@@ -135,8 +160,16 @@ export interface PlaceholderItem {
 	/** ...a literal label for a user-defined extra field (its own name). */
 	label?: string;
 }
+/**
+ * Spoolman NG fork addition. `EntityType` is upstream's spool/filament/vendor union; this
+ * fork's backend also registers `location`, and its palette group has to name it. Widened
+ * here rather than in the vendored $lib/api/fields, for the same reason ng/api.ts declares
+ * its own LocationFieldDef: an edit there conflicts on every subtree pull for no gain.
+ */
+export type PlaceholderEntity = EntityType | 'location';
+
 export interface PlaceholderGroup {
-	entity: EntityType;
+	entity: PlaceholderEntity;
 	labelKey: () => string;
 	items: PlaceholderItem[];
 }
@@ -190,6 +223,18 @@ const FIXED_GROUPS: PlaceholderGroup[] = [
 			{ token: 'vendor.registered', labelKey: m['vendor.fields.registered'] },
 			{ token: 'vendor.comment', labelKey: m['vendor.fields.comment'] }
 		]
+	},
+	// Spoolman NG fork addition. Labels use this fork's own message catalogue, so these keys
+	// come from $lib/ng/i18n rather than $lib/paraglide/messages.
+	{
+		entity: 'location',
+		labelKey: ng.locations_location,
+		items: [
+			{ token: 'location.id', labelKey: ng.spool_fields_id },
+			{ token: 'location.name', labelKey: ng.locations_show_name },
+			{ token: 'location.spoolCount', labelKey: ng.locations_show_spool_count },
+			{ token: 'location.comment', labelKey: ng.locations_show_comment }
+		]
 	}
 ];
 
@@ -203,10 +248,21 @@ const FIXED_GROUPS: PlaceholderGroup[] = [
  * spool fields are omitted from the palette.
  */
 export function getPlaceholderGroups(
-	extraFields: Record<EntityType, FieldDef[]>,
+	extraFields: Partial<Record<PlaceholderEntity, FieldDef[]>>,
 	kind: LabelKind = 'spool'
 ): PlaceholderGroup[] {
-	return FIXED_GROUPS.filter((group) => kind !== 'filament' || group.entity !== 'spool').map((group) => {
+	// Which groups a kind can resolve at all. A location label binds ONLY a Location row --
+	// no filament, no vendor, nothing to join through -- so it is the one kind whose palette
+	// is a single group, and equally the location group is useless on the other two. Written
+	// as an explicit per-kind rule rather than the previous "drop spool unless spool" filter,
+	// which read as "everything except" and would have offered location tokens on a spool
+	// label that can never fill them.
+	const allowed: Record<LabelKind, PlaceholderEntity[]> = {
+		spool: ['spool', 'filament', 'vendor'],
+		filament: ['filament', 'vendor'],
+		location: ['location']
+	};
+	return FIXED_GROUPS.filter((group) => allowed[kind].includes(group.entity)).map((group) => {
 		const extra = (extraFields[group.entity] ?? []).map((f) => ({
 			token: `${group.entity}.extra.${f.key}`,
 			label: f.name

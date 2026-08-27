@@ -9,6 +9,10 @@
 	import { printLabels, exportLabels, ZIP_THRESHOLD } from '$lib/labels/print';
 	import { EXPORT_FORMATS, resolveExportFormat } from '$lib/labels/export';
 	import { spoolSource } from '$lib/api/spoolSource';
+	// Spoolman NG fork addition (#84) -- the location picker below.
+	import { listLocations } from '$lib/ng/api';
+	import { ng } from '$lib/ng/i18n';
+	import type { Location } from '$lib/ng/types';
 	import { searchAll } from '$lib/api/search';
 	import { isAbortError } from '$lib/api/http';
 	import { inventory } from '$lib/stores/inventory.svelte';
@@ -275,22 +279,94 @@
 		selectedF = new Set();
 	}
 
+	// --- locations (Spoolman NG fork addition, #84) --------------------------------------
+	// Mirrors the filament path above, and for the same reason: the Location registry is
+	// small enough to load whole and filter in the browser, so there is no paging and no
+	// backend search. There is no `inventory` store for locations -- that store is upstream's
+	// and knows only spools, filaments and vendors -- so the rows are held here.
+	let locations = $state<Location[]>([]);
+	let selectedL = $state<Set<number>>(new Set());
+	let lSearch = $state('');
+	let lLoading = $state(true);
+
+	$effect(() => {
+		if (kind !== 'location') return;
+		const ctrl = new AbortController();
+		lLoading = true;
+		listLocations(ctrl.signal)
+			.then((rows) => {
+				if (!ctrl.signal.aborted) locations = rows;
+			})
+			.catch((e) => {
+				if (!isAbortError(e, ctrl.signal)) console.error('Failed to load locations for printing', e);
+			})
+			.finally(() => {
+				if (!ctrl.signal.aborted) lLoading = false;
+			});
+		return () => ctrl.abort();
+	});
+
+	function locationLabel(l: Location): string {
+		return `#${l.id} · ${l.name}${l.comment ? ' · ' + l.comment : ''}`;
+	}
+
+	const visibleLocations = $derived.by(() => {
+		const q = lSearch.trim().toLowerCase();
+		return locations
+			.filter((l) => !q || `${l.name} ${l.comment ?? ''}`.toLowerCase().includes(q))
+			.sort((a, b) => a.name.localeCompare(b.name));
+	});
+
+	function toggleL(id: number) {
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- transient local; `selectedL` updates via reassignment below
+		const next = new Set(selectedL);
+		if (next.has(id)) next.delete(id);
+		else next.add(id);
+		selectedL = next;
+	}
+	function selectAllL() {
+		selectedL = new Set(visibleLocations.map((l) => l.id));
+	}
+	function clearAllL() {
+		selectedL = new Set();
+	}
+
 	// The active binding set drives the preview and the print/save actions; it
-	// switches source with the label kind.
-	const bindings = $derived<LabelBinding[]>(
-		kind === 'filament'
-			? [...selectedF]
+	// switches source with the label kind. A switch rather than the nested ternaries this
+	// replaces: with three kinds, an `x ? a : b` chain silently makes `location` mean spool.
+	const bindings = $derived.by<LabelBinding[]>(() => {
+		switch (kind) {
+			case 'filament':
+				return [...selectedF]
 					.map((id) => inventory.filamentById(id))
 					.filter((f): f is Filament => !!f)
-					.map((f) => ({ filament: f, vendor: inventory.vendorById(f.vendorId) }))
-			: [...selected]
+					.map((f) => ({ filament: f, vendor: inventory.vendorById(f.vendorId) }));
+			case 'location':
+				// A location binding carries nothing else: no filament, no vendor. See
+				// LabelBinding's own doc comment in $lib/labels/template.
+				return [...selectedL]
+					.map((id) => locations.find((l) => l.id === id))
+					.filter((l): l is Location => !!l)
+					.map((l) => ({ location: l }));
+			default:
+				return [...selected]
 					.map((id) => inventory.spoolById(id))
 					.filter((s): s is Spool => !!s)
-					.map(bindingFor)
-	);
+					.map(bindingFor);
+		}
+	});
 
 	// Preview caption: the id of the first selected subject, labelled by kind.
-	const previewId = $derived(kind === 'filament' ? bindings[0]?.filament?.id : bindings[0]?.spool?.id);
+	const previewId = $derived.by(() => {
+		switch (kind) {
+			case 'filament':
+				return bindings[0]?.filament?.id;
+			case 'location':
+				return bindings[0]?.location?.id;
+			default:
+				return bindings[0]?.spool?.id;
+		}
+	});
 
 	const grid = $derived(sheetGrid(layout, design.label));
 
@@ -375,6 +451,40 @@
 				{/if}
 			</div>
 			<div class="count">{m['labels.filamentsSelected']({ count: selectedF.size })}</div>
+		{:else if kind === 'location'}
+			<!-- Spoolman NG fork addition (#84). Mirrors the filament picker above; strings come
+			     from the fork's own catalogue, since upstream has no location concept to name.
+			     The selected-count line reuses the "N locations selected" phrasing the React
+			     print dialog already had rather than inventing a new one. -->
+			<div class="col-head">
+				<span>{ng.locations_locations()}</span>
+				<div class="mini-actions">
+					<button onclick={selectAllL}>{m['labels.selectAllShort']()}</button>
+					<button onclick={clearAllL}>{m['labels.selectNoneShort']()}</button>
+				</div>
+			</div>
+			<div class="search-row">
+				<input class="search" placeholder={ng.locations_print_select_placeholder()} bind:value={lSearch} />
+			</div>
+			<div class="spool-list">
+				{#if lLoading && visibleLocations.length === 0}
+					<div class="muted">{m.loading()}…</div>
+				{:else if visibleLocations.length === 0}
+					<div class="muted">{ng.locations_empty()}</div>
+				{:else}
+					{#each visibleLocations as l (l.id)}
+						<label class="spool-item">
+							<input type="checkbox" checked={selectedL.has(l.id)} onchange={() => toggleL(l.id)} />
+							<span class="lbl">{locationLabel(l)}</span>
+						</label>
+					{/each}
+				{/if}
+			</div>
+			<div class="count">
+				{selectedL.size === 0
+					? ng.locations_print_none_selected()
+					: `${selectedL.size} / ${visibleLocations.length}`}
+			</div>
 		{:else}
 			<div class="col-head">
 				<span>{m['spool.spool']()}</span>
@@ -665,13 +775,22 @@
 				</div>
 			</div>
 			<div class="muted small">
+				<!-- No upstream key names a location subject, so that caption is composed from the
+				     fork's own "Location" string plus the id, in the same "<entity> #<id>" shape
+				     the two upstream captions use. -->
 				{kind === 'filament'
 					? m['labels.showingFilament']({ id: previewId ?? '' })
-					: m['labels.showingSpool']({ id: previewId ?? '' })}
+					: kind === 'location'
+						? `${ng.locations_location()} #${previewId ?? ''}`
+						: m['labels.showingSpool']({ id: previewId ?? '' })}
 			</div>
 		{:else}
 			<div class="muted">
-				{kind === 'filament' ? m['labels.selectAtLeastOneFilament']() : m['labels.selectAtLeastOne']()}
+				{kind === 'filament'
+					? m['labels.selectAtLeastOneFilament']()
+					: kind === 'location'
+						? ng.locations_print_description()
+						: m['labels.selectAtLeastOne']()}
 			</div>
 		{/if}
 		<div class="print-btn">
