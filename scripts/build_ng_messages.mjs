@@ -42,6 +42,11 @@ const OUT = join(ROOT, 'client_v2/locales-ng');
  * bundle to what is actually reachable. `plural: true` pulls in every CLDR-suffixed variant a
  * locale defines (`_one`, `_few`, `_many`, ...) rather than one fixed pair -- which categories
  * exist is a property of the language, not of the key.
+ *
+ * `{ prefix: 'calibration.' }` takes a whole namespace. Reserved for namespaces this fork owns
+ * end to end and uses in full -- listing 173 calibration keys one per line would be longer than
+ * this file's logic and would go stale the first time a key was added. It is NOT for a shared
+ * namespace like `spool.`, where naming each key is what keeps the generated bundle small.
  */
 const KEYS = [
 	'loading',
@@ -83,6 +88,8 @@ const KEYS = [
 	'locations.print.select_placeholder',
 	'locations.print.none_selected',
 	'locations.print.label_hint',
+	// Calibration (#123): 173 keys, all plain text or simple {{interpolation}}.
+	{ prefix: 'calibration.' },
 	'buttons.save',
 	'buttons.cancel',
 	'buttons.delete',
@@ -221,18 +228,28 @@ for (const locale of locales) {
 	const missing = [];
 
 	for (const entry of KEYS) {
-		const key = typeof entry === 'string' ? entry : entry.key;
-		const wanted =
-			typeof entry === 'string'
-				? [key]
-				: Object.keys(flat).filter((k) => k === key || k.startsWith(`${key}_`));
+		const key = typeof entry === 'string' ? entry : (entry.key ?? entry.prefix);
+		let wanted;
+		if (typeof entry === 'string') {
+			wanted = [key];
+		} else if (entry.prefix) {
+			// Whole-namespace form. A page group whose keys run to three figures is not worth
+			// listing one per line: the list would be longer than the code that reads it and
+			// would drift the moment a key is added. Prefixes are only for namespaces this
+			// fork owns end to end (`calibration.`), never a broad one like `spool.` where
+			// the allowlist is doing real work keeping the bundle small.
+			wanted = Object.keys(flat).filter((k) => k.startsWith(entry.prefix));
+		} else {
+			wanted = Object.keys(flat).filter((k) => k === key || k.startsWith(`${key}_`));
+		}
 		if (wanted.length === 0) missing.push(key);
 		for (const k of wanted) {
 			const value = flat[k];
 			// Weblate writes an empty string for an untranslated key. Omitting it entirely lets
 			// Paraglide fall back to the base locale instead of rendering a blank label.
 			if (typeof value !== 'string' || value === '') {
-				if (k === key) missing.push(k);
+				// A prefix entry has no single "the" key, so every empty one under it counts.
+				if (k === key || entry.prefix) missing.push(k);
 				continue;
 			}
 			messages[toId(k)] = convertPlaceholders(value, k, locale);
