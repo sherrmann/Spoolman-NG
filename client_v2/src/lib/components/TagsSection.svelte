@@ -13,6 +13,11 @@
 	// a tag is not one of the things you do to a spool every day.
 	import SectionLabel from './SectionLabel.svelte';
 	import AddTagModal from './AddTagModal.svelte';
+	// Spoolman NG fork addition: writing this spool's data ONTO a tag. Upstream links a tag by
+	// its UID and never touches what is stored on it, so this has no counterpart here.
+	import NfcWriteModal from '$lib/ng/components/NfcWriteModal.svelte';
+	import { inventory } from '$lib/stores/inventory.svelte';
+	import { ng } from '$lib/ng/i18n';
 	import ConfirmDialog from './ConfirmDialog.svelte';
 	import Plus from '@lucide/svelte/icons/plus';
 	import Nfc from '@lucide/svelte/icons/nfc';
@@ -26,6 +31,10 @@
 	let { spool }: { spool: Spool } = $props();
 
 	let addOpen = $state(false);
+	// Spoolman NG fork addition. The write dialog needs the filament, which a Spool carries only
+	// by id; the inspector this section sits in has already loaded it.
+	let writeOpen = $state(false);
+	let filament = $derived(inventory.filamentById(spool.filamentId));
 	let pending = $state<SpoolTag | null>(null);
 	let unlinking = $state(false);
 
@@ -54,6 +63,17 @@
 			<Plus size={13} />
 			{m['tags.add']()}
 		</button>
+		<!-- Spoolman NG fork addition. Omitted, not disabled, while the filament is missing from
+		     the store: `.link` has no disabled styling, so a disabled one is indistinguishable
+		     from a live one -- and $lib/utils/nfc states the rule this follows, that a dead
+		     button the user cannot explain is worse than no button. The absence is transient;
+		     the inspector loads the filament and the control appears with it. -->
+		{#if filament}
+			<button class="link" onclick={() => (writeOpen = true)}>
+				<Nfc size={13} />
+				{ng.nfc_encode_button()}
+			</button>
+		{/if}
 	{/snippet}
 </SectionLabel>
 
@@ -81,6 +101,12 @@
 {/if}
 
 <AddTagModal open={addOpen} {spool} onclose={() => (addOpen = false)} />
+
+<!-- Spoolman NG fork addition. Mounted only while open, like the fork's other dialogs, so it
+     starts fresh each time and its abort controller cannot outlive a closed screen. -->
+{#if writeOpen && filament}
+	<NfcWriteModal {spool} {filament} onclose={() => (writeOpen = false)} />
+{/if}
 
 <ConfirmDialog
 	open={pending !== null}

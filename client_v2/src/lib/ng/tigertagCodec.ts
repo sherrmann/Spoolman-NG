@@ -315,12 +315,16 @@ export function encodeTigerTag(data: TigerTagBinaryData): ArrayBuffer {
  * `mapSpool` in `api/map.ts`) or from the numeric suffix of `filament.externalId`, which was a
  * string on both sides already.
  *
- * DISCREPANCY vs. the Python backend (report this, do not silently resolve it): the Python
- * `map_spool_to_tigertag` (spoolman/tigertag_lookup.py) accepts optional `brand_map` /
- * `material_map` dictionaries and, when given, looks up `id_brand` / `id_material` by matching
- * the vendor/material name. The React source this file ports (client/src/utils/tigertagCodec.ts)
- * takes no such maps and always leaves `id_brand` and `id_material` at 0. This port follows the
- * React source, per instructions, so `id_brand`/`id_material` are always 0 here too.
+ * On `id_brand` / `id_material`, which look like a divergence and are not. The Python
+ * `map_spool_to_tigertag` (spoolman/tigertag_lookup.py:149-153) accepts optional `brand_map` /
+ * `material_map` dictionaries and resolves the two ids when given them; this port, like the
+ * React source it replaces, has no such parameter and leaves both at 0. That reads as a gap
+ * until you check the callers: BOTH backend call sites -- `_handle_tigertag_write` and the
+ * `/nfc/encode` endpoint (spoolman/api/v1/nfc.py:310, 369) -- call it as
+ * `map_spool_to_tigertag(spool)` with no maps, so the server emits 0 for both as well. The
+ * parameters are dead. Confirmed by measurement rather than by reading: encoding the same spool
+ * here and through `POST /nfc/encode` produced identical bytes at every offset except the
+ * embedded timestamp, which differed by the seconds between the two calls.
  */
 export function mapSpoolToTigerTag(
 	spool: Spool,
