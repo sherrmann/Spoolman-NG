@@ -86,12 +86,15 @@ export interface OrderPatchBody {
 	order_number: string | null;
 	url: string | null;
 	comment: string | null;
-	lines: {
-		filament_id: number;
-		quantity: number;
-		price_per_unit?: number;
-		arrived_at?: string;
-	}[];
+	lines: OrderPatchLine[];
+}
+
+/** One line as sent on a PATCH: an already-arrived line resends its arrived_at verbatim. */
+export interface OrderPatchLine {
+	filament_id: number;
+	quantity: number;
+	price_per_unit?: number;
+	arrived_at?: string;
 }
 
 /** Write shape for POST /order/{id}/arrive. */
