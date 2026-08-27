@@ -32,6 +32,7 @@
 		chatUndo,
 		transcribe,
 		chatSwitches,
+		aiStatus,
 		ChatStartError,
 		TranscribeError,
 		type ChatStartFailure,
@@ -71,6 +72,16 @@
 	// available when the microphone is not.
 	let voiceOn = $state(false);
 	let autosend = $state(false);
+	/**
+	 * Whether the server has a transcription endpoint.
+	 *
+	 * Gating the microphone on the voice FLAG alone is not enough, and this is exactly the
+	 * "dead button" case $lib/utils/nfc warns about: /ai/transcribe answers 409 with no
+	 * speech-to-text configured, so the button would fail on every press with nothing on screen
+	 * explaining why. Speaking replies is unaffected -- that is a browser API and needs no
+	 * server at all, which is why the two are gated separately rather than together.
+	 */
+	let sttReady = $state(false);
 	let recording = $state(false);
 	let transcribing = $state(false);
 	let speak = $state(false);
@@ -90,6 +101,8 @@
 		chatSwitches(controller.signal).then((s) => {
 			voiceOn = s.voice;
 			autosend = s.voiceAutosend;
+			// Only asked when voice is on: a server with the feature off has nothing to say here.
+			if (s.voice) aiStatus(controller.signal).then((st) => (sttReady = st.sttConfigured));
 		});
 		return () => {
 			controller.abort();
@@ -413,7 +426,7 @@
 			<!-- Press and hold, not a toggle: a toggle leaves the microphone live if the user
 			     walks away mid-thought. Leaving the button while held cancels, which is how you
 			     abandon a recording you have thought better of. -->
-			{#if voiceOn && canRecord}
+			{#if voiceOn && sttReady && canRecord}
 				<button
 					class="mic"
 					class:live={recording}
