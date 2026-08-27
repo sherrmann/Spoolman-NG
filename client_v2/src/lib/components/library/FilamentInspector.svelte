@@ -9,6 +9,9 @@
 	import Plus from '@lucide/svelte/icons/plus';
 	import Copy from '@lucide/svelte/icons/copy';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
+	// Spoolman NG fork addition (#123): the one-line link into this filament's calibration
+	// history, added below alongside the duplicate/delete icons.
+	import FlaskConical from '@lucide/svelte/icons/flask-conical';
 	import Square from '@lucide/svelte/icons/square';
 	import SquareCheck from '@lucide/svelte/icons/square-check';
 	import EditableField from '../EditableField.svelte';
@@ -29,6 +32,9 @@
 	import { serverInfo } from '$lib/stores/serverInfo.svelte';
 	import { ui } from '$lib/stores/ui.svelte';
 	import { page } from '$app/state';
+	import { resolve } from '$app/paths';
+	// Spoolman NG fork addition (#123), paired with the FlaskConical import above.
+	import { ng } from '$lib/ng/i18n';
 	import * as params from '$lib/library/params';
 	import { pct, weightAuto } from '$lib/utils/format';
 	import { usageLabel } from '$lib/utils/library';
@@ -242,6 +248,13 @@
 			     spools block it: the dialog then explains why, which a greyed-out button
 			     never could. -->
 			<span class="sep" aria-hidden="true"></span>
+			<!-- Spoolman NG fork addition (#123): link into this filament's calibration history. -->
+			<Button
+				variant="ghost"
+				title={ng.calibration_title()}
+				ariaLabel={ng.calibration_title()}
+				href={resolve(`/calibration?filament=${filament.id}`)}><FlaskConical size={15} /></Button
+			>
 			<Button
 				variant="ghost"
 				title={m['inspector.duplicateFilament']()}

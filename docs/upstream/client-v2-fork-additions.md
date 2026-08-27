@@ -56,6 +56,7 @@ upstream page rather than beside it.
 | `src/routes/labels/+page.svelte` | A third label-type button, and a location-specific hint | The segmented control is one element |
 | `src/lib/utils/spoolCode.ts` | `l`/`location` in both scan regexes, `ScannedRef.kind`, `normaliseKind` as a switch | The scanner's parser is one module, and printing a code the client then ignores is not a feature |
 | `src/lib/components/QrScannerModal.svelte` | A scanned location goes to `/location/show/<id>` | The Library has no location section to select into |
+| `src/lib/components/library/FilamentInspector.svelte` | One icon-button linking to `/calibration?filament=<id>` | Calibration belongs to a filament, and this panel is where a filament is looked at. React reaches it as a tab on `/filament/show/:id`; this client has no such page — that route is a redirect and this inspector has no tab strip |
 
 Two hazards specific to that page, both found by measuring rather than reading:
 
@@ -77,6 +78,13 @@ And one about the label designer, worth knowing before touching it:
   (`qr.ts` ×2, `render.ts`, `print.ts`) stayed silent, each meaning "spool" for anything that
   isn't `'filament'`. Left alone they would have printed a spool QR on a location label and named
   its export `spoolman-location-label-undefined`. All four are switches now; keep them that way.
+And one about the filament inspector:
+
+- It is a **flat panel, not a tabbed page**, which is why calibration lives on its own route
+  with only a link from here. Do not be tempted to grow a tab strip in it to mirror the React
+  client — that would be a large edit to a file upstream actively develops, to host a feature
+  that works perfectly well beside it. If upstream ever adds tabs of its own, revisit.
+
 - `setDesignKind` retargets text templates and never adds or removes elements, which is upstream's
   deliberate choice. A default design switched to `location` therefore keeps its colour swatch,
   which a location cannot fill. Left as-is: dropping elements on a kind switch would destroy work

@@ -17,8 +17,13 @@
 		{ href: '/dashboard', label: m['dashboard.dashboard'] },
 		// Spoolman NG fork addition (#103), same reasoning as the /home entry above.
 		{ href: '/locations', label: ng.locations_locations },
+		// Spoolman NG fork addition (#123), same reasoning as the /home entry above.
+		{ href: '/calibration', label: ng.calibration_title },
 		{ href: '/labels', label: m['nav.labels'] },
-		{ href: '/settings', label: m['settings.header'] }
+		{ href: '/settings', label: m['settings.header'] },
+		// Spoolman NG fork addition, same reasoning as the /home entry above. Last in the row
+		// because it is the one tab nobody navigates to twice.
+		{ href: '/help', label: ng.help_help }
 	] satisfies { href: Pathname; label: () => string }[];
 
 	// The deploy base path, without its trailing slash (resolve('/') === `${base}/`).

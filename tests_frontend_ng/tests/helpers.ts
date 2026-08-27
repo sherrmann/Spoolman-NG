@@ -219,3 +219,40 @@ export async function allSpools(api: APIRequestContext) {
     filament: { id: number };
   }[];
 }
+
+/** A filament with its own vendor, for a feature that hangs off one filament. */
+export async function seedFilament(api: APIRequestContext, prefix: string) {
+  const vendor = await post(api, "/vendor", { name: unique(`${prefix}Vendor`) });
+  const name = unique(prefix);
+  const filament = await post(api, "/filament", {
+    name,
+    vendor_id: vendor.id,
+    material: "PLA",
+    color_hex: "3A7BD5",
+    price: 22,
+    density: 1.24,
+    diameter: 1.75,
+    weight: 1000,
+    spool_weight: 190,
+  });
+  return { id: filament.id, name, vendorName: vendor.name as string };
+}
+
+/** One calibration session with its steps, straight from the API. */
+export async function calibrationSession(api: APIRequestContext, sessionId: number) {
+  return (await (await api.get(`/api/v1/calibration/session/${sessionId}`)).json()) as {
+    status: string;
+    steps: {
+      step_type: string;
+      outputs?: Record<string, unknown> | null;
+      selected_values?: Record<string, unknown> | null;
+    }[];
+  };
+}
+
+/** The calibration sessions recorded against a filament. */
+export async function calibrationSessions(api: APIRequestContext, filamentId: number) {
+  return (await (
+    await api.get(`/api/v1/calibration/session?filament_id=${filamentId}`)
+  ).json()) as { id: number; status: string }[];
+}
