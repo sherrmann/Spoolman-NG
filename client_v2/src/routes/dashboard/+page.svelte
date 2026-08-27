@@ -16,6 +16,8 @@
 	import { extraFieldsHref } from '$lib/settings/params';
 	import { weightAuto } from '$lib/utils/format';
 	import * as m from '$lib/paraglide/messages';
+	// Spoolman NG fork addition: the spool chip's remaining-weight gauge (see `.chip-gauge`).
+	import { getWeightPct } from '$lib/ng/analytics';
 	import { dashboardFields, DEFAULT_FIELD_KEY, type DashboardField } from '$lib/dashboard/fields';
 	import { loadLayout, saveGroups, saveSpoolOrders, type DashboardLayout } from '$lib/dashboard/layout';
 	import { fieldKeyFromUrl, gotoField, rememberFieldKey, rememberedFieldKey } from '$lib/dashboard/params';
@@ -462,6 +464,15 @@
 		flushSync(() => (cardsDragDisabled = false));
 	}
 
+	// Spoolman NG fork addition. The React board's thresholds (red at 10%, amber at 25%),
+	// mapped onto this app's own tokens rather than importing that page's raw hex values --
+	// the warm-orange accent is this palette's amber, and there is no separate warning token.
+	function gaugeColor(pct: number): string {
+		if (pct <= 10) return 'var(--danger)';
+		if (pct <= 25) return 'var(--accent)';
+		return 'var(--success)';
+	}
+
 	function cardConsider(e: CustomEvent<DndEvent<Card>>) {
 		dragging = true;
 		cards = e.detail.items;
@@ -776,6 +787,24 @@
 											: ''}
 									</div>
 								</div>
+								<!-- Spoolman NG fork addition. The React locations board drew a coloured
+								     remaining-weight bar on every spool card; this restores it here, since
+								     this page is that board's replacement. Absolutely positioned along the
+								     chip's bottom edge so it costs no height -- CHIP_H above is measured
+								     from this CSS and a taller chip would silently break bodyReserve().
+								     It cannot go inside .chip-subtitle either: that line is nowrap +
+								     ellipsis and a block child would break its truncation.
+
+								     Deliberately a DIFFERENT signal from the `low` colour on the weight
+								     text beside it. That marks stock low in absolute grams, against the
+								     viewer's own configured threshold; this shows how full the spool is
+								     relative to its own capacity. A 250 g sample spool with 200 g left is
+								     80% full AND under a 250 g threshold -- both true, both worth seeing. -->
+								<span
+									class="chip-gauge"
+									aria-hidden="true"
+									style="--pct:{getWeightPct(s)}%; --gauge:{gaugeColor(getWeightPct(s))}"
+								></span>
 							</a>
 						{/each}
 					</div>
@@ -1057,6 +1086,18 @@
 		}
 	}
 	.chip {
+		/* Positioned only so `.chip-gauge` below can hug this box. There is no stretched
+		   ::after here, so this does not repeat the containing-block mistake that broke the
+		   whole-row click target on routes/orders. */
+		position: relative;
+		/* `overflow: hidden` clips the gauge to this box's 7px corners -- but it also changes
+		   this flex item's automatic minimum size from its content height to zero (CSS Sizing:
+		   min-height:auto applies only while overflow is visible). Without `flex: none` the
+		   chips in a card holding more than fits its max-height then SHRANK instead of the body
+		   scrolling: measured at 41px before, 21px after, with the text clipped mid-line.
+		   `flex: none` restores exactly what min-height:auto was doing implicitly. */
+		overflow: hidden;
+		flex: none;
 		display: flex;
 		align-items: center;
 		gap: 9px;
@@ -1075,6 +1116,15 @@
 	}
 	.chip:active {
 		cursor: grabbing;
+	}
+	/* Spoolman NG fork addition -- see the element's own comment in the markup above. */
+	.chip-gauge {
+		position: absolute;
+		left: 0;
+		bottom: 0;
+		height: 2px;
+		width: var(--pct);
+		background: var(--gauge);
 	}
 	.chip-info {
 		display: flex;
