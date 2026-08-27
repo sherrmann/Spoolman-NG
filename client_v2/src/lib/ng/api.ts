@@ -262,3 +262,16 @@ export type LocationFieldDef = Omit<FieldDef, 'entity_type'> & { entity_type: 'l
 export async function listLocationFields(signal?: AbortSignal): Promise<LocationFieldDef[]> {
 	return getJson<LocationFieldDef[]>('/field/location', {}, signal);
 }
+
+/**
+ * Hand a location's field definition to upstream's `ExtraFieldInput`.
+ *
+ * That component's `field` prop is typed `FieldDef`, so a `LocationFieldDef` is rejected on the
+ * discriminant alone. It is structurally fine: the component (and FieldGrid and EditableField
+ * with it) renders from `key`, `name`, `field_type`, `choices`, `unit` and `default_value` and
+ * never reads `entity_type` -- verified by grep across all three. Cast here, in one named place,
+ * rather than widening the vendored union or restating the cast at every call site.
+ */
+export function asFieldDef(def: LocationFieldDef): FieldDef {
+	return def as unknown as FieldDef;
+}
