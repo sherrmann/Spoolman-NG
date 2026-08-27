@@ -165,7 +165,6 @@ export function decodeTigerTag(buf: ArrayBuffer): TigerTagBinaryData {
 	offset += 1;
 	offset += 2; // reserved
 	const timestamp = view.getUint32(offset, BE);
-	offset += 4;
 
 	// Bed temp at offset 36-37. Guarded separately from the 36-byte header check above because a
 	// tag can legitimately be read back truncated (a partial NDEF read, a short mock in tests);
@@ -254,7 +253,10 @@ export function encodeTigerTag(data: TigerTagBinaryData): ArrayBuffer {
 	// intermediate value -- `>>> 0` below is load-bearing, not decorative, to get it back to the
 	// unsigned value DataView expects.
 	const colorVal =
-		((data.color_r & 0xff) << 24) | ((data.color_g & 0xff) << 16) | ((data.color_b & 0xff) << 8) | (data.color_a & 0xff);
+		((data.color_r & 0xff) << 24) |
+		((data.color_g & 0xff) << 16) |
+		((data.color_b & 0xff) << 8) |
+		(data.color_a & 0xff);
 	view.setUint32(offset, colorVal >>> 0, BE);
 	offset += 4;
 
@@ -278,7 +280,6 @@ export function encodeTigerTag(data: TigerTagBinaryData): ArrayBuffer {
 	view.setUint16(offset, 0, BE);
 	offset += 2; // reserved
 	view.setUint32(offset, data.timestamp >>> 0, BE);
-	offset += 4;
 
 	// Bed temp at offset 36-37
 	view.setUint8(BED_TEMP_OFFSET, data.bed_temp & 0xff);
@@ -321,7 +322,11 @@ export function encodeTigerTag(data: TigerTagBinaryData): ArrayBuffer {
  * takes no such maps and always leaves `id_brand` and `id_material` at 0. This port follows the
  * React source, per instructions, so `id_brand`/`id_material` are always 0 here too.
  */
-export function mapSpoolToTigerTag(spool: Spool, filament: Filament, userMessage: string = ''): TigerTagBinaryData {
+export function mapSpoolToTigerTag(
+	spool: Spool,
+	filament: Filament,
+	userMessage: string = ''
+): TigerTagBinaryData {
 	const data: TigerTagBinaryData = {
 		id_tigertag: TIGERTAG_MAKER_V1,
 		id_product: 0,
