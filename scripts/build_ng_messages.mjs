@@ -97,6 +97,11 @@ const KEYS = [
 	// Scan-to-move and the scan sentinels (#84 / #97b / #132). Upstream's own scanner covers
 	// QR-to-navigate and tag linking; these are the keys for what it has no notion of.
 	{ prefix: 'scan.' },
+	// Writing a spool's data ONTO an NFC tag. Upstream's client links a tag by its UID and
+	// never reads or writes what is stored on it, so every string under here describes
+	// something it has no counterpart for -- including the warning that a browser NDEF write
+	// produces a tag the real TigerTag app will not recognise.
+	{ prefix: 'nfc.' },
 	'buttons.save',
 	'buttons.cancel',
 	'buttons.delete',
