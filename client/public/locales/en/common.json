@@ -1151,15 +1151,21 @@
       "comment": "Comment",
       "spool_count": "Spools stored here",
       "spools_here": "Spools at this location",
-      "no_spools": "No spools are stored at this location."
+      "no_spools": "No spools are stored at this location.",
+      "not_found": "This location no longer exists."
     },
     "print": {
       "title": "Print Location Labels",
       "button": "Print labels",
       "description": "Select the locations to print scannable QR labels for.",
       "select_placeholder": "Select locations",
-      "none_selected": "No locations selected"
-    }
+      "none_selected": "No locations selected",
+      "label_hint": "Location labels carry only location fields, and their QR code opens the location page."
+    },
+    "empty": "No locations yet.",
+    "create_error": "Failed to create location.",
+    "rename_error": "Failed to rename location.",
+    "delete_error": "Failed to delete location."
   },
   "calibration": {
     "title": "Calibration",

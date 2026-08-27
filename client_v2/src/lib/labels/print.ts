@@ -207,7 +207,11 @@ export async function exportLabels({ design, bindings, layout, baseUrl }: PrintJ
 	// Subject ids are unique (the selection is a Set), so these names never collide.
 	const files: ExportedFile[] = [];
 	for (const b of bindings) {
-		const name = `spoolman-${kind}-label-${kind === 'filament' ? b.filament?.id : b.spool?.id}`;
+		// Same three-way choice as render.ts's subjectId -- a ternary here named every
+		// location label `spoolman-location-label-undefined`.
+		const subjectId =
+			kind === 'filament' ? b.filament?.id : kind === 'location' ? b.location?.id : b.spool?.id;
+		const name = `spoolman-${kind}-label-${subjectId}`;
 		const dataUrl = renderLabelDataUrl(design, b, baseUrl, logoImage, dpi);
 		const rendered: RenderedLabel = {
 			name,

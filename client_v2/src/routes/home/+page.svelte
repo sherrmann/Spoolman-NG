@@ -40,6 +40,9 @@
 	import BreakdownBar from '$lib/ng/components/BreakdownBar.svelte';
 	import Timeline from '$lib/ng/components/Timeline.svelte';
 	import UsageChart from '$lib/ng/components/UsageChart.svelte';
+	import ThresholdEdit from '$lib/ng/components/ThresholdEdit.svelte';
+	import OrderedPill from '$lib/ng/components/OrderedPill.svelte';
+	import MarkOrderedDialog from '$lib/ng/components/MarkOrderedDialog.svelte';
 	import Database from '@lucide/svelte/icons/database';
 	import Highlighter from '@lucide/svelte/icons/highlighter';
 	import Store from '@lucide/svelte/icons/store';
@@ -191,13 +194,10 @@
 		return idx === 0 ? 0 : idx < 3 ? 1 : 2;
 	}
 
-	// Upstream's on-order pill (orders/orderPill.tsx) is plain "Ordered · <age>" with no
-	// i18n of its own; this fork's Order carries no shop reference to add back in, so the
-	// port keeps it exactly that literal rather than inventing a locale id for one word.
-	function orderedAge(orderedAt: string, now: Date = new Date()): string {
-		const days = Math.floor((now.getTime() - new Date(orderedAt).getTime()) / 86_400_000);
-		return days <= 0 ? 'today' : `${days}d`;
-	}
+	// US1 "Mark as ordered" dialog (#298), reused as-is from the full Low Stock page
+	// (routes/lowstock/+page.svelte). Mounted only while a filament is actually chosen,
+	// same reasoning as there.
+	let markOrderedFilament = $state<ForkFilament | undefined>();
 
 	// This client has no /spool or /filament listing route (client/src/pages/home's KPI
 	// links) — the Library at "/" is both, told apart by group mode — and no /locations
@@ -381,19 +381,19 @@
 							{:else}
 								{#if lowStock.explicit.length > 0}
 									<div class="subhead">{ng.low_stock_section_explicit()}</div>
-									<div class="lowstock-list">
+									<ul class="lowstock-list">
 										{#each lowStock.explicit as row (row.filament.id)}
 											{@render lowStockRow(row)}
 										{/each}
-									</div>
+									</ul>
 								{/if}
 								{#if lowStock.fallback.length > 0}
 									<div class="subhead">{ng.low_stock_section_fallback({ grams: fallbackG })}</div>
-									<div class="lowstock-list">
+									<ul class="lowstock-list">
 										{#each lowStock.fallback as row (row.filament.id)}
 											{@render lowStockRow(row)}
 										{/each}
-									</div>
+									</ul>
 								{/if}
 							{/if}
 						</div>
@@ -491,7 +491,11 @@
 </div>
 
 {#snippet lowStockRow(row: LowStockRow)}
-	<a class="lowstock-item" href={libraryHref('filament', row.filament.id)}>
+	<!-- The row is a container, not a control: it holds a mark-ordered button and a threshold
+	     editor, and an <a> may not contain interactive content. The name below is the real link,
+	     stretched over the row in CSS, so the whole row stays clickable without the row itself
+	     pretending to be a button. Same pattern as routes/lowstock/+page.svelte. -->
+	<li class="lowstock-item">
 		<span class="lowstock-left">
 			<Swatch
 				colors={row.filament.colors}
@@ -500,20 +504,39 @@
 				radius={6}
 			/>
 			<span class="lowstock-info">
-				<span class="name" use:truncTitle>{getFilamentName(row.filament, vendors)}</span>
+				<a class="name" use:truncTitle href={libraryHref('filament', row.filament.id)}
+					>{getFilamentName(row.filament, vendors)}</a
+				>
 				<span class="material">{ng.spool_fields_material()}: {row.filament.material || '?'}</span>
 			</span>
 		</span>
-		<span class="lowstock-right">
+		<span class="lowstock-right" onclick={(e) => e.stopPropagation()} role="none">
 			{#if row.onOrder}
-				<span class="pill">Ordered · {orderedAge(row.onOrder.orderedAt)}</span>
+				<OrderedPill onOrder={row.onOrder} />
+			{:else}
+				<button class="mark-ordered-btn" onclick={() => (markOrderedFilament = row.filament)}>
+					{ng.orders_mark_ordered()}
+				</button>
 			{/if}
 			<span class="weight" class:actionable={!row.onOrder} class:on-order={!!row.onOrder}>
 				{ng.low_stock_remaining_left({ amount: weightAuto(row.remaining) })}
 			</span>
+			<ThresholdEdit filamentId={row.filament.id} value={row.filament.lowStockThreshold} onSaved={refresh} />
 		</span>
-	</a>
+	</li>
 {/snippet}
+
+{#if markOrderedFilament}
+	<MarkOrderedDialog
+		filament={markOrderedFilament}
+		{vendors}
+		onclose={() => (markOrderedFilament = undefined)}
+		onsuccess={() => {
+			markOrderedFilament = undefined;
+			refresh();
+		}}
+	/>
+{/if}
 
 <style>
 	.page {
@@ -812,15 +835,18 @@
 		gap: 8px;
 	}
 	.lowstock-item {
+		position: relative;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		gap: 16px;
+		width: 100%;
 		padding: 12px 14px;
 		border-radius: var(--radius);
 		background: var(--surface-2);
 		color: inherit;
 		text-decoration: none;
+		cursor: pointer;
 		transition: background 0.15s ease;
 	}
 	.lowstock-item:hover {
@@ -854,20 +880,39 @@
 		color: var(--text-faint);
 		margin-top: 2px;
 	}
+	.lowstock-item .name::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+	}
+	.lowstock-right {
+		position: relative;
+		z-index: 1;
+	}
 	.lowstock-right {
 		display: flex;
 		align-items: center;
-		gap: 10px;
+		flex-wrap: wrap;
+		justify-content: flex-end;
+		gap: 8px;
 		flex-shrink: 0;
 	}
-	.pill {
-		font-size: 11px;
-		font-weight: 600;
-		padding: 3px 9px;
-		border-radius: 999px;
-		background: var(--accent-wash);
-		color: var(--accent-soft);
+	.mark-ordered-btn {
 		white-space: nowrap;
+		border: 1px solid var(--border-strong);
+		background: none;
+		color: var(--text-2);
+		border-radius: var(--radius);
+		padding: 5px 9px;
+		font-size: 11.5px;
+		font-weight: 500;
+		font-family: inherit;
+		cursor: pointer;
+	}
+	.mark-ordered-btn:hover {
+		border-color: var(--accent);
+		color: var(--text);
 	}
 	.weight {
 		font-size: 13px;

@@ -10,7 +10,13 @@
 		// Spoolman NG fork addition. Its label comes from this fork's own message catalogue
 		// rather than upstream's, so no string of ours lands in ./locales.
 		{ href: '/home', label: ng.home_home },
+		// Spoolman NG fork addition (#298), same reasoning as the /home entry above.
+		{ href: '/lowstock', label: ng.low_stock_title },
+		// Spoolman NG fork addition (#298/#324), same reasoning as the /home entry above.
+		{ href: '/orders', label: ng.orders_title },
 		{ href: '/dashboard', label: m['dashboard.dashboard'] },
+		// Spoolman NG fork addition (#103), same reasoning as the /home entry above.
+		{ href: '/locations', label: ng.locations_locations },
 		{ href: '/labels', label: m['nav.labels'] },
 		{ href: '/settings', label: m['settings.header'] }
 	] satisfies { href: Pathname; label: () => string }[];

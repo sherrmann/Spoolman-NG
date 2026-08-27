@@ -84,8 +84,15 @@ export function elementToShape(el: LabelElement, ctx: RenderContext): ShapeSpec 
 	switch (el.type) {
 		case 'qr': {
 			const qrCtx = { baseUrl: ctx.baseUrl, kind: ctx.kind };
-			// The QR's subject is the spool (spool labels) or filament (filament labels).
-			const subjectId = ctx.kind === 'filament' ? ctx.binding?.filament?.id : ctx.binding?.spool?.id;
+			// The QR's subject is whichever entity this kind of label is about. A switch, not a
+			// two-way test: with `location` in the union a ternary would bind a location label's
+			// QR to the (absent) spool and silently print an id-0 preview code instead.
+			const subjectId =
+				ctx.kind === 'filament'
+					? ctx.binding?.filament?.id
+					: ctx.kind === 'location'
+						? ctx.binding?.location?.id
+						: ctx.binding?.spool?.id;
 			// With no bound subject (editor canvas), preview the template with id 0 so
 			// the QR's module density matches what will actually print for this
 			// encoding — a long URL/custom target is denser than the compact scheme.

@@ -108,3 +108,114 @@ export async function apiCounts(api: APIRequestContext) {
   );
   return { spools, filaments, vendors };
 }
+
+/**
+ * One filament that is low purely because of the global fallback, with its own vendor and spool.
+ *
+ * Write tests each seed their own rather than sharing the fixture above: they mutate what they
+ * touch (setting a threshold, placing an order), and a shared row would make the result depend
+ * on which test ran first.
+ */
+export async function seedLowFilament(
+	api: APIRequestContext,
+	prefix: string,
+): Promise<{ id: number; name: string }> {
+	const vendor = await post(api, "/vendor", { name: unique(`${prefix}Vendor`) });
+	const name = unique(prefix);
+	const filament = await post(api, "/filament", {
+		name,
+		vendor_id: vendor.id,
+		material: "PLA",
+		color_hex: "AA3355",
+		price: 20,
+		density: 1.24,
+		diameter: 1.75,
+		weight: 1000,
+		spool_weight: 190,
+	});
+	await post(api, "/spool", { filament_id: filament.id, used_weight: 950, location: "Shelf Z" });
+	return { id: filament.id, name };
+}
+
+/** Open orders that include a line for this filament. */
+export async function openOrdersFor(api: APIRequestContext, filamentId: number) {
+	const orders = (await (await api.get("/api/v1/order")).json()) as {
+		state: string;
+		lines: { filament_id: number }[];
+	}[];
+	return orders.filter(
+		(o) => o.state === "open" && o.lines.some((l) => l.filament_id === filamentId),
+	);
+}
+
+/** The filament's own low-stock threshold, straight from the API. */
+export async function thresholdOf(api: APIRequestContext, filamentId: number) {
+	const f = (await (await api.get(`/api/v1/filament/${filamentId}`)).json()) as {
+		low_stock_threshold?: number | null;
+	};
+	return f.low_stock_threshold ?? null;
+}
+
+/** A shop, two filaments and one open order with a line for each. */
+export async function seedOrder(api: APIRequestContext, prefix: string) {
+	const vendor = await post(api, "/vendor", { name: unique(`${prefix}Vendor`) });
+	const shop = await post(api, "/shop", { name: unique(`${prefix}Shop`) });
+	const mk = async (suffix: string) => {
+		const name = unique(`${prefix}${suffix}`);
+		const f = await post(api, "/filament", {
+			name,
+			vendor_id: vendor.id,
+			material: "PLA",
+			color_hex: "5566AA",
+			price: 20,
+			density: 1.24,
+			diameter: 1.75,
+			weight: 1000,
+			spool_weight: 190,
+		});
+		return { id: f.id, name };
+	};
+	const first = await mk("A");
+	const second = await mk("B");
+	const orderNumber = unique(`${prefix}-SO`);
+	const order = await post(api, "/order", {
+		ordered_at: new Date(Date.now() - 3 * 864e5).toISOString(),
+		order_number: orderNumber,
+		shop_id: shop.id,
+		lines: [
+			{ filament_id: first.id, quantity: 2, price_per_unit: 20 },
+			{ filament_id: second.id, quantity: 5, price_per_unit: 30 },
+		],
+	});
+	return { orderId: order.id, orderNumber, shopName: shop.name, first, second };
+}
+
+/** One order straight from the API, for checking what a write actually persisted. */
+export async function orderById(api: APIRequestContext, orderId: number) {
+	return (await (await api.get(`/api/v1/order/${orderId}`)).json()) as {
+		state: string;
+		order_number?: string;
+		lines: { id: number; filament_id: number; quantity: number; arrived_at?: string }[];
+	};
+}
+
+/**
+ * A Location *entity* row (`/api/v1/locations`), which is what an arrival's `location_id` names.
+ *
+ * Distinct from the `location` string carried on a spool: the entity registry is a separate
+ * table, and `/api/v1/location` (singular) returns only the distinct spool strings, with no ids.
+ */
+export async function seedLocation(api: APIRequestContext, prefix: string) {
+  const name = unique(prefix);
+  const created = await post(api, "/locations", { name });
+  return { id: created.id, name };
+}
+
+/** Every non-archived spool, for checking where an arrival put the ones it created. */
+export async function allSpools(api: APIRequestContext) {
+  return (await (await api.get("/api/v1/spool?allow_archived=false")).json()) as {
+    id: number;
+    location?: string;
+    filament: { id: number };
+  }[];
+}

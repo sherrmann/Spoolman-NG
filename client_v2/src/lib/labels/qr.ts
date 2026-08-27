@@ -4,15 +4,15 @@ import type { QrElement, LabelKind } from './types';
 // QR content + geometry. The QR encodes a link back to the label's subject — a
 // spool for spool labels, a filament for filament labels. The first two forms are
 // understood by Spoolman's scanner ($lib/utils/spoolCode.ts):
-//   scheme → WEB+SPOOLMAN:S-<id> / F-<id>              (compact custom URI)
-//   url    → <base_url>/spool/show/<id> or /filament/show/<id>  (opens in a browser)
+//   scheme → WEB+SPOOLMAN:S-<id> / F-<id> / L-<id>     (compact custom URI)
+//   url    → <base_url>/{spool,filament,location}/show/<id>     (opens in a browser)
 //   custom → the element's urlTemplate                 (user-supplied, {id} substituted)
 // A custom target is meant for a third-party app or host and won't scan back
 // into Spoolman.
 
 export interface QrContext {
 	baseUrl: string;
-	/** Whether the {id} refers to a spool or a filament. Defaults to `spool`. */
+	/** Whether the {id} refers to a spool, a filament or a location. Defaults to `spool`. */
 	kind?: LabelKind;
 }
 
@@ -45,13 +45,39 @@ function webRoot(ctx: QrContext): string {
 	const root = ctx.baseUrl || (typeof window !== 'undefined' ? window.location.origin : '');
 	return root.replace(/\/$/, '');
 }
-/** Route segment for the browser link: `spool` or `filament`. */
-function showPath(ctx: QrContext): 'spool' | 'filament' {
-	return ctx.kind === 'filament' ? 'filament' : 'spool';
+// Both helpers are switches rather than the two-way tests they replace: LabelKind has
+// three members now, and `kind === 'filament' ? x : y` quietly hands a location label the
+// spool answer -- a location QR that opens some unrelated spool. See
+// docs/upstream/client-v2-fork-additions.md.
+
+/** Route segment for the browser link. */
+function showPath(ctx: QrContext): 'spool' | 'filament' | 'location' {
+	switch (ctx.kind) {
+		case 'filament':
+			return 'filament';
+		case 'location':
+			return 'location';
+		default:
+			return 'spool';
+	}
 }
-/** Compact-scheme entity prefix: `S` for spools, `F` for filaments. */
-function schemePrefix(ctx: QrContext): 'S' | 'F' {
-	return ctx.kind === 'filament' ? 'F' : 'S';
+/**
+ * Compact-scheme entity prefix: `S` for spools, `F` for filaments, `L` for locations.
+ *
+ * `L` is not a new invention -- it is the scheme this fork's React client has printed on
+ * location labels since #84 (client/src/pages/printing/locationQrCodePrintingDialog.tsx
+ * encodes `WEB+SPOOLMAN:L-<id>`), and `/location/show/<id>` is the URL form it pairs with.
+ * Matching both exactly is what lets a label printed by either client scan into the other.
+ */
+function schemePrefix(ctx: QrContext): 'S' | 'F' | 'L' {
+	switch (ctx.kind) {
+		case 'filament':
+			return 'F';
+		case 'location':
+			return 'L';
+		default:
+			return 'S';
+	}
 }
 
 /** A square boolean module grid for the given text. */

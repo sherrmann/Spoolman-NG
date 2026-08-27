@@ -7,6 +7,7 @@
 	import { labelDesigns } from '$lib/stores/labelDesigns.svelte';
 	import { setDesignKind, type LabelDesign } from '$lib/labels/types';
 	import * as m from '$lib/paraglide/messages';
+	import { ng } from '$lib/ng/i18n';
 	import Plus from '@lucide/svelte/icons/plus';
 
 	// Spool ids to pre-select in the print tab (deep-link, e.g. /labels?spools=1,2).
@@ -139,8 +140,22 @@
 						class:active={working.kind === 'filament'}
 						onclick={() => working && setDesignKind(working, 'filament')}>{m['labels.typeFilament']()}</button
 					>
+					<!-- Spoolman NG fork addition (#84): storage-location labels, carrying the `L-<id>`
+					     QR scheme this fork's React client has printed since that issue. Its label comes
+					     from the fork's own catalogue; upstream has no string for a kind it has no
+					     concept of. -->
+					<button
+						class:active={working.kind === 'location'}
+						onclick={() => working && setDesignKind(working, 'location')}>{ng.locations_location()}</button
+					>
 				</div>
-				<span class="type-hint">{m['labels.typeHint']()}</span>
+				<!-- Upstream's hint describes only the filament kind ("Filament labels leave out
+				     spool-only fields..."), which says nothing useful while the Location kind is
+				     selected. Swap in the fork's own sentence for that case rather than leaving a
+				     hint that describes a different button. -->
+				<span class="type-hint">
+					{working.kind === 'location' ? ng.locations_print_label_hint() : m['labels.typeHint']()}
+				</span>
 			</div>
 
 			<div class="tabs">

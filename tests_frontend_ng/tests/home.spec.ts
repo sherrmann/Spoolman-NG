@@ -83,7 +83,10 @@ test("low stock lists both sections and marks what is already on order", async (
   // seeds on every run, so a shared instance accumulates rows and any global locator matches
   // whatever earlier runs left behind. Tying each assertion to the name we created keeps it
   // true regardless of what else is in the database.
-  const lowRow = (name: string) => page.locator("a", { hasText: name }).first();
+  // By list-item role, not by an element or class: the row holds a stretched link plus real
+  // controls, so it is a <li> whose <a> covers only the name. Roles are also what upstream's own
+  // suite selects by -- this repo has no data-testid convention to borrow.
+  const lowRow = (name: string) => page.getByRole("listitem").filter({ hasText: name }).first();
 
   // Both routes into "low" must render: a filament under its own threshold, and one under the
   // global fallback with no threshold of its own. They are computed by different branches.
