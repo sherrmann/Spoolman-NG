@@ -210,6 +210,16 @@ export async function createLocation(body: LocationBody): Promise<Location> {
 	return mapLocation(await postJson<Json>('/locations', body));
 }
 
+/**
+ * PATCH a location row.
+ *
+ * `extra` REPLACES the whole custom-field map rather than merging key by key -- measured, not
+ * assumed: a row holding `{probe_a, probe_b}` PATCHed with only `probe_a` comes back holding
+ * only `probe_a`. So a caller editing one field must still send every other field's current
+ * value, exactly the way buildOrderPatchBody has to resend every order line (see
+ * ./orderEditBody's module comment). Omitting a key is how a field gets CLEARED, which is why
+ * LocationFieldsModal drops cleared keys instead of sending an explicit null.
+ */
 export async function updateLocation(id: number, body: LocationBody): Promise<Location> {
 	return mapLocation(await patchJson<Json>(`/locations/${id}`, body));
 }
