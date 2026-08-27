@@ -90,6 +90,10 @@ const KEYS = [
 	'locations.print.label_hint',
 	// Calibration (#123): 173 keys, all plain text or simple {{interpolation}}.
 	{ prefix: 'calibration.' },
+	// Help (#123 follow-up). `help.description` carries <Trans>-style markup that Paraglide
+	// cannot substitute components into; $lib/ng/trans parses it instead, so the string is
+	// transcribed verbatim and read at runtime rather than being split into a key per sentence.
+	{ prefix: 'help.' },
 	'buttons.save',
 	'buttons.cancel',
 	'buttons.delete',

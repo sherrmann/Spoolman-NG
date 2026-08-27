@@ -10,6 +10,7 @@
 	import { spoolSource } from '$lib/api/spoolSource';
 	import { listAllSpools, listAllFilaments, listOrders, lowStockFallbackG } from '$lib/ng/api';
 	import { ng, plural } from '$lib/ng/i18n';
+	import { parseTrans } from '$lib/ng/trans';
 	import * as m from '$lib/paraglide/messages';
 	import {
 		computeLowStock,
@@ -207,19 +208,15 @@
 	const vendorListHref = `${resolve('/')}?group=vendor`;
 	const locationBoardHref = `${resolve('/dashboard')}?by=location`;
 
-	// home.description names a <helpPageLink> this client doesn't have a route for yet;
-	// render its text without a dead link rather than dropping the sentence.
+	// home.description names a <helpPageLink>, which now has a real route to point at. Parsed
+	// with the same reader the Help page uses ($lib/ng/trans) rather than the index-slicing
+	// this replaces: that only ever handled one hard-coded tag, and silently dropped the link
+	// entirely if a translation spelled it differently.
 	let description = $derived.by(() => {
-		const raw = ng.home_description();
-		const open = raw.indexOf('<helpPageLink>');
-		const close = raw.indexOf('</helpPageLink>');
-		if (open === -1 || close === -1) return { before: raw, link: '', after: '' };
-		return {
-			before: raw.slice(0, open),
-			link: raw.slice(open + '<helpPageLink>'.length, close),
-			after: raw.slice(close + '</helpPageLink>'.length)
-		};
+		const [block] = parseTrans(ng.home_description());
+		return block?.kind === 'block' ? block.inline : [];
 	});
+	const helpHref = resolve('/help');
 
 	// --- tabs ------------------------------------------------------------------------
 
@@ -254,7 +251,12 @@
 		<div class="empty-hero">
 			<div class="empty-hero-icon"><Database size={40} /></div>
 			<h2>{ng.home_welcome()}</h2>
-			<p>{description.before}<strong>{description.link}</strong>{description.after}</p>
+			<p>
+				{#each description as node, i (i)}
+					{#if node.kind === 'tag' && node.name === 'helpPageLink'}<a href={helpHref}>{node.text}</a
+						>{:else}{node.text}{/if}
+				{/each}
+			</p>
 			<button class="empty-hero-btn" onclick={() => ui.openAddModal()}>{ng.spool_titles_create()}</button>
 		</div>
 	{:else}
