@@ -355,6 +355,15 @@
 		display: flex;
 		flex-direction: column;
 		gap: 8px;
+		/* These rows are a semantic list -- `getByRole("listitem")` is how the browser tests
+		   address them -- but not a bulleted one. `display: flex` does NOT suppress an <li>'s
+		   ::marker in Chromium, so without this every row rendered a disc, indented 40px by the
+		   UA stylesheet's padding-inline-start. Measured via getComputedStyle, not guessed: the
+		   markers sat in the list's padding against a matching background and were easy to miss
+		   on every page but the narrow one. */
+		list-style: none;
+		margin: 0;
+		padding: 0;
 	}
 
 	/* The row is a container, not a control. Its filament name is a real link stretched over
