@@ -22,9 +22,22 @@ test.beforeAll(async ({ playwright, baseURL }) => {
  * Fonts are fetched from Google's CDN, which a sandboxed or offline runner cannot reach. That
  * failure says nothing about this page, so it is the one exemption -- everything else, including
  * any 404 from a fork-only endpoint, must fail the test.
+ *
+ * Matched on the parsed hostname rather than as a substring of the URL. A substring test is
+ * satisfied by any URL merely *containing* the text -- "https://example.test/?x=fonts.gstatic.com"
+ * among them -- so it would quietly widen this exemption past the two hosts it is meant to cover
+ * and could swallow a genuine failure the suite exists to catch.
  */
-const isExternalFont = (url: string) =>
-  url.includes("fonts.googleapis.com") || url.includes("fonts.gstatic.com");
+const FONT_HOSTS = new Set(["fonts.googleapis.com", "fonts.gstatic.com"]);
+
+function isExternalFont(url: string): boolean {
+  try {
+    return FONT_HOSTS.has(new URL(url).hostname);
+  } catch {
+    // Console messages can carry an empty or non-absolute location; those are never the CDN.
+    return false;
+  }
+}
 
 function watchForFailures(page: Page) {
   const problems: string[] = [];
