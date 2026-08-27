@@ -155,3 +155,46 @@ export async function thresholdOf(api: APIRequestContext, filamentId: number) {
 	};
 	return f.low_stock_threshold ?? null;
 }
+
+/** A shop, two filaments and one open order with a line for each. */
+export async function seedOrder(api: APIRequestContext, prefix: string) {
+	const vendor = await post(api, "/vendor", { name: unique(`${prefix}Vendor`) });
+	const shop = await post(api, "/shop", { name: unique(`${prefix}Shop`) });
+	const mk = async (suffix: string) => {
+		const name = unique(`${prefix}${suffix}`);
+		const f = await post(api, "/filament", {
+			name,
+			vendor_id: vendor.id,
+			material: "PLA",
+			color_hex: "5566AA",
+			price: 20,
+			density: 1.24,
+			diameter: 1.75,
+			weight: 1000,
+			spool_weight: 190,
+		});
+		return { id: f.id, name };
+	};
+	const first = await mk("A");
+	const second = await mk("B");
+	const orderNumber = unique(`${prefix}-SO`);
+	const order = await post(api, "/order", {
+		ordered_at: new Date(Date.now() - 3 * 864e5).toISOString(),
+		order_number: orderNumber,
+		shop_id: shop.id,
+		lines: [
+			{ filament_id: first.id, quantity: 2, price_per_unit: 20 },
+			{ filament_id: second.id, quantity: 5, price_per_unit: 30 },
+		],
+	});
+	return { orderId: order.id, orderNumber, shopName: shop.name, first, second };
+}
+
+/** One order straight from the API, for checking what a write actually persisted. */
+export async function orderById(api: APIRequestContext, orderId: number) {
+	return (await (await api.get(`/api/v1/order/${orderId}`)).json()) as {
+		state: string;
+		order_number?: string;
+		lines: { id: number; filament_id: number; quantity: number; arrived_at?: string }[];
+	};
+}

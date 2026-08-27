@@ -1,26 +1,29 @@
 <script lang="ts">
+	/* eslint-disable svelte/no-navigation-without-resolve --
+	   The href below is built from resolve('/orders') plus a query string; resolving it a
+	   second time would double-apply the deploy base path. See routes/lowstock/+page.svelte
+	   for the same pattern. */
 	// Calm on-order pill for a Low Stock row already covered by an open order — ported from
-	// client/src/pages/orders/orderPill.tsx. Upstream links through to an /orders page and
-	// shows a shop name; this client has neither yet (no /orders route, and this fork's
-	// `Order` type carries no shop reference -- see the doc comment on
-	// `openOrdersByFilament` in $lib/ng/analytics), so the pill renders as plain text, same
-	// as the identical pill already on the dashboard's Low Stock tab
-	// (routes/home/+page.svelte's `lowStockRow` snippet).
+	// client/src/pages/orders/orderPill.tsx. Now that /orders exists, this links straight to
+	// the order (opening it via `?highlight=<id>`, which routes/orders/+page.svelte reads on
+	// load) and shows the shop name when the caller has one to hand it — same as upstream's
+	// `formatOrderedPill`/`OrderedPill`. `shopName` is optional because not every caller has
+	// it joined onto its on-order lookup yet (routes/home and routes/lowstock's Low Stock
+	// rows currently pass none, same as before this pill grew a shop).
+	import { resolve } from '$app/paths';
+	import { formatOrderedPill } from '$lib/ng/ordersState';
 	import type { OnOrderInfo } from '$lib/ng/analytics';
 
-	let { onOrder }: { onOrder: OnOrderInfo } = $props();
+	let { onOrder, shopName }: { onOrder: OnOrderInfo; shopName?: string } = $props();
 
-	/** "today" same-day, else "<n>d". */
-	function age(orderedAt: string, now: Date = new Date()): string {
-		const days = Math.floor((now.getTime() - new Date(orderedAt).getTime()) / 86_400_000);
-		return days <= 0 ? 'today' : `${days}d`;
-	}
+	let href = $derived(`${resolve('/orders')}?highlight=${onOrder.orderId}`);
 </script>
 
-<span class="pill">Ordered · {age(onOrder.orderedAt)}</span>
+<a class="pill" {href}>{formatOrderedPill(onOrder, shopName)}</a>
 
 <style>
 	.pill {
+		display: inline-block;
 		font-size: 11px;
 		font-weight: 600;
 		padding: 3px 9px;
@@ -28,5 +31,9 @@
 		background: var(--accent-wash);
 		color: var(--accent-soft);
 		white-space: nowrap;
+		text-decoration: none;
+	}
+	.pill:hover {
+		background: var(--accent-wash-soft);
 	}
 </style>
