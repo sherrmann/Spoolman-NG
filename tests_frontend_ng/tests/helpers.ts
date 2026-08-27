@@ -198,3 +198,24 @@ export async function orderById(api: APIRequestContext, orderId: number) {
 		lines: { id: number; filament_id: number; quantity: number; arrived_at?: string }[];
 	};
 }
+
+/**
+ * A Location *entity* row (`/api/v1/locations`), which is what an arrival's `location_id` names.
+ *
+ * Distinct from the `location` string carried on a spool: the entity registry is a separate
+ * table, and `/api/v1/location` (singular) returns only the distinct spool strings, with no ids.
+ */
+export async function seedLocation(api: APIRequestContext, prefix: string) {
+  const name = unique(prefix);
+  const created = await post(api, "/locations", { name });
+  return { id: created.id, name };
+}
+
+/** Every non-archived spool, for checking where an arrival put the ones it created. */
+export async function allSpools(api: APIRequestContext) {
+  return (await (await api.get("/api/v1/spool?allow_archived=false")).json()) as {
+    id: number;
+    location?: string;
+    filament: { id: number };
+  }[];
+}

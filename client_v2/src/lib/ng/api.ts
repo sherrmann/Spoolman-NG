@@ -176,8 +176,15 @@ export async function arriveOrder(orderId: number, body: ArriveBody): Promise<vo
 	await postJson(`/order/${orderId}/arrive`, body);
 }
 
-/** Storage locations, for choosing where spools created on arrival should live. */
+/**
+ * Storage locations, for choosing where spools created on arrival should live.
+ *
+ * `/locations` (plural) is the Location *entity* registry -- rows with an id, which is what
+ * `POST /order/{id}/arrive` means by `location_id`. Not to be confused with `/location`
+ * (singular), which returns the distinct `Spool.location` strings and has no ids at all:
+ * asking that one for entities yields a list of `{ id: NaN, name: 'undefined' }`.
+ */
 export async function listLocations(signal?: AbortSignal): Promise<Location[]> {
-	const page = await getList('/location', {}, signal);
+	const page = await getList('/locations', {}, signal);
 	return (page.items as Json[]).map((l) => ({ id: Number(l.id), name: String(l.name) }));
 }

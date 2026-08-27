@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { orderById, seedOrder } from "./helpers";
+import { allSpools, orderById, seedLocation, seedOrder } from "./helpers";
 
 /**
  * The fork's Orders page (client_v2/src/routes/orders/).
@@ -150,4 +150,38 @@ test("the page scrolls inside the app shell rather than overflowing it", async (
   expect(docScroll, `the document grew to ${docScroll}px`).toBeLessThanOrEqual(
     viewport + 1,
   );
+});
+
+test("arriving into a location creates the spools there", async ({ page, request }) => {
+  // Guards the endpoint this dropdown reads. `location_id` on an arrival is a Location ENTITY id
+  // (/api/v1/locations); /api/v1/location returns the distinct spool location strings and no ids
+  // at all, so pointing the dropdown at it yields options that all read "undefined" and a NaN id
+  // -- and the dialog swallows the load error, so nothing else here would notice.
+  const bay = await seedLocation(request, "Bay");
+  const seeded = await seedOrder(request, "Loc");
+
+  await openOrders(page);
+  await row(page, seeded.orderNumber)
+    .getByRole("button", { name: /arrived/i })
+    .click();
+
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+
+  const select = dialog.getByRole("combobox");
+  await expect(select.getByRole("option", { name: bay.name })).toBeAttached();
+
+  // Named, not the bare role: each order line carries a checkbox of its own.
+  await dialog.getByRole("checkbox", { name: /create spools/i }).check();
+  await select.selectOption({ label: bay.name });
+
+  const arrived = page.waitForResponse(
+    (r) => r.url().includes(`/order/${seeded.orderId}/arrive`) && r.request().method() === "POST",
+  );
+  await dialog.getByRole("button", { name: /mark arrived/i }).click();
+  expect((await arrived).status()).toBe(200);
+
+  // 2 + 5 units ordered, one spool each, all stamped with the location entity's NAME.
+  const here = (await allSpools(request)).filter((s) => s.location === bay.name);
+  expect(here).toHaveLength(7);
 });
