@@ -19,6 +19,8 @@
 	import Button from '$components/Button.svelte';
 	import X from '@lucide/svelte/icons/x';
 	import Send from '@lucide/svelte/icons/send';
+	import Mic from '@lucide/svelte/icons/mic';
+	import Volume2 from '@lucide/svelte/icons/volume-2';
 	import Wrench from '@lucide/svelte/icons/wrench';
 	import Undo2 from '@lucide/svelte/icons/undo-2';
 	import * as m from '$lib/paraglide/messages';
@@ -28,10 +30,16 @@
 	import {
 		streamChat,
 		chatUndo,
+		transcribe,
+		chatSwitches,
+		aiStatus,
 		ChatStartError,
+		TranscribeError,
 		type ChatStartFailure,
+		type TranscribeFailure,
 		type ChatTurnBody
 	} from '$lib/ng/aiApi';
+	import { startRecording, voiceSupported, VoiceError, MAX_CLIP_MS, type Recording } from '$lib/ng/voice';
 	import {
 		applyChatEvent,
 		initialChatState,
@@ -58,14 +66,54 @@
 	/** Undo descriptors already replayed, so a second press cannot run the same one twice. */
 	let undone = $state(new Set<string>());
 
+	// --- voice ------------------------------------------------------------------
+	// Two independent halves. Dictation needs a speech-to-text endpoint on the server; speaking
+	// replies is a browser API and needs nothing but the browser, which is why the toggle can be
+	// available when the microphone is not.
+	let voiceOn = $state(false);
+	let autosend = $state(false);
+	/**
+	 * Whether the server has a transcription endpoint.
+	 *
+	 * Gating the microphone on the voice FLAG alone is not enough, and this is exactly the
+	 * "dead button" case $lib/utils/nfc warns about: /ai/transcribe answers 409 with no
+	 * speech-to-text configured, so the button would fail on every press with nothing on screen
+	 * explaining why. Speaking replies is unaffected -- that is a browser API and needs no
+	 * server at all, which is why the two are gated separately rather than together.
+	 */
+	let sttReady = $state(false);
+	let recording = $state(false);
+	let transcribing = $state(false);
+	let speak = $state(false);
+	const canRecord = voiceSupported();
+	const canSpeak = typeof window !== 'undefined' && 'speechSynthesis' in window;
+	/** The live recorder. Not $state: nothing renders from it, and it is pure bookkeeping. */
+	let recorder: Recording | null = null;
+	let clipTimer: ReturnType<typeof setTimeout> | null = null;
+
 	let dialog = $state<HTMLDivElement | null>(null);
 	let opener: HTMLElement | null = null;
 	$effect(() => {
 		opener = document.activeElement as HTMLElement | null;
 		dialog?.focus();
 		input?.focus();
+		const controller = new AbortController();
+		chatSwitches(controller.signal).then((s) => {
+			voiceOn = s.voice;
+			autosend = s.voiceAutosend;
+			// Only asked when voice is on: a server with the feature off has nothing to say here.
+			if (s.voice) aiStatus(controller.signal).then((st) => (sttReady = st.sttConfigured));
+		});
 		return () => {
+			controller.abort();
 			inFlight?.abort();
+			// Everything the drawer started has to stop with it: a live microphone keeps the
+			// browser's recording indicator on, and an utterance carries on talking to an empty
+			// room.
+			recorder?.cancel();
+			recorder = null;
+			if (clipTimer) clearTimeout(clipTimer);
+			if (canSpeak) window.speechSynthesis.cancel();
 			opener?.focus();
 		};
 	});
@@ -105,6 +153,11 @@
 		try {
 			for await (const frame of streamChat(body, controller.signal)) {
 				chat = applyChatEvent(chat, frame);
+				// Only the assistant's own words are spoken. Tool lines and card summaries are
+				// scaffolding around the answer, and reading them aloud buries it.
+				if (frame.event === 'message') {
+					speakText(String((frame.data as { content?: unknown }).content ?? ''));
+				}
 			}
 			// The server always ends a turn with `done`; if the connection dropped before one
 			// arrived, the composer would stay disabled forever without this.
@@ -138,6 +191,104 @@
 		await drive({ messages: chat.messages, locale: getLocale(), decision });
 	}
 
+	function speakText(text: string) {
+		if (!speak || !canSpeak || !text) return;
+		// Cancel first: without it a second reply queues behind the first and the user hears an
+		// answer to a question they have moved on from.
+		window.speechSynthesis.cancel();
+		window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
+	}
+
+	function toggleSpeak() {
+		speak = !speak;
+		if (!speak && canSpeak) window.speechSynthesis.cancel();
+	}
+
+	/** Turn a failed capture into something the user can act on. */
+	function voiceErrorText(e: unknown): string {
+		if (e instanceof TranscribeError) return transcribeFailureText(e.failure);
+		if (e instanceof VoiceError) {
+			return e.reason === 'notAllowed' || e.reason === 'unavailable'
+				? ng.chat_voice_mic_error()
+				: ng.chat_voice_unsupported();
+		}
+		return ng.chat_voice_mic_error();
+	}
+
+	function transcribeFailureText(failure: TranscribeFailure): string {
+		switch (failure) {
+			case 'disabled':
+				return ng.chat_error_disabled();
+			case 'unconfigured':
+				return ng.chat_error_unconfigured();
+			default:
+				// too_long, empty and provider failures all mean "that clip did not become text",
+				// and the user's next move is the same in each case: say it again.
+				return ng.chat_voice_mic_error();
+		}
+	}
+
+	async function startTalking() {
+		if (recording || transcribing || chat.status !== 'idle') return;
+		recording = true;
+		try {
+			recorder = await startRecording();
+			// A held button can outlive the server's size limit. Stopping first turns "your clip
+			// was refused" into a clip that simply ends.
+			clipTimer = setTimeout(() => void stopTalking(false), MAX_CLIP_MS);
+		} catch (e) {
+			recording = false;
+			recorder = null;
+			chat = { ...chat, bubbles: [...chat.bubbles, { kind: 'error', text: voiceErrorText(e) }] };
+		}
+	}
+
+	/**
+	 * Release the button.
+	 *
+	 * `cancelled` is true when the pointer left the button rather than lifting off it, which is
+	 * how a user abandons a recording they have thought better of -- the clip is discarded
+	 * without being sent anywhere.
+	 */
+	async function stopTalking(cancelled: boolean) {
+		if (clipTimer) {
+			clearTimeout(clipTimer);
+			clipTimer = null;
+		}
+		const active = recorder;
+		recorder = null;
+		recording = false;
+		if (!active) return;
+		if (cancelled) {
+			active.cancel();
+			return;
+		}
+
+		const clip = await active.stop();
+		// A press too short to capture anything is not a failure worth reporting; the user
+		// almost certainly meant to click something else.
+		if (clip.size === 0) return;
+
+		transcribing = true;
+		try {
+			const text = (await transcribe(clip)).trim();
+			if (!text) return;
+			if (autosend) {
+				draft = text;
+				await send();
+			} else {
+				// The default. Speech-to-text mangles vendor names, so the transcript lands in the
+				// box for the user to fix before it is sent.
+				draft = draft ? `${draft} ${text}` : text;
+				input?.focus();
+			}
+		} catch (e) {
+			chat = { ...chat, bubbles: [...chat.bubbles, { kind: 'error', text: voiceErrorText(e) }] };
+		} finally {
+			transcribing = false;
+		}
+	}
+
 	async function undo(card: ExecutedCard, key: string) {
 		if (!card.undo?.tool || undone.has(key)) return;
 		try {
@@ -164,6 +315,21 @@
 	>
 		<div class="head">
 			<span class="title">{ng.chat_title()}</span>
+			<!-- Speaking replies needs only the browser, so this appears whenever the voice
+			     feature is on -- independently of whether a speech-to-text endpoint exists for
+			     the microphone below. -->
+			{#if voiceOn && canSpeak}
+				<button
+					class="speak"
+					class:on={speak}
+					onclick={toggleSpeak}
+					aria-pressed={speak}
+					title={ng.chat_voice_speak()}
+					aria-label={ng.chat_voice_speak()}
+				>
+					<Volume2 size={15} />
+				</button>
+			{/if}
 			<button class="x" onclick={close} aria-label={m['buttons.close']()}><X size={16} /></button>
 		</div>
 
@@ -257,15 +423,36 @@
 				send();
 			}}
 		>
+			<!-- Press and hold, not a toggle: a toggle leaves the microphone live if the user
+			     walks away mid-thought. Leaving the button while held cancels, which is how you
+			     abandon a recording you have thought better of. -->
+			{#if voiceOn && sttReady && canRecord}
+				<button
+					class="mic"
+					class:live={recording}
+					onpointerdown={startTalking}
+					onpointerup={() => stopTalking(false)}
+					onpointerleave={() => recording && stopTalking(true)}
+					disabled={transcribing || chat.status !== 'idle'}
+					title={ng.chat_voice_record()}
+					aria-label={ng.chat_voice_record()}
+				>
+					<Mic size={15} />
+				</button>
+			{/if}
 			<input
 				class="in"
 				bind:this={input}
 				bind:value={draft}
-				placeholder={ng.chat_placeholder()}
-				disabled={chat.status !== 'idle'}
+				placeholder={recording ? ng.chat_voice_listening() : ng.chat_placeholder()}
+				disabled={chat.status !== 'idle' || recording || transcribing}
 				aria-label={ng.chat_placeholder()}
 			/>
-			<Button variant="primary" type="submit" disabled={chat.status !== 'idle' || !draft.trim()}>
+			<Button
+				variant="primary"
+				type="submit"
+				disabled={chat.status !== 'idle' || recording || transcribing || !draft.trim()}
+			>
 				<Send size={14} />
 				{ng.chat_send()}
 			</Button>
@@ -458,6 +645,49 @@
 		color: var(--text-dim);
 		cursor: default;
 		text-decoration: line-through;
+	}
+	.speak {
+		display: inline-flex;
+		color: var(--text-dim);
+		cursor: pointer;
+		padding: 4px 6px;
+		background: none;
+		border: none;
+		border-radius: var(--radius-sm);
+	}
+	.speak:hover {
+		color: var(--text);
+	}
+	.speak.on {
+		color: var(--accent);
+		background: var(--bg-hover);
+	}
+	.mic {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		flex: none;
+		width: 34px;
+		color: var(--text-muted);
+		background: var(--bg-subtle);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-sm);
+		cursor: pointer;
+		/* A held button must not select the surrounding text or fire the browser's own
+		   touch-and-hold menu on a phone, which is where this feature is most used. */
+		user-select: none;
+		touch-action: none;
+	}
+	.mic:hover:not(:disabled) {
+		color: var(--text);
+	}
+	.mic.live {
+		color: var(--danger);
+		border-color: var(--danger);
+	}
+	.mic:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
 	}
 	.composer {
 		display: flex;

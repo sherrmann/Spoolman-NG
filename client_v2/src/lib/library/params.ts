@@ -255,6 +255,23 @@ export function setSortKey(key: string): void {
 }
 
 /**
+ * Spoolman NG fork addition: replace the whole filter set, and optionally the sort, in one go.
+ *
+ * Every other mutator here changes one filter, which is right for a user clicking chips. A
+ * natural-language search (see $lib/ng/nlSearch) instead produces a complete view at once, and
+ * applying it chip by chip would push several entries onto the history stack and re-render the
+ * list for each -- so Back would walk through states the user never asked for. Grouping follows
+ * setSortKey's rule so a per-spool ranking still lands on the flat list.
+ */
+export function replaceFilters(filters: FilterChip[], sort?: { key: string; asc: boolean }): void {
+	const s = currentState();
+	const sortKey = sort?.key ?? s.sortKey;
+	const sortAsc = sort?.asc ?? s.sortAsc;
+	const group = isGroupOrderable(sortKey, s.group) ? s.group : 'none';
+	navigate({ ...s, filters, sortKey, sortAsc, group, page: DEFAULTS.page });
+}
+
+/**
  * Flip the current sort's direction, leaving the field alone (#1091).
  *
  * Re-selecting the active key already means "flip" (see setSortKey), so this is

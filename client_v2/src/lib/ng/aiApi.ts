@@ -14,6 +14,7 @@ import { getJson, postJson } from '$lib/api/http';
 import { getSettings, parseSetting } from '$lib/api/settings';
 import { createSseParser } from './sse';
 import { decodeChatFrame, type ChatEvent, type ChatMessage } from './aiChat';
+import type { NlSearchResult } from './nlSearch';
 
 /**
  * Whether the assistant is switched on at all.
@@ -28,11 +29,45 @@ import { decodeChatFrame, type ChatEvent, type ChatMessage } from './aiChat';
  * show a chat button that will 404 the moment it is pressed.
  */
 export async function chatFeatureEnabled(signal?: AbortSignal): Promise<boolean> {
+	return flag('ai_feature_chat', signal);
+}
+
+/** One boolean AI setting, defaulting to off when it cannot be read. See chatFeatureEnabled. */
+async function flag(key: string, signal?: AbortSignal): Promise<boolean> {
 	try {
-		return parseSetting((await getSettings(signal)).ai_feature_chat, false);
+		return parseSetting((await getSettings(signal))[key], false);
 	} catch {
 		return false;
 	}
+}
+
+/**
+ * The three switches the chat surfaces read, fetched together.
+ *
+ * One request rather than three: they come from the same map, and the drawer needs all of them
+ * before it can decide what to render.
+ */
+export async function chatSwitches(signal?: AbortSignal): Promise<{
+	chat: boolean;
+	voice: boolean;
+	/** Send a transcript straight away instead of dropping it in the box to review. */
+	voiceAutosend: boolean;
+}> {
+	try {
+		const s = await getSettings(signal);
+		return {
+			chat: parseSetting(s.ai_feature_chat, false),
+			voice: parseSetting(s.ai_feature_voice, false),
+			voiceAutosend: parseSetting(s.ai_voice_autosend, false)
+		};
+	} catch {
+		return { chat: false, voice: false, voiceAutosend: false };
+	}
+}
+
+/** Whether natural-language search is switched on. */
+export function nlSearchEnabled(signal?: AbortSignal): Promise<boolean> {
+	return flag('ai_feature_nl_search', signal);
 }
 
 export interface AiStatus {
@@ -163,4 +198,270 @@ export async function chatUndo(tool: string, args: Record<string, unknown>): Pro
 		summary: String(res.summary ?? ''),
 		undo: (res.undo as Record<string, unknown> | null) ?? null
 	};
+}
+
+/**
+ * Send a recorded clip for transcription.
+ *
+ * Multipart with the field named `file`, which is what the endpoint's signature requires. The
+ * filename is a hint to the speech-to-text provider about the container -- the real content
+ * type rides on the Blob -- so it is derived from what was actually recorded rather than
+ * hardcoded to .webm, which would mislabel a Safari recording as something it is not.
+ *
+ * Not routed through $lib/api/http: that module sends JSON bodies, and setting a content-type
+ * header on a FormData request is worse than leaving it off, since the boundary has to come
+ * from the browser.
+ */
+export async function transcribe(clip: Blob, signal?: AbortSignal): Promise<string> {
+	const form = new FormData();
+	form.append('file', clip, filenameFor(clip.type));
+	const res = await fetch(API_BASE + '/ai/transcribe', { method: 'POST', body: form, signal });
+	if (!res.ok) throw new TranscribeError(transcribeFailure(res.status));
+	const body = (await res.json()) as { text?: unknown };
+	return String(body.text ?? '');
+}
+
+/** Why a clip could not be turned into text. Each maps to different advice. */
+export type TranscribeFailure =
+	/** 404 -- the voice feature is off server-side. */
+	| 'disabled'
+	/** 409 -- no speech-to-text endpoint configured. */
+	| 'unconfigured'
+	/** 413 -- the clip was too long. */
+	| 'too_long'
+	/** 400 -- nothing was captured, usually a press too short to record anything. */
+	| 'empty'
+	/** 502 and anything else. */
+	| 'failed';
+
+export class TranscribeError extends Error {
+	constructor(readonly failure: TranscribeFailure) {
+		super(`Transcription failed: ${failure}`);
+		this.name = 'TranscribeError';
+	}
+}
+
+function transcribeFailure(status: number): TranscribeFailure {
+	if (status === 404) return 'disabled';
+	if (status === 409) return 'unconfigured';
+	if (status === 413) return 'too_long';
+	if (status === 400) return 'empty';
+	return 'failed';
+}
+
+/** A filename whose extension matches what was recorded, for the provider's container sniffing. */
+function filenameFor(mimeType: string): string {
+	if (mimeType.includes('mp4')) return 'clip.mp4';
+	if (mimeType.includes('ogg')) return 'clip.ogg';
+	return 'clip.webm';
+}
+
+/**
+ * Translate a free-text search into filters.
+ *
+ * A single JSON reply, not a stream: the server does one completion and grounds every value
+ * against the real vocabulary before answering, so there is nothing to show progressively.
+ *
+ * `translate()` never raises server-side -- a provider failure degrades to "the whole query is
+ * free text" rather than an error -- so a rejection here means the feature is off (404), not
+ * configured (409), or the request itself failed.
+ */
+export async function nlSearch(query: string, locale: string): Promise<NlSearchResult> {
+	const res = await postJson<Record<string, unknown>>('/ai/nl-search', { query, locale });
+	return {
+		filters: Array.isArray(res.filters) ? (res.filters as NlSearchResult['filters']) : [],
+		search: typeof res.search === 'string' ? res.search : null,
+		color_hex: typeof res.color_hex === 'string' ? res.color_hex : null,
+		sort: (res.sort as NlSearchResult['sort']) ?? null
+	};
+}
+
+// --- operator settings -------------------------------------------------------------------
+//
+// Everything below is for the settings panel, and only an administrator can use any of it:
+// /ai/config, /ai/probe and the Ollama endpoints all answer 403 otherwise, and /ai/status
+// silently strips the provider fields rather than refusing. That stripping is why the panel
+// asks who it is talking to first -- a read-only user shown an empty form cannot tell it from
+// an unconfigured server, and finds out only when Save fails.
+
+/** Whether this user may operate the assistant's configuration. */
+export async function isAdmin(signal?: AbortSignal): Promise<boolean> {
+	try {
+		const me = await getJson<{ role?: unknown }>('/auth/me', {}, signal);
+		return String(me.role ?? '') === 'admin';
+	} catch {
+		// Auth may be switched off entirely, in which case /auth/me still answers with the
+		// implicit admin principal. A hard failure here is a broken or unreachable backend, and
+		// the panel's own requests will report that far better than a hidden panel would.
+		return true;
+	}
+}
+
+/** Three-valued, because "we could not tell" is a real answer for a non-Ollama endpoint. */
+export type TriState = 'yes' | 'no' | 'unknown';
+
+export interface AiCapabilities {
+	ok: boolean;
+	error?: string;
+	latencyMs?: number;
+	models: string[];
+	chat: TriState;
+	tools: TriState;
+	vision: TriState;
+	isOllama: boolean;
+}
+
+/** The whole status an administrator sees, including what a non-admin never gets. */
+export interface AiAdminStatus extends AiStatus {
+	baseUrl: string;
+	model: string;
+	visionModel: string;
+	apiKeySet: boolean;
+	sttBaseUrl: string;
+	sttModel: string;
+	sttApiKeySet: boolean;
+	/** Attribute names fixed by environment variables, which the form must not pretend to own. */
+	envLocked: string[];
+	features: Record<string, boolean>;
+	/** The most recent probe the SERVER ran, if any. Not re-run by asking for status. */
+	capabilities: AiCapabilities | null;
+}
+
+function mapCapabilities(raw: Record<string, unknown> | null | undefined): AiCapabilities | null {
+	if (!raw) return null;
+	const tri = (v: unknown): TriState => (v === 'yes' || v === 'no' ? v : 'unknown');
+	return {
+		ok: Boolean(raw.ok),
+		error: raw.error == null ? undefined : String(raw.error),
+		latencyMs: raw.latency_ms == null ? undefined : Number(raw.latency_ms),
+		models: Array.isArray(raw.models) ? raw.models.map(String) : [],
+		chat: tri(raw.chat),
+		tools: tri(raw.tools),
+		vision: tri(raw.vision),
+		isOllama: Boolean(raw.is_ollama)
+	};
+}
+
+export async function aiAdminStatus(signal?: AbortSignal): Promise<AiAdminStatus> {
+	const r = await getJson<Record<string, unknown>>('/ai/status', {}, signal);
+	const str = (v: unknown) => (v == null ? '' : String(v));
+	return {
+		configured: Boolean(r.configured),
+		sttConfigured: Boolean(r.stt_configured),
+		baseUrl: str(r.base_url),
+		model: str(r.model),
+		visionModel: str(r.vision_model),
+		apiKeySet: Boolean(r.api_key_set),
+		sttBaseUrl: str(r.stt_base_url),
+		sttModel: str(r.stt_model),
+		sttApiKeySet: Boolean(r.stt_api_key_set),
+		envLocked: Array.isArray(r.env_locked) ? r.env_locked.map(String) : [],
+		features: (r.features as Record<string, boolean> | undefined) ?? {},
+		capabilities: mapCapabilities(r.capabilities as Record<string, unknown> | null)
+	};
+}
+
+/**
+ * Test an endpoint, optionally with values the operator has typed but not saved.
+ *
+ * Overrides exist so "Test connection" answers about the form in front of you rather than about
+ * what is stored -- otherwise the only way to check a new URL is to save it first, which means
+ * breaking a working setup to find out whether the replacement works.
+ */
+export async function aiProbe(overrides: {
+	baseUrl?: string;
+	apiKey?: string;
+	model?: string;
+	visionModel?: string;
+}): Promise<AiCapabilities> {
+	const body: Record<string, unknown> = {};
+	if (overrides.baseUrl) body.base_url = overrides.baseUrl;
+	if (overrides.apiKey) body.api_key = overrides.apiKey;
+	if (overrides.model) body.model = overrides.model;
+	if (overrides.visionModel) body.vision_model = overrides.visionModel;
+	const raw = await postJson<Record<string, unknown>>('/ai/probe', body);
+	return mapCapabilities(raw) as AiCapabilities;
+}
+
+/**
+ * Store or clear an API key.
+ *
+ * `null` clears; a string replaces. Omitting a field entirely leaves that key alone, which is
+ * what makes "save the form without retyping your key" work -- the server acts only on keys
+ * actually present in the body.
+ */
+export async function setAiKeys(keys: { apiKey?: string | null; sttApiKey?: string | null }): Promise<void> {
+	const body: Record<string, unknown> = {};
+	if (keys.apiKey !== undefined) body.api_key = keys.apiKey;
+	if (keys.sttApiKey !== undefined) body.stt_api_key = keys.sttApiKey;
+	await postJson('/ai/config', body);
+}
+
+export interface OllamaModels {
+	isOllama: boolean;
+	installed: string[];
+}
+
+export async function ollamaModels(signal?: AbortSignal): Promise<OllamaModels> {
+	try {
+		const r = await getJson<Record<string, unknown>>('/ai/ollama/models', {}, signal);
+		return {
+			isOllama: Boolean(r.is_ollama),
+			installed: Array.isArray(r.installed) ? r.installed.map(String) : []
+		};
+	} catch {
+		return { isOllama: false, installed: [] };
+	}
+}
+
+/** One frame of a model download. `percent` is absent until the server knows the total. */
+export interface OllamaPullProgress {
+	status: string;
+	percent?: number;
+}
+
+/**
+ * Pull a model, yielding progress as it arrives.
+ *
+ * Same SSE machinery as the chat, reusing the same parser: a model is gigabytes, and a download
+ * with no visible progress is indistinguishable from one that has hung.
+ */
+export async function* pullOllamaModel(
+	model: string,
+	signal?: AbortSignal
+): AsyncGenerator<OllamaPullProgress> {
+	const res = await fetch(API_BASE + '/ai/ollama/pull', {
+		method: 'POST',
+		headers: { 'content-type': 'application/json' },
+		body: JSON.stringify({ model }),
+		signal
+	});
+	if (!res.ok || !res.body) throw new Error(`Pull failed: ${res.status}`);
+
+	const reader = res.body.getReader();
+	const decoder = new TextDecoder();
+	const parser = createSseParser();
+	try {
+		for (;;) {
+			const { done, value } = await reader.read();
+			if (done) break;
+			for (const frame of parser.push(decoder.decode(value, { stream: true }))) {
+				let data: Record<string, unknown>;
+				try {
+					data = JSON.parse(frame.data) as Record<string, unknown>;
+				} catch {
+					continue;
+				}
+				if (frame.event === 'error') throw new Error(String(data.message ?? 'Pull failed'));
+				if (frame.event === 'progress') {
+					yield {
+						status: String(data.status ?? ''),
+						percent: data.percent == null ? undefined : Number(data.percent)
+					};
+				}
+			}
+		}
+	} finally {
+		reader.releaseLock();
+	}
 }

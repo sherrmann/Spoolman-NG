@@ -12,6 +12,7 @@
 		type DateFilterProp
 	} from '$lib/library/dateFilter';
 	import { sortDefs, filamentLabel, type FilterOption, type SortDef } from '$lib/utils/library';
+	import NlSearchButton from '$lib/ng/components/NlSearchButton.svelte';
 	import { filterByQuery, matchesTerms, searchTerms } from '$lib/utils/match';
 	import MenuSearch from '../MenuSearch.svelte';
 	import Swatch from '../Swatch.svelte';
@@ -388,6 +389,11 @@
 				filterProp = null;
 			}}><Plus size={13} /> {m['buttons.filter']()}</button
 		>
+
+		<!-- Spoolman NG fork addition: describe the view you want instead of picking chips. It
+		     fills these same chips in, so everything after it works as it always did. Renders
+		     nothing unless an operator has enabled the feature. -->
+		<NlSearchButton />
 
 		{#each libraryState.filters as f (f.prop + f.value)}
 			<button class="chip active" onclick={() => params.removeFilter(f.prop, f.value)}>
