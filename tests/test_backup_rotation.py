@@ -7,6 +7,7 @@ cross-origin form post.
 """
 
 import sqlite3
+from contextlib import closing
 from pathlib import Path
 
 import pytest
@@ -140,3 +141,35 @@ def test_non_sqlite_database_is_skipped(backups: Path):
     result = db.backup_and_rotate(backups)
 
     assert result == database.BackupResult(None, created=False)
+
+
+def test_backup_closes_both_connections(db: Database, backups: Path, monkeypatch: pytest.MonkeyPatch):
+    """A Connection context manager commits, it does not close.
+
+    Leaving the two handles open leaks them on every backup, and on Windows it keeps the file we
+    just wrote open so the rotation below cannot move it ("used by another process"). POSIX allows
+    moving an open file, so nothing on Linux notices -- which is why this asserts the closure
+    directly instead of asserting that rotation works.
+    """
+    opened: list[sqlite3.Connection] = []
+    real_connect = sqlite3.connect
+
+    def spy(*args: object, **kwargs: object) -> sqlite3.Connection:
+        conn = real_connect(*args, **kwargs)  # type: ignore[arg-type]
+        opened.append(conn)
+        return conn
+
+    backups.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setattr(sqlite3, "connect", spy)
+    db.backup(backups_target := backups / "manual.db")
+    monkeypatch.undo()
+
+    assert len(opened) == 2, "expected a source and a destination connection"
+    for conn in opened:
+        with pytest.raises(sqlite3.ProgrammingError):
+            conn.execute("SELECT 1")
+
+    # closing() drops the commit-on-exit the Connection context manager gave us, so check the copy
+    # is actually complete rather than just present -- backup() finalizes the destination itself.
+    with closing(sqlite3.connect(backups_target)) as check:
+        assert check.execute("SELECT note FROM spool").fetchall() == [("original",)]

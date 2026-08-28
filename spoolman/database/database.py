@@ -7,6 +7,7 @@ import shutil
 import sqlite3
 import time
 from collections.abc import AsyncGenerator
+from contextlib import closing
 from os import PathLike
 from pathlib import Path
 from typing import NamedTuple
@@ -158,7 +159,15 @@ class Database:
         if Path(target_path).exists():
             raise ValueError("Backup target file already exists.")
 
-        with sqlite3.connect(self.connection_url.database) as src, sqlite3.connect(target_path) as dst:
+        # closing(), not `with sqlite3.connect(...) as conn`: a Connection's context manager is a
+        # transaction manager that commits on exit, it does not close the connection. Leaving the
+        # handles open leaks two per backup, and on Windows it keeps the file we just wrote open so
+        # _rotate()'s move of it fails with "used by another process". POSIX allows moving an open
+        # file, which is why nothing on Linux notices.
+        with (
+            closing(sqlite3.connect(self.connection_url.database)) as src,
+            closing(sqlite3.connect(target_path)) as dst,
+        ):
             src.backup(dst, pages=1, progress=progress)
 
         logger.info("Backup complete.")
