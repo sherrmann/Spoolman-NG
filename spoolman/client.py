@@ -109,7 +109,7 @@ def _require_client_build(directory: str) -> None:
         f"pre-built client bundle, which is not committed to the repository, so an install from "
         f"source has to build it once after every upgrade:\n"
         f"    cd {source_dir} && npm ci && npm run build\n"
-        f"The Docker image already contains it."
+        f"The Docker image and the release zip already contain it."
     )
     raise RuntimeError(msg)
 

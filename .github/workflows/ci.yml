@@ -648,6 +648,21 @@ jobs:
           rm -f .env && echo "VITE_APIURL=/api/v1" > .env.production
           npm run build
 
+      # Both clients go into the release zip, as they already do into the Docker image. The
+      # server serves whichever one SPOOLMAN_LEGACY_CLIENT names and offers the in-UI switcher
+      # only where it has a build of each, so shipping one bundle would silently make a native
+      # install the one deployment that cannot switch -- or opt into the Svelte client at all.
+      # No VITE_APIURL here: client_v2 derives its API base from the deploy path at runtime.
+      - name: Install client_v2 dependencies
+        run: |
+          cd client_v2
+          npm ci
+
+      - name: Build client_v2
+        run: |
+          cd client_v2
+          npm run build
+
       - name: Write build info
         run: |
           echo "GIT_COMMIT=$(git rev-parse --short HEAD)" > build.txt
@@ -659,13 +674,19 @@ jobs:
       - name: Export Moonraker requirements
         run: uv export --frozen --no-dev --no-hashes --no-emit-project -o requirements.txt
 
-      # Remove client source and keep only the built dist
+      # Remove both clients' sources and keep only their built bundles. client_v2's source was
+      # being shipped in full before this (its build was not), and it compresses to ~4.7 MB
+      # against ~0.9 MB for the bundle that replaces it -- so the zip gets smaller, not bigger.
       - name: Clean
         run: |
           mv client/dist dist
           rm -rf client
           mkdir client
           mv dist client/dist
+          mv client_v2/build build_v2
+          rm -rf client_v2
+          mkdir client_v2
+          mv build_v2 client_v2/build
           rm -rf .git
           rm -rf .venv
 

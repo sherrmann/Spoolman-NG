@@ -100,6 +100,9 @@ def test_zip_root_layout(release: Release) -> None:
         "pyproject.toml",
         "alembic.ini",
         "client/dist/index.html",
+        # Both clients ship, so a native install can serve either one and offer the in-UI
+        # switcher between them -- exactly as the Docker image does.
+        "client_v2/build/index.html",
         "spoolman/main.py",
     ):
         assert member in names, f"expected {member} at the zip root (Moonraker extracts the zip as-is)"
