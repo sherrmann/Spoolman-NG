@@ -6,16 +6,33 @@ const RELOAD_FLAG_KEY = "spoolmanAuthReloadedAt";
 const RELOAD_COOLDOWN_MS = 30_000;
 
 /**
+ * Unregisters every service-worker registration on this origin. Shared by every caller that
+ * needs a clean slate before a reload — the 401 auth-recovery reload below, and switching the
+ * UI client to svelte (uiClient.ts) so the React PWA's cached shell can't keep serving stale
+ * navigations.
+ *
+ * Under HA ingress this must be skipped: Spoolman never registers a service worker there (see
+ * index.tsx), so getRegistrations() — which is origin-wide — could only ever return foreign
+ * registrations, and the panel iframe is same-origin with the Home Assistant frontend, whose own
+ * service worker this would silently destroy (#211). Kept as one function precisely so that guard
+ * can't drift out of sync between callers.
+ */
+export async function unregisterServiceWorkers(): Promise<void> {
+  if (!("serviceWorker" in navigator) || isHaIngress()) return;
+  try {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(registrations.map((r) => r.unregister()));
+  } catch {
+    /* best-effort */
+  }
+}
+
+/**
  * Reloads the page on 401 so a forward-auth proxy can redirect through its
  * login portal and back. Cooldown bounds reload loops if recovery fails. The
  * PWA service worker's NavigationRoute would otherwise serve the precached
- * index.html and prevent the reload from reaching the proxy, so unregister it.
- *
- * Under HA ingress the unregister step must be skipped: Spoolman never registers
- * a service worker there (see index.tsx), so getRegistrations() — which is
- * origin-wide — could only ever return foreign registrations, and the panel
- * iframe is same-origin with the Home Assistant frontend, whose own service
- * worker this would silently destroy (#211).
+ * index.html and prevent the reload from reaching the proxy, so unregister it
+ * first (see unregisterServiceWorkers, including the HA-ingress guard).
  */
 export async function reloadOnAuthFailure(): Promise<void> {
   let last = 0;
@@ -30,14 +47,7 @@ export async function reloadOnAuthFailure(): Promise<void> {
   } catch {
     /* storage unavailable */
   }
-  if ("serviceWorker" in navigator && !isHaIngress()) {
-    try {
-      const registrations = await navigator.serviceWorker.getRegistrations();
-      await Promise.all(registrations.map((r) => r.unregister()));
-    } catch {
-      /* fall through to reload anyway */
-    }
-  }
+  await unregisterServiceWorkers();
   window.location.reload();
 }
 

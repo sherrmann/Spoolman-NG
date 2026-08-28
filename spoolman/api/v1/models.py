@@ -1176,6 +1176,31 @@ class Info(BaseModel):
         ),
         examples=[False],
     )
+    # Which web client this browser is on, and whether it may change that. Additive; the
+    # defaults describe a single-client install, so existing /info consumers stay
+    # wire-compatible and a client that predates the switcher sees nothing new.
+    clients_available: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Which web clients this server has a build of: 'react' (the legacy client) and/or "
+            "'svelte' (the newer one). Both ship in the Docker image; an install from source may "
+            "have built only one."
+        ),
+        examples=[["react", "svelte"]],
+    )
+    client_active: str = Field(
+        default="react",
+        description="Which web client served this request -- 'react' or 'svelte'.",
+        examples=["react"],
+    )
+    client_switch_enabled: bool = Field(
+        default=False,
+        description=(
+            "Whether visitors may switch between the two clients from inside the UI. False when "
+            "only one is built, or when the operator set SPOOLMAN_UI_SWITCHER=FALSE."
+        ),
+        examples=[True],
+    )
 
 
 class HealthCheck(BaseModel):

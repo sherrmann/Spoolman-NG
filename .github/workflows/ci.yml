@@ -504,6 +504,17 @@ jobs:
         # here, but restoring them keeps a `git diff` in a later step meaningful.
         run: git checkout -- client_v2/locales
 
+      - name: Build the legacy client too
+        # The only job that serves both bundles at once. The UI switcher hides itself unless
+        # the server has a build of each (spoolman.client.resolve_client_serving), so
+        # ui-switch.spec.ts needs the React bundle present even though every other spec here
+        # drives the Svelte one.
+        run: |
+          cd client
+          npm ci
+          rm -f .env && echo "VITE_APIURL=/api/v1" > .env.production
+          npm run build
+
       - name: Migrate the throwaway database
         run: |
           rm -rf .tests-frontend-ng-data

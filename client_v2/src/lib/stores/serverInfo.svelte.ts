@@ -11,10 +11,20 @@ class ServerInfo {
 	externalDbName = $state('SpoolmanDB');
 	loaded = $state(false);
 
+	// Per-browser UI switcher (spoolman_ui cookie, see $lib/uiClient). These three default to
+	// "switching is unavailable" -- an older backend that has never heard of the switcher sends
+	// none of them, and that must read the same as one that has it turned off.
+	clientsAvailable = $state<string[]>([]);
+	clientActive = $state<string | null>(null);
+	clientSwitchEnabled = $state(false);
+
 	async load() {
 		try {
 			const info = await getInfo();
 			if (info.external_db_name) this.externalDbName = info.external_db_name;
+			if (info.clients_available) this.clientsAvailable = info.clients_available;
+			if (info.client_active) this.clientActive = info.client_active;
+			this.clientSwitchEnabled = info.client_switch_enabled === true;
 		} catch (e) {
 			console.error('Failed to load server info', e);
 		} finally {

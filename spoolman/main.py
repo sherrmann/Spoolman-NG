@@ -19,10 +19,14 @@ from spoolman.api.v1.router import app as v1_app
 from spoolman.assetlinks import register_assetlinks_route
 from spoolman.auth import auth_state, initialize_auth_state
 from spoolman.client import (
+    CLIENT_DIRECTORIES,
+    CLIENT_REACT,
     CONFIG_CACHE_HEADERS,
+    ClientSelector,
     SinglePageApplication,
     build_configjs,
     get_ingress_base_path,
+    resolve_client_serving,
 )
 from spoolman.database import database
 from spoolman.prometheus.metrics import BUILD_INFO, registry
@@ -125,30 +129,57 @@ app.router.routes.append(Route(env.get_base_path() + "/mcp", endpoint=mcp_server
 # Mount the client side app. The React client is served by default in this fork (it still
 # covers far more of the app than the newer one); set SPOOLMAN_LEGACY_CLIENT=FALSE to opt
 # into the Svelte client instead. See env.is_legacy_client_enabled().
-if env.is_legacy_client_enabled():
-    logger.info("Serving the legacy (React) client.")
-    app.mount(
-        base_path,
-        app=SinglePageApplication(
-            directory="client/dist",
+#
+# Both bundles ship in the Docker image, so that default need not be the last word: unless the
+# operator turns it off (SPOOLMAN_UI_SWITCHER=FALSE) or this install built only one of them,
+# both are mounted behind a cookie-driven selector and each browser picks for itself, with the
+# variable above deciding what a browser that has not picked gets. An install that serves only
+# one client is mounted exactly as it was before the selector existed.
+
+
+def build_client_app(name: str) -> SinglePageApplication:
+    """Build the application that serves one client bundle, with the quirks that build needs.
+
+    The Svelte client prerenders a document per route and resolves its assets relative to the
+    current URL, so only its SPA fallback (200.html) needs the base-path fixup; the React
+    client's whole index document does. See the SinglePageApplication docstring.
+    """
+    if name == CLIENT_REACT:
+        return SinglePageApplication(
+            directory=CLIENT_DIRECTORIES[name],
             base_path=env.get_base_path(),
             ha_ingress=ha_ingress,
             fallback_document="index.html",
             rewrite_asset_paths=True,
+        )
+    return SinglePageApplication(
+        directory=CLIENT_DIRECTORIES[name],
+        base_path=env.get_base_path(),
+        ha_ingress=ha_ingress,
+        fallback_document="200.html",
+        rewrite_asset_paths=False,
+    )
+
+
+client_serving = resolve_client_serving(
+    legacy_default=env.is_legacy_client_enabled(),
+    switching_requested=env.is_client_switching_enabled(),
+)
+if client_serving.switching_enabled:
+    logger.info(
+        "Serving both web clients; %s is the default and visitors can switch between them.",
+        client_serving.default,
+    )
+    app.mount(
+        base_path,
+        app=ClientSelector(
+            {name: build_client_app(name) for name in client_serving.available},
+            client_serving,
         ),
     )
 else:
-    logger.info("Serving the new (Svelte) client.")
-    app.mount(
-        base_path,
-        app=SinglePageApplication(
-            directory="client_v2/build",
-            base_path=env.get_base_path(),
-            ha_ingress=ha_ingress,
-            fallback_document="200.html",
-            rewrite_asset_paths=False,
-        ),
-    )
+    logger.info("Serving the %s client.", client_serving.default)
+    app.mount(base_path, app=build_client_app(client_serving.default))
 
 
 def add_trusted_origin_middleware() -> None:

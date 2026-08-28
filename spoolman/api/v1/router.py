@@ -6,13 +6,14 @@ import asyncio
 import logging
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse
 
 from spoolman import env, updateaction, updatecheck
 from spoolman.api.v1.bodylimit import BodyLimitMiddleware
 from spoolman.api.v1.errors import install_exception_handlers
 from spoolman.auth import Principal, install_auth
+from spoolman.client import resolve_client_serving, select_client
 from spoolman.database.database import backup_global_db
 from spoolman.externaldb import get_external_db_name
 from spoolman.updateaction import InstallType
@@ -64,10 +65,17 @@ install_exception_handlers(app)
 
 # Add a general info endpoint
 @app.get("/info")
-async def info() -> models.Info:
+async def info(request: Request) -> models.Info:
     """Return general info about the API."""
     update_status = updatecheck.get_status()
     gate = updateaction.evaluate_gate()
+    # Resolved from this request's own cookie, the same way the mount that served the page
+    # resolved it -- so a client asking "which one am I?" gets the answer for itself rather
+    # than for whoever the server would serve by default.
+    client_serving = resolve_client_serving(
+        legacy_default=env.is_legacy_client_enabled(),
+        switching_requested=env.is_client_switching_enabled(),
+    )
     return models.Info(
         version=env.get_version(),
         debug_mode=env.is_debug_mode(),
@@ -85,6 +93,9 @@ async def info() -> models.Info:
         install_type=gate.install_type.value,
         update_action_available=gate.action_available,
         external_db_name=get_external_db_name(),
+        clients_available=list(client_serving.available),
+        client_active=select_client(request.headers, client_serving),
+        client_switch_enabled=client_serving.switching_enabled,
     )
 
 

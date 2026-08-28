@@ -7,12 +7,13 @@ import os
 import re
 from collections.abc import MutableMapping
 from pathlib import Path
-from typing import Any, Union
+from typing import Any, NamedTuple, Union
 
 from fastapi.staticfiles import StaticFiles
-from starlette.datastructures import Headers
+from starlette.datastructures import Headers, MutableHeaders
 from starlette.responses import FileResponse, Response
 from starlette.staticfiles import NotModifiedResponse
+from starlette.types import Message, Receive, Send
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +46,26 @@ _INGRESS_PATH_PATTERN = re.compile(r"^/api/hassio_ingress/[A-Za-z0-9_-]+$")
 # is cheap and correct too.
 CONFIG_CACHE_HEADERS = {"Cache-Control": "no-store"}
 
+# The two client bundles this fork can serve. These names are a client-facing contract: they
+# are the values of UI_CLIENT_COOKIE and of the ``client_active``/``clients_available`` fields
+# on /api/v1/info, and both clients' UI switchers are written against them.
+CLIENT_REACT = "react"
+CLIENT_SVELTE = "svelte"
+
+# Where each client's build artifact lives, relative to the working directory. Neither is
+# committed: the Docker image builds both (see the Dockerfile), while an install from source
+# may well have built only the one it serves.
+CLIENT_DIRECTORIES: dict[str, str] = {
+    CLIENT_REACT: "client/dist",
+    CLIENT_SVELTE: "client_v2/build",
+}
+
+# Set by either client's own UI switcher to pin this browser to one of the two. Read per
+# request by ClientSelector, and by /api/v1/info so a client can tell which one it is. An
+# absent or unrecognised value means "serve the operator's default" (SPOOLMAN_LEGACY_CLIENT),
+# so a stale cookie can never point at a client this install does not have.
+UI_CLIENT_COOKIE = "spoolman_ui"
+
 
 def get_ingress_base_path(headers: Headers) -> str | None:
     """Return the validated Home Assistant ingress base path for a request, if any.
@@ -75,8 +96,9 @@ def _require_client_build(directory: str) -> None:
     people running from a source checkout — where a ``git pull`` brings new client sources
     but no bundle, and Spoolman would otherwise refuse to start with StaticFiles' own error
     ("Directory 'client_v2/build' does not exist"), which gives them nothing to act on. This
-    only runs for the client that is actually selected (SPOOLMAN_LEGACY_CLIENT), so a missing
-    build of the *other* client never affects startup.
+    only runs for a client that is actually being mounted -- the operator's default, plus the
+    other one only where there is a build of it to switch to (see resolve_client_serving) --
+    so a client that was never built still never affects startup.
     """
     if Path(directory).is_dir():
         return
@@ -90,6 +112,82 @@ def _require_client_build(directory: str) -> None:
         f"The Docker image already contains it."
     )
     raise RuntimeError(msg)
+
+
+def client_build_exists(directory: str) -> bool:
+    """Whether a client bundle has been built -- the non-raising half of _require_client_build."""
+    return Path(directory).is_dir()
+
+
+class ClientServing(NamedTuple):
+    """How this install serves its web clients.
+
+    ``default`` is what a browser with no usable cookie gets: the operator's
+    SPOOLMAN_LEGACY_CLIENT choice. ``available`` is the clients whose bundles actually exist
+    here, which on an install from source can be fewer than both. ``switching_enabled`` is
+    whether the in-UI switcher is offered at all -- which needs the operator's blessing *and*
+    two bundles to switch between.
+    """
+
+    default: str
+    available: tuple[str, ...]
+    switching_enabled: bool
+
+
+def resolve_client_serving(*, legacy_default: bool, switching_requested: bool) -> ClientServing:
+    """Work out which clients this install can serve, and whether visitors may switch.
+
+    Takes the two environment answers as arguments rather than reading them itself, so that
+    startup (``spoolman/main.py``) and ``/api/v1/info`` reach the same conclusion by
+    construction rather than by both remembering to ask the same questions -- and so the whole
+    matrix is unit-testable without touching os.environ.
+
+    A default whose bundle is missing is deliberately *not* corrected to the other client:
+    startup fails with _require_client_build's actionable message instead, rather than
+    silently serving something else and leaving the operator wondering why
+    SPOOLMAN_LEGACY_CLIENT stopped working.
+    """
+    default = CLIENT_REACT if legacy_default else CLIENT_SVELTE
+    available = tuple(name for name, directory in CLIENT_DIRECTORIES.items() if client_build_exists(directory))
+    return ClientServing(
+        default=default,
+        available=available,
+        # Switching needs both bundles present, which also guarantees the default is one of
+        # them -- so every caller downstream can assume ``default in available`` whenever this
+        # is true.
+        switching_enabled=switching_requested and set(available) == set(CLIENT_DIRECTORIES),
+    )
+
+
+def read_client_cookie(headers: Headers) -> str | None:
+    """Return the raw UI_CLIENT_COOKIE value from a request's Cookie header, if it has one.
+
+    Hand-rolled rather than routed through http.cookies, which raises on input this has to
+    simply ignore: anything that can reach the port can send a Cookie header, and a malformed
+    one must fall back to the default client rather than 500. Returns the first match, which
+    is the most specific path -- the order browsers send them in.
+    """
+    for chunk in headers.get("cookie", "").split(";"):
+        name, _, value = chunk.partition("=")
+        if name.strip() == UI_CLIENT_COOKIE:
+            return value.strip().strip('"')
+    return None
+
+
+def select_client(headers: Headers, serving: ClientServing) -> str:
+    """Pick the client that should serve a request, from its cookie and this install's setup.
+
+    Falls back to the default for everything unexpected: no cookie, a value that names no
+    client, or one whose bundle is not built here. When switching is off the cookie is ignored
+    outright, so turning the switcher off actually returns everyone to the operator's choice
+    instead of stranding whoever had already flipped it.
+    """
+    if not serving.switching_enabled:
+        return serving.default
+    requested = read_client_cookie(headers)
+    if requested is not None and requested in serving.available:
+        return requested
+    return serving.default
 
 
 def build_configjs(base_path: str, ingress_base_path: str | None = None) -> str:
@@ -411,3 +509,58 @@ class SinglePageApplication(StaticFiles):
             return super().lookup_path(self.fallback_document)
 
         return (full_path, stat_result)
+
+
+class ClientSelector:
+    """Serve one of the two client bundles per request, chosen by the browser's cookie.
+
+    Both clients live at the same base path -- they always have, one at a time -- and that
+    cannot move into the URL without breaking the things that point at the deploy root:
+    bookmarks, integrations, and the deep links printed onto QR labels. So the choice is made
+    per request instead, which keeps every URL identical between the two clients and lets two
+    people on one instance use different ones.
+
+    This wraps the whole mount rather than sitting inside SinglePageApplication, because the
+    decision has to be made before ``lookup_path`` runs: the two bundles collide on several
+    root-level names (``index.html``, ``favicon.*``, ``manifest.webmanifest``, the PWA icons,
+    and -- the one that matters most -- ``sw.js``, where the React client's real service worker
+    and the Svelte client's self-destructing one live at the same URL).
+
+    Every response gets ``Vary: Cookie``. Restricting that to HTML would cover the documents
+    but not those shared root names, and a /sw.js cached from before a switch is exactly the
+    trap ``client_v2/static/sw.js`` exists to spring. The hashed asset trees (``/assets/*`` and
+    ``/_app/*``) are disjoint, so they could safely be left shareable, but they are immutable
+    and cached per browser anyway -- there is no worthwhile cache hit rate to protect.
+    """
+
+    def __init__(self, apps: dict[str, "SinglePageApplication"], serving: ClientServing) -> None:
+        """Construct from one mounted application per available client.
+
+        ``serving`` must describe the same install the apps were built for; the check below is
+        a wiring assertion, not input validation.
+        """
+        missing = set(serving.available) - set(apps)
+        if missing or serving.default not in apps:
+            msg = (
+                f"ClientSelector was given applications for {sorted(apps)} but must serve "
+                f"{sorted(serving.available)} with {serving.default!r} as the default."
+            )
+            raise ValueError(msg)
+        self.apps = apps
+        self.serving = serving
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        """Hand the request to whichever client this browser should see."""
+        name = select_client(Headers(scope=scope), self.serving)
+        await self.apps[name](scope, receive, self._vary_on_cookie(send))
+
+    @staticmethod
+    def _vary_on_cookie(send: Send) -> Send:
+        """Wrap ``send`` so every response it starts advertises that it varies by cookie."""
+
+        async def send_with_vary(message: Message) -> None:
+            if message["type"] == "http.response.start":
+                MutableHeaders(raw=message["headers"]).append("Vary", "Cookie")
+            await send(message)
+
+        return send_with_vary

@@ -120,6 +120,14 @@ const KEYS = [
 	'spool.fields.id',
 	'spool.fields.remaining_weight',
 	'settings.extra_fields.tab',
+	// The per-browser client switcher (Settings > Appearance): flips the spoolman_ui cookie
+	// between this fork's two clients. `ui_version.switching` is deliberately not listed --
+	// this client reloads the page immediately on a click, so there is no transient state
+	// that would ever hold that string long enough to render it.
+	'ui_version.label',
+	'ui_version.classic',
+	'ui_version.new',
+	'ui_version.tooltip',
 	'orders.mark_ordered',
 	'low_stock.remaining_left',
 	'low_stock.remaining_header',
