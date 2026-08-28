@@ -1,10 +1,30 @@
-import { DesktopOutlined, DownOutlined, MoonOutlined, SunOutlined } from "@ant-design/icons";
+import {
+  AppstoreOutlined,
+  DesktopOutlined,
+  DownOutlined,
+  MoonOutlined,
+  RocketOutlined,
+  SunOutlined,
+} from "@ant-design/icons";
 import type { RefineThemedLayoutHeaderProps } from "@refinedev/antd";
 import { useGetLocale, useSetLocale, useTranslate } from "@refinedev/core";
-import { Grid, Layout as AntdLayout, Button, Dropdown, MenuProps, Segmented, Space, theme } from "antd";
+import {
+  Grid,
+  Layout as AntdLayout,
+  Button,
+  Dropdown,
+  MenuProps,
+  Segmented,
+  Space,
+  Tooltip,
+  message,
+  theme,
+} from "antd";
 import React, { useContext } from "react";
 import { ColorModeContext, ThemePreference } from "../../contexts/color-mode";
 import { getBasePath } from "../../utils/url";
+import { UiClient, shouldShowUiClientSwitch, switchUiClient } from "../../utils/uiClient";
+import { useInfo } from "../../utils/useInfo";
 import { Version } from "../version";
 
 import { languages } from "../../i18n";
@@ -23,6 +43,8 @@ export const Header = ({ sticky }: RefineThemedLayoutHeaderProps) => {
   const t = useTranslate();
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
+  const infoResult = useInfo();
+  const [messageApi, messageContextHolder] = message.useMessage();
 
   const currentLocale = locale();
 
@@ -31,6 +53,29 @@ export const Header = ({ sticky }: RefineThemedLayoutHeaderProps) => {
     { value: "light", icon: <SunOutlined />, title: t("theme.light") },
     { value: "dark", icon: <MoonOutlined />, title: t("theme.dark") },
   ];
+
+  // Shown only when the backend opted in and both bundles are built (shouldShowUiClientSwitch);
+  // absent/loading /info renders nothing. On mobile there isn't room for two text labels next to
+  // the language dropdown and the theme control, so it collapses to icon + hover title — the same
+  // compact shape the theme Segmented already uses on every breakpoint.
+  const showUiClientSwitch = shouldShowUiClientSwitch(infoResult.data);
+  const uiClientOptionMeta: { value: UiClient; label: string; icon: React.ReactNode }[] = [
+    { value: "react", label: t("ui_version.classic"), icon: <AppstoreOutlined /> },
+    { value: "svelte", label: t("ui_version.new"), icon: <RocketOutlined /> },
+  ];
+  const uiClientOptions = uiClientOptionMeta.map(({ value, label, icon }) =>
+    isMobile ? { value, icon, title: label } : { value, label },
+  );
+
+  const handleUiClientChange = (value: string | number) => {
+    const target = value as UiClient;
+    // Only the svelte switch has an async gap (unregistering service workers) before the
+    // reload fires — the react switch reloads right away, so no feedback is needed for it.
+    if (target === "svelte") {
+      void messageApi.loading({ content: t("ui_version.switching"), key: "ui-client-switch", duration: 0 });
+    }
+    void switchUiClient(target);
+  };
 
   const menuItems: MenuProps["items"] = [...(Object.keys(languages) || [])].sort().map((lang: string) => ({
     key: lang,
@@ -55,6 +100,7 @@ export const Header = ({ sticky }: RefineThemedLayoutHeaderProps) => {
 
   return (
     <AntdLayout.Header style={headerStyles}>
+      {messageContextHolder}
       <UpdateNotification />
       <UpdateModal />
       <Space size="small" style={{ marginRight: "auto", opacity: 0.85, fontSize: 12, marginLeft: isMobile ? 48 : 0 }}>
@@ -97,6 +143,16 @@ export const Header = ({ sticky }: RefineThemedLayoutHeaderProps) => {
           value={preference}
           onChange={(value) => setPreference(value as ThemePreference)}
         />
+        {showUiClientSwitch && (
+          <Tooltip title={t("ui_version.tooltip")}>
+            <Segmented
+              aria-label={t("ui_version.label")}
+              options={uiClientOptions}
+              value={infoResult.data?.client_active as UiClient | undefined}
+              onChange={handleUiClientChange}
+            />
+          </Tooltip>
+        )}
         <ScanModal />
         <ChatDrawer />
       </Space>

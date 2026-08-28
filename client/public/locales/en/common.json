@@ -158,6 +158,13 @@
     "light": "Light",
     "dark": "Dark"
   },
+  "ui_version": {
+    "label": "Interface",
+    "classic": "Classic",
+    "new": "New",
+    "tooltip": "Choose between the classic interface and the new one. Remembered in this browser only.",
+    "switching": "Switching interface\u2026"
+  },
   "tags": {
     "clone": "Clone"
   },

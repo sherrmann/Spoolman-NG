@@ -782,6 +782,32 @@ def is_legacy_client_enabled() -> bool:
     )
 
 
+def is_client_switching_enabled() -> bool:
+    """Get whether visitors may switch between the two web clients from inside the UI.
+
+    Both clients are built into the Docker image, so which one a browser gets need not be an
+    operator-only, restart-only decision: with this on, each browser can pick one for itself
+    and SPOOLMAN_LEGACY_CLIENT becomes the default for browsers that have not. Operators who
+    would rather everyone saw the same UI set this to FALSE, which hides the control and makes
+    the server ignore any choice already stored in a visitor's browser.
+
+    Has no effect where there is nothing to switch to -- an install from source that built
+    only one of the two clients (see spoolman.client.resolve_client_serving).
+
+    Returns:
+        bool: Whether the in-UI client switcher is offered.
+
+    """
+    switcher = os.getenv("SPOOLMAN_UI_SWITCHER", "TRUE").upper()
+    if switcher in {"FALSE", "0"}:
+        return False
+    if switcher in {"TRUE", "1"}:
+        return True
+    raise ValueError(
+        f"Failed to parse SPOOLMAN_UI_SWITCHER variable: Unknown value '{switcher}'.",
+    )
+
+
 def get_base_path() -> str:
     """Get the base path.
 

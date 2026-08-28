@@ -358,12 +358,16 @@ async def test_endpoint_maps_bad_tag_to_400(monkeypatch: pytest.MonkeyPatch) -> 
 
 
 async def test_info_endpoint_includes_install_fields(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    from starlette.requests import Request  # noqa: PLC0415
+
     from spoolman.api.v1 import router  # noqa: PLC0415
 
     monkeypatch.setenv("SPOOLMAN_DIR_DATA", str(tmp_path))
     monkeypatch.setattr(updateaction, "evaluate_gate", lambda: _gate(InstallType.NATIVE, gate_open=True))
 
-    info = await router.info()
+    # /info reads the request's cookies to report which web client the caller is on; nothing
+    # in this test cares which, so a bare request is enough.
+    info = await router.info(Request({"type": "http", "method": "GET", "path": "/info", "headers": []}))
 
     assert info.install_type == "native"
     assert info.update_action_available is True

@@ -8,8 +8,11 @@
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import { settings } from '$lib/stores/settings.svelte';
 	import { theme, type ThemePref } from '$lib/stores/theme.svelte';
+	import { serverInfo } from '$lib/stores/serverInfo.svelte';
 	import { locales, getLocale, setLocale, isLocale } from '$lib/paraglide/runtime.js';
 	import * as m from '$lib/paraglide/messages';
+	import { ng } from '$lib/ng/i18n';
+	import { shouldShowUiSwitcher, switchUiClient, type UiClientTarget } from '$lib/uiClient';
 	import { languages } from '$lib/i18n/languages';
 	import { trackSave } from '$lib/utils/autosave';
 	import { numericInput, parseDecimal } from '$lib/utils/numeric';
@@ -31,6 +34,28 @@
 		{ value: 'light', label: m['settings.appearance.theme.light'] },
 		{ value: 'dark', label: m['settings.appearance.theme.dark'] }
 	];
+
+	// Spoolman NG fork addition: the per-browser switch between this client and the legacy
+	// React one (see $lib/uiClient). Hidden until GET /info says switching is on AND both
+	// bundles are actually built -- a source install may have built only one, and the fields
+	// are absent entirely against a backend that predates the switcher, which
+	// $lib/stores/serverInfo defaults to the same "unavailable" state as switching being off.
+	let showUiSwitcher = $derived(
+		shouldShowUiSwitcher(serverInfo.clientSwitchEnabled, serverInfo.clientsAvailable)
+	);
+	// Which bundle answered *this* request. Falls back to 'svelte' rather than leaving both
+	// options unselected -- this page only runs inside the Svelte client, so that is the
+	// correct guess for the one case the fallback matters: switching just turned on but
+	// client_active hasn't made it into this particular /info response yet.
+	let activeUiClient = $derived<UiClientTarget>(serverInfo.clientActive === 'react' ? 'react' : 'svelte');
+	const uiClientOptions: { value: UiClientTarget; label: () => string }[] = [
+		{ value: 'react', label: ng.ui_version_classic },
+		{ value: 'svelte', label: ng.ui_version_new }
+	];
+	function selectUiClient(target: UiClientTarget) {
+		// Reloading onto the client that's already active would just be a wasted round trip.
+		if (target !== activeUiClient) switchUiClient(target);
+	}
 
 	function saveCurrency(v: string) {
 		const code = v.trim().toUpperCase();
@@ -105,6 +130,23 @@
 					{/each}
 				</select>
 			</SettingRow>
+			{#if showUiSwitcher}
+				<SettingRow title={ng.ui_version_label()} desc={ng.ui_version_tooltip()}>
+					<div class="seg" role="group" aria-label={ng.ui_version_label()}>
+						{#each uiClientOptions as opt (opt.value)}
+							<button
+								type="button"
+								class="seg-btn"
+								class:active={activeUiClient === opt.value}
+								aria-pressed={activeUiClient === opt.value}
+								onclick={() => selectUiClient(opt.value)}
+							>
+								{opt.label()}
+							</button>
+						{/each}
+					</div>
+				</SettingRow>
+			{/if}
 		</Card>
 
 		<div class="sec-label">{m['settings.general.tab']()}</div>

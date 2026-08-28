@@ -20,6 +20,10 @@ export interface IInfo {
   /** Per-install-type update action (#294). Optional so an older server still type-checks. */
   install_type?: "native" | "docker" | "ha_addon" | "unknown";
   update_action_available?: boolean;
+  /** Per-browser UI client switcher fields. Optional so an older server still type-checks. */
+  clients_available?: string[];
+  client_active?: string;
+  client_switch_enabled?: boolean;
 }
 
 /** Shared query for server info. The `["info"]` key dedupes across every consumer

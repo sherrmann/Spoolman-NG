@@ -253,6 +253,8 @@ def test_is_update_check_enabled_raises_on_garbage(monkeypatch: pytest.MonkeyPat
 
 
 async def test_info_endpoint_includes_update_fields(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    from starlette.requests import Request  # noqa: PLC0415
+
     from spoolman.api.v1 import router  # noqa: PLC0415  (import here to keep the boundary local)
 
     monkeypatch.setenv("SPOOLMAN_DIR_DATA", str(tmp_path))  # keep dirs out of the real data dir
@@ -263,7 +265,9 @@ async def test_info_endpoint_includes_update_fields(monkeypatch: pytest.MonkeyPa
         updatecheck.UpdateStatus(latest_version="2026.7.30", update_available=True, release_url="https://x/r"),
     )
 
-    info = await router.info()
+    # /info reads the request's cookies to report which web client the caller is on; nothing
+    # in this test cares which, so a bare request is enough.
+    info = await router.info(Request({"type": "http", "method": "GET", "path": "/info", "headers": []}))
 
     assert info.update_check_enabled is True
     assert info.latest_version == "2026.7.30"
