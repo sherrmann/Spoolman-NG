@@ -1,5 +1,9 @@
 # Adding fork-only pages to the Svelte client
 
+> **See also** [`comparison.md`](comparison.md) for the current fork-vs-upstream feature and UI
+> comparison, including the React-to-Svelte parity backlog. This file covers the *mechanics* of
+> the vendored subtree; that one covers what is and isn't built yet.
+
 `client_v2/` is vendored from `Donkie/Spoolman` as a git subtree and pulled forward with
 
 ```
@@ -17,7 +21,7 @@ the subtree is a conflict this fork pays for on every pull, forever. The rule is
 
 | Path | What |
 |---|---|
-| `client_v2/src/routes/home/` | Fork-only page routes, one directory each |
+| `client_v2/src/routes/{home,lowstock,orders,locations,calibration,help}/`, `client_v2/src/routes/location/show/[id]/` | Fork-only page routes, one directory each — seven of them |
 | `client_v2/src/lib/ng/` | Fork-only logic, types, API access and message helpers |
 | `client_v2/project-ng.inlang/` | The fork's own inlang project and its generated messages |
 
@@ -59,6 +63,8 @@ upstream page rather than beside it.
 | `src/lib/library/params.ts` | One export, `replaceFilters` | A natural-language search produces a whole view at once. Applying it through the existing per-filter mutators would push several entries onto the history stack, so Back would walk through states the user never asked for |
 | `src/lib/components/library/ListToolbar.svelte` | `<NlSearchButton />` beside the filter chips | The button's whole point is that it fills these chips in; anywhere else and it reads as a separate search |
 | `src/routes/settings/+page.svelte` | `<AiSettings />`. **Adding named controls to a vendored page is a hazard**: upstream's own specs query labels page-wide, so a field announced the same as one already there takes their query from one match to several and fails it. The AI panel's two URL fields are therefore announced as "AI endpoint URL" and "Transcription endpoint URL", not by their visible row titles. Check `getByLabel` names in `tests_frontend_v2` before adding a control to a page upstream tests | The assistant's configuration belongs on the settings page. Renders nothing for a non-administrator |
+| `src/lib/api/info.ts`, `src/lib/stores/serverInfo.svelte.ts` | `clients_available`, `client_active` and `client_switch_enabled` on the `Info` type, surfaced as `$state` | The client switcher (#405) has to know whether both bundles exist and which one is serving. Both are upstream's own single definition of the `/info` shape and its store |
+| `src/routes/settings/+page.svelte` | An Interface control (segmented Classic/New), gated on `shouldShowUiSwitcher()` | Switching clients is an appearance preference and belongs beside the language and theme rows. The logic itself lives in the fork-only `src/lib/uiClient.ts` |
 | `src/routes/+layout.svelte` | `<AiChatLauncher />`, one element | The assistant is global, not a page. It renders nothing at all unless the operator has enabled it, so the cost when off is one settings read |
 | `src/lib/components/TagsSection.svelte` | An "Encode to NFC" action beside upstream's "Add tag", and the fork's `NfcWriteModal` mounted from it | This section IS the spool's tag UI. Upstream links a tag by its UID and never reads or writes what is stored on it, so writing a spool's data onto one has no home of its own; a separate section for one button would read as a different feature |
 | `src/lib/components/AddSpoolModal.svelte`, `src/lib/stores/ui.svelte.ts`, `src/routes/+layout.svelte` | A third preset, `presetArticleNumber`, beside the existing `presetFilamentId` and `duplicateFilamentId` | A scanned retail barcode no filament claims (#97b) must open a new-filament form carrying it. This is upstream's own preset mechanism with one more entry, written in the same three places the other two are |

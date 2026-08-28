@@ -5,6 +5,22 @@ PGID=${PGID:-1000}
 SPOOLMAN_PORT=${SPOOLMAN_PORT:-8000}
 SPOOLMAN_HOST=${SPOOLMAN_HOST:-0.0.0.0}
 
+# Kubernetes sets a Docker-style "service link" variable for every Service that exists in the
+# namespace when the pod starts, so a Service named "spoolman" makes SPOOLMAN_PORT=tcp://<ip>:8000
+# here. That is the Service address, not a port, and uvicorn refuses to start on it. Only the port
+# is at risk: the injected names are SPOOLMAN_SERVICE_HOST, SPOOLMAN_SERVICE_PORT, SPOOLMAN_PORT
+# and SPOOLMAN_PORT_8000_TCP*, so SPOOLMAN_HOST above is never clobbered.
+#
+# Deliberately not exported: the root branch below re-execs this script through gosu, and the child
+# re-reads the original environment and runs this guard again. Exporting the sanitized value would
+# work too, but would hide the raw value from the child for no gain.
+case "$SPOOLMAN_PORT" in
+    *://*)
+        echo "Warning: ignoring SPOOLMAN_PORT=\"$SPOOLMAN_PORT\", which is a Kubernetes service link rather than a port number. Using 8000 instead." >&2
+        SPOOLMAN_PORT=8000
+        ;;
+esac
+
 fail() {
     echo "$1" >&2
     exit 1

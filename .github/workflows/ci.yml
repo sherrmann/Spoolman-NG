@@ -999,6 +999,19 @@ jobs:
           fi
           cleanup
           echo "::endgroup::"
+
+          # A Service named "spoolman" makes Kubernetes inject SPOOLMAN_PORT=tcp://<clusterIP>:8000
+          # into the pod. uvicorn cannot bind that, so without the entrypoint guard the container
+          # never starts -- and the value comes from the cluster, not from any values file, so it
+          # looks like a port nobody set.
+          echo "::group::a Kubernetes service-link SPOOLMAN_PORT is ignored, still boots on 8000"
+          cleanup
+          docker run -d --name smoke -p 8000:8000 -e SPOOLMAN_PORT=tcp://10.0.0.1:8000 spoolman:test
+          wait_healthy "service-link SPOOLMAN_PORT"
+          docker logs smoke 2>&1 | grep -q "is a Kubernetes service link" || {
+            echo "::error::expected the service-link warning in the logs"; docker logs smoke; exit 1; }
+          cleanup
+          echo "::endgroup::"
   #
   # Build the arm64 image, then boot it under QEMU and hit the health endpoint.
   # Like build-armv7, arm64 is otherwise only built (never run) in CI, so a
