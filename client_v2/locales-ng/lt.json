@@ -475,5 +475,16 @@
 	"home_usage_bucket_day": "Diena",
 	"home_usage_bucket_week": "Savaitė",
 	"home_usage_bucket_month": "Mėnuo",
-	"home_usage_bucket_year": "Metai"
+	"home_usage_bucket_year": "Metai",
+	"apiToken_title": "Reikalingas API prieigos raktas",
+	"apiToken_help": "Šiam Spoolman egzemplioriui reikalingas API prieigos raktas. Įveskite jį, kad tęstumėte; jis saugomas šioje naršyklėje.",
+	"apiToken_placeholder": "API prieigos raktas",
+	"apiToken_submit": "Išsaugoti raktą",
+	"auth_login_title": "Prisijungti",
+	"auth_login_submit": "Prisijungti",
+	"auth_login_username": "Naudotojo vardas",
+	"auth_login_password": "Slaptažodis",
+	"auth_logout": "Atsijungti",
+	"auth_roles_admin": "Administratorius",
+	"auth_roles_readonly": "Tik skaitymo"
 }

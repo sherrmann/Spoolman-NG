@@ -475,5 +475,16 @@
 	"home_usage_bucket_day": "День",
 	"home_usage_bucket_week": "Неделя",
 	"home_usage_bucket_month": "Месяц",
-	"home_usage_bucket_year": "Год"
+	"home_usage_bucket_year": "Год",
+	"apiToken_title": "Требуется API-токен",
+	"apiToken_help": "Этот экземпляр Spoolman требует API-токен. Введите его, чтобы продолжить; он сохраняется в этом браузере.",
+	"apiToken_placeholder": "API-токен",
+	"apiToken_submit": "Сохранить токен",
+	"auth_login_title": "Вход",
+	"auth_login_submit": "Войти",
+	"auth_login_username": "Имя пользователя",
+	"auth_login_password": "Пароль",
+	"auth_logout": "Выйти",
+	"auth_roles_admin": "Администратор",
+	"auth_roles_readonly": "Только чтение"
 }

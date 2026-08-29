@@ -217,6 +217,21 @@ const KEYS = [
 	'home.usage.bucket.week',
 	'home.usage.bucket.month',
 	'home.usage.bucket.year',
+
+	// Credential prompt (#406). Listed one by one rather than as `{ prefix: 'auth.' }`
+	// because that namespace also holds the ~10 `auth.users.*` keys for the account
+	// management panel, which the Svelte client does not have yet (#413).
+	'apiToken.title',
+	'apiToken.help',
+	'apiToken.placeholder',
+	'apiToken.submit',
+	'auth.login.title',
+	'auth.login.submit',
+	'auth.login.username',
+	'auth.login.password',
+	'auth.logout',
+	'auth.roles.admin',
+	'auth.roles.readonly',
 ];
 
 /** Flatten nested i18next JSON to dotted keys. */

@@ -473,5 +473,16 @@
 	"home_usage_bucket_day": "Ημέρα",
 	"home_usage_bucket_week": "Εβδομάδα",
 	"home_usage_bucket_month": "Μήνας",
-	"home_usage_bucket_year": "Έτος"
+	"home_usage_bucket_year": "Έτος",
+	"apiToken_title": "Απαιτείται API token",
+	"apiToken_help": "Αυτή η εγκατάσταση Spoolman απαιτεί API token. Εισαγάγετέ το για να συνεχίσετε· αποθηκεύεται σε αυτό το πρόγραμμα περιήγησης.",
+	"apiToken_placeholder": "API token",
+	"apiToken_submit": "Αποθήκευση token",
+	"auth_login_title": "Σύνδεση",
+	"auth_login_submit": "Σύνδεση",
+	"auth_login_username": "Όνομα χρήστη",
+	"auth_login_password": "Κωδικός πρόσβασης",
+	"auth_logout": "Έξοδος",
+	"auth_roles_admin": "Διαχειριστής",
+	"auth_roles_readonly": "Μόνο ανάγνωση"
 }

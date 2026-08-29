@@ -475,5 +475,16 @@
 	"home_usage_bucket_day": "Zi",
 	"home_usage_bucket_week": "Săptămână",
 	"home_usage_bucket_month": "Lună",
-	"home_usage_bucket_year": "An"
+	"home_usage_bucket_year": "An",
+	"apiToken_title": "Token API necesar",
+	"apiToken_help": "Această instanță Spoolman necesită un token API. Introduceți-l pentru a continua; acesta este stocat în acest browser.",
+	"apiToken_placeholder": "Token API",
+	"apiToken_submit": "Salvează token-ul",
+	"auth_login_title": "Autentificare",
+	"auth_login_submit": "Autentificare",
+	"auth_login_username": "Nume de utilizator",
+	"auth_login_password": "Parolă",
+	"auth_logout": "Deconectare",
+	"auth_roles_admin": "Administrator",
+	"auth_roles_readonly": "Doar citire"
 }

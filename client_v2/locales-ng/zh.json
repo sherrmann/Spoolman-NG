@@ -471,5 +471,16 @@
 	"home_usage_bucket_day": "日",
 	"home_usage_bucket_week": "周",
 	"home_usage_bucket_month": "月",
-	"home_usage_bucket_year": "年"
+	"home_usage_bucket_year": "年",
+	"apiToken_title": "需要 API 令牌",
+	"apiToken_help": "此 Spoolman 实例需要 API 令牌。请输入令牌以继续；令牌将保存在此浏览器中。",
+	"apiToken_placeholder": "API 令牌",
+	"apiToken_submit": "保存令牌",
+	"auth_login_title": "登录",
+	"auth_login_submit": "登录",
+	"auth_login_username": "用户名",
+	"auth_login_password": "密码",
+	"auth_logout": "退出登录",
+	"auth_roles_admin": "管理员",
+	"auth_roles_readonly": "只读"
 }

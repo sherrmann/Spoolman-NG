@@ -473,5 +473,16 @@
 	"home_usage_bucket_day": "Dag",
 	"home_usage_bucket_week": "Week",
 	"home_usage_bucket_month": "Maand",
-	"home_usage_bucket_year": "Jaar"
+	"home_usage_bucket_year": "Jaar",
+	"apiToken_title": "API-token vereist",
+	"apiToken_help": "Deze Spoolman-installatie vereist een API-token. Voer het in om door te gaan; het wordt in deze browser opgeslagen.",
+	"apiToken_placeholder": "API-token",
+	"apiToken_submit": "Token opslaan",
+	"auth_login_title": "Inloggen",
+	"auth_login_submit": "Inloggen",
+	"auth_login_username": "Gebruikersnaam",
+	"auth_login_password": "Wachtwoord",
+	"auth_logout": "Uitloggen",
+	"auth_roles_admin": "Beheerder",
+	"auth_roles_readonly": "Alleen-lezen"
 }

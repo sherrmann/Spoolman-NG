@@ -1,7 +1,19 @@
 import { API_BASE } from './config';
-import { recoverFromUnauthorized } from './auth';
+import { handleUnauthorized } from './auth';
+import { authHeaders } from '$lib/ng/authToken';
 
 // Thin fetch wrappers around the Spoolman REST API.
+
+/**
+ * Headers for an outgoing request: the caller's own, plus the bearer credential
+ * when one is held.
+ *
+ * Every wrapper below goes through this rather than building headers inline, so
+ * there is one place a credential can be forgotten rather than seven (#406).
+ */
+function headers(extra: Record<string, string> = {}): Record<string, string> {
+	return { ...extra, ...authHeaders() };
+}
 
 export type QueryParams = Record<string, string | number | undefined | null>;
 
@@ -60,7 +72,11 @@ const RELOAD_ON_401 = new Set(['GET', 'HEAD']);
 
 async function ensureOk(res: Response, method: string, path: string): Promise<Response> {
 	if (!res.ok) {
-		if (res.status === 401 && RELOAD_ON_401.has(method)) recoverFromUnauthorized();
+		// The response, not just the status: Spoolman's own 401 carries
+		// `WWW-Authenticate: Bearer`, and that header is what separates "this
+		// server wants credentials" from "a proxy in front of it lost our
+		// session". They need opposite responses. See ./auth.ts.
+		if (res.status === 401) handleUnauthorized(res, RELOAD_ON_401.has(method));
 		let body: Record<string, unknown> | undefined;
 		try {
 			body = (await res.json()) as Record<string, unknown>;
@@ -89,7 +105,11 @@ export async function getList(
 	params: QueryParams = {},
 	signal?: AbortSignal
 ): Promise<RawPage> {
-	const res = await ensureOk(await fetch(API_BASE + path + queryString(params), { signal }), 'GET', path);
+	const res = await ensureOk(
+		await fetch(API_BASE + path + queryString(params), { signal, headers: headers() }),
+		'GET',
+		path
+	);
 	const items = (await res.json()) as unknown[];
 	const header = res.headers.get('x-total-count');
 	const total = header != null && header !== '' ? Number(header) : items.length;
@@ -101,7 +121,11 @@ export async function getJson<T = unknown>(
 	params: QueryParams = {},
 	signal?: AbortSignal
 ): Promise<T> {
-	const res = await ensureOk(await fetch(API_BASE + path + queryString(params), { signal }), 'GET', path);
+	const res = await ensureOk(
+		await fetch(API_BASE + path + queryString(params), { signal, headers: headers() }),
+		'GET',
+		path
+	);
 	return (await res.json()) as T;
 }
 
@@ -109,7 +133,7 @@ export async function patchJson<T = unknown>(path: string, body: unknown): Promi
 	const res = await ensureOk(
 		await fetch(API_BASE + path, {
 			method: 'PATCH',
-			headers: { 'content-type': 'application/json' },
+			headers: headers({ 'content-type': 'application/json' }),
 			body: JSON.stringify(body)
 		}),
 		'PATCH',
@@ -122,7 +146,7 @@ export async function putJson<T = unknown>(path: string, body: unknown): Promise
 	const res = await ensureOk(
 		await fetch(API_BASE + path, {
 			method: 'PUT',
-			headers: { 'content-type': 'application/json' },
+			headers: headers({ 'content-type': 'application/json' }),
 			body: JSON.stringify(body)
 		}),
 		'PUT',
@@ -135,7 +159,7 @@ export async function postJson<T = unknown>(path: string, body: unknown): Promis
 	const res = await ensureOk(
 		await fetch(API_BASE + path, {
 			method: 'POST',
-			headers: { 'content-type': 'application/json' },
+			headers: headers({ 'content-type': 'application/json' }),
 			body: JSON.stringify(body)
 		}),
 		'POST',
@@ -145,10 +169,14 @@ export async function postJson<T = unknown>(path: string, body: unknown): Promis
 }
 
 export async function deleteResource(path: string): Promise<void> {
-	await ensureOk(await fetch(API_BASE + path, { method: 'DELETE' }), 'DELETE', path);
+	await ensureOk(await fetch(API_BASE + path, { method: 'DELETE', headers: headers() }), 'DELETE', path);
 }
 
 export async function deleteJson<T = unknown>(path: string): Promise<T> {
-	const res = await ensureOk(await fetch(API_BASE + path, { method: 'DELETE' }), 'DELETE', path);
+	const res = await ensureOk(
+		await fetch(API_BASE + path, { method: 'DELETE', headers: headers() }),
+		'DELETE',
+		path
+	);
 	return (await res.json()) as T;
 }

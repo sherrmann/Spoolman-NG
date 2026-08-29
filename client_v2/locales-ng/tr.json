@@ -473,5 +473,16 @@
 	"home_usage_bucket_day": "Gün",
 	"home_usage_bucket_week": "Hafta",
 	"home_usage_bucket_month": "Ay",
-	"home_usage_bucket_year": "Yıl"
+	"home_usage_bucket_year": "Yıl",
+	"apiToken_title": "API token gerekli",
+	"apiToken_help": "Bu Spoolman sunucusu bir API token'ı gerektiriyor. Devam etmek için girin; token bu tarayıcıda saklanır.",
+	"apiToken_placeholder": "API token",
+	"apiToken_submit": "Token'ı kaydet",
+	"auth_login_title": "Giriş yap",
+	"auth_login_submit": "Giriş yap",
+	"auth_login_username": "Kullanıcı adı",
+	"auth_login_password": "Şifre",
+	"auth_logout": "Çıkış yap",
+	"auth_roles_admin": "Yönetici",
+	"auth_roles_readonly": "Salt okunur"
 }

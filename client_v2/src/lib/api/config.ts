@@ -8,6 +8,7 @@
 //   `<base>/`; trimming its trailing slash gives us the bare base path.
 
 import { resolve } from '$app/paths';
+import { withWsToken } from '$lib/ng/authToken';
 
 function trimTrailingSlash(s: string): string {
 	return s.replace(/\/+$/, '');
@@ -19,12 +20,20 @@ export const API_BASE: string = (() => {
 	return trimTrailingSlash(resolve('/')) + '/api/v1';
 })();
 
-/** Absolute ws(s):// URL for a resource path like "/spool". */
+/**
+ * Absolute ws(s):// URL for a resource path like "/spool".
+ *
+ * Carries the bearer credential as `?token=` when one is held: a browser cannot
+ * set an Authorization header on a WebSocket handshake, so the server accepts it
+ * in the query string instead. Both websocket clients rebuild their URL through
+ * here on every reconnect, so a credential entered after the first refused
+ * handshake is picked up without any extra plumbing.
+ */
 export function wsUrl(path: string): string {
 	let base = API_BASE;
 	if (!/^https?:/i.test(base)) {
 		const origin = typeof window !== 'undefined' ? window.location.origin : '';
 		base = origin + (base.startsWith('/') ? '' : '/') + base;
 	}
-	return base.replace(/^http/i, 'ws') + path;
+	return withWsToken(base.replace(/^http/i, 'ws') + path);
 }

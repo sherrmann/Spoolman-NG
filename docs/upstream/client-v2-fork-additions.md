@@ -23,6 +23,7 @@ the subtree is a conflict this fork pays for on every pull, forever. The rule is
 |---|---|
 | `client_v2/src/routes/{home,lowstock,orders,locations,calibration,help}/`, `client_v2/src/routes/location/show/[id]/` | Fork-only page routes, one directory each — seven of them |
 | `client_v2/src/lib/ng/` | Fork-only logic, types, API access and message helpers |
+| `client_v2/src/lib/ng/authToken.ts`, `authState.svelte.ts` | The bearer credential (rune-free, so the transport can read it synchronously) and the reactive state a component binds to |
 | `client_v2/project-ng.inlang/` | The fork's own inlang project and its generated messages |
 
 ## What this fork edits, and why each is unavoidable
@@ -68,6 +69,10 @@ upstream page rather than beside it.
 | `src/routes/+layout.svelte` | `<AiChatLauncher />`, one element | The assistant is global, not a page. It renders nothing at all unless the operator has enabled it, so the cost when off is one settings read |
 | `src/lib/components/TagsSection.svelte` | An "Encode to NFC" action beside upstream's "Add tag", and the fork's `NfcWriteModal` mounted from it | This section IS the spool's tag UI. Upstream links a tag by its UID and never reads or writes what is stored on it, so writing a spool's data onto one has no home of its own; a separate section for one button would read as a different feature |
 | `src/lib/components/AddSpoolModal.svelte`, `src/lib/stores/ui.svelte.ts`, `src/routes/+layout.svelte` | A third preset, `presetArticleNumber`, beside the existing `presetFilamentId` and `duplicateFilamentId` | A scanned retail barcode no filament claims (#97b) must open a new-filament form carrying it. This is upstream's own preset mechanism with one more entry, written in the same three places the other two are |
+| `src/lib/api/http.ts` | Every wrapper's headers go through one local `headers()` helper that merges `authHeaders()`, and a 401 hands the whole `Response` to `./auth` rather than just its status | This fork's backend answers 401 and upstream's does not (#406). There is no way to attach a credential to requests from outside the module that makes them, and one helper is a smaller footprint than seven inline spreads |
+| `src/lib/api/config.ts` | `wsUrl()` appends `?token=` when a credential is held | A browser cannot set an Authorization header on a WebSocket handshake, so the token has to travel in the URL. Both websocket clients build their URL here, on every reconnect, so this one line covers both and covers retries |
+| `src/lib/api/auth.ts` | `handleUnauthorized(res, mayReload)` beside the existing reload: a 401 carrying `WWW-Authenticate: Bearer` raises the credential prompt instead of reloading | Upstream's module assumes every 401 comes from a forward-auth proxy, which a reload can fix. This fork's own 401 is not fixable that way — reloading produced the #406 loop — and the header is the only thing that tells them apart |
+| `src/routes/+layout.svelte` | `<LoginModal />`, and `authState.load()` in the startup effect | The prompt is global, not a page, and `/auth/status` has to be asked once at startup so the prompt knows which form to show |
 | `src/lib/components/library/FilamentInspector.svelte` | One icon-button linking to `/calibration?filament=<id>` | Calibration belongs to a filament, and this panel is where a filament is looked at. React reaches it as a tab on `/filament/show/:id`; this client has no such page — that route is a redirect and this inspector has no tab strip |
 
 Two hazards specific to that page, both found by measuring rather than reading:
