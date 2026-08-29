@@ -357,8 +357,10 @@ jobs:
   # a legitimate fork/upstream difference, not a bug -- see spoolman/database/spool.py
   # (grep "this fork's filter surface") for the deliberate scope decision. It asserts
   # first_used/last_used/registered range filtering, which this fork's spool query
-  # does not implement; client_v2 sends the filter, the backend silently ignores it,
-  # and the list doesn't narrow. Excluding it here does not touch the vendored spec.
+  # does not implement. As of #409 the control is hidden client-side too, so the spec
+  # now fails earlier -- it clicks a "Registered" button that no longer exists -- rather
+  # than on the list failing to narrow. Either way it cannot pass here, and excluding it
+  # does not touch the vendored spec.
   #
   tests-frontend-v2:
     needs: [meta]
@@ -551,16 +553,64 @@ jobs:
           cd tests_frontend_ng
           npx playwright install --with-deps chromium
 
+      - name: Start two backends with authentication on
+        # The tests-auth specs need a server that actually wants credentials, and the one above
+        # cannot be it: switching auth on there would answer 401 to every other spec in this
+        # suite. They also need one instance each rather than one between them -- seeding a user
+        # account is a one-way door, since the backend refuses to delete the last administrator,
+        # so a shared instance would leave the token specs facing a login form on the second run
+        # and on every CI retry. Separate ports, separate databases.
+        run: |
+          start_auth() {
+            port="$1"; data="$2"; log="$3"
+            rm -rf "$data"; mkdir -p "$data"
+            SPOOLMAN_DB_TYPE=sqlite SPOOLMAN_DIR_DATA="$data" uv run alembic upgrade head
+            SPOOLMAN_DB_TYPE=sqlite \
+            SPOOLMAN_DIR_DATA="$data" \
+            SPOOLMAN_LEGACY_CLIENT=FALSE \
+            SPOOLMAN_LOGGING_LEVEL=INFO \
+            SPOOLMAN_API_TOKEN=spoolman-e2e-token \
+            SPOOLMAN_AUTH_SECRET=spoolman-e2e-secret \
+              nohup uv run uvicorn spoolman.main:app --host 127.0.0.1 --port "$port" > "$log" 2>&1 &
+            for _ in $(seq 1 60); do
+              if curl -sf "http://127.0.0.1:$port/api/v1/health" > /dev/null; then
+                echo "Authenticated Spoolman is up on $port."
+                return 0
+              fi
+              sleep 1
+            done
+            echo "Authenticated Spoolman on $port did not become healthy in time." >&2
+            cat "$log"
+            return 1
+          }
+          start_auth 8003 .tests-frontend-ng-auth-data spoolman-ng-auth.log
+          start_auth 8004 .tests-frontend-ng-auth-accounts-data spoolman-ng-auth-accounts.log
+
       - name: Run the fork's browser tests
         env:
           SPOOLMAN_BASE_URL: http://127.0.0.1:8002
         run: |
           cd tests_frontend_ng
-          npx playwright test
+          npx playwright test --project=chromium
+
+      - name: Run the authenticated browser tests
+        env:
+          SPOOLMAN_AUTH_BASE_URL: http://127.0.0.1:8003
+          SPOOLMAN_AUTH_ACCOUNTS_BASE_URL: http://127.0.0.1:8004
+          SPOOLMAN_AUTH_TOKEN: spoolman-e2e-token
+        run: |
+          cd tests_frontend_ng
+          npx playwright test --project=auth-token --project=auth-accounts
 
       - name: Dump Spoolman backend log
         if: ${{ failure() }}
         run: cat spoolman-ng.log
+
+      - name: Dump the authenticated backend logs
+        if: ${{ failure() }}
+        run: |
+          cat spoolman-ng-auth.log
+          cat spoolman-ng-auth-accounts.log
 
       - name: Upload Playwright report
         if: ${{ failure() }}

@@ -473,5 +473,16 @@
 	"home_usage_bucket_day": "Nap",
 	"home_usage_bucket_week": "Hét",
 	"home_usage_bucket_month": "Hónap",
-	"home_usage_bucket_year": "Év"
+	"home_usage_bucket_year": "Év",
+	"apiToken_title": "API token szükséges",
+	"apiToken_help": "Ez a Spoolman-példány API tokent igényel. Add meg a folytatáshoz; a token ebben a böngészőben lesz tárolva.",
+	"apiToken_placeholder": "API token",
+	"apiToken_submit": "Token mentése",
+	"auth_login_title": "Bejelentkezés",
+	"auth_login_submit": "Bejelentkezés",
+	"auth_login_username": "Felhasználónév",
+	"auth_login_password": "Jelszó",
+	"auth_logout": "Kijelentkezés",
+	"auth_roles_admin": "Adminisztrátor",
+	"auth_roles_readonly": "Csak olvasás"
 }

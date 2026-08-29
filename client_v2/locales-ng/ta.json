@@ -473,5 +473,16 @@
 	"home_usage_bucket_day": "நாள்",
 	"home_usage_bucket_week": "வாரம்",
 	"home_usage_bucket_month": "மாதம்",
-	"home_usage_bucket_year": "ஆண்டு"
+	"home_usage_bucket_year": "ஆண்டு",
+	"apiToken_title": "API டோக்கன் தேவை",
+	"apiToken_help": "இந்த Spoolman நிகழ்விற்கு API டோக்கன் தேவை. தொடர அதை உள்ளிடவும்; அது இந்த உலாவியிலேயே சேமிக்கப்படும்.",
+	"apiToken_placeholder": "API டோக்கன்",
+	"apiToken_submit": "டோக்கனைச் சேமி",
+	"auth_login_title": "உள்நுழைவு",
+	"auth_login_submit": "உள்நுழை",
+	"auth_login_username": "பயனர்பெயர்",
+	"auth_login_password": "கடவுச்சொல்",
+	"auth_logout": "விடுபதிகை",
+	"auth_roles_admin": "நிர்வாகி",
+	"auth_roles_readonly": "படிக்க மட்டும்"
 }

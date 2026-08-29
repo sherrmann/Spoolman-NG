@@ -471,5 +471,16 @@
 	"home_usage_bucket_day": "日",
 	"home_usage_bucket_week": "週",
 	"home_usage_bucket_month": "月",
-	"home_usage_bucket_year": "年"
+	"home_usage_bucket_year": "年",
+	"apiToken_title": "APIトークンが必要です",
+	"apiToken_help": "このSpoolmanインスタンスにはAPIトークンが必要です。続行するには入力してください。トークンはこのブラウザに保存されます。",
+	"apiToken_placeholder": "APIトークン",
+	"apiToken_submit": "トークンを保存",
+	"auth_login_title": "ログイン",
+	"auth_login_submit": "ログイン",
+	"auth_login_username": "ユーザー名",
+	"auth_login_password": "パスワード",
+	"auth_logout": "ログアウト",
+	"auth_roles_admin": "管理者",
+	"auth_roles_readonly": "読み取り専用"
 }

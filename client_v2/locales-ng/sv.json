@@ -473,5 +473,16 @@
 	"home_usage_bucket_day": "Dag",
 	"home_usage_bucket_week": "Vecka",
 	"home_usage_bucket_month": "Månad",
-	"home_usage_bucket_year": "År"
+	"home_usage_bucket_year": "År",
+	"apiToken_title": "API-token krävs",
+	"apiToken_help": "Den här Spoolman-instansen kräver en API-token. Ange den för att fortsätta; den sparas i den här webbläsaren.",
+	"apiToken_placeholder": "API-token",
+	"apiToken_submit": "Spara token",
+	"auth_login_title": "Logga in",
+	"auth_login_submit": "Logga in",
+	"auth_login_username": "Användarnamn",
+	"auth_login_password": "Lösenord",
+	"auth_logout": "Logga ut",
+	"auth_roles_admin": "Administratör",
+	"auth_roles_readonly": "Skrivskyddad"
 }

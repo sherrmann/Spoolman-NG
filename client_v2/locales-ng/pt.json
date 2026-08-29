@@ -475,5 +475,16 @@
 	"home_usage_bucket_day": "Dia",
 	"home_usage_bucket_week": "Semana",
 	"home_usage_bucket_month": "Mês",
-	"home_usage_bucket_year": "Ano"
+	"home_usage_bucket_year": "Ano",
+	"apiToken_title": "Token de API necessário",
+	"apiToken_help": "Esta instância do Spoolman requer um token de API. Introduza-o para continuar; fica guardado neste navegador.",
+	"apiToken_placeholder": "Token de API",
+	"apiToken_submit": "Guardar token",
+	"auth_login_title": "Iniciar sessão",
+	"auth_login_submit": "Iniciar sessão",
+	"auth_login_username": "Nome de utilizador",
+	"auth_login_password": "Palavra-passe",
+	"auth_logout": "Sair",
+	"auth_roles_admin": "Administrador",
+	"auth_roles_readonly": "Apenas leitura"
 }

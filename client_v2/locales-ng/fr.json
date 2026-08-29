@@ -474,5 +474,16 @@
 	"home_usage_bucket_day": "Jour",
 	"home_usage_bucket_week": "Semaine",
 	"home_usage_bucket_month": "Mois",
-	"home_usage_bucket_year": "Année"
+	"home_usage_bucket_year": "Année",
+	"apiToken_title": "Jeton API requis",
+	"apiToken_help": "Cette instance Spoolman nécessite un jeton API. Saisissez-le pour continuer ; il est stocké dans ce navigateur.",
+	"apiToken_placeholder": "Jeton API",
+	"apiToken_submit": "Enregistrer le jeton",
+	"auth_login_title": "Connexion",
+	"auth_login_submit": "Se connecter",
+	"auth_login_username": "Nom d'utilisateur",
+	"auth_login_password": "Mot de passe",
+	"auth_logout": "Se déconnecter",
+	"auth_roles_admin": "Administrateur",
+	"auth_roles_readonly": "Lecture seule"
 }

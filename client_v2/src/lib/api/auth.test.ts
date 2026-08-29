@@ -102,3 +102,68 @@ describe('recoverFromUnauthorized', () => {
 		expect(recover()).toBe(false);
 	});
 });
+
+// Which of the two recoveries a 401 gets. Sending a Spoolman 401 down the reload
+// path is #406: the tab reloads every 30s forever and never asks for the
+// credential it is missing, because no proxy is there to redirect it.
+
+async function loadHandler() {
+	vi.resetModules();
+	const { handleUnauthorized } = await import('./auth');
+	const { onCredentialsRequired } = await import('$lib/ng/authToken');
+	const prompt = vi.fn();
+	onCredentialsRequired(prompt);
+	return { handleUnauthorized, prompt };
+}
+
+function unauthorized(wwwAuthenticate?: string): Response {
+	return new Response('{"message":"Missing or invalid credentials."}', {
+		status: 401,
+		headers: wwwAuthenticate ? { 'www-authenticate': wwwAuthenticate } : {}
+	});
+}
+
+describe('handleUnauthorized', () => {
+	it('prompts, and does not reload, when Spoolman itself asks', async () => {
+		const { handleUnauthorized, prompt } = await loadHandler();
+		handleUnauthorized(unauthorized('Bearer'), true);
+		expect(prompt).toHaveBeenCalledTimes(1);
+		expect(reload).not.toHaveBeenCalled();
+	});
+
+	it('recognises the header however it is spelled or parameterised', async () => {
+		const { handleUnauthorized, prompt } = await loadHandler();
+		handleUnauthorized(unauthorized('bearer realm="spoolman", charset="UTF-8"'), true);
+		expect(prompt).toHaveBeenCalledTimes(1);
+		expect(reload).not.toHaveBeenCalled();
+	});
+
+	it('leaves the cooldown unspent, since no reload was used', async () => {
+		const { handleUnauthorized } = await loadHandler();
+		handleUnauthorized(unauthorized('Bearer'), true);
+		// A proxy 401 arriving straight afterwards must still get its one reload.
+		handleUnauthorized(unauthorized(), true);
+		expect(reload).toHaveBeenCalledTimes(1);
+	});
+
+	it('reloads for a 401 with no such header, as before', async () => {
+		const { handleUnauthorized, prompt } = await loadHandler();
+		handleUnauthorized(unauthorized(), true);
+		expect(reload).toHaveBeenCalledTimes(1);
+		expect(prompt).not.toHaveBeenCalled();
+	});
+
+	it('does neither for a write, which keeps its error instead', async () => {
+		const { handleUnauthorized, prompt } = await loadHandler();
+		handleUnauthorized(unauthorized(), false);
+		expect(reload).not.toHaveBeenCalled();
+		expect(prompt).not.toHaveBeenCalled();
+	});
+
+	it('still prompts on a write, which a reload could never have fixed', async () => {
+		const { handleUnauthorized, prompt } = await loadHandler();
+		handleUnauthorized(unauthorized('Bearer'), false);
+		expect(prompt).toHaveBeenCalledTimes(1);
+		expect(reload).not.toHaveBeenCalled();
+	});
+});

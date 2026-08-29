@@ -473,5 +473,16 @@
 	"home_usage_bucket_day": "Dag",
 	"home_usage_bucket_week": "Uge",
 	"home_usage_bucket_month": "Måned",
-	"home_usage_bucket_year": "År"
+	"home_usage_bucket_year": "År",
+	"apiToken_title": "API-token påkrævet",
+	"apiToken_help": "Denne Spoolman-instans kræver en API-token. Indtast den for at fortsætte; den gemmes i denne browser.",
+	"apiToken_placeholder": "API-token",
+	"apiToken_submit": "Gem token",
+	"auth_login_title": "Log ind",
+	"auth_login_submit": "Log ind",
+	"auth_login_username": "Brugernavn",
+	"auth_login_password": "Adgangskode",
+	"auth_logout": "Log ud",
+	"auth_roles_admin": "Administrator",
+	"auth_roles_readonly": "Skrivebeskyttet"
 }

@@ -5,6 +5,8 @@
 	import AddSpoolModal from '$components/AddSpoolModal.svelte';
 	import QrScannerModal from '$components/QrScannerModal.svelte';
 	import AiChatLauncher from '$lib/ng/components/AiChatLauncher.svelte';
+	import LoginModal from '$lib/ng/components/LoginModal.svelte';
+	import { authState } from '$lib/ng/authState.svelte';
 	import Toaster from '$components/Toaster.svelte';
 	import { ui } from '$lib/stores/ui.svelte';
 	import { settings } from '$lib/stores/settings.svelte';
@@ -43,6 +45,9 @@
 	$effect(() => {
 		settings.load();
 		serverInfo.load();
+		// Asks the open /auth/status route what this server wants, so the prompt
+		// below knows which form to show before anything has been refused.
+		authState.load();
 
 		return startLiveSync();
 	});
@@ -108,6 +113,13 @@
 <!-- Spoolman NG fork addition: the assistant. Renders nothing at all -- not even its button --
      unless an operator has switched the feature on; see AiChatLauncher. -->
 <AiChatLauncher />
+
+<!-- Raised when a request comes back asking for credentials we do not have (#406).
+     Conditionally mounted, like the fork's other dialogs, so each prompt starts
+     with empty fields rather than whatever the last attempt left behind. -->
+{#if authState.prompting}
+	<LoginModal onclose={() => (authState.prompting = false)} />
+{/if}
 
 <Toaster />
 

@@ -475,5 +475,16 @@
 	"home_usage_bucket_day": "Den",
 	"home_usage_bucket_week": "Týden",
 	"home_usage_bucket_month": "Měsíc",
-	"home_usage_bucket_year": "Rok"
+	"home_usage_bucket_year": "Rok",
+	"apiToken_title": "Je vyžadován API token",
+	"apiToken_help": "Tato instance Spoolman vyžaduje API token. Zadejte jej pro pokračování; bude uložen v tomto prohlížeči.",
+	"apiToken_placeholder": "API token",
+	"apiToken_submit": "Uložit token",
+	"auth_login_title": "Přihlášení",
+	"auth_login_submit": "Přihlásit se",
+	"auth_login_username": "Uživatelské jméno",
+	"auth_login_password": "Heslo",
+	"auth_logout": "Odhlásit se",
+	"auth_roles_admin": "Administrátor",
+	"auth_roles_readonly": "Pouze pro čtení"
 }

@@ -10,7 +10,8 @@
  * than inherited.
  */
 import { API_BASE } from '$lib/api/config';
-import { getJson, postJson } from '$lib/api/http';
+import { getJson, postJson, HttpError } from '$lib/api/http';
+import { authHeaders } from './authToken';
 import { getSettings, parseSetting } from '$lib/api/settings';
 import { createSseParser } from './sse';
 import { decodeChatFrame, type ChatEvent, type ChatMessage } from './aiChat';
@@ -136,7 +137,7 @@ export interface ChatTurnBody {
 export async function* streamChat(body: ChatTurnBody, signal?: AbortSignal): AsyncGenerator<ChatEvent> {
 	const res = await fetch(API_BASE + '/ai/chat', {
 		method: 'POST',
-		headers: { 'content-type': 'application/json' },
+		headers: { 'content-type': 'application/json', ...authHeaders() },
 		body: JSON.stringify({
 			messages: body.messages,
 			context: body.context,
@@ -215,7 +216,13 @@ export async function chatUndo(tool: string, args: Record<string, unknown>): Pro
 export async function transcribe(clip: Blob, signal?: AbortSignal): Promise<string> {
 	const form = new FormData();
 	form.append('file', clip, filenameFor(clip.type));
-	const res = await fetch(API_BASE + '/ai/transcribe', { method: 'POST', body: form, signal });
+	// No content-type of our own: the browser has to set the multipart boundary.
+	const res = await fetch(API_BASE + '/ai/transcribe', {
+		method: 'POST',
+		headers: authHeaders(),
+		body: form,
+		signal
+	});
 	if (!res.ok) throw new TranscribeError(transcribeFailure(res.status));
 	const body = (await res.json()) as { text?: unknown };
 	return String(body.text ?? '');
@@ -289,10 +296,15 @@ export async function isAdmin(signal?: AbortSignal): Promise<boolean> {
 	try {
 		const me = await getJson<{ role?: unknown }>('/auth/me', {}, signal);
 		return String(me.role ?? '') === 'admin';
-	} catch {
-		// Auth may be switched off entirely, in which case /auth/me still answers with the
-		// implicit admin principal. A hard failure here is a broken or unreachable backend, and
-		// the panel's own requests will report that far better than a hidden panel would.
+	} catch (e) {
+		// A 401 is the one failure that answers the question: the server wants credentials we
+		// do not have, so we are nobody, let alone an administrator. Failing open on it would
+		// hand the operator panel to an unauthenticated visitor. (The request itself has
+		// already raised the credential prompt on its way through http.ts.)
+		if (e instanceof HttpError && e.status === 401) return false;
+		// Anything else, including auth being switched off entirely -- where /auth/me answers
+		// with the implicit admin principal rather than failing -- is a broken or unreachable
+		// backend. The panel's own requests will report that far better than a hidden panel.
 		return true;
 	}
 }
@@ -432,7 +444,7 @@ export async function* pullOllamaModel(
 ): AsyncGenerator<OllamaPullProgress> {
 	const res = await fetch(API_BASE + '/ai/ollama/pull', {
 		method: 'POST',
-		headers: { 'content-type': 'application/json' },
+		headers: { 'content-type': 'application/json', ...authHeaders() },
 		body: JSON.stringify({ model }),
 		signal
 	});

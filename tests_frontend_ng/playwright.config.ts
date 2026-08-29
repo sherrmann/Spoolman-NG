@@ -19,6 +19,21 @@ import { defineConfig, devices } from "@playwright/test";
  */
 const baseURL = process.env.SPOOLMAN_BASE_URL ?? "http://localhost:8001";
 
+/**
+ * The authenticated specs need their own backends, started with SPOOLMAN_API_TOKEN set.
+ *
+ * They cannot share the one above: turning auth on there would answer 401 to every other spec in
+ * this suite. And they need one backend each, not one between them, because seeding a user
+ * account is irreversible -- the backend refuses to delete the last administrator, so
+ * accounts_enabled can never return to false. One instance for both would leave the token specs
+ * asserting a token field against a login form on every rerun and every CI retry.
+ *
+ * Running `npx playwright test` locally without those instances will fail these projects only --
+ * use `--project=chromium` to skip them.
+ */
+const authBaseURL = process.env.SPOOLMAN_AUTH_BASE_URL ?? "http://localhost:8003";
+const authAccountsBaseURL = process.env.SPOOLMAN_AUTH_ACCOUNTS_BASE_URL ?? "http://localhost:8004";
+
 export default defineConfig({
   testDir: "./tests",
   forbidOnly: !!process.env.CI,
@@ -37,5 +52,20 @@ export default defineConfig({
     screenshot: "only-on-failure",
     video: "on-first-retry",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
+    {
+      // These override the top-level testDir, so ./tests-auth runs here and nowhere else.
+      name: "auth-token",
+      testDir: "./tests-auth",
+      testMatch: /token\.spec\.ts/,
+      use: { ...devices["Desktop Chrome"], baseURL: authBaseURL },
+    },
+    {
+      name: "auth-accounts",
+      testDir: "./tests-auth",
+      testMatch: /accounts\.spec\.ts/,
+      use: { ...devices["Desktop Chrome"], baseURL: authAccountsBaseURL },
+    },
+  ],
 });

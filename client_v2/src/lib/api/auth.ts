@@ -1,7 +1,13 @@
-// Recovering the session when a forward-auth proxy expires it.
+// Answering a 401, which here can mean two opposite things.
 //
-// Spoolman has no login of its own and never answers 401. But plenty of people
-// run it behind a forward-auth proxy (Authelia, Authentik, oauth2-proxy, Caddy
+// This fork's Spoolman DOES have a login of its own (a shared SPOOLMAN_API_TOKEN,
+// or user accounts) and answers 401 when it wants credentials, marking those
+// responses with `WWW-Authenticate: Bearer`. Reloading cannot fix that one --
+// there is nobody to redirect us -- so it has to raise the credential prompt
+// instead. That header is the whole discriminator; see handleUnauthorized below.
+//
+// The other case is the one this module was written for. People run Spoolman
+// behind a forward-auth proxy (Authelia, Authentik, oauth2-proxy, Caddy
 // forward_auth), and those proxies treat the two kinds of request differently
 // once a session goes stale:
 //
@@ -17,6 +23,8 @@
 // comes back to the page they were on.
 //
 // Dormant for everyone else — no proxy in front means no 401 to react to.
+
+import { requireCredentials } from '$lib/ng/authToken';
 
 const COOLDOWN_KEY = 'spoolman.auth-reload-at';
 const COOLDOWN_MS = 30_000;
@@ -71,4 +79,24 @@ export function recoverFromUnauthorized(): boolean {
 	writeStamp(now);
 	globalThis.location.reload();
 	return true;
+}
+
+/**
+ * Route a 401 to whichever recovery can actually work.
+ *
+ * `WWW-Authenticate: Bearer` means Spoolman itself is asking, so we prompt and
+ * return without reloading — and without stamping the cooldown, since no reload
+ * was spent. Reloading here would be the #406 bug: a tab that reloads every 30s
+ * forever and never asks for the credential it is missing.
+ *
+ * Anything else is the proxy case, where a reload is the fix, subject to
+ * `mayReload` — a rejected write keeps its 401 as an ordinary error so the user
+ * does not lose what they typed.
+ */
+export function handleUnauthorized(res: Response, mayReload: boolean): void {
+	if (/bearer/i.test(res.headers.get('www-authenticate') ?? '')) {
+		requireCredentials();
+		return;
+	}
+	if (mayReload) recoverFromUnauthorized();
 }

@@ -473,5 +473,16 @@
 	"home_usage_bucket_day": "روز",
 	"home_usage_bucket_week": "هفته",
 	"home_usage_bucket_month": "ماه",
-	"home_usage_bucket_year": "سال"
+	"home_usage_bucket_year": "سال",
+	"apiToken_title": "توکن API لازم است",
+	"apiToken_help": "این نمونه Spoolman به توکن API نیاز دارد. برای ادامه آن را وارد کنید؛ توکن در همین مرورگر ذخیره می‌شود.",
+	"apiToken_placeholder": "توکن API",
+	"apiToken_submit": "ذخیره توکن",
+	"auth_login_title": "ورود",
+	"auth_login_submit": "ورود",
+	"auth_login_username": "نام کاربری",
+	"auth_login_password": "رمز عبور",
+	"auth_logout": "خروج",
+	"auth_roles_admin": "مدیر",
+	"auth_roles_readonly": "فقط خواندنی"
 }

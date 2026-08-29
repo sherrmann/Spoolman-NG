@@ -471,5 +471,16 @@
 	"home_usage_bucket_day": "วัน",
 	"home_usage_bucket_week": "สัปดาห์",
 	"home_usage_bucket_month": "เดือน",
-	"home_usage_bucket_year": "ปี"
+	"home_usage_bucket_year": "ปี",
+	"apiToken_title": "ต้องใช้โทเคน API",
+	"apiToken_help": "Spoolman อินสแตนซ์นี้ต้องใช้โทเคน API กรอกโทเคนเพื่อดำเนินการต่อ โทเคนจะถูกเก็บไว้ในเบราว์เซอร์นี้",
+	"apiToken_placeholder": "โทเคน API",
+	"apiToken_submit": "บันทึกโทเคน",
+	"auth_login_title": "เข้าสู่ระบบ",
+	"auth_login_submit": "เข้าสู่ระบบ",
+	"auth_login_username": "ชื่อผู้ใช้",
+	"auth_login_password": "รหัสผ่าน",
+	"auth_logout": "ออกจากระบบ",
+	"auth_roles_admin": "ผู้ดูแลระบบ",
+	"auth_roles_readonly": "อ่านอย่างเดียว"
 }

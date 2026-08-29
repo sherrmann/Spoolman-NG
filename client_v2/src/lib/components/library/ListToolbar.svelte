@@ -48,6 +48,11 @@
 	 * which scanning stops being instant, not a hard limit on anything.
 	 */
 	const SEARCHABLE_MIN = 8;
+	// The filter menu alone needs a lower bar. Upstream's 8 was chosen for a list that
+	// included the three date categories this fork does not offer (#409); without them the
+	// menu has six entries and would silently lose its search box. Scoped to this one menu
+	// so the sort, values and group menus keep upstream's threshold exactly.
+	const FILTER_SEARCHABLE_MIN = 6;
 
 	function toggle(m: Menu) {
 		open = open === m ? null : m;
@@ -126,15 +131,6 @@
 		}
 	];
 
-	// The spool timestamps that can be filtered by range. `neverable` marks the two
-	// a spool can simply lack, which are the ones worth offering a "Never" for;
-	// every spool has a registered date.
-	const DATE_FILTERS: FilterCategory[] = [
-		{ kind: 'date', key: 'last_used', label: m['spool.fields.lastUsed'], neverable: true },
-		{ kind: 'date', key: 'first_used', label: m['spool.fields.firstUsed'], neverable: true },
-		{ kind: 'date', key: 'registered', label: m['spool.fields.registered'], neverable: false }
-	];
-
 	// One-click ranges, covering the questions actually asked of a filament
 	// library: what have I used recently, and what has been sitting untouched.
 	// Each is a chip value in its own right, so its label comes from the same
@@ -196,7 +192,14 @@
 				}))
 		)
 	);
-	let filterCategories = $derived([...BASE_FILTERS, ...DATE_FILTERS, ...extraFilters]);
+	// DATE_FILTERS is deliberately left out (#409). This fork's GET /spool does not implement
+	// first_used/last_used/registered range filtering -- a documented scope decision, see
+	// "this fork's filter surface" in spoolman/database/spool.py. FastAPI drops the unknown
+	// query parameters silently, so offering the control returned an unnarrowed list and told
+	// the user nothing: they could not tell "no spools in that range" from "filter ignored".
+	// Hidden rather than gated on a capability flag, because there is no deployment where the
+	// backend does support it.
+	let filterCategories = $derived([...BASE_FILTERS, ...extraFilters]);
 
 	// Resolve a filter prop back to the extra-field entity + definition it came from.
 	function extraFieldFor(prop: string): { entity: EntityType; def: FieldDef } | undefined {
@@ -446,7 +449,7 @@
 		<div class="menu filter-menu">
 			{#if !filterProp}
 				<div class="menu-title">{m['library.filterBy']()}</div>
-				{#if filterCategories.length >= SEARCHABLE_MIN}
+				{#if filterCategories.length >= FILTER_SEARCHABLE_MIN}
 					<MenuSearch
 						value={menuQuery}
 						oninput={(v) => (menuQuery = v)}
