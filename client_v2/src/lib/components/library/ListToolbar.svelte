@@ -48,6 +48,11 @@
 	 * which scanning stops being instant, not a hard limit on anything.
 	 */
 	const SEARCHABLE_MIN = 8;
+	// The filter menu alone needs a lower bar. Upstream's 8 was chosen for a list that
+	// included the three date categories this fork does not offer (#409); without them the
+	// menu has six entries and would silently lose its search box. Scoped to this one menu
+	// so the sort, values and group menus keep upstream's threshold exactly.
+	const FILTER_SEARCHABLE_MIN = 6;
 
 	function toggle(m: Menu) {
 		open = open === m ? null : m;
@@ -444,7 +449,7 @@
 		<div class="menu filter-menu">
 			{#if !filterProp}
 				<div class="menu-title">{m['library.filterBy']()}</div>
-				{#if filterCategories.length >= SEARCHABLE_MIN}
+				{#if filterCategories.length >= FILTER_SEARCHABLE_MIN}
 					<MenuSearch
 						value={menuQuery}
 						oninput={(v) => (menuQuery = v)}

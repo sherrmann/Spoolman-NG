@@ -226,6 +226,12 @@ mutants/
 .e2e-data-ingress/
 # tests_frontend_v2 (Playwright, client_v2) real-backend temp DB
 .tests-frontend-v2-data/
+# tests_frontend_ng (Playwright, this fork's own pages) real-backend temp DBs. The two
+# auth ones are separate instances on purpose: seeding an account is irreversible, so the
+# token specs need a database that has never had one.
+.tests-frontend-ng-data/
+.tests-frontend-ng-auth-data/
+.tests-frontend-ng-auth-accounts-data/
 **/coverage-e2e/
 **/.coverage-raw/
 
