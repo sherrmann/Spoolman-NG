@@ -16,8 +16,9 @@ This document complements, and in places supersedes, the other upstream docs her
 - `docs/upstream/ledger.json` / `SOLVED.md` — the port ledger, keyed on issue and commit IDs rather
   than on features. Its watermark is upstream `009f9e3b` (2026-08-23); upstream HEAD is `42721c7`,
   so **22 upstream commits are currently untriaged**.
-- `docs/upstream/client-v2-fork-additions.md` — the mechanics of the vendored subtree. Parts of it
-  are stale; see the note at the top of that file.
+- `docs/upstream/client-v2-fork-additions.md` — the mechanics of the vendored subtree, and the
+  running list of what this fork adds to and edits inside it. It points back here for the feature
+  comparison; this file does not duplicate its Tier 1/Tier 2 tables.
 
 ---
 
