@@ -497,5 +497,8 @@
 	"printing_generic_checklist_margins": "I margini sono impostati su “Nessuno” (Spoolman gestisce già i margini).",
 	"printing_generic_checklist_headersFooters": "Intestazioni e piè di pagina sono disattivati.",
 	"printing_generic_checklist_dontShowAgain": "Non mostrare più",
-	"printing_generic_checklist_printNow": "Stampa ora"
+	"printing_generic_checklist_printNow": "Stampa ora",
+	"settings_extra_fields_field_type_link": "Link",
+	"settings_extra_fields_params_link_template": "URL del link",
+	"settings_extra_fields_params_copy_from_filament": "Copia dal filamento"
 }

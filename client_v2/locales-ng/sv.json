@@ -495,5 +495,8 @@
 	"printing_generic_checklist_margins": "Marginaler är satta till ”Inga” (Spoolman hanterar redan marginalerna).",
 	"printing_generic_checklist_headersFooters": "Sidhuvuden och sidfötter är avstängda.",
 	"printing_generic_checklist_dontShowAgain": "Visa inte detta igen",
-	"printing_generic_checklist_printNow": "Skriv ut nu"
+	"printing_generic_checklist_printNow": "Skriv ut nu",
+	"settings_extra_fields_field_type_link": "Länk",
+	"settings_extra_fields_params_link_template": "Länk-URL",
+	"settings_extra_fields_params_copy_from_filament": "Kopiera från filament"
 }

@@ -496,5 +496,8 @@
 	"printing_generic_checklist_margins": "Los márgenes están configurados como «Ninguno» (Spoolman ya gestiona los márgenes).",
 	"printing_generic_checklist_headersFooters": "Los encabezados y pies de página están desactivados.",
 	"printing_generic_checklist_dontShowAgain": "No volver a mostrar esto",
-	"printing_generic_checklist_printNow": "Imprimir ahora"
+	"printing_generic_checklist_printNow": "Imprimir ahora",
+	"settings_extra_fields_field_type_link": "Enlace",
+	"settings_extra_fields_params_link_template": "URL del enlace",
+	"settings_extra_fields_params_copy_from_filament": "Copiar del filamento"
 }

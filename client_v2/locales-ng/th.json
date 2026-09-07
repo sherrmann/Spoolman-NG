@@ -493,5 +493,8 @@
 	"printing_generic_checklist_margins": "ระยะขอบตั้งเป็น “ไม่มี” (Spoolman จัดการระยะขอบให้แล้ว)",
 	"printing_generic_checklist_headersFooters": "ปิดหัวกระดาษและท้ายกระดาษแล้ว",
 	"printing_generic_checklist_dontShowAgain": "ไม่ต้องแสดงอีก",
-	"printing_generic_checklist_printNow": "พิมพ์เลย"
+	"printing_generic_checklist_printNow": "พิมพ์เลย",
+	"settings_extra_fields_field_type_link": "ลิงก์",
+	"settings_extra_fields_params_link_template": "URL ของลิงก์",
+	"settings_extra_fields_params_copy_from_filament": "คัดลอกจากเส้นพลาสติก"
 }

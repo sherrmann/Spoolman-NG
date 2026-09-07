@@ -497,5 +497,8 @@
 	"printing_generic_checklist_margins": "Okraje jsou nastaveny na „Žádné“ (Spoolman okraje řeší už sám).",
 	"printing_generic_checklist_headersFooters": "Záhlaví a zápatí jsou vypnuta.",
 	"printing_generic_checklist_dontShowAgain": "Znovu nezobrazovat",
-	"printing_generic_checklist_printNow": "Tisknout nyní"
+	"printing_generic_checklist_printNow": "Tisknout nyní",
+	"settings_extra_fields_field_type_link": "Odkaz",
+	"settings_extra_fields_params_link_template": "URL odkazu",
+	"settings_extra_fields_params_copy_from_filament": "Kopírovat z filamentu"
 }

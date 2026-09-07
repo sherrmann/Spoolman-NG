@@ -497,5 +497,8 @@
 	"printing_generic_checklist_margins": "As margens estão definidas como “Nenhuma” (o Spoolman já trata as margens).",
 	"printing_generic_checklist_headersFooters": "Os cabeçalhos e rodapés estão desativados.",
 	"printing_generic_checklist_dontShowAgain": "Não mostrar novamente",
-	"printing_generic_checklist_printNow": "Imprimir agora"
+	"printing_generic_checklist_printNow": "Imprimir agora",
+	"settings_extra_fields_field_type_link": "Ligação",
+	"settings_extra_fields_params_link_template": "URL da Ligação",
+	"settings_extra_fields_params_copy_from_filament": "Copiar do Filamento"
 }

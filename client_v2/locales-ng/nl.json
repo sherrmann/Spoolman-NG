@@ -495,5 +495,8 @@
 	"printing_generic_checklist_margins": "Marges staan op “Geen” (Spoolman verwerkt de marges al).",
 	"printing_generic_checklist_headersFooters": "Kopteksten en voetteksten staan uit.",
 	"printing_generic_checklist_dontShowAgain": "Dit niet meer tonen",
-	"printing_generic_checklist_printNow": "Nu afdrukken"
+	"printing_generic_checklist_printNow": "Nu afdrukken",
+	"settings_extra_fields_field_type_link": "Link",
+	"settings_extra_fields_params_link_template": "Link-URL",
+	"settings_extra_fields_params_copy_from_filament": "Kopiëren van filament"
 }

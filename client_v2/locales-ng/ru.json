@@ -497,5 +497,8 @@
 	"printing_generic_checklist_margins": "Поля установлены на «Нет» (Spoolman уже учитывает поля).",
 	"printing_generic_checklist_headersFooters": "Верхние и нижние колонтитулы отключены.",
 	"printing_generic_checklist_dontShowAgain": "Больше не показывать",
-	"printing_generic_checklist_printNow": "Печатать сейчас"
+	"printing_generic_checklist_printNow": "Печатать сейчас",
+	"settings_extra_fields_field_type_link": "Ссылка",
+	"settings_extra_fields_params_link_template": "URL ссылки",
+	"settings_extra_fields_params_copy_from_filament": "Копировать из филамента"
 }

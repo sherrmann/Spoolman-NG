@@ -518,5 +518,8 @@
 	"printing_generic_checklist_margins": "Margins are set to “None” (Spoolman already handles margins).",
 	"printing_generic_checklist_headersFooters": "Headers and footers are turned off.",
 	"printing_generic_checklist_dontShowAgain": "Don't show this again",
-	"printing_generic_checklist_printNow": "Print now"
+	"printing_generic_checklist_printNow": "Print now",
+	"settings_extra_fields_field_type_link": "Link",
+	"settings_extra_fields_params_link_template": "Link URL",
+	"settings_extra_fields_params_copy_from_filament": "Copy from Filament"
 }

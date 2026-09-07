@@ -493,5 +493,8 @@
 	"printing_generic_checklist_margins": "邊界設為「無」（Spoolman 已自行處理邊界）。",
 	"printing_generic_checklist_headersFooters": "已關閉頁首與頁尾。",
 	"printing_generic_checklist_dontShowAgain": "不再顯示",
-	"printing_generic_checklist_printNow": "立即列印"
+	"printing_generic_checklist_printNow": "立即列印",
+	"settings_extra_fields_field_type_link": "連結",
+	"settings_extra_fields_params_link_template": "連結 URL",
+	"settings_extra_fields_params_copy_from_filament": "從線材複製"
 }

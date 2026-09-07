@@ -495,5 +495,8 @@
 	"printing_generic_checklist_margins": "Τα περιθώρια είναι ρυθμισμένα σε «Κανένα» (το Spoolman διαχειρίζεται ήδη τα περιθώρια).",
 	"printing_generic_checklist_headersFooters": "Οι κεφαλίδες και τα υποσέλιδα είναι απενεργοποιημένα.",
 	"printing_generic_checklist_dontShowAgain": "Να μην εμφανιστεί ξανά",
-	"printing_generic_checklist_printNow": "Εκτύπωση τώρα"
+	"printing_generic_checklist_printNow": "Εκτύπωση τώρα",
+	"settings_extra_fields_field_type_link": "Σύνδεσμος",
+	"settings_extra_fields_params_link_template": "URL Συνδέσμου",
+	"settings_extra_fields_params_copy_from_filament": "Αντιγραφή από Νήμα"
 }

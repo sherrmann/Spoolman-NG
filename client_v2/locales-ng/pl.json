@@ -497,5 +497,8 @@
 	"printing_generic_checklist_margins": "Marginesy są ustawione na „Brak” (Spoolman już obsługuje marginesy).",
 	"printing_generic_checklist_headersFooters": "Nagłówki i stopki są wyłączone.",
 	"printing_generic_checklist_dontShowAgain": "Nie pokazuj tego ponownie",
-	"printing_generic_checklist_printNow": "Drukuj teraz"
+	"printing_generic_checklist_printNow": "Drukuj teraz",
+	"settings_extra_fields_field_type_link": "Link",
+	"settings_extra_fields_params_link_template": "URL linku",
+	"settings_extra_fields_params_copy_from_filament": "Kopiuj z filamentu"
 }

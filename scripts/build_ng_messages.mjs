@@ -252,6 +252,14 @@ const KEYS = [
 	'printing.generic.checklist.headersFooters',
 	'printing.generic.checklist.dontShowAgain',
 	'printing.generic.checklist.printNow',
+	// The three extra-field definition parameters this fork's backend accepts and upstream's
+	// does not: the `link` field type (#129) and its base-URL template, and the spool-only
+	// copy-from-filament flag (#118). `settings.extra_fields.` also holds the React settings
+	// page's own ~30 keys, none of which the Svelte manager renders (it uses upstream's
+	// `settings.extraFields.*`), so these three are named one by one rather than as a prefix.
+	'settings.extra_fields.field_type.link',
+	'settings.extra_fields.params.link_template',
+	'settings.extra_fields.params.copy_from_filament',
 ];
 
 /** Flatten nested i18next JSON to dotted keys. */

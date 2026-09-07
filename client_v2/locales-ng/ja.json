@@ -493,5 +493,8 @@
 	"printing_generic_checklist_margins": "余白が「なし」に設定されていること（余白はSpoolman側ですでに調整済みです）。",
 	"printing_generic_checklist_headersFooters": "ヘッダーとフッターがオフになっていること。",
 	"printing_generic_checklist_dontShowAgain": "今後表示しない",
-	"printing_generic_checklist_printNow": "今すぐ印刷"
+	"printing_generic_checklist_printNow": "今すぐ印刷",
+	"settings_extra_fields_field_type_link": "リンク",
+	"settings_extra_fields_params_link_template": "リンクURL",
+	"settings_extra_fields_params_copy_from_filament": "フィラメントからコピー"
 }

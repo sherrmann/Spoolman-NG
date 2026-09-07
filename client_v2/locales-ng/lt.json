@@ -497,5 +497,8 @@
 	"printing_generic_checklist_margins": "Paraštės nustatytos į „Jokios“ (Spoolman jau pats tvarko paraštes).",
 	"printing_generic_checklist_headersFooters": "Antraštės ir poraštės išjungtos.",
 	"printing_generic_checklist_dontShowAgain": "Daugiau nerodyti",
-	"printing_generic_checklist_printNow": "Spausdinti dabar"
+	"printing_generic_checklist_printNow": "Spausdinti dabar",
+	"settings_extra_fields_field_type_link": "Nuoroda",
+	"settings_extra_fields_params_link_template": "Nuorodos URL",
+	"settings_extra_fields_params_copy_from_filament": "Kopijuoti iš gijos"
 }

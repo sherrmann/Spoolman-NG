@@ -495,5 +495,8 @@
 	"printing_generic_checklist_margins": "Kenar boşlukları “Yok” olarak ayarlı (Spoolman kenar boşluklarını zaten kendisi ayarlıyor).",
 	"printing_generic_checklist_headersFooters": "Üst bilgi ve alt bilgiler kapalı.",
 	"printing_generic_checklist_dontShowAgain": "Bunu bir daha gösterme",
-	"printing_generic_checklist_printNow": "Şimdi yazdır"
+	"printing_generic_checklist_printNow": "Şimdi yazdır",
+	"settings_extra_fields_field_type_link": "Bağlantı",
+	"settings_extra_fields_params_link_template": "Bağlantı URL'si",
+	"settings_extra_fields_params_copy_from_filament": "Filamentten Kopyala"
 }

@@ -495,5 +495,8 @@
 	"printing_generic_checklist_margins": "விளிம்புகள் \"எதுவுமில்லை\" என அமைக்கப்பட்டுள்ளன (Spoolman ஏற்கனவே விளிம்புகளைக் கையாளுகிறது).",
 	"printing_generic_checklist_headersFooters": "தலைப்புகளும் அடிக்குறிப்புகளும் முடக்கப்பட்டுள்ளன.",
 	"printing_generic_checklist_dontShowAgain": "இதை மீண்டும் காட்ட வேண்டாம்",
-	"printing_generic_checklist_printNow": "இப்போது அச்சிடு"
+	"printing_generic_checklist_printNow": "இப்போது அச்சிடு",
+	"settings_extra_fields_field_type_link": "இணைப்பு",
+	"settings_extra_fields_params_link_template": "இணைப்பு URL",
+	"settings_extra_fields_params_copy_from_filament": "இழையிலிருந்து நகலெடு"
 }

@@ -12,6 +12,9 @@
 	import { numericInput, parseDecimal } from '$lib/utils/numeric';
 	import { tick } from 'svelte';
 	import * as m from '$lib/paraglide/messages';
+	// Spoolman NG fork addition: the three strings this fork adds here come from its own
+	// catalogue, not upstream's.
+	import { ng } from '$lib/ng/i18n';
 	import Plus from '@lucide/svelte/icons/plus';
 	import X from '@lucide/svelte/icons/x';
 	import GripVertical from '@lucide/svelte/icons/grip-vertical';
@@ -19,7 +22,10 @@
 	const ENTITIES: { key: EntityType; label: () => string }[] = [
 		{ key: 'spool', label: m['library.section.spool'] },
 		{ key: 'filament', label: m['library.section.filament'] },
-		{ key: 'vendor', label: m['filament.fields.vendor'] }
+		{ key: 'vendor', label: m['filament.fields.vendor'] },
+		// Spoolman NG fork addition: locations are an entity with extra fields on this fork's
+		// backend, and this manager is the only place any of them can be defined.
+		{ key: 'location', label: ng.locations_location }
 	];
 
 	const FIELD_TYPE_LABELS: Record<FieldType, () => string> = {
@@ -30,7 +36,9 @@
 		[FieldType.float]: m['settings.extraFields.fieldType.float'],
 		[FieldType.float_range]: m['settings.extraFields.fieldType.floatRange'],
 		[FieldType.integer]: m['settings.extraFields.fieldType.integer'],
-		[FieldType.integer_range]: m['settings.extraFields.fieldType.integerRange']
+		[FieldType.integer_range]: m['settings.extraFields.fieldType.integerRange'],
+		// Spoolman NG fork addition.
+		[FieldType.link]: ng.settings_extra_fields_field_type_link
 	};
 
 	interface Props {
@@ -83,9 +91,18 @@
 	let originalChoices = $state<string[]>([]);
 	let multiChoice = $state(false);
 	let choiceInput = $state('');
+	// Spoolman NG fork addition: the base-URL template of a link field (#129) and the spool-only
+	// inherit-from-filament flag (#118).
+	let linkTemplate = $state('');
+	let copyFromFilament = $state(false);
 
 	let isChoice = $derived(fieldType === FieldType.choice);
 	let showsUnit = $derived(NUMERIC_FIELD_TYPES.has(fieldType));
+	// Spoolman NG fork addition.
+	let isLink = $derived(fieldType === FieldType.link);
+	let showsCopyFromFilament = $derived(entity === 'spool');
+	/** The template max the backend enforces (ExtraFieldParameters.link_template). */
+	const LINK_TEMPLATE_MAX = 512;
 
 	// A draft FieldDef so the default-value editor renders the right control.
 	let draftField = $derived<FieldDef>({
@@ -96,7 +113,9 @@
 		field_type: fieldType,
 		unit: unit || undefined,
 		choices: isChoice ? choices : undefined,
-		multi_choice: isChoice ? multiChoice : undefined
+		multi_choice: isChoice ? multiChoice : undefined,
+		// Spoolman NG fork addition: so the default-value editor below is the link field's own.
+		link_template: isLink ? linkTemplate : undefined
 	});
 
 	function startAdd() {
@@ -114,6 +133,9 @@
 		originalChoices = [];
 		multiChoice = false;
 		choiceInput = '';
+		// Spoolman NG fork addition.
+		linkTemplate = '';
+		copyFromFilament = false;
 	}
 
 	function startEdit(f: FieldDef) {
@@ -131,6 +153,9 @@
 		originalChoices = [...(f.choices ?? [])];
 		multiChoice = f.multi_choice ?? false;
 		choiceInput = '';
+		// Spoolman NG fork addition.
+		linkTemplate = f.link_template ?? '';
+		copyFromFilament = f.copy_from_filament ?? false;
 	}
 
 	function cancel() {
@@ -146,6 +171,9 @@
 			choices = [];
 			multiChoice = false;
 		}
+		// Spoolman NG fork addition: the backend rejects a template on any other type, so a
+		// template typed before the type was changed must not be carried into the save.
+		if (t !== FieldType.link) linkTemplate = '';
 	}
 
 	function addChoice() {
@@ -216,6 +244,16 @@
 			fail('choices', m['settings.extraFields.errors.choiceNeeded']());
 			return;
 		}
+		// Spoolman NG fork addition: the backend requires a template for a link field and caps it
+		// at 512 characters; say so here rather than let the save come back as a 400.
+		if (isLink && !linkTemplate.trim()) {
+			fail('link_template', m['validation.required']());
+			return;
+		}
+		if (isLink && linkTemplate.trim().length > LINK_TEMPLATE_MAX) {
+			fail('link_template', m['validation.maxChars']({ max: LINK_TEMPLATE_MAX }));
+			return;
+		}
 		if (!isNew && isChoice) {
 			const missing = originalChoices.filter((c) => !choices.includes(c));
 			if (missing.length) {
@@ -231,7 +269,12 @@
 			unit: showsUnit && unit.trim() ? unit.trim() : null,
 			default_value: defaultJson ?? null,
 			choices: isChoice ? choices : null,
-			multi_choice: isChoice ? multiChoice : null
+			multi_choice: isChoice ? multiChoice : null,
+			// Spoolman NG fork addition. Both keys are always sent: the backend reads them as
+			// "set" only when they are not null (extra_field_registry.validate_extra_field and
+			// add_or_update_extra_field), so an explicit null is how a field says it has neither.
+			link_template: isLink ? linkTemplate.trim() : null,
+			copy_from_filament: showsCopyFromFilament ? copyFromFilament : null
 		};
 
 		saving = true;
@@ -298,6 +341,15 @@
 						{FIELD_TYPE_LABELS[f.field_type]()}
 						{#if f.field_type === FieldType.choice}<span class="unit"
 								>{f.multi_choice ? m['settings.extraFields.multiSuffix']() : ''}</span
+							>{/if}
+						<!-- Spoolman NG fork addition: both parameters are annotations on the type
+						     they qualify, so they go inside this cell rather than costing the table
+						     two more columns it would have to hide again on a narrow screen. -->
+						{#if f.field_type === FieldType.link && f.link_template}<span class="note mono"
+								>{f.link_template}</span
+							>{/if}
+						{#if f.copy_from_filament}<span class="note"
+								>{ng.settings_extra_fields_params_copy_from_filament()}</span
 							>{/if}
 					</span>
 					<span class="c-def">{defaultPreview(f)}</span>
@@ -369,6 +421,30 @@
 				<label class="fld">
 					<span>{m['settings.extraFields.params.unit']()}</span>
 					<input class="in" bind:value={unit} placeholder="g, °C…" maxlength="16" />
+				</label>
+			{/if}
+
+			<!-- Spoolman NG fork addition: the two definition parameters this fork's backend
+			     accepts. The template belongs to the link type alone and the inherit flag to
+			     spool fields alone, so each is offered only where the backend will take it. -->
+			{#if isLink}
+				<label class="fld wide" data-field="link_template">
+					<span>{ng.settings_extra_fields_params_link_template()} {@render req()}</span>
+					<input
+						class="in"
+						class:invalid={errorField === 'link_template'}
+						bind:value={linkTemplate}
+						aria-required="true"
+						aria-invalid={errorField === 'link_template'}
+						placeholder={'https://www.amazon.com/dp/{}'}
+						maxlength={LINK_TEMPLATE_MAX}
+					/>
+				</label>
+			{/if}
+			{#if showsCopyFromFilament}
+				<label class="fld">
+					<span>{ng.settings_extra_fields_params_copy_from_filament()}</span>
+					<input type="checkbox" bind:checked={copyFromFilament} />
 				</label>
 			{/if}
 
@@ -506,6 +582,16 @@
 	}
 	.unit {
 		color: var(--text-dim);
+	}
+	/* Spoolman NG fork addition: the link template and the inherit flag, annotated under the
+	   type they qualify. */
+	.note {
+		display: block;
+		color: var(--text-dim);
+		font-size: 11px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 	.c-def {
 		color: var(--text-2);

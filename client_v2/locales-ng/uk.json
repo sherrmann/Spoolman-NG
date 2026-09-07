@@ -497,5 +497,8 @@
 	"printing_generic_checklist_margins": "Поля встановлено на «Немає» (Spoolman вже враховує поля).",
 	"printing_generic_checklist_headersFooters": "Верхні та нижні колонтитули вимкнено.",
 	"printing_generic_checklist_dontShowAgain": "Більше не показувати",
-	"printing_generic_checklist_printNow": "Друкувати зараз"
+	"printing_generic_checklist_printNow": "Друкувати зараз",
+	"settings_extra_fields_field_type_link": "Посилання",
+	"settings_extra_fields_params_link_template": "URL посилання",
+	"settings_extra_fields_params_copy_from_filament": "Копіювати з філаменту"
 }

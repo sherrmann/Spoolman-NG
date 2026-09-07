@@ -496,5 +496,8 @@
 	"printing_generic_checklist_margins": "Les marges sont réglées sur « Aucune » (Spoolman gère déjà les marges).",
 	"printing_generic_checklist_headersFooters": "Les en-têtes et pieds de page sont désactivés.",
 	"printing_generic_checklist_dontShowAgain": "Ne plus afficher ce message",
-	"printing_generic_checklist_printNow": "Imprimer maintenant"
+	"printing_generic_checklist_printNow": "Imprimer maintenant",
+	"settings_extra_fields_field_type_link": "Lien",
+	"settings_extra_fields_params_link_template": "URL du lien",
+	"settings_extra_fields_params_copy_from_filament": "Copier depuis le filament"
 }

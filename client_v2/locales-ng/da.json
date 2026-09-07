@@ -495,5 +495,8 @@
 	"printing_generic_checklist_margins": "Margener er sat til “Ingen” (Spoolman håndterer allerede margener).",
 	"printing_generic_checklist_headersFooters": "Sidehoveder og sidefødder er slået fra.",
 	"printing_generic_checklist_dontShowAgain": "Vis ikke dette igen",
-	"printing_generic_checklist_printNow": "Print nu"
+	"printing_generic_checklist_printNow": "Print nu",
+	"settings_extra_fields_field_type_link": "Link",
+	"settings_extra_fields_params_link_template": "Link-URL",
+	"settings_extra_fields_params_copy_from_filament": "Kopiér fra filament"
 }

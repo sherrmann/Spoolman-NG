@@ -495,5 +495,8 @@
 	"printing_generic_checklist_margins": "A margók „Nincs”-re vannak állítva (a margókat már a Spoolman kezeli).",
 	"printing_generic_checklist_headersFooters": "A fejlécek és láblécek ki vannak kapcsolva.",
 	"printing_generic_checklist_dontShowAgain": "Ne mutasd ezt többé",
-	"printing_generic_checklist_printNow": "Nyomtatás most"
+	"printing_generic_checklist_printNow": "Nyomtatás most",
+	"settings_extra_fields_field_type_link": "Link",
+	"settings_extra_fields_params_link_template": "Link URL",
+	"settings_extra_fields_params_copy_from_filament": "Másolás a filamentből"
 }

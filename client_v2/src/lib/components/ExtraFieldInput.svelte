@@ -5,6 +5,9 @@
 	import EditableField from './EditableField.svelte';
 	import LinkedText from './LinkedText.svelte';
 	import { formatDateTime } from '$lib/utils/datetime';
+	// Spoolman NG fork addition.
+	import ExternalLink from '@lucide/svelte/icons/external-link';
+	import { buildLinkUrl } from '$lib/ng/linkField';
 	import { numericInput, parseDecimal } from '$lib/utils/numeric';
 	import * as m from '$lib/paraglide/messages';
 
@@ -102,6 +105,18 @@
 		<span>{selected.length ? selected.join(', ') : '—'}</span>
 	{:else if field.field_type === FieldType.text}
 		<LinkedText text={parsed !== undefined && parsed !== '' ? withUnit(String(parsed)) : ''} />
+	{:else if field.field_type === FieldType.link}
+		<!-- Spoolman NG fork addition: a link field stores a short value and the definition
+		     carries the base-URL template it expands into (#129). An empty value or a template
+		     that expands to nothing degrades to the plain text, never to a dead link. -->
+		{@const url = buildLinkUrl(field.link_template ?? '', parsed === undefined ? '' : String(parsed))}
+		{#if url}
+			<!-- The template is an absolute external URL; there is no base path to resolve it against. -->
+			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+			<a class="link" href={url} target="_blank" rel="noreferrer noopener">{parsed}</a>
+		{:else}
+			<span>{parsed !== undefined && parsed !== '' ? String(parsed) : '—'}</span>
+		{/if}
 	{:else}
 		<span class:mono={NUMERIC_FIELD_TYPES.has(field.field_type)}
 			>{parsed !== undefined && parsed !== '' ? withUnit(String(parsed)) : '—'}</span
@@ -109,6 +124,27 @@
 	{/if}
 {:else if field.field_type === FieldType.text}
 	<EditableField value={parsed ?? ''} placeholder="" ariaLabel={field.name} linkify oninput={onText} />
+{:else if field.field_type === FieldType.link}
+	<!-- Spoolman NG fork addition: a link field is edited as text -- the box holds the short
+	     per-item value; the base URL lives on the field definition. The expanded link is offered
+	     beside the box the way EditableField offers URLs found in free text, so a spool's own
+	     fields, which the inspector edits in place, are still clickable. -->
+	{@const url = buildLinkUrl(field.link_template ?? '', parsed === undefined ? '' : String(parsed))}
+	<span class="linkrow">
+		<EditableField value={parsed ?? ''} placeholder="" ariaLabel={field.name} oninput={onText} />
+		{#if url}
+			<!-- eslint-disable svelte/no-navigation-without-resolve -->
+			<a
+				class="open"
+				href={url}
+				target="_blank"
+				rel="noreferrer noopener"
+				title={url}
+				aria-label={m['inspector.openLink']({ url })}><ExternalLink size={13} /></a
+			>
+			<!-- eslint-enable svelte/no-navigation-without-resolve -->
+		{/if}
+	</span>
 {:else if field.field_type === FieldType.integer}
 	<span class="numrow">
 		<input
@@ -228,6 +264,41 @@
 		padding: 3px 6px;
 		font-size: 12.5px;
 		width: 100%;
+	}
+	/* Spoolman NG fork addition: an expanded link field's anchor, coloured like LinkedText's. */
+	.link {
+		color: var(--accent-link);
+		text-decoration: none;
+		overflow-wrap: anywhere;
+	}
+	.link:hover {
+		text-decoration: underline;
+	}
+	/* Spoolman NG fork addition: the editable link field's open icon, as EditableField draws its own. */
+	.linkrow {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		width: 100%;
+	}
+	.open {
+		position: relative;
+		display: inline-flex;
+		align-items: center;
+		flex: none;
+		color: var(--accent-link);
+	}
+	.open::before {
+		content: '';
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: 24px;
+		height: 32px;
+		transform: translate(-50%, -50%);
+	}
+	.open:hover {
+		color: var(--accent);
 	}
 	.multi {
 		display: flex;

@@ -18,13 +18,8 @@
 	import { resolve } from '$app/paths';
 	import { live } from '$lib/api/live';
 	import { isAbortError } from '$lib/api/http';
-	import {
-		listLocations,
-		listLocationFields,
-		deleteLocation,
-		updateLocation,
-		type LocationFieldDef
-	} from '$lib/ng/api';
+	import { listLocations, deleteLocation, updateLocation } from '$lib/ng/api';
+	import { fields } from '$lib/stores/fields.svelte';
 	import { ng } from '$lib/ng/i18n';
 	import { toasts } from '$lib/stores/toasts.svelte';
 	import type { Location } from '$lib/ng/types';
@@ -39,7 +34,9 @@
 	// --- data loading ----------------------------------------------------------------
 
 	let locations = $state<Location[]>([]);
-	let fieldDefs = $state<LocationFieldDef[]>([]);
+	// Definitions come from the shared, cached store, so a field added in Settings is seen here
+	// without a reload and this page issues no request of its own for them.
+	let fieldDefs = $derived(fields.get('location'));
 
 	let loaded = $state(false);
 	let loadError = $state(false);
@@ -48,9 +45,8 @@
 
 	async function loadAll(signal: AbortSignal) {
 		try {
-			const [l, f] = await Promise.all([listLocations(signal), listLocationFields(signal)]);
-			locations = l;
-			fieldDefs = f;
+			fields.ensure('location');
+			locations = await listLocations(signal);
 			loadError = false;
 		} catch (e) {
 			if (isAbortError(e, signal)) return;

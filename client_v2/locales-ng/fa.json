@@ -495,5 +495,8 @@
 	"printing_generic_checklist_margins": "حاشیه‌ها روی «هیچ کدام» تنظیم شده باشد (Spoolman از قبل حاشیه‌ها را مدیریت می‌کند).",
 	"printing_generic_checklist_headersFooters": "سربرگ‌ها و پابرگ‌ها خاموش باشند.",
 	"printing_generic_checklist_dontShowAgain": "دیگر نمایش ندهید",
-	"printing_generic_checklist_printNow": "پرینت اکنون"
+	"printing_generic_checklist_printNow": "پرینت اکنون",
+	"settings_extra_fields_field_type_link": "لینک",
+	"settings_extra_fields_params_link_template": "آدرس لینک",
+	"settings_extra_fields_params_copy_from_filament": "کپی از فیلامنت"
 }
