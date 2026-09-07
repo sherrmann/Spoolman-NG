@@ -23,9 +23,10 @@
 		{ key: 'spool', label: m['library.section.spool'] },
 		{ key: 'filament', label: m['library.section.filament'] },
 		{ key: 'vendor', label: m['filament.fields.vendor'] },
-		// Spoolman NG fork addition: locations are an entity with extra fields on this fork's
-		// backend, and this manager is the only place any of them can be defined.
-		{ key: 'location', label: ng.locations_location }
+		// Spoolman NG fork addition: locations and printers are entities with extra fields on
+		// this fork's backend, and this manager is the only place any of them can be defined.
+		{ key: 'location', label: ng.locations_location },
+		{ key: 'printer', label: ng.spool_fields_printer }
 	];
 
 	const FIELD_TYPE_LABELS: Record<FieldType, () => string> = {

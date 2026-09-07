@@ -6,9 +6,9 @@ import { getJson, postJson, deleteJson } from './http';
 
 // Spoolman NG fork addition: `location` is a real entity type on this fork's backend
 // (spoolman/extra_field_registry.py `EntityType`), so its field definitions come back from
-// `GET /field/location` with `entity_type: "location"`. `printer` is registered there too but
-// has no UI in this client yet, so it is deliberately left out of the union.
-export type EntityType = 'spool' | 'filament' | 'vendor' | 'location';
+// `GET /field/location` with `entity_type: "location"`; `printer` is registered there too, and
+// the printers registry in this client (#413) carries each printer's `extra` values.
+export type EntityType = 'spool' | 'filament' | 'vendor' | 'location' | 'printer';
 
 export enum FieldType {
 	text = 'text',

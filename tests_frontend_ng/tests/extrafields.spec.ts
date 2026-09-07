@@ -2,9 +2,9 @@ import { expect, test, type APIRequestContext, type Page } from "@playwright/tes
 import { seedSpool, unique } from "./helpers";
 
 /**
- * The three extra-field capabilities this fork's backend has and upstream's client did not
- * expose: a `location` entity, the `link` field type with its base-URL template (#129), and the
- * spool-only `copy_from_filament` flag (#118).
+ * The extra-field capabilities this fork's backend has and upstream's client did not expose:
+ * the `location` and `printer` entities, the `link` field type with its base-URL template
+ * (#129), and the spool-only `copy_from_filament` flag (#118).
  *
  * Field DEFINITIONS are instance-wide -- one row in a server setting, not per test -- so every
  * definition made here is deleted in a `finally`. A leftover one would change what every later
@@ -69,6 +69,29 @@ test("a location field can be defined from the manager's own tab", async ({ page
     expect((await definitions(request, "spool")).map((f) => f.key)).not.toContain(key);
   } finally {
     await deleteField(request, "location", key);
+  }
+});
+
+test("a printer field can be defined from the manager's own tab", async ({ page, request }) => {
+  const key = fieldKey("nozzle");
+  const name = unique("Nozzle");
+
+  try {
+    await openFieldsManager(page);
+    await entityTab(page, "Printer").click();
+
+    await page.getByRole("button", { name: "Add Printer field" }).click();
+    await page.getByPlaceholder("lower_snake_case").fill(key);
+    await page.getByPlaceholder("Display name").fill(name);
+    await page.getByRole("button", { name: "Save field" }).click();
+
+    await expect(page.getByRole("button", { name: "Save field" })).toHaveCount(0);
+    await expect(page.getByText(key, { exact: true })).toBeVisible();
+
+    expect((await definitions(request, "printer")).map((f) => f.key)).toContain(key);
+    expect((await definitions(request, "spool")).map((f) => f.key)).not.toContain(key);
+  } finally {
+    await deleteField(request, "printer", key);
   }
 });
 
