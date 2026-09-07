@@ -111,6 +111,22 @@ async def test_measure_prefers_the_filament_tare_over_the_vendor_tare(client: As
     assert resp.json()["used_weight"] == 500
 
 
+async def test_measure_honours_an_explicit_filament_tare_of_zero_over_the_vendor(client: AsyncClient):
+    """A refill filament is created with spool_weight=0 on purpose: it has no spool to subtract.
+
+    That 0 is stored as given (filament creation only inherits the vendor's tare for None), so
+    measure() must read it as "no tare" rather than as "not set" and reach for the vendor's.
+    """
+    vendor = await _add_vendor(client, empty_spool_weight=250)
+    filament = await _add_filament(client, weight=1000, vendor_id=vendor["id"], spool_weight=0)
+    spool = await _add_spool(client, filament["id"])
+
+    resp = await client.put(f"{SPOOL}/{spool['id']}/measure", json={"weight": 700})
+
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["used_weight"] == 300
+
+
 async def test_measure_prefers_the_spool_tare_over_the_vendor_tare(client: AsyncClient):
     vendor = await _add_vendor(client)
     filament = await _add_filament(client, weight=1000, vendor_id=vendor["id"])

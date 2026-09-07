@@ -736,13 +736,19 @@ async def use_length(
     return spool
 
 
-def _first_set_tare(*candidates: float | None) -> float | None:
-    """Pick the first tare that is actually set, in precedence order: spool, filament, vendor.
+def _resolve_tare(spool_tare: float | None, filament_tare: float | None, vendor_tare: float | None) -> float | None:
+    """Pick the tare measure() subtracts: the spool's, else the filament's, else the vendor's.
 
-    Zero counts as unset, the same reading measure() has always given a spool or filament tare of
-    0 -- nobody stores an empty spool that weighs nothing; it means "not weighed".
+    The spool's tare counts as unset when it is 0 as well as None, which is how measure() has
+    always read it. The filament's is taken as stored, 0 included -- a refill filament is created
+    with an explicit 0 and must not inherit its vendor's spool -- and only a filament with no tare
+    at all walks up to the vendor, which is the same rule filament creation uses to snapshot it.
     """
-    return next((tare for tare in candidates if tare), None)
+    if spool_tare:
+        return spool_tare
+    if filament_tare is not None:
+        return filament_tare
+    return vendor_tare
 
 
 async def measure(
@@ -800,7 +806,7 @@ async def measure(
         except NoResultFound as exc:
             raise ItemNotFoundError("Filament not found for spool.") from exc
 
-        spool_weight = _first_set_tare(spool_weight, filament_info[1], filament_info[2])
+        spool_weight = _resolve_tare(spool_weight, filament_info[1], filament_info[2])
 
         if initial_weight is None or initial_weight == 0:
             initial_weight = filament_info[0] if filament_info[0] is not None else 0
