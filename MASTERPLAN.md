@@ -94,8 +94,16 @@ debugging time and both will hit every new contributor.
   fail fast with a clear message when the build lacks an API URL, or document the
   `VITE_APIURL` requirement in CONTRIBUTING. Acceptance: a fresh contributor can run
   `npm run build && npm run test:e2e` from CONTRIBUTING instructions alone.
-- [ ] **Document the local mutation-testing workflow** — P3, ~30 min. `npm run
-  mutation` exists; the mutmut invocation lives only in the workflow file.
+  Re-checked 2026-09-07: still open — `client/.env.production` is gitignored and is
+  written by the CI workflow, the `Dockerfile` and the Svelte e2e harness
+  (`tests_frontend_v2/run.py`, the obvious pattern to copy), but nothing on the
+  React e2e path does: `client/playwright.config.ts` does not check for the API
+  URL, and CONTRIBUTING does not mention `VITE_APIURL`.
+- [x] **Document the local mutation-testing workflow** — P3, ~30 min. **Done** — the
+  `[tool.mutmut]` section in `pyproject.toml` carries the exact local invocation
+  (`uv run --with 'mutmut<3' mutmut run …`) with a note that it must stay in sync
+  with `mutation.yml`, and `TESTING_STRATEGY.md` documents both `npm run mutation`
+  and the mutmut baseline.
 
 ## 4. Target devices & hardware
 
@@ -123,7 +131,13 @@ a stated support policy.
   HTTPS/Chrome-on-Android constraint.
 - [ ] **Surface the Web NFC availability reason in the UI** — P1, ~half day. When Web
   NFC is unavailable, the client should say *why* (not Chrome/Android, or not a
-  secure context) instead of hiding/failing the affordance.
+  secure context) instead of hiding/failing the affordance. Re-checked 2026-09-07:
+  still open — the Svelte client has the reason strings (`tags.nfc.insecureContext`
+  and the `insecureContext` reason code in `client_v2/src/lib/utils/nfc.ts`), but
+  `AddTagModal.svelte` hides the phone-read control whenever `nfcSupported()` is
+  false, which includes plain HTTP, so the message is never reached; the write
+  dialog folds the same reason into a generic "not supported" note, and the React
+  client's hint only says "Use Android Chrome".
 - [x] **State an armv7 support policy** — P2, ~30 min. **Done** — README states
   best-effort armv7 support with arm64 recommended for new installs, plus a
   per-arch verification table.
@@ -235,9 +249,10 @@ links to the then-dormant upstream.
   document the release credentials (PAT, REMOTE_REGISTRY_PASSWORD) recovery path.
   Investigated but not executed — see
   [`docs/org-migration-phase0-findings.md`](docs/org-migration-phase0-findings.md).
-- [ ] **Decide the funding story** — P2, ~30 min. *Half done:* FUNDING.yml now declares
-  `github: [sherrmann]`, but the in-app link in `client/src/components/header/index.tsx`
-  still points at `ko-fi.com/donkie`, so the app still funds upstream. Align the two.
+- [x] **Decide the funding story** — P2, ~30 min. **Done** (#396, 2026-08-25) — the
+  in-app link in `client/src/components/header/index.tsx` and `ko_fi:` in
+  `.github/FUNDING.yml` both point at `ko-fi.com/sherrmann`; the GitHub Sponsors
+  line is deliberately empty, as the file's own comment says.
 
 ---
 
