@@ -33,6 +33,7 @@ by also accepting ``X-Forwarded-Host``; see :func:`is_trusted_request`.
 
 import ipaddress
 import logging
+import re
 from functools import cache
 from typing import TYPE_CHECKING
 from urllib.parse import urlsplit
@@ -526,3 +527,59 @@ class TrustedOriginMiddleware:
             },
         )
         await response(scope, receive, send)
+
+
+# The value of a ``token=`` query parameter, up to the next parameter separator, fragment,
+# whitespace or the closing quote of uvicorn's request line. Anchored on the ``?`` or ``&`` that
+# precedes a query parameter name, so that the same six characters in prose -- the auth startup
+# line says ``(token=True, accounts=False)`` -- or in an unrelated name (``apitoken=``) are left
+# alone. Case insensitive because the parameter name is only conventionally lower-case.
+_QUERY_TOKEN = re.compile(r"(?i)([?&]token=)[^&#\s\"]*")
+
+
+def _redact_query_token(text: str) -> str:
+    """Replace the value of any ``token=`` query parameter in the text with ``[redacted]``."""
+    if "token=" not in text.lower():
+        return text
+    return _QUERY_TOKEN.sub(r"\1[redacted]", text)
+
+
+class RedactQueryTokenFilter(logging.Filter):
+    """Replace the value of any ``token=`` query parameter in a log record with ``[redacted]``.
+
+    uvicorn logs the request line with its query string -- both for HTTP access lines and for the
+    ``[accepted]`` line of every websocket handshake -- and the API token rides on websocket URLs
+    because browsers cannot set headers on a handshake (see :mod:`spoolman.auth`). Without this
+    filter the credential is written to the console and to ``spoolman.log`` in clear text.
+
+    The record's string arguments are redacted one by one and its message template only when there
+    are no arguments left to interpolate, so the record keeps its shape: uvicorn's own access
+    formatter unpacks ``record.args`` positionally, and a filter that flattened the message into
+    ``record.msg`` would break it. Attached to the log *handlers* rather than to individual loggers,
+    so that every logger reaching the console or ``spoolman.log`` is covered, including uvicorn's own
+    ``uvicorn.access`` and ``uvicorn.error``; see ``main.redact_tokens_in_log_output``.
+    """
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        """Redact the record in place, and always keep it.
+
+        Args:
+            record: The record about to be emitted by the handler this filter is attached to.
+
+        Returns:
+            bool: Always True -- this filter censors records, it never drops them.
+
+        """
+        args = record.args
+        if not args:
+            # A pre-formatted message. With arguments pending, the template is left alone instead: a
+            # ``%s`` placeholder sitting where the value goes would otherwise be eaten.
+            if isinstance(record.msg, str):
+                record.msg = _redact_query_token(record.msg)
+        elif isinstance(args, tuple):
+            record.args = tuple(_redact_query_token(arg) if isinstance(arg, str) else arg for arg in args)
+        elif isinstance(args, dict):
+            record.args = {
+                key: _redact_query_token(value) if isinstance(value, str) else value for key, value in args.items()
+            }
+        return True
