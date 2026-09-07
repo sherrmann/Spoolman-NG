@@ -4,6 +4,14 @@
 
 ## Unreleased
 
+- **Fixed: weighing a spool ignored a tare set on the vendor after the filament was created** (ported fix for an upstream report) — a vendor's empty-spool weight is copied into a filament only when the filament is created, so a tare added to the vendor later never reached filaments that already existed, and the measure endpoint fell straight through to a tare of zero. A 704 g reading on a spool whose vendor was later given a 250 g tare came back as 704 g remaining instead of 454 g. The tare is now resolved spool, then filament, then vendor, the same walk the create path does.
+
+- **Added: the Add tag dialog in the Svelte client offers the tag already on the reader** (ported from upstream) — the dialog used to wait for a fresh tap, which is awkward when the reader is a scale: the spool is on the pad to be weighed, and filling in the field meant lifting it off and putting it back. Each reader now remembers the last UID it reported, the reader list exposes it as `last_uid`, and the dialog offers it with one click. In memory only, like the rest of the reader registry, so it is empty after a restart until a reader scans again. Nothing changes for existing readers or agents.
+
+- **Fixed: a fractional remaining weight in the Svelte client's library wrapped its unit onto a second line** — `987.5 g`, which any print integration reporting fractional grams produces, showed as `987.5` with the `g` underneath. Reported upstream as well; the same one-line fix is applied here so it is not waiting on upstream's release cycle.
+
+- **Changed: the vendored Svelte client is pulled forward to upstream's 2026-09-04 state** — the last-UID feature above, and upstream's German, French, Polish and Chinese translation updates.
+
 - **Fixed: the Svelte client offered a date filter that did nothing** — the library's Registered, First used and Last used range filters were sent to the server, which does not implement them and drops unknown query parameters without complaint. The list came back unnarrowed, so there was no way to tell "no spools in that range" from "the filter was ignored". The three categories are no longer offered. Not implementing them server-side remains a deliberate scope decision; what changes here is that the client no longer pretends otherwise.
 
 - **Fixed: German, Polish and Chinese fell back to English in parts of the Svelte client** — the vendored translation catalogues for those three languages were behind upstream by 29, 58 and 135 strings, so the NFC tag-linking dialogs, some validation messages and parts of the add-spool flow and library toolbar rendered in English for them. All 32 languages now match upstream exactly. Note this refreshes the translations only: it does not advance the vendored subtree's sync point, so a real `git subtree pull` is still owed and will still bring the rest of upstream's client changes with it.
