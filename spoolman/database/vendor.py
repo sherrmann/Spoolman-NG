@@ -1,7 +1,6 @@
 """Helper functions for interacting with vendor database objects."""
 
 import logging
-from datetime import datetime
 
 import sqlalchemy
 from sqlalchemy import func, select
@@ -10,7 +9,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from spoolman.api.v1.models import EventType, Vendor, VendorEvent
 from spoolman.database import models
 from spoolman.database.extra_field_query import apply_extra_field_filters_and_sort
-from spoolman.database.utils import SortOrder, add_where_clause_str, add_where_clause_str_opt, order_by_expression
+from spoolman.database.utils import (
+    SortOrder,
+    add_where_clause_str,
+    add_where_clause_str_opt,
+    order_by_expression,
+    utc_now,
+)
 from spoolman.exceptions import ItemNotFoundError
 from spoolman.extra_field_registry import EntityType
 from spoolman.ws import websocket_manager
@@ -30,7 +35,7 @@ async def create(
     """Add a new vendor to the database."""
     vendor = models.Vendor(
         name=name,
-        registered=datetime.utcnow().replace(microsecond=0),
+        registered=utc_now().replace(microsecond=0),
         comment=comment,
         empty_spool_weight=empty_spool_weight,
         external_id=external_id,
@@ -183,7 +188,7 @@ async def vendor_changed(vendor: models.Vendor, typ: EventType) -> None:
             VendorEvent(
                 type=typ,
                 resource="vendor",
-                date=datetime.utcnow(),
+                date=utc_now(),
                 payload=Vendor.from_db(vendor),
             ),
         )

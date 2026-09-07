@@ -1,4 +1,5 @@
 import type { Filament } from '$lib/types';
+import { isUnitScaling } from '$lib/ng/unitScaling.svelte';
 
 /** Round a gram value for display: whole grams stay whole, else one decimal. */
 export function grams(g: number): string {
@@ -21,7 +22,7 @@ export function weightAuto(weightInGrams: number): string {
 	// 999.99999999999995 g by the arithmetic above is 1 kg to every eye that sees it, and
 	// showing it as "1000.0 g" next to its identical neighbour's "1 kg" only reads as a bug.
 	const w = Math.round(weightInGrams * 10) / 10;
-	if (w < 1000) return grams(w) + ' g';
+	if (w < 1000 || !isUnitScaling()) return grams(w) + ' g';
 	// Floor to one decimal so the kg shown never rounds up past what's on the spool —
 	// a displayed "1.2 kg" always means you have at least 1.2 kg, never as little as 1.15.
 	return grams(Math.floor(w / 100) / 10) + ' kg';

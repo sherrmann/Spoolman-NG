@@ -1,9 +1,12 @@
 # Spoolman NG vs. upstream Spoolman — feature & UI comparison
 
-**Date:** 2026-08-28 · **Fork:** `40b0cf8` (v2026.8.3) · **Upstream:** `Donkie/Spoolman` `42721c7` (2026-08-27)
+**Date:** 2026-09-07 · **Fork:** `6b51707` (master, v2026.8.3 plus #419 and #420) · **Upstream:** `Donkie/Spoolman` `4f9cc1b75` (2026-08-29, the HEAD the watch issue #421 lists)
 
 **Method:** a code-level diff of two working checkouts, not a comparison of documentation. Upstream
-was cloned fresh and every claim below cites `path:line` in one tree or the other. Regenerate with:
+was cloned fresh and every claim below cites `path:line` in one tree or the other. The diff itself
+was taken on 2026-08-28 (fork `40b0cf8`, upstream `42721c7`); this revision does not repeat it. It
+records what #419 and #420 have since closed, re-verified against master, and refreshes the
+pointers. Regenerate with:
 
 ```sh
 git clone https://github.com/Donkie/Spoolman /tmp/upstream   # then diff against this checkout
@@ -14,8 +17,11 @@ This document complements, and in places supersedes, the other upstream docs her
 - `docs/upstream-triage.md` — a 2026-07-06 sweep of upstream's *then-open issues*. Still valid as
   history; it is not a comparison of the two codebases.
 - `docs/upstream/ledger.json` / `SOLVED.md` — the port ledger, keyed on issue and commit IDs rather
-  than on features. Its watermark is upstream `009f9e3b` (2026-08-23); upstream HEAD is `42721c7`,
-  so **22 upstream commits are currently untriaged**.
+  than on features. The watch watermark (`docs/upstream/watch-state.json`) is upstream `4f9cc1b75`,
+  advanced on 2026-08-31 by the weekly watch run, not by #419. The 26 commits between the previous
+  watermark `009f9e3b` and it (16 plus 10 `client_v2` subtree commits) are listed in #421, where
+  **every box is still unticked** — although one of the 16, the tag-scan debounce fix `a6512da5`,
+  is already recorded as ported in #397 (v2026.8.2) in `ledger.json` and `SOLVED.md`.
 - `docs/upstream/client-v2-fork-additions.md` — the mechanics of the vendored subtree, and the
   running list of what this fork adds to and edits inside it. It points back here for the feature
   comparison; this file does not duplicate its Tier 1/Tier 2 tables.
@@ -57,34 +63,40 @@ are won't-fix. Both are recorded below rather than dropped.
 | **Default client** | **React** | **Svelte** |
 | Runtime client switching | Per-browser cookie + in-UI control | None — env var + restart |
 | Backend test files | 214 | 65 |
-| Playwright spec files | 60 | 18 |
+| Playwright spec files | 62 | 18 |
 | CI jobs in `ci.yml` | 26 | 13 |
 
 **Nothing upstream has is missing from this fork as a whole feature.** There are zero upstream-only
-backend modules and zero upstream-only Svelte routes. What upstream is ahead on is a small number of
-specific fixes and one filter surface, listed next.
+backend modules and zero upstream-only Svelte routes. What upstream was ahead on when the diff was
+taken — a small number of specific fixes and one filter surface — has since been closed by #419 and
+#420; the rows are kept below with their outcome.
 
 ---
 
 ## Where upstream is ahead
 
-Each row below was verified by hand against both checkouts.
+Each row below was verified by hand against both checkouts on 2026-08-28. The four actionable gaps
+have all been closed since; the closing PR and the code that now carries the fix are recorded per
+row, re-verified against master on 2026-09-07.
 
-### Actionable
+### Actionable — all closed
 
-| # | Gap | Evidence | Severity |
+| # | Gap | Evidence at the time | Outcome |
 |---|---|---|---|
-| 1 | **SQLite backup leaks two connections per run.** A `Connection` context manager commits, it does not close. The leaked handle also makes backup *rotation* fail on Windows ("file in use"); POSIX `unlink` hides it. Upstream fixed this with `contextlib.closing` in `21c7b98`. | fork `spoolman/database/database.py:161`; upstream `spoolman/database/database.py:133-141`, which carries a four-line comment explaining the failure mode | **Real bug, genuinely missed** — it appears in neither `SOLVED.md` nor `CHANGELOG.md` |
-| 2 | **No Kubernetes service-link guard in `entrypoint.sh`.** Kubernetes injects `SPOOLMAN_PORT=tcp://<clusterIP>:8000` for any Service named `spoolman` in the namespace. uvicorn cannot bind that, so the container fails to start. Upstream sanitises it back to `8000` with a warning. | upstream `entrypoint.sh:13-22`; fork `entrypoint.sh:5` consumes the value raw | **Notable** — this fork ships a Helm chart (`charts/spoolman-ng`), so it is *more* exposed to this than upstream is |
-| 3 | **Svelte client translation drift in 3 of 32 locales.** Affected strings include the NFC tag-linking dialogs, some validation messages, and parts of add-spool and the library toolbar; they fall back to English. | key counts in `client_v2/locales/*/common.json`: `de` 587 vs 616, `pl` 568 vs 626, `zh` 471 vs 606. The other 29 locales, `en` included, are byte-identical to upstream | Cosmetic — a subtree pull closes it |
-| 4 | **`client_v2` renders a date filter that silently does nothing.** | `.github/workflows/ci.yml:352-362` says so directly: *"client_v2 sends the filter, the backend silently ignores it, and the list doesn't narrow"* | See below |
+| 1 | **SQLite backup leaks two connections per run.** A `Connection` context manager commits, it does not close. The leaked handle also makes backup *rotation* fail on Windows ("file in use"); POSIX `unlink` hides it. Upstream fixed this with `contextlib.closing` in `21c7b98`. | fork `spoolman/database/database.py:161`; upstream `spoolman/database/database.py:133-141`, which carries a four-line comment explaining the failure mode | **Closed by #419.** Both connections are now opened under `contextlib.closing` (`spoolman/database/database.py:162-171`), and `test_backup_closes_both_connections` asserts they are closed rather than that rotation works, because rotation cannot fail on the POSIX runners CI uses |
+| 2 | **No Kubernetes service-link guard in `entrypoint.sh`.** Kubernetes injects `SPOOLMAN_PORT=tcp://<clusterIP>:8000` for any Service named `spoolman` in the namespace. uvicorn cannot bind that, so the container fails to start. Upstream sanitises it back to `8000` with a warning. | upstream `entrypoint.sh:13-22`; fork `entrypoint.sh:5` consumes the value raw | **Closed by #419.** `entrypoint.sh:8-22` now ignores a `*://*` value with a warning and falls back to `8000`; the `test-nonroot` job boots the image with `SPOOLMAN_PORT=tcp://10.0.0.1:8000` and greps for the warning (`.github/workflows/ci.yml:1059-1062`) |
+| 3 | **Svelte client translation drift in 3 of 32 locales.** Affected strings include the NFC tag-linking dialogs, some validation messages, and parts of add-spool and the library toolbar; they fall back to English. | key counts in `client_v2/locales/*/common.json`: `de` 587 vs 616, `pl` 568 vs 626, `zh` 471 vs 606. The other 29 locales, `en` included, are byte-identical to upstream | **Closed by #420** (issue #410). The three files were refreshed to upstream's `42721c7` copies; key counts on master are `de` 616, `pl` 626, `zh` 606. Translations only — the subtree's sync point did not move, so a `git subtree pull` is still owed |
+| 4 | **`client_v2` renders a date filter that silently does nothing.** | `.github/workflows/ci.yml:352-362` says so directly: *"client_v2 sends the filter, the backend silently ignores it, and the list doesn't narrow"* | **Closed by #420** (issue #409). See below |
 
 On (4): omitting the `first_used` / `last_used` / `registered` range filters and
 `filament.multi_color_direction` from `GET /spool` is a deliberate, documented scope decision
 (`spoolman/database/spool.py`, grep `this fork's filter surface`), and the vendored Playwright test
-that covers them is excluded in CI by name. **That decision stands.** What does not stand is the
-dead control: the client that all future work targets shows users a date filter that returns an
-unnarrowed list. Either implement the filters or hide the control in `client_v2`.
+that covers them is excluded in CI by name. **That decision stands.** What did not stand was the
+dead control: the client that all future work targets showed users a date filter that returned an
+unnarrowed list. #420 took the second of the two options and hid it — `DATE_FILTERS` is no longer
+part of `filterCategories` in `client_v2/src/lib/components/library/ListToolbar.svelte`, with a
+comment pointing at the scope decision. The excluded vendored spec now fails one step earlier, on
+a "Registered" button that no longer exists, and the exclusion comment in `ci.yml` says so.
 
 ### Known and accepted (React is frozen)
 
@@ -118,30 +130,42 @@ the list endpoint itself — `manufacturer`, `name`, `material`, `color_hex`, `d
 All new feature work lands in `client_v2`, so this is the list that matters going forward. Every
 "absent" claim was confirmed by grep against `client_v2/src`.
 
-### Blocking defect — fix before any parity item
+### Blocking defect — resolved by #420
 
-**`client_v2` never sends credentials, so it cannot be used on an instance with authentication
-enabled.**
+**`client_v2` never sent credentials, so it could not be used on an instance with authentication
+enabled** (issue #406, fixed in #420 on 2026-08-29).
 
-`client_v2/src/lib/api/` contains **zero** `Authorization` or `Bearer` references — none of the six
-fetch wrappers in `http.ts` sets an auth header. The file's own premise says why:
-`client_v2/src/lib/api/auth.ts:3` opens with *"Spoolman has no login of its own and never answers
-401."* That is true of upstream. It is **false of this fork** — `spoolman/auth.py:188` rejects with
-401 and `WWW-Authenticate`, backing both `SPOOLMAN_API_TOKEN` and the user-account system.
+At the time of the diff, `client_v2/src/lib/api/` contained **zero** `Authorization` or `Bearer`
+references — none of the fetch wrappers in `http.ts` set an auth header. The file's own premise
+said why: `client_v2/src/lib/api/auth.ts` opened with *"Spoolman has no login of its own and never
+answers 401."* That is true of upstream. It is **false of this fork** — `spoolman/auth.py` rejects
+with 401 and `WWW-Authenticate`, backing both `SPOOLMAN_API_TOKEN` and the user-account system. So
+every request 401ed, the 401 handler reloaded the page, and the tab reloaded every 30 s without
+ever showing data or asking for a credential.
 
-The React client has the whole path: `client/src/utils/apiToken.ts`,
-`client/src/utils/authReloadHandler.ts`, a token query parameter for the websocket handshake
-(`client/src/components/liveProvider.ts:75`, since browsers cannot set headers on a WS upgrade), and
-authenticated image fetches (`client/src/components/entityImage.tsx:6`).
+How #420 closed it, as it stands on master:
 
-What a user hits today: set `SPOOLMAN_API_TOKEN` or create an account, switch to the Svelte client,
-and every request 401s. The 401 handler in `auth.ts` then reloads the page — rate-limited to once
-per 30 s, so not a hot loop, but the tab reloads indefinitely and never shows data. **This fork's
-headline security feature and its designated future client are currently mutually exclusive.**
+- **Every path out of the client carries the token.** The REST wrappers in `http.ts` merge
+  `authHeaders()` (`client_v2/src/lib/ng/authToken.ts`) into their headers, and the three AI calls
+  in `lib/ng/aiApi.ts` that build their own requests do the same.
+- **The two websockets carry the token in the URL.** A browser cannot set a header on a websocket
+  handshake, so `wsUrl()` in `lib/api/config.ts` appends `?token=` through `withWsToken()`; both
+  `lib/api/live.ts` and `lib/api/scanRelay.ts` build their URL there on every reconnect. The server
+  side already expected this: `spoolman/auth.py` reads `?token=` for exactly that reason
+  (`_token_from_query`).
+- **`WWW-Authenticate` discriminates the two kinds of 401.** Spoolman's own 401 carries
+  `WWW-Authenticate: Bearer`; a forward-auth proxy's does not. `http.ts` hands the whole `Response`
+  to `handleUnauthorized()` in `auth.ts`, which raises the credential prompt for the first and keeps
+  the existing rate-limited reload for the second — so proxy users keep the behaviour that was
+  always right for them, and the reload is no longer spent where it can never work.
+- **The prompt asks the server which form to show** (`GET /auth/status`: username and password
+  where accounts exist, an API-token field where an operator set one), stores the token under the
+  key the React client already uses so the in-UI client switch does not sign you out, and is
+  covered end to end by `tests_frontend_ng/tests-auth/` against dedicated token-mode and
+  account-mode backends.
 
-This is also why backlog item 9 below is sized L: it is not "add a modal", it is retrofitting auth
-into every request path, very likely including the two websockets (`lib/api/live.ts`,
-`lib/api/scanRelay.ts` — not audited).
+Backlog item 9 below was this work; it is struck rather than removed so the table's numbers, which
+are literals and are referred to by number elsewhere in this document, stay stable.
 
 ### Backlog
 
@@ -150,16 +174,14 @@ already built and proven by the React client, making the work UI-only.
 
 | # | Feature | React location | Size |
 |---|---|---|---|
-| 9 | Native login / API-token entry, and `Authorization` plumbing | `client/src/components/apiTokenModal.tsx`, `client/src/utils/apiToken.ts` | **L** |
+| ~~9~~ | ~~Native login / API-token entry, and `Authorization` plumbing~~ — **done in #420** (`client_v2/src/lib/ng/components/LoginModal.svelte`, `authToken.ts`) | ~~`client/src/components/apiTokenModal.tsx`, `client/src/utils/apiToken.ts`~~ | ~~L~~ |
 | 3 | Resizable and drag-reorder column manager | `client/src/components/columnManager.tsx`, `resizableHeaderCell.tsx` | **L** |
 | 23 | Photo intake / Scan-to-Spool | `client/src/components/photoIntake.tsx` | **L** |
 | 2 | Multi-row selection with bulk edit / archive / weigh-in | `client/src/pages/spools/bulkEdit.tsx`, `bulkWeightUpdate.tsx` | M |
-| 10 | User and account management UI | `client/src/pages/settings/usersSettings.tsx` | M |
 | 11 | Swatches settings tab | `client/src/pages/settings/swatchSettings.tsx` | M |
 | 12 | Swatch 3MF download | `client/src/components/swatchDownloadModal.tsx` | M |
 | 13 | Import/Export settings tab | `client/src/pages/settings/importExportSettings.tsx` | M |
 | 14 | 3MF slice-import spool matcher | `client/src/pages/settings/threeMfImport.tsx` | M |
-| 15 | Printers settings, and the spool `printer_id` field | `client/src/pages/settings/printerSettings.tsx` | M |
 | 19 | Filament image upload and display | `client/src/components/filamentImageUpload.tsx`, `entityImage.tsx` | M |
 | 1 | Gallery / grid view for spools and filaments | `client/src/pages/spools/list.tsx:389-683` | S |
 | 4 | Table totals row | `client/src/pages/spools/list.tsx:696-721` | S |
@@ -167,9 +189,7 @@ already built and proven by the React client, making the work UI-only.
 | 6 | Filament aggregate `remaining_weight` column | `client/src/pages/filaments/list.tsx:89-115` | S |
 | 7 | Pre-print checklist modal | `client/src/pages/printing/prePrintChecklistModal.tsx` | S |
 | 8 | Weight-history chart on the spool page | `client/src/pages/spools/weightHistoryChart.tsx` | S |
-| 16 | Custom links (sidebar and per-spool actions) | `client/src/pages/settings/customLinksSettings.tsx` | S |
 | 17 | Extra fields for `location`/`printer`, the `link` type, `copy_from_filament` | `client/src/utils/queryFields.ts:6-38` | S |
-| 18 | `unit_scaling` setting | `client/src/utils/settings.ts:7-13` | S |
 | 20 | Update-available notification | `client/src/components/updateNotification.tsx` | S |
 | 21 | Error boundary that recovers from corrupt view state | `client/src/components/errorBoundary.tsx` | S |
 | 22 | Low-stock count badge in the nav | `client/src/components/layout.tsx:37-78` | S |
@@ -178,8 +198,8 @@ Several of these are blocked less by effort than by architecture: `client_v2`'s 
 fixed-field row plus a master-detail inspector (`client_v2/src/lib/components/library/SpoolRow.svelte:27-51`),
 not a configurable table. Items 1, 3 and 4 imply that redesign, not just a component.
 
-Three absences are structural rather than cosmetic: `printer` does not exist in `client_v2`'s type
-layer at all (`grep printer_id client_v2/src` → 0 hits), `client_v2` never fetches usage events
+Two absences are structural rather than cosmetic (a third, `printer`, has since been added under
+`client_v2/src/lib/ng/`): `client_v2` never fetches usage events
 (`grep usage_event client_v2/src` → 0 hits), and its `EntityType` is hardcoded to three entities
 (`client_v2/src/lib/api/fields.ts:7`) against React's five (`client/src/utils/queryFields.ts:18-24`).
 
@@ -204,7 +224,9 @@ layer at all (`grep printer_id client_v2/src` → 0 hits), `client_v2` never fet
 ### Already ported — do not re-file
 
 AI settings, natural-language search, NFC writing, free-text search, `spool_count` and `external_id`,
-extra-field display, and **filament and location label printing** — the last unified into the
+extra-field display, **user and account management, printers with the spool `printer_id` field,
+custom links (nav and per-spool actions) and the `unit_scaling` control** (#413, after this
+document's date), and **filament and location label printing** — the last unified into the
 `/labels` designer through a `LabelKind` union (`client_v2/src/lib/labels/types.ts:23`) rather than
 the separate `/filament/print` and `/location/print` pages React uses.
 
@@ -302,10 +324,12 @@ vendor/filament/spool and no `link` type.
 
 ## Svelte client vs. upstream
 
-**The vendored subtree is at parity with upstream HEAD.** A full recursive diff of `client_v2/`
-finds no upstream-only content: every shared file that differs does so only through this fork's own
-additive edits, and `tests_frontend_v2/` and `client_v2/e2e/` are byte-identical to upstream. The
-one exception is the locale drift noted above.
+**The vendored subtree was at parity with upstream `42721c7` when the diff was taken.** A full
+recursive diff of `client_v2/` found no upstream-only content: every shared file that differs does
+so only through this fork's own additive edits, and `tests_frontend_v2/` and `client_v2/e2e/` are
+byte-identical to upstream. The one exception, the locale drift noted above, was closed by #420 —
+translations only; the subtree's sync point is unchanged, and the ten `client_v2` commits upstream
+has added since are listed in #421.
 
 **13 routes here, 6 upstream.** Shared: `/`, `/dashboard`, `/labels`, `/settings`, and the
 `filament/show/[id]` and `spool/show/[id]` redirects. Fork-only: `/home`, `/lowstock`, `/orders`,
@@ -317,7 +341,7 @@ Fork edits to shared pages:
 |---|---|
 | `+layout.svelte` | Mounts `<AiChatLauncher />` (`:7,102`) |
 | `/labels` | A third label type, Location, with the `L-<id>` QR scheme (`:143-159`) |
-| `/settings` | An `AiSettings` panel, admin-only, plus the UI-client switcher (`:38-58,133-149`) |
+| `/settings` | The fork's admin-only panels (`NgSettings`: printers, custom links, accounts, AI), the unit-scaling row, plus the UI-client switcher |
 | `/dashboard` | A remaining-weight gauge along the bottom edge of every spool chip (`:790-807,1089-1101`) |
 
 Everything else the fork adds lives under `client_v2/src/lib/ng/` — 60+ files covering the AI, NFC,
@@ -332,8 +356,10 @@ catalogue by `scripts/build_ng_messages.mjs`. This exists so that Weblate's cons
 cannot conflict with `git subtree pull`. Both runtimes share the `PARAGLIDE_LOCALE` key, so one
 language selector drives both.
 
-**Testing.** `tests_frontend_ng/` is fork-only: 13 specs, ~77 tests, covering the fork's own Svelte
-pages plus the client switcher. Upstream has no equivalent.
+**Testing.** `tests_frontend_ng/` is fork-only: 15 specs, ~79 tests, covering the fork's own Svelte
+pages plus the client switcher, and — since #420 — the credential flow in `tests-auth/`, whose two
+specs run against their own token-mode and account-mode backends because the shared instance runs
+with authentication off. Upstream has no equivalent.
 
 ---
 
@@ -390,7 +416,7 @@ lives in a separate `tests_frontend/` package.
 | Area | Fork | Upstream |
 |---|---|---|
 | Dockerfile | Builds both clients in a `client-builder` stage, so `docker build .` works from a clean checkout; `python:3.14-slim-trixie`; adds the `nfc` extra and USB libraries; `HEALTHCHECK`; `HOME` pinned for arbitrary-UID/OpenShift runs | Expects clients pre-built and `COPY`s them; `python:3.14-slim-bookworm`; no healthcheck; no arbitrary-UID pin |
-| `entrypoint.sh` | Arbitrary-UID support, data-dir ownership healing, NFC device permissions | Kubernetes service-link `SPOOLMAN_PORT` sanitiser (**which this fork lacks — gap 2 above**) |
+| `entrypoint.sh` | Arbitrary-UID support, data-dir ownership healing, NFC device permissions, and — since #419 — the Kubernetes service-link `SPOOLMAN_PORT` sanitiser (gap 2 above) | Kubernetes service-link `SPOOLMAN_PORT` sanitiser |
 | Databases | SQLite, PostgreSQL, MySQL/MariaDB, CockroachDB | Same four |
 | Architectures | amd64, arm64, armv7 | amd64, arm64, armv7 |
 | Prometheus | Same gauges plus a `BUILD_INFO` metric (`prometheus/metrics.py:33`) | Same gauges |
@@ -404,7 +430,7 @@ lives in a separate `tests_frontend/` package.
 | | Fork | Upstream |
 |---|---|---|
 | Backend test files | 214 | 65 |
-| Playwright spec files | 60 | 18 |
+| Playwright spec files | 62 | 18 |
 | Mutation testing | Stryker (client) + mutmut (NFC codecs) | none |
 | CI jobs in `ci.yml` | 26 | 13 |
 
@@ -419,9 +445,13 @@ Weblate project and this fork not.
 
 ## Maintenance
 
-- The upstream watch ledger (`docs/upstream/watch-state.json`) is at `009f9e3b` (2026-08-23) against
-  upstream HEAD `42721c7`: **22 commits untriaged**. Most are Weblate merges; the backend-relevant
-  ones are covered above.
+- The upstream watch ledger (`docs/upstream/watch-state.json`) is at `4f9cc1b75` (advanced
+  2026-08-31 by the weekly watch run). The 26 commits since the previous watermark `009f9e3b` are
+  listed in #421 with **every box still unticked**; one of them, the tag-scan debounce fix
+  `a6512da5`, is nevertheless already in the ledger as ported in #397. Most of the rest are Weblate
+  merges; the ones that touched the backend or `client_v2` up to `42721c7` are covered above. The
+  four between `42721c7` and `4f9cc1b75` are all one feature — upstream #1120, "remember the last
+  UID each reader reported", with its two `client_v2` follow-ups — and are not covered here.
 - This document supersedes the stale parts of `docs/upstream/client-v2-fork-additions.md`.
-- The upstream checkout used to produce this comparison is ephemeral. The SHA is recorded at the top
-  so a future pass can diff from the same point.
+- The upstream checkout used to produce this comparison is ephemeral. The SHA the diff was taken at
+  (`42721c7`) is recorded in the method note so a future pass can diff from the same point.

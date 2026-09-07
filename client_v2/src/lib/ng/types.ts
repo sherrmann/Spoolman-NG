@@ -132,3 +132,33 @@ export interface LocationBody {
 	comment?: string | null;
 	extra?: Record<string, string>;
 }
+
+/**
+ * A printer (`/api/v1/printer`, #75). Fork-only: upstream's backend has no printer entity.
+ *
+ * `spoolCount` is a server-side aggregate of non-archived spools assigned to it, present on
+ * the list and detail endpoints only; a printer nested in a spool payload never carries it.
+ * Nullable fields are ABSENT from the JSON rather than null (`response_model_exclude_none`).
+ */
+export interface Printer {
+	id: number;
+	name: string;
+	comment?: string;
+	registered?: string;
+	spoolCount?: number;
+	/** Custom-field values, JSON-encoded per key, exactly as the API stores them. */
+	extra: Record<string, string>;
+}
+
+/** Write shape for POST /printer and PATCH /printer/{id}. `null` clears the comment. */
+export interface PrinterBody {
+	name?: string;
+	comment?: string | null;
+}
+
+/** A user account (`/api/v1/auth/users`, #52). Fork-only. */
+export interface User {
+	id: number;
+	username: string;
+	role: string;
+}

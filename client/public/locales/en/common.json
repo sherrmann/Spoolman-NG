@@ -140,7 +140,14 @@
       "reset_password_for": "Reset password for {{username}}",
       "reset_password_help": "Enter a new password for this user.",
       "password_reset": "Password updated.",
-      "delete_confirm": "Delete this user?"
+      "delete_confirm": "Delete this user?",
+      "deleted": "User deleted.",
+      "empty": "No accounts yet.",
+      "role_change_title": "Change role",
+      "role_change_confirm": "Change the role of {{username}} to {{role}}?",
+      "role_changed": "Role updated.",
+      "self_warning": "This is the account you are signed in with. You will be signed out.",
+      "you": "you"
     }
   },
   "yes": "Yes",
@@ -504,6 +511,7 @@
       "spool_weight": "Empty Weight",
       "location": "Location",
       "printer": "Printer",
+      "no_printer": "Not assigned",
       "lot_nr": "Lot Nr",
       "diameter": "Diameter",
       "first_used": "First Used",
@@ -1070,12 +1078,16 @@
       "description": "<p>Manage your printers here. Once you have at least one, you can assign a spool to a printer from the spool's create or edit form.</p>",
       "add_title": "Add printer",
       "edit_title": "Edit printer",
-      "delete_confirm": "Delete printer \"{{name}}\"? Spools assigned to it will be unassigned, not deleted."
+      "delete_confirm": "Delete printer \"{{name}}\"? Spools assigned to it will be unassigned, not deleted.",
+      "empty": "No printers yet."
     },
     "custom_links": {
       "sidebar_tab": "Sidebar Links",
       "spool_tab": "Spool Actions",
       "sidebar_description": "<p>Add your own links to the left sidebar, e.g. to your printer's Mainsail or Fluidd page. They open in a new tab.</p>",
+      "nav_tab": "Navigation links",
+      "nav_description": "<p>Add your own links to the navigation bar, e.g. to your printer's Mainsail or Fluidd page. They open in a new tab.</p>",
+      "empty": "No links yet.",
       "spool_description": "<p>Add custom action buttons to each spool. The URL can include the spool's fields in curly braces — {id}, {filament_id}, {location}, {lot_nr}, {comment} — which are filled in per spool, so tools like nfc2klipper or Moonraker's active-spool endpoint are one click away.</p>",
       "name": "Name",
       "url": "URL",

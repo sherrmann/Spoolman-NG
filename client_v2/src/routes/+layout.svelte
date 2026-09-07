@@ -9,6 +9,7 @@
 	import ErrorFallback from '$lib/ng/components/ErrorFallback.svelte';
 	import LoginModal from '$lib/ng/components/LoginModal.svelte';
 	import { authState } from '$lib/ng/authState.svelte';
+	import { loadUnitScaling } from '$lib/ng/unitScaling.svelte';
 	import Toaster from '$components/Toaster.svelte';
 	import { ui } from '$lib/stores/ui.svelte';
 	import { settings } from '$lib/stores/settings.svelte';
@@ -50,6 +51,8 @@
 		// Asks the open /auth/status route what this server wants, so the prompt
 		// below knows which form to show before anything has been refused.
 		authState.load();
+		// Spoolman NG fork addition: whether large weights show in kilograms (#413).
+		loadUnitScaling();
 
 		return startLiveSync();
 	});

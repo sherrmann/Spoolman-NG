@@ -115,6 +115,7 @@
 		width: 44px;
 		text-align: right;
 		flex: none;
+		white-space: nowrap;
 	}
 	.rem.low {
 		color: var(--danger-soft);

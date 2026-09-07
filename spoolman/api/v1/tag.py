@@ -2,7 +2,6 @@
 
 import asyncio
 import logging
-from datetime import datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request, WebSocket, WebSocketDisconnect
@@ -14,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from spoolman.api.v1.models import EventType, Message, Spool, TagReader, TagScan, TagScanEvent
 from spoolman.database import tag as tag_db
 from spoolman.database.database import get_db_session
+from spoolman.database.utils import utc_now
 from spoolman.scanrelay import READER_ID_PATTERN, derive_reader_id, scan_relay
 from spoolman.tags import FORMAT_MAX_LENGTH, KNOWN_FORMATS, UID_MAX_LENGTH, normalize_uid
 from spoolman.ws import scan_websocket_manager
@@ -123,7 +123,7 @@ async def scan(
 
     db_spool = await tag_db.find_spool_by_uid(db, uid)
 
-    scan_relay.register(reader_id, body.name)
+    scan_relay.register(reader_id, body.name, uid)
 
     result = TagScan(
         uid=uid,
@@ -153,7 +153,7 @@ async def _broadcast(result: TagScan) -> None:
             TagScanEvent(
                 type=EventType.SCANNED,
                 resource="tag_scan",
-                date=datetime.utcnow(),
+                date=utc_now(),
                 payload=result,
             ),
         )
@@ -176,7 +176,12 @@ async def _broadcast(result: TagScan) -> None:
 )
 async def readers() -> list[TagReader]:
     return [
-        TagReader(reader_id=reader.reader_id, name=reader.name, last_seen=reader.last_seen)
+        TagReader(
+            reader_id=reader.reader_id,
+            name=reader.name,
+            last_seen=reader.last_seen,
+            last_uid=reader.last_uid,
+        )
         for reader in scan_relay.readers()
     ]
 

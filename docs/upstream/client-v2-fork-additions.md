@@ -4,11 +4,9 @@
 > comparison, including the React-to-Svelte parity backlog. This file covers the *mechanics* of
 > the vendored subtree; that one covers what is and isn't built yet.
 
-`client_v2/` is vendored from `Donkie/Spoolman` as a git subtree and pulled forward with
-
-```
-git subtree pull --prefix=client_v2 upstream master --squash
-```
+`client_v2/` is vendored from `Donkie/Spoolman` as a git subtree and pulled forward with the
+procedure under [Pulling upstream forward](#pulling-upstream-forward) below. It is **not**
+`git subtree pull --prefix=client_v2 upstream master --squash`, for reasons given there.
 
 Upstream is active in that tree — a fetch on 2026-08-26 brought 290 commits touching it, most of
 them Weblate translation churn under `client_v2/locales/`. So every file this fork edits inside
@@ -16,6 +14,62 @@ the subtree is a conflict this fork pays for on every pull, forever. The rule is
 
 > **Add files. Do not edit files.** A new path upstream will never create costs nothing at pull
 > time; a changed line in a file upstream also changes costs a conflict every time.
+
+## Pulling upstream forward
+
+`git subtree pull --prefix=client_v2 upstream master --squash` looks like the right command and
+was documented here until 2026-W36, when it was first actually needed. It cannot work in this
+repository, for two independent reasons:
+
+1. `upstream/master` is upstream's whole tree, not a `client_v2` split. `git subtree merge`
+   only shifts the incoming tree under the prefix when it does *not* already contain that
+   directory; upstream's does, so the whole of upstream (`spoolman/`, `client/`, ...) would be
+   merged into this repository's root.
+2. The pull request that vendored the tree (#397) was squash-merged on GitHub. The
+   `git-subtree-dir` / `git-subtree-split` trailers `git subtree` looks for therefore sit in the
+   body of an ordinary mainline commit (`6126272f`), and `git subtree` would take that commit,
+   whose tree is the *entire repository*, as the previous squash and hence as the merge base.
+   Every file outside `client_v2/` would then appear deleted on the incoming side.
+
+What does work is the same three-way merge done explicitly, with the base pinned by hand. The
+split is deterministic: `git subtree split` reproduces the split commit recorded in #397's
+trailer (`a2745699`) byte for byte, which is what makes the recorded split point usable.
+
+```sh
+git remote add upstream https://github.com/Donkie/Spoolman   # once
+git fetch upstream master
+git subtree split --prefix=client_v2 upstream/master -b upstream-client-v2
+
+# The base is the split commit whose tree is what this repository's client_v2 was last
+# synchronised to. Take it from the git-subtree-split trailer of the last pull commit
+# (git log --grep=git-subtree-split -- client_v2), and confirm it exists:
+git cat-file -t <recorded split sha>
+
+# Three-way merge into the prefix, leaving conflicts in the index and working tree:
+git merge-recursive --subtree=client_v2 <recorded split sha> -- HEAD upstream-client-v2
+```
+
+Resolve any conflict keeping both sides (the Tier 1 and Tier 2 tables above say what the fork
+side is), then commit with the two trailers so the next pull can find its base:
+
+```
+git-subtree-dir: client_v2
+git-subtree-split: <output of: git rev-parse upstream-client-v2>
+```
+
+Then check the result, which is the point of the whole exercise:
+
+```sh
+# Only fork-owned paths and the Tier 1/2 files may differ from upstream.
+git diff --stat upstream/master -- client_v2
+# The two measured dashboard hazards below must survive.
+grep -n 'flex: none' client_v2/src/routes/dashboard/+page.svelte
+grep -n 'const CHIP_H = 44' client_v2/src/routes/dashboard/+page.svelte
+```
+
+If the recorded split commit is ever *not* reproduced (a different git version could in theory
+split differently), find the base by tree instead: the split commit whose tree equals
+`<upstream commit>:client_v2` for the upstream commit the tree was last synchronised to.
 
 ## What this fork adds (no conflict surface)
 
@@ -64,7 +118,7 @@ upstream page rather than beside it.
 | `src/lib/components/QrScannerModal.svelte` | A scanned location goes to `/location/show/<id>`; and each decode is offered to `$lib/ng/components/ScanExtras` before upstream's own handling | The scanner has one decode callback. The delegation is three lines and deliberately *declines* an ordinary entity scan, so upstream keeps owning navigation and keeps owning it after it changes |
 | `src/lib/library/params.ts` | One export, `replaceFilters` | A natural-language search produces a whole view at once. Applying it through the existing per-filter mutators would push several entries onto the history stack, so Back would walk through states the user never asked for |
 | `src/lib/components/library/ListToolbar.svelte` | `<NlSearchButton />` beside the filter chips | The button's whole point is that it fills these chips in; anywhere else and it reads as a separate search |
-| `src/routes/settings/+page.svelte` | `<AiSettings />`. **Adding named controls to a vendored page is a hazard**: upstream's own specs query labels page-wide, so a field announced the same as one already there takes their query from one match to several and fails it. The AI panel's two URL fields are therefore announced as "AI endpoint URL" and "Transcription endpoint URL", not by their visible row titles. Check `getByLabel` names in `tests_frontend_v2` before adding a control to a page upstream tests | The assistant's configuration belongs on the settings page. Renders nothing for a non-administrator |
+| `src/routes/settings/+page.svelte` | `<NgSettings />` — one mount for every fork panel (printers, the two custom-link lists, accounts, the assistant; each renders nothing for a non-administrator), so a new panel costs this page nothing — and `<UnitScalingRow />` inside upstream's General card, beside Base URL, because that is where the React client keeps the same setting. **Adding named controls to a vendored page is a hazard**: upstream's own specs query labels page-wide, so a field announced the same as one already there takes their query from one match to several and fails it. The AI panel's two URL fields are therefore announced as "AI endpoint URL" and "Transcription endpoint URL", not by their visible row titles. Check `getByLabel` names in `tests_frontend_v2` before adding a control to a page upstream tests | The assistant's configuration belongs on the settings page. Renders nothing for a non-administrator |
 | `src/lib/api/info.ts`, `src/lib/stores/serverInfo.svelte.ts` | `clients_available`, `client_active` and `client_switch_enabled` on the `Info` type, surfaced as `$state`; and, for the update notice (#293), `update_available`, `latest_version` and `release_url` the same way | The client switcher (#405) has to know whether both bundles exist and which one is serving, and the update notice has to know what this fork's daily release check found. Both are upstream's own single definition of the `/info` shape and its store, and `/info` is already fetched once at startup -- a fork-owned second fetcher would buy nothing but another request. Every one of the six is optional and defaulted, so a backend that sends none of them reads as "nothing to offer" rather than as an error |
 | `src/routes/settings/+page.svelte` | An Interface control (segmented Classic/New), gated on `shouldShowUiSwitcher()` | Switching clients is an appearance preference and belongs beside the language and theme rows. The logic itself lives in the fork-only `src/lib/uiClient.ts` |
 | `src/routes/+layout.svelte` | `<AiChatLauncher />` and `<UpdateNotice />`, one element each; and a `<svelte:boundary>` around the existing `{@render children()}`, whose `failed` snippet renders the same `ErrorFallback` the fork's `+error.svelte` does | The first two are global, not pages. The assistant renders nothing at all unless the operator has enabled it, so the cost when off is one settings read; the update notice renders nothing unless the `/info` this layout already loads names a newer release the user has not dismissed. The boundary has to be here because SvelteKit routes a failed `load`, an explicit `error()` and an unknown URL to `+error.svelte` but **not** an exception thrown while a page component renders -- which is exactly where a corrupt persisted value blows up -- and this layout is the only thing that wraps every page. A handful of lines, all inside the existing `<main>`, and `<svelte:boundary>` renders no element of its own, so the layout is unchanged. The fallback itself is fork-owned under `src/lib/ng/` |
@@ -82,6 +136,12 @@ upstream page rather than beside it.
 | `src/lib/components/ExtraFieldInput.svelte` | A `link` branch in each chain. Read-only: an `<a>` built from the definition's template, degrading to plain text. Editable: the value stays a text box and the expanded URL rides beside it as the same "open" icon `EditableField` offers for URLs found in free text, so a spool's own fields, which the inspector edits in place, are still clickable | This component IS how an extra field's value is shown and edited, everywhere. A link field that rendered as a raw code somewhere else would not be the feature. Both edits are one branch each, with the URL maths fork-owned in `src/lib/ng/linkField.ts` |
 | `src/lib/components/settings/ExtraFieldsManager.svelte` | A Location tab; the `link` type label; a `link_template` input shown only for a link field (required, max 512) and a `copy_from_filament` checkbox shown only for spool fields; `onTypeChange` clears the template when leaving `link`; `save()` sends both keys, null where they do not apply; the row's type cell annotates both | This is the only place in the client where an extra field can be defined, so a parameter absent from it cannot be set at all. Neither control earns a page of its own -- each is one field on one definition -- and neither gets a table column: both are annotations on the type they qualify. Its two labels ("Link URL", "Copy from Filament") were checked against every `getByLabel` in `tests_frontend_v2` first, per the settings-page hazard noted above |
 | `src/lib/components/library/FilamentInspector.svelte` | One icon-button linking to `/calibration?filament=<id>` | Calibration belongs to a filament, and this panel is where a filament is looked at. React reaches it as a tab on `/filament/show/:id`; this client has no such page — that route is a redirect and this inspector has no tab strip |
+| `src/lib/utils/format.ts` | `weightAuto()` returns grams when `isUnitScaling()` is false — one import and one extra condition | The 1000 g switch point lives in this one function behind all 23 weight call sites; a parallel formatter would leave the rest unscaled. The flag it reads is `$state` in `$lib/ng/unitScaling.svelte.ts`, which is what makes rows rendered before the setting arrived re-render — a plain variable left the list in kilograms beside an inspector in grams. **A never-set value keeps upstream's behaviour (scale)**: the vendored `crud.spec.ts` names a weight preset button `"1 kg"` on a fresh database, so honouring React's off-by-default strictly would fail upstream's own suite |
+| `src/routes/+layout.svelte` | `loadUnitScaling()` beside `authState.load()` in the startup effect | The flag has to be asked for once, before the first weight paints; the hunk was already fork-owned |
+| `src/lib/components/NavTabs.svelte` | `<CustomNavLinks />` after the `{#each tabs}` block | The one nav, rendered by TopBar on desktop and mobile alike; a list anywhere else is not in the nav. Renders nothing unless links exist |
+| `src/lib/components/library/SpoolInspector.svelte` | `<SpoolActionLinks {spool} />` under the header, and `<PrinterField {spool} />` after the lot-number field | The inspector is the spool's detail surface, with no extension point. Both render nothing unless an operator has configured links or created a printer. The printer field fetches `/spool/{id}` itself and PATCHes `printer_id` directly, so upstream's `Spool` type and mapper stay untouched |
+| `src/lib/components/AddSpoolModal.svelte` | `<PrinterPicker bind:value={printerId} />` in the location row, plus the `printerId` state, its reset in `resetSpoolForm()`, and `body.printer_id` in `submit()` — five one-line hunks | The create body is assembled inline in `submit()` and the form is a fixed sequence of labels; there is no slot. The picker renders nothing unless a printer exists |
+| `src/lib/components/library/SpoolRow.svelte` | `white-space: nowrap` on `.rem` | The remaining-weight column is a fixed 44px, and a value with a decimal (`987.5 g`, which any integration reporting fractional grams produces) wrapped its unit onto a second line (upstream issue 1124). One declaration, the same one upstream's reporter proposed, so an identical upstream fix merges without conflict; `tests_frontend_ng/tests/library.spec.ts` measures the row so the next pull cannot drop it silently |
 
 Two hazards specific to that page, both found by measuring rather than reading:
 
@@ -149,6 +209,14 @@ the page. So switching language moves both catalogues together with no coordinat
    truth, so the two clients cannot disagree about what a label says.
 2. Add the key to `KEYS` in `scripts/build_ng_messages.mjs` if it is new.
 3. Run `node scripts/build_ng_messages.mjs` and commit the regenerated messages.
+
+One trap in that pipeline, met by the custom-links strings: a message whose English carries
+**literal single braces** (`{id}`, `{location}` — the placeholders a user is meant to type) passes
+the generator, because `{id}` is exactly what a converted `{{id}}` looks like, and is then compiled by
+Paraglide as an *input*. Rendered bare it prints nothing where the brace text should be. The fix
+is to feed the brace text back in as that input — `ng.settings_custom_links_url_template_help({ id:
+'{id}' })` — which renders it as written in every language. Checked across all 31 React locales
+before relying on it: the placeholder names are identical everywhere. Do not "fix" the string.
 
 CI re-runs the generator and fails if the working tree comes back dirty, so the committed output
 cannot drift from the catalogue it was built from.

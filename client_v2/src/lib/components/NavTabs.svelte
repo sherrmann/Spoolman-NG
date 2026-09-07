@@ -6,6 +6,7 @@
 	import { ng } from '$lib/ng/i18n';
 	// Spoolman NG fork addition (#417): the low-stock count on the /lowstock tab, mounted below.
 	import LowStockBadge from '$lib/ng/components/LowStockBadge.svelte';
+	import CustomNavLinks from '$lib/ng/components/CustomNavLinks.svelte';
 
 	const tabs = [
 		{ href: '/', label: m['nav.library'] },
@@ -49,6 +50,8 @@
 			>{tab.label()}{#if tab.href === '/lowstock'}<LowStockBadge />{/if}</a
 		>
 	{/each}
+	<!-- Spoolman NG fork addition (#413): operator-configured links. Renders nothing unless some exist. -->
+	<CustomNavLinks />
 </nav>
 
 <style>

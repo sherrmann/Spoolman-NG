@@ -182,3 +182,71 @@ def test_tigertag_sync_interval_raises_on_non_integer(monkeypatch: pytest.Monkey
     monkeypatch.setenv("SPOOLMAN_TIGERTAG_SYNC_INTERVAL", "not-a-number")
     with pytest.raises(ValueError):
         env.get_tigertag_sync_interval()
+
+
+# --- CORS origins and allowed hosts (the origin and DNS-rebinding guards) ---
+#
+# Ported from upstream's tests/test_env.py, plus the allowed-hosts parsing this fork's guard
+# reads. Both variables feed spoolman/security.py: get_cors_origin() decides which origins are
+# trusted, get_allowed_hosts() decides whether the host guard runs at all.
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        ("https://spoolman.local", "https://spoolman.local"),
+        ("  https://spoolman.local  ", "https://spoolman.local"),
+        ("https://spoolman.local/", "https://spoolman.local"),
+        ("https://spoolman.local///", "https://spoolman.local"),
+        ("HTTPS://Spoolman.Local", "https://spoolman.local"),
+        ("*", "*"),
+    ],
+)
+def test_normalize_origin(raw: str, expected: str) -> None:
+    assert env.normalize_origin(raw) == expected
+
+
+def test_get_cors_origin_unset(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("SPOOLMAN_CORS_ORIGIN", raising=False)
+    assert env.get_cors_origin() is None
+    assert env.is_cors_defined() is False
+
+
+def test_get_cors_origin_single(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("SPOOLMAN_CORS_ORIGIN", "https://spoolman.local")
+    assert env.get_cors_origin() == ["https://spoolman.local"]
+    assert env.is_cors_defined() is True
+
+
+def test_get_cors_origin_trims_list_entries(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A space after the comma must not produce an entry no Origin header can ever match."""
+    monkeypatch.setenv("SPOOLMAN_CORS_ORIGIN", "https://a.local, https://b.local/")
+    assert env.get_cors_origin() == ["https://a.local", "https://b.local"]
+
+
+def test_get_cors_origin_drops_empty_and_duplicate_entries(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("SPOOLMAN_CORS_ORIGIN", "https://a.local,,https://a.local/, ")
+    assert env.get_cors_origin() == ["https://a.local"]
+
+
+def test_get_cors_origin_raw_is_unparsed(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("SPOOLMAN_CORS_ORIGIN", " https://a.local, https://b.local ")
+    assert env.get_cors_origin_raw() == " https://a.local, https://b.local "
+
+
+def test_wildcard_survives_normalization(monkeypatch: pytest.MonkeyPatch) -> None:
+    """main.add_cors_middleware drops allow_credentials by looking for this in the parsed list."""
+    monkeypatch.setenv("SPOOLMAN_CORS_ORIGIN", " * ")
+    assert env.get_cors_origin() == ["*"]
+
+
+def test_get_allowed_hosts_defaults_to_none(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Unset means the host guard stays off; see security.is_host_checking_enabled."""
+    monkeypatch.delenv("SPOOLMAN_ALLOWED_HOSTS", raising=False)
+    assert env.get_allowed_hosts() is None
+
+
+def test_get_allowed_hosts_normalises_its_entries(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Trim, lower-case, drop the trailing root dot, and keep each hostname only once."""
+    monkeypatch.setenv("SPOOLMAN_ALLOWED_HOSTS", " spoolman.example.com , SPOOLS.example.com. ,,spoolman.example.com")
+    assert env.get_allowed_hosts() == ["spoolman.example.com", "spools.example.com"]

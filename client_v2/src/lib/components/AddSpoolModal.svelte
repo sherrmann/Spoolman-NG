@@ -9,6 +9,7 @@
 	import Plus from '@lucide/svelte/icons/plus';
 	import ExtraFieldsSection from './ExtraFieldsSection.svelte';
 	import NewFilamentCards from './NewFilamentCards.svelte';
+	import PrinterPicker from '$lib/ng/components/PrinterPicker.svelte';
 	import type { Filament, Extra, MultiColorDirection } from '$lib/types';
 	import { inventory } from '$lib/stores/inventory.svelte';
 	import { settings } from '$lib/stores/settings.svelte';
@@ -195,6 +196,8 @@
 	let price = $state('');
 	let location = $state('');
 	let lot = $state('');
+	// Spoolman NG fork addition (#413): the printer the spool is loaded on, if any.
+	let printerId = $state<number | undefined>(undefined);
 	let comment = $state('');
 	let fillMode = $state<FillMode>('full');
 	let fillWeight = $state('');
@@ -284,6 +287,7 @@
 		count = '1';
 		location = '';
 		lot = '';
+		printerId = undefined;
 		comment = '';
 		fillMode = 'full';
 		fillWeight = '';
@@ -427,6 +431,7 @@
 			if (firstUsed) body.first_used = firstUsed;
 			if (lastUsed) body.last_used = lastUsed;
 			if (Object.keys(extraValues).length) body.extra = extraValues;
+			if (printerId !== undefined) body.printer_id = printerId;
 
 			for (let i = 0; i < n; i++) await spoolSource.createSpool(body);
 			if (andAnother && created) {
@@ -810,6 +815,8 @@
 							<span class="hint">{m['add.locationHint']()}</span>
 						</label>
 						<label>{m['spool.fields.lotNr']()}<input class="mono" bind:value={lot} placeholder="—" /></label>
+						<!-- Spoolman NG fork addition (#413): renders nothing unless a printer exists. -->
+						<PrinterPicker bind:value={printerId} />
 					</div>
 
 					<div class="form money">
