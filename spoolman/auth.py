@@ -1,7 +1,9 @@
 """Opt-in authentication and roles for the v1 API (issues #48 and #52).
 
 Two credentials are accepted, both carried in ``Authorization: Bearer <token>`` (websockets may pass
-``?token=`` because browsers can't set handshake headers):
+``?token=`` because browsers can't set handshake headers; that query value is stripped from
+Spoolman's own log output by ``security.RedactQueryTokenFilter``, since uvicorn logs the request
+line with its query string):
 
 * the static machine token ``SPOOLMAN_API_TOKEN`` (#48) — always an ``admin`` principal;
 * a signed login token minted by ``POST /auth/login`` for a user account (#52) — carries the user's
