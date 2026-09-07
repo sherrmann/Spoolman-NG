@@ -19,7 +19,6 @@ more than a constraint that is real on three databases out of four.
 """
 
 import logging
-from datetime import datetime
 
 import sqlalchemy
 from sqlalchemy.exc import IntegrityError
@@ -27,6 +26,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from spoolman.api.v1.models import EventType
 from spoolman.database import models, spool
+from spoolman.database.utils import utc_now
 from spoolman.exceptions import ItemNotFoundError, TagConflictError
 from spoolman.tags import TARGET_SPOOL, normalize_format, normalize_uid
 
@@ -101,7 +101,7 @@ async def link(
         uid=uid,
         target_type=TARGET_SPOOL,
         format=tag_format,
-        added=datetime.utcnow().replace(microsecond=0),
+        added=utc_now().replace(microsecond=0),
     )
     db_spool.tags.append(tag)
     try:

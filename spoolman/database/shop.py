@@ -1,7 +1,6 @@
 """Helper functions for interacting with shop database objects (#298)."""
 
 import logging
-from datetime import datetime
 
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
@@ -9,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from spoolman.api.v1.models import EventType, Shop, ShopEvent
 from spoolman.database import models
-from spoolman.database.utils import SortOrder, add_where_clause_str, order_by_expression
+from spoolman.database.utils import SortOrder, add_where_clause_str, order_by_expression, utc_now
 from spoolman.exceptions import ItemCreateError, ItemDeleteError, ItemNotFoundError
 from spoolman.ws import websocket_manager
 
@@ -34,7 +33,7 @@ async def create(
     """Add a new shop to the database. Raises ItemCreateError on a duplicate name."""
     shop = models.Shop(
         name=name,
-        registered=datetime.utcnow().replace(microsecond=0),
+        registered=utc_now().replace(microsecond=0),
         homepage=homepage,
         ships_to=_join_ships_to(ships_to),
         comment=comment,
@@ -132,7 +131,7 @@ async def shop_changed(shop: models.Shop, typ: EventType) -> None:
             ShopEvent(
                 type=typ,
                 resource="shop",
-                date=datetime.utcnow(),
+                date=utc_now(),
                 payload=Shop.from_db(shop),
             ),
         )

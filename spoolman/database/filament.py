@@ -25,6 +25,7 @@ from spoolman.database.utils import (
     escape_like,
     order_by_expression,
     parse_nested_field,
+    utc_now,
     utc_timezone_naive,
 )
 from spoolman.exceptions import ItemDeleteError, ItemNotFoundError
@@ -75,7 +76,7 @@ async def create(
 
     filament = models.Filament(
         name=name,
-        registered=datetime.utcnow().replace(microsecond=0),
+        registered=utc_now().replace(microsecond=0),
         vendor=vendor_item,
         material=material,
         price=price,
@@ -481,7 +482,7 @@ async def set_image(db: AsyncSession, filament_id: int, *, data: bytes, content_
     filament = await get_by_id(db, filament_id)
     old_image_id = filament.image_id
     image = models.Image(
-        registered=datetime.utcnow().replace(microsecond=0),
+        registered=utc_now().replace(microsecond=0),
         content_type=content_type,
         size=len(data),
         etag=hashlib.sha256(data).hexdigest(),
@@ -591,7 +592,7 @@ async def filament_changed(filament: models.Filament, typ: EventType) -> None:
             FilamentEvent(
                 type=typ,
                 resource="filament",
-                date=datetime.utcnow(),
+                date=utc_now(),
                 payload=Filament.from_db(filament),
             ),
         )

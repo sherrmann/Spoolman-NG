@@ -4,11 +4,9 @@
 > comparison, including the React-to-Svelte parity backlog. This file covers the *mechanics* of
 > the vendored subtree; that one covers what is and isn't built yet.
 
-`client_v2/` is vendored from `Donkie/Spoolman` as a git subtree and pulled forward with
-
-```
-git subtree pull --prefix=client_v2 upstream master --squash
-```
+`client_v2/` is vendored from `Donkie/Spoolman` as a git subtree and pulled forward with the
+procedure under [Pulling upstream forward](#pulling-upstream-forward) below. It is **not**
+`git subtree pull --prefix=client_v2 upstream master --squash`, for reasons given there.
 
 Upstream is active in that tree — a fetch on 2026-08-26 brought 290 commits touching it, most of
 them Weblate translation churn under `client_v2/locales/`. So every file this fork edits inside
@@ -16,6 +14,62 @@ the subtree is a conflict this fork pays for on every pull, forever. The rule is
 
 > **Add files. Do not edit files.** A new path upstream will never create costs nothing at pull
 > time; a changed line in a file upstream also changes costs a conflict every time.
+
+## Pulling upstream forward
+
+`git subtree pull --prefix=client_v2 upstream master --squash` looks like the right command and
+was documented here until 2026-W36, when it was first actually needed. It cannot work in this
+repository, for two independent reasons:
+
+1. `upstream/master` is upstream's whole tree, not a `client_v2` split. `git subtree merge`
+   only shifts the incoming tree under the prefix when it does *not* already contain that
+   directory; upstream's does, so the whole of upstream (`spoolman/`, `client/`, ...) would be
+   merged into this repository's root.
+2. The pull request that vendored the tree (#397) was squash-merged on GitHub. The
+   `git-subtree-dir` / `git-subtree-split` trailers `git subtree` looks for therefore sit in the
+   body of an ordinary mainline commit (`6126272f`), and `git subtree` would take that commit,
+   whose tree is the *entire repository*, as the previous squash and hence as the merge base.
+   Every file outside `client_v2/` would then appear deleted on the incoming side.
+
+What does work is the same three-way merge done explicitly, with the base pinned by hand. The
+split is deterministic: `git subtree split` reproduces the split commit recorded in #397's
+trailer (`a2745699`) byte for byte, which is what makes the recorded split point usable.
+
+```sh
+git remote add upstream https://github.com/Donkie/Spoolman   # once
+git fetch upstream master
+git subtree split --prefix=client_v2 upstream/master -b upstream-client-v2
+
+# The base is the split commit whose tree is what this repository's client_v2 was last
+# synchronised to. Take it from the git-subtree-split trailer of the last pull commit
+# (git log --grep=git-subtree-split -- client_v2), and confirm it exists:
+git cat-file -t <recorded split sha>
+
+# Three-way merge into the prefix, leaving conflicts in the index and working tree:
+git merge-recursive --subtree=client_v2 <recorded split sha> -- HEAD upstream-client-v2
+```
+
+Resolve any conflict keeping both sides (the Tier 1 and Tier 2 tables above say what the fork
+side is), then commit with the two trailers so the next pull can find its base:
+
+```
+git-subtree-dir: client_v2
+git-subtree-split: <output of: git rev-parse upstream-client-v2>
+```
+
+Then check the result, which is the point of the whole exercise:
+
+```sh
+# Only fork-owned paths and the Tier 1/2 files may differ from upstream.
+git diff --stat upstream/master -- client_v2
+# The two measured dashboard hazards below must survive.
+grep -n 'flex: none' client_v2/src/routes/dashboard/+page.svelte
+grep -n 'const CHIP_H = 44' client_v2/src/routes/dashboard/+page.svelte
+```
+
+If the recorded split commit is ever *not* reproduced (a different git version could in theory
+split differently), find the base by tree instead: the split commit whose tree equals
+`<upstream commit>:client_v2` for the upstream commit the tree was last synchronised to.
 
 ## What this fork adds (no conflict surface)
 
@@ -80,6 +134,7 @@ upstream page rather than beside it.
 | `src/lib/components/NavTabs.svelte` | `<CustomNavLinks />` after the `{#each tabs}` block | The one nav, rendered by TopBar on desktop and mobile alike; a list anywhere else is not in the nav. Renders nothing unless links exist |
 | `src/lib/components/library/SpoolInspector.svelte` | `<SpoolActionLinks {spool} />` under the header, and `<PrinterField {spool} />` after the lot-number field | The inspector is the spool's detail surface, with no extension point. Both render nothing unless an operator has configured links or created a printer. The printer field fetches `/spool/{id}` itself and PATCHes `printer_id` directly, so upstream's `Spool` type and mapper stay untouched |
 | `src/lib/components/AddSpoolModal.svelte` | `<PrinterPicker bind:value={printerId} />` in the location row, plus the `printerId` state, its reset in `resetSpoolForm()`, and `body.printer_id` in `submit()` — five one-line hunks | The create body is assembled inline in `submit()` and the form is a fixed sequence of labels; there is no slot. The picker renders nothing unless a printer exists |
+| `src/lib/components/library/SpoolRow.svelte` | `white-space: nowrap` on `.rem` | The remaining-weight column is a fixed 44px, and a value with a decimal (`987.5 g`, which any integration reporting fractional grams produces) wrapped its unit onto a second line (upstream issue 1124). One declaration, the same one upstream's reporter proposed, so an identical upstream fix merges without conflict; `tests_frontend_ng/tests/library.spec.ts` measures the row so the next pull cannot drop it silently |
 
 Two hazards specific to that page, both found by measuring rather than reading:
 

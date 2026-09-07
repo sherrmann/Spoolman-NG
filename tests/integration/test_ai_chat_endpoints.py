@@ -38,6 +38,7 @@ from spoolman.database import order as order_db
 from spoolman.database import shop as shop_db
 from spoolman.database import spool as spool_db
 from spoolman.database import vendor as vendor_db
+from spoolman.database.utils import utc_now
 from spoolman.exceptions import ItemNotFoundError
 
 _PROVIDER = "http://prov/v1/chat/completions"
@@ -363,9 +364,9 @@ async def test_a_commit_level_failure_does_not_poison_the_next_pending_write(
         # A genuine commit-level failure: a duplicate insert against a real unique constraint
         # (Shop.name), raised from inside db.commit() -- not a ToolError, and not caught by the
         # tool itself. This is what actually leaves an ORM session needing db.rollback().
-        ctx.db.add(models.Shop(name="dup-seed", registered=datetime.utcnow()))
+        ctx.db.add(models.Shop(name="dup-seed", registered=utc_now()))
         await ctx.db.commit()
-        ctx.db.add(models.Shop(name="dup-seed", registered=datetime.utcnow()))
+        ctx.db.add(models.Shop(name="dup-seed", registered=utc_now()))
         await ctx.db.commit()  # IntegrityError here
         return ai_tools.ExecutionResult(summary="unreachable")  # pragma: no cover
 
@@ -894,7 +895,7 @@ async def test_get_usage_stats_tool_reports_real_consumption(client: AsyncClient
         ctx = ai_tools.ToolContext(db=session, can_write=False)
         result = await ai_tools.READ_TOOLS["get_usage_stats"].run(ctx, {"bucket": "month"})
 
-    current_period = datetime.utcnow().strftime("%Y-%m")
+    current_period = utc_now().strftime("%Y-%m")
     assert result["total_consumed_weight_g"] == 42.5
     assert len(result["periods"]) == 1
     assert result["periods"][0]["period"] == current_period
@@ -2576,13 +2577,13 @@ async def test_delete_filament_execute_cascades_to_every_spool_and_its_usage_his
         archived_spool = await spool_db.create(db=session, filament_id=filament_id)
         await spool_db.update(db=session, spool_id=archived_spool.id, data={"archived": True})
         session.add(
-            models.SpoolUsageEvent(spool_id=kept_spool.id, time=datetime.utcnow(), event_type="use", delta=10.0),
+            models.SpoolUsageEvent(spool_id=kept_spool.id, time=utc_now(), event_type="use", delta=10.0),
         )
 
         survivor_filament = await filament_db.create(db=session, density=1.24, diameter=1.75, name="Survivor")
         survivor_spool = await spool_db.create(db=session, filament_id=survivor_filament.id)
         session.add(
-            models.SpoolUsageEvent(spool_id=survivor_spool.id, time=datetime.utcnow(), event_type="use", delta=5.0),
+            models.SpoolUsageEvent(spool_id=survivor_spool.id, time=utc_now(), event_type="use", delta=5.0),
         )
         await session.commit()
         ctx = ai_tools.ToolContext(db=session, can_write=True)
