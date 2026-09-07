@@ -78,9 +78,10 @@ def render_watch_issue(commits: list[dict], issues: list[dict], prs: list[dict])
         out += [
             f"### New upstream `{VENDORED_SUBTREE}` commits ({len(vendored)})",
             "",
-            f"Vendored as a subtree \u2014 take these with "
-            f"`git subtree pull --prefix={VENDORED_SUBTREE} upstream master --squash`,",
-            "not by hand. Listed so the pull is a decision rather than a surprise.",
+            f"Vendored as a subtree \u2014 take these with the pull procedure in "
+            f"`docs/upstream/client-v2-fork-additions.md` (a `git subtree split` of upstream "
+            f"merged into `{VENDORED_SUBTREE}/` with an explicit base; plain `git subtree pull` "
+            "does not work here), not by hand. Listed so the pull is a decision rather than a surprise.",
             "",
         ]
         for c in vendored:

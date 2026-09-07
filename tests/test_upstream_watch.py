@@ -117,7 +117,8 @@ def test_render_lists_client_v2_commits_in_their_own_section() -> None:
     assert "### New upstream `client_v2` commits (1)" in body
     assert f"- [ ] `{'a' * 9}` `client_v2: tweak` \u2014 pull / skip?" in body
     assert f"- [ ] `{'b' * 9}` `Fix api` (`spoolman`) \u2014 port / skip?" in body
-    assert "git subtree pull --prefix=client_v2" in body
+    assert "docs/upstream/client-v2-fork-additions.md" in body
+    assert "git subtree split" in body
 
 
 def test_render_omits_the_client_v2_section_when_nothing_touched_it() -> None:

@@ -737,6 +737,21 @@ async def use_length(
     return spool
 
 
+def _resolve_tare(spool_tare: float | None, filament_tare: float | None, vendor_tare: float | None) -> float | None:
+    """Pick the tare measure() subtracts: the spool's, else the filament's, else the vendor's.
+
+    The spool's tare counts as unset when it is 0 as well as None, which is how measure() has
+    always read it. The filament's is taken as stored, 0 included -- a refill filament is created
+    with an explicit 0 and must not inherit its vendor's spool -- and only a filament with no tare
+    at all walks up to the vendor, which is the same rule filament creation uses to snapshot it.
+    """
+    if spool_tare:
+        return spool_tare
+    if filament_tare is not None:
+        return filament_tare
+    return vendor_tare
+
+
 async def measure(
     db: AsyncSession,
     spool_id: int,
@@ -776,10 +791,15 @@ async def measure(
     initial_weight = spool_info[0]
     spool_weight = spool_info[2]
     if initial_weight is None or initial_weight == 0 or spool_weight is None or spool_weight == 0:
-        # Get filament weight and spool_weight
+        # Get filament weight and spool_weight, and the vendor's tare as the last resort. The
+        # vendor's empty_spool_weight is copied into a filament only when the filament is
+        # created, so a tare the vendor gained afterwards never reached filaments that already
+        # existed and this used to fall through to zero (upstream #1117). Walking up to the
+        # vendor here resolves the tare the same way the create path does.
         result = await db.execute(
-            sqlalchemy.select(models.Filament.weight, models.Filament.spool_weight)
+            sqlalchemy.select(models.Filament.weight, models.Filament.spool_weight, models.Vendor.empty_spool_weight)
             .join(models.Spool, models.Spool.filament_id == models.Filament.id)
+            .outerjoin(models.Vendor, models.Vendor.id == models.Filament.vendor_id)
             .where(models.Spool.id == spool_id),
         )
         try:
@@ -787,8 +807,7 @@ async def measure(
         except NoResultFound as exc:
             raise ItemNotFoundError("Filament not found for spool.") from exc
 
-        if spool_weight is None or spool_weight == 0:
-            spool_weight = filament_info[1]
+        spool_weight = _resolve_tare(spool_weight, filament_info[1], filament_info[2])
 
         if initial_weight is None or initial_weight == 0:
             initial_weight = filament_info[0] if filament_info[0] is not None else 0
