@@ -92,6 +92,8 @@ test.describe("as an administrator", () => {
     await expect(confirm).toContainText(username);
     await confirm.getByRole("button", { name: "Cancel" }).click();
     await expect(confirm).toBeHidden();
+    // The control goes back to what was never changed; a select left on "admin" would be lying.
+    await expect(role).toHaveValue("readonly");
     expect((await usersOnServer(request)).find((u) => u.username === username)?.role).toBe(
       "readonly",
     );

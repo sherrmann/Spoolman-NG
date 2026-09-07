@@ -83,12 +83,21 @@
 	}
 
 	// --- role change ----------------------------------------------------------------------
-	let roleChange = $state<{ user: User; role: Role } | null>(null);
+	// The select the change came from is kept so that a cancelled or refused change can put it
+	// back: the list re-renders with the same role string, which the DOM does not treat as a
+	// change, so the control would go on showing the value that was never applied.
+	let roleChange = $state<{ user: User; role: Role; el: HTMLSelectElement } | null>(null);
 	let busy = $state(false);
 
-	function askRole(user: User, raw: string) {
+	function askRole(user: User, el: HTMLSelectElement) {
+		const raw = el.value;
 		if (!isRole(raw) || raw === user.role) return;
-		roleChange = { user, role: raw };
+		roleChange = { user, role: raw, el };
+	}
+
+	function revertRole() {
+		if (roleChange) roleChange.el.value = roleChange.user.role;
+		roleChange = null;
 	}
 
 	async function applyRole() {
@@ -101,9 +110,7 @@
 			await refresh();
 		} catch (e) {
 			toasts.error(apiErrorMessage(e));
-			roleChange = null;
-			// Put the select back to what the server still holds.
-			await refresh();
+			revertRole();
 		} finally {
 			busy = false;
 		}
@@ -173,7 +180,7 @@
 								aria-label={`${ng.auth_users_role()}: ${user.username}`}
 								value={user.role}
 								disabled={busy}
-								onchange={(e) => askRole(user, e.currentTarget.value)}
+								onchange={(e) => askRole(user, e.currentTarget)}
 							>
 								{#each ROLES as r (r)}
 									<option value={r}>{roleLabel[r]()}</option>
@@ -268,11 +275,7 @@
 			: []}
 		confirmLabel={ng.auth_users_role_change_title()}
 		onconfirm={applyRole}
-		onclose={async () => {
-			roleChange = null;
-			// The select already shows the new value; put it back.
-			await refresh();
-		}}
+		onclose={revertRole}
 	/>
 
 	<ConfirmDialog
