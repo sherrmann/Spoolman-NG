@@ -26,6 +26,18 @@ async function openLowStock(page: Page) {
 const row = (page: Page, name: string) =>
   page.getByRole("listitem").filter({ hasText: name }).first();
 
+/**
+ * The count on the "Low Stock" nav tab, or 0 when no badge is rendered at all.
+ *
+ * `.first()` because NavTabs is mounted twice -- once for the desktop row of the top bar and
+ * once for the mobile one -- and both are in the DOM at every viewport.
+ */
+async function navBadge(page: Page): Promise<number> {
+  const badge = page.locator("nav a", { hasText: "Low Stock" }).first().locator(".badge");
+  if ((await badge.count()) === 0) return 0;
+  return Number((await badge.textContent())?.trim());
+}
+
 test("lists both low-stock sections and marks what is already on order", async ({ page }) => {
   await openLowStock(page);
 
@@ -117,4 +129,40 @@ test("the page scrolls inside the app shell rather than overflowing it", async (
     `the document grew to ${docScroll}px against a ${viewport}px viewport`,
   ).toBeLessThanOrEqual(viewport + 1);
   expect(pageScrolls, "seeded content should overflow the pane at 700x800").toBe(true);
+});
+
+/**
+ * The nav badge counts low-stock filaments that are NOT already on an order.
+ *
+ * Every expectation here is relative to the count read first: this suite shares one database and
+ * the tests above seed low filaments of their own, so the absolute number depends on run order.
+ */
+test("the nav badge counts a newly low filament", async ({ page, request }) => {
+  await openLowStock(page);
+  const before = await navBadge(page);
+
+  const filament = await seedLowFilament(request, "Badge");
+  await page.reload({ waitUntil: "networkidle" });
+
+  await expect(row(page, filament.name)).toBeVisible();
+  await expect.poll(() => navBadge(page), { timeout: 10_000 }).toBe(before + 1);
+});
+
+test("the nav badge drops as soon as a filament is marked ordered", async ({ page, request }) => {
+  const filament = await seedLowFilament(request, "BadgeOrd");
+
+  await openLowStock(page);
+  const before = await navBadge(page);
+  expect(before).toBeGreaterThan(0);
+
+  await row(page, filament.name)
+    .getByRole("button", { name: /mark as ordered/i })
+    .click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole("button", { name: /mark as ordered/i }).click();
+
+  // No reload: orders have no live channel, so this only passes if the page tells the badge's
+  // shared store to refresh itself after the write succeeds.
+  await expect.poll(() => navBadge(page), { timeout: 10_000 }).toBe(before - 1);
 });

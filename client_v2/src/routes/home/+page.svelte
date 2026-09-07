@@ -44,6 +44,7 @@
 	import ThresholdEdit from '$lib/ng/components/ThresholdEdit.svelte';
 	import OrderedPill from '$lib/ng/components/OrderedPill.svelte';
 	import MarkOrderedDialog from '$lib/ng/components/MarkOrderedDialog.svelte';
+	import { lowStockBadge } from '$lib/ng/lowStockBadge.svelte';
 	import Database from '@lucide/svelte/icons/database';
 	import Highlighter from '@lucide/svelte/icons/highlighter';
 	import Store from '@lucide/svelte/icons/store';
@@ -536,6 +537,8 @@
 		onsuccess={() => {
 			markOrderedFilament = undefined;
 			refresh();
+			// Orders have no live channel, so the nav badge is told by hand (see $lib/api/live).
+			lowStockBadge.refresh();
 		}}
 	/>
 {/if}

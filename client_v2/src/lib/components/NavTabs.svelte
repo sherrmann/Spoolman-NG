@@ -4,6 +4,8 @@
 	import { page } from '$app/stores';
 	import * as m from '$lib/paraglide/messages';
 	import { ng } from '$lib/ng/i18n';
+	// Spoolman NG fork addition (#417): the low-stock count on the /lowstock tab, mounted below.
+	import LowStockBadge from '$lib/ng/components/LowStockBadge.svelte';
 
 	const tabs = [
 		{ href: '/', label: m['nav.library'] },
@@ -38,7 +40,14 @@
 
 <nav class="tabs">
 	{#each tabs as tab (tab.href)}
-		<a href={resolve(tab.href)} class="tab" class:active={isActive(tab.href)}>{tab.label()}</a>
+		<!-- Spoolman NG fork addition (#417): the Low Stock tab carries the count of filaments
+		     still needing attention. The badge renders nothing at all until that count is both
+		     loaded and non-zero, so every other tab -- and this one while nothing is low -- is
+		     exactly what upstream wrote. Written without a line break before the {#if} so the
+		     label and the pill are not separated by a stray text node. -->
+		<a href={resolve(tab.href)} class="tab" class:active={isActive(tab.href)}
+			>{tab.label()}{#if tab.href === '/lowstock'}<LowStockBadge />{/if}</a
+		>
 	{/each}
 </nav>
 

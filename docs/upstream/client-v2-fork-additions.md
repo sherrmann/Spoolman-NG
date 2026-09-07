@@ -38,7 +38,7 @@ tool config. Re-apply the fork side and move on.
 |---|---|---|
 | `vite.config.ts` | A second `paraglideVitePlugin({ project: './project-ng.inlang' })` | Vite reads exactly one config; a plugin cannot register itself |
 | `package.json` | `paraglide` also runs `paraglide:ng` | `npm run check` compiles messages before typechecking, and CI runs it |
-| `src/lib/components/NavTabs.svelte` | One entry per fork page in the `tabs` array | It is the single source of truth for the nav, on both desktop and mobile |
+| `src/lib/components/NavTabs.svelte` | One entry per fork page in the `tabs` array, and a `<LowStockBadge />` inside the anchor of the `/lowstock` entry (#417) | It is the single source of truth for the nav, on both desktop and mobile. The badge has to be inside that anchor -- a count that sat beside the tab would not read as belonging to it -- and it renders nothing at all until its count is loaded and non-zero, so every other tab is untouched. The count, its one shared load and its live subscriptions are fork-owned in `src/lib/ng/lowStockBadge.svelte.ts` |
 | `.prettierignore` | `src/lib/paraglide-ng` and the `project-ng.inlang` generated files | Tool config is one file; the entries sit directly beside upstream's own for `src/lib/paraglide` and `project.inlang` |
 | `eslint.config.js` | `src/lib/paraglide-ng/` and `project-ng.inlang/` in `ignores` | Same reason, beside the same upstream entries |
 
