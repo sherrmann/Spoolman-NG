@@ -1,7 +1,6 @@
 """Helper functions for interacting with location database objects."""
 
 import logging
-from datetime import datetime
 
 import sqlalchemy
 from sqlalchemy import case, func, select
@@ -10,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from spoolman.api.v1.models import EventType, Location, LocationEvent
 from spoolman.database import models
 from spoolman.database.extra_field_query import apply_extra_field_filters_and_sort
-from spoolman.database.utils import SortOrder, add_where_clause_str, order_by_expression
+from spoolman.database.utils import SortOrder, add_where_clause_str, order_by_expression, utc_now
 from spoolman.exceptions import ItemNotFoundError
 from spoolman.extra_field_registry import EntityType
 from spoolman.ws import websocket_manager
@@ -28,7 +27,7 @@ async def create(
     """Add a new location to the database."""
     location = models.Location(
         name=name,
-        registered=datetime.utcnow().replace(microsecond=0),
+        registered=utc_now().replace(microsecond=0),
         comment=comment,
         extra=[models.LocationField(key=k, value=v) for k, v in (extra or {}).items()],
     )
@@ -203,7 +202,7 @@ async def location_changed(location: models.Location, typ: EventType) -> None:
             LocationEvent(
                 type=typ,
                 resource="location",
-                date=datetime.utcnow(),
+                date=utc_now(),
                 payload=Location.from_db(location),
             ),
         )

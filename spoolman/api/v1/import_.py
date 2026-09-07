@@ -19,7 +19,7 @@ from spoolman.api.v1.spool import SpoolParameters
 from spoolman.api.v1.vendor import VendorParameters
 from spoolman.database import models
 from spoolman.database.database import get_db_session
-from spoolman.database.utils import utc_timezone_naive
+from spoolman.database.utils import utc_now, utc_timezone_naive
 from spoolman.import_data import ImportFormat, ImportMode, ImportResult, parse_body, unflatten_row
 
 router = APIRouter(
@@ -58,7 +58,7 @@ _PARAMS = {
 
 
 def _now() -> datetime:
-    return datetime.utcnow().replace(microsecond=0)
+    return utc_now().replace(microsecond=0)
 
 
 async def _build_vendor(

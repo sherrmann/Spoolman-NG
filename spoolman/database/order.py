@@ -9,7 +9,13 @@ from sqlalchemy.orm import joinedload
 
 from spoolman.api.v1.models import EventType, Order, OrderEvent
 from spoolman.database import filament, models, shop
-from spoolman.database.utils import SortOrder, add_where_clause_int_opt, order_by_expression, utc_timezone_naive
+from spoolman.database.utils import (
+    SortOrder,
+    add_where_clause_int_opt,
+    order_by_expression,
+    utc_now,
+    utc_timezone_naive,
+)
 from spoolman.exceptions import ItemNotFoundError
 from spoolman.ws import websocket_manager
 
@@ -49,11 +55,9 @@ async def create(
         shop_item = await shop.get_by_id(db, shop_id)
 
     order = models.Order(
-        registered=datetime.utcnow().replace(microsecond=0),
+        registered=utc_now().replace(microsecond=0),
         shop=shop_item,
-        ordered_at=utc_timezone_naive(ordered_at)
-        if ordered_at is not None
-        else datetime.utcnow().replace(microsecond=0),
+        ordered_at=utc_timezone_naive(ordered_at) if ordered_at is not None else utc_now().replace(microsecond=0),
         order_number=order_number,
         url=url,
         comment=comment,
@@ -227,7 +231,7 @@ async def arrive(
     order = await get_by_id(db, order_id)
     requests = _resolve_arrival_requests(order, order_id, lines)
 
-    now = datetime.utcnow().replace(microsecond=0)
+    now = utc_now().replace(microsecond=0)
     location_name: str | None = None
     if location_id is not None:
         location_name = (await location.get_by_id(db, location_id)).name
@@ -272,7 +276,7 @@ async def order_changed(order: models.Order, typ: EventType) -> None:
             OrderEvent(
                 type=typ,
                 resource="order",
-                date=datetime.utcnow(),
+                date=utc_now(),
                 payload=Order.from_db(order),
             ),
         )

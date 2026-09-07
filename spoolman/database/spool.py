@@ -33,6 +33,7 @@ from spoolman.database.utils import (
     order_by_clauses,
     order_by_expression,
     parse_nested_field,
+    utc_now,
     utc_timezone_naive,
 )
 from spoolman.exceptions import ItemCreateError, ItemNotFoundError, SpoolMeasureError
@@ -167,7 +168,7 @@ async def build(
 
     spool = models.Spool(
         filament=filament_item,
-        registered=datetime.utcnow().replace(microsecond=0),
+        registered=utc_now().replace(microsecond=0),
         initial_weight=initial_weight,
         spool_weight=spool_weight,
         used_weight=used_weight,
@@ -571,7 +572,7 @@ def _record_usage_event(
     db.add(
         models.SpoolUsageEvent(
             spool_id=spool_id,
-            time=datetime.utcnow().replace(microsecond=0),
+            time=utc_now().replace(microsecond=0),
             event_type=event_type,
             delta=delta,
             measured_weight=measured_weight,
@@ -659,8 +660,8 @@ async def use_weight(
     spool = await get_by_id(db, spool_id)
 
     if spool.first_used is None:
-        spool.first_used = datetime.utcnow().replace(microsecond=0)
-    spool.last_used = datetime.utcnow().replace(microsecond=0)
+        spool.first_used = utc_now().replace(microsecond=0)
+    spool.last_used = utc_now().replace(microsecond=0)
 
     _record_usage_event(
         db,
@@ -727,8 +728,8 @@ async def use_length(
     spool = await get_by_id(db, spool_id)
 
     if spool.first_used is None:
-        spool.first_used = datetime.utcnow().replace(microsecond=0)
-    spool.last_used = datetime.utcnow().replace(microsecond=0)
+        spool.first_used = utc_now().replace(microsecond=0)
+    spool.last_used = utc_now().replace(microsecond=0)
 
     _record_usage_event(db, spool_id, "use", weight_delta, comment=comment, idempotency_key=idempotency_key)
     await db.commit()
@@ -861,7 +862,7 @@ async def spool_changed(spool: models.Spool, typ: EventType, delta: dict | None 
         spool = Spool.from_db(spool)
         await websocket_manager.send(
             ("spool", str(spool.id)),
-            SpoolEvent(type=typ, resource="spool", date=datetime.utcnow(), payload=spool, payload_extras=delta),
+            SpoolEvent(type=typ, resource="spool", date=utc_now(), payload=spool, payload_extras=delta),
         )
     except Exception:
         # Important to have a catch-all here since we don't want to stop the call if this fails.

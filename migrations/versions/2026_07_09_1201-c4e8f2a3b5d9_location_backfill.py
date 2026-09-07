@@ -13,10 +13,10 @@ Idempotent: only inserts names not already present, so a re-run (e.g. the migrat
 does not create duplicates.
 """
 
-from datetime import datetime
-
 import sqlalchemy as sa
 from alembic import op
+
+from spoolman.database.utils import utc_now
 
 # revision identifiers, used by Alembic.
 revision = "c4e8f2a3b5d9"
@@ -40,7 +40,7 @@ def upgrade() -> None:
     """Insert a location row for each distinct non-blank spool location not already registered."""
     conn = op.get_bind()
     existing = {row.name for row in conn.execute(sa.select(location.c.name)).all()}
-    now = datetime.utcnow().replace(microsecond=0)
+    now = utc_now().replace(microsecond=0)
     rows = conn.execute(sa.select(spool.c.location).distinct()).all()
     for row in rows:
         loc = row.location
