@@ -4,6 +4,7 @@
 	import { page } from '$app/stores';
 	import * as m from '$lib/paraglide/messages';
 	import { ng } from '$lib/ng/i18n';
+	import CustomNavLinks from '$lib/ng/components/CustomNavLinks.svelte';
 
 	const tabs = [
 		{ href: '/', label: m['nav.library'] },
@@ -40,6 +41,8 @@
 	{#each tabs as tab (tab.href)}
 		<a href={resolve(tab.href)} class="tab" class:active={isActive(tab.href)}>{tab.label()}</a>
 	{/each}
+	<!-- Spoolman NG fork addition (#413): operator-configured links. Renders nothing unless some exist. -->
+	<CustomNavLinks />
 </nav>
 
 <style>

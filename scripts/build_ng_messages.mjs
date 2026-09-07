@@ -218,9 +218,9 @@ const KEYS = [
 	'home.usage.bucket.month',
 	'home.usage.bucket.year',
 
-	// Credential prompt (#406). Listed one by one rather than as `{ prefix: 'auth.' }`
-	// because that namespace also holds the ~10 `auth.users.*` keys for the account
-	// management panel, which the Svelte client does not have yet (#413).
+	// Credential prompt (#406). Listed one by one rather than as `{ prefix: 'auth.' }`:
+	// `auth.` also carries the account-management strings below, and keeping the two
+	// groups apart says which panel each string belongs to.
 	'apiToken.title',
 	'apiToken.help',
 	'apiToken.placeholder',
@@ -232,6 +232,57 @@ const KEYS = [
 	'auth.logout',
 	'auth.roles.admin',
 	'auth.roles.readonly',
+
+	// Settings parity (#413): the unit-scaling control, custom links, printers and the
+	// account-management panel.
+	'settings.general.unit_scaling.label',
+	'settings.general.unit_scaling.tooltip',
+	'settings.custom_links.nav_tab',
+	'settings.custom_links.nav_description',
+	'settings.custom_links.spool_tab',
+	// Carries literal `{id}`-style braces, which message-format reads as placeholders. The
+	// component feeds the brace text back in as the inputs; see CustomLinksSettings.svelte.
+	'settings.custom_links.spool_description',
+	'settings.custom_links.name',
+	'settings.custom_links.url',
+	'settings.custom_links.url_template',
+	'settings.custom_links.url_template_help',
+	'settings.custom_links.add_title',
+	'settings.custom_links.edit_title',
+	'settings.custom_links.delete_confirm',
+	'settings.custom_links.empty',
+	'spool.custom_actions',
+	'settings.printers.tab',
+	'settings.printers.description',
+	'settings.printers.add_title',
+	'settings.printers.edit_title',
+	'settings.printers.delete_confirm',
+	'settings.printers.empty',
+	'printer.fields.name',
+	'printer.fields.comment',
+	'printer.fields.spool_count',
+	'spool.fields.printer',
+	'spool.fields.no_printer',
+	'spool.fields_help.printer',
+	'auth.users.tab',
+	'auth.users.title',
+	'auth.users.help',
+	'auth.users.role',
+	'auth.users.add',
+	'auth.users.need_fields',
+	'auth.users.created',
+	'auth.users.reset_password',
+	'auth.users.reset_password_for',
+	'auth.users.reset_password_help',
+	'auth.users.password_reset',
+	'auth.users.delete_confirm',
+	'auth.users.deleted',
+	'auth.users.empty',
+	'auth.users.role_change_title',
+	'auth.users.role_change_confirm',
+	'auth.users.role_changed',
+	'auth.users.self_warning',
+	'auth.users.you',
 ];
 
 /** Flatten nested i18next JSON to dotted keys. */

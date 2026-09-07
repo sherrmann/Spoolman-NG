@@ -178,12 +178,10 @@ already built and proven by the React client, making the work UI-only.
 | 3 | Resizable and drag-reorder column manager | `client/src/components/columnManager.tsx`, `resizableHeaderCell.tsx` | **L** |
 | 23 | Photo intake / Scan-to-Spool | `client/src/components/photoIntake.tsx` | **L** |
 | 2 | Multi-row selection with bulk edit / archive / weigh-in | `client/src/pages/spools/bulkEdit.tsx`, `bulkWeightUpdate.tsx` | M |
-| 10 | User and account management UI | `client/src/pages/settings/usersSettings.tsx` | M |
 | 11 | Swatches settings tab | `client/src/pages/settings/swatchSettings.tsx` | M |
 | 12 | Swatch 3MF download | `client/src/components/swatchDownloadModal.tsx` | M |
 | 13 | Import/Export settings tab | `client/src/pages/settings/importExportSettings.tsx` | M |
 | 14 | 3MF slice-import spool matcher | `client/src/pages/settings/threeMfImport.tsx` | M |
-| 15 | Printers settings, and the spool `printer_id` field | `client/src/pages/settings/printerSettings.tsx` | M |
 | 19 | Filament image upload and display | `client/src/components/filamentImageUpload.tsx`, `entityImage.tsx` | M |
 | 1 | Gallery / grid view for spools and filaments | `client/src/pages/spools/list.tsx:389-683` | S |
 | 4 | Table totals row | `client/src/pages/spools/list.tsx:696-721` | S |
@@ -191,9 +189,7 @@ already built and proven by the React client, making the work UI-only.
 | 6 | Filament aggregate `remaining_weight` column | `client/src/pages/filaments/list.tsx:89-115` | S |
 | 7 | Pre-print checklist modal | `client/src/pages/printing/prePrintChecklistModal.tsx` | S |
 | 8 | Weight-history chart on the spool page | `client/src/pages/spools/weightHistoryChart.tsx` | S |
-| 16 | Custom links (sidebar and per-spool actions) | `client/src/pages/settings/customLinksSettings.tsx` | S |
 | 17 | Extra fields for `location`/`printer`, the `link` type, `copy_from_filament` | `client/src/utils/queryFields.ts:6-38` | S |
-| 18 | `unit_scaling` setting | `client/src/utils/settings.ts:7-13` | S |
 | 20 | Update-available notification | `client/src/components/updateNotification.tsx` | S |
 | 21 | Error boundary that recovers from corrupt view state | `client/src/components/errorBoundary.tsx` | S |
 | 22 | Low-stock count badge in the nav | `client/src/components/layout.tsx:37-78` | S |
@@ -202,8 +198,8 @@ Several of these are blocked less by effort than by architecture: `client_v2`'s 
 fixed-field row plus a master-detail inspector (`client_v2/src/lib/components/library/SpoolRow.svelte:27-51`),
 not a configurable table. Items 1, 3 and 4 imply that redesign, not just a component.
 
-Three absences are structural rather than cosmetic: `printer` does not exist in `client_v2`'s type
-layer at all (`grep printer_id client_v2/src` → 0 hits), `client_v2` never fetches usage events
+Two absences are structural rather than cosmetic (a third, `printer`, has since been added under
+`client_v2/src/lib/ng/`): `client_v2` never fetches usage events
 (`grep usage_event client_v2/src` → 0 hits), and its `EntityType` is hardcoded to three entities
 (`client_v2/src/lib/api/fields.ts:7`) against React's five (`client/src/utils/queryFields.ts:18-24`).
 
@@ -228,7 +224,9 @@ layer at all (`grep printer_id client_v2/src` → 0 hits), `client_v2` never fet
 ### Already ported — do not re-file
 
 AI settings, natural-language search, NFC writing, free-text search, `spool_count` and `external_id`,
-extra-field display, and **filament and location label printing** — the last unified into the
+extra-field display, **user and account management, printers with the spool `printer_id` field,
+custom links (nav and per-spool actions) and the `unit_scaling` control** (#413, after this
+document's date), and **filament and location label printing** — the last unified into the
 `/labels` designer through a `LabelKind` union (`client_v2/src/lib/labels/types.ts:23`) rather than
 the separate `/filament/print` and `/location/print` pages React uses.
 
@@ -343,7 +341,7 @@ Fork edits to shared pages:
 |---|---|
 | `+layout.svelte` | Mounts `<AiChatLauncher />` (`:7,102`) |
 | `/labels` | A third label type, Location, with the `L-<id>` QR scheme (`:143-159`) |
-| `/settings` | An `AiSettings` panel, admin-only, plus the UI-client switcher (`:38-58,133-149`) |
+| `/settings` | The fork's admin-only panels (`NgSettings`: printers, custom links, accounts, AI), the unit-scaling row, plus the UI-client switcher |
 | `/dashboard` | A remaining-weight gauge along the bottom edge of every spool chip (`:790-807,1089-1101`) |
 
 Everything else the fork adds lives under `client_v2/src/lib/ng/` — 60+ files covering the AI, NFC,
