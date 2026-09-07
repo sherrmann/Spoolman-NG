@@ -40,6 +40,8 @@
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import * as m from '$lib/paraglide/messages';
+	// Spoolman NG fork addition
+	import WeightHistoryChart from '$lib/ng/components/WeightHistoryChart.svelte';
 
 	let { spool }: { spool: Spool } = $props();
 
@@ -437,6 +439,9 @@
 			</div>
 		{/if}
 	</div>
+
+	<!-- Spoolman NG fork addition -->
+	<WeightHistoryChart spoolId={spool.id} />
 
 	<div class="grid">
 		<div class="col">

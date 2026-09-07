@@ -55,6 +55,12 @@ const KEYS = [
 	'spool.spool',
 	'spool.titles.create',
 	'spool.fields.material',
+	// The measured-weight chart on the spool inspector (#104). Named one by one rather than as
+	// a `spool.weight_history.` prefix: `spool.` is a shared namespace, and the allowlist is
+	// what keeps the generated bundle to the keys this client actually renders.
+	'spool.weight_history.title',
+	'spool.weight_history.chart_label',
+	'spool.weight_history.idle_gain',
 	'filament.filament',
 	'vendor.vendor',
 	'locations.no_location',

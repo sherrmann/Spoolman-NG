@@ -277,3 +277,30 @@ export async function calibrationSessions(api: APIRequestContext, filamentId: nu
     await api.get(`/api/v1/calibration/session?filament_id=${filamentId}`)
   ).json()) as { id: number; status: string }[];
 }
+
+/**
+ * Record a gross weigh-in against a spool, the way the inspector's adjust panel does.
+ *
+ * Keep the value under the spool's full gross weight -- every filament seeded here is 1000 g of
+ * filament on a 190 g spool, so under 1190 g. Above that the backend reads the measurement as a
+ * re-registration and resets the initial weight instead of recording usage, which is a different
+ * code path and a different event.
+ */
+export async function measureSpool(api: APIRequestContext, spoolId: number, grossWeight: number) {
+  const res = await api.put(`/api/v1/spool/${spoolId}/measure`, {
+    headers: { "Content-Type": "application/json" },
+    data: JSON.stringify({ weight: grossWeight }),
+  });
+  if (!res.ok()) {
+    throw new Error(`PUT /spool/${spoolId}/measure -> ${res.status()} ${await res.text()}`);
+  }
+}
+
+/** The measure events recorded against a spool, newest first, straight from the API. */
+export async function spoolMeasurements(api: APIRequestContext, spoolId: number) {
+  const events = (await (await api.get(`/api/v1/spool/${spoolId}/events`)).json()) as {
+    event_type: string;
+    measured_weight?: number;
+  }[];
+  return events.filter((e) => e.event_type === "measure");
+}
