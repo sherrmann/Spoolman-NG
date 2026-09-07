@@ -58,6 +58,29 @@ if access_handlers:
 # Get logger instance for this module
 logger = logging.getLogger(__name__)
 
+# One filter instance, shared, so the sweep below can tell a handler it has already covered.
+_token_redaction = security.RedactQueryTokenFilter()
+
+
+def redact_tokens_in_log_output() -> None:
+    """Strip API tokens out of the query strings uvicorn logs, on every handler that emits them.
+
+    Attached to handlers rather than loggers so that uvicorn's own ``uvicorn.access`` and
+    ``uvicorn.error`` records are covered as well as Spoolman's. Idempotent, and run twice on
+    purpose: once here at import, and again from ``startup()``, because ``uvicorn.run(app)`` (the
+    ``__main__`` path below) configures logging *after* this module was imported and replaces the
+    uvicorn loggers' handlers with fresh, unfiltered ones. The ``uvicorn spoolman.main:app`` path
+    configures logging first, so there the second pass finds nothing to do.
+    See security.RedactQueryTokenFilter.
+    """
+    for name in (None, "uvicorn", "uvicorn.error", "uvicorn.access"):
+        for handler in logging.getLogger(name).handlers:
+            if _token_redaction not in handler.filters:
+                handler.addFilter(_token_redaction)
+
+
+redact_tokens_in_log_output()
+
 
 # Setup FastAPI
 app = FastAPI(
@@ -274,6 +297,10 @@ def add_file_logging() -> None:
     access_handlers = logging.getLogger("uvicorn.access").handlers
     if access_handlers:
         logging.getLogger("uvicorn.access").addHandler(file_handler)
+
+    # Covers the file handler just added, and re-covers uvicorn's handlers if uvicorn.run()
+    # replaced them after import.
+    redact_tokens_in_log_output()
 
 
 @app.on_event("startup")
