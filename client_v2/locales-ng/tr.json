@@ -498,5 +498,9 @@
 	"printing_generic_checklist_printNow": "Şimdi yazdır",
 	"settings_extra_fields_field_type_link": "Bağlantı",
 	"settings_extra_fields_params_link_template": "Bağlantı URL'si",
-	"settings_extra_fields_params_copy_from_filament": "Filamentten Kopyala"
+	"settings_extra_fields_params_copy_from_filament": "Filamentten Kopyala",
+	"update_notification_title": "Spoolman'ın yeni bir sürümü mevcut",
+	"update_notification_description": "{version} sürümü yayınlandı. Yenilikleri ve nasıl güncelleneceğini görün.",
+	"update_notification_viewRelease": "Sürüm notlarını görüntüle",
+	"update_action_close": "Kapat"
 }

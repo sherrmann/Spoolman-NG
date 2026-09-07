@@ -498,5 +498,9 @@
 	"printing_generic_checklist_printNow": "پرینت اکنون",
 	"settings_extra_fields_field_type_link": "لینک",
 	"settings_extra_fields_params_link_template": "آدرس لینک",
-	"settings_extra_fields_params_copy_from_filament": "کپی از فیلامنت"
+	"settings_extra_fields_params_copy_from_filament": "کپی از فیلامنت",
+	"update_notification_title": "ورژن جدید Spoolman موجود است",
+	"update_notification_description": "ورژن {version} منتشر شده است. تغییرات جدید و روش به‌روزرسانی را ببینید.",
+	"update_notification_viewRelease": "مشاهده یادداشت‌های نسخه",
+	"update_action_close": "بستن"
 }

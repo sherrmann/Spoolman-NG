@@ -500,5 +500,9 @@
 	"printing_generic_checklist_printNow": "Tisknout nyní",
 	"settings_extra_fields_field_type_link": "Odkaz",
 	"settings_extra_fields_params_link_template": "URL odkazu",
-	"settings_extra_fields_params_copy_from_filament": "Kopírovat z filamentu"
+	"settings_extra_fields_params_copy_from_filament": "Kopírovat z filamentu",
+	"update_notification_title": "K dispozici je nová verze Spoolman",
+	"update_notification_description": "Byla vydána verze {version}. Podívejte se, co je nového a jak aktualizovat.",
+	"update_notification_viewRelease": "Zobrazit poznámky k vydání",
+	"update_action_close": "Zavřít"
 }

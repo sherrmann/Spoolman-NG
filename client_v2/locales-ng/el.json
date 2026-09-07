@@ -498,5 +498,9 @@
 	"printing_generic_checklist_printNow": "Εκτύπωση τώρα",
 	"settings_extra_fields_field_type_link": "Σύνδεσμος",
 	"settings_extra_fields_params_link_template": "URL Συνδέσμου",
-	"settings_extra_fields_params_copy_from_filament": "Αντιγραφή από Νήμα"
+	"settings_extra_fields_params_copy_from_filament": "Αντιγραφή από Νήμα",
+	"update_notification_title": "Μια νέα έκδοση του Spoolman είναι διαθέσιμη",
+	"update_notification_description": "Η έκδοση {version} κυκλοφόρησε. Δείτε τι νέο υπάρχει και πώς να κάνετε ενημέρωση.",
+	"update_notification_viewRelease": "Προβολή σημειώσεων έκδοσης",
+	"update_action_close": "Κλείσιμο"
 }

@@ -260,6 +260,13 @@ const KEYS = [
 	'settings.extra_fields.field_type.link',
 	'settings.extra_fields.params.link_template',
 	'settings.extra_fields.params.copy_from_filament',
+	// The update-available notice (#293). `update.` also holds the React client's whole
+	// per-install-type update dialog and its self-update flow, none of which this client offers,
+	// so the four keys the card renders are named one by one rather than as a prefix.
+	'update.notification.title',
+	'update.notification.description',
+	'update.notification.viewRelease',
+	'update.action.close',
 ];
 
 /** Flatten nested i18next JSON to dotted keys. */

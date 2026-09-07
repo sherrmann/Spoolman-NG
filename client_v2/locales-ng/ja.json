@@ -496,5 +496,9 @@
 	"printing_generic_checklist_printNow": "今すぐ印刷",
 	"settings_extra_fields_field_type_link": "リンク",
 	"settings_extra_fields_params_link_template": "リンクURL",
-	"settings_extra_fields_params_copy_from_filament": "フィラメントからコピー"
+	"settings_extra_fields_params_copy_from_filament": "フィラメントからコピー",
+	"update_notification_title": "新しいバージョンのSpoolmanが利用可能です",
+	"update_notification_description": "バージョン {version} がリリースされました。新機能とアップデート方法をご確認ください。",
+	"update_notification_viewRelease": "リリースノートを見る",
+	"update_action_close": "閉じる"
 }

@@ -498,5 +498,9 @@
 	"printing_generic_checklist_printNow": "Nyomtatás most",
 	"settings_extra_fields_field_type_link": "Link",
 	"settings_extra_fields_params_link_template": "Link URL",
-	"settings_extra_fields_params_copy_from_filament": "Másolás a filamentből"
+	"settings_extra_fields_params_copy_from_filament": "Másolás a filamentből",
+	"update_notification_title": "Új Spoolman verzió érhető el",
+	"update_notification_description": "A {version} verzió megjelent. Nézd meg, mi újult meg, és hogyan frissíthetsz.",
+	"update_notification_viewRelease": "Kiadási megjegyzések megtekintése",
+	"update_action_close": "Bezárás"
 }

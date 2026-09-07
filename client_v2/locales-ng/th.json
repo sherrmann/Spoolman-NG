@@ -496,5 +496,9 @@
 	"printing_generic_checklist_printNow": "พิมพ์เลย",
 	"settings_extra_fields_field_type_link": "ลิงก์",
 	"settings_extra_fields_params_link_template": "URL ของลิงก์",
-	"settings_extra_fields_params_copy_from_filament": "คัดลอกจากเส้นพลาสติก"
+	"settings_extra_fields_params_copy_from_filament": "คัดลอกจากเส้นพลาสติก",
+	"update_notification_title": "มีเวอร์ชันใหม่ของ Spoolman พร้อมใช้งาน",
+	"update_notification_description": "เวอร์ชัน {version} เปิดตัวแล้ว ดูสิ่งใหม่และวิธีอัปเดต",
+	"update_notification_viewRelease": "ดูบันทึกการเปลี่ยนแปลง",
+	"update_action_close": "ปิด"
 }

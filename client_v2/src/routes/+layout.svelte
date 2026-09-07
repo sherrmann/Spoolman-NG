@@ -5,6 +5,7 @@
 	import AddSpoolModal from '$components/AddSpoolModal.svelte';
 	import QrScannerModal from '$components/QrScannerModal.svelte';
 	import AiChatLauncher from '$lib/ng/components/AiChatLauncher.svelte';
+	import UpdateNotice from '$lib/ng/components/UpdateNotice.svelte';
 	import LoginModal from '$lib/ng/components/LoginModal.svelte';
 	import { authState } from '$lib/ng/authState.svelte';
 	import Toaster from '$components/Toaster.svelte';
@@ -113,6 +114,11 @@
 <!-- Spoolman NG fork addition: the assistant. Renders nothing at all -- not even its button --
      unless an operator has switched the feature on; see AiChatLauncher. -->
 <AiChatLauncher />
+
+<!-- Spoolman NG fork addition: the once-per-release update notice (#293). Renders nothing until
+     /info has answered, and nothing at all unless that answer names a newer version the user has
+     not already dismissed. -->
+<UpdateNotice />
 
 <!-- Raised when a request comes back asking for credentials we do not have (#406).
      Conditionally mounted, like the fork's other dialogs, so each prompt starts

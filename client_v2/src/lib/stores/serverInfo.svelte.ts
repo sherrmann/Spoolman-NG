@@ -18,6 +18,13 @@ class ServerInfo {
 	clientActive = $state<string | null>(null);
 	clientSwitchEnabled = $state(false);
 
+	// Spoolman NG fork addition: what the backend's daily release check found (#293), read by
+	// the update notice. Defaults say "nothing to announce", which is also what a backend that
+	// never runs the check, or one whose check has not answered yet, amounts to.
+	updateAvailable = $state(false);
+	latestVersion = $state<string | null>(null);
+	releaseUrl = $state<string | null>(null);
+
 	async load() {
 		try {
 			const info = await getInfo();
@@ -25,6 +32,12 @@ class ServerInfo {
 			if (info.clients_available) this.clientsAvailable = info.clients_available;
 			if (info.client_active) this.clientActive = info.client_active;
 			this.clientSwitchEnabled = info.client_switch_enabled === true;
+			// Spoolman NG fork addition. Copied defensively, like the fields above: an older or
+			// check-less backend omits all three, and `?? null` keeps a missing one from
+			// becoming `undefined` in a field typed `string | null`.
+			this.updateAvailable = info.update_available === true;
+			this.latestVersion = info.latest_version ?? null;
+			this.releaseUrl = info.release_url ?? null;
 		} catch (e) {
 			console.error('Failed to load server info', e);
 		} finally {

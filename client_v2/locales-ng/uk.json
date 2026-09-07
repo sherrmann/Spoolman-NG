@@ -500,5 +500,9 @@
 	"printing_generic_checklist_printNow": "Друкувати зараз",
 	"settings_extra_fields_field_type_link": "Посилання",
 	"settings_extra_fields_params_link_template": "URL посилання",
-	"settings_extra_fields_params_copy_from_filament": "Копіювати з філаменту"
+	"settings_extra_fields_params_copy_from_filament": "Копіювати з філаменту",
+	"update_notification_title": "Доступна нова версія Spoolman",
+	"update_notification_description": "Випущено версію {version}. Дізнайтеся, що нового та як оновити.",
+	"update_notification_viewRelease": "Переглянути нотатки випуску",
+	"update_action_close": "Закрити"
 }

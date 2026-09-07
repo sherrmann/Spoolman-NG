@@ -498,5 +498,9 @@
 	"printing_generic_checklist_printNow": "Nu afdrukken",
 	"settings_extra_fields_field_type_link": "Link",
 	"settings_extra_fields_params_link_template": "Link-URL",
-	"settings_extra_fields_params_copy_from_filament": "Kopiëren van filament"
+	"settings_extra_fields_params_copy_from_filament": "Kopiëren van filament",
+	"update_notification_title": "Er is een nieuwe versie van Spoolman beschikbaar",
+	"update_notification_description": "Versie {version} is uitgebracht. Bekijk wat er nieuw is en hoe u kunt bijwerken.",
+	"update_notification_viewRelease": "Releasenotes bekijken",
+	"update_action_close": "Sluiten"
 }

@@ -496,5 +496,9 @@
 	"printing_generic_checklist_printNow": "立即打印",
 	"settings_extra_fields_field_type_link": "链接",
 	"settings_extra_fields_params_link_template": "链接 URL",
-	"settings_extra_fields_params_copy_from_filament": "从耗材复制"
+	"settings_extra_fields_params_copy_from_filament": "从耗材复制",
+	"update_notification_title": "Spoolman 有新版本可用",
+	"update_notification_description": "版本 {version} 已发布。查看更新内容及升级方法。",
+	"update_notification_viewRelease": "查看发行说明",
+	"update_action_close": "关闭"
 }

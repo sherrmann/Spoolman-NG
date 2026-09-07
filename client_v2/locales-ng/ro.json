@@ -500,5 +500,9 @@
 	"printing_generic_checklist_printNow": "Imprimă acum",
 	"settings_extra_fields_field_type_link": "Link",
 	"settings_extra_fields_params_link_template": "URL link",
-	"settings_extra_fields_params_copy_from_filament": "Copiază din filament"
+	"settings_extra_fields_params_copy_from_filament": "Copiază din filament",
+	"update_notification_title": "O nouă versiune de Spoolman este disponibilă",
+	"update_notification_description": "Versiunea {version} a fost lansată. Vezi ce e nou și cum să actualizezi.",
+	"update_notification_viewRelease": "Vezi notele de lansare",
+	"update_action_close": "Închide"
 }

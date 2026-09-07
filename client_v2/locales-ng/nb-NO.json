@@ -498,5 +498,9 @@
 	"printing_generic_checklist_printNow": "Skriv ut nå",
 	"settings_extra_fields_field_type_link": "Lenke",
 	"settings_extra_fields_params_link_template": "Lenke-URL",
-	"settings_extra_fields_params_copy_from_filament": "Kopier fra filament"
+	"settings_extra_fields_params_copy_from_filament": "Kopier fra filament",
+	"update_notification_title": "En ny versjon av Spoolman er tilgjengelig",
+	"update_notification_description": "Versjon {version} er utgitt. Se hva som er nytt og hvordan du oppdaterer.",
+	"update_notification_viewRelease": "Vis utgivelsesnotater",
+	"update_action_close": "Lukk"
 }

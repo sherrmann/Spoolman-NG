@@ -499,5 +499,9 @@
 	"printing_generic_checklist_printNow": "Imprimir agora",
 	"settings_extra_fields_field_type_link": "Link",
 	"settings_extra_fields_params_link_template": "URL do Link",
-	"settings_extra_fields_params_copy_from_filament": "Copiar do Filamento"
+	"settings_extra_fields_params_copy_from_filament": "Copiar do Filamento",
+	"update_notification_title": "Uma nova versão do Spoolman está disponível",
+	"update_notification_description": "A versão {version} foi lançada. Veja as novidades e como atualizar.",
+	"update_notification_viewRelease": "Ver notas da versão",
+	"update_action_close": "Fechar"
 }
