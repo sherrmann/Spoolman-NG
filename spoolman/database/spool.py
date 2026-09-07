@@ -736,6 +736,15 @@ async def use_length(
     return spool
 
 
+def _first_set_tare(*candidates: float | None) -> float | None:
+    """Pick the first tare that is actually set, in precedence order: spool, filament, vendor.
+
+    Zero counts as unset, the same reading measure() has always given a spool or filament tare of
+    0 -- nobody stores an empty spool that weighs nothing; it means "not weighed".
+    """
+    return next((tare for tare in candidates if tare), None)
+
+
 async def measure(
     db: AsyncSession,
     spool_id: int,
@@ -775,10 +784,15 @@ async def measure(
     initial_weight = spool_info[0]
     spool_weight = spool_info[2]
     if initial_weight is None or initial_weight == 0 or spool_weight is None or spool_weight == 0:
-        # Get filament weight and spool_weight
+        # Get filament weight and spool_weight, and the vendor's tare as the last resort. The
+        # vendor's empty_spool_weight is copied into a filament only when the filament is
+        # created, so a tare the vendor gained afterwards never reached filaments that already
+        # existed and this used to fall through to zero (upstream #1117). Walking up to the
+        # vendor here resolves the tare the same way the create path does.
         result = await db.execute(
-            sqlalchemy.select(models.Filament.weight, models.Filament.spool_weight)
+            sqlalchemy.select(models.Filament.weight, models.Filament.spool_weight, models.Vendor.empty_spool_weight)
             .join(models.Spool, models.Spool.filament_id == models.Filament.id)
+            .outerjoin(models.Vendor, models.Vendor.id == models.Filament.vendor_id)
             .where(models.Spool.id == spool_id),
         )
         try:
@@ -786,8 +800,7 @@ async def measure(
         except NoResultFound as exc:
             raise ItemNotFoundError("Filament not found for spool.") from exc
 
-        if spool_weight is None or spool_weight == 0:
-            spool_weight = filament_info[1]
+        spool_weight = _first_set_tare(spool_weight, filament_info[1], filament_info[2])
 
         if initial_weight is None or initial_weight == 0:
             initial_weight = filament_info[0] if filament_info[0] is not None else 0
