@@ -209,10 +209,12 @@ def test_an_empty_forwarded_host_is_ignored():
 
 
 def test_the_startup_description_names_what_is_configured(monkeypatch: pytest.MonkeyPatch):
+    """Compared whole rather than by substring: a hostname-in-string check reads as URL sanitisation to CodeQL."""
     monkeypatch.setenv("SPOOLMAN_ALLOWED_HOSTS", "spoolman.example.com")
-    description = security.describe_allowed_hosts()
-    assert "spoolman.example.com" in description
-    assert "*.local" in description
+    assert security.describe_allowed_hosts() == (
+        "IP addresses, single-label names and *.local, *.localhost, *.lan, *.home, *.home.arpa, *.internal, "
+        "plus ['spoolman.example.com']"
+    )
 
 
 def _guarded_app() -> FastAPI:
