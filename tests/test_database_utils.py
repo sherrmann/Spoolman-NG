@@ -1,8 +1,10 @@
-"""Unit tests for spoolman.database.utils's pure datetime helper.
+"""Unit tests for spoolman.database.utils's pure datetime helpers.
 
 Every datetime column in this codebase is stored naive-UTC. ``utc_timezone_naive`` is the single
 choke point that normalizes a caller-supplied datetime (naive or offset-aware) into that form
 before it hits the ORM, so it must never let the host's local timezone leak into the result.
+``utc_now`` is the matching source of "now" for every write and event timestamp (issue #385): it
+must produce the same naive-UTC form, never an offset-aware value, on any host.
 """
 
 import os
@@ -10,8 +12,14 @@ import time
 from datetime import datetime, timedelta, timezone
 
 import pytest
+import time_machine
 
-from spoolman.database.utils import utc_timezone_naive
+from spoolman.database.utils import utc_now, utc_timezone_naive
+
+# An arbitrary fixed instant. Pinning the clock gives every ``utc_now`` test an oracle that is
+# independent of the helper itself: the expected value is the instant travelled to, spelled naive.
+PINNED_INSTANT = datetime(2026, 1, 1, 12, 30, 45, tzinfo=timezone.utc)
+PINNED_NAIVE = datetime(2026, 1, 1, 12, 30, 45)  # noqa: DTZ001
 
 
 @pytest.fixture
@@ -60,3 +68,30 @@ def test_naive_result_does_not_depend_on_the_hosts_timezone(non_utc_host: None) 
     result = utc_timezone_naive(naive)
     assert result == naive
     assert result.tzinfo is None
+
+
+def test_utc_now_is_naive() -> None:
+    assert utc_now().tzinfo is None
+
+
+def test_utc_now_returns_the_current_utc_instant_as_a_naive_value() -> None:
+    with time_machine.travel(PINNED_INSTANT, tick=False):
+        assert utc_now() == PINNED_NAIVE
+
+
+def test_utc_now_does_not_depend_on_the_hosts_timezone(non_utc_host: None) -> None:  # noqa: ARG001
+    # On a UTC-5 host a naive ``datetime.now()`` would read 07:30; the helper must still say 12:30,
+    # because naive means UTC in this codebase, not local wall-clock time.
+    with time_machine.travel(PINNED_INSTANT, tick=False):
+        assert utc_now() == PINNED_NAIVE
+
+
+def test_utc_now_compares_cleanly_with_a_normalised_aware_input() -> None:
+    # The failure mode issue #385 guards against: an aware "now" and a naive value read back from
+    # the database cannot be compared. Both helpers must land on the same naive form so that
+    # ``now - stored`` never raises TypeError.
+    with time_machine.travel(PINNED_INSTANT, tick=False):
+        now = utc_now()
+    stored = utc_timezone_naive(PINNED_INSTANT.astimezone(timezone(timedelta(hours=-5))))
+    assert now == stored
+    assert now - stored == timedelta(0)
