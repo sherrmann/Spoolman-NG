@@ -525,5 +525,9 @@
 	"update_notification_title": "A new version of Spoolman is available",
 	"update_notification_description": "Version {version} has been released. See what's new and how to update.",
 	"update_notification_viewRelease": "View release notes",
-	"update_action_close": "Close"
+	"update_action_close": "Close",
+	"errorBoundary_title": "Something went wrong",
+	"errorBoundary_subTitle": "This page failed to render. If it started after changing or sharing view settings, resetting them usually fixes it.",
+	"errorBoundary_reset": "Reset view settings & reload",
+	"errorBoundary_home": "Go to home page"
 }

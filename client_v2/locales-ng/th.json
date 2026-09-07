@@ -500,5 +500,9 @@
 	"update_notification_title": "มีเวอร์ชันใหม่ของ Spoolman พร้อมใช้งาน",
 	"update_notification_description": "เวอร์ชัน {version} เปิดตัวแล้ว ดูสิ่งใหม่และวิธีอัปเดต",
 	"update_notification_viewRelease": "ดูบันทึกการเปลี่ยนแปลง",
-	"update_action_close": "ปิด"
+	"update_action_close": "ปิด",
+	"errorBoundary_title": "เกิดข้อผิดพลาดบางอย่าง",
+	"errorBoundary_subTitle": "ไม่สามารถแสดงผลหน้านี้ได้ หากปัญหาเกิดขึ้นหลังจากเปลี่ยนหรือแชร์การตั้งค่ามุมมอง การรีเซ็ตการตั้งค่ามักจะแก้ปัญหาได้",
+	"errorBoundary_reset": "รีเซ็ตการตั้งค่ามุมมองและโหลดใหม่",
+	"errorBoundary_home": "ไปที่หน้าแรก"
 }

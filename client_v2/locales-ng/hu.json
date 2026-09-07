@@ -502,5 +502,9 @@
 	"update_notification_title": "Új Spoolman verzió érhető el",
 	"update_notification_description": "A {version} verzió megjelent. Nézd meg, mi újult meg, és hogyan frissíthetsz.",
 	"update_notification_viewRelease": "Kiadási megjegyzések megtekintése",
-	"update_action_close": "Bezárás"
+	"update_action_close": "Bezárás",
+	"errorBoundary_title": "Valami hiba történt",
+	"errorBoundary_subTitle": "Ezt az oldalt nem sikerült megjeleníteni. Ha ez a nézetbeállítások módosítása vagy megosztása után jelentkezett, a beállítások visszaállítása általában megoldja.",
+	"errorBoundary_reset": "Nézetbeállítások visszaállítása és újratöltés",
+	"errorBoundary_home": "Vissza a kezdőlapra"
 }

@@ -500,5 +500,9 @@
 	"update_notification_title": "新しいバージョンのSpoolmanが利用可能です",
 	"update_notification_description": "バージョン {version} がリリースされました。新機能とアップデート方法をご確認ください。",
 	"update_notification_viewRelease": "リリースノートを見る",
-	"update_action_close": "閉じる"
+	"update_action_close": "閉じる",
+	"errorBoundary_title": "問題が発生しました",
+	"errorBoundary_subTitle": "このページの表示に失敗しました。表示設定の変更や共有の後に発生した場合は、設定をリセットすると解決することがほとんどです。",
+	"errorBoundary_reset": "表示設定をリセットして再読込",
+	"errorBoundary_home": "ホームページへ移動"
 }

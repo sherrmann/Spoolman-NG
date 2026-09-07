@@ -502,5 +502,9 @@
 	"update_notification_title": "Er is een nieuwe versie van Spoolman beschikbaar",
 	"update_notification_description": "Versie {version} is uitgebracht. Bekijk wat er nieuw is en hoe u kunt bijwerken.",
 	"update_notification_viewRelease": "Releasenotes bekijken",
-	"update_action_close": "Sluiten"
+	"update_action_close": "Sluiten",
+	"errorBoundary_title": "Er is iets misgegaan",
+	"errorBoundary_subTitle": "Deze pagina kon niet worden weergegeven. Als dit begon na het wijzigen of delen van weergave-instellingen, lost het resetten daarvan het meestal op.",
+	"errorBoundary_reset": "Weergave-instellingen resetten & herladen",
+	"errorBoundary_home": "Ga naar de startpagina"
 }

@@ -500,5 +500,9 @@
 	"update_notification_title": "Spoolman 有新版本可用",
 	"update_notification_description": "版本 {version} 已发布。查看更新内容及升级方法。",
 	"update_notification_viewRelease": "查看发行说明",
-	"update_action_close": "关闭"
+	"update_action_close": "关闭",
+	"errorBoundary_title": "出错了",
+	"errorBoundary_subTitle": "此页面渲染失败。如果是在更改或分享视图设置后开始出现的，重置视图设置通常可以解决。",
+	"errorBoundary_reset": "重置视图设置并重新加载",
+	"errorBoundary_home": "返回主页"
 }

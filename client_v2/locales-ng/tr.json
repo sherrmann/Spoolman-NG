@@ -502,5 +502,9 @@
 	"update_notification_title": "Spoolman'ın yeni bir sürümü mevcut",
 	"update_notification_description": "{version} sürümü yayınlandı. Yenilikleri ve nasıl güncelleneceğini görün.",
 	"update_notification_viewRelease": "Sürüm notlarını görüntüle",
-	"update_action_close": "Kapat"
+	"update_action_close": "Kapat",
+	"errorBoundary_title": "Bir şeyler ters gitti",
+	"errorBoundary_subTitle": "Bu sayfa görüntülenemedi. Sorun, görünüm ayarlarını değiştirdikten veya paylaştıktan sonra başladıysa, ayarları sıfırlamak genellikle sorunu çözer.",
+	"errorBoundary_reset": "Görünüm ayarlarını sıfırla ve yeniden yükle",
+	"errorBoundary_home": "Ana sayfaya git"
 }

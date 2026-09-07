@@ -502,5 +502,9 @@
 	"update_notification_title": "Μια νέα έκδοση του Spoolman είναι διαθέσιμη",
 	"update_notification_description": "Η έκδοση {version} κυκλοφόρησε. Δείτε τι νέο υπάρχει και πώς να κάνετε ενημέρωση.",
 	"update_notification_viewRelease": "Προβολή σημειώσεων έκδοσης",
-	"update_action_close": "Κλείσιμο"
+	"update_action_close": "Κλείσιμο",
+	"errorBoundary_title": "Κάτι πήγε στραβά",
+	"errorBoundary_subTitle": "Αυτή η σελίδα δεν μπόρεσε να εμφανιστεί. Εάν αυτό ξεκίνησε μετά από αλλαγή ή κοινοποίηση ρυθμίσεων προβολής, η επαναφορά τους συνήθως το διορθώνει.",
+	"errorBoundary_reset": "Επαναφορά ρυθμίσεων προβολής & επαναφόρτωση",
+	"errorBoundary_home": "Μετάβαση στην αρχική σελίδα"
 }

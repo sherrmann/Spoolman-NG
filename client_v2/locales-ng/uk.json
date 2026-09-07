@@ -504,5 +504,9 @@
 	"update_notification_title": "Доступна нова версія Spoolman",
 	"update_notification_description": "Випущено версію {version}. Дізнайтеся, що нового та як оновити.",
 	"update_notification_viewRelease": "Переглянути нотатки випуску",
-	"update_action_close": "Закрити"
+	"update_action_close": "Закрити",
+	"errorBoundary_title": "Щось пішло не так",
+	"errorBoundary_subTitle": "Не вдалося відобразити цю сторінку. Якщо це почалося після зміни налаштувань вигляду або обміну ними, зазвичай допомагає їх скидання.",
+	"errorBoundary_reset": "Скинути налаштування вигляду та перезавантажити",
+	"errorBoundary_home": "Перейти на домашню сторінку"
 }

@@ -504,5 +504,9 @@
 	"update_notification_title": "Yra nauja Spoolman versija",
 	"update_notification_description": "Išleista versija {version}. Sužinokite, kas naujo ir kaip atnaujinti.",
 	"update_notification_viewRelease": "Peržiūrėti leidimo pastabas",
-	"update_action_close": "Uždaryti"
+	"update_action_close": "Uždaryti",
+	"errorBoundary_title": "Kažkas nutiko ne taip",
+	"errorBoundary_subTitle": "Nepavyko atvaizduoti šio puslapio. Jei tai prasidėjo pakeitus rodinio nustatymus ar jais pasidalijus, jų atstatymas dažniausiai padeda.",
+	"errorBoundary_reset": "Atstatyti rodinio nustatymus ir perkrauti",
+	"errorBoundary_home": "Eiti į pradžios puslapį"
 }

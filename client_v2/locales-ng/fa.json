@@ -502,5 +502,9 @@
 	"update_notification_title": "ورژن جدید Spoolman موجود است",
 	"update_notification_description": "ورژن {version} منتشر شده است. تغییرات جدید و روش به‌روزرسانی را ببینید.",
 	"update_notification_viewRelease": "مشاهده یادداشت‌های نسخه",
-	"update_action_close": "بستن"
+	"update_action_close": "بستن",
+	"errorBoundary_title": "مشکلی پیش آمد",
+	"errorBoundary_subTitle": "نمایش این صفحه با خطا مواجه شد. اگر این مشکل پس از تغییر یا اشتراک‌گذاری تنظیمات نما شروع شده باشد، بازنشانی آن‌ها معمولاً مشکل را برطرف می‌کند.",
+	"errorBoundary_reset": "بازنشانی تنظیمات نما و بارگذاری مجدد",
+	"errorBoundary_home": "رفتن به صفحه اصلی"
 }

@@ -267,6 +267,13 @@ const KEYS = [
 	'update.notification.description',
 	'update.notification.viewRelease',
 	'update.action.close',
+	// The error page and the render-time boundary (#417). `errorBoundary.` holds exactly these
+	// four in the React catalogue, but they are still named one by one so a key added there later
+	// does not silently become a string this client compiles.
+	'errorBoundary.title',
+	'errorBoundary.subTitle',
+	'errorBoundary.reset',
+	'errorBoundary.home',
 ];
 
 /** Flatten nested i18next JSON to dotted keys. */

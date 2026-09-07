@@ -504,5 +504,9 @@
 	"update_notification_title": "O nouă versiune de Spoolman este disponibilă",
 	"update_notification_description": "Versiunea {version} a fost lansată. Vezi ce e nou și cum să actualizezi.",
 	"update_notification_viewRelease": "Vezi notele de lansare",
-	"update_action_close": "Închide"
+	"update_action_close": "Închide",
+	"errorBoundary_title": "Ceva nu a mers bine",
+	"errorBoundary_subTitle": "Această pagină nu a putut fi afișată. Dacă problema a apărut după modificarea sau partajarea setărilor de vizualizare, resetarea lor o rezolvă de obicei.",
+	"errorBoundary_reset": "Resetează setările de vizualizare și reîncarcă",
+	"errorBoundary_home": "Mergi la pagina principală"
 }

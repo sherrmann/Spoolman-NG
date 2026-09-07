@@ -500,5 +500,9 @@
 	"update_notification_title": "有新版本的 Spoolman 可供使用",
 	"update_notification_description": "版本 {version} 已發布。查看新功能與更新方法。",
 	"update_notification_viewRelease": "檢視版本說明",
-	"update_action_close": "關閉"
+	"update_action_close": "關閉",
+	"errorBoundary_title": "發生錯誤",
+	"errorBoundary_subTitle": "此頁面無法正常顯示。如果是在變更或分享檢視設定後才發生，重設檢視設定通常可以解決。",
+	"errorBoundary_reset": "重設檢視設定並重新載入",
+	"errorBoundary_home": "回到主頁"
 }

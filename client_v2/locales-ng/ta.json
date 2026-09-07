@@ -502,5 +502,9 @@
 	"update_notification_title": "Spoolman இன் புதிய பதிப்பு கிடைக்கிறது",
 	"update_notification_description": "பதிப்பு {version} வெளியிடப்பட்டுள்ளது. புதியவை என்ன, எப்படிப் புதுப்பிப்பது என்பதைப் பார்க்கவும்.",
 	"update_notification_viewRelease": "வெளியீட்டுக் குறிப்புகளைக் காண்க",
-	"update_action_close": "மூடு"
+	"update_action_close": "மூடு",
+	"errorBoundary_title": "ஏதோ தவறு நடந்துவிட்டது",
+	"errorBoundary_subTitle": "இந்தப் பக்கத்தைக் காட்ட முடியவில்லை. காட்சி அமைப்புகளை மாற்றிய அல்லது பகிர்ந்த பிறகு இது தொடங்கியிருந்தால், அவற்றை மீட்டமைப்பது பொதுவாக இதைச் சரிசெய்யும்.",
+	"errorBoundary_reset": "காட்சி அமைப்புகளை மீட்டமைத்து மீண்டும் ஏற்று",
+	"errorBoundary_home": "முகப்புப் பக்கத்திற்குச் செல்"
 }

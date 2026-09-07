@@ -502,5 +502,9 @@
 	"update_notification_title": "En ny versjon av Spoolman er tilgjengelig",
 	"update_notification_description": "Versjon {version} er utgitt. Se hva som er nytt og hvordan du oppdaterer.",
 	"update_notification_viewRelease": "Vis utgivelsesnotater",
-	"update_action_close": "Lukk"
+	"update_action_close": "Lukk",
+	"errorBoundary_title": "Noe gikk galt",
+	"errorBoundary_subTitle": "Denne siden kunne ikke vises. Hvis det begynte etter at du endret eller delte visningsinnstillinger, hjelper det som regel å nullstille dem.",
+	"errorBoundary_reset": "Nullstill visningsinnstillinger og last på nytt",
+	"errorBoundary_home": "Gå til startsiden"
 }

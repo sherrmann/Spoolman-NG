@@ -504,5 +504,9 @@
 	"update_notification_title": "È disponibile una nuova versione di Spoolman",
 	"update_notification_description": "È stata rilasciata la versione {version}. Scopri le novità e come aggiornare.",
 	"update_notification_viewRelease": "Visualizza note di rilascio",
-	"update_action_close": "Chiudi"
+	"update_action_close": "Chiudi",
+	"errorBoundary_title": "Qualcosa è andato storto",
+	"errorBoundary_subTitle": "Impossibile visualizzare questa pagina. Se il problema è comparso dopo aver modificato o condiviso le impostazioni di visualizzazione, reimpostarle di solito lo risolve.",
+	"errorBoundary_reset": "Reimposta visualizzazione e ricarica",
+	"errorBoundary_home": "Vai alla pagina iniziale"
 }
