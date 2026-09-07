@@ -35,6 +35,7 @@ import httpx
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from spoolman.database import models
+from spoolman.database.utils import utc_now
 from spoolman.settings import SETTINGS
 
 logger = logging.getLogger(__name__)
@@ -217,7 +218,7 @@ async def _set_stored_key(db: AsyncSession, db_key: str, value: str | None, labe
             models.Setting(
                 key=db_key,
                 value=value,
-                last_updated=datetime.utcnow().replace(microsecond=0),
+                last_updated=utc_now().replace(microsecond=0),
             ),
         )
     else:

@@ -33,6 +33,7 @@ from spoolman.database.utils import (
     order_by_clauses,
     order_by_expression,
     parse_nested_field,
+    utc_now,
     utc_timezone_naive,
 )
 from spoolman.exceptions import ItemCreateError, ItemNotFoundError, SpoolMeasureError
@@ -167,7 +168,7 @@ async def build(
 
     spool = models.Spool(
         filament=filament_item,
-        registered=datetime.utcnow().replace(microsecond=0),
+        registered=utc_now().replace(microsecond=0),
         initial_weight=initial_weight,
         spool_weight=spool_weight,
         used_weight=used_weight,
@@ -571,7 +572,7 @@ def _record_usage_event(
     db.add(
         models.SpoolUsageEvent(
             spool_id=spool_id,
-            time=datetime.utcnow().replace(microsecond=0),
+            time=utc_now().replace(microsecond=0),
             event_type=event_type,
             delta=delta,
             measured_weight=measured_weight,
@@ -659,8 +660,8 @@ async def use_weight(
     spool = await get_by_id(db, spool_id)
 
     if spool.first_used is None:
-        spool.first_used = datetime.utcnow().replace(microsecond=0)
-    spool.last_used = datetime.utcnow().replace(microsecond=0)
+        spool.first_used = utc_now().replace(microsecond=0)
+    spool.last_used = utc_now().replace(microsecond=0)
 
     _record_usage_event(
         db,
@@ -727,13 +728,28 @@ async def use_length(
     spool = await get_by_id(db, spool_id)
 
     if spool.first_used is None:
-        spool.first_used = datetime.utcnow().replace(microsecond=0)
-    spool.last_used = datetime.utcnow().replace(microsecond=0)
+        spool.first_used = utc_now().replace(microsecond=0)
+    spool.last_used = utc_now().replace(microsecond=0)
 
     _record_usage_event(db, spool_id, "use", weight_delta, comment=comment, idempotency_key=idempotency_key)
     await db.commit()
     await spool_changed(spool, EventType.UPDATED, {"weight_delta": weight_delta})
     return spool
+
+
+def _resolve_tare(spool_tare: float | None, filament_tare: float | None, vendor_tare: float | None) -> float | None:
+    """Pick the tare measure() subtracts: the spool's, else the filament's, else the vendor's.
+
+    The spool's tare counts as unset when it is 0 as well as None, which is how measure() has
+    always read it. The filament's is taken as stored, 0 included -- a refill filament is created
+    with an explicit 0 and must not inherit its vendor's spool -- and only a filament with no tare
+    at all walks up to the vendor, which is the same rule filament creation uses to snapshot it.
+    """
+    if spool_tare:
+        return spool_tare
+    if filament_tare is not None:
+        return filament_tare
+    return vendor_tare
 
 
 async def measure(
@@ -775,10 +791,15 @@ async def measure(
     initial_weight = spool_info[0]
     spool_weight = spool_info[2]
     if initial_weight is None or initial_weight == 0 or spool_weight is None or spool_weight == 0:
-        # Get filament weight and spool_weight
+        # Get filament weight and spool_weight, and the vendor's tare as the last resort. The
+        # vendor's empty_spool_weight is copied into a filament only when the filament is
+        # created, so a tare the vendor gained afterwards never reached filaments that already
+        # existed and this used to fall through to zero (upstream #1117). Walking up to the
+        # vendor here resolves the tare the same way the create path does.
         result = await db.execute(
-            sqlalchemy.select(models.Filament.weight, models.Filament.spool_weight)
+            sqlalchemy.select(models.Filament.weight, models.Filament.spool_weight, models.Vendor.empty_spool_weight)
             .join(models.Spool, models.Spool.filament_id == models.Filament.id)
+            .outerjoin(models.Vendor, models.Vendor.id == models.Filament.vendor_id)
             .where(models.Spool.id == spool_id),
         )
         try:
@@ -786,8 +807,7 @@ async def measure(
         except NoResultFound as exc:
             raise ItemNotFoundError("Filament not found for spool.") from exc
 
-        if spool_weight is None or spool_weight == 0:
-            spool_weight = filament_info[1]
+        spool_weight = _resolve_tare(spool_weight, filament_info[1], filament_info[2])
 
         if initial_weight is None or initial_weight == 0:
             initial_weight = filament_info[0] if filament_info[0] is not None else 0
@@ -861,7 +881,7 @@ async def spool_changed(spool: models.Spool, typ: EventType, delta: dict | None 
         spool = Spool.from_db(spool)
         await websocket_manager.send(
             ("spool", str(spool.id)),
-            SpoolEvent(type=typ, resource="spool", date=datetime.utcnow(), payload=spool, payload_extras=delta),
+            SpoolEvent(type=typ, resource="spool", date=utc_now(), payload=spool, payload_extras=delta),
         )
     except Exception:
         # Important to have a catch-all here since we don't want to stop the call if this fails.
