@@ -488,5 +488,13 @@
 	"auth_login_password": "Contraseña",
 	"auth_logout": "Cerrar sesión",
 	"auth_roles_admin": "Administrador",
-	"auth_roles_readonly": "Solo lectura"
+	"auth_roles_readonly": "Solo lectura",
+	"printing_generic_checklist_title": "Antes de imprimir",
+	"printing_generic_checklist_intro": "Los diálogos de impresión del navegador suelen reescalar las páginas, lo que rompe la geometría de la etiqueta. En el diálogo de impresión que se abrirá a continuación, comprueba:",
+	"printing_generic_checklist_scale": "La escala está al 100 % / «Tamaño real» — nunca «Ajustar a la página».",
+	"printing_generic_checklist_paperSize": "El tamaño de papel seleccionado es exactamente {width} × {height} mm.",
+	"printing_generic_checklist_margins": "Los márgenes están configurados como «Ninguno» (Spoolman ya gestiona los márgenes).",
+	"printing_generic_checklist_headersFooters": "Los encabezados y pies de página están desactivados.",
+	"printing_generic_checklist_dontShowAgain": "No volver a mostrar esto",
+	"printing_generic_checklist_printNow": "Imprimir ahora"
 }

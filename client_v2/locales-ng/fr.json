@@ -488,5 +488,13 @@
 	"auth_login_password": "Mot de passe",
 	"auth_logout": "Se déconnecter",
 	"auth_roles_admin": "Administrateur",
-	"auth_roles_readonly": "Lecture seule"
+	"auth_roles_readonly": "Lecture seule",
+	"printing_generic_checklist_title": "Avant d'imprimer",
+	"printing_generic_checklist_intro": "Les boîtes de dialogue d'impression des navigateurs redimensionnent souvent les pages, ce qui fausse la géométrie des étiquettes. Dans la boîte de dialogue d'impression qui va s'ouvrir, vérifiez :",
+	"printing_generic_checklist_scale": "L'échelle est à 100 % / « Taille réelle » — jamais « Ajuster à la page ».",
+	"printing_generic_checklist_paperSize": "Le format de papier sélectionné est exactement {width} × {height} mm.",
+	"printing_generic_checklist_margins": "Les marges sont réglées sur « Aucune » (Spoolman gère déjà les marges).",
+	"printing_generic_checklist_headersFooters": "Les en-têtes et pieds de page sont désactivés.",
+	"printing_generic_checklist_dontShowAgain": "Ne plus afficher ce message",
+	"printing_generic_checklist_printNow": "Imprimer maintenant"
 }

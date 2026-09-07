@@ -489,5 +489,13 @@
 	"auth_login_password": "Parolă",
 	"auth_logout": "Deconectare",
 	"auth_roles_admin": "Administrator",
-	"auth_roles_readonly": "Doar citire"
+	"auth_roles_readonly": "Doar citire",
+	"printing_generic_checklist_title": "Înainte de a imprima",
+	"printing_generic_checklist_intro": "Ferestrele de imprimare ale browserului redimensionează adesea paginile, ceea ce strică geometria etichetei. În fereastra de imprimare care se deschide în continuare, verifică:",
+	"printing_generic_checklist_scale": "Scara este 100% / „Dimensiune reală” — niciodată „Adaptează la pagină”.",
+	"printing_generic_checklist_paperSize": "Dimensiunea hârtiei selectate este exact {width} × {height} mm.",
+	"printing_generic_checklist_margins": "Marginile sunt setate la „Niciuna” (Spoolman se ocupă deja de margini).",
+	"printing_generic_checklist_headersFooters": "Antetele și subsolurile sunt dezactivate.",
+	"printing_generic_checklist_dontShowAgain": "Nu mai arăta asta",
+	"printing_generic_checklist_printNow": "Imprimă acum"
 }

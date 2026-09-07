@@ -487,5 +487,13 @@
 	"auth_login_password": "Passwort",
 	"auth_logout": "Abmelden",
 	"auth_roles_admin": "Administrator",
-	"auth_roles_readonly": "Nur Lesen"
+	"auth_roles_readonly": "Nur Lesen",
+	"printing_generic_checklist_title": "Vor dem Drucken",
+	"printing_generic_checklist_intro": "Druckdialoge von Browsern skalieren Seiten oft neu, was die Labelgeometrie zerstört. Prüfe im als Nächstes geöffneten Druckdialog:",
+	"printing_generic_checklist_scale": "Die Skalierung ist auf 100% / \"Originalgröße\" eingestellt — niemals \"An Seite anpassen\".",
+	"printing_generic_checklist_paperSize": "Die gewählte Papiergröße ist exakt {width} × {height} mm.",
+	"printing_generic_checklist_margins": "Ränder sind auf \"Keine\" eingestellt (Spoolman kümmert sich bereits um die Ränder).",
+	"printing_generic_checklist_headersFooters": "Kopf- und Fußzeilen sind deaktiviert.",
+	"printing_generic_checklist_dontShowAgain": "Nicht erneut anzeigen",
+	"printing_generic_checklist_printNow": "Jetzt drucken"
 }

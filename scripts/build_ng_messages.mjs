@@ -238,6 +238,20 @@ const KEYS = [
 	'auth.logout',
 	'auth.roles.admin',
 	'auth.roles.readonly',
+	// The pre-print checklist shown between the label print button and the browser's own
+	// print dialog (#296). `printing.generic.` also holds the React printing dialog's own
+	// ~40 keys, none of which this client renders, so the checklist's eight are named one by
+	// one rather than taken as a prefix. `pageSizeMode{Hint,Apply}` are deliberately absent:
+	// this client has no page-size mode to switch, so those two strings have nothing to say
+	// here.
+	'printing.generic.checklist.title',
+	'printing.generic.checklist.intro',
+	'printing.generic.checklist.scale',
+	'printing.generic.checklist.paperSize',
+	'printing.generic.checklist.margins',
+	'printing.generic.checklist.headersFooters',
+	'printing.generic.checklist.dontShowAgain',
+	'printing.generic.checklist.printNow',
 ];
 
 /** Flatten nested i18next JSON to dotted keys. */

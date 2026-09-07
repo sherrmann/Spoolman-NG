@@ -487,5 +487,13 @@
 	"auth_login_password": "Wachtwoord",
 	"auth_logout": "Uitloggen",
 	"auth_roles_admin": "Beheerder",
-	"auth_roles_readonly": "Alleen-lezen"
+	"auth_roles_readonly": "Alleen-lezen",
+	"printing_generic_checklist_title": "Voor het afdrukken",
+	"printing_generic_checklist_intro": "Afdrukvensters van de browser schalen pagina's vaak opnieuw, wat de labelgeometrie verstoort. Controleer in het afdrukvenster dat hierna opent:",
+	"printing_generic_checklist_scale": "Schaal staat op 100% / “Werkelijke grootte” — nooit “Aanpassen aan pagina”.",
+	"printing_generic_checklist_paperSize": "Het geselecteerde papierformaat is precies {width} × {height} mm.",
+	"printing_generic_checklist_margins": "Marges staan op “Geen” (Spoolman verwerkt de marges al).",
+	"printing_generic_checklist_headersFooters": "Kopteksten en voetteksten staan uit.",
+	"printing_generic_checklist_dontShowAgain": "Dit niet meer tonen",
+	"printing_generic_checklist_printNow": "Nu afdrukken"
 }

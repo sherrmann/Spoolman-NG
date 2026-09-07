@@ -487,5 +487,13 @@
 	"auth_login_password": "Adgangskode",
 	"auth_logout": "Log ud",
 	"auth_roles_admin": "Administrator",
-	"auth_roles_readonly": "Skrivebeskyttet"
+	"auth_roles_readonly": "Skrivebeskyttet",
+	"printing_generic_checklist_title": "Før du printer",
+	"printing_generic_checklist_intro": "Browserens udskriftsdialog skalerer ofte siderne om, hvilket ødelægger etikettens geometri. Tjek følgende i den udskriftsdialog, der åbner herefter:",
+	"printing_generic_checklist_scale": "Skalering er 100 % / “Faktisk størrelse” — aldrig “Tilpas til side”.",
+	"printing_generic_checklist_paperSize": "Den valgte papirstørrelse er præcis {width} × {height} mm.",
+	"printing_generic_checklist_margins": "Margener er sat til “Ingen” (Spoolman håndterer allerede margener).",
+	"printing_generic_checklist_headersFooters": "Sidehoveder og sidefødder er slået fra.",
+	"printing_generic_checklist_dontShowAgain": "Vis ikke dette igen",
+	"printing_generic_checklist_printNow": "Print nu"
 }

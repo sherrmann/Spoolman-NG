@@ -489,5 +489,13 @@
 	"auth_login_password": "Slaptažodis",
 	"auth_logout": "Atsijungti",
 	"auth_roles_admin": "Administratorius",
-	"auth_roles_readonly": "Tik skaitymo"
+	"auth_roles_readonly": "Tik skaitymo",
+	"printing_generic_checklist_title": "Prieš spausdinant",
+	"printing_generic_checklist_intro": "Naršyklės spausdinimo langai dažnai pakeičia puslapio mastelį, o tai sugadina etiketės geometriją. Kitame atsidariusiame spausdinimo lange patikrinkite:",
+	"printing_generic_checklist_scale": "Mastelis yra 100 % / „Tikras dydis“ — niekada „Talpinti į puslapį“.",
+	"printing_generic_checklist_paperSize": "Pasirinktas popieriaus dydis yra tiksliai {width} × {height} mm.",
+	"printing_generic_checklist_margins": "Paraštės nustatytos į „Jokios“ (Spoolman jau pats tvarko paraštes).",
+	"printing_generic_checklist_headersFooters": "Antraštės ir poraštės išjungtos.",
+	"printing_generic_checklist_dontShowAgain": "Daugiau nerodyti",
+	"printing_generic_checklist_printNow": "Spausdinti dabar"
 }

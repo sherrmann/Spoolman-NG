@@ -489,5 +489,13 @@
 	"auth_login_password": "Heslo",
 	"auth_logout": "Odhlásit se",
 	"auth_roles_admin": "Administrátor",
-	"auth_roles_readonly": "Pouze pro čtení"
+	"auth_roles_readonly": "Pouze pro čtení",
+	"printing_generic_checklist_title": "Před tiskem",
+	"printing_generic_checklist_intro": "Tiskové dialogy prohlížečů často stránky přeškálují, což naruší geometrii štítků. V dialogu tisku, který se nyní otevře, zkontrolujte:",
+	"printing_generic_checklist_scale": "Měřítko je 100 % / „Skutečná velikost“ — nikdy „Přizpůsobit stránce“.",
+	"printing_generic_checklist_paperSize": "Vybraná velikost papíru je přesně {width} × {height} mm.",
+	"printing_generic_checklist_margins": "Okraje jsou nastaveny na „Žádné“ (Spoolman okraje řeší už sám).",
+	"printing_generic_checklist_headersFooters": "Záhlaví a zápatí jsou vypnuta.",
+	"printing_generic_checklist_dontShowAgain": "Znovu nezobrazovat",
+	"printing_generic_checklist_printNow": "Tisknout nyní"
 }

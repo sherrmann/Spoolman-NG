@@ -487,5 +487,13 @@
 	"auth_login_password": "Şifre",
 	"auth_logout": "Çıkış yap",
 	"auth_roles_admin": "Yönetici",
-	"auth_roles_readonly": "Salt okunur"
+	"auth_roles_readonly": "Salt okunur",
+	"printing_generic_checklist_title": "Yazdırmadan önce",
+	"printing_generic_checklist_intro": "Tarayıcı yazdırma pencereleri genellikle sayfaları yeniden ölçeklendirir, bu da etiket geometrisini bozar. Bir sonra açılan yazdırma penceresinde şunları kontrol edin:",
+	"printing_generic_checklist_scale": "Ölçek %100 / “Gerçek boyut” olarak ayarlı — asla “Sayfaya sığdır” değil.",
+	"printing_generic_checklist_paperSize": "Seçilen kağıt boyutu tam olarak {width} × {height} mm.",
+	"printing_generic_checklist_margins": "Kenar boşlukları “Yok” olarak ayarlı (Spoolman kenar boşluklarını zaten kendisi ayarlıyor).",
+	"printing_generic_checklist_headersFooters": "Üst bilgi ve alt bilgiler kapalı.",
+	"printing_generic_checklist_dontShowAgain": "Bunu bir daha gösterme",
+	"printing_generic_checklist_printNow": "Şimdi yazdır"
 }

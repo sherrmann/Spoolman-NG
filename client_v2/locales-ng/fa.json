@@ -487,5 +487,13 @@
 	"auth_login_password": "رمز عبور",
 	"auth_logout": "خروج",
 	"auth_roles_admin": "مدیر",
-	"auth_roles_readonly": "فقط خواندنی"
+	"auth_roles_readonly": "فقط خواندنی",
+	"printing_generic_checklist_title": "قبل از پرینت",
+	"printing_generic_checklist_intro": "پنجره‌های پرینت مرورگر اغلب صفحه را دوباره مقیاس‌بندی می‌کنند که هندسه لیبل را به‌هم می‌ریزد. در پنجره پرینتی که در ادامه باز می‌شود، این موارد را بررسی کنید:",
+	"printing_generic_checklist_scale": "مقیاس 100% / «اندازه واقعی» باشد — هرگز «متناسب با صفحه» را انتخاب نکنید.",
+	"printing_generic_checklist_paperSize": "اندازه کاغذ انتخاب‌شده دقیقاً {width} × {height} میلی‌متر است.",
+	"printing_generic_checklist_margins": "حاشیه‌ها روی «هیچ کدام» تنظیم شده باشد (Spoolman از قبل حاشیه‌ها را مدیریت می‌کند).",
+	"printing_generic_checklist_headersFooters": "سربرگ‌ها و پابرگ‌ها خاموش باشند.",
+	"printing_generic_checklist_dontShowAgain": "دیگر نمایش ندهید",
+	"printing_generic_checklist_printNow": "پرینت اکنون"
 }

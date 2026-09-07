@@ -485,5 +485,13 @@
 	"auth_login_password": "パスワード",
 	"auth_logout": "ログアウト",
 	"auth_roles_admin": "管理者",
-	"auth_roles_readonly": "読み取り専用"
+	"auth_roles_readonly": "読み取り専用",
+	"printing_generic_checklist_title": "印刷する前に",
+	"printing_generic_checklist_intro": "ブラウザの印刷ダイアログはページを再スケーリングすることが多く、ラベルの寸法が崩れる原因になります。次に開く印刷ダイアログで、以下を確認してください:",
+	"printing_generic_checklist_scale": "倍率が100%／「実際のサイズ」になっていること — 「用紙に合わせる」は選ばないでください。",
+	"printing_generic_checklist_paperSize": "選択した用紙サイズが正確に {width} × {height} mm であること。",
+	"printing_generic_checklist_margins": "余白が「なし」に設定されていること（余白はSpoolman側ですでに調整済みです）。",
+	"printing_generic_checklist_headersFooters": "ヘッダーとフッターがオフになっていること。",
+	"printing_generic_checklist_dontShowAgain": "今後表示しない",
+	"printing_generic_checklist_printNow": "今すぐ印刷"
 }

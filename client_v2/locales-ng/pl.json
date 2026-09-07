@@ -489,5 +489,13 @@
 	"auth_login_password": "Hasło",
 	"auth_logout": "Wyloguj",
 	"auth_roles_admin": "Administrator",
-	"auth_roles_readonly": "Tylko do odczytu"
+	"auth_roles_readonly": "Tylko do odczytu",
+	"printing_generic_checklist_title": "Przed wydrukiem",
+	"printing_generic_checklist_intro": "Okna dialogowe drukowania przeglądarki często przeskalowują strony, co psuje geometrię etykiety. W oknie dialogowym drukowania, które zaraz się otworzy, sprawdź:",
+	"printing_generic_checklist_scale": "Skala wynosi 100% / „Rozmiar rzeczywisty” — nigdy „Dopasuj do strony”.",
+	"printing_generic_checklist_paperSize": "Wybrany rozmiar papieru wynosi dokładnie {width} × {height} mm.",
+	"printing_generic_checklist_margins": "Marginesy są ustawione na „Brak” (Spoolman już obsługuje marginesy).",
+	"printing_generic_checklist_headersFooters": "Nagłówki i stopki są wyłączone.",
+	"printing_generic_checklist_dontShowAgain": "Nie pokazuj tego ponownie",
+	"printing_generic_checklist_printNow": "Drukuj teraz"
 }

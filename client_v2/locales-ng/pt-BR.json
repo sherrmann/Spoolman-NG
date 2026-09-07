@@ -488,5 +488,13 @@
 	"auth_login_password": "Senha",
 	"auth_logout": "Sair",
 	"auth_roles_admin": "Administrador",
-	"auth_roles_readonly": "Somente leitura"
+	"auth_roles_readonly": "Somente leitura",
+	"printing_generic_checklist_title": "Antes de imprimir",
+	"printing_generic_checklist_intro": "As caixas de diálogo de impressão do navegador costumam redimensionar as páginas, o que quebra a geometria da etiqueta. Na caixa de diálogo de impressão que abrir a seguir, verifique:",
+	"printing_generic_checklist_scale": "A escala está em 100% / “Tamanho real” — nunca “Ajustar à página”.",
+	"printing_generic_checklist_paperSize": "O tamanho de papel selecionado é exatamente {width} × {height} mm.",
+	"printing_generic_checklist_margins": "As margens estão definidas como “Nenhuma” (o Spoolman já cuida das margens).",
+	"printing_generic_checklist_headersFooters": "Cabeçalhos e rodapés estão desativados.",
+	"printing_generic_checklist_dontShowAgain": "Não mostrar isso novamente",
+	"printing_generic_checklist_printNow": "Imprimir agora"
 }

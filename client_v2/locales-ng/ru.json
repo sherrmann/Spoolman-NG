@@ -489,5 +489,13 @@
 	"auth_login_password": "Пароль",
 	"auth_logout": "Выйти",
 	"auth_roles_admin": "Администратор",
-	"auth_roles_readonly": "Только чтение"
+	"auth_roles_readonly": "Только чтение",
+	"printing_generic_checklist_title": "Перед печатью",
+	"printing_generic_checklist_intro": "Диалоги печати браузера часто масштабируют страницы заново, что нарушает геометрию этикеток. В открывшемся далее диалоге печати проверьте:",
+	"printing_generic_checklist_scale": "Масштаб установлен на 100% / «Реальный размер» — никогда не «По размеру страницы».",
+	"printing_generic_checklist_paperSize": "Выбранный размер бумаги равен точно {width} × {height} мм.",
+	"printing_generic_checklist_margins": "Поля установлены на «Нет» (Spoolman уже учитывает поля).",
+	"printing_generic_checklist_headersFooters": "Верхние и нижние колонтитулы отключены.",
+	"printing_generic_checklist_dontShowAgain": "Больше не показывать",
+	"printing_generic_checklist_printNow": "Печатать сейчас"
 }

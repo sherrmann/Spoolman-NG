@@ -487,5 +487,13 @@
 	"auth_login_password": "கடவுச்சொல்",
 	"auth_logout": "விடுபதிகை",
 	"auth_roles_admin": "நிர்வாகி",
-	"auth_roles_readonly": "படிக்க மட்டும்"
+	"auth_roles_readonly": "படிக்க மட்டும்",
+	"printing_generic_checklist_title": "அச்சிடுவதற்கு முன்",
+	"printing_generic_checklist_intro": "உலாவி அச்சு உரையாடல்கள் பெரும்பாலும் பக்கங்களை மறு அளவிடும், இது லேபிள் வடிவத்தைச் சிதைக்கும். அடுத்ததாகத் திறக்கும் அச்சு உரையாடலில், இவற்றைச் சரிபார்க்கவும்:",
+	"printing_generic_checklist_scale": "அளவு 100% / \"உண்மையான அளவு\" — \"பக்கத்திற்குப் பொருத்து\" ஒருபோதும் அல்ல.",
+	"printing_generic_checklist_paperSize": "தேர்ந்தெடுக்கப்பட்ட காகித அளவு சரியாக {width} × {height} mm ஆக இருக்க வேண்டும்.",
+	"printing_generic_checklist_margins": "விளிம்புகள் \"எதுவுமில்லை\" என அமைக்கப்பட்டுள்ளன (Spoolman ஏற்கனவே விளிம்புகளைக் கையாளுகிறது).",
+	"printing_generic_checklist_headersFooters": "தலைப்புகளும் அடிக்குறிப்புகளும் முடக்கப்பட்டுள்ளன.",
+	"printing_generic_checklist_dontShowAgain": "இதை மீண்டும் காட்ட வேண்டாம்",
+	"printing_generic_checklist_printNow": "இப்போது அச்சிடு"
 }

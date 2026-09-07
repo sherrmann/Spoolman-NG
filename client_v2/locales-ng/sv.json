@@ -487,5 +487,13 @@
 	"auth_login_password": "Lösenord",
 	"auth_logout": "Logga ut",
 	"auth_roles_admin": "Administratör",
-	"auth_roles_readonly": "Skrivskyddad"
+	"auth_roles_readonly": "Skrivskyddad",
+	"printing_generic_checklist_title": "Innan du skriver ut",
+	"printing_generic_checklist_intro": "Webbläsarens utskriftsdialog skalar ofta om sidor, vilket förstör etikettens geometri. Kontrollera följande i utskriftsdialogen som öppnas härnäst:",
+	"printing_generic_checklist_scale": "Skala är 100 % / ”Verklig storlek” — aldrig ”Anpassa till sida”.",
+	"printing_generic_checklist_paperSize": "Vald pappersstorlek är exakt {width} × {height} mm.",
+	"printing_generic_checklist_margins": "Marginaler är satta till ”Inga” (Spoolman hanterar redan marginalerna).",
+	"printing_generic_checklist_headersFooters": "Sidhuvuden och sidfötter är avstängda.",
+	"printing_generic_checklist_dontShowAgain": "Visa inte detta igen",
+	"printing_generic_checklist_printNow": "Skriv ut nu"
 }

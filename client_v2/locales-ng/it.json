@@ -489,5 +489,13 @@
 	"auth_login_password": "Password",
 	"auth_logout": "Disconnettiti",
 	"auth_roles_admin": "Amministratore",
-	"auth_roles_readonly": "Sola lettura"
+	"auth_roles_readonly": "Sola lettura",
+	"printing_generic_checklist_title": "Prima di stampare",
+	"printing_generic_checklist_intro": "Le finestre di stampa del browser spesso ridimensionano le pagine, il che compromette la geometria dell'etichetta. Nella finestra di stampa che si aprirà, verifica:",
+	"printing_generic_checklist_scale": "La scala è al 100% / “Dimensioni effettive” — mai “Adatta alla pagina”.",
+	"printing_generic_checklist_paperSize": "La dimensione carta selezionata è esattamente {width} × {height} mm.",
+	"printing_generic_checklist_margins": "I margini sono impostati su “Nessuno” (Spoolman gestisce già i margini).",
+	"printing_generic_checklist_headersFooters": "Intestazioni e piè di pagina sono disattivati.",
+	"printing_generic_checklist_dontShowAgain": "Non mostrare più",
+	"printing_generic_checklist_printNow": "Stampa ora"
 }

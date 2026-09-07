@@ -510,5 +510,13 @@
 	"auth_login_password": "Password",
 	"auth_logout": "Log out",
 	"auth_roles_admin": "Administrator",
-	"auth_roles_readonly": "Read-only"
+	"auth_roles_readonly": "Read-only",
+	"printing_generic_checklist_title": "Before you print",
+	"printing_generic_checklist_intro": "Browser print dialogs often re-scale pages, which breaks the label geometry. In the print dialog that opens next, check:",
+	"printing_generic_checklist_scale": "Scale is 100% / “Actual size” — never “Fit to page”.",
+	"printing_generic_checklist_paperSize": "The selected paper size is exactly {width} × {height} mm.",
+	"printing_generic_checklist_margins": "Margins are set to “None” (Spoolman already handles margins).",
+	"printing_generic_checklist_headersFooters": "Headers and footers are turned off.",
+	"printing_generic_checklist_dontShowAgain": "Don't show this again",
+	"printing_generic_checklist_printNow": "Print now"
 }

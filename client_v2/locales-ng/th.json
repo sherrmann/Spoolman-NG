@@ -485,5 +485,13 @@
 	"auth_login_password": "รหัสผ่าน",
 	"auth_logout": "ออกจากระบบ",
 	"auth_roles_admin": "ผู้ดูแลระบบ",
-	"auth_roles_readonly": "อ่านอย่างเดียว"
+	"auth_roles_readonly": "อ่านอย่างเดียว",
+	"printing_generic_checklist_title": "ก่อนพิมพ์",
+	"printing_generic_checklist_intro": "หน้าต่างพิมพ์ของเบราว์เซอร์มักปรับสเกลหน้ากระดาษโดยอัตโนมัติ ซึ่งจะทำให้ขนาดฉลากผิดเพี้ยน ในหน้าต่างพิมพ์ที่จะเปิดขึ้นถัดไป ให้ตรวจสอบ:",
+	"printing_generic_checklist_scale": "สเกลเป็น 100% / “ขนาดจริง” — ห้ามใช้ “พอดีหน้ากระดาษ” เด็ดขาด",
+	"printing_generic_checklist_paperSize": "ขนาดกระดาษที่เลือกตรงกับ {width} × {height} มม. พอดี",
+	"printing_generic_checklist_margins": "ระยะขอบตั้งเป็น “ไม่มี” (Spoolman จัดการระยะขอบให้แล้ว)",
+	"printing_generic_checklist_headersFooters": "ปิดหัวกระดาษและท้ายกระดาษแล้ว",
+	"printing_generic_checklist_dontShowAgain": "ไม่ต้องแสดงอีก",
+	"printing_generic_checklist_printNow": "พิมพ์เลย"
 }

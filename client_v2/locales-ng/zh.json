@@ -485,5 +485,13 @@
 	"auth_login_password": "密码",
 	"auth_logout": "退出登录",
 	"auth_roles_admin": "管理员",
-	"auth_roles_readonly": "只读"
+	"auth_roles_readonly": "只读",
+	"printing_generic_checklist_title": "打印前须知",
+	"printing_generic_checklist_intro": "浏览器的打印对话框经常会重新缩放页面，这会破坏标签的尺寸。在接下来打开的打印对话框中，请检查：",
+	"printing_generic_checklist_scale": "缩放比例为 100%／“实际大小”——切勿选择“适合页面大小”。",
+	"printing_generic_checklist_paperSize": "所选纸张尺寸恰好为 {width} × {height} mm。",
+	"printing_generic_checklist_margins": "边距设置为“无”（Spoolman 已自行处理边距）。",
+	"printing_generic_checklist_headersFooters": "已关闭页眉和页脚。",
+	"printing_generic_checklist_dontShowAgain": "不再显示",
+	"printing_generic_checklist_printNow": "立即打印"
 }

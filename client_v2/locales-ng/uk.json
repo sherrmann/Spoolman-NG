@@ -489,5 +489,13 @@
 	"auth_login_password": "Пароль",
 	"auth_logout": "Вийти",
 	"auth_roles_admin": "Адміністратор",
-	"auth_roles_readonly": "Лише читання"
+	"auth_roles_readonly": "Лише читання",
+	"printing_generic_checklist_title": "Перед друком",
+	"printing_generic_checklist_intro": "Діалогові вікна друку браузера часто масштабують сторінки, що порушує геометрію етикетки. У вікні друку, яке відкриється далі, перевірте:",
+	"printing_generic_checklist_scale": "Масштаб — 100% / «Фактичний розмір» — ніколи не «За розміром сторінки».",
+	"printing_generic_checklist_paperSize": "Вибраний розмір паперу точно дорівнює {width} × {height} мм.",
+	"printing_generic_checklist_margins": "Поля встановлено на «Немає» (Spoolman вже враховує поля).",
+	"printing_generic_checklist_headersFooters": "Верхні та нижні колонтитули вимкнено.",
+	"printing_generic_checklist_dontShowAgain": "Більше не показувати",
+	"printing_generic_checklist_printNow": "Друкувати зараз"
 }
