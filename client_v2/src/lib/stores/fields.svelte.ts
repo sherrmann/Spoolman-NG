@@ -10,14 +10,22 @@ import {
 // Reactive cache of extra-field definitions per entity type. Loaded on demand
 // (inspectors) and by the settings manager; refetched after mutations.
 
-const ENTITIES: EntityType[] = ['spool', 'filament', 'vendor'];
+// Spoolman NG fork addition: `location` and `printer` are this fork's entity types too.
+const ENTITIES: EntityType[] = ['spool', 'filament', 'vendor', 'location', 'printer'];
 
 function byOrder(list: FieldDef[]): FieldDef[] {
 	return [...list].sort((a, b) => a.order - b.order || a.key.localeCompare(b.key));
 }
 
 class Fields {
-	private defs = $state<Record<EntityType, FieldDef[]>>({ spool: [], filament: [], vendor: [] });
+	// Spoolman NG fork addition: the `location` and `printer` slots, forced by `Record<EntityType, …>`.
+	private defs = $state<Record<EntityType, FieldDef[]>>({
+		spool: [],
+		filament: [],
+		vendor: [],
+		location: [],
+		printer: []
+	});
 	// Reactive so views can wait for the definitions rather than render against an
 	// empty list and then rearrange themselves once they arrive.
 	private loaded = $state<EntityType[]>([]);

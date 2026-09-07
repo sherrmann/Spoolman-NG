@@ -33,6 +33,7 @@
 	import OrderedPill from '$lib/ng/components/OrderedPill.svelte';
 	import MarkOrderedDialog from '$lib/ng/components/MarkOrderedDialog.svelte';
 	import CreateOrderModal from '$lib/ng/components/CreateOrderModal.svelte';
+	import { lowStockBadge } from '$lib/ng/lowStockBadge.svelte';
 
 	// --- data loading ----------------------------------------------------------------
 
@@ -130,11 +131,15 @@
 	function markOrderedSuccess() {
 		markOrderedFilament = undefined;
 		refresh();
+		// Orders have no live channel, so the nav badge is told by hand (see $lib/api/live).
+		lowStockBadge.refresh();
 	}
 	function bulkSuccess() {
 		bulkOpen = false;
 		selected = new Set();
 		refresh();
+		// Orders have no live channel, so the nav badge is told by hand (see $lib/api/live).
+		lowStockBadge.refresh();
 	}
 
 	// A plain href rather than a click handler: the row's name is a real link (stretched over the

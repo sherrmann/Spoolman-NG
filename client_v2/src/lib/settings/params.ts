@@ -12,7 +12,9 @@ export const ENTITY_PARAM = 'fields';
 /** Anchor on the Settings page's extra-fields section, so links scroll to it. */
 export const EXTRA_FIELDS_ANCHOR = 'extra-fields';
 
-const ENTITIES: EntityType[] = ['spool', 'filament', 'vendor'];
+// Spoolman NG fork addition: `location` and `printer` too, so `?fields=location` resolves to
+// its own tab instead of falling through to null and leaving the page on spool.
+const ENTITIES: EntityType[] = ['spool', 'filament', 'vendor', 'location', 'printer'];
 
 /** The entity tab the URL asks for, or null when it doesn't say (or says nonsense). */
 export function entityFromUrl(params: URLSearchParams): EntityType | null {

@@ -8,7 +8,6 @@
 import { getJson, getList, patchJson, postJson, deleteResource, HttpError } from '$lib/api/http';
 import { mapFilament, mapSpool } from '$lib/api/map';
 import type { Spool } from '$lib/types';
-import type { FieldDef } from '$lib/api/fields';
 import type {
 	ArriveBody,
 	ForkFilament,
@@ -258,35 +257,6 @@ export async function findLocationByName(name: string, signal?: AbortSignal): Pr
 		.map(mapLocation)
 		.filter((l) => l.name === name)
 		.sort((a, b) => a.id - b.id)[0];
-}
-
-/**
- * A custom-field definition for an entity type only this fork has.
- *
- * Upstream's `$lib/api/fields` types `EntityType` as spool/filament/vendor -- those are the only
- * entities upstream has. This fork's backend also registers `location` and `printer`
- * (spoolman/extra_field_registry.py:27), and the rows it returns carry `entity_type: "location"`,
- * which that union cannot express. Widening the vendored type would be an edit upstream conflicts
- * on for no gain, so the field SHAPE is reused and only the discriminant is restated here.
- */
-export type LocationFieldDef = Omit<FieldDef, 'entity_type'> & { entity_type: 'location' };
-
-/** Custom-field DEFINITIONS for locations (`GET /field/location`). */
-export async function listLocationFields(signal?: AbortSignal): Promise<LocationFieldDef[]> {
-	return getJson<LocationFieldDef[]>('/field/location', {}, signal);
-}
-
-/**
- * Hand a location's field definition to upstream's `ExtraFieldInput`.
- *
- * That component's `field` prop is typed `FieldDef`, so a `LocationFieldDef` is rejected on the
- * discriminant alone. It is structurally fine: the component (and FieldGrid and EditableField
- * with it) renders from `key`, `name`, `field_type`, `choices`, `unit` and `default_value` and
- * never reads `entity_type` -- verified by grep across all three. Cast here, in one named place,
- * rather than widening the vendored union or restating the cast at every call site.
- */
-export function asFieldDef(def: LocationFieldDef): FieldDef {
-	return def as unknown as FieldDef;
 }
 
 // --- printers (#75 / #413) -------------------------------------------------------------------

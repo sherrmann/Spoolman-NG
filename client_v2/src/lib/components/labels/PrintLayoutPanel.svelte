@@ -11,6 +11,13 @@
 	import { spoolSource } from '$lib/api/spoolSource';
 	// Spoolman NG fork addition (#84) -- the location picker below.
 	import { listLocations } from '$lib/ng/api';
+	// Spoolman NG fork addition (#296) -- the pre-print checklist gate on doPrint below.
+	import PrePrintChecklist from '$lib/ng/components/PrePrintChecklist.svelte';
+	import {
+		checklistPaper,
+		rememberSkipPrintChecklist,
+		shouldSkipPrintChecklist
+	} from '$lib/ng/printChecklist';
 	import { ng } from '$lib/ng/i18n';
 	import type { Location } from '$lib/ng/types';
 	import { searchAll } from '$lib/api/search';
@@ -375,7 +382,10 @@
 	let previewW = $state(0);
 	const previewFitW = $derived(previewW > 0 ? Math.min(PREVIEW_W, previewW) : PREVIEW_W);
 
-	async function doPrint() {
+	// Spoolman NG fork addition (#296). The print itself, unchanged -- what used to be
+	// `doPrint`. It is now reached either straight from the button (when the user has opted
+	// out of the checklist) or from the checklist's "Print now".
+	async function runPrint() {
 		if (bindings.length === 0) return;
 		printing = true;
 		try {
@@ -385,6 +395,15 @@
 		} finally {
 			printing = false;
 		}
+	}
+
+	// Spoolman NG fork addition (#296). The checklist has to sit here, between the button and
+	// `window.print()`: that call is the point of no return, after which the browser's own
+	// dialog decides scale, paper and margins.
+	let checklistOpen = $state(false);
+	function doPrint() {
+		if (shouldSkipPrintChecklist(localStorage)) void runPrint();
+		else checklistOpen = true;
 	}
 
 	// The format the file export writes, resolved leniently so a design saved by a
@@ -808,6 +827,18 @@
 				</Button>
 			{/if}
 		</div>
+		<!-- Spoolman NG fork addition (#296) -->
+		{#if checklistOpen}
+			<PrePrintChecklist
+				paper={checklistPaper(design, layout)}
+				onclose={() => (checklistOpen = false)}
+				onconfirm={(skip) => {
+					if (skip) rememberSkipPrintChecklist(localStorage);
+					checklistOpen = false;
+					void runPrint();
+				}}
+			/>
+		{/if}
 	</div>
 </div>
 

@@ -4,7 +4,11 @@ import { getJson, postJson, deleteJson } from './http';
 // custom fields available on each entity type; values live in each entity's
 // `extra` map.
 
-export type EntityType = 'spool' | 'filament' | 'vendor';
+// Spoolman NG fork addition: `location` is a real entity type on this fork's backend
+// (spoolman/extra_field_registry.py `EntityType`), so its field definitions come back from
+// `GET /field/location` with `entity_type: "location"`; `printer` is registered there too, and
+// the printers registry in this client (#413) carries each printer's `extra` values.
+export type EntityType = 'spool' | 'filament' | 'vendor' | 'location' | 'printer';
 
 export enum FieldType {
 	text = 'text',
@@ -14,7 +18,10 @@ export enum FieldType {
 	float_range = 'float_range',
 	datetime = 'datetime',
 	boolean = 'boolean',
-	choice = 'choice'
+	choice = 'choice',
+	// Spoolman NG fork addition: a short per-item value expanded into a URL through the
+	// definition's `link_template` (#129).
+	link = 'link'
 }
 
 /** Editable definition parameters (POST body). */
@@ -27,6 +34,13 @@ export interface FieldParams {
 	default_value?: string | null;
 	choices?: string[] | null;
 	multi_choice?: boolean | null;
+	// Spoolman NG fork addition. Base-URL template for a `link` field: `{}` is replaced by the
+	// item's value, or the value is appended when there is no `{}`. Required for `link` and
+	// rejected for every other type; max 512 characters (spoolman/extra_field_registry.py).
+	link_template?: string | null;
+	// Spoolman NG fork addition. Spool fields only: a new spool inherits this key's value from
+	// its parent filament's same-key field at creation time, unless it supplies its own (#118).
+	copy_from_filament?: boolean | null;
 }
 
 export interface FieldDef extends FieldParams {
@@ -65,5 +79,7 @@ export const FIELD_TYPE_LABELS: Record<FieldType, string> = {
 	[FieldType.float_range]: 'Float range',
 	[FieldType.datetime]: 'Date & time',
 	[FieldType.boolean]: 'Boolean',
-	[FieldType.choice]: 'Choice'
+	[FieldType.choice]: 'Choice',
+	// Spoolman NG fork addition.
+	[FieldType.link]: 'Link'
 };

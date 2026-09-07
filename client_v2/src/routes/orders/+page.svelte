@@ -31,6 +31,7 @@
 	import OrderDetailsModal from '$lib/ng/components/OrderDetailsModal.svelte';
 	import ArriveModal from '$lib/ng/components/ArriveModal.svelte';
 	import NewOrderModal from '$lib/ng/components/NewOrderModal.svelte';
+	import { lowStockBadge } from '$lib/ng/lowStockBadge.svelte';
 
 	// --- data loading ----------------------------------------------------------------
 
@@ -125,6 +126,9 @@
 		detailsOrder = undefined;
 		creating = false;
 		refresh();
+		// Creating, receiving, editing or deleting an order all change how many filaments the
+		// nav badge counts, and orders have no live channel (see $lib/api/live), so tell it.
+		lowStockBadge.refresh();
 	}
 
 	function orderedAtLabel(iso: string): string {

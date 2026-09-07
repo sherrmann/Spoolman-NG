@@ -5,6 +5,8 @@
 	import AddSpoolModal from '$components/AddSpoolModal.svelte';
 	import QrScannerModal from '$components/QrScannerModal.svelte';
 	import AiChatLauncher from '$lib/ng/components/AiChatLauncher.svelte';
+	import UpdateNotice from '$lib/ng/components/UpdateNotice.svelte';
+	import ErrorFallback from '$lib/ng/components/ErrorFallback.svelte';
 	import LoginModal from '$lib/ng/components/LoginModal.svelte';
 	import { authState } from '$lib/ng/authState.svelte';
 	import { loadUnitScaling } from '$lib/ng/unitScaling.svelte';
@@ -99,7 +101,19 @@
 <div class="app">
 	<TopBar onadd={() => ui.openAddModal()} onscan={() => ui.openScanner()} />
 
-	<main>{@render children()}</main>
+	<main>
+		<!-- Spoolman NG fork addition: the render-time error boundary (#417). SvelteKit sends a
+		     failed `load`, an explicit error() and an unknown URL to +error.svelte, but NOT an
+		     exception thrown while a page component renders -- which is exactly where a corrupt
+		     persisted value blows up -- and this layout is the only place that wraps every page.
+		     The fallback is the same component +error.svelte renders. -->
+		<svelte:boundary onerror={(error) => console.error('Uncaught render error:', error)}>
+			{@render children()}
+			{#snippet failed(error, reset)}
+				<ErrorFallback message={error instanceof Error ? error.message : String(error)} retry={reset} />
+			{/snippet}
+		</svelte:boundary>
+	</main>
 	<Footer />
 </div>
 
@@ -116,6 +130,11 @@
 <!-- Spoolman NG fork addition: the assistant. Renders nothing at all -- not even its button --
      unless an operator has switched the feature on; see AiChatLauncher. -->
 <AiChatLauncher />
+
+<!-- Spoolman NG fork addition: the once-per-release update notice (#293). Renders nothing until
+     /info has answered, and nothing at all unless that answer names a newer version the user has
+     not already dismissed. -->
+<UpdateNotice />
 
 <!-- Raised when a request comes back asking for credentials we do not have (#406).
      Conditionally mounted, like the fork's other dialogs, so each prompt starts

@@ -18,7 +18,8 @@
 	// No print button either -- location label printing is handled separately.
 	import { isAbortError, HttpError } from '$lib/api/http';
 	import { spoolSource } from '$lib/api/spoolSource';
-	import { getLocation, listLocationFields, listAllSpools, listAllFilaments, asFieldDef } from '$lib/ng/api';
+	import { getLocation, listAllSpools, listAllFilaments } from '$lib/ng/api';
+	import { fields } from '$lib/stores/fields.svelte';
 	import { ng } from '$lib/ng/i18n';
 	import { getFilamentName, getWeightPct } from '$lib/ng/analytics';
 	import { weightAuto } from '$lib/utils/format';
@@ -29,7 +30,6 @@
 	import SectionLabel from '$components/SectionLabel.svelte';
 	import ProgressBar from '$components/ProgressBar.svelte';
 	import type { Location, ForkFilament } from '$lib/ng/types';
-	import type { LocationFieldDef } from '$lib/ng/api';
 	import type { Spool, Vendor } from '$lib/types';
 	import type { PageData } from './$types';
 
@@ -39,7 +39,8 @@
 	// --- the location itself + its field definitions ------------------------------------
 
 	let location = $state<Location | undefined>();
-	let fieldDefs = $state<LocationFieldDef[]>([]);
+	// From the shared, cached definitions store; see routes/locations/+page.svelte.
+	let fieldDefs = $derived(fields.get('location'));
 	let locationLoaded = $state(false);
 	let locationError = $state(false);
 	// A stale/mistyped id (an old QR label for a row that's since been deleted) -- distinct
@@ -52,9 +53,8 @@
 		locationError = false;
 		notFound = false;
 		try {
-			const [loc, defs] = await Promise.all([getLocation(locId, signal), listLocationFields(signal)]);
-			location = loc;
-			fieldDefs = defs;
+			fields.ensure('location');
+			location = await getLocation(locId, signal);
 		} catch (e) {
 			if (isAbortError(e, signal)) return;
 			if (e instanceof HttpError && e.status === 404) {
@@ -175,12 +175,7 @@
 				<FieldGrid>
 					{#each fieldDefs as def (def.key)}
 						<Field label={def.name}>
-							<ExtraFieldInput
-								field={asFieldDef(def)}
-								value={location.extra[def.key]}
-								onchange={() => {}}
-								readonly
-							/>
+							<ExtraFieldInput field={def} value={location.extra[def.key]} onchange={() => {}} readonly />
 						</Field>
 					{/each}
 				</FieldGrid>

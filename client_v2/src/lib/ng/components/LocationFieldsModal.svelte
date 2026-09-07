@@ -1,7 +1,7 @@
 <script lang="ts">
 	// Edits one Location row's custom-field values (#103) -- opened from the "Custom fields"
-	// button on a /locations row. The caller only mounts this while `listLocationFields()` has
-	// already returned at least one definition (see routes/locations/+page.svelte), so `defs` is
+	// button on a /locations row. The caller only mounts this while the shared `fields` store
+	// holds at least one location definition (see routes/locations/+page.svelte), so `defs` is
 	// never empty here.
 	//
 	// Deliberately its own small Save/Cancel form rather than $components/ExtraFieldsSection:
@@ -17,13 +17,14 @@
 	import * as m from '$lib/paraglide/messages';
 	import { ng } from '$lib/ng/i18n';
 	import { untrack } from 'svelte';
-	import { updateLocation, asFieldDef, type LocationFieldDef } from '$lib/ng/api';
+	import { updateLocation } from '$lib/ng/api';
+	import type { FieldDef } from '$lib/api/fields';
 	import { toasts } from '$lib/stores/toasts.svelte';
 	import type { Location } from '$lib/ng/types';
 
 	interface Props {
 		location: Location;
-		defs: LocationFieldDef[];
+		defs: FieldDef[];
 		onclose: () => void;
 		onsuccess: () => void;
 	}
@@ -112,7 +113,7 @@
 				{#each defs as def (def.key)}
 					<Field label={def.name}>
 						<ExtraFieldInput
-							field={asFieldDef(def)}
+							field={def}
 							value={draft[def.key]}
 							onchange={(json) => onFieldChange(def.key, json)}
 						/>

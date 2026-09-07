@@ -161,10 +161,10 @@ export interface PlaceholderItem {
 	label?: string;
 }
 /**
- * Spoolman NG fork addition. `EntityType` is upstream's spool/filament/vendor union; this
- * fork's backend also registers `location`, and its palette group has to name it. Widened
- * here rather than in the vendored $lib/api/fields, for the same reason ng/api.ts declares
- * its own LocationFieldDef: an edit there conflicts on every subtree pull for no gain.
+ * Spoolman NG fork addition. The entity a palette group belongs to. `EntityType` now carries
+ * `location` itself (this fork widened the vendored union once the `link` field type forced
+ * edits to that file anyway), so the `| 'location'` is redundant; the name is kept because the
+ * palette code reads better for it than a bare `EntityType`.
  */
 export type PlaceholderEntity = EntityType | 'location';
 

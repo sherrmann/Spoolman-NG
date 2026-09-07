@@ -277,3 +277,90 @@ export async function calibrationSessions(api: APIRequestContext, filamentId: nu
     await api.get(`/api/v1/calibration/session?filament_id=${filamentId}`)
   ).json()) as { id: number; status: string }[];
 }
+
+/**
+ * Record a gross weigh-in against a spool, the way the inspector's adjust panel does.
+ *
+ * Keep the value under the spool's full gross weight -- every filament seeded here is 1000 g of
+ * filament on a 190 g spool, so under 1190 g. Above that the backend reads the measurement as a
+ * re-registration and resets the initial weight instead of recording usage, which is a different
+ * code path and a different event.
+ */
+export async function measureSpool(api: APIRequestContext, spoolId: number, grossWeight: number) {
+  const res = await api.put(`/api/v1/spool/${spoolId}/measure`, {
+    headers: { "Content-Type": "application/json" },
+    data: JSON.stringify({ weight: grossWeight }),
+  });
+  if (!res.ok()) {
+    throw new Error(`PUT /spool/${spoolId}/measure -> ${res.status()} ${await res.text()}`);
+  }
+}
+
+/** The measure events recorded against a spool, newest first, straight from the API. */
+export async function spoolMeasurements(api: APIRequestContext, spoolId: number) {
+  const events = (await (await api.get(`/api/v1/spool/${spoolId}/events`)).json()) as {
+    event_type: string;
+    measured_weight?: number;
+  }[];
+  return events.filter((e) => e.event_type === "measure");
+}
+
+/**
+ * Make sure the label designer has a design to work with, and that it is the one the /labels
+ * page picks by default.
+ *
+ * Designs live in the `label_designs` server setting rather than per browser, so a fresh
+ * database has none at all and the page renders its empty state instead of the print panel.
+ * This writes one straight into the setting: the page selects `designs[0]`, so ours goes to
+ * the front, and anything another spec created is preserved behind it. Re-running replaces
+ * our entry rather than adding a second one.
+ *
+ * The layout is left off deliberately -- the client backfills it from DEFAULT_LAYOUT, which
+ * is what a design created through the UI starts with (sheet mode, A4 portrait).
+ */
+const LABEL_DESIGN_NAME = "NG checklist design";
+
+export async function seedLabelDesign(api: APIRequestContext): Promise<void> {
+  const current = (await (await api.get("/api/v1/setting/label_designs")).json()) as {
+    value: string;
+  };
+  let existing: { id: string; name: string }[] = [];
+  try {
+    existing = JSON.parse(current.value) as { id: string; name: string }[];
+  } catch {
+    existing = [];
+  }
+
+  const design = {
+    id: "ng-checklist-design",
+    name: LABEL_DESIGN_NAME,
+    kind: "spool",
+    label: { w: 50, h: 25 },
+    elements: [
+      {
+        id: "ng-checklist-design-meta",
+        type: "text",
+        x: 2,
+        y: 2,
+        w: 46,
+        fontSize: 3,
+        bold: true,
+        align: "left",
+        color: "#000000",
+        wrap: false,
+        template: "#{spool.id}",
+      },
+    ],
+  };
+  const designs = [design, ...existing.filter((d) => d.id !== design.id)];
+
+  // The endpoint's body is itself a JSON-encoded string, so the value is double-encoded --
+  // the same shape $lib/api/settings.setSetting sends.
+  const res = await api.post("/api/v1/setting/label_designs", {
+    headers: { "Content-Type": "application/json" },
+    data: JSON.stringify(JSON.stringify(designs)),
+  });
+  if (!res.ok()) {
+    throw new Error(`POST /setting/label_designs -> ${res.status()} ${await res.text()}`);
+  }
+}

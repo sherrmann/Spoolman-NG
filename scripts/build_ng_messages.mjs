@@ -55,6 +55,12 @@ const KEYS = [
 	'spool.spool',
 	'spool.titles.create',
 	'spool.fields.material',
+	// The measured-weight chart on the spool inspector (#104). Named one by one rather than as
+	// a `spool.weight_history.` prefix: `spool.` is a shared namespace, and the allowlist is
+	// what keeps the generated bundle to the keys this client actually renders.
+	'spool.weight_history.title',
+	'spool.weight_history.chart_label',
+	'spool.weight_history.idle_gain',
 	'filament.filament',
 	'vendor.vendor',
 	'locations.no_location',
@@ -232,6 +238,42 @@ const KEYS = [
 	'auth.logout',
 	'auth.roles.admin',
 	'auth.roles.readonly',
+	// The pre-print checklist shown between the label print button and the browser's own
+	// print dialog (#296). `printing.generic.` also holds the React printing dialog's own
+	// ~40 keys, none of which this client renders, so the checklist's eight are named one by
+	// one rather than taken as a prefix. `pageSizeMode{Hint,Apply}` are deliberately absent:
+	// this client has no page-size mode to switch, so those two strings have nothing to say
+	// here.
+	'printing.generic.checklist.title',
+	'printing.generic.checklist.intro',
+	'printing.generic.checklist.scale',
+	'printing.generic.checklist.paperSize',
+	'printing.generic.checklist.margins',
+	'printing.generic.checklist.headersFooters',
+	'printing.generic.checklist.dontShowAgain',
+	'printing.generic.checklist.printNow',
+	// The three extra-field definition parameters this fork's backend accepts and upstream's
+	// does not: the `link` field type (#129) and its base-URL template, and the spool-only
+	// copy-from-filament flag (#118). `settings.extra_fields.` also holds the React settings
+	// page's own ~30 keys, none of which the Svelte manager renders (it uses upstream's
+	// `settings.extraFields.*`), so these three are named one by one rather than as a prefix.
+	'settings.extra_fields.field_type.link',
+	'settings.extra_fields.params.link_template',
+	'settings.extra_fields.params.copy_from_filament',
+	// The update-available notice (#293). `update.` also holds the React client's whole
+	// per-install-type update dialog and its self-update flow, none of which this client offers,
+	// so the four keys the card renders are named one by one rather than as a prefix.
+	'update.notification.title',
+	'update.notification.description',
+	'update.notification.viewRelease',
+	'update.action.close',
+	// The error page and the render-time boundary (#417). `errorBoundary.` holds exactly these
+	// four in the React catalogue, but they are still named one by one so a key added there later
+	// does not silently become a string this client compiles.
+	'errorBoundary.title',
+	'errorBoundary.subTitle',
+	'errorBoundary.reset',
+	'errorBoundary.home',
 
 	// Settings parity (#413): the unit-scaling control, custom links, printers and the
 	// account-management panel.
