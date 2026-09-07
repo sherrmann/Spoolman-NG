@@ -4,7 +4,8 @@
 	import SettingRow from '$components/settings/SettingRow.svelte';
 	import ExtraFieldsManager from '$components/settings/ExtraFieldsManager.svelte';
 	import ScannerSettings from '$components/settings/ScannerSettings.svelte';
-	import AiSettings from '$lib/ng/components/AiSettings.svelte';
+	import NgSettings from '$lib/ng/components/NgSettings.svelte';
+	import UnitScalingRow from '$lib/ng/components/UnitScalingRow.svelte';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import { settings } from '$lib/stores/settings.svelte';
 	import { theme, type ThemePref } from '$lib/stores/theme.svelte';
@@ -182,6 +183,8 @@
 					onchange={(e) => saveBaseUrl(e.currentTarget.value)}
 				/>
 			</SettingRow>
+			<!-- Spoolman NG fork addition (#413): shown to administrators only. -->
+			<UnitScalingRow />
 		</Card>
 
 		<div class="sec-label">{m['settings.library.tab']()}</div>
@@ -224,9 +227,9 @@
 		</div>
 		<ExtraFieldsManager entity={fieldsEntity} onentity={gotoEntity} />
 
-		<!-- Spoolman NG fork addition: the assistant's configuration. Renders nothing at all for
-		     a non-administrator, who cannot use any of its endpoints. -->
-		<AiSettings />
+		<!-- Spoolman NG fork addition: every panel this fork adds (printers, custom links,
+		     accounts, the assistant). Each renders nothing at all for a non-administrator. -->
+		<NgSettings />
 	</div>
 </div>
 

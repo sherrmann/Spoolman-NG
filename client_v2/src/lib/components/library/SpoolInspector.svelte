@@ -8,6 +8,8 @@
 	import NumberInput from '../NumberInput.svelte';
 	import EditableField from '../EditableField.svelte';
 	import Combobox from '../Combobox.svelte';
+	import SpoolActionLinks from '$lib/ng/components/SpoolActionLinks.svelte';
+	import PrinterField from '$lib/ng/components/PrinterField.svelte';
 	import Scale from '@lucide/svelte/icons/scale';
 	import Printer from '@lucide/svelte/icons/printer';
 	import Archive from '@lucide/svelte/icons/archive';
@@ -371,6 +373,8 @@
 			>
 		</div>
 	</div>
+	<!-- Spoolman NG fork addition (#413): operator-configured links. Renders nothing unless some exist. -->
+	<SpoolActionLinks {spool} />
 
 	<ConfirmDialog
 		open={confirmOpen}
@@ -454,6 +458,8 @@
 				<Field label={m['spool.fields.lotNr']()} help={m['spool.fieldsHelp.lotNr']()}>
 					<EditableField value={spool.lot} mono oninput={(v) => set({ lot: v })} />
 				</Field>
+				<!-- Spoolman NG fork addition (#413): renders nothing unless a printer exists. -->
+				<PrinterField {spool} />
 				<!-- Blank in any of the three below means "follow the filament", which is
 				     what `onclear` restores; the placeholder is the value that then applies. -->
 				<Field label={m['spool.fields.weight']()} help={m['spool.fieldsHelp.weight']()}>

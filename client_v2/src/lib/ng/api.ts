@@ -17,10 +17,13 @@ import type {
 	NewOrderBody,
 	Order,
 	OrderPatchBody,
+	Printer,
+	PrinterBody,
 	Shop,
 	UsageBucket,
 	UsageStat
 } from './types';
+import { mapPrinter } from './printers';
 
 type Json = Record<string, unknown>;
 
@@ -284,4 +287,45 @@ export async function listLocationFields(signal?: AbortSignal): Promise<Location
  */
 export function asFieldDef(def: LocationFieldDef): FieldDef {
 	return def as unknown as FieldDef;
+}
+
+// --- printers (#75 / #413) -------------------------------------------------------------------
+
+/**
+ * Every printer, by name. The list is small by nature (a printer is a physical machine), so
+ * it is not paged; the API's default limit is unbounded.
+ */
+export async function listPrinters(signal?: AbortSignal): Promise<Printer[]> {
+	const rows = await getJson<Json[]>('/printer', { sort: 'name:asc' }, signal);
+	return rows.map(mapPrinter);
+}
+
+export async function createPrinter(body: PrinterBody): Promise<Printer> {
+	return mapPrinter(await postJson<Json>('/printer', body));
+}
+
+export async function updatePrinter(id: number, body: PrinterBody): Promise<Printer> {
+	return mapPrinter(await patchJson<Json>(`/printer/${id}`, body));
+}
+
+/** Spools assigned to the printer are unassigned by the server, not deleted. */
+export async function deletePrinter(id: number): Promise<void> {
+	await deleteResource(`/printer/${id}`);
+}
+
+/**
+ * The printer a spool is assigned to, if any.
+ *
+ * Upstream's `Spool` type has no printer field and its mapper drops the nested object, so the
+ * inspector asks for the one spool it is showing rather than widening the vendored type.
+ */
+export async function spoolPrinterId(spoolId: number, signal?: AbortSignal): Promise<number | undefined> {
+	const s = await getJson<Json>(`/spool/${spoolId}`, {}, signal);
+	const printer = s.printer as Json | null | undefined;
+	return printer == null ? undefined : Number(printer.id);
+}
+
+/** Assign a spool to a printer, or `null` to unassign it. */
+export async function setSpoolPrinter(spoolId: number, printerId: number | null): Promise<void> {
+	await patchJson(`/spool/${spoolId}`, { printer_id: printerId });
 }
