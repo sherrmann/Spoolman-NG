@@ -6,36 +6,37 @@
 	 * Upstream's `Spool` has no printer field and its mapper drops the nested object, so this
 	 * row fetches the one spool it shows and writes `printer_id` straight to the API instead of
 	 * going through the inspector's debounced saver -- which would need the vendored type and
-	 * mapper widened. Renders nothing while no printer exists, so the inspector is unchanged for
-	 * anyone who does not track printers.
+	 * mapper widened. The printer list itself comes from the shared store, loaded once. Renders
+	 * nothing while no printer exists, so the inspector is unchanged for anyone who does not
+	 * track printers.
 	 */
 	import Field from '$components/Field.svelte';
 	import type { Spool } from '$lib/types';
 	import { ng } from '$lib/ng/i18n';
 	import { toasts } from '$lib/stores/toasts.svelte';
-	import { listPrinters, setSpoolPrinter, spoolPrinterId } from '$lib/ng/api';
+	import { setSpoolPrinter, spoolPrinterId } from '$lib/ng/api';
 	import { apiErrorMessage } from '$lib/ng/errors';
-	import type { Printer } from '$lib/ng/types';
+	import { printers } from '$lib/ng/printersState.svelte';
 
 	let { spool }: { spool: Spool } = $props();
 
-	let printers = $state<Printer[]>([]);
 	let current = $state<number | undefined>(undefined);
 	let ready = $state(false);
+
+	$effect(() => {
+		void printers.load();
+	});
 
 	$effect(() => {
 		const id = spool.id;
 		const controller = new AbortController();
 		ready = false;
-		Promise.all([listPrinters(controller.signal), spoolPrinterId(id, controller.signal)])
-			.then(([p, assigned]) => {
-				printers = p;
+		spoolPrinterId(id, controller.signal)
+			.then((assigned) => {
 				current = assigned;
 				ready = true;
 			})
-			.catch(() => {
-				printers = [];
-			});
+			.catch(() => {});
 		return () => controller.abort();
 	});
 
@@ -52,7 +53,7 @@
 	}
 </script>
 
-{#if ready && printers.length}
+{#if ready && printers.items.length}
 	<Field label={ng.spool_fields_printer()} help={ng.spool_fields_help_printer()}>
 		<select
 			class="sel"
@@ -61,7 +62,7 @@
 			onchange={(e) => change(e.currentTarget.value)}
 		>
 			<option value="">{ng.spool_fields_no_printer()}</option>
-			{#each printers as p (p.id)}
+			{#each printers.items as p (p.id)}
 				<option value={p.id}>{p.name}</option>
 			{/each}
 		</select>

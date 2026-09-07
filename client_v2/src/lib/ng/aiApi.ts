@@ -10,7 +10,7 @@
  * than inherited.
  */
 import { API_BASE } from '$lib/api/config';
-import { getJson, postJson, HttpError } from '$lib/api/http';
+import { getJson, postJson } from '$lib/api/http';
 import { authHeaders } from './authToken';
 import { getSettings, parseSetting } from '$lib/api/settings';
 import { createSseParser } from './sse';
@@ -288,26 +288,8 @@ export async function nlSearch(query: string, locale: string): Promise<NlSearchR
 // Everything below is for the settings panel, and only an administrator can use any of it:
 // /ai/config, /ai/probe and the Ollama endpoints all answer 403 otherwise, and /ai/status
 // silently strips the provider fields rather than refusing. That stripping is why the panel
-// asks who it is talking to first -- a read-only user shown an empty form cannot tell it from
-// an unconfigured server, and finds out only when Save fails.
-
-/** Whether this user may operate the assistant's configuration. */
-export async function isAdmin(signal?: AbortSignal): Promise<boolean> {
-	try {
-		const me = await getJson<{ role?: unknown }>('/auth/me', {}, signal);
-		return String(me.role ?? '') === 'admin';
-	} catch (e) {
-		// A 401 is the one failure that answers the question: the server wants credentials we
-		// do not have, so we are nobody, let alone an administrator. Failing open on it would
-		// hand the operator panel to an unauthenticated visitor. (The request itself has
-		// already raised the credential prompt on its way through http.ts.)
-		if (e instanceof HttpError && e.status === 401) return false;
-		// Anything else, including auth being switched off entirely -- where /auth/me answers
-		// with the implicit admin principal rather than failing -- is a broken or unreachable
-		// backend. The panel's own requests will report that far better than a hidden panel.
-		return true;
-	}
-}
+// asks who it is talking to first (see $lib/ng/me) -- a read-only user shown an empty form
+// cannot tell it from an unconfigured server, and finds out only when Save fails.
 
 /** Three-valued, because "we could not tell" is a real answer for a non-Ollama endpoint. */
 export type TriState = 'yes' | 'no' | 'unknown';

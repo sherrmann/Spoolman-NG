@@ -53,38 +53,3 @@
 		<Button variant="primary" type="submit" disabled={busy}>{ng.auth_users_reset_password()}</Button>
 	{/snippet}
 </NgFormModal>
-
-<style>
-	.help {
-		margin: 0;
-		font-size: 12.5px;
-		color: var(--text-muted);
-	}
-	.fld {
-		display: flex;
-		flex-direction: column;
-		gap: 6px;
-	}
-	.lbl {
-		font-size: 12px;
-		color: var(--text-muted);
-	}
-	.in {
-		background: var(--input-bg);
-		border: 1px solid var(--border-input);
-		border-radius: var(--radius-sm);
-		color: var(--text);
-		padding: 7px 10px;
-		font-size: 13px;
-	}
-	.in:focus {
-		border-color: var(--accent);
-	}
-	.in.invalid {
-		border-color: var(--danger);
-	}
-	.error {
-		color: var(--danger-soft);
-		font-size: 12px;
-	}
-</style>

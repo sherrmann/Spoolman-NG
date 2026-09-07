@@ -7,7 +7,8 @@
 	 * copies of the overlay, the focus handling and the styles would be three places to fix the
 	 * next accessibility finding, so the shell is lifted out here and the forms fill it in.
 	 *
-	 * The caller owns the form and its state. Pressing Enter inside submits through the form
+	 * The caller owns the form and its state, and writes its fields with the `fld`/`lbl`/`in`/
+	 * `error` classes styled at the bottom of this file. Pressing Enter inside submits through the form
 	 * element's own `onsubmit`, so `onsubmit` is wired here rather than on a button.
 	 */
 	import X from '@lucide/svelte/icons/x';
@@ -146,5 +147,38 @@
 		gap: 8px;
 		padding: 6px 0 16px;
 		flex: none;
+	}
+	/* The fields are the caller's markup, so their rules live here under :global rather than
+	   being copied into every form. */
+	.body :global(.fld) {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+	}
+	.body :global(.lbl),
+	.body :global(.hint),
+	.body :global(.help) {
+		font-size: 12px;
+		color: var(--text-muted);
+		margin: 0;
+	}
+	.body :global(.in) {
+		background: var(--input-bg);
+		border: 1px solid var(--border-input);
+		border-radius: var(--radius-sm);
+		color: var(--text);
+		padding: 7px 10px;
+		font-size: 13px;
+		font-family: inherit;
+	}
+	.body :global(.in:focus) {
+		border-color: var(--accent);
+	}
+	.body :global(.in.invalid) {
+		border-color: var(--danger);
+	}
+	.body :global(.error) {
+		color: var(--danger-soft);
+		font-size: 12px;
 	}
 </style>

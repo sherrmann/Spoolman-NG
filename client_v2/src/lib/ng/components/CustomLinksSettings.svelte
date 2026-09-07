@@ -12,7 +12,6 @@
 	 * Renders nothing for a non-administrator, who cannot write settings.
 	 */
 	import Button from '$components/Button.svelte';
-	import Card from '$components/Card.svelte';
 	import ConfirmDialog from '$components/ConfirmDialog.svelte';
 	import Pencil from '@lucide/svelte/icons/pencil';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
@@ -23,10 +22,10 @@
 	import { setSetting } from '$lib/api/settings';
 	import { currentUserIsAdmin } from '$lib/ng/me';
 	import { apiErrorMessage } from '$lib/ng/errors';
-	import { parseTrans } from '$lib/ng/trans';
 	import type { CustomLink } from '$lib/ng/customLinks';
 	import { linkList, type LinkSettingKey } from '$lib/ng/customLinksState.svelte';
 	import LinkFormModal from './LinkFormModal.svelte';
+	import NgSettingsSection from './NgSettingsSection.svelte';
 
 	interface Props {
 		settingKey: LinkSettingKey;
@@ -41,9 +40,6 @@
 
 	let list = $derived(linkList(settingKey));
 	let show = $state(false);
-	let paragraphs = $derived(
-		parseTrans(description).map((b) => (b.kind === 'block' ? b.inline.map((i) => i.text).join('') : ''))
-	);
 
 	$effect(() => {
 		(async () => {
@@ -90,44 +86,40 @@
 </script>
 
 {#if show}
-	<section aria-label={title}>
-		<div class="sec-label">{title}</div>
-		{#each paragraphs as p, i (i)}<p class="intro">{p}</p>{/each}
-		<Card>
-			{#if list.items.length === 0}
-				<div class="empty">{ng.settings_custom_links_empty()}</div>
-			{:else}
-				<ul class="list">
-					{#each list.items as link, i (i)}
-						<li class="item">
-							<span class="name">{link.name}</span>
-							<span class="url mono" title={link.url}>{link.url}</span>
-							<span class="row-actions">
-								<Button
-									variant="ghost"
-									ariaLabel={`${m['buttons.edit']()}: ${link.name}`}
-									title={m['buttons.edit']()}
-									onclick={() => (editing = i)}><Pencil size={14} /></Button
-								>
-								<Button
-									variant="danger-ghost"
-									ariaLabel={`${m['buttons.delete']()}: ${link.name}`}
-									title={m['buttons.delete']()}
-									onclick={() => (deleting = i)}><Trash2 size={14} /></Button
-								>
-							</span>
-						</li>
-					{/each}
-				</ul>
-			{/if}
-			<div class="foot">
-				<Button variant="outline" onclick={() => (editing = -1)}>
-					<Plus size={14} />
-					{ng.settings_custom_links_add_title()}
-				</Button>
-			</div>
-		</Card>
-	</section>
+	<NgSettingsSection {title} {description}>
+		{#if list.items.length === 0}
+			<div class="empty">{ng.settings_custom_links_empty()}</div>
+		{:else}
+			<ul class="list">
+				{#each list.items as link, i (i)}
+					<li class="item">
+						<span>{link.name}</span>
+						<span class="muted mono" title={link.url}>{link.url}</span>
+						<span class="row-actions">
+							<Button
+								variant="ghost"
+								ariaLabel={`${m['buttons.edit']()}: ${link.name}`}
+								title={m['buttons.edit']()}
+								onclick={() => (editing = i)}><Pencil size={14} /></Button
+							>
+							<Button
+								variant="danger-ghost"
+								ariaLabel={`${m['buttons.delete']()}: ${link.name}`}
+								title={m['buttons.delete']()}
+								onclick={() => (deleting = i)}><Trash2 size={14} /></Button
+							>
+						</span>
+					</li>
+				{/each}
+			</ul>
+		{/if}
+		<div class="foot">
+			<Button variant="outline" onclick={() => (editing = -1)}>
+				<Plus size={14} />
+				{ng.settings_custom_links_add_title()}
+			</Button>
+		</div>
+	</NgSettingsSection>
 
 	{#if editing !== null}
 		<LinkFormModal
@@ -154,62 +146,14 @@
 {/if}
 
 <style>
-	.sec-label {
-		font-size: 11px;
-		text-transform: uppercase;
-		letter-spacing: 0.04em;
-		color: var(--text-dim);
-		margin: 22px 0 8px;
-	}
-	.intro {
-		margin: 0 0 10px;
-		font-size: 12px;
-		line-height: 1.55;
-		color: var(--text-muted);
-	}
-	.list {
-		list-style: none;
-		margin: 0;
-		padding: 0;
-	}
 	.item {
-		display: grid;
 		grid-template-columns: minmax(80px, 1fr) minmax(0, 2fr) auto;
-		align-items: center;
-		gap: 12px;
-		padding: 10px 14px;
-		font-size: 13px;
-	}
-	.item + .item {
-		border-top: 1px solid var(--border);
-	}
-	.url {
-		color: var(--text-dim);
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-		font-size: 12px;
-	}
-	.row-actions {
-		display: inline-flex;
-		gap: 2px;
-	}
-	.empty {
-		padding: 14px;
-		font-size: 12.5px;
-		color: var(--text-dim);
-	}
-	.foot {
-		display: flex;
-		justify-content: flex-end;
-		padding: 10px 14px;
-		border-top: 1px solid var(--border);
 	}
 	@media (max-width: 560px) {
 		.item {
 			grid-template-columns: 1fr auto;
 		}
-		.url {
+		.muted {
 			grid-column: 1 / -1;
 		}
 	}

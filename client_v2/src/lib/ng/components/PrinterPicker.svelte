@@ -10,23 +10,16 @@
 	 * and is found the same way.
 	 */
 	import { ng } from '$lib/ng/i18n';
-	import { listPrinters } from '$lib/ng/api';
-	import type { Printer } from '$lib/ng/types';
+	import { printers } from '$lib/ng/printersState.svelte';
 
 	let { value = $bindable() }: { value: number | undefined } = $props();
 
-	let printers = $state<Printer[]>([]);
-
 	$effect(() => {
-		const controller = new AbortController();
-		listPrinters(controller.signal)
-			.then((p) => (printers = p))
-			.catch(() => (printers = []));
-		return () => controller.abort();
+		void printers.load();
 	});
 </script>
 
-{#if printers.length}
+{#if printers.items.length}
 	<label>
 		{ng.spool_fields_printer()}
 		<select
@@ -37,7 +30,7 @@
 			}}
 		>
 			<option value="">{ng.spool_fields_no_printer()}</option>
-			{#each printers as p (p.id)}
+			{#each printers.items as p (p.id)}
 				<option value={p.id}>{p.name}</option>
 			{/each}
 		</select>

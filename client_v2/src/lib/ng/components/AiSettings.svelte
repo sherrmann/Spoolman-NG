@@ -24,7 +24,6 @@
 	import { toasts } from '$lib/stores/toasts.svelte';
 	import { getSettings, setSetting, parseSetting, type SettingsMap } from '$lib/api/settings';
 	import {
-		isAdmin,
 		aiAdminStatus,
 		aiProbe,
 		setAiKeys,
@@ -34,6 +33,7 @@
 		type AiCapabilities,
 		type TriState
 	} from '$lib/ng/aiApi';
+	import { currentUserIsAdmin } from '$lib/ng/me';
 	import { AI_PRESETS, OLLAMA_SUGGESTIONS } from '$lib/ng/aiPresets';
 	import { FEATURES, blockedReason, toggleDisabled, type FeatureKey } from '$lib/ng/aiFeatures';
 
@@ -73,7 +73,7 @@
 	$effect(() => {
 		const controller = new AbortController();
 		(async () => {
-			admin = await isAdmin(controller.signal);
+			admin = await currentUserIsAdmin();
 			if (!admin) {
 				loaded = true;
 				return;
