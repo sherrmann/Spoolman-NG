@@ -4,6 +4,8 @@
 
 ## Unreleased
 
+- **Added: fast unit tests for the origin and host guards** — the cross-origin write/websocket guard and the opt-in DNS-rebinding host guard ported in #397 were covered only by the Docker integration matrix, so the quick test job that gates every push gave no signal at all on a regression to either of them. Upstream's own unit tests for both now run in the fast suite, alongside the environment-variable parsing they depend on and a check that a refused websocket handshake really does close before any data is sent.
+
 - **Fixed: the Svelte client offered a date filter that did nothing** — the library's Registered, First used and Last used range filters were sent to the server, which does not implement them and drops unknown query parameters without complaint. The list came back unnarrowed, so there was no way to tell "no spools in that range" from "the filter was ignored". The three categories are no longer offered. Not implementing them server-side remains a deliberate scope decision; what changes here is that the client no longer pretends otherwise.
 
 - **Fixed: German, Polish and Chinese fell back to English in parts of the Svelte client** — the vendored translation catalogues for those three languages were behind upstream by 29, 58 and 135 strings, so the NFC tag-linking dialogs, some validation messages and parts of the add-spool flow and library toolbar rendered in English for them. All 32 languages now match upstream exactly. Note this refreshes the translations only: it does not advance the vendored subtree's sync point, so a real `git subtree pull` is still owed and will still bring the rest of upstream's client changes with it.
