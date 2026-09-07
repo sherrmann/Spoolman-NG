@@ -47,6 +47,18 @@ def utc_timezone_naive(dt: datetime) -> datetime:
     return dt.replace(tzinfo=None)
 
 
+def utc_now() -> datetime:
+    """Return the current time in the naive-UTC form every datetime column in this codebase stores.
+
+    This is the replacement for the ``datetime.utcnow`` classmethod, deprecated since Python 3.12. It
+    must stay naive: the ORM drops tzinfo on read-back, so an offset-aware value written today
+    comes back naive tomorrow, and a comparison between the two raises ``TypeError``. Callers
+    that write a column keep their own ``.replace(microsecond=0)`` on top of this; the event
+    emitters use the value as it is. See :func:`utc_timezone_naive` for the storage contract.
+    """
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
 class SortOrder(Enum):
     ASC = 1
     DESC = 2

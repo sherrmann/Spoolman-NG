@@ -1,12 +1,11 @@
 """Helper functions for interacting with vendor database objects."""
 
-from datetime import datetime
-
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from spoolman.api.v1.models import EventType, SettingEvent, SettingKV
 from spoolman.database import models
+from spoolman.database.utils import utc_now
 from spoolman.exceptions import ItemNotFoundError
 from spoolman.settings import SettingDefinition
 from spoolman.ws import websocket_manager
@@ -27,7 +26,7 @@ async def update(
     setting = models.Setting(
         key=definition.key,
         value=value,
-        last_updated=datetime.utcnow().replace(microsecond=0),
+        last_updated=utc_now().replace(microsecond=0),
     )
     await db.merge(setting)
     # Commit before notifying so the setting is durable and visible to subsequent
@@ -68,7 +67,7 @@ async def setting_changed(definition: SettingDefinition, set_value: str | None, 
         SettingEvent(
             type=typ,
             resource="setting",
-            date=datetime.utcnow(),
+            date=utc_now(),
             payload=SettingKV.from_db(definition, set_value),
         ),
     )

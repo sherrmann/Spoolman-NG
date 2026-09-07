@@ -35,11 +35,11 @@ field any longer.
 """
 
 import logging
-from datetime import datetime
 
 import sqlalchemy as sa
 from alembic import op
 
+from spoolman.database.utils import utc_now
 from spoolman.tags import normalize_uid
 
 # revision identifiers, used by Alembic.
@@ -83,7 +83,7 @@ def upgrade() -> None:
 
     converted = 0
     left_behind = 0
-    now = datetime.utcnow().replace(microsecond=0)
+    now = utc_now().replace(microsecond=0)
 
     for row in rows:
         value = row.value

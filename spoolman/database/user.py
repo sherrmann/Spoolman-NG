@@ -1,11 +1,10 @@
 """Database helpers for optional user accounts (issue #52)."""
 
-from datetime import datetime
-
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from spoolman.database import models
+from spoolman.database.utils import utc_now
 from spoolman.exceptions import ItemNotFoundError
 from spoolman.users import ROLE_ADMIN
 
@@ -16,7 +15,7 @@ async def create(db: AsyncSession, *, username: str, password_hash: str, role: s
         username=username,
         password_hash=password_hash,
         role=role,
-        registered=datetime.utcnow().replace(microsecond=0),
+        registered=utc_now().replace(microsecond=0),
     )
     db.add(user)
     await db.commit()
@@ -78,5 +77,5 @@ async def delete(db: AsyncSession, user_id: int) -> None:
 
 async def touch_last_login(db: AsyncSession, user: models.User) -> None:
     """Record a successful login timestamp."""
-    user.last_login = datetime.utcnow().replace(microsecond=0)
+    user.last_login = utc_now().replace(microsecond=0)
     await db.commit()

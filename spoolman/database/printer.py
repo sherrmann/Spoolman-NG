@@ -1,7 +1,6 @@
 """Helper functions for interacting with printer database objects (issue #75)."""
 
 import logging
-from datetime import datetime
 
 import sqlalchemy
 from sqlalchemy import func, select
@@ -10,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from spoolman.api.v1.models import EventType, Printer, PrinterEvent
 from spoolman.database import models
 from spoolman.database.extra_field_query import apply_extra_field_filters_and_sort
-from spoolman.database.utils import SortOrder, add_where_clause_str, order_by_expression
+from spoolman.database.utils import SortOrder, add_where_clause_str, order_by_expression, utc_now
 from spoolman.exceptions import ItemNotFoundError
 from spoolman.extra_field_registry import EntityType
 from spoolman.ws import websocket_manager
@@ -28,7 +27,7 @@ async def create(
     """Add a new printer to the database."""
     printer = models.Printer(
         name=name,
-        registered=datetime.utcnow().replace(microsecond=0),
+        registered=utc_now().replace(microsecond=0),
         comment=comment,
         extra=[models.PrinterField(key=k, value=v) for k, v in (extra or {}).items()],
     )
@@ -169,7 +168,7 @@ async def printer_changed(printer: models.Printer, typ: EventType) -> None:
             PrinterEvent(
                 type=typ,
                 resource="printer",
-                date=datetime.utcnow(),
+                date=utc_now(),
                 payload=Printer.from_db(printer),
             ),
         )

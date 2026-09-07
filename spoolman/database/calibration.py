@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
 from spoolman.database import models
-from spoolman.database.utils import utc_timezone_naive
+from spoolman.database.utils import utc_now, utc_timezone_naive
 from spoolman.exceptions import ItemNotFoundError
 
 logger = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ async def create_session(
     await filament_db.get_by_id(db, filament_id)  # raises ItemNotFoundError if filament missing
 
     db_item = models.CalibrationSession(
-        registered=datetime.utcnow().replace(microsecond=0),
+        registered=utc_now().replace(microsecond=0),
         filament_id=filament_id,
         status=status,
         printer_name=printer_name,
@@ -133,9 +133,7 @@ async def create_step_result(
         selected_values=selected_values,
         notes=notes,
         confidence=confidence,
-        recorded_at=(
-            utc_timezone_naive(recorded_at) if recorded_at is not None else datetime.utcnow().replace(microsecond=0)
-        ),
+        recorded_at=(utc_timezone_naive(recorded_at) if recorded_at is not None else utc_now().replace(microsecond=0)),
     )
     db.add(db_item)
     await db.commit()
