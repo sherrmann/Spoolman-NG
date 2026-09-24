@@ -16,7 +16,9 @@ from pathlib import Path
 
 import pytest
 from httpx import ASGITransport, AsyncClient
+from starlette.applications import Starlette
 from starlette.datastructures import Headers
+from starlette.routing import Mount
 
 from spoolman.client import (
     SinglePageApplication,
@@ -150,7 +152,11 @@ def _make_dist(tmp_path: Path) -> Path:
 
 def _make_client(tmp_path: Path, base_path: str = "", *, ha_ingress: bool) -> AsyncClient:
     spa = SinglePageApplication(directory=str(_make_dist(tmp_path)), base_path=base_path, ha_ingress=ha_ingress)
-    return AsyncClient(transport=ASGITransport(app=spa), base_url="http://test")
+    if not base_path:
+        return AsyncClient(transport=ASGITransport(app=spa), base_url="http://test")
+    # Mounted at the base path, as main.py does, so the app sees base-relative paths.
+    app = Starlette(routes=[Mount(base_path, app=spa)])
+    return AsyncClient(transport=ASGITransport(app=app), base_url="http://test")
 
 
 async def test_ingress_request_gets_index_rendered_for_the_session_prefix(tmp_path: Path):
