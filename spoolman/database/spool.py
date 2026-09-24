@@ -33,6 +33,7 @@ from spoolman.database.utils import (
     order_by_clauses,
     order_by_expression,
     parse_nested_field,
+    split_filter_values,
     utc_now,
     utc_timezone_naive,
 )
@@ -257,7 +258,7 @@ def _build_search_filters(search: str) -> list:
     Returns a list of SQLAlchemy conditions to be combined with OR.
     """
     search_conditions = []
-    for value_part in search.split(","):
+    for value_part in split_filter_values(search):
         if len(value_part) == 0:
             continue
 

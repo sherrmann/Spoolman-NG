@@ -1,5 +1,6 @@
 """Utility functions for the database module."""
 
+import re
 from collections.abc import Sequence
 from datetime import datetime, timezone
 from enum import Enum
@@ -151,6 +152,42 @@ def order_by_expression(expr: ColumnElement[Any], order: "SortOrder") -> ColumnE
     return expr.asc() if order == SortOrder.ASC else expr.desc()
 
 
+# A quote that ends a quoted filter part: followed by a comma or the end of the value.
+_CLOSING_QUOTE = re.compile(r'"(?=,|\Z)')
+
+
+def split_filter_values(value: str) -> list[str]:
+    """Split a comma-separated filter value, keeping commas inside a quoted part.
+
+    A part wrapped in double quotes is an exact match, and its value may itself contain a
+    comma (a location called "Top shelf, Rack 3"). A part that starts with a quote runs to the
+    first quote followed by a comma or the end of the string. Without such a closing quote, or
+    for a part that doesn't start with one, this splits at the next comma exactly like
+    ``value.split(",")``, so every value that has no comma inside quotes splits as before.
+    """
+    parts: list[str] = []
+    start = 0
+    # Once no closing quote is found after some position, none exists after any later one
+    # either, so the search runs at most once past the last closing quote. Without this a
+    # value like '"a,' * n rescans the rest of the string for every part: quadratic.
+    closing_quote_left = True
+    while True:
+        end = -1
+        if closing_quote_left and value.startswith('"', start):
+            match = _CLOSING_QUOTE.search(value, start + 1)
+            if match:
+                end = match.end()
+            else:
+                closing_quote_left = False
+        if end == -1:
+            comma = value.find(",", start)
+            end = len(value) if comma == -1 else comma
+        parts.append(value[start:end])
+        if end == len(value):
+            return parts
+        start = end + 1
+
+
 def add_where_clause_str_opt(
     stmt: Select,
     field: attributes.InstrumentedAttribute[str | None],
@@ -159,7 +196,7 @@ def add_where_clause_str_opt(
     """Add a where clause to a select statement for an optional string field."""
     if value is not None:
         conditions = []
-        for value_part in value.split(","):
+        for value_part in split_filter_values(value):
             # If part is empty, search for empty fields
             if len(value_part) == 0:
                 conditions.append(field.is_(None))
@@ -183,7 +220,7 @@ def add_where_clause_str(
     """Add a where clause to a select statement for a string field."""
     if value is not None:
         conditions = []
-        for value_part in value.split(","):
+        for value_part in split_filter_values(value):
             # If part is empty, search for empty fields
             if len(value_part) == 0:
                 conditions.append(field == "")
