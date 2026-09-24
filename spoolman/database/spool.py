@@ -477,10 +477,11 @@ async def update(
         elif isinstance(v, datetime):
             setattr(spool, k, utc_timezone_naive(v))
         elif k == "extra":
+            extra = v or {}  # `"extra": null` changes nothing, the same as leaving it out
             # Merge semantics (#233): keys present are replaced, a None value deletes the
-            # key, keys not mentioned stay. Unlike the other entities, which replace all.
-            spool.extra = [f for f in spool.extra if f.key not in v]
-            spool.extra.extend([models.SpoolField(key=k2, value=v2) for k2, v2 in v.items() if v2 is not None])
+            # key, keys not mentioned stay. Filaments and vendors merge the same way.
+            spool.extra = [f for f in spool.extra if f.key not in extra]
+            spool.extra.extend([models.SpoolField(key=k2, value=v2) for k2, v2 in extra.items() if v2 is not None])
         elif k == "printer_id":
             # #75: validate the reassignment (no DB-level FK) and set the relationship object so the
             # post-commit spool_changed payload has it loaded; a null clears the assignment.

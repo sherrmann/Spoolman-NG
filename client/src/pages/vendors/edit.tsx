@@ -5,10 +5,14 @@ import { Alert, DatePicker, Form, Input, InputNumber, message, Typography } from
 import TextArea from "antd/es/input/TextArea";
 import dayjs from "dayjs";
 import { useState } from "react";
-import { ExtraFieldFormItem, ParsedExtras, StringifiedExtras } from "../../components/extraFields";
+import { ExtraFieldFormItem, ParsedExtras, StringifiedExtrasForUpdate } from "../../components/extraFields";
 import { formatNumberOnUserInput, numberParserAllowEmpty } from "../../utils/parsing";
 import { EntityType, useGetFields } from "../../utils/queryFields";
 import { IVendor, IVendorParsedExtras } from "./model";
+
+// What the form submits: extra values as JSON strings, with null for a field left empty.
+// The API merges extra per key, so null is what clears a value.
+type IVendorRequest = Omit<IVendor, "extra"> & { extra?: { [key: string]: string | null } };
 
 /*
 The API returns the extra fields as JSON values, but we need to parse them into their real types
@@ -23,7 +27,7 @@ export const VendorEdit = () => {
   const [hasChanged, setHasChanged] = useState(false);
   const extraFields = useGetFields(EntityType.vendor);
 
-  const { formProps, saveButtonProps } = useForm<IVendor, HttpError, IVendor, IVendor>({
+  const { formProps, saveButtonProps } = useForm<IVendor, HttpError, IVendorRequest, IVendor>({
     liveMode: "manual",
     onLiveEvent() {
       // Warn the user if the vendor has been updated since the form was opened
@@ -42,7 +46,7 @@ export const VendorEdit = () => {
   formProps.onFinish = (allValues: IVendorParsedExtras) => {
     if (allValues !== undefined && allValues !== null) {
       // Lot of stupidity here to make types work
-      const stringifiedAllValues = StringifiedExtras<IVendorParsedExtras>(allValues);
+      const stringifiedAllValues = StringifiedExtrasForUpdate<IVendorParsedExtras>(allValues);
       originalOnFinish?.({
         extra: {},
         ...stringifiedAllValues,

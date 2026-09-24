@@ -54,6 +54,13 @@ class VendorParameters(BaseModel):
 
 class VendorUpdateParameters(VendorParameters):
     name: str | None = Field(None, max_length=64, description="Vendor name.", examples=["Polymaker"])
+    extra: dict[str, str | None] | None = Field(  # type: ignore[assignment]  # None clears the key
+        None,
+        description=(
+            "Extra fields to change on this vendor. Keys present are set to the given value, "
+            "a null value removes the key, and keys not mentioned are left unchanged."
+        ),
+    )
 
     @field_validator("name")
     @classmethod
@@ -255,7 +262,8 @@ async def create(  # noqa: ANN201
     name="Update vendor",
     description=(
         "Update any attribute of a vendor. Only fields specified in the request will be affected. "
-        "If extra is set, all existing extra fields will be removed and replaced with the new ones."
+        "Extra fields merge per key: keys in the request are set, a null value removes the key, and "
+        "keys not mentioned are left unchanged."
     ),
     response_model_exclude_none=True,
     response_model=Vendor,

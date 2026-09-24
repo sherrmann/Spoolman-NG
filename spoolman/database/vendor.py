@@ -149,7 +149,10 @@ async def update(
     vendor = await get_by_id(db, vendor_id)
     for k, v in data.items():
         if k == "extra":
-            vendor.extra = [models.VendorField(key=k, value=v) for k, v in v.items()]
+            extra = v or {}  # `"extra": null` changes nothing, the same as leaving it out
+            # Merged per key like a spool's and a filament's; see database/filament.py update().
+            vendor.extra = [f for f in vendor.extra if f.key not in extra]
+            vendor.extra.extend([models.VendorField(key=k2, value=v2) for k2, v2 in extra.items() if v2 is not None])
         else:
             setattr(vendor, k, v)
     await db.commit()

@@ -257,6 +257,13 @@ class FilamentParameters(BaseModel):
 class FilamentUpdateParameters(FilamentParameters):
     density: float | None = Field(None, gt=0, description="The density of this filament in g/cm3.", examples=[1.24])
     diameter: float | None = Field(None, gt=0, description="The diameter of this filament in mm.", examples=[1.75])
+    extra: dict[str, str | None] | None = Field(  # type: ignore[assignment]  # None clears the key
+        None,
+        description=(
+            "Extra fields to change on this filament. Keys present are set to the given value, "
+            "a null value removes the key, and keys not mentioned are left unchanged."
+        ),
+    )
     label_printed_at: datetime | None = Field(
         None,
         description=(
@@ -605,7 +612,8 @@ async def create(  # noqa: ANN201
     name="Update filament",
     description=(
         "Update any attribute of a filament. Only fields specified in the request will be affected. "
-        "If extra is set, all existing extra fields will be removed and replaced with the new ones."
+        "Extra fields merge per key: keys in the request are set, a null value removes the key, and "
+        "keys not mentioned are left unchanged."
     ),
     response_model_exclude_none=True,
     response_model=Filament,

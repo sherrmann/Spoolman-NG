@@ -18,7 +18,7 @@ import {
 import TextArea from "antd/es/input/TextArea";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
-import { ExtraFieldFormItem, ParsedExtras, StringifiedExtras } from "../../components/extraFields";
+import { ExtraFieldFormItem, ParsedExtras, StringifiedExtrasForUpdate } from "../../components/extraFields";
 import { FilamentImageSection } from "../../components/filamentImageUpload";
 import { MultiColorPicker } from "../../components/multiColorPicker";
 import { formatNumberOnUserInput, numberParser, numberParserAllowEmpty } from "../../utils/parsing";
@@ -31,6 +31,10 @@ import { FilamentCatalogFields } from "./catalogFields";
 import { FilamentDeleteButton } from "./filamentDeleteButton";
 import { filamentDisplayName } from "./functions";
 import { IFilament, IFilamentParsedExtras } from "./model";
+
+// What the form submits: extra values as JSON strings, with null for a field left empty.
+// The API merges extra per key, so null is what clears a value.
+type IFilamentRequest = Omit<IFilament, "extra"> & { extra?: { [key: string]: string | null } };
 
 /*
 The API returns the extra fields as JSON values, but we need to parse them into their real types
@@ -50,7 +54,7 @@ export const FilamentEdit = () => {
   const invalidate = useInvalidate();
   const { list } = useNavigation();
 
-  const { formProps, saveButtonProps, id } = useForm<IFilament, HttpError, IFilament, IFilament>({
+  const { formProps, saveButtonProps, id } = useForm<IFilament, HttpError, IFilamentRequest, IFilament>({
     liveMode: "manual",
     onLiveEvent() {
       // Warn the user if the filament has been updated since the form was opened
@@ -91,7 +95,7 @@ export const FilamentEdit = () => {
         allValues.multi_color_hexes = "";
       }
       // Lot of stupidity here to make types work
-      const stringifiedAllValues = StringifiedExtras<IFilamentParsedExtras>(allValues);
+      const stringifiedAllValues = StringifiedExtrasForUpdate<IFilamentParsedExtras>(allValues);
       originalOnFinish?.({
         extra: {},
         ...stringifiedAllValues,
