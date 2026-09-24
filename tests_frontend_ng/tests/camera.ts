@@ -12,17 +12,19 @@ import { writeQrVideo } from "./qrVideo";
  * Every browser opened through the fixture is closed when the test ends, whether it passed or
  * not -- a leaked headless chromium holding a camera outlives the run.
  */
-export const test = base.extend<{ cameraPage: (payloads: string[]) => Promise<Page> }>({
+type CameraOptions = { inverted?: boolean };
+
+export const test = base.extend<{ cameraPage: (payloads: string[], options?: CameraOptions) => Promise<Page> }>({
 	cameraPage: async ({ baseURL }, use) => {
 		const opened: Browser[] = [];
-		await use(async (payloads: string[]) => {
+		await use(async (payloads: string[], options?: CameraOptions) => {
 			const browser = await chromium.launch({
 				executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH,
 				args: [
 					// Answer the permission prompt, swap the camera for a file, and name the file.
 					"--use-fake-ui-for-media-stream",
 					"--use-fake-device-for-media-stream",
-					`--use-file-for-fake-video-capture=${writeQrVideo(payloads)}`,
+					`--use-file-for-fake-video-capture=${writeQrVideo(payloads, options)}`,
 				],
 			});
 			opened.push(browser);

@@ -40,6 +40,18 @@ test("a spool code still navigates, so the fork handler has not swallowed upstre
   await page.waitForURL(new RegExp(`sel=spool:${spoolId}\\b`), { timeout: 20_000 });
 });
 
+test("a white-on-black spool label decodes too", async ({ cameraPage, request }) => {
+  // Light-on-dark labels are a common thermal-printer choice. Without a built-in barcode
+  // detector (Firefox, and headless Chromium on Linux) qr-scanner decodes in a worker that only
+  // reads dark-on-light unless told otherwise (upstream issue 1165).
+  const { spoolId } = await seedSpool(request, "ScanInverted", "Shelf Inverted");
+  const page = await cameraPage([`WEB+SPOOLMAN:S-${spoolId}`], { inverted: true });
+
+  await openScanner(page);
+
+  await page.waitForURL(new RegExp(`sel=spool:${spoolId}\\b`), { timeout: 20_000 });
+});
+
 test("the reserved clear code is acknowledged rather than silently ignored", async ({ cameraPage }) => {
   // Spoolman holds no active spool of its own, so there is nothing to clear here. Saying so is
   // the whole feature: a code other integrations agree on must not look like a dud label.
