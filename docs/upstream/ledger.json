@@ -1110,7 +1110,7 @@
       "kind": "",
       "pri": "",
       "pr": 429,
-      "released_in": null
+      "released_in": "v2026.9.0"
     },
     {
       "fork_issue": 428,
@@ -1121,7 +1121,7 @@
       "kind": "",
       "pri": "",
       "pr": 429,
-      "released_in": null
+      "released_in": "v2026.9.0"
     }
   ],
   "in_progress": [
@@ -1808,21 +1808,21 @@
       "verdict": "ported",
       "reason": "merge of a6512da59",
       "pr": 429,
-      "released_in": null
+      "released_in": "v2026.9.0"
     },
     {
       "sha": "0a3404cef",
       "verdict": "skipped",
       "reason": "React client catalogue is fork-maintained and the client is frozen",
       "pr": 429,
-      "released_in": null
+      "released_in": "v2026.9.0"
     },
     {
       "sha": "0b3d7ba14",
       "verdict": "ported",
       "reason": "client_v2 locale churn, arrives with the subtree pull",
       "pr": 429,
-      "released_in": null
+      "released_in": "v2026.9.0"
     },
     {
       "sha": "1b1dbbb7",
@@ -1843,7 +1843,7 @@
       "verdict": "ported",
       "reason": "client_v2 locale churn, arrives with the subtree pull",
       "pr": 429,
-      "released_in": null
+      "released_in": "v2026.9.0"
     },
     {
       "sha": "3f1d3b4c",
@@ -1864,7 +1864,7 @@
       "verdict": "ported",
       "reason": "the vendoring point; already in the tree",
       "pr": 429,
-      "released_in": null
+      "released_in": "v2026.9.0"
     },
     {
       "sha": "46beda22",
@@ -1878,28 +1878,28 @@
       "verdict": "ported",
       "reason": "",
       "pr": 429,
-      "released_in": null
+      "released_in": "v2026.9.0"
     },
     {
       "sha": "4f9cc1b75",
       "verdict": "ported",
       "reason": "merge of 4c2febbba, eced7f22d and 035922b49",
       "pr": 429,
-      "released_in": null
+      "released_in": "v2026.9.0"
     },
     {
       "sha": "6bcda3d30",
       "verdict": "ported",
       "reason": "client_v2 locale churn, arrives with the subtree pull",
       "pr": 429,
-      "released_in": null
+      "released_in": "v2026.9.0"
     },
     {
       "sha": "6da0902c8",
       "verdict": "ported",
       "reason": "already in the vendored tree since #397",
       "pr": 429,
-      "released_in": null
+      "released_in": "v2026.9.0"
     },
     {
       "sha": "72daa29c",
@@ -1941,14 +1941,14 @@
       "verdict": "ported",
       "reason": "client_v2 locale churn, arrives with the subtree pull",
       "pr": 429,
-      "released_in": null
+      "released_in": "v2026.9.0"
     },
     {
       "sha": "92be2975b",
       "verdict": "skipped",
       "reason": "React client catalogue is fork-maintained and the client is frozen",
       "pr": 429,
-      "released_in": null
+      "released_in": "v2026.9.0"
     },
     {
       "sha": "97524b11",
@@ -1969,7 +1969,7 @@
       "verdict": "skipped",
       "reason": "React client catalogue is fork-maintained and the client is frozen",
       "pr": 429,
-      "released_in": null
+      "released_in": "v2026.9.0"
     },
     {
       "sha": "a6512da5",
@@ -1983,7 +1983,7 @@
       "verdict": "ported",
       "reason": "already ported in #397; unit tests added here",
       "pr": 429,
-      "released_in": null
+      "released_in": "v2026.9.0"
     },
     {
       "sha": "ac7865ec",
@@ -2011,7 +2011,7 @@
       "verdict": "skipped",
       "reason": "React client catalogue is fork-maintained and the client is frozen",
       "pr": 429,
-      "released_in": null
+      "released_in": "v2026.9.0"
     },
     {
       "sha": "d43552bd",
@@ -2046,7 +2046,7 @@
       "verdict": "skipped",
       "reason": "React client catalogue is fork-maintained and the client is frozen",
       "pr": 429,
-      "released_in": null
+      "released_in": "v2026.9.0"
     },
     {
       "sha": "ecd43bd5",
@@ -2060,7 +2060,7 @@
       "verdict": "skipped",
       "reason": "React client catalogue is fork-maintained and the client is frozen",
       "pr": 429,
-      "released_in": null
+      "released_in": "v2026.9.0"
     }
   ]
 }
