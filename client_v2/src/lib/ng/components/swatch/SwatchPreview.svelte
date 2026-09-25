@@ -12,7 +12,8 @@
 	/** Pixels per mm, so differently sized styles preview at a comparable scale. */
 	const PREVIEW_SCALE = 5;
 
-	const gradientId = `swatch-gradient-${$props.id()}`;
+	const uid = $props.id();
+	const gradientId = `swatch-gradient-${uid}`;
 	let markingFill = $derived(layout.markingColor === 'black' ? '#000000' : '#ffffff');
 	let multi = $derived(layout.baseColorHexes.length > 1);
 	let baseFill = $derived(multi ? `url(#${gradientId})` : (layout.baseColorHexes[0] ?? '#d9d9d9'));

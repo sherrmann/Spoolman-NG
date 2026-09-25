@@ -71,31 +71,36 @@
 
 {#if show}
 	<NgSettingsSection title={ng.settings_swatch_tab()}>
-		<label class="row">
-			<span class="lbl" title={ng.settings_swatch_default_style_tooltip()}
-				>{ng.settings_swatch_default_style_label()}</span
-			>
-			<select class="sel" value={styleKey} onchange={(e) => choose(e.currentTarget.value)}>
-				{#each SWATCH_STYLES as s (s.key)}
-					<option value={s.key}>{swatchStyleName(s.key)}</option>
+		<div class="body">
+			<label class="row">
+				<span class="lbl" title={ng.settings_swatch_default_style_tooltip()}
+					>{ng.settings_swatch_default_style_label()}</span
+				>
+				<select class="sel" value={styleKey} onchange={(e) => choose(e.currentTarget.value)}>
+					{#each SWATCH_STYLES as s (s.key)}
+						<option value={s.key}>{swatchStyleName(s.key)}</option>
+					{/each}
+				</select>
+			</label>
+			<p class="intro">{ng.settings_swatch_preview_description()}</p>
+			<div class="samples">
+				{#each [SAMPLE_LIGHT, SAMPLE_DARK] as sample (sample.id)}
+					<div class="sample">
+						<SwatchPreview
+							layout={buildSwatchLayoutForStyle(sample, styleKey)}
+							label={`${swatchStyleName(styleKey)} · ${sample.name}`}
+						/>
+					</div>
 				{/each}
-			</select>
-		</label>
-		<p class="intro">{ng.settings_swatch_preview_description()}</p>
-		<div class="samples">
-			{#each [SAMPLE_LIGHT, SAMPLE_DARK] as sample (sample.id)}
-				<div class="sample">
-					<SwatchPreview
-						layout={buildSwatchLayoutForStyle(sample, styleKey)}
-						label={`${swatchStyleName(styleKey)} · ${sample.name}`}
-					/>
-				</div>
-			{/each}
+			</div>
 		</div>
 	</NgSettingsSection>
 {/if}
 
 <style>
+	.body {
+		padding: 12px 14px;
+	}
 	.row {
 		display: flex;
 		align-items: center;

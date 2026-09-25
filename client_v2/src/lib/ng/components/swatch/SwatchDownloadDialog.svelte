@@ -59,9 +59,7 @@
 	});
 
 	let root = $derived((settings.baseUrl || window.location.origin).replace(/\/+$/, ''));
-	let payload = $derived(
-		useUrl ? `${root}/filament/show/${filament.id}` : `WEB+SPOOLMAN:F-${filament.id}`
-	);
+	let payload = $derived(useUrl ? `${root}/filament/show/${filament.id}` : `WEB+SPOOLMAN:F-${filament.id}`);
 	let input = $derived(
 		swatchInputFromFilament(filament, {
 			qrPayload: payload,
