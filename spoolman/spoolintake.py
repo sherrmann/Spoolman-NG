@@ -272,8 +272,43 @@ def _similarity(a: str | None, b: str | None) -> float:
         return 0.0
     ratio = difflib.SequenceMatcher(None, na, nb).ratio()
     if na in nb or nb in na:
-        return max(ratio, 0.85)
+        return max(ratio, _CONTAINMENT_SCORE)
     return ratio
+
+
+#: A floor for names that contain one another; see _similarity and _name_similarity.
+_CONTAINMENT_SCORE = 0.85
+#: The most a word match can add to that floor. It stays below 1.0 so an exact name still wins:
+#: with the material set aside, "PLA - White" and every maker's "White" have the same words.
+_WORD_OVERLAP_BONUS = 0.1
+
+
+def _words(value: str | None, drop: frozenset[str] = frozenset()) -> frozenset[str]:
+    """Lower-case words of a name, ignoring trademark signs and punctuation ("PolyTerra™" is "polyterra")."""
+    return frozenset(word for word in re.sub(r"[^\w+]+", " ", (value or "").lower()).split() if word not in drop)
+
+
+def _name_similarity(reading: str | None, candidate: str | None, materials: frozenset[str]) -> float:
+    """Name similarity with the containment boost applied to words, not just to the whole string.
+
+    SpoolmanDB renames products by prefixing the old name ("Panchroma™ Matte (Formerly PolyTerra™)
+    Charcoal Black"), and labels repeat the material in the name ("PolyTerra PLA Charcoal Black").
+    A character comparison scores that pair below unrelated products of the same maker. When every
+    word of the reading appears in the candidate's name, once the material and trademark signs are
+    set aside, it gets at least the substring floor, plus up to 0.1 for how much of the two word
+    sets is shared: "Red" matches "Red" better than "Lava Red", instead of the two tying. It stays
+    under an exact match's 1.0.
+
+    Only in that direction. The reverse, a candidate's words all found in the reading, rewards
+    short generic names: every maker's plain "Green" would rise above "Silk Green" for a reading
+    of "Si1k Green". That direction keeps the plain substring rule of _similarity.
+    """
+    score = _similarity(reading, candidate)
+    reading_words, candidate_words = _words(reading, materials), _words(candidate, materials)
+    if reading_words and reading_words <= candidate_words:
+        overlap = len(reading_words) / len(candidate_words)
+        return max(score, _CONTAINMENT_SCORE + _WORD_OVERLAP_BONUS * overlap)
+    return score
 
 
 #: Two spool weights within 5% of each other count as the same nominal size.
@@ -322,7 +357,8 @@ def score_candidate(
     scales the whole score down hard (a PETG label must not match a PLA record). A material
     and its plus variant ("PLA" and "PLA+") get partial credit instead of the penalty.
     """
-    name_score = _similarity(extraction.get("name"), name)
+    materials = _words(extraction.get("material")) | _words(material)
+    name_score = _name_similarity(extraction.get("name"), name, materials)
     vendor_score = _similarity(extraction.get("vendor"), vendor)
     material_a, material_b = _material_key(extraction.get("material")), _material_key(material)
     mismatch = False

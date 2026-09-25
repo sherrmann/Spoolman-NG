@@ -149,6 +149,60 @@ def test_plus_variant_ranks_below_the_exact_material_in_the_catalog(monkeypatch:
     assert [m["external_id"] for m in plain_label] == ["esun-pla", "esun-pla-plus"]
 
 
+def _polymaker(label_name: str, record_name: str) -> float:
+    extraction = {"vendor": "Polymaker", "name": label_name, "material": "PLA", "weight_g": 1000}
+    return score_candidate(extraction, vendor="Polymaker", name=record_name, material="PLA", weight_g=1000)
+
+
+def test_a_renamed_product_beats_other_lines_of_the_same_maker() -> None:
+    """SpoolmanDB renamed PolyTerra; a label with the old name must still find it."""
+    renamed = _polymaker("PolyTerra PLA Charcoal Black", "Panchroma™ Matte (Formerly PolyTerra™) Charcoal Black")
+    other_line = _polymaker("PolyTerra PLA Charcoal Black", "PolyLite™ PLA Pro Black")
+    other_colour = _polymaker("PolyTerra PLA Charcoal Black", "Panchroma™ Matte (Formerly PolyTerra™) Cotton White")
+
+    assert renamed > other_line
+    assert renamed > other_colour
+
+
+def test_trademark_signs_and_the_material_word_do_not_block_a_word_match() -> None:
+    reading, record = "PolyTerra PLA Charcoal Black", "Panchroma™ Matte (Formerly PolyTerra™) Charcoal Black"
+    assert spoolintake._similarity(reading, record) < 0.85, "a character comparison misses it"  # noqa: SLF001
+    assert spoolintake._name_similarity(reading, record, frozenset({"pla"})) >= 0.85  # noqa: SLF001
+    assert spoolintake._name_similarity(reading, record, frozenset()) < 0.85, "the material word blocks it"  # noqa: SLF001
+
+
+def test_fewer_extra_words_score_higher() -> None:
+    """Every word of "Red" is in both names, but "Red" is the closer match than "Lava Red"."""
+    assert _polymaker("Red", "Red") > _polymaker("Red", "Lava Red")
+
+
+def test_an_exact_name_beats_a_word_match_once_the_material_is_set_aside() -> None:
+    """An exact "PLA - White" must beat a plain "White", though both have the same words without "PLA"."""
+    reading = {"vendor": None, "name": "PLA - White", "material": "PLA", "weight_g": None}
+    exact = score_candidate(reading, vendor="FlashForge", name="PLA - White", material="PLA", weight_g=1000)
+    plain = score_candidate(reading, vendor="3DJAKE", name="White", material="PLA", weight_g=1000)
+    assert exact > plain
+
+
+def test_a_short_generic_candidate_gets_no_word_bonus() -> None:
+    """The reverse direction must not lift every maker's plain "Green" for a reading of "Si1k Green"."""
+    generic = score_candidate(
+        {"vendor": None, "name": "Si1k Green", "material": "PLA", "weight_g": 1000},
+        vendor="Abaflex",
+        name="Green",
+        material="PLA",
+        weight_g=1000,
+    )
+    right = score_candidate(
+        {"vendor": None, "name": "Si1k Green", "material": "PLA", "weight_g": 1000},
+        vendor="Bambu Lab",
+        name="Silk Green",
+        material="PLA",
+        weight_g=1000,
+    )
+    assert right > generic
+
+
 def test_name_containment_matches_verbose_catalog_names() -> None:
     score = score_candidate(
         _EXTRACTION,
