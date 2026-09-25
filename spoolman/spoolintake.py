@@ -272,8 +272,48 @@ def _similarity(a: str | None, b: str | None) -> float:
         return 0.0
     ratio = difflib.SequenceMatcher(None, na, nb).ratio()
     if na in nb or nb in na:
-        return max(ratio, 0.85)
+        return max(ratio, _CONTAINMENT_SCORE)
     return ratio
+
+
+#: A floor for names that contain one another; see _similarity and _name_similarity.
+_CONTAINMENT_SCORE = 0.85
+#: The most a word match can add to that floor. It stays below 1.0 so an exact name still wins:
+#: with the material set aside, "PLA - White" and every maker's "White" have the same words.
+_WORD_OVERLAP_BONUS = 0.1
+#: Weight of the character score within a word match, only enough to order equal overlaps.
+_WORD_TIE_BREAK = 0.01
+
+
+def _words(value: str | None, drop: frozenset[str] = frozenset()) -> frozenset[str]:
+    """Lower-case words of a name, ignoring trademark signs and punctuation ("PolyTerra™" is "polyterra")."""
+    return frozenset(word for word in re.sub(r"[^\w+]+", " ", (value or "").lower()).split() if word not in drop)
+
+
+def _name_similarity(reading: str | None, candidate: str | None, materials: frozenset[str]) -> float:
+    """Name similarity with the containment boost applied to words, not just to the whole string.
+
+    SpoolmanDB renames products by prefixing the old name ("Panchroma™ Matte (Formerly PolyTerra™)
+    Charcoal Black"), and labels repeat the material in the name ("PolyTerra PLA Charcoal Black").
+    A character comparison scores that pair below unrelated products of the same maker. When every
+    word of the reading appears in the candidate's name, once the material and trademark signs are
+    set aside, it gets at least the substring floor, plus up to 0.1 for how much of the two word
+    sets is shared: a reading of "Charcoal Black" matches "Matte Charcoal Black" better than the
+    long Panchroma name, where both used to sit at the floor. A small share of the character score
+    orders equal overlaps. It stays under an exact match's 1.0.
+
+    Only in that direction. The reverse, a candidate's words all found in the reading, rewards
+    short generic names: every maker's plain "Green" would rise above "Silk Green" for a reading
+    of "Si1k Green". That direction keeps the plain substring rule of _similarity.
+    """
+    score = _similarity(reading, candidate)
+    reading_words, candidate_words = _words(reading, materials), _words(candidate, materials)
+    if reading_words and reading_words <= candidate_words:
+        overlap = len(reading_words) / len(candidate_words)
+        # The character score breaks ties between equal word overlaps: with the material set aside,
+        # "PLA - Black" and a plain "Black" have the same words for a reading of "PLA Black".
+        return max(score, _CONTAINMENT_SCORE + _WORD_OVERLAP_BONUS * overlap + _WORD_TIE_BREAK * score)
+    return score
 
 
 #: Two spool weights within 5% of each other count as the same nominal size.
@@ -284,6 +324,28 @@ def _weight_closeness(a: float | None, b: float | None) -> float:
     if a is None or b is None or a <= 0 or b <= 0:
         return 0.0
     return 1.0 if abs(a - b) / max(a, b) <= _WEIGHT_TOLERANCE else 0.0
+
+
+def _material_key(value: str | None) -> str:
+    """Normalise a material name for comparison: case and spaces ignored, "PLA Plus" and "PLA-Plus" read as "PLA+"."""
+    key = re.sub(r"\s+", "", (value or "").upper())
+    return re.sub(r"-?PLUS$", "+", key) if len(key) > len("PLUS") else key
+
+
+def _material_variant(a: str, b: str) -> bool:
+    """Whether two material keys differ only by a trailing "+" ("PLA" and "PLA+").
+
+    Labels and extractions drop the plus often enough ("PLA+" printed small, or read as "PLA")
+    that treating the pair as a hard mismatch loses the right spool. Only a trailing plus counts:
+    in "PC+ABS" or "PLA+WOOD" it joins two materials.
+    """
+    longer, shorter = (a, b) if len(a) > len(b) else (b, a)
+    return longer == shorter + "+" and bool(shorter) and "+" not in shorter
+
+
+#: Material credit for a plus/non-plus pair: below an exact match, so a label that does say "PLA+"
+#: still prefers PLA+ records, but without the mismatch penalty.
+_MATERIAL_VARIANT_SCORE = 0.5
 
 
 def score_candidate(
@@ -297,19 +359,28 @@ def score_candidate(
     """Score a filament candidate against an extraction; pure and unit-testable.
 
     Name 0.4 + vendor 0.3 + material 0.2 + weight 0.1; a definite material mismatch
-    scales the whole score down hard (a PETG label must not match a PLA record).
+    scales the whole score down hard (a PETG label must not match a PLA record). A material
+    and its plus variant ("PLA" and "PLA+") get partial credit instead of the penalty.
     """
-    name_score = _similarity(extraction.get("name"), name)
+    materials = _words(extraction.get("material")) | _words(material)
+    name_score = _name_similarity(extraction.get("name"), name, materials)
     vendor_score = _similarity(extraction.get("vendor"), vendor)
-    material_a, material_b = _norm(extraction.get("material")), _norm(material)
+    material_a, material_b = _material_key(extraction.get("material")), _material_key(material)
+    mismatch = False
     if material_a and material_b:
-        material_score = 1.0 if material_a == material_b else 0.0
+        if material_a == material_b:
+            material_score = 1.0
+        elif _material_variant(material_a, material_b):
+            material_score = _MATERIAL_VARIANT_SCORE
+        else:
+            material_score = 0.0
+            mismatch = True
     else:
         material_score = 0.5 if material_a or material_b else 0.0
     weight_score = _weight_closeness(extraction.get("weight_g"), weight_g)
 
     score = 0.4 * name_score + 0.3 * vendor_score + 0.2 * material_score + 0.1 * weight_score
-    if material_a and material_b and material_a != material_b:
+    if mismatch:
         score *= 0.3
     return round(score, 3)
 
@@ -317,6 +388,17 @@ def score_candidate(
 _LIBRARY_MIN_SCORE = 0.45
 _CATALOG_MIN_SCORE = 0.5
 _MATCH_LIMIT = 5
+
+
+def _best(scored: list[tuple[float, dict]], limit: int | None = None) -> list[dict]:
+    """Return the entries of (score, entry) pairs best first, keeping input order for equal scores.
+
+    Sorted on the score itself, not on the whole-number ``match_percent`` shown to the user: the
+    name tie-break is worth a fraction of a percent, and rounding first would hand every such
+    tie back to catalogue order.
+    """
+    scored.sort(key=lambda pair: -pair[0])
+    return [entry for _, entry in scored[: _MATCH_LIMIT if limit is None else limit]]
 
 
 def _rank_library(rows: list[dict], extraction: dict, aggregates: dict) -> list[dict]:
@@ -338,16 +420,18 @@ def _rank_library(rows: list[dict], extraction: dict, aggregates: dict) -> list[
             continue
         spool_count, remaining = aggregates.get(row["filament_id"], (0, 0.0))
         candidates.append(
-            {
-                "kind": "library",
-                **row,
-                "active_spool_count": spool_count,
-                "remaining_weight_g": round(remaining, 1),
-                "match_percent": int(score * 100),
-            },
+            (
+                score,
+                {
+                    "kind": "library",
+                    **row,
+                    "active_spool_count": spool_count,
+                    "remaining_weight_g": round(remaining, 1),
+                    "match_percent": int(score * 100),
+                },
+            ),
         )
-    candidates.sort(key=lambda entry: -entry["match_percent"])
-    return candidates[:_MATCH_LIMIT]
+    return _best(candidates)
 
 
 async def match_library(db: AsyncSession, extraction: dict) -> list[dict]:
@@ -422,19 +506,21 @@ def match_catalog(extraction: dict) -> list[dict]:
         if score < _CATALOG_MIN_SCORE:
             continue
         candidates.append(
-            {
-                "kind": "catalog",
-                "external_id": entry.get("id"),
-                "vendor": entry.get("manufacturer"),
-                "name": entry.get("name"),
-                "material": entry.get("material"),
-                "weight_g": entry.get("weight"),
-                "diameter_mm": entry.get("diameter"),
-                "match_percent": int(score * 100),
-            },
+            (
+                score,
+                {
+                    "kind": "catalog",
+                    "external_id": entry.get("id"),
+                    "vendor": entry.get("manufacturer"),
+                    "name": entry.get("name"),
+                    "material": entry.get("material"),
+                    "weight_g": entry.get("weight"),
+                    "diameter_mm": entry.get("diameter"),
+                    "match_percent": int(score * 100),
+                },
+            ),
         )
-    candidates.sort(key=lambda entry: -entry["match_percent"])
-    return candidates[:_MATCH_LIMIT]
+    return _best(candidates)
 
 
 #: Text fields of the extraction the decision model sees. Numbers other than the nominal weight
