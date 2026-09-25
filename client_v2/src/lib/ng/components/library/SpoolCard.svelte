@@ -46,7 +46,10 @@
 			<span class="id mono">{vm.idLabel}</span>
 		</span>
 		<span class="name">
-			{#if identity.title}<span class="title" use:truncTitle>{identity.title}</span>{/if}
+			<!-- A plain title, not truncTitle: that action detects text cut off sideways, and this one is
+			     clamped to two lines, so it is cut off downwards. Always there, as a clamp that fits
+			     costs nothing to hover. -->
+			{#if identity.title}<span class="title" title={identity.title}>{identity.title}</span>{/if}
 			{#if identity.sub}<span class="sub" use:truncTitle>{identity.sub}</span>{/if}
 		</span>
 		<span class="facts">

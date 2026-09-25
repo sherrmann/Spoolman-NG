@@ -110,6 +110,11 @@ test("toggling Grid view renders one card per spool, each opening its spool", as
     await expect(card.locator("a.card")).toHaveAttribute(
       "href",
       new RegExp(`sel=spool(%3A|:)${id}(&|$)`),
+    ); // The title is clamped to two lines, so the full name has to be reachable on hover.
+    const title = card.locator(".title");
+    await expect(title).toHaveAttribute(
+      "title",
+      (await title.textContent())!.trim(),
     );
   }
 
