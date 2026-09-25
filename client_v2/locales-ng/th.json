@@ -554,5 +554,7 @@
 	"spool_weigh_updated": "อัปเดต {name} แล้ว",
 	"spool_view_grid": "มุมมองกริด",
 	"spool_view_grid_tooltip": "ดูม้วนพลาสติกเป็นแผ่นสี",
-	"spool_view_table_tooltip": "กลับไปยังตารางเต็ม"
+	"spool_view_table_tooltip": "กลับไปยังตารางเต็ม",
+	"spool_totals_shown_other": "แสดง {count} ม้วนพลาสติก",
+	"spool_totals_selected_other": "เลือก {count} ม้วนพลาสติก"
 }

@@ -562,5 +562,9 @@
 	"spool_weigh_updated": "{name} frissítve",
 	"spool_view_grid": "Rácsnézet",
 	"spool_view_grid_tooltip": "Tekercsek böngészése színes csempékként",
-	"spool_view_table_tooltip": "Vissza a teljes táblázathoz"
+	"spool_view_table_tooltip": "Vissza a teljes táblázathoz",
+	"spool_totals_shown_one": "{count} tekercs megjelenítve",
+	"spool_totals_shown_other": "{count} db tekercs megjelenítve",
+	"spool_totals_selected_one": "{count} tekercs kiválasztva",
+	"spool_totals_selected_other": "{count} db tekercs kiválasztva"
 }

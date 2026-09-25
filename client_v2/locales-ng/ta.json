@@ -562,5 +562,9 @@
 	"spool_weigh_updated": "{name} புதுப்பிக்கப்பட்டது",
 	"spool_view_grid": "கட்டக் காட்சி",
 	"spool_view_grid_tooltip": "ச்பூல்களை வண்ணக் கட்டங்களாகப் பார்",
-	"spool_view_table_tooltip": "முழு அட்டவணைக்குத் திரும்பு"
+	"spool_view_table_tooltip": "முழு அட்டவணைக்குத் திரும்பு",
+	"spool_totals_shown_one": "{count} ச்பூல் காட்டப்படுகிறது",
+	"spool_totals_shown_other": "{count} ச்பூல்கள் காட்டப்படுகின்றன",
+	"spool_totals_selected_one": "{count} ச்பூல் தேர்ந்தெடுக்கப்பட்டது",
+	"spool_totals_selected_other": "{count} ச்பூல்கள் தேர்ந்தெடுக்கப்பட்டன"
 }

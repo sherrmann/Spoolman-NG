@@ -1,6 +1,6 @@
 # Library table parity in the Svelte client (#412)
 
-**Status:** steps 1 (selection, bulk edit, bulk archive), 2 (weigh-in) and 3 (gallery) built; steps 4 and 5 still proposals. **Date:** 2026-09-07. **Fork:** `client_v2` subtree at
+**Status:** steps 1 (selection, bulk edit, bulk archive), 2 (weigh-in), 3 (gallery) and 4 (totals) built; step 5 in progress. **Date:** 2026-09-07. **Fork:** `client_v2` subtree at
 upstream `42721c7` (2026-08-27); upstream HEAD `81636f25` (2026-09-04).
 
 Issue #412 groups four things the frozen React client does and the Svelte library cannot:
@@ -499,6 +499,11 @@ mode and omits it when grouped.
   spool's numbers; page size 1 shows a per-page "shown" figure.
 
 **Tier 2 rows to append:** none.
+
+*As built:* the "of N matching" suffix is left out: the pagination beside it already says
+"1–20 of 57 spools" in flat mode, and it counts groups when grouped. The registry of rendered
+rows gained a version counter so the line follows rows as they load; nothing else reads it.
+Weights use the app's `weightAuto`, so a total shows at the same precision as a row.
 
 #### Step 5 — column manager (optional, flat mode only)
 

@@ -554,5 +554,7 @@
 	"spool_weigh_updated": "已更新 {name}",
 	"spool_view_grid": "網格檢視",
 	"spool_view_grid_tooltip": "以色塊瀏覽料盤",
-	"spool_view_table_tooltip": "返回完整表格"
+	"spool_view_table_tooltip": "返回完整表格",
+	"spool_totals_shown_other": "顯示 {count} 個料盤",
+	"spool_totals_selected_other": "已選擇 {count} 個料盤"
 }

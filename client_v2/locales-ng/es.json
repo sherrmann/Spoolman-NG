@@ -569,5 +569,11 @@
 	"spool_weigh_updated": "Se actualizó {name}",
 	"spool_view_grid": "Vista de cuadrícula",
 	"spool_view_grid_tooltip": "Explora las bobinas como mosaicos de color",
-	"spool_view_table_tooltip": "Volver a la tabla completa"
+	"spool_view_table_tooltip": "Volver a la tabla completa",
+	"spool_totals_shown_one": "{count} bobina mostrada",
+	"spool_totals_shown_many": "{count} bobinas mostradas",
+	"spool_totals_shown_other": "{count} bobinas mostradas",
+	"spool_totals_selected_one": "{count} bobina seleccionada",
+	"spool_totals_selected_many": "{count} bobinas seleccionadas",
+	"spool_totals_selected_other": "{count} bobinas seleccionadas"
 }

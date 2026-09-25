@@ -562,5 +562,9 @@
 	"spool_weigh_updated": "Oppdaterte {name}",
 	"spool_view_grid": "Rutenettvisning",
 	"spool_view_grid_tooltip": "Bla gjennom spoler som fargefliser",
-	"spool_view_table_tooltip": "Tilbake til hele tabellen"
+	"spool_view_table_tooltip": "Tilbake til hele tabellen",
+	"spool_totals_shown_one": "{count} spole vist",
+	"spool_totals_shown_other": "{count} spoler vist",
+	"spool_totals_selected_one": "{count} spole valgt",
+	"spool_totals_selected_other": "{count} spoler valgt"
 }

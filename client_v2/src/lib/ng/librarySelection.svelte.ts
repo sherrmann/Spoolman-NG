@@ -33,6 +33,12 @@ export class LibrarySelection {
 	// Deliberately not reactive: rows register while rendering, and only a click reads it.
 	// eslint-disable-next-line svelte/prefer-svelte-reactivity
 	readonly #shown = new Map<number, { vm: SpoolVM; count: number }>();
+	/**
+	 * Bumped whenever a row comes or goes, for the one reader that has to follow the registry
+	 * live: the totals line (#412 step 4). Only written here, never read inside register, so a
+	 * row's effect never depends on it.
+	 */
+	#shownVersion = $state(0);
 
 	get count(): number {
 		return this.selected.size;
@@ -83,6 +89,7 @@ export class LibrarySelection {
 		const entry = this.#shown.get(id);
 		this.#shown.set(id, { vm, count: (entry?.count ?? 0) + 1 });
 		untrack(() => {
+			this.#shownVersion++;
 			if (this.selected.has(id) && this.selected.get(id) !== vm) this.selected.set(id, vm);
 		});
 		return () => {
@@ -90,7 +97,14 @@ export class LibrarySelection {
 			if (!current) return;
 			if (current.count <= 1) this.#shown.delete(id);
 			else this.#shown.set(id, { vm: current.vm, count: current.count - 1 });
+			untrack(() => this.#shownVersion++);
 		};
+	}
+
+	/** The spools on screen, newest view model of each. Reactive: it follows rows as they come and go. */
+	shown(): SpoolVM[] {
+		void this.#shownVersion;
+		return [...this.#shown.values()].map((e) => e.vm);
 	}
 
 	/** How many spools are on screen: what "select all shown" would add. */

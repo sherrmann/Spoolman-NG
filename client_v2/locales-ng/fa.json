@@ -562,5 +562,9 @@
 	"spool_weigh_updated": "{name} به‌روزرسانی شد",
 	"spool_view_grid": "نمای شبکه‌ای",
 	"spool_view_grid_tooltip": "مرور قرقره‌ها به‌صورت کاشی‌های رنگی",
-	"spool_view_table_tooltip": "بازگشت به جدول کامل"
+	"spool_view_table_tooltip": "بازگشت به جدول کامل",
+	"spool_totals_shown_one": "{count} قرقره نمایش داده می‌شود",
+	"spool_totals_shown_other": "تعداد {count} قرقره نمایش داده می‌شود",
+	"spool_totals_selected_one": "{count} قرقره انتخاب شد",
+	"spool_totals_selected_other": "تعداد {count} قرقره انتخاب شد"
 }

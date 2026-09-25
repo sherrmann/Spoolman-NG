@@ -570,5 +570,11 @@
 	"spool_weigh_updated": "Оновлено: {name}",
 	"spool_view_grid": "Вигляд сіткою",
 	"spool_view_grid_tooltip": "Перегляд котушок у вигляді кольорових плиток",
-	"spool_view_table_tooltip": "Повернутися до повної таблиці"
+	"spool_view_table_tooltip": "Повернутися до повної таблиці",
+	"spool_totals_shown_one": "Показано {count} котушку",
+	"spool_totals_shown_few": "Показано {count} котушки",
+	"spool_totals_shown_many": "Показано {count} котушок",
+	"spool_totals_selected_one": "Вибрано {count} котушку",
+	"spool_totals_selected_few": "Вибрано {count} котушки",
+	"spool_totals_selected_many": "Вибрано {count} котушок"
 }

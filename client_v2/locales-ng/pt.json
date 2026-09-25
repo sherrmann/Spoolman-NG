@@ -570,5 +570,11 @@
 	"spool_weigh_updated": "Bobine {name} atualizada",
 	"spool_view_grid": "Vista em grelha",
 	"spool_view_grid_tooltip": "Percorrer as bobines como mosaicos de cor",
-	"spool_view_table_tooltip": "Voltar à tabela completa"
+	"spool_view_table_tooltip": "Voltar à tabela completa",
+	"spool_totals_shown_one": "{count} bobine mostrada",
+	"spool_totals_shown_many": "{count} bobines mostradas",
+	"spool_totals_shown_other": "{count} bobines mostradas",
+	"spool_totals_selected_one": "{count} bobine selecionada",
+	"spool_totals_selected_many": "{count} bobines selecionadas",
+	"spool_totals_selected_other": "{count} bobines selecionadas"
 }
