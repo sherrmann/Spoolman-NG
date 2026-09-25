@@ -84,7 +84,9 @@
 	.update-notice {
 		position: fixed;
 		left: 18px;
-		bottom: 46px;
+		/* Clear of the bottom navigation on phones; zero on desktop, where the footer this
+		   used to clear is gone. */
+		bottom: calc(18px + var(--bottomnav-h));
 		z-index: 45;
 		display: flex;
 		align-items: flex-start;
@@ -127,7 +129,7 @@
 		.update-notice {
 			left: 12px;
 			right: 12px;
-			bottom: 70px;
+			bottom: calc(70px + var(--bottomnav-h));
 			max-width: none;
 		}
 	}

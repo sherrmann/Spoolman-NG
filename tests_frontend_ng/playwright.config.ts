@@ -53,7 +53,17 @@ export default defineConfig({
     video: "on-first-retry",
   },
   projects: [
-    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
+    // The desktop suite. The mobile specs are left to their own project below: they need a
+    // touch-enabled phone context, and would otherwise run twice.
+    { name: "chromium", testIgnore: /mobile\//, use: { ...devices["Desktop Chrome"] } },
+    {
+      // Phone-sized layout and touch flows (tests/mobile/). Pixel 5 emulation: 393x727 CSS px,
+      // touch and a mobile user agent, on the same Chromium as every other project here. The
+      // specs narrow the viewport further themselves to cover the smallest phones.
+      name: "mobile",
+      testMatch: /mobile\/.*\.spec\.ts/,
+      use: { ...devices["Pixel 5"] },
+    },
     {
       // These override the top-level testDir, so ./tests-auth runs here and nowhere else.
       name: "auth-token",

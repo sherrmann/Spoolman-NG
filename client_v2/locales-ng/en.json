@@ -662,5 +662,9 @@
 	"printing_qrcode_useHTTPUrl_options_url": "URL",
 	"settings_swatch_tab": "Swatches",
 	"settings_swatch_default_style_label": "Default swatch style",
-	"settings_swatch_preview_description": "Preview with two example filaments — the text and QR code are automatically printed in black or white, whichever contrasts best with the filament color:"
+	"settings_swatch_preview_description": "Preview with two example filaments — the text and QR code are automatically printed in black or white, whichever contrasts best with the filament color:",
+	"mobile_nav_more": "More",
+	"mobile_nav_more_pages": "More pages",
+	"mobile_nav_about": "About",
+	"mobile_nav_sponsor_upstream": "Sponsor Spoolman's original author"
 }

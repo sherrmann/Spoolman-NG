@@ -916,6 +916,21 @@
 			right: 14px;
 			left: auto;
 		}
+		/* Spoolman NG fork addition: on a phone the Group/Sort cluster left the filter row too
+		   little width, so each of its buttons wrapped onto a line of its own. Let the cluster
+		   drop to its own row instead, right-aligned, when the two do not fit side by side. */
+		.toolbar {
+			flex-wrap: wrap;
+		}
+		.controls {
+			margin-left: auto;
+		}
+		/* The menus hang a fixed 44px below the toolbar's top, i.e. under its first row. With
+		   Group/Sort on a second row that put their menus over their own buttons; open them
+		   under the whole toolbar instead. */
+		.menu {
+			top: 100%;
+		}
 	}
 
 	/* The same trade on a desktop where the list has been dragged narrow (#1034).
