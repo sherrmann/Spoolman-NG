@@ -414,6 +414,12 @@ const KEYS = [
 	'settings.swatch.tab',
 	'settings.swatch.default_style.label',
 	'settings.swatch.preview_description',
+	// The phone layout's bottom navigation and its More sheet, and the About block that replaced
+	// the footer (version and project links) on the Help page and in that sheet.
+	'mobile_nav.more',
+	'mobile_nav.more_pages',
+	'mobile_nav.about',
+	'mobile_nav.sponsor_upstream',
 ];
 
 /** Flatten nested i18next JSON to dotted keys. */

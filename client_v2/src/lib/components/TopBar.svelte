@@ -76,9 +76,9 @@
 		</div>
 	</div>
 
-	<div class="row mobile-nav">
-		<NavTabs />
-	</div>
+	<!-- Spoolman NG fork addition: upstream's second row of scrolling tabs for phones is gone.
+	     It cost ~50px at the top of every page and hid most pages past the screen's edge; the
+	     bottom navigation (BottomNav, mounted by the layout) replaces it. -->
 </header>
 
 <style>
@@ -125,8 +125,21 @@
 		display: none;
 	}
 
-	.mobile-nav {
-		display: none;
+	/* Spoolman NG fork addition: with this fork's extra pages the tab row alone is ~850px (more
+	   with the low-stock count or custom links), and below ~1500px the header was wider than
+	   the window -- the search field, scan button and "Add spools" sat past its right edge,
+	   reachable only by scrolling the whole page sideways. The tabs now give way instead: the
+	   row shrinks to the space left over and scrolls within itself (NavTabs keeps the current
+	   page's tab in view). Its nav is sized to its tabs, so NavTabs' ResizeObserver sees a
+	   badge or link arrive. */
+	.nav-desktop {
+		flex: 0 1 auto;
+		min-width: 0;
+		overflow-x: auto;
+		scrollbar-width: none;
+	}
+	.nav-desktop :global(.tabs) {
+		width: max-content;
 	}
 
 	@media (max-width: 860px) {
@@ -212,11 +225,14 @@
 		.search-back:hover {
 			color: var(--text);
 		}
+	}
 
-		.mobile-nav {
-			display: flex;
-			padding: 0 6px 8px;
-			overflow-x: auto;
+	/* Spoolman NG fork addition: below 360px (iPhone SE, small Android) the wordmark plus three
+	   44px buttons is wider than the screen, which pushed the add button off the edge and made
+	   every page scroll sideways. The mark alone still links home and keeps its aria-label. */
+	@media (max-width: 359px) {
+		.row.primary :global(.logo span) {
+			display: none;
 		}
 	}
 </style>

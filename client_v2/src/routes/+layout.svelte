@@ -1,7 +1,10 @@
 <script lang="ts">
 	import '../app.css';
 	import TopBar from '$components/TopBar.svelte';
-	import Footer from '$components/Footer.svelte';
+	// Spoolman NG fork addition: upstream's footer is gone; its version and links moved to the
+	// Help page and the phone layout's More sheet (AboutLinks). BottomNav is the phone layout's
+	// navigation, in the footer's place at the bottom of the shell.
+	import BottomNav from '$lib/ng/components/BottomNav.svelte';
 	import AddSpoolModal from '$components/AddSpoolModal.svelte';
 	import QrScannerModal from '$components/QrScannerModal.svelte';
 	import AiChatLauncher from '$lib/ng/components/AiChatLauncher.svelte';
@@ -132,7 +135,7 @@
 			{/snippet}
 		</svelte:boundary>
 	</main>
-	<Footer />
+	<BottomNav />
 </div>
 
 <AddSpoolModal

@@ -83,7 +83,7 @@ async function filament(
   return post(api, "/filament", body);
 }
 
-async function post(
+export async function post(
   api: APIRequestContext,
   path: string,
   body: unknown,

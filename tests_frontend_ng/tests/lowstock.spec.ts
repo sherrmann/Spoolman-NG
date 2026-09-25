@@ -111,7 +111,7 @@ test("the dialog can be dismissed without placing an order", async ({ page, requ
 
 test("the page scrolls inside the app shell rather than overflowing it", async ({ page }) => {
   // The same guard the Home page carries: the shell is height:100dvh and pages scroll within it.
-  // A page that grows the document instead puts the footer through its own content.
+  // A page that grows the document instead puts the bottom of the shell through its own content.
   await page.setViewportSize({ width: 700, height: 800 });
   await openLowStock(page);
 

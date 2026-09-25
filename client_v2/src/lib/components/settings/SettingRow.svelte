@@ -22,6 +22,12 @@
 	}
 	.row-main {
 		flex: 1;
+		/* Spoolman NG fork addition: a flex item will not shrink below its longest unbreakable
+		   word by default, so a description quoting a URL (the AI settings' example endpoints)
+		   pushed the control past a phone screen's edge. Let the text column give way and
+		   break such a word instead. */
+		min-width: 0;
+		overflow-wrap: anywhere;
 	}
 	.row-title {
 		font-size: 13px;
