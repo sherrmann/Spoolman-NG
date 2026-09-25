@@ -452,7 +452,7 @@
 						oninput={(v) => set({ articleNumber: v })}
 					/>
 				</Field>
-				<FilamentCatalogueFields {filament} onchange={(v) => set({ ng: v })} />
+				<FilamentCatalogueFields {filament} />
 				{#if filament.externalId}
 					<Field label={m['filament.fields.externalId']()} mono>{filament.externalId}</Field>
 				{/if}

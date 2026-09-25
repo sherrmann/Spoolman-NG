@@ -5,11 +5,20 @@
 	 *
 	 * Every row can go back to unknown ("—"), which is what the database stores until someone
 	 * says. Translucent and glow are three-way for the same reason: "no" is information that
-	 * unknown is not. The inspector's own saver writes the change, so it is debounced and shows
-	 * in the save indicator like every other field there.
+	 * unknown is not.
+	 *
+	 * The rows save through a saver of their own, keyed by field, rather than the inspector's:
+	 * that one merges a pending patch one level deep, so a whole `ng` object would replace the
+	 * previous one, and a live update landing between two quick edits could revert the first.
+	 * Here each edit adds one key to the pending patch, and only the keys edited are sent. It is
+	 * debounced and reports to the save indicator like the inspector's.
 	 */
 	import Field from '$lib/components/Field.svelte';
-	import type { Filament } from '$lib/types';
+	import type { Filament, FilamentPatch } from '$lib/types';
+	import { inventory } from '$lib/stores/inventory.svelte';
+	import { spoolSource } from '$lib/api/spoolSource';
+	import { makeSaver } from '$lib/utils/saver';
+	import { trackSave } from '$lib/utils/autosave';
 	import { ng } from '$lib/ng/i18n';
 	import { optionText, yesNoText } from '$lib/ng/filamentCatalogueText';
 	import {
@@ -20,16 +29,34 @@
 		type FilamentNg
 	} from '$lib/ng/filamentCatalogue';
 
-	let { filament, onchange }: { filament: Filament; onchange: (next: FilamentNg) => void } = $props();
+	let { filament }: { filament: Filament } = $props();
 
 	let current = $derived(filament.ng ?? EMPTY_FILAMENT_NG);
 
-	function setEnum<K extends 'spoolType' | 'finish' | 'pattern'>(key: K, value: string) {
-		onchange({ ...current, [key]: value === '' ? null : value });
+	// `filamentNgPatchToApi` sends only the keys a partial `ng` carries, so the cast is sound;
+	// the view model's patch type just has no partial form of `ng`.
+	// A filament deleted with an edit still pending has left the cache by the time this saver
+	// flushes (on unmount, when the inspector clears its selection), and a PATCH would only earn
+	// an error toast under "Filament deleted"; the inspector cancels its own savers for the same
+	// reason, but cannot reach this one.
+	const saver = makeSaver<string, Partial<FilamentNg>>((id, patch) =>
+		inventory.filamentById(id)
+			? trackSave(spoolSource.saveFilament(id, { ng: patch } as FilamentPatch))
+			: Promise.resolve()
+	);
+	$effect(() => () => saver.flush());
+
+	function set(patch: Partial<FilamentNg>) {
+		inventory.patchFilament(filament.id, { ng: { ...current, ...patch } });
+		saver.push(filament.id, patch);
+	}
+
+	function setEnum(key: 'spoolType' | 'finish' | 'pattern', value: string) {
+		set({ [key]: value === '' ? null : value });
 	}
 
 	function setBool(key: 'translucent' | 'glow', value: string) {
-		onchange({ ...current, [key]: value === '' ? null : value === 'true' });
+		set({ [key]: value === '' ? null : value === 'true' });
 	}
 
 	const boolValue = (v: boolean | null) => (v === null ? '' : String(v));

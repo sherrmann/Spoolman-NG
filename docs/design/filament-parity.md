@@ -55,8 +55,8 @@ maps a filament gets **one line** that hands over to fork code:
 |---|---|
 | `lib/types.ts` | `ng?: FilamentNg` on `Filament`, with a type-only import |
 | `lib/api/map.ts` | `ng: mapFilamentNg(f)` in `mapFilament`; `Object.assign(out, filamentNgPatchToApi(patch))` in `filamentPatchToApi` |
-| `lib/api/spoolSource.ts` | `Object.assign(body, catalogueFromExternal(ext))` in `importExternalFilament` |
-| `components/library/FilamentInspector.svelte` | one import and `<FilamentCatalogueFields {filament} onchange={(ng) => set({ ng })} />` inside the specs grid |
+| `lib/api/spoolSource.ts` | `...catalogueFromExternal(ext)` in `importExternalFilament`'s create body |
+| `components/library/FilamentInspector.svelte` | one import and `<FilamentCatalogueFields {filament} />` inside the specs grid |
 
 Everything else is in `lib/ng/filamentCatalogue.ts` (types, option lists, mapping both ways,
 tested) and `lib/ng/components/FilamentCatalogueFields.svelte`.
@@ -75,9 +75,11 @@ widen the seam further than one more line each.
 - The inspector shows five rows in its specs grid, after the article number: three selects with
   an empty "unknown" choice, and two for translucent and glow with unknown, yes and no. The
   booleans are three-way because the database has three states, and "no" is information
-  ("not translucent") that the empty state is not. Saved through the inspector's existing
-  debounced saver, which sends the five together; the mapping sends only what a patch carries,
-  so no other field is touched.
+  ("not translucent") that the empty state is not.
+- Saved through a debounced saver of the component's own, keyed by field, so only the fields
+  edited are sent. Not the inspector's saver: it merges a pending patch one level deep, so a
+  whole `ng` object replaced the previous one, and a live update landing between two quick edits
+  (a spool event carries its filament) sent the first field back to its old value.
 - `importExternalFilament` copies all five from the catalogue entry. SpoolmanDB gives the
   booleans as `false` when not set; they are copied as they are, like the React client does.
 - The library's column manager (#456) gets five columns, hidden by default, like every column
@@ -87,6 +89,11 @@ widen the seam further than one more line each.
   form is upstream's (`NewFilamentCards.svelte`, 450 lines) and a sixth card section would be
   the largest edit in this plan. They can be set in the inspector straight after. Revisit if
   asked.
+- **Also not in step 1:** duplicating a filament, and creating one from the change-filament
+  dialog. Both go through the same new-filament draft, so a duplicate starts with the five
+  fields unknown, where the React client's clone copies them. Carrying them means the draft
+  (`lib/filament/draft.ts`) and `spoolSource.createFilament`, both upstream's; see open
+  question 1.
 
 ### Step 2: reference images
 
@@ -118,7 +125,8 @@ The style setting only affects the download, so they go together.
 
 Each with the answer this design assumes if nobody objects.
 
-1. **Catalogue fields on the new-filament form?** Default: not now (step 1 above).
+1. **Catalogue fields on the new-filament form, and carried by duplicate?** Default: not now
+   (step 1 above). If wanted, both come together, since they share the draft.
 2. **Filter the library by the catalogue fields?** Default: no. Upstream's filter menu reads
    upstream's field list; adding to it is a larger edit than any of these steps, and nobody has
    asked for it.
