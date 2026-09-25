@@ -569,5 +569,11 @@
 	"spool_weigh_updated": "{name} atualizado",
 	"spool_view_grid": "Visualização em grade",
 	"spool_view_grid_tooltip": "Navegar pelos carretéis como blocos coloridos",
-	"spool_view_table_tooltip": "Voltar à tabela completa"
+	"spool_view_table_tooltip": "Voltar à tabela completa",
+	"spool_totals_shown_one": "{count} carretel exibido",
+	"spool_totals_shown_many": "{count} carretéis exibidos",
+	"spool_totals_shown_other": "{count} carretéis exibidos",
+	"spool_totals_selected_one": "{count} carretel selecionado",
+	"spool_totals_selected_many": "{count} carretéis selecionados",
+	"spool_totals_selected_other": "{count} carretéis selecionados"
 }

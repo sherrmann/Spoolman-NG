@@ -562,5 +562,9 @@
 	"spool_weigh_updated": "{name} aktualisiert",
 	"spool_view_grid": "Kachelansicht",
 	"spool_view_grid_tooltip": "Spulen als Farbkacheln durchstöbern",
-	"spool_view_table_tooltip": "Zurück zur vollständigen Tabelle"
+	"spool_view_table_tooltip": "Zurück zur vollständigen Tabelle",
+	"spool_totals_shown_one": "{count} Spule angezeigt",
+	"spool_totals_shown_other": "{count} Spulen angezeigt",
+	"spool_totals_selected_one": "{count} Spule ausgewählt",
+	"spool_totals_selected_other": "{count} Spulen ausgewählt"
 }

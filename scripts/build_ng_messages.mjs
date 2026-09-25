@@ -357,6 +357,9 @@ const KEYS = [
 	'spool.view.grid',
 	'spool.view.grid_tooltip',
 	'spool.view.table_tooltip',
+	// The totals line under the Library (#412 step 4).
+	{ key: 'spool.totals.shown', plural: true },
+	{ key: 'spool.totals.selected', plural: true },
 ];
 
 /** Flatten nested i18next JSON to dotted keys. */

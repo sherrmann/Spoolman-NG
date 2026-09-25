@@ -562,5 +562,9 @@
 	"spool_weigh_updated": "{name} güncellendi",
 	"spool_view_grid": "Izgara görünümü",
 	"spool_view_grid_tooltip": "Makaralara renkli kutucuklar halinde göz atın",
-	"spool_view_table_tooltip": "Tam tabloya geri dön"
+	"spool_view_table_tooltip": "Tam tabloya geri dön",
+	"spool_totals_shown_one": "{count} makara gösteriliyor",
+	"spool_totals_shown_other": "{count} makara gösteriliyor",
+	"spool_totals_selected_one": "{count} makara seçildi",
+	"spool_totals_selected_other": "{count} makara seçildi"
 }

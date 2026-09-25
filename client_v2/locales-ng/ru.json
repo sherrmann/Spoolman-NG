@@ -570,5 +570,11 @@
 	"spool_weigh_updated": "Обновлено: {name}",
 	"spool_view_grid": "Вид сеткой",
 	"spool_view_grid_tooltip": "Просмотр катушек в виде цветных плиток",
-	"spool_view_table_tooltip": "Вернуться к полной таблице"
+	"spool_view_table_tooltip": "Вернуться к полной таблице",
+	"spool_totals_shown_one": "{count} катушка показана",
+	"spool_totals_shown_few": "{count} катушки показано",
+	"spool_totals_shown_many": "{count} катушек показано",
+	"spool_totals_selected_one": "{count} катушка выбрана",
+	"spool_totals_selected_few": "{count} катушки выбрано",
+	"spool_totals_selected_many": "{count} катушек выбрано"
 }

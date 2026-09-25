@@ -570,5 +570,11 @@
 	"spool_weigh_updated": "Aktualizováno: {name}",
 	"spool_view_grid": "Zobrazení v mřížce",
 	"spool_view_grid_tooltip": "Procházejte cívky jako barevné dlaždice",
-	"spool_view_table_tooltip": "Zpět na úplnou tabulku"
+	"spool_view_table_tooltip": "Zpět na úplnou tabulku",
+	"spool_totals_shown_one": "Zobrazena {count} cívka",
+	"spool_totals_shown_few": "Zobrazeny {count} cívky",
+	"spool_totals_shown_other": "Zobrazeno {count} cívek",
+	"spool_totals_selected_one": "Vybrána {count} cívka",
+	"spool_totals_selected_few": "Vybrány {count} cívky",
+	"spool_totals_selected_other": "Vybráno {count} cívek"
 }

@@ -608,5 +608,9 @@
 	"spool_weigh_status_failed": "Failed",
 	"spool_view_grid": "Grid view",
 	"spool_view_grid_tooltip": "Browse spools as color tiles",
-	"spool_view_table_tooltip": "Back to the full table"
+	"spool_view_table_tooltip": "Back to the full table",
+	"spool_totals_shown_one": "{count} spool shown",
+	"spool_totals_shown_other": "{count} spools shown",
+	"spool_totals_selected_one": "{count} spool selected",
+	"spool_totals_selected_other": "{count} spools selected"
 }
