@@ -410,6 +410,46 @@ test.describe("library", () => {
   });
 });
 
+test.describe("library footer", () => {
+  test("totals and paging take little of a small phone's screen", async ({ page, playwright, baseURL }) => {
+    // On a 320x568 phone the totals line and the pager once took about 190px: the pager's range
+    // text, page numbers and page-size picker could not share a row. With several pages, the
+    // numbers show where you are and the text gives way, so numbers and picker share one row.
+    const api = await playwright.request.newContext({ baseURL });
+    const vendor = await post(api, "/vendor", { name: unique("Pager Vendor") });
+    for (let i = 0; i < 21; i++) {
+      const f = await post(api, "/filament", {
+        name: unique("Pager Filament"),
+        vendor_id: vendor.id,
+        material: "PLA",
+        density: 1.24,
+        diameter: 1.75,
+        weight: 1000,
+      });
+      await post(api, "/spool", { filament_id: f.id, used_weight: 100 });
+    }
+    await api.dispose();
+
+    await page.setViewportSize({ width: 320, height: 568 });
+    await open(page, "/");
+    const pager = page.locator(".pager");
+    const numbers = pager.locator(".nums");
+    const size = pager.getByRole("combobox", { name: /page/i });
+    await expect(numbers).toBeVisible();
+
+    const totalsTop = (await page.locator(".totals").boundingBox())!.y;
+    const navTop = (await bottomNav(page).boundingBox())!.y;
+    expect(navTop - totalsTop, "totals and pager together").toBeLessThanOrEqual(110);
+
+    const n = (await numbers.boundingBox())!;
+    const s = (await size.boundingBox())!;
+    expect(Math.abs(n.y + n.height / 2 - (s.y + s.height / 2)), "numbers and picker share a row").toBeLessThan(
+      4,
+    );
+    await expectCleanLayout(page, "the library footer at 320x568");
+  });
+});
+
 test.describe("dialogs", () => {
   /** The open dialog must fit the screen, and so must its way out. */
   async function expectDialogFits(page: Page, what: string) {
