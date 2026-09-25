@@ -570,5 +570,11 @@
 	"spool_weigh_updated": "S-a actualizat {name}",
 	"spool_view_grid": "Vizualizare grilă",
 	"spool_view_grid_tooltip": "Răsfoiește bobinele sub formă de plăcuțe colorate",
-	"spool_view_table_tooltip": "Înapoi la tabelul complet"
+	"spool_view_table_tooltip": "Înapoi la tabelul complet",
+	"spool_totals_shown_one": "{count} bobină afișată",
+	"spool_totals_shown_few": "{count} bobine afișate",
+	"spool_totals_shown_other": "{count} de bobine afișate",
+	"spool_totals_selected_one": "{count} bobină selectată",
+	"spool_totals_selected_few": "{count} bobine selectate",
+	"spool_totals_selected_other": "{count} de bobine selectate"
 }

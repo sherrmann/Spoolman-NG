@@ -562,5 +562,9 @@
 	"spool_weigh_updated": "Uppdaterade {name}",
 	"spool_view_grid": "Rutnätsvy",
 	"spool_view_grid_tooltip": "Bläddra bland spolar som färgrutor",
-	"spool_view_table_tooltip": "Tillbaka till den fullständiga tabellen"
+	"spool_view_table_tooltip": "Tillbaka till den fullständiga tabellen",
+	"spool_totals_shown_one": "{count} spole visas",
+	"spool_totals_shown_other": "{count} spolar visas",
+	"spool_totals_selected_one": "{count} spole vald",
+	"spool_totals_selected_other": "{count} spolar valda"
 }

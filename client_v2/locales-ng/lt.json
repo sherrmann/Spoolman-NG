@@ -570,5 +570,11 @@
 	"spool_weigh_updated": "Atnaujinta {name}",
 	"spool_view_grid": "Tinklelio rodinys",
 	"spool_view_grid_tooltip": "Naršyti rites kaip spalvų plyteles",
-	"spool_view_table_tooltip": "Grįžti į pilną lentelę"
+	"spool_view_table_tooltip": "Grįžti į pilną lentelę",
+	"spool_totals_shown_one": "Rodoma {count} ritė",
+	"spool_totals_shown_few": "Rodomos {count} ritės",
+	"spool_totals_shown_other": "Rodoma {count} ričių",
+	"spool_totals_selected_one": "Pasirinkta {count} ritė",
+	"spool_totals_selected_few": "Pasirinktos {count} ritės",
+	"spool_totals_selected_other": "Pasirinkta {count} ričių"
 }

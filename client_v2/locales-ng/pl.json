@@ -570,5 +570,11 @@
 	"spool_weigh_updated": "Zaktualizowano {name}",
 	"spool_view_grid": "Widok siatki",
 	"spool_view_grid_tooltip": "Przeglądaj szpule jako kolorowe kafelki",
-	"spool_view_table_tooltip": "Wróć do pełnej tabeli"
+	"spool_view_table_tooltip": "Wróć do pełnej tabeli",
+	"spool_totals_shown_one": "Wyświetlono {count} szpulę",
+	"spool_totals_shown_few": "Wyświetlono {count} szpule",
+	"spool_totals_shown_many": "Wyświetlono {count} szpul",
+	"spool_totals_selected_one": "Wybrano {count} szpulę",
+	"spool_totals_selected_few": "Wybrano {count} szpule",
+	"spool_totals_selected_many": "Wybrano {count} szpul"
 }
