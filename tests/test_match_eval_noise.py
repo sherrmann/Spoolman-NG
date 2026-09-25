@@ -139,21 +139,19 @@ def test_weight_missing(noise_module: ModuleType) -> None:
     assert noise_module.weight_missing(label, rng) == label
 
 
-def test_weight_in_kg(noise_module: ModuleType) -> None:
-    rng = noise_module.random.Random(0)
-    assert noise_module.weight_in_kg(_label(), rng)["weight_g"] == 1.0
-    label = _label(weight_g=None)
-    assert noise_module.weight_in_kg(label, rng) == label
+# --- weight_missing applies at roughly its probability ---------------------------------
 
 
-# --- weight operator mutual exclusion -------------------------------------------------
-
-
-def test_weight_operators_are_mutually_exclusive(noise_module: ModuleType) -> None:
-    for seed in range(200):
+def test_weight_missing_applies_at_roughly_its_probability(noise_module: ModuleType) -> None:
+    trials = 2000
+    hits = 0
+    for seed in range(trials):
         rng = noise_module.random.Random(seed)
         _, applied = noise_module._apply_noise(_label(), rng)  # noqa: SLF001
-        assert not ({"weight_missing", "weight_in_kg"} <= set(applied))
+        if "weight_missing" in applied:
+            hits += 1
+    rate = hits / trials
+    assert abs(rate - noise_module.NOISE_PROBABILITY) < 0.05
 
 
 # --- determinism -----------------------------------------------------------------------
@@ -194,9 +192,9 @@ def test_generate_cases_stratifies_by_manufacturer(noise_module: ModuleType) -> 
 # --- output passes through normalize_extraction ----------------------------------------
 
 
-def test_weight_in_kg_comes_back_normalized_to_grams(noise_module: ModuleType) -> None:
-    # normalize_extraction reads any weight below _MIN_PLAUSIBLE_WEIGHT_G (20) as kilograms and
-    # scales it back up -- so a label noised to "1.0 kg" round-trips to 1000 g, not 1.0 g.
+def test_weight_missing_comes_back_normalized_to_none(noise_module: ModuleType) -> None:
+    # normalize_extraction must not invent a weight when the label has none -- a missing
+    # weight_g should stay missing all the way through to the extraction dict.
     catalog = [
         {
             "id": "only-entry",
@@ -207,14 +205,14 @@ def test_weight_in_kg_comes_back_normalized_to_grams(noise_module: ModuleType) -
             "diameter": 1.75,
         },
     ]
-    # Force weight_in_kg by trying seeds until it is the noise applied.
+    # Force weight_missing by trying seeds until it is the noise applied.
     for seed in range(500):
         cases = noise_module.generate_cases(catalog, 1, seed=seed)
-        if "weight_in_kg" in cases[0]["noise"]:
-            assert cases[0]["extraction"]["weight_g"] == 1000
+        if "weight_missing" in cases[0]["noise"]:
+            assert cases[0]["extraction"]["weight_g"] is None
             break
     else:
-        pytest.fail("no seed in range produced a weight_in_kg case to check normalization against")
+        pytest.fail("no seed in range produced a weight_missing case to check normalisation against")
 
 
 # --- catalog_id ------------------------------------------------------------------------

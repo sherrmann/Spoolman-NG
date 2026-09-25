@@ -170,7 +170,8 @@ def test_photo_cases_labels_and_skips(eval_module: ModuleType, tmp_path: Path) -
         encoding="utf-8",
     )
 
-    cases, unlabelled = eval_module.photo_cases(tmp_path, None)
+    photos = eval_module.photo_cases(tmp_path, None)
+    cases, unlabelled = photos.cases, photos.unlabelled
 
     by_file = {case.case_id: case for case in cases}
     assert by_file["a.jpg"].catalog_id == "acme-pla"
@@ -178,6 +179,7 @@ def test_photo_cases_labels_and_skips(eval_module: ModuleType, tmp_path: Path) -
     assert by_file["b.jpg"].catalog_id is None
     assert "d.jpg" not in by_file, "no dumped extraction: left out entirely"
     assert [case.case_id for case in unlabelled] == ["c.jpg"]
+    assert photos.missing == ["d.jpg"], "labelled but not dumped: reported, not silently dropped"
 
 
 def test_photo_cases_extractions_argument_overrides_the_default_path(eval_module: ModuleType, tmp_path: Path) -> None:
@@ -187,7 +189,8 @@ def test_photo_cases_extractions_argument_overrides_the_default_path(eval_module
     override = tmp_path / "other.jsonl"
     override.write_text(json.dumps({"file": "a.jpg", "extraction": {"vendor": "Acme"}}) + "\n", encoding="utf-8")
 
-    cases, unlabelled = eval_module.photo_cases(tmp_path, override)
+    photos = eval_module.photo_cases(tmp_path, override)
+    cases, unlabelled = photos.cases, photos.unlabelled
 
     assert unlabelled == []
     assert len(cases) == 1
@@ -362,11 +365,12 @@ def test_print_catalog_report(eval_module: ModuleType, capsys: pytest.CaptureFix
     out = capsys.readouterr().out
 
     assert "== photos: 5 cases (3 in the catalog, 2 not)" in out
-    assert "right product on the fuzzy shortlist  3/3 (100%)" in out
-    assert "top-1, fuzzy order                    2/3 (67%)" in out
-    assert "top-1, reranked                       2/3 (67%)" in out
-    assert "not in catalog, wrong entry preselected  1/2" in out
-    assert "not in catalog, model answered 'none'    1/1" in out
+    flat = " ".join(out.split())
+    assert "right product on the fuzzy shortlist 3/3 (100%)" in flat
+    assert "top-1, fuzzy order 2/3 (67%)" in flat
+    assert "top-1, reranked 2/3 (67%)" in flat
+    assert "not in catalog, wrong entry preselected 1/2" in flat
+    assert "not in catalog, model answered none 1/1" in flat
     assert "fixed: p2" in out
     assert "broke: p3" in out
     assert "== generated: 0 cases (0 in the catalog, 0 not)" in out, "the errored case is excluded from the group"
@@ -437,14 +441,22 @@ async def test_catalog_main_restores_load_catalog(eval_module: ModuleType, tmp_p
     assert eval_module.spoolintake.load_catalog is original
 
 
-async def test_catalog_main_restores_load_catalog_on_error(eval_module: ModuleType, tmp_path: Path) -> None:
+async def test_catalog_main_restores_load_catalog_on_error(
+    eval_module: ModuleType,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     catalog_path = tmp_path / "filaments.json"
     catalog_path.write_text(json.dumps(_CATALOG), encoding="utf-8")
     original = eval_module.spoolintake.load_catalog
-    # No cases.json in this folder, so photo_cases blows up mid-run.
-    args = _catalog_args(catalog=catalog_path, photos=tmp_path / "missing", baseline_only=True)
 
-    with pytest.raises(FileNotFoundError):
+    def explode(*_args: object) -> list:
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(eval_module, "generated_cases", explode)
+    args = _catalog_args(catalog=catalog_path, generated=3, baseline_only=True)
+
+    with pytest.raises(RuntimeError):
         await eval_module._catalog_main(args)  # noqa: SLF001
 
     assert eval_module.spoolintake.load_catalog is original
@@ -551,3 +563,148 @@ async def test_catalog_main_without_baseline_only_needs_endpoint(
 
     assert result == 2
     assert "--baseline-only" in capsys.readouterr().err
+
+
+# --- review fixes: missing, duplicate and malformed inputs; ties; noise breakdown --------------
+
+
+def _write_photos(folder: Path, labels: list[dict], dump_lines: list[str]) -> Path:
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / "cases.json").write_text(json.dumps(labels), encoding="utf-8")
+    (folder / "extractions.jsonl").write_text("\n".join(dump_lines), encoding="utf-8")
+    return folder
+
+
+def test_photo_cases_keeps_the_first_of_duplicate_files(eval_module: ModuleType, tmp_path: Path) -> None:
+    folder = _write_photos(
+        tmp_path / "p",
+        [{"file": "a.jpg", "catalog_id": "acme-pla"}, {"file": "a.jpg", "catalog_id": "other-petg"}],
+        [json.dumps({"file": "a.jpg", "extraction": {"vendor": "Acme"}})],
+    )
+
+    photos = eval_module.photo_cases(folder, None)
+
+    assert [c.catalog_id for c in photos.cases] == ["acme-pla"]
+    assert photos.duplicates == ["a.jpg"]
+
+
+@pytest.mark.parametrize(
+    ("dump_lines", "message"),
+    [
+        (["garbage"], "line 1"),
+        ([json.dumps({"file": "a.jpg"})], "line 1"),
+        ([json.dumps({"file": "a.jpg", "extraction": {}}), json.dumps({"file": "a.jpg", "extraction": {}})], "twice"),
+    ],
+)
+def test_photo_cases_rejects_a_malformed_dump(
+    eval_module: ModuleType,
+    tmp_path: Path,
+    dump_lines: list[str],
+    message: str,
+) -> None:
+    folder = _write_photos(tmp_path / "p", [{"file": "a.jpg", "catalog_id": "acme-pla"}], dump_lines)
+
+    with pytest.raises(eval_module.EvalInputError, match=message):
+        eval_module.photo_cases(folder, None)
+
+
+async def test_catalog_main_reports_bad_inputs_with_exit_2(
+    eval_module: ModuleType,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    catalog_path = tmp_path / "filaments.json"
+    catalog_path.write_text(json.dumps(_CATALOG), encoding="utf-8")
+    folder = tmp_path / "p"
+    folder.mkdir()
+    (folder / "cases.json").write_text(json.dumps([{"file": "a.jpg", "catalog_id": "acme-pla"}]), encoding="utf-8")
+
+    result = await eval_module._catalog_main(  # noqa: SLF001
+        _catalog_args(catalog=catalog_path, photos=folder, baseline_only=True),
+    )
+
+    assert result == 2
+    assert "extractions.jsonl" in capsys.readouterr().err
+
+
+async def test_catalog_main_lists_photos_without_an_extraction(
+    eval_module: ModuleType,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    catalog_path = tmp_path / "filaments.json"
+    catalog_path.write_text(json.dumps(_CATALOG), encoding="utf-8")
+    folder = _write_photos(
+        tmp_path / "p",
+        [{"file": "a.jpg", "catalog_id": "acme-pla"}, {"file": "failed.jpg", "catalog_id": "other-petg"}],
+        [json.dumps({"file": "a.jpg", "extraction": {"vendor": "Acme", "name": "Pro PLA", "material": "PLA"}})],
+    )
+
+    result = await eval_module._catalog_main(  # noqa: SLF001
+        _catalog_args(catalog=catalog_path, photos=folder, baseline_only=True),
+    )
+
+    out = capsys.readouterr().out
+    assert result == 0
+    assert "1 photo(s) have no extraction" in out
+    assert "failed.jpg" in out
+    assert "== photos: 1 cases" in out
+
+
+async def test_run_catalog_case_flags_a_tied_top_score(
+    eval_module: ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    twins = [
+        {"id": "a1", "manufacturer": "Acme", "name": "Black", "material": "PLA", "weight": 1000, "diameter": 1.75},
+        {"id": "b1", "manufacturer": "Bolt", "name": "Black", "material": "PLA", "weight": 1000, "diameter": 1.75},
+    ]
+    monkeypatch.setattr(eval_module.spoolintake, "load_catalog", lambda: twins)
+    case = eval_module.CatalogCase("t", "generated", {"name": "Black", "material": "PLA", "weight_g": 1000}, "b1")
+
+    result = await eval_module.run_catalog_case(None, case, {e["id"]: e for e in twins})
+
+    assert result.top_tied is True
+    assert result.shortlisted is True
+    assert result.baseline_ok is False, "file order put Acme first"
+
+
+def test_report_breaks_generated_results_down_by_noise(
+    eval_module: ModuleType,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    def result(case_id: str, noise: tuple[str, ...], *, ok: bool) -> object:
+        case = eval_module.CatalogCase(case_id, "generated", {}, "x", noise)
+        return eval_module.CatalogResult(case=case, shortlisted=True, empty=False, baseline_ok=ok)
+
+    eval_module.print_catalog_report(
+        [result("g1", (), ok=True), result("g2", ("drop_vendor",), ok=False), result("g3", ("drop_vendor",), ok=True)],
+    )
+
+    flat = " ".join(capsys.readouterr().out.split())
+    assert "by noise operator" in flat
+    assert "(none) n=1 shortlisted 100% fuzzy 100%" in flat
+    assert "drop_vendor n=2 shortlisted 100% fuzzy 50%" in flat
+
+
+@pytest.mark.parametrize(
+    ("argv", "message"),
+    [
+        (["--catalog", "c.json", "--suggest"], "needs --photos"),
+        (["--photos", "p", "--suggest", "--generated", "2"], "run --generated separately"),
+    ],
+)
+def test_main_rejects_suggest_misuse(
+    eval_module: ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    argv: list[str],
+    message: str,
+) -> None:
+    monkeypatch.setattr(sys, "argv", ["match_rerank_eval.py", *argv])
+
+    with pytest.raises(SystemExit) as exit_info:
+        eval_module.main()
+
+    assert exit_info.value.code == 2
+    assert message in capsys.readouterr().err

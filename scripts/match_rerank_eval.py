@@ -214,6 +214,8 @@ class CatalogCase:
     source: str
     extraction: dict
     catalog_id: str | None
+    #: Noise operators applied to a generated reading (see match_eval_noise.py); empty for photos.
+    noise: tuple[str, ...] = ()
 
 
 @dataclass
@@ -226,6 +228,8 @@ class CatalogResult:
     #: Whether the shortlist was empty (nothing to preselect, nothing to ask the model).
     empty: bool
     baseline_ok: bool
+    #: Whether fuzzy's top two candidates share a score, so catalog file order picked the first.
+    top_tied: bool = False
     rerank_ok: bool | None = None
     answered_none: bool = False
     error: str | None = None
@@ -238,8 +242,8 @@ def _norm(value: object) -> str:
 def same_product(candidate: dict, expected: dict, extraction: dict) -> bool:
     """Whether a shortlisted candidate is the expected catalog entry's product.
 
-    SpoolmanDB lists one product several times, once per diameter and spool size, and a label
-    that shows neither cannot tell them apart. So manufacturer, name, material and weight must
+    SpoolmanDB lists one product several times, once per diameter, spool type and spool size, and
+    a label that shows none of them cannot tell them apart. So manufacturer, name, material and weight must
     match, and the diameter only when the label gave one.
     """
     if (
@@ -274,27 +278,75 @@ def load_catalog_file(path: Path | None) -> tuple[list[dict], str]:
     return entries, f"{source}: {len(entries)} entries, sha256 {hashlib.sha256(raw).hexdigest()[:16]}"
 
 
-def photo_cases(photos: Path, extractions: Path | None) -> tuple[list[CatalogCase], list[CatalogCase]]:
+class EvalInputError(Exception):
+    """An input file for the eval is missing or malformed; the message says which and where."""
+
+
+@dataclass
+class PhotoSet:
+    """The photo folder's readings, sorted by what can be measured."""
+
+    cases: list[CatalogCase]
+    #: Photos with an extraction but no ``catalog_id`` yet.
+    unlabelled: list[CatalogCase]
+    #: Photos listed in cases.json with no extraction, usually because extraction failed. They
+    #: are left out of the numbers, so they must be reported: they tend to be the hardest labels.
+    missing: list[str]
+    #: Files listed more than once in cases.json; only the first entry counts.
+    duplicates: list[str]
+
+
+def _read_extractions(path: Path) -> dict[str, dict]:
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError as exc:
+        msg = f"Cannot read the extractions file {path}: {exc.strerror or exc}."
+        raise EvalInputError(msg) from exc
+    dumped: dict[str, dict] = {}
+    for number, line in enumerate(lines, start=1):
+        if not line.strip():
+            continue
+        try:
+            record = json.loads(line)
+            file, extraction = record["file"], record["extraction"]
+        except (json.JSONDecodeError, KeyError, TypeError) as exc:
+            msg = f"{path}, line {number}: not a {{file, extraction}} JSON record."
+            raise EvalInputError(msg) from exc
+        if file in dumped:
+            msg = f"{path}, line {number}: {file} appears twice; dump the extractions again."
+            raise EvalInputError(msg)
+        dumped[file] = extraction
+    return dumped
+
+
+def photo_cases(photos: Path, extractions: Path | None) -> PhotoSet:
     """Pair the photo folder's cases.json labels with extractions dumped by ai_eval_vision.py.
 
     A case counts once its entry in cases.json has a ``catalog_id`` key: a SpoolmanDB id, or null
-    for a spool that is not in the catalog. Returns the labelled cases and the unlabelled ones.
+    for a spool that is not in the catalog.
     """
-    labels = json.loads((photos / "cases.json").read_text(encoding="utf-8"))
-    dumped = {}
-    for line in (extractions or photos / "extractions.jsonl").read_text(encoding="utf-8").splitlines():
-        if line.strip():
-            record = json.loads(line)
-            dumped[record["file"]] = record["extraction"]
-    cases, unlabelled = [], []
+    cases_file = photos / "cases.json"
+    try:
+        labels = json.loads(cases_file.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        msg = f"Cannot read {cases_file}: {exc}."
+        raise EvalInputError(msg) from exc
+    dumped = _read_extractions(extractions or photos / "extractions.jsonl")
+    result = PhotoSet(cases=[], unlabelled=[], missing=[], duplicates=[])
+    seen: set[str] = set()
     for label in labels:
-        if label["file"] not in dumped:
+        file = label["file"]
+        if file in seen:
+            result.duplicates.append(file)
             continue
-        if "catalog_id" not in label:
-            unlabelled.append(CatalogCase(label["file"], "photos", dumped[label["file"]], None))
-            continue
-        cases.append(CatalogCase(label["file"], "photos", dumped[label["file"]], label["catalog_id"]))
-    return cases, unlabelled
+        seen.add(file)
+        if file not in dumped:
+            result.missing.append(file)
+        elif "catalog_id" not in label:
+            result.unlabelled.append(CatalogCase(file, "photos", dumped[file], None))
+        else:
+            result.cases.append(CatalogCase(file, "photos", dumped[file], label["catalog_id"]))
+    return result
 
 
 def generated_cases(catalog: list[dict], n: int, seed: int) -> list[CatalogCase]:
@@ -302,7 +354,7 @@ def generated_cases(catalog: list[dict], n: int, seed: int) -> list[CatalogCase]
     import match_eval_noise  # noqa: PLC0415 - a sibling script module, only needed for this mode
 
     return [
-        CatalogCase(case["id"], "generated", case["extraction"], case["catalog_id"])
+        CatalogCase(case["id"], "generated", case["extraction"], case["catalog_id"], tuple(case["noise"]))
         for case in match_eval_noise.generate_cases(catalog, n, seed)
     ]
 
@@ -326,6 +378,7 @@ async def run_catalog_case(
         shortlisted=expected is None or any(same_product(c, expected, case.extraction) for c in shortlist),
         empty=not shortlist,
         baseline_ok=ok(shortlist),
+        top_tied=len(shortlist) > 1 and shortlist[0]["match_percent"] == shortlist[1]["match_percent"],
     )
     if config is None:
         return result
@@ -343,6 +396,42 @@ async def run_catalog_case(
     return result
 
 
+def _rate(label: str, hits: int, total: int) -> None:
+    print(f"  {label:<40}{hits}/{total} ({hits / total:.0%})")
+
+
+def _print_matchable(matchable: list[CatalogResult]) -> None:
+    total = len(matchable)
+    _rate("right product on the fuzzy shortlist", sum(r.shortlisted for r in matchable), total)
+    _rate("top-1, fuzzy order", sum(r.baseline_ok for r in matchable), total)
+    # A tie at the top is settled by the catalog's file order, not by the score, so a rerank can
+    # "fix" or "break" these cases without the fuzzy order having had an opinion.
+    _rate("fuzzy top score tied (file order won)", sum(r.top_tied for r in matchable), total)
+    if any(r.rerank_ok is not None for r in matchable):
+        _rate("top-1, reranked", sum(bool(r.rerank_ok) for r in matchable), total)
+        print(f"  {'none although it was shortlisted':<40}{sum(r.answered_none for r in matchable if r.shortlisted)}")
+
+
+def _print_by_noise(matchable: list[CatalogResult]) -> None:
+    """Break generated readings down by noise operator: which kinds of damage each order copes with."""
+    reranked = any(r.rerank_ok is not None for r in matchable)
+    operators = sorted({op for r in matchable for op in r.case.noise})
+    print("  by noise operator (a case can have several):")
+    for name, group in [("(none)", [r for r in matchable if not r.case.noise])] + [
+        (op, [r for r in matchable if op in r.case.noise]) for op in operators
+    ]:
+        if not group:
+            continue
+        total = len(group)
+        line = (
+            f"    {name:<20} n={total:<4} shortlisted {sum(r.shortlisted for r in group) / total:4.0%}"
+            f"  fuzzy {sum(r.baseline_ok for r in group) / total:4.0%}"
+        )
+        if reranked:
+            line += f"  reranked {sum(bool(r.rerank_ok) for r in group) / total:4.0%}"
+        print(line)
+
+
 def print_catalog_report(results: list[CatalogResult]) -> None:
     """Print fuzzy vs reranked per source, the recall ceiling and the 'none' answers."""
     for source in sorted({r.case.source for r in results}):
@@ -351,26 +440,20 @@ def print_catalog_report(results: list[CatalogResult]) -> None:
         absent = [r for r in group if r.case.catalog_id is None]
         print(f"== {source}: {len(group)} cases ({len(matchable)} in the catalog, {len(absent)} not)")
         if matchable:
-            total = len(matchable)
-            shortlisted = sum(r.shortlisted for r in matchable)
-            print(f"  right product on the fuzzy shortlist  {shortlisted}/{total} ({shortlisted / total:.0%})")
-            baseline = sum(r.baseline_ok for r in matchable)
-            print(f"  top-1, fuzzy order                    {baseline}/{total} ({baseline / total:.0%})")
-            if any(r.rerank_ok is not None for r in matchable):
-                reranked = sum(bool(r.rerank_ok) for r in matchable)
-                print(f"  top-1, reranked                       {reranked}/{total} ({reranked / total:.0%})")
-                wrongly_none = sum(r.answered_none for r in matchable if r.shortlisted)
-                print(f"  'none' although it was shortlisted    {wrongly_none}")
-                changed = [r for r in matchable if r.rerank_ok != r.baseline_ok]
-                for r in changed[:15]:
-                    verdict = "fixed" if r.rerank_ok else "broke"
-                    print(f"    {verdict}: {r.case.case_id} {json.dumps(r.case.extraction, ensure_ascii=False)}")
+            _print_matchable(matchable)
+            if any(r.case.noise for r in matchable):
+                _print_by_noise(matchable)
+            changed = [r for r in matchable if r.rerank_ok is not None and r.rerank_ok != r.baseline_ok]
+            for r in changed[:15]:
+                verdict = "fixed" if r.rerank_ok else "broke"
+                tied = " (fuzzy top was tied)" if r.top_tied else ""
+                print(f"    {verdict}{tied}: {r.case.case_id} {json.dumps(r.case.extraction, ensure_ascii=False)}")
         if absent:
             asked = [r for r in absent if not r.empty]
-            said_none = sum(r.answered_none for r in asked)
-            print(f"  not in catalog, wrong entry preselected  {len(asked)}/{len(absent)}")
+            print(f"  {'not in catalog, wrong entry preselected':<40}{len(asked)}/{len(absent)}")
             if any(r.rerank_ok is not None for r in absent):
-                print(f"  not in catalog, model answered 'none'    {said_none}/{len(asked)}")
+                said_none = sum(r.answered_none for r in asked)
+                print(f"  {'not in catalog, model answered none':<40}{said_none}/{len(asked)}")
         print()
     errored = [r for r in results if r.error is not None]
     if errored:
@@ -458,21 +541,40 @@ async def _catalog_main(args: argparse.Namespace) -> int:
         spoolintake.load_catalog = original_loader
 
 
+def _load_photos(photos: PhotoSet, by_id: dict[str, dict]) -> list[CatalogCase]:
+    """Report what the photo folder holds and return the cases that can be measured.
+
+    Raises EvalInputError for a catalog_id this catalog does not have.
+    """
+    if photos.duplicates:
+        print(f"Listed more than once in cases.json, first entry used: {', '.join(photos.duplicates)}\n")
+    if photos.missing:
+        print(
+            f"{len(photos.missing)} photo(s) have no extraction (it failed or was not dumped) and are "
+            f"left out of the numbers: {', '.join(photos.missing)}\n",
+        )
+    if photos.unlabelled:
+        names = ", ".join(c.case_id for c in photos.unlabelled)
+        print(f"Unlabelled photos, left out (add a catalog_id to cases.json): {names}\n")
+    unknown = [c.case_id for c in photos.cases if c.catalog_id is not None and c.catalog_id not in by_id]
+    if unknown:
+        msg = f"catalog_id not found in this catalog: {', '.join(unknown)}"
+        raise EvalInputError(msg)
+    return photos.cases
+
+
 async def _run_catalog_modes(args: argparse.Namespace, catalog: list[dict]) -> int:
     by_id = {entry.get("id"): entry for entry in catalog}
     cases: list[CatalogCase] = []
     if args.photos:
-        photo, unlabelled = photo_cases(args.photos, args.extractions)
-        if args.suggest:
-            print_suggestions(unlabelled + photo, catalog)
-            return 0
-        cases += photo
-        if unlabelled:
-            names = ", ".join(c.case_id for c in unlabelled)
-            print(f"Unlabelled photos, left out (add a catalog_id to cases.json): {names}\n")
-        unknown = [c.case_id for c in photo if c.catalog_id is not None and c.catalog_id not in by_id]
-        if unknown:
-            print(f"catalog_id not found in this catalog: {', '.join(unknown)}", file=sys.stderr)
+        try:
+            photos = photo_cases(args.photos, args.extractions)
+            if args.suggest:
+                print_suggestions(photos.unlabelled + photos.cases, catalog)
+                return 0
+            cases += _load_photos(photos, by_id)
+        except EvalInputError as exc:
+            print(exc, file=sys.stderr)
             return 2
     if args.generated:
         cases += generated_cases(catalog, args.generated, args.seed)
@@ -535,6 +637,10 @@ def main() -> None:
     real.add_argument("--seed", type=int, default=1, help="seed for --generated")
     real.add_argument("--baseline-only", action="store_true", help="fuzzy numbers only; no decision endpoint")
     args = parser.parse_args()
+    if args.suggest and not args.photos:
+        parser.error("--suggest lists catalog rows for photos; it needs --photos")
+    if args.suggest and args.generated:
+        parser.error("--suggest only labels photos; run --generated separately")
     if args.photos or args.generated or args.catalog or args.find:
         sys.exit(asyncio.run(_catalog_main(args)))
     sys.exit(asyncio.run(_main(args.min_accuracy)))

@@ -414,17 +414,23 @@ reports three numbers per set:
 - top-1 accuracy in the fuzzy order;
 - top-1 accuracy after reranking.
 
+It also breaks the generated results down by noise operator, shows how many fuzzy top picks were
+tied with another candidate on score (where file order, not the scorer, decided the winner), and
+lists labelled photos that produced no extraction at all.
+
 Download the catalog once:
 
 ```bash
 curl -o filaments.json https://sherrmann.github.io/SpoolmanDB/filaments.json
 ```
 
-**Generated readings.** These need no photos. `--generated 300` samples 300 catalog entries
-across manufacturers and adds label-style noise from a fixed list: a missing vendor, the
-material folded into the name, a dropped word, an OCR-style character swap, and so on (see
-`scripts/match_eval_noise.py`). `--baseline-only` prints the fuzzy numbers without a decision
-endpoint:
+**Generated readings.** These need no photos. `--generated 300` samples catalog entries and adds
+label-style noise from a fixed list: a missing vendor, the material folded into the name, a
+dropped word, an OCR-style character swap, and so on (see `scripts/match_eval_noise.py`). The
+sample gives every manufacturer an equal share rather than one proportional to its catalog size:
+with 59 makers in the current catalog and `--generated 300`, each gets about 5 cases, so a large
+maker such as Polymaker (15% of the catalog) is under-represented relative to its catalog share.
+`--baseline-only` prints the fuzzy numbers without a decision endpoint:
 
 ```bash
 uv run python scripts/match_rerank_eval.py --catalog filaments.json --generated 300 --seed 1 --baseline-only
@@ -458,7 +464,7 @@ uv run python scripts/match_rerank_eval.py --catalog filaments.json --generated 
 
 A pick counts as right when it is the same product as the labelled row: same maker, name,
 material and weight, and the same diameter only when the label shows one. SpoolmanDB lists
-one product once per diameter and spool size.
+one product once per diameter, spool type and spool size.
 
 ## Privacy
 

@@ -3,8 +3,8 @@
 Real label readings are scarce -- photos are personal and slow to collect -- but the SpoolmanDB
 catalog already holds thousands of real vendor/name/material/weight combinations. This turns each
 catalog entry into a clean label, then perturbs it the way a vision extraction actually goes
-wrong: a missing vendor, an OCR-mangled name, a weight reported in kilograms instead of grams. The
-result approximates a real scan's extraction dict without a single photo.
+wrong: a missing vendor, an OCR-mangled name, a missing weight reading. The result approximates a
+real scan's extraction dict without a single photo.
 
 The noise operators are fixed here, deliberately, and must not be tuned against match or rerank
 results -- doing so would let the eval measure "cases chosen to make reranking look good" instead
@@ -19,11 +19,19 @@ observed or expected from a vision model, not one picked to move a number:
   ocr_swap           a classic OCR confusion in the name (O/0, l/1/I, rn/m)
   material_drop_plus   a trailing "+" dropped from the material ("PLA+" -> "PLA")
   weight_missing     the net weight not printed, or not legible
-  weight_in_kg       the net weight read in kilograms rather than grams
 
-Each is applied independently with probability NOISE_PROBABILITY, except that weight_missing and
-weight_in_kg are mutually exclusive (both touch weight_g, and applying both would just mean the
-second overwrote the first's effect).
+There is deliberately no "weight read in kilograms" operator: every label passes through
+spoolintake.normalize_extraction below, the same as a real scan's extraction, and that function
+already reads any weight under 20 as kilograms and scales it back to grams -- so a kg noise
+operator would round-trip straight back to the original value and change nothing.
+
+Each operator is applied independently with probability NOISE_PROBABILITY.
+
+Sampling is stratified by manufacturer, round-robin, so every maker gets an equal share of the
+generated cases rather than a share proportional to its catalog size: with 59 makers in the
+current catalog and n=300, each gets about 5 cases regardless of how many entries it has, so a
+large maker such as Polymaker (15% of the catalog) is under-represented relative to its catalog
+share, and a small one is over-represented.
 """
 
 import random
@@ -132,16 +140,6 @@ def weight_missing(label: dict, rng: random.Random) -> dict:  # noqa: ARG001
     return {**label, "weight_g": None}
 
 
-def weight_in_kg(label: dict, rng: random.Random) -> dict:  # noqa: ARG001
-    """Report the net weight in kilograms rather than grams."""
-    weight = label.get("weight_g")
-    if weight is None:
-        return label
-    return {**label, "weight_g": weight / 1000}
-
-
-#: Ordered so weight_missing and weight_in_kg (mutually exclusive, both weight_g) sit together;
-#: generate_cases enforces the exclusion regardless of this order.
 NOISE_OPERATORS: tuple[tuple[str, float, Callable[[dict, random.Random], dict]], ...] = (
     ("drop_vendor", NOISE_PROBABILITY, drop_vendor),
     ("vendor_case", NOISE_PROBABILITY, vendor_case),
@@ -151,20 +149,14 @@ NOISE_OPERATORS: tuple[tuple[str, float, Callable[[dict, random.Random], dict]],
     ("ocr_swap", NOISE_PROBABILITY, ocr_swap),
     ("material_drop_plus", NOISE_PROBABILITY, material_drop_plus),
     ("weight_missing", NOISE_PROBABILITY, weight_missing),
-    ("weight_in_kg", NOISE_PROBABILITY, weight_in_kg),
 )
-
-_WEIGHT_OPERATOR_NAMES = ("weight_missing", "weight_in_kg")
 
 
 def _apply_noise(label: dict, rng: random.Random) -> tuple[dict, list[str]]:
-    """Apply every operator independently, skipping no-ops and keeping the weight ones exclusive."""
+    """Apply every operator independently, skipping no-ops."""
     noisy = label
     applied: list[str] = []
-    weight_operator_used = False
     for name, probability, fn in NOISE_OPERATORS:
-        if name in _WEIGHT_OPERATOR_NAMES and weight_operator_used:
-            continue
         if rng.random() >= probability:
             continue
         result = fn(noisy, rng)
@@ -172,8 +164,6 @@ def _apply_noise(label: dict, rng: random.Random) -> tuple[dict, list[str]]:
             continue  # a no-op for this label -- not recorded
         noisy = result
         applied.append(name)
-        if name in _WEIGHT_OPERATOR_NAMES:
-            weight_operator_used = True
     return noisy, applied
 
 
