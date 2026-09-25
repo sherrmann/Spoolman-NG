@@ -19,6 +19,11 @@ they are personal, so point the harness at your own directory instead:
     poe ai-eval-vision --photos ~/my-spool-photos
 
 That directory needs a cases.json in the same shape as scripts/ai_eval_vision_cases/cases.json.
+
+Pass ``--dump-extractions FILE`` to also write each successfully-extracted photo's normalised
+extraction as a JSON line to FILE, in case order, for scripts/match_rerank_eval.py --photos. A
+photo whose extraction failed is left out; the file is overwritten at the start of the run. A case
+may leave out ``want`` when it is only there for that: it then counts towards completion alone.
 """
 
 # ruff: noqa: T201  (this is a CLI report; print is the point)
@@ -59,30 +64,34 @@ def _matches(expected: object, actual: object) -> bool:
     return False
 
 
-async def _run_case(config: ai.AIConfig, folder: Path, case: dict) -> tuple[bool, int, int, int]:
-    """Return (completed, fields_ok, fields_total, match_fields_ok) for one photo."""
+async def _run_case(config: ai.AIConfig, folder: Path, case: dict) -> tuple[bool, int, int, int, dict | None]:
+    """Return (completed, fields_ok, fields_total, match_fields_ok, extraction) for one photo.
+
+    ``extraction`` is the normalised dict `spoolintake.extract` returned, or None when extraction
+    failed -- the caller uses it for ``--dump-extractions`` without re-running the request.
+    """
     image = base64.b64encode((folder / case["file"]).read_bytes()).decode()
     started = time.perf_counter()
     try:
         got = await spoolintake.extract(config, image, "image/jpeg")
     except (ai.AIRequestError, spoolintake.ExtractionParseError) as exc:
         print(f"  FAILED after {time.perf_counter() - started:.1f}s  {case['file']}: {exc}")
-        return False, 0, len(case["want"]), 0
+        return False, 0, len(case.get("want", {})), 0, None
 
     elapsed = time.perf_counter() - started
-    want = case["want"]
+    want = case.get("want", {})
     hits = sum(_matches(expected, got.get(field)) for field, expected in want.items())
     match_hits = sum(_matches(expected, got.get(field)) for field, expected in want.items() if field in MATCH_FIELDS)
-    print(f"  {elapsed:6.1f}s  {hits}/{len(want)} fields  {case['file']}  ({case['what']})")
+    print(f"  {elapsed:6.1f}s  {hits}/{len(want)} fields  {case['file']}  ({case.get('what', '')})")
     for field, expected in want.items():
         actual = got.get(field)
         if not _matches(expected, actual):
             flag = "  <-- match-critical" if field in MATCH_FIELDS else ""
             print(f"           miss  {field}: wanted {expected!r}, got {actual!r}{flag}")
-    return True, hits, len(want), match_hits
+    return True, hits, len(want), match_hits, got
 
 
-async def _main(photos: Path, min_completion: float) -> int:
+async def _main(photos: Path, min_completion: float, dump_extractions: Path | None) -> int:
     config = ai.AIConfig(
         base_url=os.environ.get("SPOOLMAN_AI_BASE_URL"),
         api_key=os.environ.get("SPOOLMAN_AI_API_KEY"),
@@ -103,15 +112,22 @@ async def _main(photos: Path, min_completion: float) -> int:
         return 2
 
     print(f"model={config.vision_model or config.model}  photos={photos}  cases={len(cases)}\n")
+    if dump_extractions is not None:
+        dump_extractions.write_text("", encoding="utf-8")  # overwrite at the start of the run
+
     completed = fields_ok = fields_total = match_ok = 0
     for case in cases:
-        ok, hits, total, match_hits = await _run_case(config, photos, case)
+        ok, hits, total, match_hits, extraction = await _run_case(config, photos, case)
         completed += int(ok)
         fields_ok += hits
         fields_total += total
         match_ok += match_hits
+        if dump_extractions is not None and extraction is not None:
+            line = json.dumps({"file": case["file"], "extraction": extraction})
+            with dump_extractions.open("a", encoding="utf-8") as handle:
+                handle.write(line + "\n")
 
-    match_total = sum(1 for case in cases for field in case["want"] if field in MATCH_FIELDS)
+    match_total = sum(1 for case in cases for field in case.get("want", {}) if field in MATCH_FIELDS)
     print(f"\nCompleted:       {completed}/{len(cases)}")
     print(f"Fields correct:  {fields_ok}/{fields_total}")
     print(f"  match-critical:{match_ok}/{match_total}  (name/vendor/material/weight — what finds the filament)")
@@ -124,8 +140,14 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--photos", type=Path, default=DEFAULT_CASES, help="directory holding cases.json + images")
     parser.add_argument("--min-completion", type=float, default=1.0, help="fail below this completion rate")
+    parser.add_argument(
+        "--dump-extractions",
+        type=Path,
+        default=None,
+        help="write each successfully-extracted photo's normalised extraction as a JSON line to this file",
+    )
     args = parser.parse_args()
-    sys.exit(asyncio.run(_main(args.photos, args.min_completion)))
+    sys.exit(asyncio.run(_main(args.photos, args.min_completion, args.dump_extractions)))
 
 
 if __name__ == "__main__":
