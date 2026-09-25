@@ -205,3 +205,35 @@ test("the printed report shows the heading and the seeded material, and cleans u
   await page.evaluate(() => window.dispatchEvent(new Event("afterprint")));
   await expect(page.locator(".inventory-report-root")).toHaveCount(0);
 });
+
+test("the import form is locked while a request is out, so its result belongs to what was sent", async ({
+  page,
+}) => {
+  // Changing the form mid-request would pin the answer on a different file, or let the
+  // clearing that follows a real import discard a newer file.
+  let release!: () => void;
+  const held = new Promise<void>((r) => (release = r));
+  await page.route("**/api/v1/import/**", async (route) => {
+    await held;
+    await route.continue();
+  });
+
+  await page.goto("/settings", { waitUntil: "networkidle" });
+  const section = page.getByRole("region", { name: "Import / Export" });
+  await section.getByRole("combobox", { name: "Data" }).selectOption("vendors");
+  await section
+    .getByLabel("Choose file")
+    .setInputFiles(writeTemp("locked.csv", `name\n${unique("Locked")}\n`));
+  await section.getByRole("button", { name: "Validate" }).click();
+
+  await expect(section.getByRole("combobox", { name: "Data" })).toBeDisabled();
+  await expect(section.getByRole("combobox", { name: "Mode" })).toBeDisabled();
+  await expect(section.getByLabel("Choose file")).toBeDisabled();
+  await expect(
+    section.getByRole("checkbox", { name: "Dry run" }),
+  ).toBeDisabled();
+
+  release();
+  await expect(section.getByRole("status")).toContainText("Dry run");
+  await expect(section.getByRole("combobox", { name: "Data" })).toBeEnabled();
+});
