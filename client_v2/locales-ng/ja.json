@@ -547,5 +547,9 @@
 	"spool_bulk_unarchive_confirm_other": "{count}本のスプールのアーカイブを解除しますか?",
 	"spool_bulk_clear_selection": "選択を解除",
 	"spool_bulk_edit_help": "変更する項目にチェックを入れると、選択したすべてのスプールに適用されます。チェックのない項目は変更されません。",
-	"spool_bulk_nothing_selected": "変更する項目を少なくとも1つチェックしてください。"
+	"spool_bulk_nothing_selected": "変更する項目を少なくとも1つチェックしてください。",
+	"spool_weigh_title": "スプールを計量",
+	"spool_weigh_save_next": "保存して次へ",
+	"spool_weigh_done": "完了",
+	"spool_weigh_updated": "{name}を更新しました"
 }

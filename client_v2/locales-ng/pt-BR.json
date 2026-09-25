@@ -562,5 +562,9 @@
 	"spool_bulk_unarchive_confirm_other": "Desarquivar {count} carretéis?",
 	"spool_bulk_clear_selection": "Limpar seleção",
 	"spool_bulk_edit_help": "Marque um campo para alterá-lo em todos os carretéis selecionados. Campos desmarcados permanecem inalterados.",
-	"spool_bulk_nothing_selected": "Marque pelo menos um campo para alterar."
+	"spool_bulk_nothing_selected": "Marque pelo menos um campo para alterar.",
+	"spool_weigh_title": "Pesar Carretéis",
+	"spool_weigh_save_next": "Salvar e Próximo",
+	"spool_weigh_done": "Concluir",
+	"spool_weigh_updated": "{name} atualizado"
 }

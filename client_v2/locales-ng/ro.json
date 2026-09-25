@@ -563,5 +563,9 @@
 	"spool_bulk_unarchive_confirm_other": "Dezarhivați {count} de bobine?",
 	"spool_bulk_clear_selection": "Golește selecția",
 	"spool_bulk_edit_help": "Bifați un câmp pentru a-l modifica la toate bobinele selectate. Câmpurile nebifate rămân neschimbate.",
-	"spool_bulk_nothing_selected": "Bifați cel puțin un câmp de modificat."
+	"spool_bulk_nothing_selected": "Bifați cel puțin un câmp de modificat.",
+	"spool_weigh_title": "Cântărire bobine",
+	"spool_weigh_save_next": "Salvează și următoarea",
+	"spool_weigh_done": "Gata",
+	"spool_weigh_updated": "S-a actualizat {name}"
 }

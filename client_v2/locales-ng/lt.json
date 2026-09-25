@@ -563,5 +563,9 @@
 	"spool_bulk_unarchive_confirm_other": "Išarchyvuoti {count} ričių?",
 	"spool_bulk_clear_selection": "Išvalyti pasirinkimą",
 	"spool_bulk_edit_help": "Pažymėkite lauką, kurį norite pakeisti visose pasirinktose ritėse. Nepažymėti laukai lieka nepakeisti.",
-	"spool_bulk_nothing_selected": "Pažymėkite bent vieną keistiną lauką."
+	"spool_bulk_nothing_selected": "Pažymėkite bent vieną keistiną lauką.",
+	"spool_weigh_title": "Sverti rites",
+	"spool_weigh_save_next": "Išsaugoti ir kitą",
+	"spool_weigh_done": "Atlikta",
+	"spool_weigh_updated": "Atnaujinta {name}"
 }

@@ -555,5 +555,9 @@
 	"spool_bulk_unarchive_confirm_other": "Επαναφορά {count} αρχειοθετημένων καρουλιών;",
 	"spool_bulk_clear_selection": "Εκκαθάριση επιλογής",
 	"spool_bulk_edit_help": "Τσεκάρετε ένα πεδίο για να το αλλάξετε σε κάθε επιλεγμένο καρούλι. Τα μη τσεκαρισμένα πεδία παραμένουν αμετάβλητα.",
-	"spool_bulk_nothing_selected": "Τσεκάρετε τουλάχιστον ένα πεδίο για αλλαγή."
+	"spool_bulk_nothing_selected": "Τσεκάρετε τουλάχιστον ένα πεδίο για αλλαγή.",
+	"spool_weigh_title": "Ζύγιση Καρουλιών",
+	"spool_weigh_save_next": "Αποθήκευση & Επόμενο",
+	"spool_weigh_done": "Τέλος",
+	"spool_weigh_updated": "Ενημερώθηκε: {name}"
 }

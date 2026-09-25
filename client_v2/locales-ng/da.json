@@ -555,5 +555,9 @@
 	"spool_bulk_unarchive_confirm_other": "Gendan {count} spoler fra arkivet?",
 	"spool_bulk_clear_selection": "Ryd markering",
 	"spool_bulk_edit_help": "Sæt flueben ved et felt for at ændre det på alle valgte spoler. Felter uden flueben ændres ikke.",
-	"spool_bulk_nothing_selected": "Sæt flueben ved mindst ét felt, der skal ændres."
+	"spool_bulk_nothing_selected": "Sæt flueben ved mindst ét felt, der skal ændres.",
+	"spool_weigh_title": "Vej spoler",
+	"spool_weigh_save_next": "Gem & næste",
+	"spool_weigh_done": "Færdig",
+	"spool_weigh_updated": "{name} opdateret"
 }

@@ -341,6 +341,18 @@ const KEYS = [
 	'spool.bulk.select_shown',
 	'spool.bulk.select_row',
 	'spool.bulk.invalid_price',
+	'spool.bulk.weigh',
+	// Weighing the selection one spool after another (#412 step 2).
+	'spool.weigh.title',
+	'spool.weigh.save_next',
+	'spool.weigh.done',
+	'spool.weigh.updated',
+	'spool.weigh.progress',
+	'spool.weigh.skip',
+	'spool.weigh.summary',
+	'spool.weigh.status_updated',
+	'spool.weigh.status_skipped',
+	'spool.weigh.status_failed',
 ];
 
 /** Flatten nested i18next JSON to dotted keys. */

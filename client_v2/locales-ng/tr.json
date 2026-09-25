@@ -555,5 +555,9 @@
 	"spool_bulk_unarchive_confirm_other": "{count} makara arşivden çıkarılsın mı?",
 	"spool_bulk_clear_selection": "Seçimi temizle",
 	"spool_bulk_edit_help": "Seçili tüm makaralarda değiştirmek istediğiniz alanları işaretleyin. İşaretlenmeyen alanlar olduğu gibi bırakılır.",
-	"spool_bulk_nothing_selected": "Değiştirmek için en az bir alan işaretleyin."
+	"spool_bulk_nothing_selected": "Değiştirmek için en az bir alan işaretleyin.",
+	"spool_weigh_title": "Makaraları Tart",
+	"spool_weigh_save_next": "Kaydet ve Sonraki",
+	"spool_weigh_done": "Bitti",
+	"spool_weigh_updated": "{name} güncellendi"
 }

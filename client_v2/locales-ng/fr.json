@@ -562,5 +562,9 @@
 	"spool_bulk_unarchive_confirm_other": "Désarchiver {count} bobines ?",
 	"spool_bulk_clear_selection": "Effacer la sélection",
 	"spool_bulk_edit_help": "Cochez un champ pour le modifier sur toutes les bobines sélectionnées. Les champs non cochés restent inchangés.",
-	"spool_bulk_nothing_selected": "Cochez au moins un champ à modifier."
+	"spool_bulk_nothing_selected": "Cochez au moins un champ à modifier.",
+	"spool_weigh_title": "Peser les bobines",
+	"spool_weigh_save_next": "Enregistrer et suivant",
+	"spool_weigh_done": "Terminé",
+	"spool_weigh_updated": "Mis à jour : {name}"
 }

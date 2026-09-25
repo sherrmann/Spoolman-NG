@@ -5,7 +5,7 @@
  * base-URL resolution, the x-total-count paging header and the 401 forward-auth reload are all
  * handled there, and a second copy would drift from them.
  */
-import { getJson, getList, patchJson, postJson, deleteResource, HttpError } from '$lib/api/http';
+import { getJson, getList, patchJson, postJson, putJson, deleteResource, HttpError } from '$lib/api/http';
 import { mapFilament, mapSpool } from '$lib/api/map';
 import type { Spool } from '$lib/types';
 import type {
@@ -298,4 +298,31 @@ export async function spoolPrinterId(spoolId: number, signal?: AbortSignal): Pro
 /** Assign a spool to a printer, or `null` to unassign it. */
 export async function setSpoolPrinter(spoolId: number, printerId: number | null): Promise<void> {
 	await patchJson(`/spool/${spoolId}`, { printer_id: printerId });
+}
+
+/**
+ * Record one weigh-in reading for a spool, safe to repeat (#412 step 2).
+ *
+ * The same three calls the inspector's Adjust panel makes through spoolSource, plus an
+ * Idempotency-Key. A retry after a lost response must not consume the filament a second time:
+ * the server records the key with the first request that commits, and answers a repeat with the
+ * spool as it stands instead of applying it again. The caller keeps one key per spool across
+ * retries and draws a new one only when it moves on.
+ */
+export async function recordReading(
+	spoolId: number,
+	mode: 'length' | 'weight' | 'measured_weight',
+	value: number,
+	idempotencyKey: string
+): Promise<Spool> {
+	const headers = { 'Idempotency-Key': idempotencyKey };
+	const updated =
+		mode === 'measured_weight'
+			? await putJson<Json>(`/spool/${spoolId}/measure`, { weight: value }, headers)
+			: await putJson<Json>(
+					`/spool/${spoolId}/use`,
+					mode === 'length' ? { use_length: value } : { use_weight: value },
+					headers
+				);
+	return mapSpool(updated);
 }

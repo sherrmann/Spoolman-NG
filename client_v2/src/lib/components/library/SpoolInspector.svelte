@@ -195,6 +195,9 @@
 	}
 	function openAdjust() {
 		adjustOpen = !adjustOpen;
+		// Spoolman NG fork addition: re-read the mode, which the fork's weigh-in (#412) may have
+		// changed while this inspector stayed mounted.
+		if (adjustOpen) adjustMode = loadAdjustMode();
 		if (adjustOpen) resetAdjustInput();
 	}
 	function setAdjustMode(mode: AdjustMode) {

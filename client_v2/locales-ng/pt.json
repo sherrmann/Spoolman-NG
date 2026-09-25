@@ -563,5 +563,9 @@
 	"spool_bulk_unarchive_confirm_other": "Desarquivar {count} bobines?",
 	"spool_bulk_clear_selection": "Limpar seleção",
 	"spool_bulk_edit_help": "Assinale um campo para o alterar em todas as bobines selecionadas. Os campos não assinalados ficam inalterados.",
-	"spool_bulk_nothing_selected": "Assinale pelo menos um campo para alterar."
+	"spool_bulk_nothing_selected": "Assinale pelo menos um campo para alterar.",
+	"spool_weigh_title": "Pesar Bobines",
+	"spool_weigh_save_next": "Guardar e Seguinte",
+	"spool_weigh_done": "Concluído",
+	"spool_weigh_updated": "Bobine {name} atualizada"
 }

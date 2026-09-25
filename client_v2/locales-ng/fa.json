@@ -555,5 +555,9 @@
 	"spool_bulk_unarchive_confirm_other": "{count} قرقره از آرشیو خارج شوند؟",
 	"spool_bulk_clear_selection": "پاک کردن انتخاب",
 	"spool_bulk_edit_help": "هر فیلدی را که می‌خواهید در همه قرقره‌های انتخاب‌شده تغییر کند علامت بزنید. فیلدهای علامت‌نخورده دست‌نخورده می‌مانند.",
-	"spool_bulk_nothing_selected": "دست‌کم یک فیلد را برای تغییر علامت بزنید."
+	"spool_bulk_nothing_selected": "دست‌کم یک فیلد را برای تغییر علامت بزنید.",
+	"spool_weigh_title": "وزن‌کشی قرقره‌ها",
+	"spool_weigh_save_next": "ذخیره و بعدی",
+	"spool_weigh_done": "پایان",
+	"spool_weigh_updated": "{name} به‌روزرسانی شد"
 }

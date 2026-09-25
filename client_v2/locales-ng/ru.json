@@ -563,5 +563,9 @@
 	"spool_bulk_unarchive_confirm_many": "Вернуть из архива {count} катушек?",
 	"spool_bulk_clear_selection": "Снять выделение",
 	"spool_bulk_edit_help": "Отметьте поле, чтобы изменить его у всех выбранных катушек. Неотмеченные поля останутся без изменений.",
-	"spool_bulk_nothing_selected": "Отметьте хотя бы одно поле для изменения."
+	"spool_bulk_nothing_selected": "Отметьте хотя бы одно поле для изменения.",
+	"spool_weigh_title": "Взвешивание катушек",
+	"spool_weigh_save_next": "Сохранить и далее",
+	"spool_weigh_done": "Готово",
+	"spool_weigh_updated": "Обновлено: {name}"
 }
