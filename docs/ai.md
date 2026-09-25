@@ -414,9 +414,9 @@ reports three numbers per set:
 - top-1 accuracy in the fuzzy order;
 - top-1 accuracy after reranking.
 
-It also breaks the generated results down by noise operator, shows how many fuzzy top picks were
-tied with another candidate on score (where file order, not the scorer, decided the winner), and
-lists labelled photos that produced no extraction at all.
+It also breaks the generated results down by noise operator, shows how many fuzzy top-1 results were
+decided by the catalog's file order (the top two tied on score and only one was right), and lists
+photos that produced no extraction at all.
 
 Download the catalog once:
 

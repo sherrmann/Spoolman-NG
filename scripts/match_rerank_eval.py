@@ -228,7 +228,8 @@ class CatalogResult:
     #: Whether the shortlist was empty (nothing to preselect, nothing to ask the model).
     empty: bool
     baseline_ok: bool
-    #: Whether fuzzy's top two candidates share a score, so catalog file order picked the first.
+    #: Whether fuzzy's top two candidates share a score and only one of them is right, so the
+    #: catalog's file order, not the score, decided the fuzzy top-1 result.
     top_tied: bool = False
     rerank_ok: bool | None = None
     answered_none: bool = False
@@ -378,7 +379,13 @@ async def run_catalog_case(
         shortlisted=expected is None or any(same_product(c, expected, case.extraction) for c in shortlist),
         empty=not shortlist,
         baseline_ok=ok(shortlist),
-        top_tied=len(shortlist) > 1 and shortlist[0]["match_percent"] == shortlist[1]["match_percent"],
+        top_tied=(
+            expected is not None
+            and len(shortlist) > 1
+            and shortlist[0]["match_percent"] == shortlist[1]["match_percent"]
+            and same_product(shortlist[0], expected, case.extraction)
+            != same_product(shortlist[1], expected, case.extraction)
+        ),
     )
     if config is None:
         return result
@@ -406,7 +413,7 @@ def _print_matchable(matchable: list[CatalogResult]) -> None:
     _rate("top-1, fuzzy order", sum(r.baseline_ok for r in matchable), total)
     # A tie at the top is settled by the catalog's file order, not by the score, so a rerank can
     # "fix" or "break" these cases without the fuzzy order having had an opinion.
-    _rate("fuzzy top score tied (file order won)", sum(r.top_tied for r in matchable), total)
+    _rate("fuzzy top-1 decided by file order", sum(r.top_tied for r in matchable), total)
     if any(r.rerank_ok is not None for r in matchable):
         _rate("top-1, reranked", sum(bool(r.rerank_ok) for r in matchable), total)
         print(f"  {'none although it was shortlisted':<40}{sum(r.answered_none for r in matchable if r.shortlisted)}")
@@ -626,7 +633,7 @@ async def _main(min_accuracy: float) -> int:
 def main() -> None:
     """Entry point for `poe match-rerank-eval`."""
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--min-accuracy", type=float, default=0.7, help="fixture mode: fail below this")
+    parser.add_argument("--min-accuracy", type=float, help="fixture mode: fail below this (default 0.7)")
     real = parser.add_argument_group("real-catalog mode (shortlists built by the product from SpoolmanDB)")
     real.add_argument("--catalog", type=Path, help="SpoolmanDB filaments.json (default: Spoolman's synced copy)")
     real.add_argument("--photos", type=Path, help="photo folder with cases.json (entries carry catalog_id)")
@@ -641,9 +648,15 @@ def main() -> None:
         parser.error("--suggest lists catalog rows for photos; it needs --photos")
     if args.suggest and args.generated:
         parser.error("--suggest only labels photos; run --generated separately")
+    if args.extractions and not args.photos:
+        parser.error("--extractions belongs to --photos")
+    if args.seed != 1 and not args.generated:
+        parser.error("--seed only applies to --generated")
+    if args.min_accuracy is not None and (args.photos or args.generated or args.catalog or args.find):
+        parser.error("--min-accuracy only applies to the fixture cases, not to real-catalog mode")
     if args.photos or args.generated or args.catalog or args.find:
         sys.exit(asyncio.run(_catalog_main(args)))
-    sys.exit(asyncio.run(_main(args.min_accuracy)))
+    sys.exit(asyncio.run(_main(0.7 if args.min_accuracy is None else args.min_accuracy)))
 
 
 if __name__ == "__main__":

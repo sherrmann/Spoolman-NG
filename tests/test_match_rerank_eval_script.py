@@ -692,6 +692,9 @@ def test_report_breaks_generated_results_down_by_noise(
     [
         (["--catalog", "c.json", "--suggest"], "needs --photos"),
         (["--photos", "p", "--suggest", "--generated", "2"], "run --generated separately"),
+        (["--catalog", "c.json", "--extractions", "e.jsonl"], "belongs to --photos"),
+        (["--catalog", "c.json", "--seed", "7"], "only applies to --generated"),
+        (["--generated", "5", "--min-accuracy", "0.5"], "only applies to the fixture cases"),
     ],
 )
 def test_main_rejects_suggest_misuse(
@@ -708,3 +711,22 @@ def test_main_rejects_suggest_misuse(
 
     assert exit_info.value.code == 2
     assert message in capsys.readouterr().err
+
+
+async def test_a_tie_between_variants_of_the_right_product_is_not_counted(
+    eval_module: ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Two diameters of the same product tie, but file order cannot change the result."""
+    variants = [
+        {"id": "a175", "manufacturer": "Acme", "name": "Black", "material": "PLA", "weight": 1000, "diameter": 1.75},
+        {"id": "a285", "manufacturer": "Acme", "name": "Black", "material": "PLA", "weight": 1000, "diameter": 2.85},
+    ]
+    monkeypatch.setattr(eval_module.spoolintake, "load_catalog", lambda: variants)
+    reading = {"vendor": "Acme", "name": "Black", "material": "PLA", "weight_g": 1000}
+    case = eval_module.CatalogCase("v", "generated", reading, "a285")
+
+    result = await eval_module.run_catalog_case(None, case, {e["id"]: e for e in variants})
+
+    assert result.baseline_ok is True
+    assert result.top_tied is False
