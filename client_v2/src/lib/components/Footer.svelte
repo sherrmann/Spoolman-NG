@@ -84,6 +84,12 @@
 		.footer {
 			padding: 6px 12px;
 		}
+		/* Spoolman NG fork addition: at phone width the one-line ellipsis cut "Report an issue"
+		   off mid-word, leaving a link that was partly hidden. Wrapping costs no height: two
+		   lines of this text fit within the sponsor button's row. */
+		.version {
+			white-space: normal;
+		}
 		.sponsor {
 			font-size: 0;
 			gap: 0;

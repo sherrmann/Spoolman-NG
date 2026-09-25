@@ -838,6 +838,11 @@
 		display: flex;
 		flex-direction: column;
 		gap: 8px;
+		/* Drop the browser's default list indent: the rows are cards, not bullets, and the 40px
+		   it adds is a sixth of a small phone's width. */
+		list-style: none;
+		margin: 0;
+		padding: 0;
 	}
 	.lowstock-item {
 		position: relative;
@@ -929,6 +934,21 @@
 	}
 	.weight.on-order {
 		color: var(--text-faint);
+	}
+	/* On a phone the name, the order button, the weight and the threshold button do not fit on
+	   one line, and the right-hand group refused to shrink, pushing the threshold button off the
+	   screen. Put the actions on their own line under the name, as the Low Stock page does,
+	   indented to line up with the name past the 40px swatch and its 14px gap. */
+	@media (max-width: 700px) {
+		.lowstock-item {
+			flex-wrap: wrap;
+			row-gap: 8px;
+		}
+		.lowstock-right {
+			flex-basis: 100%;
+			justify-content: flex-start;
+			padding-left: 54px;
+		}
 	}
 
 	/* All-spools swatch grid */

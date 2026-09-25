@@ -190,6 +190,10 @@
 		/* Allow shrinking below the native input's preferred width when placed in
 		   grid/flex cells (e.g. the label print panel's margin grid). */
 		min-width: 0;
+		/* Spoolman NG fork addition: a fixed `width` (the inspector passes 285px) must still
+		   yield to a narrower cell. On a phone the value column is ~230px, and without this cap
+		   the steppers were pushed past the bottom sheet's edge, out of reach. */
+		max-width: 100%;
 	}
 	.ni.spaced {
 		margin-top: 5px;

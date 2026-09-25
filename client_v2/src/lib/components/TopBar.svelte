@@ -219,4 +219,13 @@
 			overflow-x: auto;
 		}
 	}
+
+	/* Spoolman NG fork addition: below 360px (iPhone SE, small Android) the wordmark plus three
+	   44px buttons is wider than the screen, which pushed the add button off the edge and made
+	   every page scroll sideways. The mark alone still links home and keeps its aria-label. */
+	@media (max-width: 359px) {
+		.row.primary :global(.logo span) {
+			display: none;
+		}
+	}
 </style>

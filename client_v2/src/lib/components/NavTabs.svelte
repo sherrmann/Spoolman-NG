@@ -37,9 +37,20 @@
 		const path = $page.url.pathname.slice(basePath.length) || '/';
 		return href === '/' ? path === '/' : path.startsWith(href);
 	}
+
+	// Spoolman NG fork addition: on a phone the tabs sit in a sideways-scrolling strip, and
+	// landing on a page past its end (Dashboard onwards) left the current tab out of sight.
+	// Centre it in the strip on every navigation, so its neighbours show on both sides;
+	// a strip that does not overflow (desktop) cannot scroll, and a hidden copy of this component
+	// (the desktop row on mobile) has no box to scroll to.
+	let navEl: HTMLElement;
+	$effect(() => {
+		void $page.url.pathname;
+		navEl?.querySelector('.tab.active')?.scrollIntoView({ block: 'nearest', inline: 'center' });
+	});
 </script>
 
-<nav class="tabs">
+<nav class="tabs" bind:this={navEl}>
 	{#each tabs as tab (tab.href)}
 		<!-- Spoolman NG fork addition (#417): the Low Stock tab carries the count of filaments
 		     still needing attention. The badge renders nothing at all until that count is both
