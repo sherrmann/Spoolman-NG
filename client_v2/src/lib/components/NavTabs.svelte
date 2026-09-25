@@ -1,52 +1,47 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import type { Pathname } from '$app/types';
 	import { page } from '$app/stores';
-	import * as m from '$lib/paraglide/messages';
-	import { ng } from '$lib/ng/i18n';
+	// Spoolman NG fork addition: the page list lives in $lib/ng/nav, shared with the phone
+	// layout's bottom bar (BottomNav), so a page added here cannot go missing there.
+	import { NAV_PAGES as tabs, isActivePath } from '$lib/ng/nav';
 	// Spoolman NG fork addition (#417): the low-stock count on the /lowstock tab, mounted below.
 	import LowStockBadge from '$lib/ng/components/LowStockBadge.svelte';
 	import CustomNavLinks from '$lib/ng/components/CustomNavLinks.svelte';
-
-	const tabs = [
-		{ href: '/', label: m['nav.library'] },
-		// Spoolman NG fork addition. Its label comes from this fork's own message catalogue
-		// rather than upstream's, so no string of ours lands in ./locales.
-		{ href: '/home', label: ng.home_home },
-		// Spoolman NG fork addition (#298), same reasoning as the /home entry above.
-		{ href: '/lowstock', label: ng.low_stock_title },
-		// Spoolman NG fork addition (#298/#324), same reasoning as the /home entry above.
-		{ href: '/orders', label: ng.orders_title },
-		{ href: '/dashboard', label: m['dashboard.dashboard'] },
-		// Spoolman NG fork addition (#103), same reasoning as the /home entry above.
-		{ href: '/locations', label: ng.locations_locations },
-		// Spoolman NG fork addition (#123), same reasoning as the /home entry above.
-		{ href: '/calibration', label: ng.calibration_title },
-		{ href: '/labels', label: m['nav.labels'] },
-		{ href: '/settings', label: m['settings.header'] },
-		// Spoolman NG fork addition, same reasoning as the /home entry above. Last in the row
-		// because it is the one tab nobody navigates to twice.
-		{ href: '/help', label: ng.help_help }
-	] satisfies { href: Pathname; label: () => string }[];
 
 	// The deploy base path, without its trailing slash (resolve('/') === `${base}/`).
 	const basePath = resolve('/').replace(/\/$/, '');
 
 	function isActive(href: string): boolean {
-		// Compare against the path with the deploy base path stripped off.
-		const path = $page.url.pathname.slice(basePath.length) || '/';
-		return href === '/' ? path === '/' : path.startsWith(href);
+		return isActivePath(href, $page.url.pathname, basePath);
 	}
 
-	// Spoolman NG fork addition: on a phone the tabs sit in a sideways-scrolling strip, and
-	// landing on a page past its end (Dashboard onwards) left the current tab out of sight.
-	// Centre it in the strip on every navigation, so its neighbours show on both sides;
-	// a strip that does not overflow (desktop) cannot scroll, and a hidden copy of this component
-	// (the desktop row on mobile) has no box to scroll to.
+	// Spoolman NG fork addition: when the row is narrower than its tabs (TopBar lets it scroll
+	// below 1500px), keep the current page's tab in view. Only the row itself is scrolled --
+	// scrollIntoView would also scroll the document -- and only on a change of page, not of
+	// query string, or every filter change would yank the row back. Re-run when the row's
+	// content changes width: the low-stock badge and custom links arrive after first paint.
 	let navEl: HTMLElement;
+	let pathname = $derived($page.url.pathname);
+
+	function revealActive() {
+		const strip = navEl?.parentElement;
+		const tab = navEl?.querySelector<HTMLElement>('.tab.active');
+		if (!strip || !tab || strip.scrollWidth <= strip.clientWidth) return;
+		const left = tab.offsetLeft - strip.offsetLeft;
+		if (left < strip.scrollLeft || left + tab.offsetWidth > strip.scrollLeft + strip.clientWidth) {
+			strip.scrollTo({ left: left - (strip.clientWidth - tab.offsetWidth) / 2 });
+		}
+	}
+
 	$effect(() => {
-		void $page.url.pathname;
-		navEl?.querySelector('.tab.active')?.scrollIntoView({ block: 'nearest', inline: 'center' });
+		void pathname;
+		revealActive();
+	});
+
+	$effect(() => {
+		const observer = new ResizeObserver(() => revealActive());
+		observer.observe(navEl);
+		return () => observer.disconnect();
 	});
 </script>
 

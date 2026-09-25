@@ -532,7 +532,7 @@
 <style>
 	.tabs {
 		display: flex;
-		/* Spoolman NG fork addition: eight entity tabs do not fit on one line on a phone, and
+		/* Spoolman NG fork addition: five entity tabs do not fit on one line on a phone, and
 		   without wrapping the last ones sat past the screen's edge. */
 		flex-wrap: wrap;
 		gap: 4px;

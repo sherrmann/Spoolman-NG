@@ -20,6 +20,7 @@
 	import Highlighter from '@lucide/svelte/icons/highlighter';
 	import FileText from '@lucide/svelte/icons/file-text';
 	import User from '@lucide/svelte/icons/user';
+	import AboutLinks from '$lib/ng/components/AboutLinks.svelte';
 
 	const libraryHref = resolve('/');
 	const spoolListHref = `${libraryHref}?group=none`;
@@ -86,6 +87,12 @@
 			{/if}
 		{/each}
 	</div>
+
+	<!-- The version and project links upstream kept in a footer on every page. -->
+	<section class="card" aria-labelledby="about-heading">
+		<h2 id="about-heading">{ng.mobile_nav_about()}</h2>
+		<AboutLinks />
+	</section>
 </div>
 
 <style>
@@ -112,6 +119,11 @@
 		display: flex;
 		flex-direction: column;
 		gap: 12px;
+	}
+	h2 {
+		margin: 0;
+		font-size: 14px;
+		font-weight: 700;
 	}
 	.card p {
 		margin: 0;

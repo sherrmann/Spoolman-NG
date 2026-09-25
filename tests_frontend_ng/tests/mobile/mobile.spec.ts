@@ -146,42 +146,122 @@ for (const width of PHONE_WIDTHS) {
   });
 }
 
+/** The phone layout's bottom navigation bar, and the More sheet it opens. */
+function bottomNav(page: Page): Locator {
+  return page.locator("nav.bottom-nav");
+}
+function moreSheet(page: Page): Locator {
+  return page.getByRole("dialog", { name: "More pages" });
+}
+
 test.describe("navigation", () => {
-  test("the current page's tab is scrolled into view in the tab strip", async ({ page }) => {
-    // The strip scrolls sideways at phone width. Landing on a page whose tab sits past the end of
-    // it -- anything from Dashboard onwards -- must not leave the user unable to see where they are.
-    for (const path of ["/settings", "/help", "/labels", "/calibration", "/"]) {
-      await test.step(path, async () => {
-        await open(page, path);
-        const active = page.locator(".mobile-nav a.tab.active");
-        await expect(active).toHaveCount(1);
-        await expect(active).toBeInViewport({ ratio: 1 });
-      });
-    }
+  test("the header is one row and the page keeps most of the screen", async ({ page }) => {
+    // The header once stacked a second row of scrolling tabs, and a footer took a strip at the
+    // bottom: together about 150px of a 727px screen on every page. Navigation moved to a bottom
+    // bar and the footer went, so the fixed chrome now has a budget.
+    await open(page, "/");
+    const vh = page.viewportSize()!.height;
+    const header = (await page.locator("header.topbar").boundingBox())!;
+    const nav = (await bottomNav(page).boundingBox())!;
+    expect(header.height, "the header should be a single row").toBeLessThanOrEqual(60);
+    expect(nav.height, "the bottom bar").toBeLessThanOrEqual(64);
+    expect(header.height + nav.height, "header and bottom bar together").toBeLessThanOrEqual(vh * 0.17);
+    // The bar sits on the bottom edge, not floating over content above it.
+    expect(Math.round(nav.y + nav.height)).toBe(vh);
+    await expect(page.locator("footer")).toHaveCount(0);
   });
 
-  test("every tab can be reached and tapped from the strip", async ({ page }) => {
+  test("the bottom bar and its More sheet reach every page the desktop navigation does", async ({ page }) => {
+    // The desktop tab row is in the DOM but hidden at this width; its links are the list of
+    // pages. A page that is in it but in neither the bar nor the sheet is unreachable on a phone.
     await open(page, "/");
-    const tabs = page.locator(".mobile-nav a.tab");
-    const hrefs = await tabs.evaluateAll((els) => els.map((e) => e.getAttribute("href")!));
-    expect(hrefs.length).toBeGreaterThan(5);
+    await expect(page.locator(".nav-desktop")).toBeHidden();
+    const desktop = await page
+      .locator(".nav-desktop a.tab[href^='/']")
+      .evaluateAll((els) => els.map((e) => e.getAttribute("href")!));
+    expect(desktop.length).toBeGreaterThan(5);
+
+    const inBar = await bottomNav(page)
+      .locator("a[href]")
+      .evaluateAll((els) => els.map((e) => e.getAttribute("href")!));
+    await bottomNav(page).getByRole("button", { name: "More" }).tap();
+    await expect(moreSheet(page)).toBeVisible();
+    const inSheet = await moreSheet(page)
+      .locator("a[href^='/']")
+      .evaluateAll((els) => els.map((e) => e.getAttribute("href")!));
+
+    expect([...inBar, ...inSheet].sort()).toEqual([...desktop].sort());
+    expect(inBar.length, "four pages in the bar, the rest under More").toBe(4);
+  });
+
+  test("tapping a bottom-bar page navigates and marks it current", async ({ page }) => {
+    await open(page, "/");
+    const links = bottomNav(page).locator("a[href]");
+    const hrefs = await links.evaluateAll((els) => els.map((e) => e.getAttribute("href")!));
     for (const href of hrefs) {
       await test.step(href, async () => {
-        const tab = page.locator(`.mobile-nav a.tab[href="${href}"]`);
-        await tab.tap();
-        // Compared on the path alone: pages may add a query string on arrival (?by= on the
-        // dashboard).
+        const link = bottomNav(page).locator(`a[href="${href}"]`);
+        await expectInViewport(page, `the ${href} link`, await link.boundingBox());
+        await link.tap();
+        // Compared on the path alone: pages may add a query string on arrival.
         await expect.poll(() => new URL(page.url()).pathname).toBe(href);
-        await expect(tab).toHaveClass(/active/);
+        await expect(link).toHaveAttribute("aria-current", "page");
+        await expect(bottomNav(page).locator("[aria-current='page']")).toHaveCount(1);
       });
     }
   });
 
-  test("the desktop navigation is not shown alongside the mobile one", async ({ page }) => {
+  test("the More sheet opens every other page and closes behind it", async ({ page }) => {
     await open(page, "/");
-    await expect(page.locator(".mobile-nav")).toBeVisible();
-    await expect(page.locator(".nav-desktop")).toBeHidden();
-    await expect(page.locator(".search-desktop")).toBeHidden();
+    const more = bottomNav(page).getByRole("button", { name: "More" });
+
+    await more.tap();
+    await expect(more).toHaveAttribute("aria-expanded", "true");
+    await expectInViewport(page, "the More sheet", await moreSheet(page).boundingBox());
+    await expectCleanLayout(page, "the More sheet");
+
+    await moreSheet(page).getByRole("link", { name: "Settings" }).tap();
+    await expect(page).toHaveURL(/\/settings$/);
+    await expect(moreSheet(page)).toHaveCount(0);
+    // On a page the sheet holds, More is where you are.
+    await expect(more).toHaveClass(/active/);
+
+    await test.step("closes by its button, the backdrop and Escape", async () => {
+      await more.tap();
+      await moreSheet(page).getByRole("button", { name: "Close" }).tap();
+      await expect(moreSheet(page)).toHaveCount(0);
+      await expect(more).toBeFocused();
+
+      await more.tap();
+      await page.mouse.click(20, 20);
+      await expect(moreSheet(page)).toHaveCount(0);
+
+      await more.tap();
+      await page.keyboard.press("Escape");
+      await expect(moreSheet(page)).toHaveCount(0);
+    });
+  });
+
+  test("the More sheet carries the version and this project's links", async ({ page }) => {
+    await open(page, "/");
+    await bottomNav(page).getByRole("button", { name: "More" }).tap();
+    const sheet = moreSheet(page);
+    await expect(sheet.getByText(/Spoolman NG\sv\d/)).toBeVisible();
+    await expect(sheet.getByRole("link", { name: "Report an issue" })).toHaveAttribute(
+      "href",
+      "https://github.com/sherrmann/Spoolman-NG/issues",
+    );
+  });
+
+  test("the library toolbar takes at most two rows", async ({ page }) => {
+    // Filter, grid view and select once wrapped onto a row each beside the group/sort cluster.
+    await open(page, "/");
+    const toolbar = page.getByRole("toolbar").first();
+    const box = (await toolbar.boundingBox())!;
+    expect(box.height).toBeLessThanOrEqual(2 * 44 + 3 * 10);
+    for (const name of ["Grid view", "Select"]) {
+      await expectInViewport(page, `the ${name} button`, await toolbar.getByRole("button", { name }).boundingBox());
+    }
   });
 });
 
@@ -298,9 +378,13 @@ test.describe("library", () => {
     // popover anchored near the right edge is the usual thing to spill off a narrow screen.
     for (const name of [/Filter/, /^Filament/]) {
       await test.step(String(name), async () => {
-        await page.getByRole("button", { name }).first().tap();
+        const button = page.getByRole("button", { name }).first();
+        await button.tap();
         await expectCleanLayout(page, `the library with the ${name} menu open`);
-        await page.keyboard.press("Escape");
+        // The same button closes it again. (Escape only does so from the menu's search box.)
+        // This tap also fails if the open menu covers its own button, which it once did once
+        // the group/sort buttons wrapped onto a second toolbar row.
+        await button.tap();
       });
     }
   });

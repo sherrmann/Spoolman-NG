@@ -92,6 +92,10 @@
 
 	/* Layout */
 	--topbar-h: 53px;
+	/* Spoolman NG fork addition: the phone layout's bottom navigation (BottomNav), including the
+	   home-indicator inset. Zero on desktop, where there is none; things pinned to the bottom of
+	   the screen (toasts, the update notice, the assistant button) add it to stay clear of it. */
+	--bottomnav-h: 0px;
 	/* Library list column. The Library page overrides this per-instance from the
 	   remembered width (stores/listWidth, LIST_DEFAULT must match this); the value
 	   here is what the pane is styled with until that lands. */
@@ -293,5 +297,12 @@ input[type='number'] {
 	   full tap target in both dimensions. */
 	.sponsor {
 		min-width: 44px;
+	}
+}
+
+/* Spoolman NG fork addition: see --bottomnav-h above. */
+@media (max-width: 860px) {
+	:root {
+		--bottomnav-h: calc(56px + env(safe-area-inset-bottom));
 	}
 }

@@ -642,5 +642,9 @@
 	"filament_image_upload_error": "Could not save the photo",
 	"filament_image_removed": "Photo removed",
 	"filament_image_remove_error": "Could not remove the photo",
-	"filament_image_prepare_error": "Could not read that image file"
+	"filament_image_prepare_error": "Could not read that image file",
+	"mobile_nav_more": "More",
+	"mobile_nav_more_pages": "More pages",
+	"mobile_nav_about": "About",
+	"mobile_nav_sponsor_upstream": "Sponsor Spoolman's original author"
 }

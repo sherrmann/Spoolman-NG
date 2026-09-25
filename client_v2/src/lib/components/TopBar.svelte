@@ -76,9 +76,9 @@
 		</div>
 	</div>
 
-	<div class="row mobile-nav">
-		<NavTabs />
-	</div>
+	<!-- Spoolman NG fork addition: upstream's second row of scrolling tabs for phones is gone.
+	     It cost ~50px at the top of every page and hid most pages past the screen's edge; the
+	     bottom navigation (BottomNav, mounted by the layout) replaces it. -->
 </header>
 
 <style>
@@ -125,25 +125,25 @@
 		display: none;
 	}
 
-	.mobile-nav {
-		display: none;
-	}
-
-	@media (max-width: 860px) {
-		.nav-desktop,
-		.search-desktop,
-		.add-desktop {
+	/* Spoolman NG fork addition: with this fork's extra pages the tab row alone is ~850px, and
+	   below ~1500px the header was wider than the window -- the search field, scan button and
+	   "Add spools" sat past its right edge, reachable only by scrolling the whole page sideways.
+	   Below 1500px the search collapses to the icon and overlay the phone layout uses, and the
+	   tabs scroll inside their own space rather than pushing the actions off the screen. */
+	@media (max-width: 1499px) {
+		.nav-desktop {
+			flex: 0 1 auto;
+			min-width: 0;
+			overflow-x: auto;
+			scrollbar-width: none;
+		}
+		.search-desktop {
 			display: none;
 		}
 		.row.primary {
-			gap: 12px;
 			/* Anchor the absolutely-positioned search overlay. */
 			position: relative;
 		}
-		.spacer {
-			flex: 1;
-		}
-
 		/* Search and scan are peer secondary actions, so they share the outlined
 		   icon-button look; the filled + button stays the primary action. */
 		.search-toggle {
@@ -151,8 +151,8 @@
 			display: inline-flex;
 			align-items: center;
 			justify-content: center;
-			width: 44px;
-			height: 44px;
+			width: 36px;
+			height: 36px;
 			border-radius: var(--radius-md);
 			border: 1px solid var(--border-strong);
 			background: none;
@@ -163,24 +163,6 @@
 			color: var(--text);
 			border-color: var(--accent);
 		}
-		.scan-btn {
-			width: 44px;
-			height: 44px;
-		}
-		.add-mobile {
-			flex: none;
-			display: inline-flex;
-			align-items: center;
-			justify-content: center;
-			width: 44px;
-			height: 44px;
-			border-radius: var(--radius-md);
-			border: none;
-			background: var(--accent-fill);
-			color: #fff;
-			cursor: pointer;
-		}
-
 		.search-overlay {
 			position: absolute;
 			inset: 0;
@@ -212,11 +194,33 @@
 		.search-back:hover {
 			color: var(--text);
 		}
+	}
 
-		.mobile-nav {
-			display: flex;
-			padding: 0 6px 8px;
-			overflow-x: auto;
+	@media (max-width: 860px) {
+		.nav-desktop,
+		.add-desktop {
+			display: none;
+		}
+		.row.primary {
+			gap: 12px;
+		}
+		.search-toggle,
+		.scan-btn {
+			width: 44px;
+			height: 44px;
+		}
+		.add-mobile {
+			flex: none;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			width: 44px;
+			height: 44px;
+			border-radius: var(--radius-md);
+			border: none;
+			background: var(--accent-fill);
+			color: #fff;
+			cursor: pointer;
 		}
 	}
 
