@@ -38,10 +38,6 @@ describe('mapFilamentNg', () => {
 		expect(mapFilamentNg({ has_image: true }).hasImage).toBe(true);
 		expect(mapFilamentNg({ has_image: null }).hasImage).toBe(false);
 	});
-
-	it('never sends hasImage, which has endpoints of its own', () => {
-		expect(filamentNgPatchToApi({ ng: { hasImage: true } as never })).toEqual({});
-	});
 });
 
 describe('filamentNgPatchToApi', () => {
@@ -51,6 +47,10 @@ describe('filamentNgPatchToApi', () => {
 			spool_type: null,
 			glow: false
 		});
+	});
+
+	it('never sends hasImage, which has endpoints of its own', () => {
+		expect(filamentNgPatchToApi({ ng: { hasImage: true } as never })).toEqual({});
 	});
 
 	it('sends nothing for a patch without catalogue fields', () => {

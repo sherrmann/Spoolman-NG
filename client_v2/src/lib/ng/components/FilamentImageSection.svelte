@@ -31,9 +31,14 @@
 	let id = $derived(filament.id);
 	let hasImage = $derived(filament.ng?.hasImage ?? false);
 	let src = $state<string | null>(null);
-	let busy = $state(false);
+	// The filament an upload or removal is running for. This component is reused as the selection
+	// moves, so a slow upload for one filament must not lock the buttons of the next.
+	let busyFor = $state<string | null>(null);
+	let busy = $derived(busyFor === id);
 	// Bumped after an upload, so the same filament's photo is fetched again.
 	let version = $state(0);
+	// Which filament `src` belongs to; plain, since only the effect below reads it.
+	let shownFor: string | null = null;
 	let input = $state<HTMLInputElement>();
 
 	$effect(() => {
@@ -43,15 +48,19 @@
 			src = null;
 			return;
 		}
-		// Show what is already held at once, and swap in the revalidated copy when it lands.
-		src = cachedFilamentImage(current);
+		// Show what is already held at once, and swap in the revalidated copy when it lands. After
+		// a replace nothing is held, and the old photo stays up until the new one arrives rather
+		// than the section collapsing in between.
+		const cached = cachedFilamentImage(current);
+		if (cached || shownFor !== current) src = cached;
+		shownFor = current;
 		const ctrl = new AbortController();
 		loadFilamentImage(current, ctrl.signal)
 			.then((url) => {
 				if (!ctrl.signal.aborted) src = url;
 			})
 			.catch((e) => {
-				// A network failure keeps whatever is shown.
+				// A failure keeps whatever is shown (see loadFilamentImage).
 				if (!isAbortError(e, ctrl.signal)) console.error('Failed to load filament photo', e);
 			});
 		return () => ctrl.abort();
@@ -63,7 +72,7 @@
 		e.currentTarget.value = '';
 		if (!file) return;
 		const target = id;
-		busy = true;
+		busyFor = target;
 		try {
 			let prepared;
 			try {
@@ -75,19 +84,19 @@
 			}
 			const updated = await uploadFilamentImage(target, prepared);
 			inventory.upsertFilament(mapFilament(updated));
-			version++;
+			if (target === id) version++;
 			toasts.success(ng.filament_image_uploaded());
 		} catch (err) {
 			console.error('Failed to upload filament photo', err);
 			toasts.error(ng.filament_image_upload_error());
 		} finally {
-			busy = false;
+			if (busyFor === target) busyFor = null;
 		}
 	}
 
 	async function remove() {
 		const target = id;
-		busy = true;
+		busyFor = target;
 		try {
 			await deleteFilamentImage(target);
 			const f = inventory.filamentById(target);
@@ -97,7 +106,7 @@
 			console.error('Failed to remove filament photo', err);
 			toasts.error(ng.filament_image_remove_error());
 		} finally {
-			busy = false;
+			if (busyFor === target) busyFor = null;
 		}
 	}
 </script>

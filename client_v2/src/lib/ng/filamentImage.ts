@@ -87,7 +87,8 @@ export function cachedFilamentImage(filamentId: string): string | null {
 
 /**
  * The filament's photo as an object URL, or null when it has none. Revalidates a cached copy
- * with If-None-Match. A network failure rejects, so the caller can keep what it shows.
+ * with If-None-Match. Any failure but a 404 rejects, so the caller keeps what it shows: a 500 or
+ * a login prompt says nothing about whether the photo still exists.
  */
 export async function loadFilamentImage(filamentId: string, signal?: AbortSignal): Promise<string | null> {
 	const url = filamentImageUrl(filamentId);
@@ -96,12 +97,12 @@ export async function loadFilamentImage(filamentId: string, signal?: AbortSignal
 	if (cached?.etag) headers['If-None-Match'] = cached.etag;
 	const res = await fetch(url, { headers, signal });
 	if (res.status === 304 && cached) return cached.objectUrl;
-	if (!res.ok) {
-		if (res.status === 401) handleUnauthorized(res, true);
+	if (res.status === 404) {
 		// Removed on the server, or never there: drop the stale copy.
 		invalidate(url);
 		return null;
 	}
+	if (!res.ok) throw await failure(res, 'GET');
 	const objectUrl = URL.createObjectURL(await res.blob());
 	invalidate(url);
 	cache.set(url, { etag: res.headers.get('etag'), objectUrl });
@@ -109,7 +110,8 @@ export async function loadFilamentImage(filamentId: string, signal?: AbortSignal
 }
 
 async function failure(res: Response, method: string): Promise<HttpError> {
-	if (res.status === 401) handleUnauthorized(res, false);
+	// A read may answer a 401 with a reload, as http.ts's reads do; a write may not.
+	if (res.status === 401) handleUnauthorized(res, method === 'GET');
 	let body: Record<string, unknown> | undefined;
 	try {
 		body = (await res.json()) as Record<string, unknown>;
