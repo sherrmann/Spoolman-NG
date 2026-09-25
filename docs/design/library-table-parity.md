@@ -1,6 +1,6 @@
 # Library table parity in the Svelte client (#412)
 
-**Status:** step 1 (selection, bulk edit, bulk archive) built; steps 2 to 5 still proposals. **Date:** 2026-09-07. **Fork:** `client_v2` subtree at
+**Status:** steps 1 (selection, bulk edit, bulk archive) and 2 (weigh-in) built; steps 3 to 5 still proposals. **Date:** 2026-09-07. **Fork:** `client_v2` subtree at
 upstream `42721c7` (2026-08-27); upstream HEAD `81636f25` (2026-09-04).
 
 Issue #412 groups four things the frozen React client does and the Svelte library cannot:
@@ -375,6 +375,13 @@ the scale in turn, type the reading, next. One request per spool, no search box.
 |---|---|
 | `lib/ng/components/library/WeighInModal.svelte` | Steps through the selection in list order. Shows "3 of 12", the spool's identity (`rowIdentity(vm, 'flat')`), location, current remaining, one number input, the three-way mode (length / used weight / measured gross weight) read from and written to the same `spoolman-v2-adjust-mode` `localStorage` key the inspector's Adjust panel uses (`SpoolInspector.svelte`, `ADJUST_MODE_KEY`), so a mode picked in either place is what the other opens with. The key is a component-local constant there, not an export, so the fork duplicates the literal; see the hazard below. Buttons: Save & Next, Skip, Done. Ends on a per-spool result list. Enter submits. |
 | `lib/ng/weighIn.ts` | The stepper as a pure reducer: `{ queue, index, results }` with `save(result)`, `skip()`, `done()`; validation identical to `applyAdjust` in the inspector (non-numeric refused, negative measured weight refused). The modal is the only caller. |
+
+*As built:* a failed save (a dropped connection, a spool deleted meanwhile) keeps the stepper on
+that spool with the reason and the typed reading, so a retry is one keypress; Skip then records
+it as failed. Advancing past a failure, as first planned, lost the reading. The backend does not
+refuse a gross reading below the tare: it clamps the remaining weight at zero. Readings are parsed with the app's strict
+`parseDecimal` rather than the inspector's `parseFloat`, which reads "12abc" as 12 and "1e2" as
+100. The queue is the selection in the order it was made, and the selection is kept afterwards.
 
 **Upstream lines touched:** none. `BulkBar` gains a "Weigh in" button.
 

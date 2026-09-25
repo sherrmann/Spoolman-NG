@@ -555,5 +555,9 @@
 	"spool_bulk_unarchive_confirm_other": "Oppheve arkivering av {count} spoler?",
 	"spool_bulk_clear_selection": "Fjern merking",
 	"spool_bulk_edit_help": "Huk av et felt for å endre det på alle valgte spoler. Felt uten avhuking forblir uendret.",
-	"spool_bulk_nothing_selected": "Huk av minst ett felt som skal endres."
+	"spool_bulk_nothing_selected": "Huk av minst ett felt som skal endres.",
+	"spool_weigh_title": "Vei spoler",
+	"spool_weigh_save_next": "Lagre og neste",
+	"spool_weigh_done": "Ferdig",
+	"spool_weigh_updated": "Oppdaterte {name}"
 }

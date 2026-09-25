@@ -474,7 +474,8 @@
       "select_mode": "Select",
       "select_shown": "Select all shown",
       "select_row": "Select spool #{{id}}",
-      "invalid_price": "Enter a price of 0 or more, or leave it empty to use the filament's price."
+      "invalid_price": "Enter a price of 0 or more, or leave it empty to use the filament's price.",
+      "weigh": "Weigh in"
     },
     "weigh": {
       "button": "Weigh Spools",
@@ -486,7 +487,13 @@
       "done": "Done",
       "updated": "Updated {{name}}",
       "pick_spool": "Select a spool first.",
-      "tooltip": "Re-weigh several spools in a row"
+      "tooltip": "Re-weigh several spools in a row",
+      "progress": "{{index}} of {{count}}",
+      "skip": "Skip",
+      "summary": "{{updated}} updated, {{skipped}} skipped, {{failed}} failed",
+      "status_updated": "Updated",
+      "status_skipped": "Skipped",
+      "status_failed": "Failed"
     },
     "view": {
       "grid": "Grid view",

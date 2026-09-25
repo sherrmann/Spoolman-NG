@@ -563,5 +563,9 @@
 	"spool_bulk_unarchive_confirm_other": "Ripristinare {count} bobine?",
 	"spool_bulk_clear_selection": "Annulla selezione",
 	"spool_bulk_edit_help": "Spunta un campo per modificarlo su tutte le bobine selezionate. I campi non spuntati restano invariati.",
-	"spool_bulk_nothing_selected": "Spunta almeno un campo da modificare."
+	"spool_bulk_nothing_selected": "Spunta almeno un campo da modificare.",
+	"spool_weigh_title": "Pesa bobine",
+	"spool_weigh_save_next": "Salva e successiva",
+	"spool_weigh_done": "Fatto",
+	"spool_weigh_updated": "Aggiornato: {name}"
 }

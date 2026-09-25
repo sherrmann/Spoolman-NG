@@ -555,5 +555,9 @@
 	"spool_bulk_unarchive_confirm_other": "{count} spoelen terugzetten?",
 	"spool_bulk_clear_selection": "Selectie wissen",
 	"spool_bulk_edit_help": "Vink een veld aan om het op elke geselecteerde spoel te wijzigen. Niet-aangevinkte velden blijven ongewijzigd.",
-	"spool_bulk_nothing_selected": "Vink minstens één veld aan om te wijzigen."
+	"spool_bulk_nothing_selected": "Vink minstens één veld aan om te wijzigen.",
+	"spool_weigh_title": "Spoelen wegen",
+	"spool_weigh_save_next": "Opslaan & volgende",
+	"spool_weigh_done": "Klaar",
+	"spool_weigh_updated": "{name} bijgewerkt"
 }

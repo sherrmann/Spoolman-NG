@@ -555,5 +555,9 @@
 	"spool_bulk_unarchive_confirm_other": "Avarkivera {count} spolar?",
 	"spool_bulk_clear_selection": "Rensa markering",
 	"spool_bulk_edit_help": "Bocka i ett fält för att ändra det på alla valda spolar. Fält som inte är ibockade lämnas oförändrade.",
-	"spool_bulk_nothing_selected": "Bocka i minst ett fält att ändra."
+	"spool_bulk_nothing_selected": "Bocka i minst ett fält att ändra.",
+	"spool_weigh_title": "Väg spolar",
+	"spool_weigh_save_next": "Spara & nästa",
+	"spool_weigh_done": "Klar",
+	"spool_weigh_updated": "Uppdaterade {name}"
 }

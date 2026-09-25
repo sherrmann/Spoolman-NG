@@ -555,5 +555,9 @@
 	"spool_bulk_unarchive_confirm_other": "{count} db tekercs archiválásának visszavonása?",
 	"spool_bulk_clear_selection": "Kijelölés törlése",
 	"spool_bulk_edit_help": "Jelöld be a mezőt, hogy minden kijelölt tekercsen módosuljon. A be nem jelölt mezők változatlanok maradnak.",
-	"spool_bulk_nothing_selected": "Jelölj be legalább egy módosítandó mezőt."
+	"spool_bulk_nothing_selected": "Jelölj be legalább egy módosítandó mezőt.",
+	"spool_weigh_title": "Tekercsek mérése",
+	"spool_weigh_save_next": "Mentés és következő",
+	"spool_weigh_done": "Kész",
+	"spool_weigh_updated": "{name} frissítve"
 }

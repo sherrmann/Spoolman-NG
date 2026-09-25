@@ -555,5 +555,9 @@
 	"spool_bulk_unarchive_confirm_other": "{count} ச்பூல்களைக் காப்பகத்திலிருந்து மீட்கவா?",
 	"spool_bulk_clear_selection": "தேர்வை அழி",
 	"spool_bulk_edit_help": "தேர்ந்தெடுத்த ஒவ்வொரு ச்பூலிலும் மாற்ற வேண்டிய புலத்தைக் குறியிடவும். குறியிடாத புலங்கள் மாற்றப்படாமல் இருக்கும்.",
-	"spool_bulk_nothing_selected": "மாற்ற குறைந்தது ஒரு புலத்தையாவது குறியிடவும்."
+	"spool_bulk_nothing_selected": "மாற்ற குறைந்தது ஒரு புலத்தையாவது குறியிடவும்.",
+	"spool_weigh_title": "ச்பூல்களை எடையிடு",
+	"spool_weigh_save_next": "சேமித்து அடுத்தது",
+	"spool_weigh_done": "முடிந்தது",
+	"spool_weigh_updated": "{name} புதுப்பிக்கப்பட்டது"
 }

@@ -555,5 +555,9 @@
 	"spool_bulk_unarchive_confirm_other": "Archivierung von {count} Spulen aufheben?",
 	"spool_bulk_clear_selection": "Auswahl aufheben",
 	"spool_bulk_edit_help": "Hake ein Feld an, um es bei allen ausgewählten Spulen zu ändern. Nicht angehakte Felder bleiben unverändert.",
-	"spool_bulk_nothing_selected": "Hake mindestens ein Feld an, das geändert werden soll."
+	"spool_bulk_nothing_selected": "Hake mindestens ein Feld an, das geändert werden soll.",
+	"spool_weigh_title": "Spulen wiegen",
+	"spool_weigh_save_next": "Speichern & Weiter",
+	"spool_weigh_done": "Fertig",
+	"spool_weigh_updated": "{name} aktualisiert"
 }

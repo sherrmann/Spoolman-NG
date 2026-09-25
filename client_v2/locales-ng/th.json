@@ -547,5 +547,9 @@
 	"spool_bulk_unarchive_confirm_other": "ยกเลิกเก็บถาวรม้วนพลาสติก {count} ม้วนหรือไม่?",
 	"spool_bulk_clear_selection": "ล้างการเลือก",
 	"spool_bulk_edit_help": "ติ๊กเลือกฟิลด์เพื่อเปลี่ยนค่าในม้วนพลาสติกที่เลือกทุกม้วน ฟิลด์ที่ไม่ได้ติ๊กจะไม่ถูกเปลี่ยนแปลง",
-	"spool_bulk_nothing_selected": "ติ๊กเลือกฟิลด์ที่ต้องการเปลี่ยนอย่างน้อยหนึ่งฟิลด์"
+	"spool_bulk_nothing_selected": "ติ๊กเลือกฟิลด์ที่ต้องการเปลี่ยนอย่างน้อยหนึ่งฟิลด์",
+	"spool_weigh_title": "ชั่งน้ำหนักม้วนพลาสติก",
+	"spool_weigh_save_next": "บันทึกและถัดไป",
+	"spool_weigh_done": "เสร็จสิ้น",
+	"spool_weigh_updated": "อัปเดต {name} แล้ว"
 }

@@ -594,5 +594,16 @@
 	"spool_bulk_select_mode": "Select",
 	"spool_bulk_select_shown": "Select all shown",
 	"spool_bulk_select_row": "Select spool #{id}",
-	"spool_bulk_invalid_price": "Enter a price of 0 or more, or leave it empty to use the filament's price."
+	"spool_bulk_invalid_price": "Enter a price of 0 or more, or leave it empty to use the filament's price.",
+	"spool_bulk_weigh": "Weigh in",
+	"spool_weigh_title": "Weigh Spools",
+	"spool_weigh_save_next": "Save & Next",
+	"spool_weigh_done": "Done",
+	"spool_weigh_updated": "Updated {name}",
+	"spool_weigh_progress": "{index} of {count}",
+	"spool_weigh_skip": "Skip",
+	"spool_weigh_summary": "{updated} updated, {skipped} skipped, {failed} failed",
+	"spool_weigh_status_updated": "Updated",
+	"spool_weigh_status_skipped": "Skipped",
+	"spool_weigh_status_failed": "Failed"
 }

@@ -547,5 +547,9 @@
 	"spool_bulk_unarchive_confirm_other": "要取消封存 {count} 個料盤嗎？",
 	"spool_bulk_clear_selection": "清除選擇",
 	"spool_bulk_edit_help": "勾選欄位即可在每個選取的料盤上變更該欄位。未勾選的欄位維持不變。",
-	"spool_bulk_nothing_selected": "請至少勾選一個要變更的欄位。"
+	"spool_bulk_nothing_selected": "請至少勾選一個要變更的欄位。",
+	"spool_weigh_title": "料盤秤重",
+	"spool_weigh_save_next": "儲存並下一個",
+	"spool_weigh_done": "完成",
+	"spool_weigh_updated": "已更新 {name}"
 }

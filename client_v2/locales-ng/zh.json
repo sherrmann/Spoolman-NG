@@ -547,5 +547,9 @@
 	"spool_bulk_unarchive_confirm_other": "取消存档 {count} 个料盘？",
 	"spool_bulk_clear_selection": "清除选择",
 	"spool_bulk_edit_help": "勾选某个字段即可在每个选中的料盘上更改它。未勾选的字段保持不变。",
-	"spool_bulk_nothing_selected": "请至少勾选一个要更改的字段。"
+	"spool_bulk_nothing_selected": "请至少勾选一个要更改的字段。",
+	"spool_weigh_title": "料盘称重",
+	"spool_weigh_save_next": "保存并下一个",
+	"spool_weigh_done": "完成",
+	"spool_weigh_updated": "已更新 {name}"
 }

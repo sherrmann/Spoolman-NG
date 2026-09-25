@@ -563,5 +563,9 @@
 	"spool_bulk_unarchive_confirm_many": "Розархівувати {count} котушок?",
 	"spool_bulk_clear_selection": "Зняти вибір",
 	"spool_bulk_edit_help": "Позначте поле, щоб змінити його в усіх вибраних котушках. Непозначені поля залишаться без змін.",
-	"spool_bulk_nothing_selected": "Позначте хоча б одне поле для зміни."
+	"spool_bulk_nothing_selected": "Позначте хоча б одне поле для зміни.",
+	"spool_weigh_title": "Зважування котушок",
+	"spool_weigh_save_next": "Зберегти й далі",
+	"spool_weigh_done": "Готово",
+	"spool_weigh_updated": "Оновлено: {name}"
 }

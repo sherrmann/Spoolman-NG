@@ -10,6 +10,7 @@
 	import Button from '$components/Button.svelte';
 	import ConfirmDialog from '$components/ConfirmDialog.svelte';
 	import BulkEditModal from './BulkEditModal.svelte';
+	import WeighInModal from './WeighInModal.svelte';
 	import * as m from '$lib/paraglide/messages';
 	import { ng, plural } from '$lib/ng/i18n';
 	import { toasts } from '$lib/stores/toasts.svelte';
@@ -17,9 +18,13 @@
 	import { librarySelection, selectionSummary } from '$lib/ng/librarySelection.svelte';
 	import { bulkApply } from '$lib/ng/bulkPatch';
 	import type { SpoolPatch } from '$lib/types';
+	import type { SpoolVM } from '$lib/utils/library';
 
 	let summary = $derived(selectionSummary(librarySelection.selected.values()));
 	let editing = $state(false);
+	// The spools being weighed, captured when the weigh-in opens so the queue does not shift
+	// under it if the selection changes.
+	let weighing = $state<SpoolVM[] | null>(null);
 	let confirming = $state<'archive' | 'unarchive' | null>(null);
 	let busy = $state(false);
 
@@ -66,6 +71,13 @@
 		<span class="count">{plural('spool_bulk_selected', librarySelection.count)}</span>
 		<span class="actions">
 			<Button disabled={busy} onclick={() => (editing = true)}>{m['buttons.edit']()}</Button>
+			<Button
+				variant="outline"
+				disabled={busy}
+				onclick={() => (weighing = [...librarySelection.selected.values()])}
+			>
+				{ng.spool_bulk_weigh()}
+			</Button>
 			{#if summary.active.length > 0}
 				<Button variant="outline" disabled={busy} onclick={() => (confirming = 'archive')}
 					>{m['buttons.archive']()}</Button
@@ -81,6 +93,12 @@
 			</Button>
 		</span>
 	</div>
+{/if}
+
+{#if weighing}
+	<!-- The selection is left as it is afterwards: weighing changes nothing about which spools
+	     are wanted, and archiving the empties is often the next step. -->
+	<WeighInModal spools={weighing} onclose={() => (weighing = null)} />
 {/if}
 
 {#if editing}

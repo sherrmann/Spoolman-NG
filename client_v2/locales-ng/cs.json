@@ -563,5 +563,9 @@
 	"spool_bulk_unarchive_confirm_other": "Zrušit archivaci {count} cívek?",
 	"spool_bulk_clear_selection": "Zrušit výběr",
 	"spool_bulk_edit_help": "Zaškrtněte pole, které chcete změnit u všech vybraných cívek. Nezaškrtnutá pole zůstanou beze změny.",
-	"spool_bulk_nothing_selected": "Zaškrtněte alespoň jedno pole, které chcete změnit."
+	"spool_bulk_nothing_selected": "Zaškrtněte alespoň jedno pole, které chcete změnit.",
+	"spool_weigh_title": "Vážit cívky",
+	"spool_weigh_save_next": "Uložit a další",
+	"spool_weigh_done": "Hotovo",
+	"spool_weigh_updated": "Aktualizováno: {name}"
 }
