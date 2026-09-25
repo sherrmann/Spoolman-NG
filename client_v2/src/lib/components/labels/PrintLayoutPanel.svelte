@@ -102,6 +102,9 @@
 		return () => ctrl.abort();
 	});
 	async function loadPage(dir: 'asc' | 'desc', offset: number, limit: number, signal: AbortSignal) {
+		// Spoolman NG fork addition: every page load shows as loading, not just the first, so the
+		// previous page's rows are never offered for selection under the new page's number.
+		loading = true;
 		try {
 			const page = await spoolSource.listSpools({
 				filters: {},
@@ -119,6 +122,8 @@
 			// Abandoning the tab mid-load is exactly when cancelling matters most.
 			if (isAbortError(e, signal)) return;
 			console.error('Failed to load spools for printing', e);
+			// Spoolman NG fork addition: a failed page shows nothing rather than the last page's rows.
+			pageIds = [];
 		} finally {
 			if (!signal.aborted) loading = false;
 		}

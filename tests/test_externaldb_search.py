@@ -7,12 +7,14 @@ fork's catalog is SpoolmanDB and TigerTag merged, so the search covers both.
 """
 
 import json
+import os
 from pathlib import Path
 
 import pytest
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
+from spoolman import filecache
 from spoolman.api.v1 import externaldb
 
 
@@ -116,3 +118,23 @@ async def test_endpoint_returns_the_page_and_the_total_count():
     assert [f["id"] for f in resp.json()] == [f"filament_{i}" for i in range(8)]
     assert [f["id"] for f in page2.json()] == [f"filament_{i}" for i in range(8, 16)]
     assert too_big.status_code == 422
+
+
+def test_a_same_size_rewrite_within_the_same_second_is_picked_up(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    """The sync can rewrite the catalog with the same size and, on a coarse filesystem, the same mtime."""
+    monkeypatch.setattr(filecache, "get_cache_dir", lambda: tmp_path / "cache")
+    monkeypatch.setattr(externaldb, "get_filaments_file", lambda: filecache.get_file("filaments.json"))
+    monkeypatch.setattr(externaldb, "is_tigertag_enabled", lambda: False)
+    first = json.dumps([filament(1, "Aaaaaa", "Black")]).encode()
+    second = json.dumps([filament(1, "Bbbbbb", "Black")]).encode()
+    assert len(first) == len(second)
+
+    filecache.update_file("filaments.json", first)
+    stamp = filecache.get_file("filaments.json").stat()
+    assert externaldb.search_filaments("aaaaaa", limit=10)[1] == 1
+
+    filecache.update_file("filaments.json", second)
+    os.utime(filecache.get_file("filaments.json"), ns=(stamp.st_atime_ns, stamp.st_mtime_ns))
+
+    assert externaldb.search_filaments("aaaaaa", limit=10)[1] == 0
+    assert externaldb.search_filaments("bbbbbb", limit=10)[1] == 1

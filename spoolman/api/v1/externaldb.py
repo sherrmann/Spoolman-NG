@@ -12,6 +12,7 @@ from fastapi import APIRouter, HTTPException, Query, Response
 from fastapi.responses import FileResponse
 from pydantic import ValidationError
 
+from spoolman import filecache
 from spoolman.env import is_tigertag_enabled
 from spoolman.externaldb import ExternalFilament, ExternalMaterial, get_filaments_file, get_materials_file
 from spoolman.tigertagdb import get_tigertag_filaments_file
@@ -140,19 +141,21 @@ async def filaments(
 # entry's lowercased "manufacturer name material" search text, built once rather than per
 # search: a search pages through the whole catalog, once per page.
 #
-# The key holds each source file's mtime and size rather than mtime alone, since a filesystem
-# with one-second mtime granularity reports the same stamp for two writes in the same second,
-# and whether TigerTag is enabled, since that decides which sources are merged.
-_CatalogKey = tuple[tuple[float, int] | None, tuple[float, int] | None, bool]
+# The key holds each source file's mtime and size, how many times this process has rewritten it
+# (a filesystem with one-second mtime granularity reports the same stamp for two writes of the
+# same size in the same second; the stat still catches a write from another process), and
+# whether TigerTag is enabled, since that decides which sources are merged.
+_Stamp = tuple[float, int, int]
+_CatalogKey = tuple[_Stamp | None, _Stamp | None, bool]
 _catalog_cache: tuple[_CatalogKey, list[tuple[str, ExternalFilament]]] | None = None
 
 
-def _file_stamp(path: Path) -> tuple[float, int] | None:
+def _file_stamp(path: Path) -> _Stamp | None:
     try:
         stat = path.stat()
     except OSError:
         return None
-    return (stat.st_mtime, stat.st_size)
+    return (stat.st_mtime, stat.st_size, filecache.generation(path.name))
 
 
 def _load_search_catalog() -> list[tuple[str, ExternalFilament]]:
