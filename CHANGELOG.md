@@ -4,6 +4,7 @@
 
 ## Unreleased
 
+- **Added: 3D-printable filament swatches in the Svelte client** (#415) — the filament inspector's swatch button previews and downloads a printable sample card (3MF) in any of the five styles, with the QR code as a scan code or a link; the default style is set in Settings → Swatches.
 - **Added: filament reference photos in the Svelte client** (#415) — the filament inspector shows a filament's photo and can upload, replace or remove it. Photos are shrunk to at most 1024 px and re-encoded in the browser before upload, which also drops the photo's location metadata.
 - **Added: SpoolmanDB catalogue fields in the Svelte client** (#415) — a filament's spool type, finish, pattern, translucency and glow can be seen and set in the filament inspector, and shown as columns in the library's list. **Fixed:** importing a filament from SpoolmanDB in the Svelte client dropped these five fields; it now copies them, as the classic client does.
 - **Added: choose, order and resize the columns of the Svelte library's list** (#412) — "Columns" in the toolbar of the flat list shows or hides any of: ID, colour, name, material, manufacturer, diameter, fill level, remaining and used weight, price, lot number, location, first and last used, registered, comment, and each spool extra field; up and down buttons reorder them, and dragging a header edge (or its arrow keys) sets a width. Wider than the pane, the list scrolls sideways. Remembered in this browser; Reset returns to the standard row. Grouped views and the gallery are unchanged.
