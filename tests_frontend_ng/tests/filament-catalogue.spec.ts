@@ -243,6 +243,7 @@ test("a filament imported from SpoolmanDB keeps its catalogue fields", async ({
     finish: "glossy",
     pattern: "marble",
     translucent: true,
-    glow: false,
   });
+  // A false in the catalogue cannot be told from "not recorded", so it is not stored as "No".
+  expect(created[0].glow ?? null).toBeNull();
 });

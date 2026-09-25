@@ -50,7 +50,7 @@ describe('filamentNgPatchToApi', () => {
 });
 
 describe('catalogueFromExternal', () => {
-	it('copies the catalogue fields of a SpoolmanDB entry, as the React client does', () => {
+	it('copies the catalogue fields of a SpoolmanDB entry, as the classic client does', () => {
 		expect(
 			catalogueFromExternal({
 				id: 'x',
@@ -58,16 +58,14 @@ describe('catalogueFromExternal', () => {
 				spool_type: 'plastic',
 				finish: 'glossy',
 				pattern: 'sparkle',
-				translucent: false,
-				glow: false
+				translucent: true,
+				glow: true
 			})
-		).toEqual({
-			spool_type: 'plastic',
-			finish: 'glossy',
-			pattern: 'sparkle',
-			translucent: false,
-			glow: false
-		});
+		).toEqual({ spool_type: 'plastic', finish: 'glossy', pattern: 'sparkle', translucent: true, glow: true });
+	});
+
+	it('leaves a false translucent or glow unset, since the catalogue cannot tell it from unknown', () => {
+		expect(catalogueFromExternal({ id: 'x', translucent: false, glow: false })).toEqual({});
 	});
 
 	it('leaves out what the entry does not have or this server does not accept', () => {

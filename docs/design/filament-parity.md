@@ -80,8 +80,10 @@ widen the seam further than one more line each.
   edited are sent. Not the inspector's saver: it merges a pending patch one level deep, so a
   whole `ng` object replaced the previous one, and a live update landing between two quick edits
   (a spool event carries its filament) sent the first field back to its old value.
-- `importExternalFilament` copies all five from the catalogue entry. SpoolmanDB gives the
-  booleans as `false` when not set; they are copied as they are, like the React client does.
+- `importExternalFilament` copies the catalogue entry's spool type, finish and pattern, and
+  translucent and glow only when true. The catalogue's model defaults both booleans to `false`
+  and TigerTag entries leave them out, so a `false` there cannot be told from "not recorded";
+  storing it would claim "no" where nothing is known. The React client does the same.
 - The library's column manager (#456) gets five columns, hidden by default, like every column
   beyond upstream's row.
 - **Not in step 1:** the fields on the new-filament form. A new filament is usually imported

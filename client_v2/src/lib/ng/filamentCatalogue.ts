@@ -81,12 +81,19 @@ export function filamentNgPatchToApi(patch: { ng?: Partial<FilamentNg> }): Json 
 /**
  * The catalogue fields to send when creating a filament from a SpoolmanDB entry. Only values the
  * API accepts are copied, so an entry with a value this server does not know still imports.
+ *
+ * Translucent and glow are copied only when true: the catalogue's model defaults both to false
+ * and TigerTag entries leave them out, so a false there cannot be told from "not recorded", and
+ * storing it would claim "not translucent" where nothing is known. The classic client does the
+ * same (`client/src/pages/filaments/create.tsx`).
  */
 export function catalogueFromExternal(ext: object): Json {
 	const ng = mapFilamentNg(ext as Json);
 	const out: Json = {};
 	for (const [key, api] of Object.entries(API_NAMES) as [keyof FilamentNg, string][]) {
-		if (ng[key] !== null) out[api] = ng[key];
+		const v = ng[key];
+		if (v === null || v === false) continue;
+		out[api] = v;
 	}
 	return out;
 }
