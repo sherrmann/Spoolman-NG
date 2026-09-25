@@ -689,5 +689,9 @@
 	"settings_import_export_entity_label": "Data",
 	"settings_import_export_mode_label": "Mode",
 	"settings_import_export_format_label": "Format",
-	"filament_fields_spool_count": "Spools"
+	"filament_fields_spool_count": "Spools",
+	"mobile_nav_more": "More",
+	"mobile_nav_more_pages": "More pages",
+	"mobile_nav_about": "About",
+	"mobile_nav_sponsor_upstream": "Sponsor Spoolman's original author"
 }

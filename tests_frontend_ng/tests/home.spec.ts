@@ -121,8 +121,9 @@ test("every tab switches and renders its panel", async ({ page }) => {
 
 test("the page scrolls inside the app shell rather than overflowing it", async ({ page }) => {
   // The regression guard. The layout shell is height:100dvh and every page scrolls *within* it
-  // (upstream's pages all carry `scroll-y`). If a page grows the document instead, the static
-  // footer ends up painted across the page's own content -- which is exactly what shipped.
+  // (upstream's pages all carry `scroll-y`). If a page grows the document instead, whatever is
+  // fixed at the bottom of the shell (the footer then, the phone layout's bottom bar now) ends
+  // up painted across the page's own content -- which is exactly what shipped.
   //
   // Asserted behaviourally, on the document's own height, rather than by checking for a class
   // name: this keeps working if the class is ever renamed, and catches any other way a page

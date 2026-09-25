@@ -31,11 +31,12 @@
 	class="trigger"
 	class:active={libraryMode.mode === 'gallery'}
 	aria-pressed={libraryMode.mode === 'gallery'}
+	aria-label={ng.spool_view_grid()}
 	title={libraryMode.mode === 'gallery' ? ng.spool_view_table_tooltip() : ng.spool_view_grid_tooltip()}
 	onclick={() => libraryMode.set(libraryMode.mode === 'gallery' ? 'list' : 'gallery')}
 >
 	<LayoutGrid size={14} />
-	{ng.spool_view_grid()}
+	<span class="label">{ng.spool_view_grid()}</span>
 </button>
 {#if flatList}
 	<ColumnManager />
@@ -44,10 +45,12 @@
 	class="trigger"
 	class:active={librarySelection.on}
 	aria-pressed={librarySelection.on}
+	aria-label={ng.spool_bulk_select_mode()}
+	title={ng.spool_bulk_select_mode()}
 	onclick={() => librarySelection.setMode(!librarySelection.on)}
 >
 	<CheckSquare size={14} />
-	{ng.spool_bulk_select_mode()}
+	<span class="label">{ng.spool_bulk_select_mode()}</span>
 </button>
 {#if librarySelection.on}
 	<button class="trigger" onclick={() => librarySelection.selectShown()}>
@@ -78,5 +81,19 @@
 		background: var(--accent-wash);
 		border-color: var(--accent-border);
 		color: var(--accent-soft);
+	}
+
+	/* On a phone each labelled button took a row of its own under the Filter chip. There they
+	   become 44px icon buttons, named by aria-label and title, so the row holds them all. */
+	@media (max-width: 860px) {
+		.trigger:has(.label) {
+			justify-content: center;
+			width: 44px;
+			height: 44px;
+			padding: 0;
+		}
+		.trigger .label {
+			display: none;
+		}
 	}
 </style>

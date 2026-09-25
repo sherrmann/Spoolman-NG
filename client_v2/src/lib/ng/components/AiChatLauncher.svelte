@@ -45,7 +45,7 @@
 	.launcher {
 		position: fixed;
 		right: 20px;
-		bottom: 20px;
+		bottom: calc(20px + var(--bottomnav-h));
 		z-index: 40;
 		display: inline-flex;
 		align-items: center;
@@ -61,5 +61,13 @@
 	}
 	.launcher:hover {
 		background: var(--bg-hover);
+	}
+	/* On a phone the inspector is a bottom sheet (DetailPane, backdrop at z-index 20) and this
+	   button sat on top of its bottom-right corner, over the sheet's own controls. Tuck it
+	   under the backdrop there: an open sheet covers it, and closing the sheet brings it back. */
+	@media (max-width: 860px) {
+		.launcher {
+			z-index: 19;
+		}
 	}
 </style>

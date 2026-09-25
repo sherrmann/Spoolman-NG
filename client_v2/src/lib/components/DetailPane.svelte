@@ -55,6 +55,17 @@
 	}
 	$effect(() => () => track(false));
 
+	// Spoolman NG fork addition: Escape closes the open sheet. The scrim's own keydown handler
+	// never fires because nothing gives the scrim focus, so the sheet could only be dismissed by
+	// touch. Mobile layout only -- the desktop pane is not something to close -- and never while
+	// a dialog is open on top of the sheet, which handles that Escape itself.
+	function keydown(e: KeyboardEvent) {
+		if (e.key !== 'Escape' || e.defaultPrevented || !open) return;
+		if (!window.matchMedia(MOBILE).matches) return;
+		if (document.querySelector('[aria-modal="true"]')) return;
+		onclose?.();
+	}
+
 	function pointerdown(e: PointerEvent) {
 		if (!open || !window.matchMedia(MOBILE).matches) return;
 		if (e.pointerType === 'mouse' && e.button !== 0) return;
@@ -125,6 +136,8 @@
 		}
 	}
 </script>
+
+<svelte:window onkeydown={keydown} />
 
 <div class="pane" class:open>
 	<div

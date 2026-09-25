@@ -38,7 +38,9 @@
 	.toaster {
 		position: fixed;
 		right: 18px;
-		bottom: 46px;
+		/* Spoolman NG fork addition: 46px cleared upstream's footer, which the fork removed;
+		   the bottom navigation takes its place on phones (--bottomnav-h, zero on desktop). */
+		bottom: calc(18px + var(--bottomnav-h));
 		z-index: 3500;
 		display: flex;
 		flex-direction: column;
@@ -76,7 +78,7 @@
 		.toaster {
 			left: 12px;
 			right: 12px;
-			bottom: 12px;
+			bottom: calc(12px + var(--bottomnav-h));
 			align-items: stretch;
 		}
 		.toast {
