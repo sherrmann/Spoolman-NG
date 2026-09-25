@@ -298,8 +298,9 @@ def _name_similarity(reading: str | None, candidate: str | None, materials: froz
     A character comparison scores that pair below unrelated products of the same maker. When every
     word of the reading appears in the candidate's name, once the material and trademark signs are
     set aside, it gets at least the substring floor, plus up to 0.1 for how much of the two word
-    sets is shared: "Red" matches "Red" better than "Lava Red", instead of the two tying. It stays
-    under an exact match's 1.0.
+    sets is shared: a reading of "Charcoal Black" matches "Matte Charcoal Black" better than the
+    long Panchroma name, where both used to sit at the floor. A small share of the character score
+    orders equal overlaps. It stays under an exact match's 1.0.
 
     Only in that direction. The reverse, a candidate's words all found in the reading, rewards
     short generic names: every maker's plain "Green" would rise above "Silk Green" for a reading

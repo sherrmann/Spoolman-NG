@@ -179,7 +179,7 @@ def test_fewer_extra_words_score_higher() -> None:
     )
 
 
-def test_the_material_word_still_counts_towards_the_overlap() -> None:
+def test_equal_word_overlaps_are_ordered_by_character_similarity() -> None:
     """For a reading of "PLA Black", "PLA - Black" must beat every maker's plain "Black"."""
     reading = {"vendor": None, "name": "PLA Black", "material": "PLA", "weight_g": None}
     with_material = score_candidate(reading, vendor="FlashForge", name="PLA - Black", material="PLA", weight_g=1000)
