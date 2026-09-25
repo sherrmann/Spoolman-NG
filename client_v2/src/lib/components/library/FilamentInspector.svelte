@@ -40,6 +40,8 @@
 	import FilamentCatalogueFields from '$lib/ng/components/FilamentCatalogueFields.svelte';
 	// Spoolman NG fork addition (#415): the reference photo, under the manufacturer.
 	import FilamentImageSection from '$lib/ng/components/FilamentImageSection.svelte';
+	// Spoolman NG fork addition (#415): the 3D-printable swatch download, beside duplicate.
+	import FilamentSwatchButton from '$lib/ng/components/swatch/FilamentSwatchButton.svelte';
 	import * as params from '$lib/library/params';
 	import { pct, weightAuto } from '$lib/utils/format';
 	import { usageLabel } from '$lib/utils/library';
@@ -261,6 +263,7 @@
 				ariaLabel={ng.calibration_title()}
 				href={resolve(`/calibration?filament=${filament.id}`)}><FlaskConical size={15} /></Button
 			>
+			<FilamentSwatchButton {filament} />
 			<Button
 				variant="ghost"
 				title={m['inspector.duplicateFilament']()}

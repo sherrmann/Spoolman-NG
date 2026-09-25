@@ -17,6 +17,7 @@
 	import CustomLinksSettings from './CustomLinksSettings.svelte';
 	import PrinterSettings from './PrinterSettings.svelte';
 	import UserSettings from './UserSettings.svelte';
+	import SwatchSettings from './swatch/SwatchSettings.svelte';
 
 	const braces = {
 		id: '{id}',
@@ -44,4 +45,5 @@
 	urlPlaceholder="http://moonraker.local/server/spoolman/spool_id?id={'{id}'}"
 />
 <UserSettings />
+<SwatchSettings />
 <AiSettings />
