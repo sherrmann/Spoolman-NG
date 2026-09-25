@@ -1488,5 +1488,13 @@
     "update_error": "Tellimuse uuendamine ebaõnnestus. Palun proovi uuesti.",
     "delete_error": "Tellimuse kustutamine ebaõnnestus. Palun proovi uuesti.",
     "delete_confirm": "Kas kustutada see tellimus? Selle read kustutatakse samuti."
+  },
+  "mobile_nav": {
+    "more": "Veel",
+    "more_pages": "Veel lehti",
+    "about": "Teave",
+    "sponsor_upstream": "Toeta Spoolmani algset autorit",
+    "documentation": "Dokumentatsioon",
+    "report_issue": "Teata probleemist"
   }
 }

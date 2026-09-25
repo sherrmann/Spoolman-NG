@@ -635,5 +635,11 @@
 	"settings_import_export_no_file": "Παρακαλώ επιλέξτε πρώτα ένα αρχείο.",
 	"settings_import_export_result": "Δημιουργήθηκαν {created}, ενημερώθηκαν {updated}, παραλείφθηκαν {skipped}.",
 	"settings_import_export_import_errors": "Η εισαγωγή απέτυχε",
-	"filament_fields_spool_count": "Καρούλια"
+	"filament_fields_spool_count": "Καρούλια",
+	"mobile_nav_more": "Άλλα",
+	"mobile_nav_more_pages": "Περισσότερες σελίδες",
+	"mobile_nav_about": "Σχετικά",
+	"mobile_nav_sponsor_upstream": "Υποστηρίξτε τον αρχικό δημιουργό του Spoolman",
+	"mobile_nav_documentation": "Τεκμηρίωση",
+	"mobile_nav_report_issue": "Αναφορά προβλήματος"
 }

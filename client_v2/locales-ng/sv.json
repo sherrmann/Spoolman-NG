@@ -635,5 +635,11 @@
 	"settings_import_export_no_file": "Välj en fil först.",
 	"settings_import_export_result": "Skapade {created}, uppdaterade {updated}, hoppade över {skipped}.",
 	"settings_import_export_import_errors": "Importen misslyckades",
-	"filament_fields_spool_count": "Spolar"
+	"filament_fields_spool_count": "Spolar",
+	"mobile_nav_more": "Mer",
+	"mobile_nav_more_pages": "Fler sidor",
+	"mobile_nav_about": "Om",
+	"mobile_nav_sponsor_upstream": "Stöd Spoolmans ursprungliga upphovsperson",
+	"mobile_nav_documentation": "Dokumentation",
+	"mobile_nav_report_issue": "Rapportera ett problem"
 }

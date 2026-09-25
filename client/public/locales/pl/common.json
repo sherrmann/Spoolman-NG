@@ -1519,5 +1519,13 @@
     "delete_confirm": "Usunąć to zamówienie? Jego pozycje również zostaną usunięte.",
     "filaments_count_few": "{{count}} filamenty",
     "filaments_count_many": "{{count}} filamentów"
+  },
+  "mobile_nav": {
+    "more": "Więcej",
+    "more_pages": "Więcej stron",
+    "about": "Informacje",
+    "sponsor_upstream": "Wesprzyj pierwotnego autora Spoolmana",
+    "documentation": "Dokumentacja",
+    "report_issue": "Zgłoś problem"
   }
 }

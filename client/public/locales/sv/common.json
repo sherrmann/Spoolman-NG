@@ -1500,5 +1500,13 @@
     "update_error": "Det gick inte att uppdatera ordern. Försök igen.",
     "delete_error": "Det gick inte att ta bort ordern. Försök igen.",
     "delete_confirm": "Ta bort den här ordern? Dess rader tas bort också."
+  },
+  "mobile_nav": {
+    "more": "Mer",
+    "more_pages": "Fler sidor",
+    "about": "Om",
+    "sponsor_upstream": "Stöd Spoolmans ursprungliga upphovsperson",
+    "documentation": "Dokumentation",
+    "report_issue": "Rapportera ett problem"
   }
 }

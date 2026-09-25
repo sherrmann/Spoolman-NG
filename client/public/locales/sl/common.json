@@ -1526,5 +1526,13 @@
     "delete_confirm": "Izbrišem to naročilo? Izbrisane bodo tudi njegove vrstice.",
     "filaments_count_two": "{{count}} filamenta",
     "filaments_count_few": "{{count}} filamenti"
+  },
+  "mobile_nav": {
+    "more": "Več",
+    "more_pages": "Več strani",
+    "about": "O aplikaciji",
+    "sponsor_upstream": "Podpri prvotnega avtorja Spoolmana",
+    "documentation": "Dokumentacija",
+    "report_issue": "Prijavi težavo"
   }
 }

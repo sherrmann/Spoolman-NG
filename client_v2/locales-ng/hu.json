@@ -635,5 +635,11 @@
 	"settings_import_export_no_file": "Először válassz ki egy fájlt.",
 	"settings_import_export_result": "Létrehozva: {created}, frissítve: {updated}, kihagyva: {skipped}.",
 	"settings_import_export_import_errors": "Az importálás sikertelen",
-	"filament_fields_spool_count": "Tekercsek"
+	"filament_fields_spool_count": "Tekercsek",
+	"mobile_nav_more": "Több",
+	"mobile_nav_more_pages": "További oldalak",
+	"mobile_nav_about": "Névjegy",
+	"mobile_nav_sponsor_upstream": "A Spoolman eredeti szerzőjének támogatása",
+	"mobile_nav_documentation": "Dokumentáció",
+	"mobile_nav_report_issue": "Hiba bejelentése"
 }

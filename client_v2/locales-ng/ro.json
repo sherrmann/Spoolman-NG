@@ -645,5 +645,11 @@
 	"settings_import_export_no_file": "Alegeți mai întâi un fișier.",
 	"settings_import_export_result": "Create: {created}, actualizate: {updated}, omise: {skipped}.",
 	"settings_import_export_import_errors": "Importul a eșuat",
-	"filament_fields_spool_count": "Bobine"
+	"filament_fields_spool_count": "Bobine",
+	"mobile_nav_more": "Mai mult",
+	"mobile_nav_more_pages": "Mai multe pagini",
+	"mobile_nav_about": "Despre",
+	"mobile_nav_sponsor_upstream": "Susțineți autorul original al Spoolman",
+	"mobile_nav_documentation": "Documentație",
+	"mobile_nav_report_issue": "Raportați o problemă"
 }
