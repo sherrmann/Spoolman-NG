@@ -245,7 +245,7 @@ def same_product(candidate: dict, expected: dict, extraction: dict) -> bool:
 
     SpoolmanDB lists one product several times, once per diameter, spool type and spool size, and
     a label that shows none of them cannot tell them apart. So manufacturer, name, material and weight must
-    match, and the diameter only when the label gave one.
+    match, and the diameter (the labelled row's) only when the reading has one.
     """
     if (
         _norm(candidate.get("vendor")) != _norm(expected.get("manufacturer"))
@@ -254,10 +254,13 @@ def same_product(candidate: dict, expected: dict, extraction: dict) -> bool:
         or spoolintake.coerce_number(candidate.get("weight_g")) != spoolintake.coerce_number(expected.get("weight"))
     ):
         return False
-    diameter = extraction.get("diameter_mm")
-    if diameter is None:
+    if extraction.get("diameter_mm") is None:
         return True
-    return spoolintake.coerce_number(candidate.get("diameter_mm")) == spoolintake.coerce_number(diameter)
+    # Compare with the labelled row, not with the reading: a misread diameter must not turn the
+    # wrong variant into a right answer.
+    return spoolintake.coerce_number(candidate.get("diameter_mm")) == spoolintake.coerce_number(
+        expected.get("diameter")
+    )
 
 
 def load_catalog_file(path: Path | None) -> tuple[list[dict], str]:

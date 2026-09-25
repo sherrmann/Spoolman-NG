@@ -118,6 +118,17 @@ def test_same_product_diameter_only_checked_when_the_extraction_has_one(eval_mod
     assert eval_module.same_product(candidate, expected, {"diameter_mm": 1.75}) is False, "given and mismatched"
 
 
+def test_same_product_compares_diameter_with_the_labelled_row_not_the_reading(eval_module: ModuleType) -> None:
+    """A misread diameter must not make the wrong variant count as right."""
+    wrong_variant = {"vendor": "Acme", "name": "Pro PLA", "material": "PLA", "weight_g": 1000, "diameter_mm": 2.85}
+    right_variant = {**wrong_variant, "diameter_mm": 1.75}
+    labelled = {"manufacturer": "Acme", "name": "Pro PLA", "material": "PLA", "weight": 1000, "diameter": 1.75}
+    misread = {"diameter_mm": 2.85}
+
+    assert eval_module.same_product(wrong_variant, labelled, misread) is False
+    assert eval_module.same_product(right_variant, labelled, misread) is True
+
+
 # --- load_catalog_file ---------------------------------------------------------------------
 
 

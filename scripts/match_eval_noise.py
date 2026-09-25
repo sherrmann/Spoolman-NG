@@ -178,7 +178,11 @@ def generate_cases(catalog: list[dict], n: int, seed: int) -> list[dict]:
     by_manufacturer: dict[str, list[dict]] = {}
     for entry in usable:
         by_manufacturer.setdefault(entry["manufacturer"], []).append(entry)
+    # Sorted first so the order is stable, then shuffled with the seeded rng: otherwise a
+    # partial last round, and every run with n below the number of makers, would always go to
+    # the alphabetically first makers whatever the seed.
     manufacturers = sorted(by_manufacturer)
+    rng.shuffle(manufacturers)
 
     remaining = {manufacturer: list(entries) for manufacturer, entries in by_manufacturer.items()}
     cases = []

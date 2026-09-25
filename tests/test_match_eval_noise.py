@@ -189,6 +189,21 @@ def test_generate_cases_stratifies_by_manufacturer(noise_module: ModuleType) -> 
     assert counts == {"3D-Fuel": 2, "Prusament": 2, "Overture": 2}
 
 
+def test_seed_decides_which_makers_get_a_partial_round(noise_module: ModuleType) -> None:
+    """With fewer cases than makers, the seed, not the alphabet, picks the makers."""
+    catalog = [
+        {"id": f"m{i}", "manufacturer": f"Maker {i:02d}", "name": "Black", "material": "PLA", "weight": 1000}
+        for i in range(20)
+    ]
+
+    def makers(seed: int) -> set[str]:
+        return {case["catalog_id"] for case in noise_module.generate_cases(catalog, 3, seed=seed)}
+
+    picks = {frozenset(makers(seed)) for seed in range(10)}
+    assert len(picks) > 1, "every seed picked the same makers"
+    assert picks != {frozenset({"m0", "m1", "m2"})}
+
+
 # --- output passes through normalize_extraction ----------------------------------------
 
 
