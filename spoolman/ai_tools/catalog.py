@@ -55,9 +55,9 @@ def _rank(extraction: dict, limit: int) -> list[dict]:
             weight_g=spoolintake.coerce_number(entry.get("weight")),
         )
         if score >= MIN_SCORE:
-            scored.append(entry_row(entry, score=score))
-    scored.sort(key=lambda row: -row["match_percent"])
-    return scored[:limit]
+            scored.append((score, entry_row(entry, score=score)))
+    # Sorted on the score, not the rounded match_percent (see spoolintake._best).
+    return spoolintake._best(scored, limit)  # noqa: SLF001
 
 
 async def _run_catalog_lookup(ctx: ToolContext, args: dict) -> dict:  # noqa: ARG001

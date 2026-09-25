@@ -98,6 +98,148 @@ def test_material_mismatch_is_penalized_hard() -> None:
     assert score < 0.35
 
 
+def _esun(material: str) -> float:
+    extraction = {"vendor": "eSun", "name": "Black", "material": material, "weight_g": 1000}
+    return score_candidate(extraction, vendor="eSun", name="Black", material="PLA+", weight_g=1000)
+
+
+def test_a_dropped_plus_is_a_partial_match_not_a_mismatch() -> None:
+    """A PLA+ spool read as "PLA" must still reach the shortlist (it scored 0.24 before)."""
+    assert _esun("PLA") >= spoolintake._CATALOG_MIN_SCORE  # noqa: SLF001
+    assert _esun("PLA") < _esun("PLA+"), "an exact material still wins"
+
+
+def test_plus_variant_works_both_ways() -> None:
+    extraction = {"vendor": "eSun", "name": "Black", "material": "PLA+", "weight_g": 1000}
+    score = score_candidate(extraction, vendor="eSun", name="Black", material="PLA", weight_g=1000)
+    assert score >= spoolintake._CATALOG_MIN_SCORE  # noqa: SLF001
+
+
+@pytest.mark.parametrize("spelling", ["PLA+", "pla+", "PLA Plus", "PLA PLUS", "PLAPlus", "PLA-Plus", " PLA + "])
+def test_plus_spellings_are_the_same_material(spelling: str) -> None:
+    assert _esun(spelling) == _esun("PLA+")
+
+
+@pytest.mark.parametrize(
+    ("label", "record"),
+    [
+        ("PC", "PC+ABS"),  # a plus joining two materials is not a "plus" variant
+        ("PLA", "PLA+WOOD"),
+        ("ABS", "ABS+GF20"),
+        ("PLA", "PETG+"),
+    ],
+)
+def test_other_material_differences_stay_hard_mismatches(label: str, record: str) -> None:
+    extraction = {"vendor": "eSun", "name": "Black", "material": label, "weight_g": 1000}
+    score = score_candidate(extraction, vendor="eSun", name="Black", material=record, weight_g=1000)
+    assert score < 0.35
+
+
+def test_plus_variant_ranks_below_the_exact_material_in_the_catalog(monkeypatch: pytest.MonkeyPatch) -> None:
+    entries = [
+        _catalog_entry("esun-pla", "eSun", "Black", "PLA", 1000),
+        _catalog_entry("esun-pla-plus", "eSun", "Black", "PLA+", 1000),
+    ]
+    monkeypatch.setattr(spoolintake, "load_catalog", lambda: entries)
+
+    plus_label = spoolintake.match_catalog({"vendor": "eSun", "name": "Black", "material": "PLA+", "weight_g": 1000})
+    plain_label = spoolintake.match_catalog({"vendor": "eSun", "name": "Black", "material": "PLA", "weight_g": 1000})
+
+    assert [m["external_id"] for m in plus_label] == ["esun-pla-plus", "esun-pla"]
+    assert [m["external_id"] for m in plain_label] == ["esun-pla", "esun-pla-plus"]
+
+
+def _polymaker(label_name: str, record_name: str) -> float:
+    extraction = {"vendor": "Polymaker", "name": label_name, "material": "PLA", "weight_g": 1000}
+    return score_candidate(extraction, vendor="Polymaker", name=record_name, material="PLA", weight_g=1000)
+
+
+def test_a_renamed_product_beats_other_lines_of_the_same_maker() -> None:
+    """SpoolmanDB renamed PolyTerra; a label with the old name must still find it."""
+    renamed = _polymaker("PolyTerra PLA Charcoal Black", "Panchroma™ Matte (Formerly PolyTerra™) Charcoal Black")
+    other_line = _polymaker("PolyTerra PLA Charcoal Black", "PolyLite™ PLA Pro Black")
+    other_colour = _polymaker("PolyTerra PLA Charcoal Black", "Panchroma™ Matte (Formerly PolyTerra™) Cotton White")
+
+    assert renamed > other_line
+    assert renamed > other_colour
+
+
+def test_trademark_signs_and_the_material_word_do_not_block_a_word_match() -> None:
+    reading, record = "PolyTerra PLA Charcoal Black", "Panchroma™ Matte (Formerly PolyTerra™) Charcoal Black"
+    assert spoolintake._similarity(reading, record) < 0.85, "a character comparison misses it"  # noqa: SLF001
+    assert spoolintake._name_similarity(reading, record, frozenset({"pla"})) >= 0.85  # noqa: SLF001
+    assert spoolintake._name_similarity(reading, record, frozenset()) < 0.85, "the material word blocks it"  # noqa: SLF001
+
+
+def test_fewer_extra_words_score_higher() -> None:
+    """Both candidates contain every word of the reading; the one with fewer extra words wins."""
+    assert _polymaker("Charcoal Black", "Matte Charcoal Black") > _polymaker(
+        "Charcoal Black",
+        "Panchroma™ Matte (Formerly PolyTerra™) Charcoal Black",
+    )
+
+
+def test_equal_word_overlaps_are_ordered_by_character_similarity() -> None:
+    """For a reading of "PLA Black", "PLA - Black" must beat every maker's plain "Black"."""
+    reading = {"vendor": None, "name": "PLA Black", "material": "PLA", "weight_g": None}
+    with_material = score_candidate(reading, vendor="FlashForge", name="PLA - Black", material="PLA", weight_g=1000)
+    plain = score_candidate(reading, vendor="3DJAKE", name="Black", material="PLA", weight_g=1000)
+    assert with_material > plain
+
+
+def test_an_exact_name_beats_a_word_match_once_the_material_is_set_aside() -> None:
+    """An exact "PLA - White" must beat a plain "White", though both have the same words without "PLA"."""
+    reading = {"vendor": None, "name": "PLA - White", "material": "PLA", "weight_g": None}
+    exact = score_candidate(reading, vendor="FlashForge", name="PLA - White", material="PLA", weight_g=1000)
+    plain = score_candidate(reading, vendor="3DJAKE", name="White", material="PLA", weight_g=1000)
+    assert exact > plain
+
+
+def test_catalog_ranking_keeps_the_tie_break_that_rounding_would_lose(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Both rows show 58 %, but "PLA - Black" scores higher and must come first whatever the file order."""
+    entries = [
+        _catalog_entry("plain", "3DJAKE", "Black", "PLA", 1000),
+        _catalog_entry("flashforge", "FlashForge", "PLA - Black", "PLA", 1000),
+    ]
+    monkeypatch.setattr(spoolintake, "load_catalog", lambda: entries)
+
+    matches = spoolintake.match_catalog({"vendor": None, "name": "PLA Black", "material": "PLA", "weight_g": None})
+
+    assert [m["external_id"] for m in matches] == ["flashforge", "plain"]
+    assert matches[0]["match_percent"] == matches[1]["match_percent"], "the shown percentage is the same"
+
+
+def test_library_ranking_keeps_the_tie_break_that_rounding_would_lose() -> None:
+    rows = [
+        {"filament_id": 1, "vendor": "3DJAKE", "name": "Black", "material": "PLA", "weight_g": 1000},
+        {"filament_id": 2, "vendor": "FlashForge", "name": "PLA - Black", "material": "PLA", "weight_g": 1000},
+    ]
+    reading = {"vendor": None, "name": "PLA Black", "material": "PLA", "weight_g": None}
+
+    ranked = spoolintake._rank_library(rows, reading, {})  # noqa: SLF001
+
+    assert [r["filament_id"] for r in ranked] == [2, 1]
+
+
+def test_a_short_generic_candidate_gets_no_word_bonus() -> None:
+    """The reverse direction must not lift every maker's plain "Green" for a reading of "Si1k Green"."""
+    generic = score_candidate(
+        {"vendor": None, "name": "Si1k Green", "material": "PLA", "weight_g": 1000},
+        vendor="Abaflex",
+        name="Green",
+        material="PLA",
+        weight_g=1000,
+    )
+    right = score_candidate(
+        {"vendor": None, "name": "Si1k Green", "material": "PLA", "weight_g": 1000},
+        vendor="Bambu Lab",
+        name="Silk Green",
+        material="PLA",
+        weight_g=1000,
+    )
+    assert right > generic
+
+
 def test_name_containment_matches_verbose_catalog_names() -> None:
     score = score_candidate(
         _EXTRACTION,

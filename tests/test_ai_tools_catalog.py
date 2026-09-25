@@ -175,3 +175,16 @@ async def test_run_catalog_lookup_degrades_to_empty_when_catalog_is_missing(
     result = await _lookup({"vendor": "Anyone"})
 
     assert result == {"count": 0, "matches": []}
+
+
+def test_rank_sorts_on_the_score_not_the_rounded_percentage(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Both rows round to the same match_percent; the higher score must still come first."""
+    entries = [
+        {"id": "plain", "manufacturer": "3DJAKE", "name": "Black", "material": "PLA", "weight": 1000},
+        {"id": "flashforge", "manufacturer": "FlashForge", "name": "PLA - Black", "material": "PLA", "weight": 1000},
+    ]
+    monkeypatch.setattr(spoolintake, "load_catalog", lambda: entries)
+
+    rows = catalog._rank({"name": "PLA Black", "material": "PLA"}, limit=10)  # noqa: SLF001
+
+    assert [row["external_id"] for row in rows] == ["flashforge", "plain"]
