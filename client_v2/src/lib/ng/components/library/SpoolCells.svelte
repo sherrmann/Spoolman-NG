@@ -20,7 +20,7 @@
 	import { columnsView } from '$lib/ng/libraryColumnsView.svelte';
 	import { CATALOGUE_COLUMNS, EXTRA_PREFIX } from '$lib/ng/libraryColumnCatalogue';
 	import { catalogueText } from '$lib/ng/filamentCatalogueText';
-	import type { FilamentNg } from '$lib/ng/filamentCatalogue';
+	import type { CatalogueKey } from '$lib/ng/filamentCatalogue';
 	import { ng } from '$lib/ng/i18n';
 
 	interface Props {
@@ -107,7 +107,7 @@
 				{:else if col === 'comment'}
 					<span title={vm.spool.comment}>{vm.spool.comment}</span>
 				{:else if CATALOGUE_COLUMNS.has(col)}
-					{catalogueText(col as keyof FilamentNg, vm.filament.ng)}
+					{catalogueText(col as CatalogueKey, vm.filament.ng)}
 				{:else if col.startsWith(EXTRA_PREFIX)}
 					{extraText(col.slice(EXTRA_PREFIX.length))}
 				{/if}

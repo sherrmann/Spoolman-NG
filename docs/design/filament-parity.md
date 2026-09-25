@@ -1,6 +1,6 @@
 # Filament parity in the Svelte client (#415)
 
-Status: step 1 built; steps 2 and 3 designed, not built.
+Status: all three steps built.
 
 #415 lists five filament features the frozen React client has and `client_v2` lacks. This note
 records where each one attaches to the vendored client, in the order they are built. The rule
@@ -99,18 +99,43 @@ widen the seam further than one more line each.
 
 ### Step 2: reference images
 
-- `hasImage` in `FilamentNg`.
+As built: `lib/ng/filamentImage.ts` (preparation, fetch, upload, delete) and
+`lib/ng/components/FilamentImageSection.svelte`; the inspector gains one import and one line.
+
+- `hasImage` in `FilamentNg`, read-only there: `filamentNgPatchToApi` never sends it.
 - A fork `FilamentImage` section in the inspector's right-hand column, under the manufacturer,
   showing the image with replace and remove, or an upload button when there is none.
 - Fetched with the client's credentials (a bearer token, not a cookie, so `<img src>` does not
   work) into an object URL, with the `ETag` kept to revalidate. Uploads go through a port of the
   React client's `imageTransform.ts`: EXIF rotation applied, longest side at most 1024 px, WebP
   (JPEG where the browser cannot encode WebP).
+- Upload and removal save at once, not through a debounced saver: the photo has its own
+  endpoints. Both endpoints broadcast a filament update, so another open client learns that a
+  photo was added or removed. A photo **replaced** elsewhere keeps `has_image` true, so it shows
+  the next time that filament is opened, when the cached copy is revalidated. Revalidating on
+  every filament update instead would mean a request per spool event during a print.
 - Not on the new-filament form, for the reason given in step 1.
 
 ### Step 3: swatch style and 3MF swatch download
 
 The style setting only affects the download, so they go together.
+
+As built: the generator is in `lib/ng/swatch/`; the dialog, the inspector icon, the preview and
+the settings panel are in `lib/ng/components/swatch/`. The settings panel mounts through the
+fork's `NgSettings`, so upstream's settings page is not touched again; the inspector gains one
+import and one line. Checked against the classic client: with the same QR matrix, every file in
+the 3MF is identical for all five styles. The QR matrices themselves differ, because `qrcode`
+and `qrcode-generator` choose different masks; each of the port's codes was decoded back to its
+payload with zxing. The classic tests that parse the 3MF's XML used the browser's `DOMParser`,
+which the client's node test environment lacks; they run against a small test-only parser
+(`xmlTestHelpers.ts`) rather than a new dependency. It throws where DOMParser would report a
+parse error (mismatched or unclosed tags, an unescaped `&` or `<`), so a broken escape still
+fails the escaping test.
+
+Known limitation, shared with the label designer and the classic client: the link form of the
+QR code is `<base URL setting>/filament/show/<id>`, or the page's origin when that setting is
+empty. Under a sub-path deployment with no base URL set, the origin lacks the path prefix and
+the link does not resolve. Fixing it belongs in one place for all three, not in the swatch.
 
 - `client/src/utils/swatch/*.ts` (about 1,250 lines, framework-free) and its tests are copied to
   `lib/ng/swatch/`. The one change: its QR module uses `qrcode-generator`, which `client_v2`
@@ -120,8 +145,9 @@ The style setting only affects the download, so they go together.
 - A "Download swatch" icon button in the inspector header, beside duplicate and delete, opening
   a dialog like the React one: style (defaulting to the setting), QR as scan code or URL, and
   download.
-- The setting as one row in the existing settings page, following #430's printers and custom
-  links tabs, with the two-sample preview.
+- The setting as a section of the settings page, among the fork's other panels, with the
+  two-sample preview. Administrators only, like those panels, since the write needs admin
+  rights.
 
 ## 4. Open questions
 

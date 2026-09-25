@@ -3,7 +3,7 @@
  * columns. Unknown is an empty string: a column cell stays blank, as for any unset field.
  */
 import { ng } from '$lib/ng/i18n';
-import type { FilamentNg } from './filamentCatalogue';
+import type { CatalogueKey, FilamentNg } from './filamentCatalogue';
 
 const byId = ng as unknown as Record<string, (() => string) | undefined>;
 
@@ -16,7 +16,7 @@ export function yesNoText(value: boolean | null): string {
 	return value === null ? '' : value ? ng.yes() : ng.no();
 }
 
-export function catalogueText(key: keyof FilamentNg, f: FilamentNg | undefined): string {
+export function catalogueText(key: CatalogueKey, f: FilamentNg | undefined): string {
 	if (!f) return '';
 	switch (key) {
 		case 'spoolType':

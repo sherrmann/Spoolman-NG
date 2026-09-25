@@ -22,7 +22,8 @@ export type SpoolType = (typeof SPOOL_TYPES)[number];
 export type Finish = (typeof FINISHES)[number];
 export type Pattern = (typeof PATTERNS)[number];
 
-export interface FilamentNg {
+/** The five SpoolmanDB catalogue fields, which the inspector edits. */
+export interface CatalogueFields {
 	spoolType: SpoolType | null;
 	finish: Finish | null;
 	pattern: Pattern | null;
@@ -30,12 +31,24 @@ export interface FilamentNg {
 	glow: boolean | null;
 }
 
+export type CatalogueKey = keyof CatalogueFields;
+
+/**
+ * Everything this fork reads off a filament that upstream's view model does not carry: the
+ * catalogue fields, and whether it has a reference photo (#415 step 2). `hasImage` is read-only
+ * here; the photo has endpoints of its own (see filamentImage.ts).
+ */
+export interface FilamentNg extends CatalogueFields {
+	hasImage: boolean;
+}
+
 export const EMPTY_FILAMENT_NG: FilamentNg = {
 	spoolType: null,
 	finish: null,
 	pattern: null,
 	translucent: null,
-	glow: null
+	glow: null,
+	hasImage: false
 };
 
 function oneOf<T extends string>(allowed: readonly T[], v: unknown): T | null {
@@ -53,11 +66,12 @@ export function mapFilamentNg(f: Json): FilamentNg {
 		finish: oneOf(FINISHES, f.finish),
 		pattern: oneOf(PATTERNS, f.pattern),
 		translucent: bool(f.translucent),
-		glow: bool(f.glow)
+		glow: bool(f.glow),
+		hasImage: f.has_image === true
 	};
 }
 
-const API_NAMES: Record<keyof FilamentNg, string> = {
+const API_NAMES: Record<CatalogueKey, string> = {
 	spoolType: 'spool_type',
 	finish: 'finish',
 	pattern: 'pattern',
@@ -69,10 +83,10 @@ const API_NAMES: Record<keyof FilamentNg, string> = {
  * The API body for a patch that may carry `ng`. Only the fields present in `patch.ng` are sent,
  * so saving one field never overwrites another; null is sent as null, which clears it.
  */
-export function filamentNgPatchToApi(patch: { ng?: Partial<FilamentNg> }): Json {
+export function filamentNgPatchToApi(patch: { ng?: Partial<CatalogueFields> }): Json {
 	const out: Json = {};
 	if (!patch.ng) return out;
-	for (const [key, api] of Object.entries(API_NAMES) as [keyof FilamentNg, string][]) {
+	for (const [key, api] of Object.entries(API_NAMES) as [CatalogueKey, string][]) {
 		if (key in patch.ng) out[api] = patch.ng[key] ?? null;
 	}
 	return out;
@@ -90,7 +104,7 @@ export function filamentNgPatchToApi(patch: { ng?: Partial<FilamentNg> }): Json 
 export function catalogueFromExternal(ext: object): Json {
 	const ng = mapFilamentNg(ext as Json);
 	const out: Json = {};
-	for (const [key, api] of Object.entries(API_NAMES) as [keyof FilamentNg, string][]) {
+	for (const [key, api] of Object.entries(API_NAMES) as [CatalogueKey, string][]) {
 		const v = ng[key];
 		if (v === null || v === false) continue;
 		out[api] = v;
