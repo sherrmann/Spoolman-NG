@@ -578,5 +578,19 @@
 	"spool_totals_selected_few": "{count} bobine selectate",
 	"spool_totals_selected_other": "{count} de bobine selectate",
 	"buttons_columns": "Coloane",
-	"buttons_columnsTooltip": "Alege, reordonează și ascunde coloanele tabelului"
+	"buttons_columnsTooltip": "Alege, reordonează și ascunde coloanele tabelului",
+	"filament_fields_spool_type": "Tip de bobină",
+	"filament_fields_finish": "Finisaj",
+	"filament_fields_pattern": "Model",
+	"filament_fields_translucent": "Translucid",
+	"filament_fields_glow": "Fosforescent",
+	"filament_spool_type_options_plastic": "Plastic",
+	"filament_spool_type_options_cardboard": "Carton",
+	"filament_spool_type_options_metal": "Metal",
+	"filament_finish_options_matte": "Mat",
+	"filament_finish_options_glossy": "Lucios",
+	"filament_pattern_options_marble": "Marmorat",
+	"filament_pattern_options_sparkle": "Cu sclipici",
+	"yes": "Da",
+	"no": "Nu"
 }

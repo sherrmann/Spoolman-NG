@@ -558,5 +558,19 @@
 	"spool_totals_shown_other": "แสดง {count} ม้วนพลาสติก",
 	"spool_totals_selected_other": "เลือก {count} ม้วนพลาสติก",
 	"buttons_columns": "คอลัมน์",
-	"buttons_columnsTooltip": "เลือก จัดลำดับ และซ่อนคอลัมน์ของตาราง"
+	"buttons_columnsTooltip": "เลือก จัดลำดับ และซ่อนคอลัมน์ของตาราง",
+	"filament_fields_spool_type": "ประเภทแกนม้วน",
+	"filament_fields_finish": "ผิวสัมผัส",
+	"filament_fields_pattern": "ลวดลาย",
+	"filament_fields_translucent": "โปร่งแสง",
+	"filament_fields_glow": "เรืองแสงในที่มืด",
+	"filament_spool_type_options_plastic": "พลาสติก",
+	"filament_spool_type_options_cardboard": "กระดาษแข็ง",
+	"filament_spool_type_options_metal": "โลหะ",
+	"filament_finish_options_matte": "ด้าน",
+	"filament_finish_options_glossy": "เงา",
+	"filament_pattern_options_marble": "ลายหินอ่อน",
+	"filament_pattern_options_sparkle": "กากเพชร",
+	"yes": "ใช่",
+	"no": "ไม่"
 }

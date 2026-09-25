@@ -578,5 +578,19 @@
 	"spool_totals_selected_few": "Вибрано {count} котушки",
 	"spool_totals_selected_many": "Вибрано {count} котушок",
 	"buttons_columns": "Колонки",
-	"buttons_columnsTooltip": "Вибір, порядок і приховування колонок таблиці"
+	"buttons_columnsTooltip": "Вибір, порядок і приховування колонок таблиці",
+	"filament_fields_spool_type": "Тип котушки",
+	"filament_fields_finish": "Поверхня",
+	"filament_fields_pattern": "Візерунок",
+	"filament_fields_translucent": "Напівпрозорий",
+	"filament_fields_glow": "Світиться в темряві",
+	"filament_spool_type_options_plastic": "Пластикова",
+	"filament_spool_type_options_cardboard": "Картонна",
+	"filament_spool_type_options_metal": "Металева",
+	"filament_finish_options_matte": "Матова",
+	"filament_finish_options_glossy": "Глянцева",
+	"filament_pattern_options_marble": "Мармур",
+	"filament_pattern_options_sparkle": "Блискітки",
+	"yes": "Так",
+	"no": "Ні"
 }

@@ -2,6 +2,9 @@
 // layer (src/lib/api/map.ts) maps the Spoolman REST shape to these. `extra`
 // holds custom-field values as JSON-encoded strings keyed by field key.
 
+// Spoolman NG fork addition (#415): the catalogue fields, kept under `Filament.ng`.
+import type { FilamentNg } from '$lib/ng/filamentCatalogue';
+
 /** Custom-field values: field key → JSON-encoded string value. */
 export type Extra = Record<string, string>;
 
@@ -71,6 +74,8 @@ export interface Filament {
 	/** Linked NFC/RFID tags. Always present; empty when the filament has none. */
 	tags: Tag[];
 	extra: Extra;
+	/** Spoolman NG fork addition (#415): SpoolmanDB catalogue fields. */
+	ng?: FilamentNg;
 }
 
 export interface Spool {

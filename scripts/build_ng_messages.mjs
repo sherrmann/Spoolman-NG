@@ -368,6 +368,21 @@ const KEYS = [
 	'spool.columns.move_up',
 	'spool.columns.move_down',
 	'spool.columns.resize',
+	// SpoolmanDB catalogue fields on a filament (#415 step 1).
+	'filament.fields.spool_type',
+	'filament.fields.finish',
+	'filament.fields.pattern',
+	'filament.fields.translucent',
+	'filament.fields.glow',
+	'filament.spool_type_options.plastic',
+	'filament.spool_type_options.cardboard',
+	'filament.spool_type_options.metal',
+	'filament.finish_options.matte',
+	'filament.finish_options.glossy',
+	'filament.pattern_options.marble',
+	'filament.pattern_options.sparkle',
+	'yes',
+	'no',
 ];
 
 /** Flatten nested i18next JSON to dotted keys. */

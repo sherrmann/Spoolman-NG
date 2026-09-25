@@ -36,6 +36,8 @@
 	import { resolve } from '$app/paths';
 	// Spoolman NG fork addition (#123), paired with the FlaskConical import above.
 	import { ng } from '$lib/ng/i18n';
+	// Spoolman NG fork addition (#415): the SpoolmanDB catalogue fields, in the specs grid below.
+	import FilamentCatalogueFields from '$lib/ng/components/FilamentCatalogueFields.svelte';
 	import * as params from '$lib/library/params';
 	import { pct, weightAuto } from '$lib/utils/format';
 	import { usageLabel } from '$lib/utils/library';
@@ -450,6 +452,7 @@
 						oninput={(v) => set({ articleNumber: v })}
 					/>
 				</Field>
+				<FilamentCatalogueFields {filament} />
 				{#if filament.externalId}
 					<Field label={m['filament.fields.externalId']()} mono>{filament.externalId}</Field>
 				{/if}

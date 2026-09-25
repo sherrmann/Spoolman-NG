@@ -568,5 +568,19 @@
 	"spool_totals_selected_one": "{count} spoel geselecteerd",
 	"spool_totals_selected_other": "{count} spoelen geselecteerd",
 	"buttons_columns": "Kolommen",
-	"buttons_columnsTooltip": "Tabelkolommen kiezen, herschikken en verbergen"
+	"buttons_columnsTooltip": "Tabelkolommen kiezen, herschikken en verbergen",
+	"filament_fields_spool_type": "Spoeltype",
+	"filament_fields_finish": "Afwerking",
+	"filament_fields_pattern": "Patroon",
+	"filament_fields_translucent": "Doorschijnend",
+	"filament_fields_glow": "Lichtgevend in het donker",
+	"filament_spool_type_options_plastic": "Kunststof",
+	"filament_spool_type_options_cardboard": "Karton",
+	"filament_spool_type_options_metal": "Metaal",
+	"filament_finish_options_matte": "Mat",
+	"filament_finish_options_glossy": "Glanzend",
+	"filament_pattern_options_marble": "Marmer",
+	"filament_pattern_options_sparkle": "Glitter",
+	"yes": "Ja",
+	"no": "Nee"
 }

@@ -578,5 +578,19 @@
 	"spool_totals_selected_few": "Wybrano {count} szpule",
 	"spool_totals_selected_many": "Wybrano {count} szpul",
 	"buttons_columns": "Kolumny",
-	"buttons_columnsTooltip": "Wybierz, uporządkuj i ukryj kolumny tabeli"
+	"buttons_columnsTooltip": "Wybierz, uporządkuj i ukryj kolumny tabeli",
+	"filament_fields_spool_type": "Typ szpuli",
+	"filament_fields_finish": "Wykończenie",
+	"filament_fields_pattern": "Wzór",
+	"filament_fields_translucent": "Półprzezroczysty",
+	"filament_fields_glow": "Świecący w ciemności",
+	"filament_spool_type_options_plastic": "Plastikowa",
+	"filament_spool_type_options_cardboard": "Kartonowa",
+	"filament_spool_type_options_metal": "Metalowa",
+	"filament_finish_options_matte": "Matowe",
+	"filament_finish_options_glossy": "Błyszczące",
+	"filament_pattern_options_marble": "Marmurowy",
+	"filament_pattern_options_sparkle": "Brokatowy",
+	"yes": "Tak",
+	"no": "Nie"
 }

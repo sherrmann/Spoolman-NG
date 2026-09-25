@@ -578,5 +578,19 @@
 	"spool_totals_selected_few": "Pasirinktos {count} ritės",
 	"spool_totals_selected_other": "Pasirinkta {count} ričių",
 	"buttons_columns": "Stulpeliai",
-	"buttons_columnsTooltip": "Pasirinkite, pertvarkykite ir slėpkite lentelės stulpelius"
+	"buttons_columnsTooltip": "Pasirinkite, pertvarkykite ir slėpkite lentelės stulpelius",
+	"filament_fields_spool_type": "Ritės tipas",
+	"filament_fields_finish": "Paviršius",
+	"filament_fields_pattern": "Raštas",
+	"filament_fields_translucent": "Peršviečiama",
+	"filament_fields_glow": "Šviečia tamsoje",
+	"filament_spool_type_options_plastic": "Plastikinė",
+	"filament_spool_type_options_cardboard": "Kartoninė",
+	"filament_spool_type_options_metal": "Metalinė",
+	"filament_finish_options_matte": "Matinis",
+	"filament_finish_options_glossy": "Blizgus",
+	"filament_pattern_options_marble": "Marmurinis",
+	"filament_pattern_options_sparkle": "Blizgučiai",
+	"yes": "Taip",
+	"no": "Ne"
 }

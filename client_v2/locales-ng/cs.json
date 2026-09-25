@@ -578,5 +578,19 @@
 	"spool_totals_selected_few": "Vybrány {count} cívky",
 	"spool_totals_selected_other": "Vybráno {count} cívek",
 	"buttons_columns": "Sloupce",
-	"buttons_columnsTooltip": "Vyberte, přeuspořádejte a skryjte sloupce tabulky"
+	"buttons_columnsTooltip": "Vyberte, přeuspořádejte a skryjte sloupce tabulky",
+	"filament_fields_spool_type": "Typ cívky",
+	"filament_fields_finish": "Povrch",
+	"filament_fields_pattern": "Vzor",
+	"filament_fields_translucent": "Průsvitný",
+	"filament_fields_glow": "Svítící ve tmě",
+	"filament_spool_type_options_plastic": "Plastová",
+	"filament_spool_type_options_cardboard": "Kartonová",
+	"filament_spool_type_options_metal": "Kovová",
+	"filament_finish_options_matte": "Matný",
+	"filament_finish_options_glossy": "Lesklý",
+	"filament_pattern_options_marble": "Mramorový",
+	"filament_pattern_options_sparkle": "Třpytivý",
+	"yes": "Ano",
+	"no": "Ne"
 }

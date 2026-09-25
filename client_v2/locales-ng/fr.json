@@ -577,5 +577,19 @@
 	"spool_totals_selected_many": "{count} bobines sélectionnées",
 	"spool_totals_selected_other": "{count} bobines sélectionnées",
 	"buttons_columns": "Colonnes",
-	"buttons_columnsTooltip": "Choisir, réordonner et masquer les colonnes du tableau"
+	"buttons_columnsTooltip": "Choisir, réordonner et masquer les colonnes du tableau",
+	"filament_fields_spool_type": "Type de bobine",
+	"filament_fields_finish": "Finition",
+	"filament_fields_pattern": "Motif",
+	"filament_fields_translucent": "Translucide",
+	"filament_fields_glow": "Phosphorescent",
+	"filament_spool_type_options_plastic": "Plastique",
+	"filament_spool_type_options_cardboard": "Carton",
+	"filament_spool_type_options_metal": "Métal",
+	"filament_finish_options_matte": "Mat",
+	"filament_finish_options_glossy": "Brillant",
+	"filament_pattern_options_marble": "Marbré",
+	"filament_pattern_options_sparkle": "Pailleté",
+	"yes": "Oui",
+	"no": "Non"
 }

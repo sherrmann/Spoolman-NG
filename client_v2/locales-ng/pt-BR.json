@@ -577,5 +577,19 @@
 	"spool_totals_selected_many": "{count} carretéis selecionados",
 	"spool_totals_selected_other": "{count} carretéis selecionados",
 	"buttons_columns": "Colunas",
-	"buttons_columnsTooltip": "Escolher, reordenar e ocultar colunas da tabela"
+	"buttons_columnsTooltip": "Escolher, reordenar e ocultar colunas da tabela",
+	"filament_fields_spool_type": "Tipo de Carretel",
+	"filament_fields_finish": "Acabamento",
+	"filament_fields_pattern": "Padrão",
+	"filament_fields_translucent": "Translúcido",
+	"filament_fields_glow": "Brilha no Escuro",
+	"filament_spool_type_options_plastic": "Plástico",
+	"filament_spool_type_options_cardboard": "Papelão",
+	"filament_spool_type_options_metal": "Metal",
+	"filament_finish_options_matte": "Fosco",
+	"filament_finish_options_glossy": "Brilhante",
+	"filament_pattern_options_marble": "Marmorizado",
+	"filament_pattern_options_sparkle": "Glitter",
+	"yes": "Sim",
+	"no": "Não"
 }

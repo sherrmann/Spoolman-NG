@@ -568,5 +568,19 @@
 	"spool_totals_selected_one": "{count} tekercs kiválasztva",
 	"spool_totals_selected_other": "{count} db tekercs kiválasztva",
 	"buttons_columns": "Oszlopok",
-	"buttons_columnsTooltip": "Táblázatoszlopok kiválasztása, átrendezése és elrejtése"
+	"buttons_columnsTooltip": "Táblázatoszlopok kiválasztása, átrendezése és elrejtése",
+	"filament_fields_spool_type": "Tekercs típusa",
+	"filament_fields_finish": "Felület",
+	"filament_fields_pattern": "Mintázat",
+	"filament_fields_translucent": "Áttetsző",
+	"filament_fields_glow": "Sötétben világító",
+	"filament_spool_type_options_plastic": "Műanyag",
+	"filament_spool_type_options_cardboard": "Karton",
+	"filament_spool_type_options_metal": "Fém",
+	"filament_finish_options_matte": "Matt",
+	"filament_finish_options_glossy": "Fényes",
+	"filament_pattern_options_marble": "Márvány",
+	"filament_pattern_options_sparkle": "Csillámos",
+	"yes": "Igen",
+	"no": "Nem"
 }

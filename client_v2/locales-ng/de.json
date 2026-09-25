@@ -568,5 +568,19 @@
 	"spool_totals_selected_one": "{count} Spule ausgewählt",
 	"spool_totals_selected_other": "{count} Spulen ausgewählt",
 	"buttons_columns": "Spalten",
-	"buttons_columnsTooltip": "Tabellenspalten auswählen, neu anordnen und ausblenden"
+	"buttons_columnsTooltip": "Tabellenspalten auswählen, neu anordnen und ausblenden",
+	"filament_fields_spool_type": "Spulentyp",
+	"filament_fields_finish": "Oberfläche",
+	"filament_fields_pattern": "Muster",
+	"filament_fields_translucent": "Transluzent",
+	"filament_fields_glow": "Leuchtet im Dunkeln",
+	"filament_spool_type_options_plastic": "Kunststoff",
+	"filament_spool_type_options_cardboard": "Pappe",
+	"filament_spool_type_options_metal": "Metall",
+	"filament_finish_options_matte": "Matt",
+	"filament_finish_options_glossy": "Glänzend",
+	"filament_pattern_options_marble": "Marmor",
+	"filament_pattern_options_sparkle": "Glitzer",
+	"yes": "Ja",
+	"no": "Nein"
 }

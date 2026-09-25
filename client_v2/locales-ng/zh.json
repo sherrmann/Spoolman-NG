@@ -558,5 +558,19 @@
 	"spool_totals_shown_other": "显示 {count} 个料盘",
 	"spool_totals_selected_other": "已选择 {count} 个料盘",
 	"buttons_columns": "列",
-	"buttons_columnsTooltip": "选择、重排和隐藏表格列"
+	"buttons_columnsTooltip": "选择、重排和隐藏表格列",
+	"filament_fields_spool_type": "料盘类型",
+	"filament_fields_finish": "表面效果",
+	"filament_fields_pattern": "花纹",
+	"filament_fields_translucent": "半透明",
+	"filament_fields_glow": "夜光",
+	"filament_spool_type_options_plastic": "塑料",
+	"filament_spool_type_options_cardboard": "纸板",
+	"filament_spool_type_options_metal": "金属",
+	"filament_finish_options_matte": "哑光",
+	"filament_finish_options_glossy": "亮面",
+	"filament_pattern_options_marble": "大理石纹",
+	"filament_pattern_options_sparkle": "闪粉",
+	"yes": "是",
+	"no": "否"
 }
