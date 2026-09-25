@@ -7,7 +7,7 @@ import { message } from "antd/lib";
 import dayjs from "dayjs";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
-import { ExtraFieldFormItem, ParsedExtras, StringifiedExtras } from "../../components/extraFields";
+import { ExtraFieldFormItem, ParsedExtras, StringifiedExtrasForUpdate } from "../../components/extraFields";
 import { useSpoolmanLocations } from "../../components/otherModels";
 import { searchMatches } from "../../utils/filtering";
 import { formatNumberOnUserInput, numberParser, numberParserAllowEmpty } from "../../utils/parsing";
@@ -109,7 +109,7 @@ export const SpoolEdit = () => {
   formProps.onFinish = (allValues: ISpoolRequest) => {
     if (allValues !== undefined && allValues !== null) {
       // Lot of stupidity here to make types work
-      const values = StringifiedExtras<ISpoolRequest>(allValues);
+      const values = StringifiedExtrasForUpdate<ISpoolRequest>(allValues);
       // #61: a spool heavier than its theoretical weight would submit a negative used_weight
       // (422 from the backend). Absorb the deficit into initial_weight, like measure() does.
       if ((values.used_weight ?? 0) < 0) {

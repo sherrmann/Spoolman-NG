@@ -488,7 +488,10 @@ class SinglePageApplication(StaticFiles):
 
     def lookup_path(self, path: str) -> tuple[str, os.stat_result | None]:
         """Return the fallback document if the requested file cannot be found."""
-        path = path.removeprefix(self.base_path).removeprefix("/")
+        # The mount (app.mount(base_path, ...)) has already stripped the base path, so `path`
+        # arrives base-relative. Stripping base_path again as a raw string prefix mangled asset
+        # names that start with it: "spoolman.svg" under base "spoolman" became ".svg".
+        path = path.removeprefix("/")
 
         full_path, stat_result = super().lookup_path(path)
 

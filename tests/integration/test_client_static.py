@@ -9,6 +9,7 @@ and the manifest is served with its start_url/scope rewritten to the base path.
 import json
 from pathlib import Path
 
+import pytest
 import pytest_asyncio
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
@@ -79,3 +80,26 @@ async def test_manifest_is_rewritten_for_sub_path_deploy(tmp_path: Path):
         data = resp.json()
         assert data["start_url"] == "/spoolman/"
         assert data["scope"] == "/spoolman/"
+
+
+@pytest.mark.parametrize("base_path", ["/spoolman", "/spool"])
+async def test_asset_named_like_the_base_path_is_served_under_it(tmp_path: Path, base_path: str):
+    """The mount already strips the base path; stripping it again mangled asset names.
+
+    Under SPOOLMAN_BASE_PATH=/spoolman the Svelte client's logo, `spoolman.svg`, was looked
+    up as `.svg` and missed (under /spool, as `man.svg`), so the logo broke wherever the
+    client showed it. Upstream dropped the second strip in d65b50d5.
+    """
+    dist = tmp_path / "dist"
+    dist.mkdir()
+    _make_dist(dist)
+    (dist / "spoolman.svg").write_text("<svg></svg>", encoding="utf-8")
+    async with _client_for(dist, base_path) as client:
+        logo = await client.get(f"{base_path}/spoolman.svg")
+        asset = await client.get(f"{base_path}/assets/app.js")
+
+    assert logo.status_code == 200
+    assert logo.text == "<svg></svg>"
+    assert logo.headers["content-type"].startswith("image/svg")
+    assert asset.status_code == 200
+    assert "spoolman" in asset.text

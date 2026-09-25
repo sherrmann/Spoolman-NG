@@ -231,3 +231,25 @@ export function StringifiedExtras<T extends { extra?: { [key: string]: unknown }
     };
   }
 }
+
+/**
+ * Like StringifiedExtras, for an edit form's PATCH: a field left empty is sent as null.
+ *
+ * The API merges `extra` per key on spools, filaments and vendors, so a key simply left out
+ * of the map keeps whatever it held. null is what clears it. Create forms keep using
+ * StringifiedExtras, where an absent key and an empty one mean the same thing.
+ * @param obj
+ * @returns
+ */
+export function StringifiedExtrasForUpdate<T extends { extra?: { [key: string]: unknown } }>(
+  obj: T,
+): Omit<T, "extra"> & { extra?: { [key: string]: string | null } } {
+  if (!obj.extra) {
+    return { ...obj, extra: undefined };
+  }
+  const newExtra: { [key: string]: string | null } = {};
+  Object.entries(obj.extra).forEach(([key, value]) => {
+    newExtra[key] = value === undefined || value === null ? null : JSON.stringify(value);
+  });
+  return { ...obj, extra: newExtra };
+}

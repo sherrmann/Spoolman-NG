@@ -33,6 +33,7 @@ from spoolman.database.utils import (
     order_by_clauses,
     order_by_expression,
     parse_nested_field,
+    split_filter_values,
     utc_now,
     utc_timezone_naive,
 )
@@ -257,7 +258,7 @@ def _build_search_filters(search: str) -> list:
     Returns a list of SQLAlchemy conditions to be combined with OR.
     """
     search_conditions = []
-    for value_part in search.split(","):
+    for value_part in split_filter_values(search):
         if len(value_part) == 0:
             continue
 
@@ -303,6 +304,7 @@ async def find(  # noqa: C901, PLR0912, PLR0915
     filament_name: str | None = None,
     filament_id: int | Sequence[int] | None = None,
     filament_material: str | None = None,
+    filament_multi_color_direction: str | None = None,
     vendor_name: str | None = None,
     vendor_id: int | Sequence[int] | None = None,
     location: str | None = None,
@@ -351,6 +353,7 @@ async def find(  # noqa: C901, PLR0912, PLR0915
     stmt = add_where_clause_str(stmt, models.Vendor.name, vendor_name)
     stmt = add_where_clause_str_opt(stmt, models.Filament.name, filament_name)
     stmt = add_where_clause_str_opt(stmt, models.Filament.material, filament_material)
+    stmt = add_where_clause_str_opt(stmt, models.Filament.multi_color_direction, filament_multi_color_direction)
     stmt = add_where_clause_str_opt(stmt, models.Spool.location, location)
     stmt = add_where_clause_str_opt(stmt, models.Spool.lot_nr, lot_nr)
 
@@ -477,10 +480,11 @@ async def update(
         elif isinstance(v, datetime):
             setattr(spool, k, utc_timezone_naive(v))
         elif k == "extra":
+            extra = v or {}  # `"extra": null` changes nothing, the same as leaving it out
             # Merge semantics (#233): keys present are replaced, a None value deletes the
-            # key, keys not mentioned stay. Unlike the other entities, which replace all.
-            spool.extra = [f for f in spool.extra if f.key not in v]
-            spool.extra.extend([models.SpoolField(key=k2, value=v2) for k2, v2 in v.items() if v2 is not None])
+            # key, keys not mentioned stay. Filaments and vendors merge the same way.
+            spool.extra = [f for f in spool.extra if f.key not in extra]
+            spool.extra.extend([models.SpoolField(key=k2, value=v2) for k2, v2 in extra.items() if v2 is not None])
         elif k == "printer_id":
             # #75: validate the reassignment (no DB-level FK) and set the relationship object so the
             # post-commit spool_changed payload has it loaded; a null clears the assignment.
@@ -971,9 +975,9 @@ async def rename_location(
 # ---------------------------------------------------------------------------------------------
 # Spool grouping (GET /spool/group) and field-value rename (PATCH /spool/field/{field}).
 # Ported from upstream's spoolman/database/spool.py (find_groups / rename_field_value), adapted to
-# this fork's filter surface: no filament_multi_color_direction, first_used/last_used/registered
-# range filters or include_empty (none of those exist elsewhere on this fork's spool endpoints
-# yet, and grafting them on here would be new, unrequested API surface). filament/vendor extra
+# this fork's filter surface: no first_used/last_used/registered range filters or include_empty
+# (none of those exist elsewhere on this fork's spool endpoints yet). filament_multi_color_direction
+# was added to both find() and find_groups() later, because the vendored client sends it. filament/vendor extra
 # field filters ARE wired in, via the already-ported apply_spool_related_extra_filters.
 # ---------------------------------------------------------------------------------------------
 
@@ -1109,6 +1113,7 @@ def _apply_group_filters(
     filament_name: str | None,
     filament_id: int | Sequence[int] | None,
     filament_material: str | None,
+    filament_multi_color_direction: str | None,
     vendor_name: str | None,
     vendor_id: int | Sequence[int] | None,
     location: str | None,
@@ -1127,6 +1132,7 @@ def _apply_group_filters(
     stmt = add_where_clause_str(stmt, models.Vendor.name, vendor_name)
     stmt = add_where_clause_str_opt(stmt, models.Filament.name, filament_name)
     stmt = add_where_clause_str_opt(stmt, models.Filament.material, filament_material)
+    stmt = add_where_clause_str_opt(stmt, models.Filament.multi_color_direction, filament_multi_color_direction)
     stmt = add_where_clause_str_opt(stmt, models.Spool.location, location)
     stmt = add_where_clause_str_opt(stmt, models.Spool.lot_nr, lot_nr)
     if not allow_archived:
@@ -1147,6 +1153,7 @@ async def find_groups(
     filament_name: str | None = None,
     filament_id: int | Sequence[int] | None = None,
     filament_material: str | None = None,
+    filament_multi_color_direction: str | None = None,
     vendor_name: str | None = None,
     vendor_id: int | Sequence[int] | None = None,
     location: str | None = None,
@@ -1175,6 +1182,7 @@ async def find_groups(
         filament_name=filament_name,
         filament_id=filament_id,
         filament_material=filament_material,
+        filament_multi_color_direction=filament_multi_color_direction,
         vendor_name=vendor_name,
         vendor_id=vendor_id,
         location=location,

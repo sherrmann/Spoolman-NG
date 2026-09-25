@@ -25,6 +25,7 @@ from spoolman.database.utils import (
     escape_like,
     order_by_expression,
     parse_nested_field,
+    split_filter_values,
     utc_now,
     utc_timezone_naive,
 )
@@ -138,7 +139,7 @@ def _build_search_filters(search: str) -> list:
 
     """
     search_conditions = []
-    for value_part in search.split(","):
+    for value_part in split_filter_values(search):
         if len(value_part) == 0:
             continue
 
@@ -361,7 +362,14 @@ async def update(
             else:
                 filament.vendor = await vendor.get_by_id(db, v)
         elif k == "extra":
-            filament.extra = [models.FilamentField(key=k, value=v) for k, v in v.items()]
+            extra = v or {}  # `"extra": null` changes nothing, the same as leaving it out
+            # Merged per key like a spool's (#233): keys present are replaced, a None value
+            # deletes the key, keys not mentioned stay. The Svelte client saves one field at a
+            # time, so replacing the whole set lost the others (upstream issue 1141).
+            filament.extra = [f for f in filament.extra if f.key not in extra]
+            filament.extra.extend(
+                [models.FilamentField(key=k2, value=v2) for k2, v2 in extra.items() if v2 is not None]
+            )
         elif isinstance(v, Enum):
             # Enum-typed fields (multi_color_direction #74, spool_type/finish/pattern #91) are stored
             # as their string value. A None (cleared) value falls through to the plain setattr below.

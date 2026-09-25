@@ -105,6 +105,9 @@
 					maxScansPerSecond: 5,
 					returnDetailedScanResult: true
 				});
+				// Also read light-on-dark codes (white-on-black labels). Only the worker decoder
+				// Firefox falls back to needs this; it defaults to 'original' (upstream issue 1165).
+				scanner.setInversionMode('both');
 				return scanner.start();
 			})
 			.then(() => {

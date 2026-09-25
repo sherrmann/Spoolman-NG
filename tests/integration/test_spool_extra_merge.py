@@ -2,8 +2,9 @@
 
 Maintainer decision on #233: spools deliberately MERGE partial extra updates (adopted from
 an upstream PR so concurrent writers - e.g. the NFC flow and a user edit - can't clobber
-each other's keys), unlike the other entities, which replace the whole set. That left keys
-undeletable; a null value now removes the key. These tests pin all three behaviors.
+each other's keys). That left keys undeletable; a null value now removes the key. These
+tests pin all three behaviors. Filaments and vendors follow the same rules since upstream
+issue 1141 (test_filament_vendor_extra_merge.py); locations and printers still replace.
 """
 
 from httpx import AsyncClient
@@ -62,3 +63,13 @@ async def test_deleting_an_unknown_key_is_rejected(client: AsyncClient):
     resp = await client.patch(f"{SPOOL}/{spool['id']}", json={"extra": {"nope": None}})
 
     assert resp.status_code == 400, resp.text
+
+
+async def test_null_extra_map_changes_nothing(client: AsyncClient):
+    """`"extra": null` used to be a 500 (iterating None); it now leaves extra alone."""
+    spool = await _spool_with_fields(client)
+
+    resp = await client.patch(f"{SPOOL}/{spool['id']}", json={"extra": None, "comment": "x"})
+
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["extra"] == {"slot": '"3"', "owner": '"Sam"'}

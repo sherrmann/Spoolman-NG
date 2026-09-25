@@ -20,8 +20,11 @@ const HEIGHT = 480;
 /** Frames each payload is held for. The scanner reads 5/s, so this is ~2s of a steady label. */
 const FRAMES_PER_PAYLOAD = 20;
 
-/** The luma plane for one payload: a centred, quiet-zoned QR on white. */
-function lumaFor(payload: string): Buffer {
+/**
+ * The luma plane for one payload: a centred, quiet-zoned QR on white, or with `inverted` a
+ * white-on-black one, the way a label printed light-on-dark looks to the camera.
+ */
+function lumaFor(payload: string, inverted: boolean): Buffer {
 	const { modules } = QRCode.create(payload, { errorCorrectionLevel: 'M' });
 	const size = modules.size;
 	// Half the short side, and the fraction is the whole reason this works: qr-scanner only
@@ -37,11 +40,12 @@ function lumaFor(payload: string): Buffer {
 	const x0 = Math.floor((WIDTH - drawn) / 2);
 	const y0 = Math.floor((HEIGHT - drawn) / 2);
 
-	const y = Buffer.alloc(WIDTH * HEIGHT, 255);
+	const [paper, ink] = inverted ? [0, 255] : [255, 0];
+	const y = Buffer.alloc(WIDTH * HEIGHT, paper);
 	for (let row = 0; row < drawn; row++) {
 		for (let col = 0; col < drawn; col++) {
 			const dark = modules.data[Math.floor(row / scale) * size + Math.floor(col / scale)];
-			if (dark) y[(y0 + row) * WIDTH + (x0 + col)] = 0;
+			if (dark) y[(y0 + row) * WIDTH + (x0 + col)] = ink;
 		}
 	}
 	return y;
@@ -55,11 +59,11 @@ function lumaFor(payload: string): Buffer {
  * Re-scanning is not a hazard -- the machine treats the held spool coming back into view as
  * nothing to report, which is exactly the real-world case this mirrors.
  */
-export function writeQrVideo(payloads: string[]): string {
+export function writeQrVideo(payloads: string[], { inverted = false }: { inverted?: boolean } = {}): string {
 	const chroma = Buffer.alloc((WIDTH / 2) * (HEIGHT / 2), 128);
 	const parts: Buffer[] = [Buffer.from(`YUV4MPEG2 W${WIDTH} H${HEIGHT} F10:1 Ip A1:1 C420\n`)];
 	for (const payload of payloads) {
-		const y = lumaFor(payload);
+		const y = lumaFor(payload, inverted);
 		for (let f = 0; f < FRAMES_PER_PAYLOAD; f++) {
 			parts.push(Buffer.from('FRAME\n'), y, chroma, chroma);
 		}
