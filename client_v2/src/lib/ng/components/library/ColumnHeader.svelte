@@ -15,16 +15,28 @@
 	const STEP = 10;
 
 	// More columns than the pane is wide: the list below scrolls sideways (see the style block),
-	// and the header, which sits outside that scroll container, follows its position.
+	// and the header, which sits outside that scroll container, keeps the same position. Both
+	// ways: the list scrolls the header, and the header scrolls the list, because focusing a
+	// resize handle that is partly off-screen makes the browser scroll the header to it.
+	// Assigning an equal scrollLeft fires no scroll event, so the two cannot ping-pong.
 	let header = $state<HTMLDivElement>();
 	$effect(() => {
 		const list = header?.nextElementSibling;
 		if (!header || !(list instanceof HTMLElement)) return;
 		const el = header;
-		const sync = () => (el.scrollLeft = list.scrollLeft);
-		sync();
-		list.addEventListener('scroll', sync, { passive: true });
-		return () => list.removeEventListener('scroll', sync);
+		const fromList = () => {
+			if (el.scrollLeft !== list.scrollLeft) el.scrollLeft = list.scrollLeft;
+		};
+		const fromHeader = () => {
+			if (list.scrollLeft !== el.scrollLeft) list.scrollLeft = el.scrollLeft;
+		};
+		fromList();
+		list.addEventListener('scroll', fromList, { passive: true });
+		el.addEventListener('scroll', fromHeader, { passive: true });
+		return () => {
+			list.removeEventListener('scroll', fromList);
+			el.removeEventListener('scroll', fromHeader);
+		};
 	});
 
 	function widthOf(el: HTMLElement): number {
