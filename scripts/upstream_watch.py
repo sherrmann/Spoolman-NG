@@ -54,6 +54,28 @@ def partition_vendored(commits: list[dict]) -> tuple[list[dict], list[dict]]:
     return vendored, other
 
 
+#: Top-level upstream directories holding server code: what the client half of a mixed commit talks to.
+SERVER_DIRS = frozenset({"spoolman", "migrations"})
+
+
+def partition_split(commits: list[dict]) -> tuple[list[dict], list[dict]]:
+    """Split non-vendored commits into (client_v2 + server, everything else).
+
+    A commit that changes `client_v2` and the server together is the one a subtree pull
+    ports by half: the pull brings the client change, which then calls an endpoint, parameter
+    or field the fork's backend does not have. That happened to catalogue search (ed758a11),
+    the Color type filter (29f0f362) and "Show filaments with no spools" (33ad8d71), each
+    found only after the client had shipped calling a backend that ignored it. Listing these
+    on their own makes the server half a decision of its own rather than a line lost among
+    the ordinary ports.
+    """
+    split, other = [], []
+    for commit in commits:
+        dirs = set(commit["dirs"])
+        (split if VENDORED_SUBTREE in dirs and dirs & SERVER_DIRS else other).append(commit)
+    return split, other
+
+
 def render_watch_issue(commits: list[dict], issues: list[dict], prs: list[dict]) -> str | None:
     """Render the weekly watch issue body, or None when there is nothing to report."""
     if not (commits or issues or prs):
@@ -65,6 +87,20 @@ def render_watch_issue(commits: list[dict], issues: list[dict], prs: list[dict])
         "",
     ]
     vendored, commits = partition_vendored(commits)
+    split, commits = partition_split(commits)
+    if split:
+        out += [
+            f"### New upstream commits spanning `{VENDORED_SUBTREE}` and the server ({len(split)})",
+            "",
+            f"The next subtree pull brings the `{VENDORED_SUBTREE}` half of each of these automatically. "
+            "Port the server half with or before that pull, or the Svelte client ships calling an "
+            "endpoint, parameter or field this backend does not have.",
+            "",
+        ]
+        for c in split:
+            server = ", ".join(f"`{_sanitize(d)}`" for d in c["dirs"] if d != VENDORED_SUBTREE)
+            out.append(f"- [ ] `{c['sha'][:9]}` `{_sanitize(c['subject'])}` ({server}) — port server half / skip?")
+        out.append("")
     if commits:
         out += [f"### New upstream commits ({len(commits)})", ""]
         for c in commits:

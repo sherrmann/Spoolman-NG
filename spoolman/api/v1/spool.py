@@ -931,6 +931,19 @@ async def delete(
     return Message(message="Success!")
 
 
+async def _replay_after_lost_race(db: AsyncSession, spool_id: int, response: Response) -> Spool:
+    """Answer as a replay when another request committed this idempotency key first (#60).
+
+    Rolling back expires the spool this session already loaded, and get_by_id would hand that same
+    instance back; serialising it then tries to lazy-load in sync code and raises MissingGreenlet.
+    Expunging first makes get_by_id load the spool afresh, with what the other request committed.
+    """
+    await db.rollback()
+    db.expunge_all()
+    response.headers["Idempotency-Replayed"] = "true"
+    return Spool.from_db(await spool.get_by_id(db, spool_id))
+
+
 @router.put(
     "/{spool_id}/use",
     name="Use spool filament",
@@ -996,9 +1009,7 @@ async def use(  # noqa: ANN201
             )
     except IntegrityError:
         # A concurrent request applied this key first; treat as a replay rather than double-count.
-        await db.rollback()
-        response.headers["Idempotency-Replayed"] = "true"
-        return Spool.from_db(await spool.get_by_id(db, spool_id))
+        return await _replay_after_lost_race(db, spool_id, response)
 
     logger.info(
         "Spool #%s use: requested weight=%s length=%s → used_weight=%sg",
@@ -1050,9 +1061,7 @@ async def measure(  # noqa: ANN201
             idempotency_key=idempotency_key,
         )
     except IntegrityError:
-        await db.rollback()
-        response.headers["Idempotency-Replayed"] = "true"
-        return Spool.from_db(await spool.get_by_id(db, spool_id))
+        return await _replay_after_lost_race(db, spool_id, response)
     except SpoolMeasureError as e:
         logger.exception("Failed to update spool measurement.")
         return JSONResponse(

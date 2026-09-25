@@ -75,6 +75,34 @@ describe('rememberedViewHref', () => {
 	});
 });
 
+// Spoolman NG fork addition: the page size is remembered with the grouping and
+// sort (upstream issues 1145, 1154).
+describe('rememberedViewHref with a remembered page size', () => {
+	const WITH_SIZE = (size: number) => `{"group":"filament","sort":"last_used","asc":false,"size":${size}}`;
+
+	it('restores a page size remembered under the shipped layout', async () => {
+		expect(await hrefFor(WITH_SIZE(50), '')).toBe('/?size=50');
+	});
+
+	it('restores it beside a remembered grouping', async () => {
+		expect(await hrefFor('{"group":"location","sort":"remaining_weight","asc":true,"size":100}', '')).toBe(
+			'/?group=location&sort=remaining_weight&dir=asc&size=100'
+		);
+	});
+
+	it('starts the page count over, since page 3 of 20 is not page 3 of 50', async () => {
+		expect(await hrefFor(WITH_SIZE(50), '?page=3')).toBe('/?size=50');
+	});
+
+	it('leaves a URL that names its own page size alone', async () => {
+		expect(await hrefFor(WITH_SIZE(50), '?size=10')).toBeNull();
+	});
+
+	it('has nothing to do when the remembered size is the shipped one', async () => {
+		expect(await hrefFor(WITH_SIZE(20), '')).toBeNull();
+	});
+});
+
 describe('parseLibraryState', () => {
 	it('reads the view from the URL alone, never from the stored preference', async () => {
 		// The load function's purity is what SvelteKit's per-URL caching rests on:

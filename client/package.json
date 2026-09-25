@@ -74,7 +74,10 @@
     "vitest": "^4.1.9"
   },
   "overrides": {
-    "path-to-regexp@>=8.0.0 <8.4.0": "8.4.2"
+    "path-to-regexp@>=8.0.0 <8.4.0": "8.4.2",
+    "typed-rest-client": {
+      "qs": "6.16.0"
+    }
   },
   "scripts": {
     "dev": "refine dev",

@@ -13,7 +13,8 @@ describe('parseStoredView', () => {
 			group: 'location',
 			sortKey: 'name',
 			sortAsc: true,
-			showEmpty: false
+			showEmpty: false,
+			pageSize: null
 		});
 	});
 
@@ -22,7 +23,8 @@ describe('parseStoredView', () => {
 			group: 'filament',
 			sortKey: 'name',
 			sortAsc: true,
-			showEmpty: true
+			showEmpty: true,
+			pageSize: null
 		});
 	});
 
@@ -54,7 +56,19 @@ describe('parseStoredView', () => {
 			group: 'colour',
 			sortKey: 'name',
 			sortAsc: false,
-			showEmpty: false
+			showEmpty: false,
+			pageSize: null
 		});
+	});
+
+	it('reads back a remembered page size, and ignores one it cannot use', () => {
+		// Spoolman NG fork addition (upstream issues 1145, 1154).
+		const view = (size: string) =>
+			parseStoredView(`{"group":"filament","sort":"name","asc":true,"size":${size}}`);
+		expect(view('50')?.pageSize).toBe(50);
+		// A bad size costs the size only, never the grouping stored beside it.
+		for (const bad of ['0', '-10', '2.5', '"50"', 'null']) {
+			expect(view(bad)).toMatchObject({ group: 'filament', pageSize: null });
+		}
 	});
 });

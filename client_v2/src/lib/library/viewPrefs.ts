@@ -22,6 +22,10 @@
 // preference. Showing filaments you own no spools of cannot produce that
 // confusion -- restoring it can only put more on screen, never less -- so it is
 // remembered while the hiding toggles still are not.
+//
+// Spoolman NG fork addition: the page size is remembered too (upstream issues 1145
+// and 1154). Like the grouping it only changes how much is on screen at once, never
+// what is left out.
 
 const KEY = 'spoolman-v2-library-view';
 
@@ -35,6 +39,8 @@ export interface StoredView {
 	sortKey: string;
 	sortAsc: boolean;
 	showEmpty: boolean;
+	/** Spoolman NG fork addition. Null when the entry predates it, or holds no usable size. */
+	pageSize: number | null;
 }
 
 /** Rebuild a stored view from its JSON, or null if there isn't a usable one. */
@@ -43,7 +49,7 @@ export function parseStoredView(raw: string | null): StoredView | null {
 	try {
 		const parsed: unknown = JSON.parse(raw);
 		if (typeof parsed !== 'object' || parsed === null) return null;
-		const { group, sort, asc, empty } = parsed as Record<string, unknown>;
+		const { group, sort, asc, empty, size } = parsed as Record<string, unknown>;
 		if (typeof group !== 'string' || typeof sort !== 'string' || typeof asc !== 'boolean') {
 			return null;
 		}
@@ -51,7 +57,9 @@ export function parseStoredView(raw: string | null): StoredView | null {
 		// build simply has no such field. Treating that as "off" keeps those
 		// entries valid; rejecting them would throw away a grouping the user
 		// picked long ago the first time they loaded a new version.
-		return { group, sortKey: sort, sortAsc: asc, showEmpty: empty === true };
+		// Spoolman NG fork addition: `size` is newer still, so it gets the same leniency.
+		const pageSize = typeof size === 'number' && Number.isInteger(size) && size > 0 ? size : null;
+		return { group, sortKey: sort, sortAsc: asc, showEmpty: empty === true, pageSize };
 	} catch {
 		// Corrupt entry: the shipped view is no worse than what a first-time
 		// visitor gets.
@@ -80,7 +88,8 @@ export function rememberView(view: StoredView): void {
 		prev.group === view.group &&
 		prev.sortKey === view.sortKey &&
 		prev.sortAsc === view.sortAsc &&
-		prev.showEmpty === view.showEmpty
+		prev.showEmpty === view.showEmpty &&
+		prev.pageSize === view.pageSize
 	) {
 		// Selecting a spool or turning a page navigates too; only the changes that
 		// actually move the view are worth a synchronous localStorage write.
@@ -109,7 +118,8 @@ function write(view: StoredView): void {
 				group: view.group,
 				sort: view.sortKey,
 				asc: view.sortAsc,
-				empty: view.showEmpty
+				empty: view.showEmpty,
+				size: view.pageSize
 			})
 		);
 	} catch {

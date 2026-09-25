@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import ForeignKey, Integer, LargeBinary, String, Text
+from sqlalchemy import ForeignKey, Index, Integer, LargeBinary, String, Text
 from sqlalchemy.dialects.mysql import LONGBLOB
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -259,6 +259,13 @@ class SpoolUsageEvent(Base):
     """
 
     __tablename__ = "spool_usage_event"
+    # Declared here as well as in migration e2258ccc175e, so a schema built from the models (the test
+    # suite's create_all) has the uniqueness guard idempotency relies on, and autogenerate does not
+    # propose dropping it.
+    __table_args__ = (
+        Index("ix_spool_usage_event_spool_time", "spool_id", "time"),
+        Index("uq_spool_usage_event_idempotency", "spool_id", "idempotency_key", unique=True),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     spool_id: Mapped[int] = mapped_column(ForeignKey("spool.id", ondelete="CASCADE"), index=True)

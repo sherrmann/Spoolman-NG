@@ -1,3 +1,6 @@
+# GitHub does not run version updates on a fork until they are switched on in the
+# repository's security settings (Dependabot version updates), and this repository
+# is a fork of Donkie/Spoolman. Security updates are a separate switch on the same page.
 version: 2
 updates:
   - package-ecosystem: "pip"
@@ -8,3 +11,20 @@ updates:
     directory: "/client"
     schedule:
       interval: "weekly"
+  # client_v2 is vendored from upstream as a subtree, and upstream bumps its
+  # dependencies itself; those bumps arrive with the next pull. A version-update PR
+  # here would be an edit to a vendored file that conflicts with that pull, so
+  # version updates are off (a limit of 0). Security updates ignore this limit, so
+  # a vulnerable dependency still gets a PR without waiting for upstream.
+  - package-ecosystem: "npm"
+    directory: "/client_v2"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      actions:
+        patterns: ["*"]

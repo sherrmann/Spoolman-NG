@@ -6,12 +6,26 @@ import json
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any
 
+from sqlalchemy import inspect
+
 from spoolman.database import models
 
 if TYPE_CHECKING:
     from _typeshed import SupportsWrite
 
 banned_attrs = {"awaitable_attrs", "metadata", "registry", "spools", "filaments"}
+
+# To-many relationships the flattener knows how to put in a cell. Every other one is left out: a
+# row describes one entity, and a list of related rows written as-is comes out as
+# `[<spoolman.database.models.CalibrationSession object at 0x…>]` in CSV and JSON alike. Leaving
+# them out by default means a relationship added later cannot start doing that unnoticed.
+COLLAPSED_COLLECTIONS = {"extra", "tags"}
+
+
+def _uncollapsed_collections(obj: models.Base) -> set[str]:
+    """Names of `obj`'s to-many relationships that have no rule for becoming a cell."""
+    return {rel.key for rel in inspect(type(obj)).relationships if rel.uselist} - COLLAPSED_COLLECTIONS
+
 
 # A spreadsheet treats a cell starting with any of these as a formula, so a vendor named
 # `=cmd|' /C calc'!A0` executes when the export is opened (CWE-1236). Prefixing with a single
@@ -40,9 +54,10 @@ def escape_csv_value(value: Any) -> Any:  # noqa: ANN401
 async def flatten_sqlalchemy_object(obj: models.Base, parent_key: str = "", sep: str = ".") -> dict[str, Any]:
     """Recursively flattens a SQLAlchemy object into a dictionary with dot-separated keys."""
     fields = {}
+    skipped = banned_attrs | _uncollapsed_collections(obj)
     for attr in dir(obj):
         # Check if the attribute is a column or a relationship
-        if not attr.startswith("_") and attr not in banned_attrs:
+        if not attr.startswith("_") and attr not in skipped:
             value = await getattr(obj.awaitable_attrs, attr)
 
             if attr == "extra":

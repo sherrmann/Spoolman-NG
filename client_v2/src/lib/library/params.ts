@@ -48,7 +48,8 @@ const ENTITY_KINDS: EntityKind[] = ['spool', 'filament', 'vendor'];
  *  holds. A URL naming none of them is the one that defers to the remembered
  *  view; naming any of them describes a view of its own, which is taken whole so
  *  a stored grouping never gets spliced onto a link's sort. */
-const VIEW_PARAMS = ['group', 'sort', 'dir', 'empty'];
+// Spoolman NG fork addition: `size`, now that the page size is remembered too.
+const VIEW_PARAMS = ['group', 'sort', 'dir', 'empty', 'size'];
 
 const DEFAULTS = {
 	group: 'filament' as GroupMode,
@@ -182,7 +183,8 @@ export function rememberedViewHref(url: URL): string | null {
 		group === DEFAULTS.group &&
 		stored.sortKey === DEFAULTS.sortKey &&
 		stored.sortAsc === DEFAULTS.sortAsc &&
-		stored.showEmpty === DEFAULTS.showEmpty
+		stored.showEmpty === DEFAULTS.showEmpty &&
+		(stored.pageSize ?? DEFAULTS.pageSize) === DEFAULTS.pageSize
 	) {
 		return null;
 	}
@@ -190,12 +192,17 @@ export function rememberedViewHref(url: URL): string | null {
 	// Everything the URL *does* say (a selection, filters, archived spools) is
 	// kept; only the layout comes from the preference.
 	const state = parseLibraryState(url.searchParams);
+	// Spoolman NG fork addition: the remembered page size. A page number counted in
+	// pages of another size points at different spools, so it starts over.
+	const pageSize = stored.pageSize ?? state.pageSize;
 	const qs = serializeState({
 		...state,
 		group,
 		sortKey: stored.sortKey,
 		sortAsc: stored.sortAsc,
-		showEmpty: stored.showEmpty
+		showEmpty: stored.showEmpty,
+		pageSize,
+		page: pageSize === state.pageSize ? state.page : DEFAULTS.page
 	});
 	return `${url.pathname}?${qs}`;
 }
@@ -217,7 +224,8 @@ function navigate(next: LibraryState, replace = false): void {
 		group: next.group,
 		sortKey: next.sortKey,
 		sortAsc: next.sortAsc,
-		showEmpty: next.showEmpty
+		showEmpty: next.showEmpty,
+		pageSize: next.pageSize
 	});
 
 	const qs = serializeState(next);
