@@ -7,6 +7,7 @@
 - **Added: the Svelte library remembers its page size** (upstream issues 1145 and 1154) — the number of rows per page is now kept with the grouping and sort the library already remembered, so leaving the library and coming back no longer resets it to 20. A link that names its own page size still opens at that size.
 - **Added: the Svelte library can sort spools by ID** (upstream issue 1154) — the number printed on a spool's label. It sorts lowest first and, like the other per-spool sorts, shows the flat list.
 - **Fixed: a sort that named the same field twice used the second direction** — `sort=id:desc,id:asc` returned spools in ascending order. The first mention now decides, as it does in SQL. The Svelte client always adds `id:asc` as a tie-breaker, so without this its new ID sort could not go descending.
+- **Changed: the weekly upstream watch lists commits that change the Svelte client and the server together under their own heading** — a subtree pull brings only the client half of such a commit, which is how the catalogue search, the Color type filter and "Show filaments with no spools" shipped calling server features this fork did not have. The subtree pull procedure gains the same check.
 
 ## [2026.9.1] — 2026-09-25
 

@@ -47,7 +47,19 @@ git cat-file -t <recorded split sha>
 
 # Three-way merge into the prefix, leaving conflicts in the index and working tree:
 git merge-recursive --subtree=client_v2 <recorded split sha> -- HEAD upstream-client-v2
+
+# The commits whose client half this pull brings but whose server half it does not. Each one
+# needs its spoolman/ or migrations/ change ported in the same PR, or the client ships calling
+# an endpoint, parameter or field this backend lacks (#443, #444). <last synced upstream commit>
+# is the upstream commit named in the last pull's PR, not the split sha above.
+git log --format=%H <last synced upstream commit>..upstream/master -- client_v2 |
+  while read -r c; do
+    git show --pretty=format: --name-only "$c" | grep -qE '^(spoolman|migrations)/' &&
+      git log -1 --format='%h %s' "$c"
+  done
 ```
+
+The weekly `upstream-watch` issue lists the same commits under their own heading as they land.
 
 Resolve any conflict keeping both sides (the Tier 1 and Tier 2 tables above say what the fork
 side is), then commit with the two trailers so the next pull can find its base:

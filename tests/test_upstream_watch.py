@@ -10,7 +10,7 @@ import subprocess
 
 import pytest
 import upstream_watch
-from upstream_watch import filter_created_after, partition_vendored, render_watch_issue
+from upstream_watch import filter_created_after, partition_split, partition_vendored, render_watch_issue
 
 
 def test_render_empty_is_none() -> None:
@@ -128,3 +128,44 @@ def test_render_omits_the_client_v2_section_when_nothing_touched_it() -> None:
 
 def test_render_is_still_none_when_only_vendored_commits_would_be_empty() -> None:
     assert render_watch_issue([], [], []) is None
+
+
+def test_partition_split_picks_out_commits_spanning_client_v2_and_the_server() -> None:
+    """The subtree pull brings the client half of these; the server half has to be ported by hand."""
+    api = {"sha": "a" * 40, "subject": "search endpoint", "dirs": ["client_v2", "spoolman", "tests"]}
+    migration = {"sha": "b" * 40, "subject": "new column", "dirs": ["client_v2", "migrations"]}
+    specs = {"sha": "c" * 40, "subject": "client and its specs", "dirs": ["client_v2", "tests_frontend_v2"]}
+    backend = {"sha": "d" * 40, "subject": "Fix api", "dirs": ["spoolman"]}
+
+    split, other = partition_split([api, migration, specs, backend])
+
+    assert split == [api, migration]
+    # No server code on the other side: nothing a pull could leave dangling.
+    assert other == [specs, backend]
+
+
+def test_render_lists_split_commits_first_under_their_own_heading() -> None:
+    commits = [
+        {"sha": "b" * 40, "subject": "Fix api", "dirs": ["spoolman"]},
+        {"sha": "a" * 40, "subject": "Paged search", "dirs": ["client_v2", "spoolman", "tests"]},
+        {"sha": "c" * 40, "subject": "client_v2: tweak", "dirs": ["client_v2"]},
+    ]
+    body = render_watch_issue(commits, [], [])
+    assert body is not None
+
+    heading = "### New upstream commits spanning `client_v2` and the server (1)"
+    assert heading in body
+    assert body.index(heading) < body.index("### New upstream commits (1)")
+    # Listed with the directories left to port, not the half the pull brings.
+    assert f"- [ ] `{'a' * 9}` `Paged search` (`spoolman`, `tests`) \u2014 port server half / skip?" in body
+    assert "### New upstream `client_v2` commits (1)" in body
+
+
+def test_render_sanitizes_split_commits_too() -> None:
+    hostile = "Fix `x` @someuser see Donkie/Spoolman#5"
+    commits = [{"sha": "e" * 40, "subject": hostile, "dirs": ["client_v2", "spoolman"]}]
+    body = render_watch_issue(commits, [], [])
+    assert body is not None
+    stripped = re.sub(r"`[^`]*`", "", body)
+    assert "@someuser" not in stripped
+    assert "Donkie/Spoolman#" not in stripped
