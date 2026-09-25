@@ -1,6 +1,6 @@
 # Library table parity in the Svelte client (#412)
 
-**Status:** design proposal, no code. **Date:** 2026-09-07. **Fork:** `client_v2` subtree at
+**Status:** step 1 (selection, bulk edit, bulk archive) built; steps 2 to 5 still proposals. **Date:** 2026-09-07. **Fork:** `client_v2` subtree at
 upstream `42721c7` (2026-08-27); upstream HEAD `81636f25` (2026-09-04).
 
 Issue #412 groups four things the frozen React client does and the Svelte library cannot:

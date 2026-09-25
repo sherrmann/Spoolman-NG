@@ -2,7 +2,8 @@
 	import { tick, untrack } from 'svelte';
 	import GroupHeader from './GroupHeader.svelte';
 	import Plus from '@lucide/svelte/icons/plus';
-	import SpoolRow from './SpoolRow.svelte';
+	// Spoolman NG fork seam (#412): upstream's row plus a selection checkbox.
+	import SpoolRow from '$lib/ng/components/library/SpoolRow.svelte';
 	import UnusedRow from './UnusedRow.svelte';
 	import type { Spool } from '$lib/types';
 	import type { GroupSummary } from '$lib/api/types';

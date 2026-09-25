@@ -540,5 +540,20 @@
 	"auth_users_reset_password_for": "{username} jelszavának visszaállítása",
 	"auth_users_reset_password_help": "Adj meg új jelszót ennek a felhasználónak.",
 	"auth_users_password_reset": "Jelszó frissítve.",
-	"auth_users_delete_confirm": "Törlöd ezt a felhasználót?"
+	"auth_users_delete_confirm": "Törlöd ezt a felhasználót?",
+	"spool_bulk_selected_one": "{count} kijelölve",
+	"spool_bulk_selected_other": "{count} db kijelölve",
+	"spool_bulk_edit_title_one": "{count} tekercs szerkesztése",
+	"spool_bulk_edit_title_other": "{count} db tekercs szerkesztése",
+	"spool_bulk_applied_one": "{count} tekercs frissítve.",
+	"spool_bulk_applied_other": "{count} db tekercs frissítve.",
+	"spool_bulk_applied_partial_one": "{count} tekercs frissítve, {failed} sikertelen.",
+	"spool_bulk_applied_partial_other": "{count} db tekercs frissítve, {failed} sikertelen.",
+	"spool_bulk_archive_confirm_one": "{count} tekercs archiválása?",
+	"spool_bulk_archive_confirm_other": "{count} db tekercs archiválása?",
+	"spool_bulk_unarchive_confirm_one": "{count} tekercs archiválásának visszavonása?",
+	"spool_bulk_unarchive_confirm_other": "{count} db tekercs archiválásának visszavonása?",
+	"spool_bulk_clear_selection": "Kijelölés törlése",
+	"spool_bulk_edit_help": "Jelöld be a mezőt, hogy minden kijelölt tekercsen módosuljon. A be nem jelölt mezők változatlanok maradnak.",
+	"spool_bulk_nothing_selected": "Jelölj be legalább egy módosítandó mezőt."
 }

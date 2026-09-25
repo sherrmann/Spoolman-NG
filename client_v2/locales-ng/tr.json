@@ -540,5 +540,20 @@
 	"auth_users_reset_password_for": "{username} kullanıcısının şifresini sıfırla",
 	"auth_users_reset_password_help": "Bu kullanıcı için yeni bir şifre girin.",
 	"auth_users_password_reset": "Şifre güncellendi.",
-	"auth_users_delete_confirm": "Bu kullanıcı silinsin mi?"
+	"auth_users_delete_confirm": "Bu kullanıcı silinsin mi?",
+	"spool_bulk_selected_one": "{count} seçildi",
+	"spool_bulk_selected_other": "{count} seçildi",
+	"spool_bulk_edit_title_one": "{count} makarayı düzenle",
+	"spool_bulk_edit_title_other": "{count} makarayı düzenle",
+	"spool_bulk_applied_one": "{count} makara güncellendi.",
+	"spool_bulk_applied_other": "{count} makara güncellendi.",
+	"spool_bulk_applied_partial_one": "{count} makara güncellendi, {failed} tanesi başarısız oldu.",
+	"spool_bulk_applied_partial_other": "{count} makara güncellendi, {failed} tanesi başarısız oldu.",
+	"spool_bulk_archive_confirm_one": "{count} makara arşivlensin mi?",
+	"spool_bulk_archive_confirm_other": "{count} makara arşivlensin mi?",
+	"spool_bulk_unarchive_confirm_one": "{count} makara arşivden çıkarılsın mı?",
+	"spool_bulk_unarchive_confirm_other": "{count} makara arşivden çıkarılsın mı?",
+	"spool_bulk_clear_selection": "Seçimi temizle",
+	"spool_bulk_edit_help": "Seçili tüm makaralarda değiştirmek istediğiniz alanları işaretleyin. İşaretlenmeyen alanlar olduğu gibi bırakılır.",
+	"spool_bulk_nothing_selected": "Değiştirmek için en az bir alan işaretleyin."
 }

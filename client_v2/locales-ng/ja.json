@@ -538,5 +538,14 @@
 	"auth_users_reset_password_for": "{username}のパスワードをリセット",
 	"auth_users_reset_password_help": "このユーザーの新しいパスワードを入力してください。",
 	"auth_users_password_reset": "パスワードを更新しました。",
-	"auth_users_delete_confirm": "このユーザーを削除しますか?"
+	"auth_users_delete_confirm": "このユーザーを削除しますか?",
+	"spool_bulk_selected_other": "{count}件選択中",
+	"spool_bulk_edit_title_other": "{count}本のスプールを編集",
+	"spool_bulk_applied_other": "{count}本のスプールを更新しました。",
+	"spool_bulk_applied_partial_other": "{count}本のスプールを更新しました。{failed}本は失敗しました。",
+	"spool_bulk_archive_confirm_other": "{count}本のスプールをアーカイブしますか?",
+	"spool_bulk_unarchive_confirm_other": "{count}本のスプールのアーカイブを解除しますか?",
+	"spool_bulk_clear_selection": "選択を解除",
+	"spool_bulk_edit_help": "変更する項目にチェックを入れると、選択したすべてのスプールに適用されます。チェックのない項目は変更されません。",
+	"spool_bulk_nothing_selected": "変更する項目を少なくとも1つチェックしてください。"
 }

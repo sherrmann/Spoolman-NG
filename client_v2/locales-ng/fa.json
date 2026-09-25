@@ -540,5 +540,20 @@
 	"auth_users_reset_password_for": "بازنشانی رمز عبور {username}",
 	"auth_users_reset_password_help": "رمز عبور جدیدی برای این کاربر وارد کنید.",
 	"auth_users_password_reset": "رمز عبور به‌روزرسانی شد.",
-	"auth_users_delete_confirm": "این کاربر حذف شود؟"
+	"auth_users_delete_confirm": "این کاربر حذف شود؟",
+	"spool_bulk_selected_one": "{count} مورد انتخاب شد",
+	"spool_bulk_selected_other": "{count} مورد انتخاب شد",
+	"spool_bulk_edit_title_one": "ویرایش {count} قرقره",
+	"spool_bulk_edit_title_other": "ویرایش {count} قرقره",
+	"spool_bulk_applied_one": "{count} قرقره به‌روزرسانی شد.",
+	"spool_bulk_applied_other": "{count} قرقره به‌روزرسانی شد.",
+	"spool_bulk_applied_partial_one": "{count} قرقره به‌روزرسانی شد، {failed} مورد ناموفق بود.",
+	"spool_bulk_applied_partial_other": "{count} قرقره به‌روزرسانی شد، {failed} مورد ناموفق بود.",
+	"spool_bulk_archive_confirm_one": "{count} قرقره آرشیو شود؟",
+	"spool_bulk_archive_confirm_other": "{count} قرقره آرشیو شوند؟",
+	"spool_bulk_unarchive_confirm_one": "{count} قرقره از آرشیو خارج شود؟",
+	"spool_bulk_unarchive_confirm_other": "{count} قرقره از آرشیو خارج شوند؟",
+	"spool_bulk_clear_selection": "پاک کردن انتخاب",
+	"spool_bulk_edit_help": "هر فیلدی را که می‌خواهید در همه قرقره‌های انتخاب‌شده تغییر کند علامت بزنید. فیلدهای علامت‌نخورده دست‌نخورده می‌مانند.",
+	"spool_bulk_nothing_selected": "دست‌کم یک فیلد را برای تغییر علامت بزنید."
 }

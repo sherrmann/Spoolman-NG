@@ -538,5 +538,14 @@
 	"auth_users_reset_password_for": "重設 {username} 的密碼",
 	"auth_users_reset_password_help": "請輸入此使用者的新密碼。",
 	"auth_users_password_reset": "密碼已更新。",
-	"auth_users_delete_confirm": "要刪除此使用者嗎？"
+	"auth_users_delete_confirm": "要刪除此使用者嗎？",
+	"spool_bulk_selected_other": "已選擇 {count} 項",
+	"spool_bulk_edit_title_other": "編輯 {count} 個料盤",
+	"spool_bulk_applied_other": "已更新 {count} 個料盤。",
+	"spool_bulk_applied_partial_other": "已更新 {count} 個料盤，{failed} 個失敗。",
+	"spool_bulk_archive_confirm_other": "要封存 {count} 個料盤嗎？",
+	"spool_bulk_unarchive_confirm_other": "要取消封存 {count} 個料盤嗎？",
+	"spool_bulk_clear_selection": "清除選擇",
+	"spool_bulk_edit_help": "勾選欄位即可在每個選取的料盤上變更該欄位。未勾選的欄位維持不變。",
+	"spool_bulk_nothing_selected": "請至少勾選一個要變更的欄位。"
 }

@@ -538,5 +538,14 @@
 	"auth_users_reset_password_for": "รีเซ็ตรหัสผ่านของ {username}",
 	"auth_users_reset_password_help": "กรอกรหัสผ่านใหม่สำหรับผู้ใช้นี้",
 	"auth_users_password_reset": "อัปเดตรหัสผ่านแล้ว",
-	"auth_users_delete_confirm": "ลบผู้ใช้นี้หรือไม่?"
+	"auth_users_delete_confirm": "ลบผู้ใช้นี้หรือไม่?",
+	"spool_bulk_selected_other": "เลือกแล้ว {count} รายการ",
+	"spool_bulk_edit_title_other": "แก้ไขม้วนพลาสติก {count} ม้วน",
+	"spool_bulk_applied_other": "อัปเดตม้วนพลาสติก {count} ม้วนแล้ว",
+	"spool_bulk_applied_partial_other": "อัปเดตม้วนพลาสติก {count} ม้วนแล้ว ล้มเหลว {failed} ม้วน",
+	"spool_bulk_archive_confirm_other": "เก็บถาวรม้วนพลาสติก {count} ม้วนหรือไม่?",
+	"spool_bulk_unarchive_confirm_other": "ยกเลิกเก็บถาวรม้วนพลาสติก {count} ม้วนหรือไม่?",
+	"spool_bulk_clear_selection": "ล้างการเลือก",
+	"spool_bulk_edit_help": "ติ๊กเลือกฟิลด์เพื่อเปลี่ยนค่าในม้วนพลาสติกที่เลือกทุกม้วน ฟิลด์ที่ไม่ได้ติ๊กจะไม่ถูกเปลี่ยนแปลง",
+	"spool_bulk_nothing_selected": "ติ๊กเลือกฟิลด์ที่ต้องการเปลี่ยนอย่างน้อยหนึ่งฟิลด์"
 }

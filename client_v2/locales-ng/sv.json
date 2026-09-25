@@ -540,5 +540,20 @@
 	"auth_users_reset_password_for": "Återställ lösenord för {username}",
 	"auth_users_reset_password_help": "Ange ett nytt lösenord för den här användaren.",
 	"auth_users_password_reset": "Lösenordet har uppdaterats.",
-	"auth_users_delete_confirm": "Ta bort den här användaren?"
+	"auth_users_delete_confirm": "Ta bort den här användaren?",
+	"spool_bulk_selected_one": "{count} vald",
+	"spool_bulk_selected_other": "{count} valda",
+	"spool_bulk_edit_title_one": "Ändra {count} spole",
+	"spool_bulk_edit_title_other": "Ändra {count} spolar",
+	"spool_bulk_applied_one": "Uppdaterade {count} spole.",
+	"spool_bulk_applied_other": "Uppdaterade {count} spolar.",
+	"spool_bulk_applied_partial_one": "Uppdaterade {count} spole, {failed} misslyckades.",
+	"spool_bulk_applied_partial_other": "Uppdaterade {count} spolar, {failed} misslyckades.",
+	"spool_bulk_archive_confirm_one": "Arkivera {count} spole?",
+	"spool_bulk_archive_confirm_other": "Arkivera {count} spolar?",
+	"spool_bulk_unarchive_confirm_one": "Avarkivera {count} spole?",
+	"spool_bulk_unarchive_confirm_other": "Avarkivera {count} spolar?",
+	"spool_bulk_clear_selection": "Rensa markering",
+	"spool_bulk_edit_help": "Bocka i ett fält för att ändra det på alla valda spolar. Fält som inte är ibockade lämnas oförändrade.",
+	"spool_bulk_nothing_selected": "Bocka i minst ett fält att ändra."
 }
