@@ -6,6 +6,7 @@ actually produces (kg-as-grams, "1.75 mm" strings, #-prefixed hex); the matcher 
 its pure scoring function and an injected catalog — no DB, no network, no LLM anywhere.
 """
 
+import asyncio
 import json
 
 import pytest
@@ -584,3 +585,29 @@ async def test_build_matches_keeps_fuzzy_order_and_makes_no_http_call_with_an_in
 
     assert result == {"library": fuzzy_library, "catalog": []}
     assert route.call_count == 0
+
+
+async def test_build_matches_propagates_cancellation(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The catch-all around the rerank must not swallow a cancelled scan."""
+    monkeypatch.setenv(decision.ENV_BASE_URL, "https://api.typesafe.ai")
+    candidate = _library_candidate(1, match_percent=90)
+
+    async def fake_library(_db: object, _extraction: dict) -> list[dict]:
+        return [candidate]
+
+    started = asyncio.Event()
+
+    async def hanging_ask(*_args: object, **_kwargs: object) -> dict:
+        started.set()
+        await asyncio.sleep(10)
+        return {}
+
+    monkeypatch.setattr(spoolintake, "match_library", fake_library)
+    monkeypatch.setattr(spoolintake, "match_catalog", lambda _extraction: [])
+    monkeypatch.setattr(decision, "ask_choices", hanging_ask)
+
+    task = asyncio.create_task(spoolintake.build_matches(None, _FULL_EXTRACTION))
+    await started.wait()
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task

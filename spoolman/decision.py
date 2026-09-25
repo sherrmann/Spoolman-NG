@@ -90,7 +90,7 @@ def resolve_config() -> DecisionConfig | None:
         return None
     api_key = _env(ENV_API_KEY)
     if api_key is not None and not api_key.isascii():
-        # An HTTP header cannot carry it, so every request would fail; say so once here instead.
+        # An HTTP header cannot carry it, so every request would fail; say why here instead.
         logger.warning("Ignoring the decision endpoint: %s contains non-ASCII characters.", ENV_API_KEY)
         return None
     return DecisionConfig(base_url=base_url, model=_env(ENV_MODEL) or DEFAULT_MODEL, api_key=api_key)

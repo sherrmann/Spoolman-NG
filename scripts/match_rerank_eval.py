@@ -167,11 +167,12 @@ def _print_report(results: list[CaseResult]) -> float:
         # The product keeps the fuzzy order on a "none" answer, so the review screen preselects a
         # wrong candidate whenever the shortlist is non-empty, reranked or not. What reranking
         # adds is the model's "none", which a later UI could show as a warning.
-        preselected = sum(r.baseline_top1 is not None for r in null_cases)
-        said_none = [r for r in null_cases if r.answered_none]
+        # A case whose shortlist is empty asks the model nothing, so it cannot answer "none".
+        asked = [r for r in null_cases if r.baseline_top1 is not None]
+        said_none = [r for r in asked if r.answered_none]
         print(f"Cases with no right candidate ({len(null_cases)}):")
-        print(f"  a wrong candidate is preselected  {preselected}/{len(null_cases)}")
-        print(f"  the model answered 'none'         {len(said_none)}/{len(null_cases)}")
+        print(f"  a wrong candidate is preselected  {len(asked)}/{len(null_cases)}")
+        print(f"  the model answered 'none'         {len(said_none)}/{len(asked)} of those")
         print()
 
     wrongly_none = [r for r in ok if r.expected is not None and r.expected_shortlisted and r.answered_none]
@@ -182,7 +183,7 @@ def _print_report(results: list[CaseResult]) -> float:
         print()
 
     if errored:
-        print(f"Skipped {len(errored)} case(s) after a decision-endpoint error:")
+        print(f"{len(errored)} case(s) failed with a decision-endpoint error:")
         for r in errored:
             print(f"  {r.case_id}: {r.error}")
 
