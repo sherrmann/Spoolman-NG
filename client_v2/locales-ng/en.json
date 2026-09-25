@@ -633,5 +633,14 @@
 	"filament_pattern_options_marble": "Marble",
 	"filament_pattern_options_sparkle": "Sparkle",
 	"yes": "Yes",
-	"no": "No"
+	"no": "No",
+	"filament_fields_image": "Photo",
+	"filament_image_upload": "Upload photo",
+	"filament_image_replace": "Replace photo",
+	"filament_image_remove": "Remove photo",
+	"filament_image_uploaded": "Photo saved",
+	"filament_image_upload_error": "Could not save the photo",
+	"filament_image_removed": "Photo removed",
+	"filament_image_remove_error": "Could not remove the photo",
+	"filament_image_prepare_error": "Could not read that image file"
 }

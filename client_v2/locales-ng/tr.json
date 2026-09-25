@@ -582,5 +582,14 @@
 	"filament_pattern_options_marble": "Mermer",
 	"filament_pattern_options_sparkle": "Simli",
 	"yes": "Evet",
-	"no": "Hayır"
+	"no": "Hayır",
+	"filament_fields_image": "Fotoğraf",
+	"filament_image_upload": "Fotoğraf yükle",
+	"filament_image_replace": "Fotoğrafı değiştir",
+	"filament_image_remove": "Fotoğrafı kaldır",
+	"filament_image_uploaded": "Fotoğraf kaydedildi",
+	"filament_image_upload_error": "Fotoğraf kaydedilemedi",
+	"filament_image_removed": "Fotoğraf kaldırıldı",
+	"filament_image_remove_error": "Fotoğraf kaldırılamadı",
+	"filament_image_prepare_error": "Bu görüntü dosyası okunamadı"
 }

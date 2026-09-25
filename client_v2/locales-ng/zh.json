@@ -572,5 +572,14 @@
 	"filament_pattern_options_marble": "大理石纹",
 	"filament_pattern_options_sparkle": "闪粉",
 	"yes": "是",
-	"no": "否"
+	"no": "否",
+	"filament_fields_image": "照片",
+	"filament_image_upload": "上传照片",
+	"filament_image_replace": "更换照片",
+	"filament_image_remove": "移除照片",
+	"filament_image_uploaded": "照片已保存",
+	"filament_image_upload_error": "无法保存照片",
+	"filament_image_removed": "照片已移除",
+	"filament_image_remove_error": "无法移除照片",
+	"filament_image_prepare_error": "无法读取该图片文件"
 }

@@ -582,5 +582,14 @@
 	"filament_pattern_options_marble": "Márvány",
 	"filament_pattern_options_sparkle": "Csillámos",
 	"yes": "Igen",
-	"no": "Nem"
+	"no": "Nem",
+	"filament_fields_image": "Fénykép",
+	"filament_image_upload": "Fénykép feltöltése",
+	"filament_image_replace": "Fénykép cseréje",
+	"filament_image_remove": "Fénykép eltávolítása",
+	"filament_image_uploaded": "Fénykép elmentve",
+	"filament_image_upload_error": "Nem sikerült elmenteni a fényképet",
+	"filament_image_removed": "Fénykép eltávolítva",
+	"filament_image_remove_error": "Nem sikerült eltávolítani a fényképet",
+	"filament_image_prepare_error": "Nem sikerült beolvasni a képfájlt"
 }

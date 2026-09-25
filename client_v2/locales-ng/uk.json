@@ -592,5 +592,14 @@
 	"filament_pattern_options_marble": "Мармур",
 	"filament_pattern_options_sparkle": "Блискітки",
 	"yes": "Так",
-	"no": "Ні"
+	"no": "Ні",
+	"filament_fields_image": "Фото",
+	"filament_image_upload": "Завантажити фото",
+	"filament_image_replace": "Замінити фото",
+	"filament_image_remove": "Видалити фото",
+	"filament_image_uploaded": "Фото збережено",
+	"filament_image_upload_error": "Не вдалося зберегти фото",
+	"filament_image_removed": "Фото видалено",
+	"filament_image_remove_error": "Не вдалося видалити фото",
+	"filament_image_prepare_error": "Не вдалося прочитати цей файл зображення"
 }

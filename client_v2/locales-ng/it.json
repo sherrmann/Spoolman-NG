@@ -592,5 +592,14 @@
 	"filament_pattern_options_marble": "Marmorizzato",
 	"filament_pattern_options_sparkle": "Glitter",
 	"yes": "Sì",
-	"no": "No"
+	"no": "No",
+	"filament_fields_image": "Foto",
+	"filament_image_upload": "Carica foto",
+	"filament_image_replace": "Sostituisci foto",
+	"filament_image_remove": "Rimuovi foto",
+	"filament_image_uploaded": "Foto salvata",
+	"filament_image_upload_error": "Impossibile salvare la foto",
+	"filament_image_removed": "Foto rimossa",
+	"filament_image_remove_error": "Impossibile rimuovere la foto",
+	"filament_image_prepare_error": "Impossibile leggere il file immagine"
 }

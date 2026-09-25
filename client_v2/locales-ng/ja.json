@@ -572,5 +572,14 @@
 	"filament_pattern_options_marble": "マーブル",
 	"filament_pattern_options_sparkle": "ラメ",
 	"yes": "はい",
-	"no": "いいえ"
+	"no": "いいえ",
+	"filament_fields_image": "写真",
+	"filament_image_upload": "写真をアップロード",
+	"filament_image_replace": "写真を差し替え",
+	"filament_image_remove": "写真を削除",
+	"filament_image_uploaded": "写真を保存しました",
+	"filament_image_upload_error": "写真を保存できませんでした",
+	"filament_image_removed": "写真を削除しました",
+	"filament_image_remove_error": "写真を削除できませんでした",
+	"filament_image_prepare_error": "その画像ファイルを読み込めませんでした"
 }

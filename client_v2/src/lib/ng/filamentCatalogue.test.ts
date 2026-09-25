@@ -21,7 +21,8 @@ describe('mapFilamentNg', () => {
 			finish: 'matte',
 			pattern: 'sparkle',
 			translucent: true,
-			glow: false
+			glow: false,
+			hasImage: false
 		});
 	});
 
@@ -31,6 +32,15 @@ describe('mapFilamentNg', () => {
 			mapFilamentNg({ spool_type: 'wood', finish: 'satin', pattern: 1, translucent: 'yes', glow: null })
 		).toEqual(EMPTY_FILAMENT_NG);
 		expect(mapFilamentNg({ translucent: false }).translucent).toBe(false);
+	});
+
+	it('reads whether the filament has a reference photo', () => {
+		expect(mapFilamentNg({ has_image: true }).hasImage).toBe(true);
+		expect(mapFilamentNg({ has_image: null }).hasImage).toBe(false);
+	});
+
+	it('never sends hasImage, which has endpoints of its own', () => {
+		expect(filamentNgPatchToApi({ ng: { hasImage: true } as never })).toEqual({});
 	});
 });
 

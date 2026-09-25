@@ -38,6 +38,8 @@
 	import { ng } from '$lib/ng/i18n';
 	// Spoolman NG fork addition (#415): the SpoolmanDB catalogue fields, in the specs grid below.
 	import FilamentCatalogueFields from '$lib/ng/components/FilamentCatalogueFields.svelte';
+	// Spoolman NG fork addition (#415): the reference photo, under the manufacturer.
+	import FilamentImageSection from '$lib/ng/components/FilamentImageSection.svelte';
 	import * as params from '$lib/library/params';
 	import { pct, weightAuto } from '$lib/utils/format';
 	import { usageLabel } from '$lib/utils/library';
@@ -474,6 +476,7 @@
 				emptyWeightShadowedBy={vendorTareShadowedBy}
 				onchange={() => (changeVendorOpen = true)}
 			/>
+			<FilamentImageSection {filament} />
 		</div>
 	</div>
 </div>
