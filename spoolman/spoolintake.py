@@ -281,6 +281,8 @@ _CONTAINMENT_SCORE = 0.85
 #: The most a word match can add to that floor. It stays below 1.0 so an exact name still wins:
 #: with the material set aside, "PLA - White" and every maker's "White" have the same words.
 _WORD_OVERLAP_BONUS = 0.1
+#: Weight of the character score within a word match, only enough to order equal overlaps.
+_WORD_TIE_BREAK = 0.01
 
 
 def _words(value: str | None, drop: frozenset[str] = frozenset()) -> frozenset[str]:
@@ -307,7 +309,9 @@ def _name_similarity(reading: str | None, candidate: str | None, materials: froz
     reading_words, candidate_words = _words(reading, materials), _words(candidate, materials)
     if reading_words and reading_words <= candidate_words:
         overlap = len(reading_words) / len(candidate_words)
-        return max(score, _CONTAINMENT_SCORE + _WORD_OVERLAP_BONUS * overlap)
+        # The character score breaks ties between equal word overlaps: with the material set aside,
+        # "PLA - Black" and a plain "Black" have the same words for a reading of "PLA Black".
+        return max(score, _CONTAINMENT_SCORE + _WORD_OVERLAP_BONUS * overlap + _WORD_TIE_BREAK * score)
     return score
 
 

@@ -172,8 +172,19 @@ def test_trademark_signs_and_the_material_word_do_not_block_a_word_match() -> No
 
 
 def test_fewer_extra_words_score_higher() -> None:
-    """Every word of "Red" is in both names, but "Red" is the closer match than "Lava Red"."""
-    assert _polymaker("Red", "Red") > _polymaker("Red", "Lava Red")
+    """Both candidates contain every word of the reading; the one with fewer extra words wins."""
+    assert _polymaker("Charcoal Black", "Matte Charcoal Black") > _polymaker(
+        "Charcoal Black",
+        "Panchroma™ Matte (Formerly PolyTerra™) Charcoal Black",
+    )
+
+
+def test_the_material_word_still_counts_towards_the_overlap() -> None:
+    """For a reading of "PLA Black", "PLA - Black" must beat every maker's plain "Black"."""
+    reading = {"vendor": None, "name": "PLA Black", "material": "PLA", "weight_g": None}
+    with_material = score_candidate(reading, vendor="FlashForge", name="PLA - Black", material="PLA", weight_g=1000)
+    plain = score_candidate(reading, vendor="3DJAKE", name="Black", material="PLA", weight_g=1000)
+    assert with_material > plain
 
 
 def test_an_exact_name_beats_a_word_match_once_the_material_is_set_aside() -> None:
