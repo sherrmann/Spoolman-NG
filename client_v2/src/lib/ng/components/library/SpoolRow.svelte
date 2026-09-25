@@ -12,6 +12,7 @@
 	 * The low-stock page solved the same problem the same way.
 	 *
 	 * In gallery mode (#412 step 3) it renders a card instead, which carries its own checkbox.
+	 * In the flat list with columns configured (step 5) it renders the fork's cell row.
 	 */
 	import type { ComponentProps } from 'svelte';
 	import Upstream from '$components/library/SpoolRow.svelte';
@@ -19,6 +20,8 @@
 	import { ng } from '$lib/ng/i18n';
 	import { libraryMode } from '$lib/ng/libraryMode.svelte';
 	import SpoolCard from './SpoolCard.svelte';
+	import SpoolCells from './SpoolCells.svelte';
+	import { columnsView } from '$lib/ng/libraryColumnsView.svelte';
 
 	let props: ComponentProps<typeof Upstream> = $props();
 
@@ -29,6 +32,8 @@
 
 {#if libraryMode.mode === 'gallery'}
 	<SpoolCard vm={props.vm} context={props.context} />
+{:else if columnsView.custom && (props.context ?? 'flat') === 'flat'}
+	<SpoolCells vm={props.vm} />
 {:else if librarySelection.on}
 	<div class="ng-row">
 		<span class="check" style="padding-left:{Math.max(0, (props.indent ?? 14) - 6)}px">

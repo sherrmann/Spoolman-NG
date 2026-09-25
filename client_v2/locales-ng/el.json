@@ -566,5 +566,7 @@
 	"spool_totals_shown_one": "{count} καρούλι εμφανίζεται",
 	"spool_totals_shown_other": "{count} καρούλια εμφανίζονται",
 	"spool_totals_selected_one": "{count} καρούλι έχει επιλεγεί",
-	"spool_totals_selected_other": "{count} καρούλια έχουν επιλεγεί"
+	"spool_totals_selected_other": "{count} καρούλια έχουν επιλεγεί",
+	"buttons_columns": "Στήλες",
+	"buttons_columnsTooltip": "Επιλέξτε, αναδιατάξτε και αποκρύψτε τις στήλες του πίνακα"
 }

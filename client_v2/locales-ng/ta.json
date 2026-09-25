@@ -566,5 +566,7 @@
 	"spool_totals_shown_one": "{count} ச்பூல் காட்டப்படுகிறது",
 	"spool_totals_shown_other": "{count} ச்பூல்கள் காட்டப்படுகின்றன",
 	"spool_totals_selected_one": "{count} ச்பூல் தேர்ந்தெடுக்கப்பட்டது",
-	"spool_totals_selected_other": "{count} ச்பூல்கள் தேர்ந்தெடுக்கப்பட்டன"
+	"spool_totals_selected_other": "{count} ச்பூல்கள் தேர்ந்தெடுக்கப்பட்டன",
+	"buttons_columns": "நெடுவரிசைகள்",
+	"buttons_columnsTooltip": "அட்டவணை நெடுவரிசைகளைத் தேர்ந்தெடுக்கவும், வரிசை மாற்றவும், மறைக்கவும்"
 }

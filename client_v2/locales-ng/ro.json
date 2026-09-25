@@ -576,5 +576,7 @@
 	"spool_totals_shown_other": "{count} de bobine afișate",
 	"spool_totals_selected_one": "{count} bobină selectată",
 	"spool_totals_selected_few": "{count} bobine selectate",
-	"spool_totals_selected_other": "{count} de bobine selectate"
+	"spool_totals_selected_other": "{count} de bobine selectate",
+	"buttons_columns": "Coloane",
+	"buttons_columnsTooltip": "Alege, reordonează și ascunde coloanele tabelului"
 }

@@ -575,5 +575,7 @@
 	"spool_totals_shown_other": "{count} carretéis exibidos",
 	"spool_totals_selected_one": "{count} carretel selecionado",
 	"spool_totals_selected_many": "{count} carretéis selecionados",
-	"spool_totals_selected_other": "{count} carretéis selecionados"
+	"spool_totals_selected_other": "{count} carretéis selecionados",
+	"buttons_columns": "Colunas",
+	"buttons_columnsTooltip": "Escolher, reordenar e ocultar colunas da tabela"
 }

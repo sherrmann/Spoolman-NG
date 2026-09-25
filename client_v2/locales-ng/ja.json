@@ -556,5 +556,7 @@
 	"spool_view_grid_tooltip": "スプールをカラータイルで表示",
 	"spool_view_table_tooltip": "完全なテーブルに戻る",
 	"spool_totals_shown_other": "{count}本のスプールを表示中",
-	"spool_totals_selected_other": "{count}本のスプールを選択中"
+	"spool_totals_selected_other": "{count}本のスプールを選択中",
+	"buttons_columns": "列",
+	"buttons_columnsTooltip": "テーブルの列の選択・並べ替え・非表示"
 }

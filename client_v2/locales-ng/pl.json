@@ -576,5 +576,7 @@
 	"spool_totals_shown_many": "Wyświetlono {count} szpul",
 	"spool_totals_selected_one": "Wybrano {count} szpulę",
 	"spool_totals_selected_few": "Wybrano {count} szpule",
-	"spool_totals_selected_many": "Wybrano {count} szpul"
+	"spool_totals_selected_many": "Wybrano {count} szpul",
+	"buttons_columns": "Kolumny",
+	"buttons_columnsTooltip": "Wybierz, uporządkuj i ukryj kolumny tabeli"
 }

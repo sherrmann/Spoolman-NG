@@ -360,6 +360,14 @@ const KEYS = [
 	// The totals line under the Library (#412 step 4).
 	{ key: 'spool.totals.shown', plural: true },
 	{ key: 'spool.totals.selected', plural: true },
+	// The flat list's column manager (#412 step 5).
+	'buttons.columns',
+	'buttons.columnsTooltip',
+	'spool.columns.progress',
+	'spool.columns.reset',
+	'spool.columns.move_up',
+	'spool.columns.move_down',
+	'spool.columns.resize',
 ];
 
 /** Flatten nested i18next JSON to dotted keys. */

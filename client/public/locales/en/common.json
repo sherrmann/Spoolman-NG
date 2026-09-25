@@ -477,6 +477,13 @@
       "invalid_price": "Enter a price of 0 or more, or leave it empty to use the filament's price.",
       "weigh": "Weigh in"
     },
+    "columns": {
+      "progress": "Fill level",
+      "reset": "Reset columns",
+      "move_up": "Move {{name}} up",
+      "move_down": "Move {{name}} down",
+      "resize": "Resize {{name}}"
+    },
     "weigh": {
       "button": "Weigh Spools",
       "title": "Weigh Spools",

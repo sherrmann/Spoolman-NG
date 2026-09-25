@@ -556,5 +556,7 @@
 	"spool_view_grid_tooltip": "以色块形式浏览料盘",
 	"spool_view_table_tooltip": "返回完整表格",
 	"spool_totals_shown_other": "显示 {count} 个料盘",
-	"spool_totals_selected_other": "已选择 {count} 个料盘"
+	"spool_totals_selected_other": "已选择 {count} 个料盘",
+	"buttons_columns": "列",
+	"buttons_columnsTooltip": "选择、重排和隐藏表格列"
 }

@@ -576,5 +576,7 @@
 	"spool_totals_shown_other": "{count} bobine mostrate",
 	"spool_totals_selected_one": "{count} bobina selezionata",
 	"spool_totals_selected_many": "{count} bobine selezionate",
-	"spool_totals_selected_other": "{count} bobine selezionate"
+	"spool_totals_selected_other": "{count} bobine selezionate",
+	"buttons_columns": "Colonne",
+	"buttons_columnsTooltip": "Scegli, riordina e nascondi le colonne della tabella"
 }

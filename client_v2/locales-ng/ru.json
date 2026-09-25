@@ -576,5 +576,7 @@
 	"spool_totals_shown_many": "{count} катушек показано",
 	"spool_totals_selected_one": "{count} катушка выбрана",
 	"spool_totals_selected_few": "{count} катушки выбрано",
-	"spool_totals_selected_many": "{count} катушек выбрано"
+	"spool_totals_selected_many": "{count} катушек выбрано",
+	"buttons_columns": "Столбцы",
+	"buttons_columnsTooltip": "Выбор, порядок и скрытие столбцов таблицы"
 }

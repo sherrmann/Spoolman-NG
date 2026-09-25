@@ -556,5 +556,7 @@
 	"spool_view_grid_tooltip": "以色塊瀏覽料盤",
 	"spool_view_table_tooltip": "返回完整表格",
 	"spool_totals_shown_other": "顯示 {count} 個料盤",
-	"spool_totals_selected_other": "已選擇 {count} 個料盤"
+	"spool_totals_selected_other": "已選擇 {count} 個料盤",
+	"buttons_columns": "欄位",
+	"buttons_columnsTooltip": "選擇、重新排列及隱藏表格欄位"
 }

@@ -11,6 +11,16 @@
 	import CheckSquare from '@lucide/svelte/icons/square-check';
 	import LayoutGrid from '@lucide/svelte/icons/layout-grid';
 	import { libraryMode } from '$lib/ng/libraryMode.svelte';
+	import ColumnManager from './ColumnManager.svelte';
+	import { page } from '$app/state';
+	import { parseLibraryState } from '$lib/library/params';
+	import { isGroupedMode } from '$lib/api/query';
+
+	// Columns apply to the flat list only: grouped rows let the group choose what to show, and
+	// the gallery has no columns.
+	let flatList = $derived(
+		libraryMode.mode === 'list' && !isGroupedMode(parseLibraryState(page.url.searchParams))
+	);
 	import { librarySelection } from '$lib/ng/librarySelection.svelte';
 	import { ng } from '$lib/ng/i18n';
 
@@ -27,6 +37,9 @@
 	<LayoutGrid size={14} />
 	{ng.spool_view_grid()}
 </button>
+{#if flatList}
+	<ColumnManager />
+{/if}
 <button
 	class="trigger"
 	class:active={librarySelection.on}

@@ -566,5 +566,7 @@
 	"spool_totals_shown_one": "{count} makara gösteriliyor",
 	"spool_totals_shown_other": "{count} makara gösteriliyor",
 	"spool_totals_selected_one": "{count} makara seçildi",
-	"spool_totals_selected_other": "{count} makara seçildi"
+	"spool_totals_selected_other": "{count} makara seçildi",
+	"buttons_columns": "Sütunlar",
+	"buttons_columnsTooltip": "Tablo sütunlarını seçin, yeniden sıralayın ve gizleyin"
 }
