@@ -14,6 +14,7 @@
 	import * as m from '$lib/paraglide/messages';
 	import { ng } from '$lib/ng/i18n';
 	import { spoolSource } from '$lib/api/spoolSource';
+	import { inventory } from '$lib/stores/inventory.svelte';
 	import { HttpError } from '$lib/api/http';
 	import { rowIdentity, type SpoolVM } from '$lib/utils/library';
 	import { weightAuto } from '$lib/utils/format';
@@ -67,6 +68,11 @@
 		return id === null ? null : (byId.get(id) ?? null);
 	});
 	let identity = $derived(current ? rowIdentity(current, 'flat') : null);
+	// The live figure, not the one captured when the spool was ticked: it may have been used or
+	// weighed since, and the reading about to be typed is judged against this number.
+	let remaining = $derived(
+		current ? (inventory.spoolById(current.spool.id)?.remaining ?? current.spool.remaining) : 0
+	);
 	let summary = $derived(weighSummary(weigh.results));
 
 	const MODE_LABEL: Record<AdjustMode, () => string> = {
@@ -164,7 +170,7 @@
 				{#if current.location}<span>{current.location} · </span>{/if}<span
 					>{m['spool.fields.remainingWeight']()}</span
 				>
-				<span class="mono">{weightAuto(current.spool.remaining)}</span>
+				<span class="mono">{weightAuto(remaining)}</span>
 			</span>
 		</div>
 
