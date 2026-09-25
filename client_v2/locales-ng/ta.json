@@ -540,5 +540,20 @@
 	"auth_users_reset_password_for": "{username} இன் கடவுச்சொல்லை மீட்டமை",
 	"auth_users_reset_password_help": "இந்தப் பயனருக்குப் புதிய கடவுச்சொல்லை உள்ளிடவும்.",
 	"auth_users_password_reset": "கடவுச்சொல் புதுப்பிக்கப்பட்டது.",
-	"auth_users_delete_confirm": "இந்தப் பயனரை நீக்கவா?"
+	"auth_users_delete_confirm": "இந்தப் பயனரை நீக்கவா?",
+	"spool_bulk_selected_one": "{count} தேர்ந்தெடுக்கப்பட்டது",
+	"spool_bulk_selected_other": "{count} தேர்ந்தெடுக்கப்பட்டன",
+	"spool_bulk_edit_title_one": "{count} ச்பூலைத் தொகு",
+	"spool_bulk_edit_title_other": "{count} ச்பூல்களைத் தொகு",
+	"spool_bulk_applied_one": "{count} ச்பூல் புதுப்பிக்கப்பட்டது.",
+	"spool_bulk_applied_other": "{count} ச்பூல்கள் புதுப்பிக்கப்பட்டன.",
+	"spool_bulk_applied_partial_one": "{count} ச்பூல் புதுப்பிக்கப்பட்டது, {failed} தோல்வியடைந்தன.",
+	"spool_bulk_applied_partial_other": "{count} ச்பூல்கள் புதுப்பிக்கப்பட்டன, {failed} தோல்வியடைந்தன.",
+	"spool_bulk_archive_confirm_one": "{count} ச்பூலைக் காப்பகப்படுத்தவா?",
+	"spool_bulk_archive_confirm_other": "{count} ச்பூல்களைக் காப்பகப்படுத்தவா?",
+	"spool_bulk_unarchive_confirm_one": "{count} ச்பூலைக் காப்பகத்திலிருந்து மீட்கவா?",
+	"spool_bulk_unarchive_confirm_other": "{count} ச்பூல்களைக் காப்பகத்திலிருந்து மீட்கவா?",
+	"spool_bulk_clear_selection": "தேர்வை அழி",
+	"spool_bulk_edit_help": "தேர்ந்தெடுத்த ஒவ்வொரு ச்பூலிலும் மாற்ற வேண்டிய புலத்தைக் குறியிடவும். குறியிடாத புலங்கள் மாற்றப்படாமல் இருக்கும்.",
+	"spool_bulk_nothing_selected": "மாற்ற குறைந்தது ஒரு புலத்தையாவது குறியிடவும்."
 }

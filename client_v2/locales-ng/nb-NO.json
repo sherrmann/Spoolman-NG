@@ -540,5 +540,20 @@
 	"auth_users_reset_password_for": "Tilbakestill passord for {username}",
 	"auth_users_reset_password_help": "Skriv inn et nytt passord for denne brukeren.",
 	"auth_users_password_reset": "Passordet er oppdatert.",
-	"auth_users_delete_confirm": "Slette denne brukeren?"
+	"auth_users_delete_confirm": "Slette denne brukeren?",
+	"spool_bulk_selected_one": "{count} valgt",
+	"spool_bulk_selected_other": "{count} valgt",
+	"spool_bulk_edit_title_one": "Rediger {count} spole",
+	"spool_bulk_edit_title_other": "Rediger {count} spoler",
+	"spool_bulk_applied_one": "Oppdaterte {count} spole.",
+	"spool_bulk_applied_other": "Oppdaterte {count} spoler.",
+	"spool_bulk_applied_partial_one": "Oppdaterte {count} spole, {failed} mislyktes.",
+	"spool_bulk_applied_partial_other": "Oppdaterte {count} spoler, {failed} mislyktes.",
+	"spool_bulk_archive_confirm_one": "Arkivere {count} spole?",
+	"spool_bulk_archive_confirm_other": "Arkivere {count} spoler?",
+	"spool_bulk_unarchive_confirm_one": "Oppheve arkivering av {count} spole?",
+	"spool_bulk_unarchive_confirm_other": "Oppheve arkivering av {count} spoler?",
+	"spool_bulk_clear_selection": "Fjern merking",
+	"spool_bulk_edit_help": "Huk av et felt for å endre det på alle valgte spoler. Felt uten avhuking forblir uendret.",
+	"spool_bulk_nothing_selected": "Huk av minst ett felt som skal endres."
 }

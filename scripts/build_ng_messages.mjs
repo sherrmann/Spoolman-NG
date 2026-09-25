@@ -325,6 +325,22 @@ const KEYS = [
 	'auth.users.role_changed',
 	'auth.users.self_warning',
 	'auth.users.you',
+	// Selection and bulk edit in the Library (#412). `spool.bulk.` also holds strings for the
+	// classic client's own bulk bar that this client does not render, so the keys are named
+	// one by one rather than taken as a prefix.
+	{ key: 'spool.bulk.selected', plural: true },
+	{ key: 'spool.bulk.edit_title', plural: true },
+	{ key: 'spool.bulk.applied', plural: true },
+	{ key: 'spool.bulk.applied_partial', plural: true },
+	{ key: 'spool.bulk.archive_confirm', plural: true },
+	{ key: 'spool.bulk.unarchive_confirm', plural: true },
+	'spool.bulk.clear_selection',
+	'spool.bulk.edit_help',
+	'spool.bulk.nothing_selected',
+	'spool.bulk.select_mode',
+	'spool.bulk.select_shown',
+	'spool.bulk.select_row',
+	'spool.bulk.invalid_price',
 ];
 
 /** Flatten nested i18next JSON to dotted keys. */

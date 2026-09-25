@@ -1,7 +1,8 @@
 <script lang="ts">
 	import Swatch from '../Swatch.svelte';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
-	import SpoolRow from './SpoolRow.svelte';
+	// Spoolman NG fork seam (#412): upstream's row plus a selection checkbox.
+	import SpoolRow from '$lib/ng/components/library/SpoolRow.svelte';
 	import type { RowContext, SpoolVM } from '$lib/utils/library';
 	import { isSelected } from '$lib/library/params';
 	import { truncTitle } from '$lib/actions/truncated';

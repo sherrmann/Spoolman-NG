@@ -470,7 +470,11 @@
       "archive_confirm_one": "Archive {{count}} spool?",
       "archive_confirm_other": "Archive {{count}} spools?",
       "unarchive_confirm_one": "Unarchive {{count}} spool?",
-      "unarchive_confirm_other": "Unarchive {{count}} spools?"
+      "unarchive_confirm_other": "Unarchive {{count}} spools?",
+      "select_mode": "Select",
+      "select_shown": "Select all shown",
+      "select_row": "Select spool #{{id}}",
+      "invalid_price": "Enter a price of 0 or more, or leave it empty to use the filament's price."
     },
     "weigh": {
       "button": "Weigh Spools",

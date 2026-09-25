@@ -540,5 +540,20 @@
 	"auth_users_reset_password_for": "Wachtwoord resetten voor {username}",
 	"auth_users_reset_password_help": "Voer een nieuw wachtwoord in voor deze gebruiker.",
 	"auth_users_password_reset": "Wachtwoord bijgewerkt.",
-	"auth_users_delete_confirm": "Deze gebruiker verwijderen?"
+	"auth_users_delete_confirm": "Deze gebruiker verwijderen?",
+	"spool_bulk_selected_one": "{count} geselecteerd",
+	"spool_bulk_selected_other": "{count} geselecteerd",
+	"spool_bulk_edit_title_one": "{count} spoel bewerken",
+	"spool_bulk_edit_title_other": "{count} spoelen bewerken",
+	"spool_bulk_applied_one": "{count} spoel bijgewerkt.",
+	"spool_bulk_applied_other": "{count} spoelen bijgewerkt.",
+	"spool_bulk_applied_partial_one": "{count} spoel bijgewerkt, {failed} mislukt.",
+	"spool_bulk_applied_partial_other": "{count} spoelen bijgewerkt, {failed} mislukt.",
+	"spool_bulk_archive_confirm_one": "{count} spoel archiveren?",
+	"spool_bulk_archive_confirm_other": "{count} spoelen archiveren?",
+	"spool_bulk_unarchive_confirm_one": "{count} spoel terugzetten?",
+	"spool_bulk_unarchive_confirm_other": "{count} spoelen terugzetten?",
+	"spool_bulk_clear_selection": "Selectie wissen",
+	"spool_bulk_edit_help": "Vink een veld aan om het op elke geselecteerde spoel te wijzigen. Niet-aangevinkte velden blijven ongewijzigd.",
+	"spool_bulk_nothing_selected": "Vink minstens één veld aan om te wijzigen."
 }

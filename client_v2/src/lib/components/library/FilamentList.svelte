@@ -1,8 +1,10 @@
 <script lang="ts">
 	import ListToolbar from './ListToolbar.svelte';
 	import GroupRow from './GroupRow.svelte';
-	import SpoolRow from './SpoolRow.svelte';
-	import Pagination from '../Pagination.svelte';
+	// Spoolman NG fork seams (#412): the row with a selection checkbox, and the footer with the
+	// bulk bar. Both render upstream's own component; see docs/upstream/client-v2-fork-additions.md.
+	import SpoolRow from '$lib/ng/components/library/SpoolRow.svelte';
+	import Pagination from '$lib/ng/components/library/LibraryFooter.svelte';
 	import type { Spool } from '$lib/types';
 	import type { GroupSummary } from '$lib/api/types';
 	import type { LibraryState } from '$lib/library/params';

@@ -540,5 +540,20 @@
 	"auth_users_reset_password_for": "Passwort für {username} zurücksetzen",
 	"auth_users_reset_password_help": "Gib ein neues Passwort für diesen Benutzer ein.",
 	"auth_users_password_reset": "Passwort aktualisiert.",
-	"auth_users_delete_confirm": "Diesen Benutzer löschen?"
+	"auth_users_delete_confirm": "Diesen Benutzer löschen?",
+	"spool_bulk_selected_one": "{count} ausgewählt",
+	"spool_bulk_selected_other": "{count} ausgewählt",
+	"spool_bulk_edit_title_one": "{count} Spule bearbeiten",
+	"spool_bulk_edit_title_other": "{count} Spulen bearbeiten",
+	"spool_bulk_applied_one": "{count} Spule aktualisiert.",
+	"spool_bulk_applied_other": "{count} Spulen aktualisiert.",
+	"spool_bulk_applied_partial_one": "{count} Spule aktualisiert, {failed} fehlgeschlagen.",
+	"spool_bulk_applied_partial_other": "{count} Spulen aktualisiert, {failed} fehlgeschlagen.",
+	"spool_bulk_archive_confirm_one": "{count} Spule archivieren?",
+	"spool_bulk_archive_confirm_other": "{count} Spulen archivieren?",
+	"spool_bulk_unarchive_confirm_one": "Archivierung von {count} Spule aufheben?",
+	"spool_bulk_unarchive_confirm_other": "Archivierung von {count} Spulen aufheben?",
+	"spool_bulk_clear_selection": "Auswahl aufheben",
+	"spool_bulk_edit_help": "Hake ein Feld an, um es bei allen ausgewählten Spulen zu ändern. Nicht angehakte Felder bleiben unverändert.",
+	"spool_bulk_nothing_selected": "Hake mindestens ein Feld an, das geändert werden soll."
 }

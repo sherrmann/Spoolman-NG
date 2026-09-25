@@ -540,5 +540,20 @@
 	"auth_users_reset_password_for": "Επαναφορά κωδικού για τον χρήστη {username}",
 	"auth_users_reset_password_help": "Εισαγάγετε νέο κωδικό πρόσβασης για αυτόν τον χρήστη.",
 	"auth_users_password_reset": "Ο κωδικός πρόσβασης ενημερώθηκε.",
-	"auth_users_delete_confirm": "Διαγραφή αυτού του χρήστη;"
+	"auth_users_delete_confirm": "Διαγραφή αυτού του χρήστη;",
+	"spool_bulk_selected_one": "{count} επιλεγμένο",
+	"spool_bulk_selected_other": "{count} επιλεγμένα",
+	"spool_bulk_edit_title_one": "Επεξεργασία {count} καρουλιού",
+	"spool_bulk_edit_title_other": "Επεξεργασία {count} καρουλιών",
+	"spool_bulk_applied_one": "Ενημερώθηκε {count} καρούλι.",
+	"spool_bulk_applied_other": "Ενημερώθηκαν {count} καρούλια.",
+	"spool_bulk_applied_partial_one": "Ενημερώθηκε {count} καρούλι, απέτυχαν {failed}.",
+	"spool_bulk_applied_partial_other": "Ενημερώθηκαν {count} καρούλια, απέτυχαν {failed}.",
+	"spool_bulk_archive_confirm_one": "Αρχειοθέτηση {count} καρουλιού;",
+	"spool_bulk_archive_confirm_other": "Αρχειοθέτηση {count} καρουλιών;",
+	"spool_bulk_unarchive_confirm_one": "Επαναφορά {count} αρχειοθετημένου καρουλιού;",
+	"spool_bulk_unarchive_confirm_other": "Επαναφορά {count} αρχειοθετημένων καρουλιών;",
+	"spool_bulk_clear_selection": "Εκκαθάριση επιλογής",
+	"spool_bulk_edit_help": "Τσεκάρετε ένα πεδίο για να το αλλάξετε σε κάθε επιλεγμένο καρούλι. Τα μη τσεκαρισμένα πεδία παραμένουν αμετάβλητα.",
+	"spool_bulk_nothing_selected": "Τσεκάρετε τουλάχιστον ένα πεδίο για αλλαγή."
 }
