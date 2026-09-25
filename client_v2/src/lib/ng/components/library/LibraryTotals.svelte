@@ -13,9 +13,24 @@
 	import { totals } from '$lib/ng/libraryTotals';
 	import { weightAuto } from '$lib/utils/format';
 	import { settings } from '$lib/stores/settings.svelte';
+	import { inventory } from '$lib/stores/inventory.svelte';
+	import type { SpoolVM } from '$lib/utils/library';
 
 	let selecting = $derived(librarySelection.count > 0);
-	let t = $derived(totals(selecting ? librarySelection.selected.values() : librarySelection.shown()));
+	/**
+	 * A selected spool as it stands now, not as it was when ticked. Selected spools on another
+	 * page are not re-rendered, so their snapshot goes stale when one is weighed (step 2) or
+	 * changed elsewhere; the inventory cache is what live updates keep current.
+	 */
+	function current(vm: SpoolVM): SpoolVM {
+		const spool = inventory.spoolById(vm.spool.id) ?? vm.spool;
+		const filament = inventory.filamentById(spool.filamentId) ?? vm.filament;
+		return spool === vm.spool && filament === vm.filament ? vm : { ...vm, spool, filament };
+	}
+
+	let t = $derived(
+		totals(selecting ? [...librarySelection.selected.values()].map(current) : librarySelection.shown())
+	);
 </script>
 
 {#if t.count > 0}

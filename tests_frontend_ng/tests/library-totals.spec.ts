@@ -214,3 +214,39 @@ test("no priced spool in view leaves the Price part off the line entirely", asyn
   expect(text).toMatch(/^2 spools shown\b/);
   expect(text).not.toContain("Price");
 });
+
+test("a selected spool on another page is totalled as it stands now, not as it was ticked", async ({
+  page,
+  request,
+}) => {
+  // Its row is not re-rendered while another page is showing, so the snapshot taken when it
+  // was ticked goes stale; the totals must follow the live update instead.
+  const { location, spools } = await seedThree(request);
+  await openAt(page, location, "&size=1");
+  await page.getByRole("button", { name: "Select", exact: true }).click();
+  const box = page.getByRole("checkbox", { name: /Select spool #\d+/ }).first();
+  const id = Number(
+    (await box.getAttribute("aria-label"))!.match(/#(\d+)/)![1],
+  );
+  await box.check();
+  await expect(totals(page)).toContainText("1 spool selected");
+
+  // Page 2, in the app, so the selection survives.
+  await page.getByRole("link", { name: "2", exact: true }).click();
+  await expect(page).toHaveURL(/page=2/);
+  await expect(
+    page.getByRole("checkbox", { name: `Select spool #${id}`, exact: true }),
+  ).toHaveCount(0);
+
+  const res = await request.patch(`/api/v1/spool/${id}`, {
+    data: { used_weight: 500 },
+  });
+  expect(res.ok()).toBeTruthy();
+
+  // Initial 1000 g each: 500 used leaves 500.
+  await expect
+    .poll(async () => totalsText(page))
+    .toContain("Used Weight 500 g");
+  expect(await totalsText(page)).toContain("Remaining Weight 500 g");
+  expect(spools[id]).toBeDefined();
+});
