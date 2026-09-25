@@ -1,3 +1,18 @@
+<script lang="ts" module>
+	import { getInfo, type Info } from '$lib/api/info';
+
+	// One /info request per page load, as upstream's footer made: the More sheet mounts this
+	// afresh every time it opens. A failed request is forgotten so the next mount retries.
+	let cached: Promise<Info> | null = null;
+	function loadInfo(): Promise<Info> {
+		cached ??= getInfo().catch((e) => {
+			cached = null;
+			throw e;
+		});
+		return cached;
+	}
+</script>
+
 <script lang="ts">
 	/* eslint-disable svelte/no-navigation-without-resolve --
 	   External project links; resolve() is for in-app routes only. */
@@ -6,7 +21,6 @@
 	 * gone -- on a phone it cost a permanent strip of screen for links nobody needs twice -- so
 	 * this sits on the Help page and at the bottom of the phone layout's More sheet instead.
 	 */
-	import { getInfo, type Info } from '$lib/api/info';
 	import * as m from '$lib/paraglide/messages';
 	import { ng } from '$lib/ng/i18n';
 	import { PROJECT_LINKS } from '$lib/ng/nav';
@@ -20,7 +34,7 @@
 	let info = $state<Info | null>(null);
 
 	$effect(() => {
-		getInfo()
+		loadInfo()
 			.then((i) => (info = i))
 			.catch((e) => console.error('Failed to load version info', e));
 	});

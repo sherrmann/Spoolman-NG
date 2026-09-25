@@ -1,36 +1,63 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
+import { seedLowFilament } from "./helpers";
 import { expectCleanLayout, expectInViewport } from "./mobile/layout";
 
 /**
- * The header at laptop and tablet widths.
+ * The header at laptop and desktop widths.
  *
- * With this fork's extra pages the tab row alone is about 850px, and below ~1500px the header was
- * wider than the window: the search field, the scan button and "Add spools" sat past its right
- * edge, reachable only by scrolling the whole page sideways. Now the search collapses to an icon
- * there and the tabs scroll inside their own space.
+ * With this fork's extra pages the tab row alone is about 850px, more with the low-stock count or
+ * custom links, and below ~1500px the header was wider than the window: the search field, the scan
+ * button and "Add spools" sat past its right edge, reachable only by scrolling the whole page
+ * sideways. Now the tab row gives way -- it shrinks to the space left and scrolls within itself --
+ * while the search field stays where upstream put it (upstream's own suite types into it at 1280).
  */
 
-async function expectHeaderActionsOnScreen(page: Page) {
-  for (const name of ["Search", "Add spools"]) {
-    const button = page.locator("header").getByRole("button", { name, exact: true }).filter({ visible: true });
-    await expectInViewport(page, `the ${name} button`, await button.boundingBox());
-  }
-  await expectInViewport(page, "the scan button", await page.locator("header .scan-btn").boundingBox());
+async function setSetting(request: APIRequestContext, key: string, value: unknown) {
+  const res = await request.post(`/api/v1/setting/${key}`, {
+    headers: { "Content-Type": "application/json" },
+    data: JSON.stringify(JSON.stringify(value)),
+  });
+  if (!res.ok()) throw new Error(`setting ${key} -> ${res.status()} ${await res.text()}`);
 }
 
-for (const width of [1000, 1280, 1440]) {
+test.beforeAll(async ({ playwright, baseURL }) => {
+  // The widest the row gets: a low-stock count on its tab and an operator's custom link.
+  const api = await playwright.request.newContext({ baseURL });
+  await seedLowFilament(api, "Header");
+  await setSetting(api, "custom_links", [{ name: "Mainsail", url: "http://mainsail.local" }]);
+  await api.dispose();
+});
+
+test.afterAll(async ({ playwright, baseURL }) => {
+  const api = await playwright.request.newContext({ baseURL });
+  await setSetting(api, "custom_links", []);
+  await api.dispose();
+});
+
+async function expectHeaderActionsOnScreen(page: Page) {
+  await expectInViewport(page, "the search field", await page.locator(".search-desktop input").boundingBox());
+  await expectInViewport(page, "the scan button", await page.locator("header .scan-btn").boundingBox());
+  await expectInViewport(page, "the add button", await page.locator(".add-desktop button").boundingBox());
+}
+
+for (const width of [1000, 1280, 1440, 1500, 1600]) {
   test(`at ${width}px the header fits and its actions are on screen`, async ({ page }) => {
     await page.setViewportSize({ width, height: 800 });
     await page.goto("/settings", { waitUntil: "networkidle" });
+    // Wait for the late arrivals that widen the row.
+    await expect(page.locator(".nav-desktop").getByRole("link", { name: /Mainsail/ })).toBeAttached();
+    await expect(page.locator(".nav-desktop a.tab[href='/lowstock'] .badge")).toBeVisible();
     await expectCleanLayout(page, "/settings");
     await expectHeaderActionsOnScreen(page);
   });
 }
 
-test("the current page's tab is scrolled into view when the tab row is too narrow", async ({ page }) => {
+test("the current page's tab stays in view when the tab row is too narrow", async ({ page }) => {
   await page.setViewportSize({ width: 1000, height: 800 });
   for (const path of ["/help", "/settings", "/"]) {
     await page.goto(path, { waitUntil: "networkidle" });
+    // The badge renders after first paint and pushes the later tabs right; the row must follow.
+    await expect(page.locator(".nav-desktop a.tab[href='/lowstock'] .badge")).toBeVisible();
     const active = page.locator(".nav-desktop a.tab.active");
     await expect(active).toHaveCount(1);
     await expect(active).toBeInViewport({ ratio: 1 });
@@ -38,27 +65,3 @@ test("the current page's tab is scrolled into view when the tab row is too narro
   // The row scrolled, not the page.
   expect(await page.evaluate(() => window.scrollX)).toBe(0);
 });
-
-test("the collapsed search opens over the header and finds things", async ({ page }) => {
-  await page.setViewportSize({ width: 1000, height: 800 });
-  await page.goto("/", { waitUntil: "networkidle" });
-  await page.locator("header").getByRole("button", { name: "Search", exact: true }).click();
-  const input = page.locator(".search-overlay input");
-  await expect(input).toBeFocused();
-  await expectInViewport(page, "the search field", await input.boundingBox());
-  await page.locator(".search-back").click();
-  await expect(input).toBeHidden();
-});
-
-test("at full width the search field is shown in the header as before", async ({ page }) => {
-  await page.setViewportSize({ width: 1600, height: 900 });
-  await page.goto("/", { waitUntil: "networkidle" });
-  await expect(page.locator(".search-desktop input")).toBeVisible();
-  await expect(page.locator("header").getByRole("button", { name: "Search", exact: true })).toBeHidden();
-  await expectHeaderActionsOnScreenWide(page);
-});
-
-async function expectHeaderActionsOnScreenWide(page: Page) {
-  await expectInViewport(page, "the add button", await page.locator(".add-desktop button").boundingBox());
-  await expectInViewport(page, "the search field", await page.locator(".search-desktop input").boundingBox());
-}

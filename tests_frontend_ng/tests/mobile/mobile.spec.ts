@@ -296,7 +296,8 @@ test.describe("library", () => {
     expect(count, "the spool inspector should show number inputs").toBeGreaterThan(0);
     for (let i = 0; i < count; i++) {
       const stepper = steppers.nth(i);
-      await stepper.scrollIntoViewIfNeeded();
+      // Centred vertically, so a stepper resting on the sheet's bottom edge is not a sub-pixel miss.
+      await stepper.evaluate((el) => el.scrollIntoView({ block: "center", inline: "nearest" }));
       await expect(stepper).toBeInViewport({ ratio: 1 });
       // Reaching it must not have taken a sideways scroll of the sheet: Playwright will happily
       // scroll one to bring a clipped control into view, which a user would never think to do.

@@ -15,8 +15,8 @@
 		return isActivePath(href, $page.url.pathname, basePath);
 	}
 
-	// Spoolman NG fork addition: when the row is narrower than its tabs (TopBar lets it scroll
-	// below 1500px), keep the current page's tab in view. Only the row itself is scrolled --
+	// Spoolman NG fork addition: when the row is narrower than its tabs (TopBar lets it shrink
+	// and scroll), keep the current page's tab in view. Only the row itself is scrolled --
 	// scrollIntoView would also scroll the document -- and only on a change of page, not of
 	// query string, or every filter change would yank the row back. Re-run when the row's
 	// content changes width: the low-stock badge and custom links arrive after first paint.
