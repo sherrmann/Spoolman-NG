@@ -286,6 +286,28 @@ def _weight_closeness(a: float | None, b: float | None) -> float:
     return 1.0 if abs(a - b) / max(a, b) <= _WEIGHT_TOLERANCE else 0.0
 
 
+def _material_key(value: str | None) -> str:
+    """Normalise a material name for comparison: case and spaces ignored, "PLA Plus" read as "PLA+"."""
+    key = re.sub(r"\s+", "", (value or "").upper())
+    return re.sub(r"PLUS$", "+", key) if len(key) > len("PLUS") else key
+
+
+def _material_variant(a: str, b: str) -> bool:
+    """Whether two material keys differ only by a trailing "+" ("PLA" and "PLA+").
+
+    Labels and extractions drop the plus often enough ("PLA+" printed small, or read as "PLA")
+    that treating the pair as a hard mismatch loses the right spool. Only a trailing plus counts:
+    in "PC+ABS" or "PLA+WOOD" it joins two materials.
+    """
+    longer, shorter = (a, b) if len(a) > len(b) else (b, a)
+    return longer == shorter + "+" and bool(shorter) and "+" not in shorter
+
+
+#: Material credit for a plus/non-plus pair: below an exact match, so a label that does say "PLA+"
+#: still prefers PLA+ records, but without the mismatch penalty.
+_MATERIAL_VARIANT_SCORE = 0.5
+
+
 def score_candidate(
     extraction: dict,
     *,
@@ -297,19 +319,27 @@ def score_candidate(
     """Score a filament candidate against an extraction; pure and unit-testable.
 
     Name 0.4 + vendor 0.3 + material 0.2 + weight 0.1; a definite material mismatch
-    scales the whole score down hard (a PETG label must not match a PLA record).
+    scales the whole score down hard (a PETG label must not match a PLA record). A material
+    and its plus variant ("PLA" and "PLA+") get partial credit instead of the penalty.
     """
     name_score = _similarity(extraction.get("name"), name)
     vendor_score = _similarity(extraction.get("vendor"), vendor)
-    material_a, material_b = _norm(extraction.get("material")), _norm(material)
+    material_a, material_b = _material_key(extraction.get("material")), _material_key(material)
+    mismatch = False
     if material_a and material_b:
-        material_score = 1.0 if material_a == material_b else 0.0
+        if material_a == material_b:
+            material_score = 1.0
+        elif _material_variant(material_a, material_b):
+            material_score = _MATERIAL_VARIANT_SCORE
+        else:
+            material_score = 0.0
+            mismatch = True
     else:
         material_score = 0.5 if material_a or material_b else 0.0
     weight_score = _weight_closeness(extraction.get("weight_g"), weight_g)
 
     score = 0.4 * name_score + 0.3 * vendor_score + 0.2 * material_score + 0.1 * weight_score
-    if material_a and material_b and material_a != material_b:
+    if mismatch:
         score *= 0.3
     return round(score, 3)
 

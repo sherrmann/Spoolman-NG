@@ -98,6 +98,57 @@ def test_material_mismatch_is_penalized_hard() -> None:
     assert score < 0.35
 
 
+def _esun(material: str) -> float:
+    extraction = {"vendor": "eSun", "name": "Black", "material": material, "weight_g": 1000}
+    return score_candidate(extraction, vendor="eSun", name="Black", material="PLA+", weight_g=1000)
+
+
+def test_a_dropped_plus_is_a_partial_match_not_a_mismatch() -> None:
+    """A PLA+ spool read as "PLA" must still reach the shortlist (it scored 0.29 before)."""
+    assert _esun("PLA") >= spoolintake._CATALOG_MIN_SCORE  # noqa: SLF001
+    assert _esun("PLA") < _esun("PLA+"), "an exact material still wins"
+
+
+def test_plus_variant_works_both_ways() -> None:
+    extraction = {"vendor": "eSun", "name": "Black", "material": "PLA+", "weight_g": 1000}
+    score = score_candidate(extraction, vendor="eSun", name="Black", material="PLA", weight_g=1000)
+    assert score >= spoolintake._CATALOG_MIN_SCORE  # noqa: SLF001
+
+
+@pytest.mark.parametrize("spelling", ["PLA+", "pla+", "PLA Plus", "PLA PLUS", "PLAPlus", " PLA + "])
+def test_plus_spellings_are_the_same_material(spelling: str) -> None:
+    assert _esun(spelling) == _esun("PLA+")
+
+
+@pytest.mark.parametrize(
+    ("label", "record"),
+    [
+        ("PC", "PC+ABS"),  # a plus joining two materials is not a "plus" variant
+        ("PLA", "PLA+WOOD"),
+        ("ABS", "ABS+GF20"),
+        ("PLA", "PETG+"),
+    ],
+)
+def test_other_material_differences_stay_hard_mismatches(label: str, record: str) -> None:
+    extraction = {"vendor": "eSun", "name": "Black", "material": label, "weight_g": 1000}
+    score = score_candidate(extraction, vendor="eSun", name="Black", material=record, weight_g=1000)
+    assert score < 0.35
+
+
+def test_plus_variant_ranks_below_the_exact_material_in_the_catalog(monkeypatch: pytest.MonkeyPatch) -> None:
+    entries = [
+        _catalog_entry("esun-pla", "eSun", "Black", "PLA", 1000),
+        _catalog_entry("esun-pla-plus", "eSun", "Black", "PLA+", 1000),
+    ]
+    monkeypatch.setattr(spoolintake, "load_catalog", lambda: entries)
+
+    plus_label = spoolintake.match_catalog({"vendor": "eSun", "name": "Black", "material": "PLA+", "weight_g": 1000})
+    plain_label = spoolintake.match_catalog({"vendor": "eSun", "name": "Black", "material": "PLA", "weight_g": 1000})
+
+    assert [m["external_id"] for m in plus_label] == ["esun-pla-plus", "esun-pla"]
+    assert [m["external_id"] for m in plain_label] == ["esun-pla", "esun-pla-plus"]
+
+
 def test_name_containment_matches_verbose_catalog_names() -> None:
     score = score_candidate(
         _EXTRACTION,
