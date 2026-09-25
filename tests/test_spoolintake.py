@@ -6,11 +6,14 @@ actually produces (kg-as-grams, "1.75 mm" strings, #-prefixed hex); the matcher 
 its pure scoring function and an injected catalog — no DB, no network, no LLM anywhere.
 """
 
+import asyncio
 import json
 
 import pytest
+import respx
+from httpx import Response
 
-from spoolman import spoolintake
+from spoolman import decision, spoolintake
 from spoolman.spoolintake import (
     ExtractionParseError,
     normalize_extraction,
@@ -268,3 +271,354 @@ def test_real_vendors_survive(vendor: str) -> None:
     discard right answers to catch wrong ones.
     """
     assert spoolintake.normalize_extraction({"vendor": vendor})["vendor"] == vendor
+
+
+# --- Decision-model rerank ---
+
+
+@pytest.fixture(autouse=True)
+def _clean_decision_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Isolate the SPOOLMAN_AI_DECISION_* env between tests in this module."""
+    for name in (decision.ENV_BASE_URL, decision.ENV_API_KEY, decision.ENV_MODEL):
+        monkeypatch.delenv(name, raising=False)
+
+
+_DECISION_CONFIG = decision.DecisionConfig(base_url="https://api.typesafe.ai", model="jev-1.13")
+
+
+def _library_candidate(filament_id: int, match_percent: int) -> dict:
+    return {
+        "kind": "library",
+        "filament_id": filament_id,
+        "vendor": "Prusa",
+        "name": "Galaxy Black",
+        "material": "PLA",
+        "weight_g": 1000,
+        "active_spool_count": 0,
+        "remaining_weight_g": 1000.0,
+        "match_percent": match_percent,
+    }
+
+
+def _rerank_answer_body(*, choices: dict[str, tuple[str, dict[str, float]]]) -> dict:
+    """Build a System One response answering each requested id with the given choice."""
+    return {
+        "model": "jev-1.13.0",
+        "answers": {
+            qid: {"type": "choice", "choice": choice, "probabilities": probabilities, "confidence": 0.9}
+            for qid, (choice, probabilities) in choices.items()
+        },
+        "usage": {},
+    }
+
+
+_FULL_EXTRACTION = {
+    "vendor": "Prusa",
+    "name": "Galaxy Black",
+    "material": "PLA",
+    "color_hex": "1a1a2e",
+    "weight_g": 1000,
+    "spool_weight_g": 250,
+    "diameter_mm": 1.75,
+    "extruder_temp_c": 210,
+    "bed_temp_c": 60,
+    "lot_nr": "L123",
+    "article_number": "A1",
+    "confidence": "high",
+}
+
+
+@respx.mock
+async def test_rerank_matches_reorders_by_probability_and_keeps_match_percent() -> None:
+    c1, c2 = _library_candidate(1, match_percent=90), _library_candidate(2, match_percent=40)
+    matches = {"library": [c1, c2], "catalog": []}
+    respx.post("https://api.typesafe.ai/v1/systemone").mock(
+        return_value=Response(
+            200,
+            json=_rerank_answer_body(
+                choices={"library": ("c2", {"c1": 0.2, "c2": 0.7, "none": 0.1})},
+            ),
+        ),
+    )
+
+    result = await spoolintake.rerank_matches(_DECISION_CONFIG, _FULL_EXTRACTION, matches)
+
+    assert [c["filament_id"] for c in result["library"]] == [2, 1]
+    assert result["library"][0]["rerank_probability"] == 0.7
+    assert result["library"][1]["rerank_probability"] == 0.2
+    assert result["library"][0]["match_percent"] == 40, "match_percent stays the fuzzy score"
+    assert result["library"][1]["match_percent"] == 90
+    assert result["catalog"] == []
+
+
+@respx.mock
+async def test_rerank_matches_is_stable_for_ties() -> None:
+    c1, c2, c3 = (
+        _library_candidate(1, match_percent=90),
+        _library_candidate(2, match_percent=80),
+        _library_candidate(3, match_percent=70),
+    )
+    matches = {"library": [c1, c2, c3], "catalog": []}
+    respx.post("https://api.typesafe.ai/v1/systemone").mock(
+        return_value=Response(
+            200,
+            json=_rerank_answer_body(
+                choices={"library": ("none", {"c1": 0.5, "c2": 0.5, "c3": 0.5, "none": 0.0})},
+            ),
+        ),
+    )
+
+    result = await spoolintake.rerank_matches(_DECISION_CONFIG, _FULL_EXTRACTION, matches)
+
+    assert [c["filament_id"] for c in result["library"]] == [1, 2, 3], "ties keep the original (fuzzy) order"
+
+
+@respx.mock
+async def test_rerank_matches_leaves_empty_lists_alone_and_asks_no_question_for_them() -> None:
+    c1 = _library_candidate(1, match_percent=90)
+    matches = {"library": [c1], "catalog": []}
+    route = respx.post("https://api.typesafe.ai/v1/systemone").mock(
+        return_value=Response(
+            200,
+            json=_rerank_answer_body(choices={"library": ("c1", {"c1": 1.0, "none": 0.0})}),
+        ),
+    )
+
+    result = await spoolintake.rerank_matches(_DECISION_CONFIG, _FULL_EXTRACTION, matches)
+
+    assert result["catalog"] == []
+    sent = json.loads(route.calls.last.request.content)
+    assert set(sent["questions"]) == {"library"}
+
+
+@respx.mock
+async def test_rerank_matches_sends_no_request_when_both_lists_are_empty() -> None:
+    matches = {"library": [], "catalog": []}
+
+    result = await spoolintake.rerank_matches(_DECISION_CONFIG, _FULL_EXTRACTION, matches)
+
+    assert result == matches
+
+
+@respx.mock
+async def test_rerank_matches_sends_no_request_without_identifying_fields() -> None:
+    c1 = _library_candidate(1, match_percent=90)
+    matches = {"library": [c1], "catalog": []}
+    bare_extraction = dict.fromkeys(_FULL_EXTRACTION)
+
+    result = await spoolintake.rerank_matches(_DECISION_CONFIG, bare_extraction, matches)
+
+    assert result == matches
+
+
+@respx.mock
+async def test_rerank_matches_state_only_carries_the_four_identifying_fields() -> None:
+    c1 = _library_candidate(1, match_percent=90)
+    matches = {"library": [c1], "catalog": []}
+    route = respx.post("https://api.typesafe.ai/v1/systemone").mock(
+        return_value=Response(
+            200,
+            json=_rerank_answer_body(choices={"library": ("c1", {"c1": 1.0, "none": 0.0})}),
+        ),
+    )
+
+    await spoolintake.rerank_matches(_DECISION_CONFIG, _FULL_EXTRACTION, matches)
+
+    sent = json.loads(route.calls.last.request.content)
+    assert sent["state"] == {"vendor": "Prusa", "name": "Galaxy Black", "material": "PLA", "weight_g": 1000}
+
+
+def test_apply_rerank_keeps_the_fuzzy_order_on_a_none_answer_even_with_higher_probabilities() -> None:
+    """A "none" answer must not let a lower-ranked candidate's probability promote it.
+
+    The client preselects the first (fuzzy-ranked) entry, so reordering on a rejected answer
+    would be worse than leaving the fuzzy order alone.
+    """
+    c1, c2 = _library_candidate(1, match_percent=90), _library_candidate(2, match_percent=40)
+    answer = decision.ChoiceAnswer(
+        choice="none",
+        probabilities={"c1": 0.1, "c2": 0.3, "none": 0.6},
+        confidence=None,
+    )
+
+    result = spoolintake._apply_rerank([c1, c2], answer)  # noqa: SLF001
+
+    assert [c["filament_id"] for c in result] == [1, 2], "fuzzy order is kept despite c2's higher probability"
+    assert result[0]["rerank_probability"] == 0.1
+    assert result[1]["rerank_probability"] == 0.3
+
+
+def test_apply_rerank_with_no_probabilities_puts_the_chosen_candidate_first() -> None:
+    c1, c2, c3 = (
+        _library_candidate(1, match_percent=90),
+        _library_candidate(2, match_percent=80),
+        _library_candidate(3, match_percent=70),
+    )
+    answer = decision.ChoiceAnswer(choice="c2", probabilities={}, confidence=None)
+
+    result = spoolintake._apply_rerank([c1, c2, c3], answer)  # noqa: SLF001
+
+    assert [c["filament_id"] for c in result] == [2, 1, 3]
+
+
+# --- build_matches: reranking integration -----------------------------------------
+
+
+@respx.mock
+async def test_build_matches_makes_no_http_call_without_config(monkeypatch: pytest.MonkeyPatch) -> None:
+    fuzzy_library = [_library_candidate(1, match_percent=90)]
+
+    async def _fake_match_library(db: object, extraction: dict) -> list[dict]:  # noqa: ARG001
+        return fuzzy_library
+
+    def _fake_match_catalog(extraction: dict) -> list[dict]:  # noqa: ARG001
+        return []
+
+    monkeypatch.setattr(spoolintake, "match_library", _fake_match_library)
+    monkeypatch.setattr(spoolintake, "match_catalog", _fake_match_catalog)
+
+    result = await spoolintake.build_matches(None, _FULL_EXTRACTION)
+
+    assert result == {"library": fuzzy_library, "catalog": []}
+
+
+@respx.mock
+async def test_build_matches_keeps_fuzzy_order_and_warns_on_decision_endpoint_failure(
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    monkeypatch.setenv(decision.ENV_BASE_URL, "https://api.typesafe.ai")
+    fuzzy_library = [_library_candidate(1, match_percent=90), _library_candidate(2, match_percent=40)]
+
+    async def _fake_match_library(db: object, extraction: dict) -> list[dict]:  # noqa: ARG001
+        return fuzzy_library
+
+    def _fake_match_catalog(extraction: dict) -> list[dict]:  # noqa: ARG001
+        return []
+
+    monkeypatch.setattr(spoolintake, "match_library", _fake_match_library)
+    monkeypatch.setattr(spoolintake, "match_catalog", _fake_match_catalog)
+    respx.post("https://api.typesafe.ai/v1/systemone").mock(return_value=Response(500))
+
+    with caplog.at_level("WARNING"):
+        result = await spoolintake.build_matches(None, _FULL_EXTRACTION)
+
+    assert result == {"library": fuzzy_library, "catalog": []}
+    assert "Keeping the fuzzy match order" in caplog.text
+
+
+@respx.mock
+async def test_build_matches_keeps_fuzzy_order_and_warns_when_resolve_config_raises(
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """An optional reorder must never break Scan-to-Spool, even on a bug in resolve_config."""
+    monkeypatch.setenv(decision.ENV_BASE_URL, "https://api.typesafe.ai")
+    fuzzy_library = [_library_candidate(1, match_percent=90), _library_candidate(2, match_percent=40)]
+
+    async def _fake_match_library(db: object, extraction: dict) -> list[dict]:  # noqa: ARG001
+        return fuzzy_library
+
+    def _fake_match_catalog(extraction: dict) -> list[dict]:  # noqa: ARG001
+        return []
+
+    def _raise_resolve_config() -> None:
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(spoolintake, "match_library", _fake_match_library)
+    monkeypatch.setattr(spoolintake, "match_catalog", _fake_match_catalog)
+    monkeypatch.setattr(decision, "resolve_config", _raise_resolve_config)
+
+    with caplog.at_level("WARNING"):
+        result = await spoolintake.build_matches(None, _FULL_EXTRACTION)
+
+    assert result == {"library": fuzzy_library, "catalog": []}
+    assert "unexpected error" in caplog.text
+
+
+@respx.mock
+async def test_build_matches_keeps_fuzzy_order_and_warns_when_rerank_matches_raises_unexpectedly(
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    monkeypatch.setenv(decision.ENV_BASE_URL, "https://api.typesafe.ai")
+    fuzzy_library = [_library_candidate(1, match_percent=90), _library_candidate(2, match_percent=40)]
+
+    async def _fake_match_library(db: object, extraction: dict) -> list[dict]:  # noqa: ARG001
+        return fuzzy_library
+
+    def _fake_match_catalog(extraction: dict) -> list[dict]:  # noqa: ARG001
+        return []
+
+    async def _raise_rerank_matches(config: object, extraction: dict, matches: dict) -> dict:  # noqa: ARG001
+        raise ValueError("boom")
+
+    monkeypatch.setattr(spoolintake, "match_library", _fake_match_library)
+    monkeypatch.setattr(spoolintake, "match_catalog", _fake_match_catalog)
+    monkeypatch.setattr(spoolintake, "rerank_matches", _raise_rerank_matches)
+
+    with caplog.at_level("WARNING"):
+        result = await spoolintake.build_matches(None, _FULL_EXTRACTION)
+
+    assert result == {"library": fuzzy_library, "catalog": []}
+    assert "unexpected error" in caplog.text
+
+
+@respx.mock
+async def test_build_matches_keeps_fuzzy_order_and_makes_no_http_call_with_an_invalid_base_url(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv(decision.ENV_BASE_URL, "http://[::1")
+    fuzzy_library = [_library_candidate(1, match_percent=90)]
+
+    async def _fake_match_library(db: object, extraction: dict) -> list[dict]:  # noqa: ARG001
+        return fuzzy_library
+
+    def _fake_match_catalog(extraction: dict) -> list[dict]:  # noqa: ARG001
+        return []
+
+    monkeypatch.setattr(spoolintake, "match_library", _fake_match_library)
+    monkeypatch.setattr(spoolintake, "match_catalog", _fake_match_catalog)
+    route = respx.post(url__regex=r".*").mock(return_value=Response(200))
+
+    result = await spoolintake.build_matches(None, _FULL_EXTRACTION)
+
+    assert result == {"library": fuzzy_library, "catalog": []}
+    assert route.call_count == 0
+
+
+async def test_build_matches_propagates_cancellation(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The catch-all around the rerank must not swallow a cancelled scan."""
+    monkeypatch.setenv(decision.ENV_BASE_URL, "https://api.typesafe.ai")
+    candidate = _library_candidate(1, match_percent=90)
+
+    async def fake_library(_db: object, _extraction: dict) -> list[dict]:
+        return [candidate]
+
+    started = asyncio.Event()
+
+    async def hanging_ask(*_args: object, **_kwargs: object) -> dict:
+        started.set()
+        await asyncio.sleep(10)
+        return {}
+
+    monkeypatch.setattr(spoolintake, "match_library", fake_library)
+    monkeypatch.setattr(spoolintake, "match_catalog", lambda _extraction: [])
+    monkeypatch.setattr(decision, "ask_choices", hanging_ask)
+
+    task = asyncio.create_task(spoolintake.build_matches(None, _FULL_EXTRACTION))
+    await started.wait()
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task
+
+
+def test_apply_rerank_sorts_on_unrounded_probabilities() -> None:
+    """Two probabilities that round to the same value still follow the model's order."""
+    candidates = [_library_candidate(1, match_percent=90), _library_candidate(2, match_percent=80)]
+    answer = decision.ChoiceAnswer(choice="c2", probabilities={"c1": 0.5004, "c2": 0.5005}, confidence=0.5)
+
+    ranked = spoolintake._apply_rerank(candidates, answer)  # noqa: SLF001
+
+    assert [c["filament_id"] for c in ranked] == [2, 1]
+    assert ranked[0]["rerank_probability"] == ranked[1]["rerank_probability"] == 0.5
