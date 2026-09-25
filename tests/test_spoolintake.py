@@ -611,3 +611,14 @@ async def test_build_matches_propagates_cancellation(monkeypatch: pytest.MonkeyP
     task.cancel()
     with pytest.raises(asyncio.CancelledError):
         await task
+
+
+def test_apply_rerank_sorts_on_unrounded_probabilities() -> None:
+    """Two probabilities that round to the same value still follow the model's order."""
+    candidates = [_library_candidate(1, match_percent=90), _library_candidate(2, match_percent=80)]
+    answer = decision.ChoiceAnswer(choice="c2", probabilities={"c1": 0.5004, "c2": 0.5005}, confidence=0.5)
+
+    ranked = spoolintake._apply_rerank(candidates, answer)  # noqa: SLF001
+
+    assert [c["filament_id"] for c in ranked] == [2, 1]
+    assert ranked[0]["rerank_probability"] == ranked[1]["rerank_probability"] == 0.5

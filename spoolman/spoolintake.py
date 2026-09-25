@@ -473,13 +473,14 @@ def _apply_rerank(candidates: list[dict], answer: decision.ChoiceAnswer) -> list
     the fuzzy order is kept: the client preselects the first entry, and promoting a candidate
     the model has just rejected would be worse than leaving the order alone.
     """
-    ranked = []
+    scored = []
     for index, candidate in enumerate(candidates, start=1):
         probability = answer.probabilities.get(f"c{index}", 1.0 if answer.choice == f"c{index}" else 0.0)
-        ranked.append({**candidate, "rerank_probability": round(probability, 3)})
+        scored.append((probability, {**candidate, "rerank_probability": round(probability, 3)}))
     if answer.choice != _RERANK_NONE:
-        ranked.sort(key=lambda entry: -entry["rerank_probability"])
-    return ranked
+        # Sort on the unrounded value: rounding first would turn a close call into a tie.
+        scored.sort(key=lambda pair: -pair[0])
+    return [entry for _, entry in scored]
 
 
 async def _rerank_with_answers(
