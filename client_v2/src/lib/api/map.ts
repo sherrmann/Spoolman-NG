@@ -10,6 +10,8 @@ import type {
 } from '$lib/types';
 import type { GroupSummary } from './types';
 import { formatDurationShort, formatShortDate } from '$lib/utils/datetime';
+// Spoolman NG fork addition (#415): the catalogue fields, both ways.
+import { filamentNgPatchToApi, mapFilamentNg } from '$lib/ng/filamentCatalogue';
 
 // Map between the Spoolman API JSON shape and the client's domain types.
 // The API uses integer ids and snake_case; the client uses string ids for
@@ -76,7 +78,8 @@ export function mapFilament(f: Json): Filament {
 		externalId: f.external_id ?? undefined,
 		registeredLabel: formatShortDate(f.registered),
 		tags: mapTags(f.tags),
-		extra: f.extra ?? {}
+		extra: f.extra ?? {},
+		ng: mapFilamentNg(f)
 	};
 }
 
@@ -249,6 +252,7 @@ export function filamentPatchToApi(patch: FilamentPatch): Json {
 	if ('articleNumber' in patch) out.article_number = patch.articleNumber ?? '';
 	if ('comment' in patch) out.comment = patch.comment ?? '';
 	if ('extra' in patch) out.extra = patch.extra;
+	Object.assign(out, filamentNgPatchToApi(patch));
 	return out;
 }
 

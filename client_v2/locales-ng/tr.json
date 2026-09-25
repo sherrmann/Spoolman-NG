@@ -568,5 +568,19 @@
 	"spool_totals_selected_one": "{count} makara seçildi",
 	"spool_totals_selected_other": "{count} makara seçildi",
 	"buttons_columns": "Sütunlar",
-	"buttons_columnsTooltip": "Tablo sütunlarını seçin, yeniden sıralayın ve gizleyin"
+	"buttons_columnsTooltip": "Tablo sütunlarını seçin, yeniden sıralayın ve gizleyin",
+	"filament_fields_spool_type": "Makara Türü",
+	"filament_fields_finish": "Yüzey",
+	"filament_fields_pattern": "Desen",
+	"filament_fields_translucent": "Yarı Saydam",
+	"filament_fields_glow": "Karanlıkta Parlayan",
+	"filament_spool_type_options_plastic": "Plastik",
+	"filament_spool_type_options_cardboard": "Karton",
+	"filament_spool_type_options_metal": "Metal",
+	"filament_finish_options_matte": "Mat",
+	"filament_finish_options_glossy": "Parlak",
+	"filament_pattern_options_marble": "Mermer",
+	"filament_pattern_options_sparkle": "Simli",
+	"yes": "Evet",
+	"no": "Hayır"
 }

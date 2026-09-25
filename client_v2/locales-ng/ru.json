@@ -578,5 +578,19 @@
 	"spool_totals_selected_few": "{count} катушки выбрано",
 	"spool_totals_selected_many": "{count} катушек выбрано",
 	"buttons_columns": "Столбцы",
-	"buttons_columnsTooltip": "Выбор, порядок и скрытие столбцов таблицы"
+	"buttons_columnsTooltip": "Выбор, порядок и скрытие столбцов таблицы",
+	"filament_fields_spool_type": "Тип катушки",
+	"filament_fields_finish": "Поверхность",
+	"filament_fields_pattern": "Узор",
+	"filament_fields_translucent": "Полупрозрачный",
+	"filament_fields_glow": "Светится в темноте",
+	"filament_spool_type_options_plastic": "Пластиковая",
+	"filament_spool_type_options_cardboard": "Картонная",
+	"filament_spool_type_options_metal": "Металлическая",
+	"filament_finish_options_matte": "Матовая",
+	"filament_finish_options_glossy": "Глянцевая",
+	"filament_pattern_options_marble": "Мрамор",
+	"filament_pattern_options_sparkle": "Блёстки",
+	"yes": "Да",
+	"no": "Нет"
 }

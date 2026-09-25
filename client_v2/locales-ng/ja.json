@@ -558,5 +558,19 @@
 	"spool_totals_shown_other": "{count}本のスプールを表示中",
 	"spool_totals_selected_other": "{count}本のスプールを選択中",
 	"buttons_columns": "列",
-	"buttons_columnsTooltip": "テーブルの列の選択・並べ替え・非表示"
+	"buttons_columnsTooltip": "テーブルの列の選択・並べ替え・非表示",
+	"filament_fields_spool_type": "スプールの種類",
+	"filament_fields_finish": "仕上げ",
+	"filament_fields_pattern": "パターン",
+	"filament_fields_translucent": "半透明",
+	"filament_fields_glow": "蓄光",
+	"filament_spool_type_options_plastic": "プラスチック",
+	"filament_spool_type_options_cardboard": "紙",
+	"filament_spool_type_options_metal": "金属",
+	"filament_finish_options_matte": "マット",
+	"filament_finish_options_glossy": "光沢",
+	"filament_pattern_options_marble": "マーブル",
+	"filament_pattern_options_sparkle": "ラメ",
+	"yes": "はい",
+	"no": "いいえ"
 }

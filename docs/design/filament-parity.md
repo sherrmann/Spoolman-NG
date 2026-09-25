@@ -1,0 +1,126 @@
+# Filament parity in the Svelte client (#415)
+
+Status: step 1 built; steps 2 and 3 designed, not built.
+
+#415 lists five filament features the frozen React client has and `client_v2` lacks. This note
+records where each one attaches to the vendored client, in the order they are built. The rule
+from [`client-v2-fork-additions.md`](../upstream/client-v2-fork-additions.md) applies throughout:
+add files under `client_v2/src/lib/ng/`, and edit an upstream file only by a line or two, recorded
+as Tier 2.
+
+## 1. What exists
+
+**Backend (complete for all five).**
+
+- Catalogue fields (#91): `spool_type` (`plastic`, `cardboard`, `metal`), `finish` (`matte`,
+  `glossy`), `pattern` (`marble`, `sparkle`), `translucent` and `glow` (booleans). All nullable;
+  null means unknown. The API validates the three enums; the columns are plain strings.
+  SpoolmanDB carries all five (`spoolman/externaldb.py`, `ExternalFilament`), and
+  `/external/filament/search` returns them.
+- Per-filament stock: `remaining_weight` and `spool_count` on the filament list and detail
+  responses, summed over non-archived spools.
+- `swatch_style` setting: a JSON-encoded string, default `""`, meaning the `classic` style.
+- Reference images: `GET`/`PUT`/`DELETE /filament/{id}/image`, JPEG, PNG or WebP up to 2 MiB,
+  with an `ETag` and `If-None-Match` support. `has_image` on the filament. The server does no
+  image processing; the React client resizes to 1024 px and re-encodes to WebP first.
+
+**React client.** Catalogue fields as five clearable selects on the create and edit forms and as
+opt-in list columns; the stock column; a swatch-style settings tab with a live preview; a 3MF
+"swatch" download (a printable colour sample card with the filament's name and a QR code); image
+upload and display.
+
+**Svelte client.**
+
+- Its `Filament` view model (`lib/types.ts`, filled by `mapFilament` in `lib/api/map.ts`) has
+  none of the catalogue fields, no `has_image`, no stock aggregate.
+- **Bug:** `spoolSource.importExternalFilament` builds the create body field by field and leaves
+  the five catalogue fields out, so a filament imported from SpoolmanDB through this client
+  loses them. The React client copies them (`client/src/pages/filaments/create.tsx`).
+- Stock per filament is **already shown**, in another form: grouping the library by filament
+  puts each filament's total remaining weight in its group row (`GroupRow.svelte`), and the
+  filament inspector's header shows the same total (#572). The React list column has no further
+  equivalent to build here; #415's second item is closed by pointing at those.
+
+## 2. The seam
+
+The catalogue fields are data on the filament, so they belong in the view model, where the
+cache, live updates and the save path already carry everything else. Keeping them out of it
+(a fork component fetching `GET /filament/{id}` itself) would mean a second copy of the filament
+that live updates do not refresh, and a second save path.
+
+So the view model gets **one optional, fork-owned property**, and each upstream function that
+maps a filament gets **one line** that hands over to fork code:
+
+| Upstream file | Edit |
+|---|---|
+| `lib/types.ts` | `ng?: FilamentNg` on `Filament`, with a type-only import |
+| `lib/api/map.ts` | `ng: mapFilamentNg(f)` in `mapFilament`; `Object.assign(out, filamentNgPatchToApi(patch))` in `filamentPatchToApi` |
+| `lib/api/spoolSource.ts` | `Object.assign(body, catalogueFromExternal(ext))` in `importExternalFilament` |
+| `components/library/FilamentInspector.svelte` | one import and `<FilamentCatalogueFields {filament} onchange={(ng) => set({ ng })} />` inside the specs grid |
+
+Everything else is in `lib/ng/filamentCatalogue.ts` (types, option lists, mapping both ways,
+tested) and `lib/ng/components/FilamentCatalogueFields.svelte`.
+
+`ng` keeps the fork's fields in one place: a later upstream field of the same name cannot
+collide with them, and a pull that changes `mapFilament` conflicts on one line at most.
+
+Steps 2 and 3 add to the same `FilamentNg` (`hasImage`) and the same inspector, so they do not
+widen the seam further than one more line each.
+
+## 3. Steps
+
+### Step 1: catalogue fields, and the import fix
+
+- `FilamentNg` = `{ spoolType, finish, pattern, translucent, glow }`, each `null` when unknown.
+- The inspector shows five rows in its specs grid, after the article number: three selects with
+  an empty "unknown" choice, and two for translucent and glow with unknown, yes and no. The
+  booleans are three-way because the database has three states, and "no" is information
+  ("not translucent") that the empty state is not. Saved through the inspector's existing
+  debounced saver, which sends the five together; the mapping sends only what a patch carries,
+  so no other field is touched.
+- `importExternalFilament` copies all five from the catalogue entry. SpoolmanDB gives the
+  booleans as `false` when not set; they are copied as they are, like the React client does.
+- The library's column manager (#456) gets five columns, hidden by default, like every column
+  beyond upstream's row.
+- **Not in step 1:** the fields on the new-filament form. A new filament is usually imported
+  (which now carries them) or typed in for a spool that is being registered right then; the
+  form is upstream's (`NewFilamentCards.svelte`, 450 lines) and a sixth card section would be
+  the largest edit in this plan. They can be set in the inspector straight after. Revisit if
+  asked.
+
+### Step 2: reference images
+
+- `hasImage` in `FilamentNg`.
+- A fork `FilamentImage` section in the inspector's right-hand column, under the manufacturer,
+  showing the image with replace and remove, or an upload button when there is none.
+- Fetched with the client's credentials (a bearer token, not a cookie, so `<img src>` does not
+  work) into an object URL, with the `ETag` kept to revalidate. Uploads go through a port of the
+  React client's `imageTransform.ts`: EXIF rotation applied, longest side at most 1024 px, WebP
+  (JPEG where the browser cannot encode WebP).
+- Not on the new-filament form, for the reason given in step 1.
+
+### Step 3: swatch style and 3MF swatch download
+
+The style setting only affects the download, so they go together.
+
+- `client/src/utils/swatch/*.ts` (about 1,250 lines, framework-free) and its tests are copied to
+  `lib/ng/swatch/`. The one change: its QR module uses `qrcode-generator`, which `client_v2`
+  does not have; it is rewritten against `qrcode`, which `client_v2` already uses, rather than
+  adding a dependency to upstream's `package.json`. The test pins the QR matrix, so a
+  difference would fail the test.
+- A "Download swatch" icon button in the inspector header, beside duplicate and delete, opening
+  a dialog like the React one: style (defaulting to the setting), QR as scan code or URL, and
+  download.
+- The setting as one row in the existing settings page, following #430's printers and custom
+  links tabs, with the two-sample preview.
+
+## 4. Open questions
+
+Each with the answer this design assumes if nobody objects.
+
+1. **Catalogue fields on the new-filament form?** Default: not now (step 1 above).
+2. **Filter the library by the catalogue fields?** Default: no. Upstream's filter menu reads
+   upstream's field list; adding to it is a larger edit than any of these steps, and nobody has
+   asked for it.
+3. **Show the image anywhere but the inspector (a library column, the gallery card)?** Default:
+   no. Every image costs an authenticated request, and the gallery is about colour.

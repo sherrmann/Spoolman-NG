@@ -568,5 +568,19 @@
 	"spool_totals_selected_one": "{count} καρούλι έχει επιλεγεί",
 	"spool_totals_selected_other": "{count} καρούλια έχουν επιλεγεί",
 	"buttons_columns": "Στήλες",
-	"buttons_columnsTooltip": "Επιλέξτε, αναδιατάξτε και αποκρύψτε τις στήλες του πίνακα"
+	"buttons_columnsTooltip": "Επιλέξτε, αναδιατάξτε και αποκρύψτε τις στήλες του πίνακα",
+	"filament_fields_spool_type": "Τύπος Καρουλιού",
+	"filament_fields_finish": "Φινίρισμα",
+	"filament_fields_pattern": "Μοτίβο",
+	"filament_fields_translucent": "Ημιδιαφανές",
+	"filament_fields_glow": "Φωσφορίζει στο Σκοτάδι",
+	"filament_spool_type_options_plastic": "Πλαστικό",
+	"filament_spool_type_options_cardboard": "Χαρτόνι",
+	"filament_spool_type_options_metal": "Μεταλλικό",
+	"filament_finish_options_matte": "Ματ",
+	"filament_finish_options_glossy": "Γυαλιστερό",
+	"filament_pattern_options_marble": "Μάρμαρο",
+	"filament_pattern_options_sparkle": "Γκλίτερ",
+	"yes": "Ναι",
+	"no": "Όχι"
 }

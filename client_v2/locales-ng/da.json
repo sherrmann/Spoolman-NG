@@ -568,5 +568,19 @@
 	"spool_totals_selected_one": "{count} spole valgt",
 	"spool_totals_selected_other": "{count} spoler valgt",
 	"buttons_columns": "Kolonner",
-	"buttons_columnsTooltip": "Vælg, omarrangér og skjul tabelkolonner"
+	"buttons_columnsTooltip": "Vælg, omarrangér og skjul tabelkolonner",
+	"filament_fields_spool_type": "Spoletype",
+	"filament_fields_finish": "Finish",
+	"filament_fields_pattern": "Mønster",
+	"filament_fields_translucent": "Gennemskinnelig",
+	"filament_fields_glow": "Selvlysende",
+	"filament_spool_type_options_plastic": "Plast",
+	"filament_spool_type_options_cardboard": "Pap",
+	"filament_spool_type_options_metal": "Metal",
+	"filament_finish_options_matte": "Mat",
+	"filament_finish_options_glossy": "Blank",
+	"filament_pattern_options_marble": "Marmor",
+	"filament_pattern_options_sparkle": "Glimmer",
+	"yes": "Ja",
+	"no": "Nej"
 }

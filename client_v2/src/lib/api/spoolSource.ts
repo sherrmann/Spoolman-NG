@@ -27,6 +27,8 @@ import { filamentLabel, type FilterOption } from '$lib/utils/library';
 import type { EntityType } from './fields';
 import { type ExternalFilament } from './external';
 import { searchAll } from './search';
+// Spoolman NG fork addition (#415): SpoolmanDB's catalogue fields on an imported filament.
+import { catalogueFromExternal } from '$lib/ng/filamentCatalogue';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Json = Record<string, any>;
@@ -287,7 +289,8 @@ class HttpSpoolSource {
 			spool_weight: ext.spool_weight ?? undefined,
 			settings_extruder_temp: ext.extruder_temp ?? undefined,
 			settings_bed_temp: ext.bed_temp ?? undefined,
-			external_id: ext.id
+			external_id: ext.id,
+			...catalogueFromExternal(ext)
 		};
 		if (ext.color_hexes && ext.color_hexes.length) {
 			body.multi_color_hexes = ext.color_hexes.map((h) => h.replace(/^#/, '')).join(',');

@@ -568,5 +568,19 @@
 	"spool_totals_selected_one": "{count} spole vald",
 	"spool_totals_selected_other": "{count} spolar valda",
 	"buttons_columns": "Kolumner",
-	"buttons_columnsTooltip": "Välj, ordna om och dölj tabellkolumner"
+	"buttons_columnsTooltip": "Välj, ordna om och dölj tabellkolumner",
+	"filament_fields_spool_type": "Spoltyp",
+	"filament_fields_finish": "Finish",
+	"filament_fields_pattern": "Mönster",
+	"filament_fields_translucent": "Genomskinlig",
+	"filament_fields_glow": "Självlysande",
+	"filament_spool_type_options_plastic": "Plast",
+	"filament_spool_type_options_cardboard": "Kartong",
+	"filament_spool_type_options_metal": "Metall",
+	"filament_finish_options_matte": "Matt",
+	"filament_finish_options_glossy": "Blank",
+	"filament_pattern_options_marble": "Marmor",
+	"filament_pattern_options_sparkle": "Glitter",
+	"yes": "Ja",
+	"no": "Nej"
 }

@@ -568,5 +568,19 @@
 	"spool_totals_selected_one": "{count} قرقره انتخاب شد",
 	"spool_totals_selected_other": "تعداد {count} قرقره انتخاب شد",
 	"buttons_columns": "ستون‌ها",
-	"buttons_columnsTooltip": "انتخاب، جابه‌جایی و پنهان کردن ستون‌های جدول"
+	"buttons_columnsTooltip": "انتخاب، جابه‌جایی و پنهان کردن ستون‌های جدول",
+	"filament_fields_spool_type": "نوع قرقره",
+	"filament_fields_finish": "نوع سطح",
+	"filament_fields_pattern": "طرح",
+	"filament_fields_translucent": "نیمه‌شفاف",
+	"filament_fields_glow": "شب‌تاب",
+	"filament_spool_type_options_plastic": "پلاستیکی",
+	"filament_spool_type_options_cardboard": "مقوایی",
+	"filament_spool_type_options_metal": "فلزی",
+	"filament_finish_options_matte": "مات",
+	"filament_finish_options_glossy": "براق",
+	"filament_pattern_options_marble": "ماربل",
+	"filament_pattern_options_sparkle": "اکلیلی",
+	"yes": "بله",
+	"no": "خیر"
 }

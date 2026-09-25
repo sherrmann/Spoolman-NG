@@ -568,5 +568,19 @@
 	"spool_totals_selected_one": "{count} ச்பூல் தேர்ந்தெடுக்கப்பட்டது",
 	"spool_totals_selected_other": "{count} ச்பூல்கள் தேர்ந்தெடுக்கப்பட்டன",
 	"buttons_columns": "நெடுவரிசைகள்",
-	"buttons_columnsTooltip": "அட்டவணை நெடுவரிசைகளைத் தேர்ந்தெடுக்கவும், வரிசை மாற்றவும், மறைக்கவும்"
+	"buttons_columnsTooltip": "அட்டவணை நெடுவரிசைகளைத் தேர்ந்தெடுக்கவும், வரிசை மாற்றவும், மறைக்கவும்",
+	"filament_fields_spool_type": "ச்பூல் வகை",
+	"filament_fields_finish": "பூச்சு",
+	"filament_fields_pattern": "வடிவமைப்பு",
+	"filament_fields_translucent": "ஒளிபுகும்",
+	"filament_fields_glow": "இருட்டில் ஒளிரும்",
+	"filament_spool_type_options_plastic": "பிளாஸ்டிக்",
+	"filament_spool_type_options_cardboard": "அட்டை",
+	"filament_spool_type_options_metal": "உலோகம்",
+	"filament_finish_options_matte": "மெருகற்ற",
+	"filament_finish_options_glossy": "பளபளப்பான",
+	"filament_pattern_options_marble": "பளிங்கு",
+	"filament_pattern_options_sparkle": "மினுமினுப்பு",
+	"yes": "ஆம்",
+	"no": "இல்லை"
 }

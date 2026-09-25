@@ -33,8 +33,17 @@ const BUILT_IN: ColumnDef[] = [
 	{ id: 'firstUsed', label: m['spool.fields.firstUsed'], width: 84 },
 	{ id: 'lastUsed', label: m['spool.fields.lastUsed'], width: 84 },
 	{ id: 'registered', label: m['spool.fields.registered'], width: 84 },
-	{ id: 'comment', label: m['spool.fields.comment'], width: 140 }
+	{ id: 'comment', label: m['spool.fields.comment'], width: 140 },
+	// The filament's SpoolmanDB catalogue fields (#415).
+	{ id: 'spoolType', label: ng.filament_fields_spool_type, width: 80 },
+	{ id: 'finish', label: ng.filament_fields_finish, width: 70 },
+	{ id: 'pattern', label: ng.filament_fields_pattern, width: 70 },
+	{ id: 'translucent', label: ng.filament_fields_translucent, width: 80 },
+	{ id: 'glow', label: ng.filament_fields_glow, width: 80 }
 ];
+
+/** The catalogue columns, which SpoolCells fills from `filament.ng`. */
+export const CATALOGUE_COLUMNS = new Set(['spoolType', 'finish', 'pattern', 'translucent', 'glow']);
 
 export const EXTRA_PREFIX = 'extra.';
 

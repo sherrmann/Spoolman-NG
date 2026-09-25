@@ -619,5 +619,19 @@
 	"spool_columns_reset": "Reset columns",
 	"spool_columns_move_up": "Move {name} up",
 	"spool_columns_move_down": "Move {name} down",
-	"spool_columns_resize": "Resize {name}"
+	"spool_columns_resize": "Resize {name}",
+	"filament_fields_spool_type": "Spool Type",
+	"filament_fields_finish": "Finish",
+	"filament_fields_pattern": "Pattern",
+	"filament_fields_translucent": "Translucent",
+	"filament_fields_glow": "Glow in the Dark",
+	"filament_spool_type_options_plastic": "Plastic",
+	"filament_spool_type_options_cardboard": "Cardboard",
+	"filament_spool_type_options_metal": "Metal",
+	"filament_finish_options_matte": "Matte",
+	"filament_finish_options_glossy": "Glossy",
+	"filament_pattern_options_marble": "Marble",
+	"filament_pattern_options_sparkle": "Sparkle",
+	"yes": "Yes",
+	"no": "No"
 }
