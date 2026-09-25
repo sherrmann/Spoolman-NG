@@ -2,14 +2,18 @@
 
 SQLite parses `a OR b OR c ...` into a tree as deep as the chain is long and refuses one deeper
 than 1000, so a filter with about a thousand values raised "Expression tree is too large" as a
-500. Exact matches now share one IN list, which does not nest, so any number of them works; a
-chain of alternatives that cannot be merged (substring matches) is capped with a 400.
+500. Exact matches on a built-in field now share one IN list, which does not nest, so any number
+of them works; a chain of alternatives that cannot be merged is capped on SQLite with a 400.
 """
 
 import json
 
 import pytest
 from httpx import AsyncClient
+from sqlalchemy import column
+
+from spoolman import env
+from spoolman.database.utils import SQLITE_MAX_FILTER_ALTERNATIVES, any_of
 
 SPOOL = "/api/v1/spool"
 FIL = "/api/v1/filament"
@@ -83,7 +87,7 @@ async def test_thousands_of_substring_values_are_refused_with_a_400(
     resp = await client.get(url, params={param: ",".join(f"x{i}" for i in range(MANY)), **more})
 
     assert resp.status_code == 400, resp.text
-    assert "Too many alternatives" in resp.json()["message"]
+    assert "too many alternatives" in resp.json()["message"]
 
 
 async def test_thousands_of_extra_field_values_are_refused_with_a_400(client: AsyncClient):
@@ -93,3 +97,23 @@ async def test_thousands_of_extra_field_values_are_refused_with_a_400(client: As
 
     assert resp.status_code == 400, resp.text
     assert "extra.bin" in resp.json()["message"]
+
+
+def test_the_cap_applies_to_sqlite_only(monkeypatch: pytest.MonkeyPatch):
+    """Postgres, MariaDB and CockroachDB parse a long OR chain without a depth limit."""
+    conditions = [column("x") == i for i in range(SQLITE_MAX_FILTER_ALTERNATIVES + 1)]
+
+    for db_type in (None, env.DatabaseType.SQLITE):
+        monkeypatch.setattr(env, "get_database_type", lambda db_type=db_type: db_type)
+        with pytest.raises(ValueError, match="too many alternatives"):
+            any_of(conditions, "x")
+
+    for db_type in (env.DatabaseType.POSTGRES, env.DatabaseType.MYSQL, env.DatabaseType.COCKROACHDB):
+        monkeypatch.setattr(env, "get_database_type", lambda db_type=db_type: db_type)
+        any_of(conditions, "x")
+
+
+async def test_a_long_search_still_works_on_sqlite(client: AsyncClient):
+    """Each search term is eight alternatives; SQLite itself accepted about 124 terms before the cap."""
+    resp = await client.get(SPOOL, params={"search": ",".join(f"w{i}" for i in range(100))})
+    assert resp.status_code == 200, resp.text

@@ -11,6 +11,7 @@ from sqlalchemy import Select
 from sqlalchemy.orm import attributes
 from sqlalchemy.sql import ColumnElement
 
+from spoolman import env
 from spoolman.database import models
 
 # Escape character for LIKE patterns. Deliberately not backslash: a backslash ESCAPE clause is
@@ -191,23 +192,27 @@ def split_filter_values(value: str) -> list[str]:
         start = end + 1
 
 
-# How many alternatives one filter may OR together. SQLite parses `a OR b OR c ...` into a tree
-# as deep as the chain is long and refuses one deeper than 1000 ("Expression tree is too large"),
-# a 500 for what is really an oversized request. SQLAlchemy flattens nested ORs back into one
-# chain, so the tree cannot be balanced; the chain is kept short instead. Exact matches do not
-# count against this: they are collected into one IN list, which SQLite does not nest.
-MAX_FILTER_ALTERNATIVES = 500
+# How many alternatives one filter may OR together on SQLite. SQLite parses `a OR b OR c ...`
+# into a tree as deep as the chain is long and refuses one deeper than 1000 ("Expression tree is
+# too large"), which reached the client as a 500. Measured, a spool list with every other filter
+# set still ran at 980 alternatives and failed at 990, so this leaves room for the rest of the
+# query. SQLAlchemy flattens nested ORs back into one chain, so the tree cannot be balanced
+# instead. The other three databases have no such limit and are not capped.
+#
+# Exact matches on a built-in string field, and ids, do not add to the chain: they are collected
+# into one IN list, which SQLite does not nest.
+SQLITE_MAX_FILTER_ALTERNATIVES = 900
 
 
 def any_of(conditions: Sequence[ColumnElement[bool]], what: str) -> ColumnElement[bool]:
-    """OR `conditions` together, refusing a chain too long for every backend to parse.
+    """OR `conditions` together, refusing a chain too long for SQLite to parse.
 
     Raises ValueError, which the list endpoints turn into a 400, naming `what` was filtered on.
     """
-    if len(conditions) > MAX_FILTER_ALTERNATIVES:
+    if len(conditions) > SQLITE_MAX_FILTER_ALTERNATIVES and env.get_database_type() in (None, env.DatabaseType.SQLITE):
         raise ValueError(
-            f"Too many alternatives in the '{what}' filter ({len(conditions)}). At most "
-            f"{MAX_FILTER_ALTERNATIVES} are supported; exact matches in double quotes do not count.",
+            f"The '{what}' filter asks for too many alternatives at once ({len(conditions)}); "
+            f"with SQLite at most {SQLITE_MAX_FILTER_ALTERNATIVES} are supported. Split the request.",
         )
     return sqlalchemy.or_(*conditions)
 
