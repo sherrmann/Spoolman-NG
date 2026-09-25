@@ -111,9 +111,11 @@ than dropped so that `client_v2` does not reproduce them when it reimplements ex
 ### Partial
 
 Upstream has `GET /external/filament/search`, a server-side word match over the external catalogue
-(`spoolman/api/v1/externaldb.py:37-58` upstream). This fork instead put rich query-param filters on
-the list endpoint itself — `manufacturer`, `name`, `material`, `color_hex`, `diameter`, `weight`,
-`id` (`spoolman/api/v1/externaldb.py:71-98`). Overlapping, not identical.
+(`spoolman/api/v1/externaldb.py:37-58` upstream). This fork put rich query-param filters on the list
+endpoint itself — `manufacturer`, `name`, `material`, `color_hex`, `diameter`, `weight`, `id`
+(`spoolman/api/v1/externaldb.py:71-98`) — and, since 2026-09-25 (#443), also has the search endpoint,
+with upstream's paging, over its merged SpoolmanDB and TigerTag catalogue. The vendored Svelte client
+had been calling the search endpoint all along and getting a 404.
 
 ### Deliberate divergences, not gaps
 
@@ -275,8 +277,11 @@ Endpoint-level differences inside shared routers:
 | `GET/PUT/DELETE /filament/{id}/image` | yes | no |
 | `GET /export/filament/{id}/slicer` | yes | no |
 | `GET /spool` — `search`, `archived`, `color_hex` + `color_similarity_threshold` | yes | no |
-| `GET /spool` — `first_used`, `last_used`, `registered`, `filament.multi_color_direction` | **no** (deliberate) | yes |
-| `GET /external/filament/search` | no | yes |
+| `GET /spool` — `first_used`, `last_used`, `registered` | **no** (deliberate) | yes |
+| `GET /spool` / `GET /spool/group` — `filament.multi_color_direction` | yes (#446) | yes |
+| `GET /spool/group` — `include_empty` | yes (#444) | yes |
+| `GET /external/filament/search` | yes (#443) | yes |
+| Filament tags: `POST`/`DELETE /filament/{id}/tag`, `GET /filament?tag=`, `Filament.tags` | yes (#445) | yes |
 | `GET /external/filament` rich filters, `GET /external/profile/{id}` | yes | no |
 | `POST /v1/update` (admin-gated self-update) | yes (`router.py:139-176`) | no |
 | `GET /v1/info` extra fields | `update_check_enabled`, `latest_version`, `update_available`, `release_url`, `install_type`, `update_action_available`, `clients_available`, `client_active`, `client_switch_enabled` | base fields only |

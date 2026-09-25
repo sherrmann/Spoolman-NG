@@ -1,5 +1,5 @@
 <script lang="ts">
-	// The NFC/RFID tags linked to a spool, listed in its inspector.
+	// The NFC/RFID tags linked to a spool or filament, listed in its inspector.
 	//
 	// A tag is identified by its hardware UID and nothing else, so there is very
 	// little to show: the UID, what kind of tag it is when the reader said, and
@@ -9,8 +9,8 @@
 	// to be typed would make one tag look like several.
 	//
 	// Adding is a quiet section action rather than another button in the inspector
-	// header: that header already carries the spool's primary actions, and linking
-	// a tag is not one of the things you do to a spool every day.
+	// header: that header already carries the primary actions, and linking a tag is
+	// not one of the things you do every day.
 	import SectionLabel from './SectionLabel.svelte';
 	import AddTagModal from './AddTagModal.svelte';
 	// Spoolman NG fork addition: writing this spool's data ONTO a tag. Upstream links a tag by
@@ -22,20 +22,28 @@
 	import Plus from '@lucide/svelte/icons/plus';
 	import Nfc from '@lucide/svelte/icons/nfc';
 	import X from '@lucide/svelte/icons/x';
-	import type { Spool, SpoolTag } from '$lib/types';
-	import { unlinkTag } from '$lib/api/tags';
+	import type { Tag } from '$lib/types';
+	import { unlinkTag, type TagKind } from '$lib/api/tags';
 	import { toasts } from '$lib/stores/toasts.svelte';
 	import { formatShortDate } from '$lib/utils/datetime';
 	import * as m from '$lib/paraglide/messages';
 
-	let { spool }: { spool: Spool } = $props();
+	interface Props {
+		/** What the tags identify, and so where links and unlinks go. */
+		kind: TagKind;
+		id: number | string;
+		tags: Tag[];
+	}
+	let { kind, id, tags }: Props = $props();
 
 	let addOpen = $state(false);
-	// Spoolman NG fork addition. The write dialog needs the filament, which a Spool carries only
-	// by id; the inspector this section sits in has already loaded it.
+	// Spoolman NG fork addition. Writing a tag encodes one spool's data, so the action is only
+	// offered on a spool's tags. The spool comes from the same store the inspector reads it from,
+	// and the write dialog needs its filament, which a Spool carries only by id.
 	let writeOpen = $state(false);
-	let filament = $derived(inventory.filamentById(spool.filamentId));
-	let pending = $state<SpoolTag | null>(null);
+	let spool = $derived(kind === 'spool' ? inventory.spoolById(Number(id)) : undefined);
+	let filament = $derived(spool ? inventory.filamentById(spool.filamentId) : undefined);
+	let pending = $state<Tag | null>(null);
 	let unlinking = $state(false);
 
 	async function confirmUnlink() {
@@ -43,8 +51,8 @@
 		if (!tag) return;
 		unlinking = true;
 		try {
-			await unlinkTag(spool.id, tag.uid);
-			// No local edit: unlinking emits the spool's ordinary `updated` event, and
+			await unlinkTag({ kind, id }, tag.uid);
+			// No local edit: unlinking emits the holder's ordinary `updated` event, and
 			// the list below re-renders from the cache when it arrives.
 			toasts.success(m['tags.unlinked']());
 			pending = null;
@@ -53,6 +61,10 @@
 		} finally {
 			unlinking = false;
 		}
+	}
+
+	function unlinkBody(uid: string): string {
+		return kind === 'spool' ? m['tags.unlinkBody']({ uid }) : m['tags.unlinkBodyFilament']({ uid });
 	}
 </script>
 
@@ -63,12 +75,12 @@
 			<Plus size={13} />
 			{m['tags.add']()}
 		</button>
-		<!-- Spoolman NG fork addition. Omitted, not disabled, while the filament is missing from
-		     the store: `.link` has no disabled styling, so a disabled one is indistinguishable
-		     from a live one -- and $lib/utils/nfc states the rule this follows, that a dead
-		     button the user cannot explain is worse than no button. The absence is transient;
-		     the inspector loads the filament and the control appears with it. -->
-		{#if filament}
+		<!-- Spoolman NG fork addition. Omitted, not disabled, on a filament's tags and while the
+		     spool's filament is missing from the store: `.link` has no disabled styling, so a
+		     disabled one is indistinguishable from a live one -- and $lib/utils/nfc states the rule
+		     this follows, that a dead button the user cannot explain is worse than no button. The
+		     absence is transient; the inspector loads the filament and the control appears with it. -->
+		{#if spool && filament}
 			<button class="link" onclick={() => (writeOpen = true)}>
 				<Nfc size={13} />
 				{ng.nfc_encode_button()}
@@ -77,9 +89,9 @@
 	{/snippet}
 </SectionLabel>
 
-{#if spool.tags.length}
+{#if tags.length}
 	<ul class="tags">
-		{#each spool.tags as tag (tag.uid)}
+		{#each tags as tag (tag.uid)}
 			<li class="tag">
 				<Nfc size={14} class="ico" />
 				<span class="uid mono">{tag.uid}</span>
@@ -100,11 +112,11 @@
 	<div class="none">{m['tags.none']()}</div>
 {/if}
 
-<AddTagModal open={addOpen} {spool} onclose={() => (addOpen = false)} />
+<AddTagModal open={addOpen} {kind} {id} onclose={() => (addOpen = false)} />
 
 <!-- Spoolman NG fork addition. Mounted only while open, like the fork's other dialogs, so it
      starts fresh each time and its abort controller cannot outlive a closed screen. -->
-{#if writeOpen && filament}
+{#if writeOpen && spool && filament}
 	<NfcWriteModal {spool} {filament} onclose={() => (writeOpen = false)} />
 {/if}
 
@@ -112,7 +124,7 @@
 	open={pending !== null}
 	busy={unlinking}
 	title={m['tags.unlinkTitle']()}
-	lines={pending ? [m['tags.unlinkBody']({ uid: pending.uid })] : []}
+	lines={pending ? [unlinkBody(pending.uid)] : []}
 	confirmLabel={unlinking ? m['tags.unlinking']() : m['tags.unlink']()}
 	onconfirm={confirmUnlink}
 	onclose={() => (pending = null)}

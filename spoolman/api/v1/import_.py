@@ -79,7 +79,8 @@ async def _build_filament(db: AsyncSession, data: dict[str, Any], existing: mode
     extra = data.pop("extra", None)
     vendor_id = data.pop("vendor_id", None)
     direction = data.pop("multi_color_direction", None)
-    obj = existing or models.Filament(registered=_now())
+    # tags=[] for the reason _build_spool gives below.
+    obj = existing or models.Filament(registered=_now(), tags=[])
     for key, value in data.items():
         setattr(obj, key, value)
     obj.multi_color_direction = direction.value if direction is not None else None

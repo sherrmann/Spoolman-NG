@@ -605,23 +605,72 @@ async def nfc_lookup(
 
     tag_format = _detect_tag_format(raw_data, request.tag_type)
 
-    if request.auto_create and not request.nfc_tag_uid:
-        # A spool created here is found again by the UID of the tag that created it, so with
-        # no UID there is nothing to bind it to and the next identical scan would create
-        # another one -- silently duplicating inventory for as long as the client kept
-        # scanning. Refusing says which field is missing; inventing a substitute identity
-        # would keep a broken integration quiet while corrupting the very data it writes.
+    if request.auto_create:
+        refusal = await _auto_create_refusal(db, request.nfc_tag_uid)
+        if refusal is not None:
+            return refusal
+        async with _AUTO_CREATE_LOCK:
+            return await _dispatch_lookup(db, tag_format, raw_data, request)
+    return await _dispatch_lookup(db, tag_format, raw_data, request)
+
+
+async def _auto_create_refusal(db: AsyncSession, nfc_tag_uid: str | None) -> NfcLookupResponse | None:
+    """Say why auto_create cannot go ahead for this tag, or None if it can.
+
+    A spool created by a lookup is found again by the UID of the tag that created it. Where
+    that cannot work, every later identical scan would create another spool, silently
+    duplicating inventory for as long as the client kept scanning; refusing says what is wrong,
+    where inventing a substitute identity would keep a broken integration quiet while
+    corrupting the very data it writes.
+    """
+    if not nfc_tag_uid:
         return NfcLookupResponse(
             success=False,
             message=(
                 "auto_create requires nfc_tag_uid: without the tag's UID the created spool could not be found again."
             ),
         )
+    from spoolman.tags import normalize_uid
 
-    if request.auto_create:
-        async with _AUTO_CREATE_LOCK:
-            return await _dispatch_lookup(db, tag_format, raw_data, request)
-    return await _dispatch_lookup(db, tag_format, raw_data, request)
+    try:
+        normalize_uid(nfc_tag_uid)
+    except ValueError as e:
+        # Not a UID any tag could be stored under, so the spool could not be bound to it either.
+        return NfcLookupResponse(success=False, message=f"auto_create refused: {e}")
+    refusal = await _filament_tag_refusal(db, nfc_tag_uid)
+    if refusal is not None:
+        return NfcLookupResponse(success=False, message=f"auto_create refused: {refusal}")
+    return None
+
+
+async def _filament_tag_refusal(db: AsyncSession, uid_hex: str | None) -> str | None:
+    """Say why a spool must not be created from a tag that identifies a filament, or None.
+
+    A spool created from a tag is found again by that tag's UID. A UID linked to a filament can
+    never be linked to the new spool too, so every later identical request would create another
+    spool, unbound, duplicating inventory.
+    """
+    held_by = await _filament_holding_uid(db, uid_hex)
+    if held_by is None:
+        return None
+    return (
+        f"tag {uid_hex} is linked to filament {held_by}, not to a spool, "
+        "so a spool created from it could not be found again."
+    )
+
+
+async def _filament_holding_uid(db: AsyncSession, uid_hex: str | None) -> int | None:
+    """Return the id of the filament this tag UID is linked to, if it is linked to one."""
+    if not uid_hex:
+        return None
+    from spoolman.database import models
+    from spoolman.database import tag as tag_db
+
+    try:
+        target = await tag_db.find_by_uid(db, uid_hex)
+    except ValueError:
+        return None
+    return target.id if isinstance(target, models.Filament) else None
 
 
 async def _dispatch_lookup(
@@ -1109,6 +1158,9 @@ async def nfc_create_from_tag(
 
     Supports both TigerTag and Qidi tag formats.
     """
+    refusal = await _filament_tag_refusal(db, request.nfc_tag_uid)
+    if refusal is not None:
+        return NfcCreateFromTagResponse(success=False, message=f"Not created: {refusal}")
     try:
         if request.tag_type == "qidi":
             return await _create_from_qidi_tag(db, request)

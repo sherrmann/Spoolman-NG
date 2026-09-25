@@ -57,6 +57,7 @@ function filament(over: Partial<ForkFilament> = {}): ForkFilament {
 		comment: '',
 		registeredLabel: '',
 		extra: {},
+		tags: [],
 		...over
 	};
 }

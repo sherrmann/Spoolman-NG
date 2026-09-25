@@ -975,9 +975,9 @@ async def rename_location(
 # ---------------------------------------------------------------------------------------------
 # Spool grouping (GET /spool/group) and field-value rename (PATCH /spool/field/{field}).
 # Ported from upstream's spoolman/database/spool.py (find_groups / rename_field_value), adapted to
-# this fork's filter surface: no first_used/last_used/registered range filters or include_empty
-# (none of those exist elsewhere on this fork's spool endpoints yet). filament_multi_color_direction
-# was added to both find() and find_groups() later, because the vendored client sends it. filament/vendor extra
+# this fork's filter surface: no first_used/last_used/registered range filters (none exist
+# elsewhere on this fork's spool endpoints yet). filament_multi_color_direction and include_empty
+# were added later, because the vendored client sends them. filament/vendor extra
 # field filters ARE wired in, via the already-ported apply_spool_related_extra_filters.
 # ---------------------------------------------------------------------------------------------
 
@@ -1091,9 +1091,8 @@ def _group_aggregates() -> tuple[ColumnElement, ColumnElement, ColumnElement, Co
     )
     remaining_expr = case((remaining_expr < 0, 0.0), else_=remaining_expr)
     return (
-        # COUNT of the spool's id, not COUNT(*), for parity with upstream: harmless here since
-        # this fork's group query (unlike upstream's include_empty one) always selects FROM the
-        # spools, so every row already has one, but it keeps the two implementations comparable.
+        # COUNT of the spool's id, not COUNT(*): the row an empty group is made of (include_empty)
+        # has a filament but no spool, and counting rows would score that phantom as one spool.
         func.count(models.Spool.id).label("spool_count"),
         func.count(case((models.Spool.used_weight > 0, models.Spool.id))).label("in_use_count"),
         # Rounded like every other weight expression in this file: summing floats across a
@@ -1105,6 +1104,41 @@ def _group_aggregates() -> tuple[ColumnElement, ColumnElement, ColumnElement, Co
         # Named apart from the `last_used` filter parameter: this is the group's aggregate.
         func.max(models.Spool.last_used).label("last_used"),
     )
+
+
+def _not_archived() -> ColumnElement:
+    """Match spools that are not archived.
+
+    `archived` is nullable with a default of false, so "not archived" means false OR null. Shared
+    because it lands in two places: a WHERE for the spool-driven group query, and the JOIN
+    condition of the filament-driven one behind include_empty (see find_groups).
+    """
+    return sqlalchemy.or_(models.Spool.archived.is_(False), models.Spool.archived.is_(None))
+
+
+def _apply_group_filament_filters(
+    stmt: sqlalchemy.Select,
+    *,
+    filament_id_column: ColumnElement,
+    filament_name: str | None,
+    filament_id: int | Sequence[int] | None,
+    filament_material: str | None,
+    filament_multi_color_direction: str | None,
+    vendor_name: str | None,
+    vendor_id: int | Sequence[int] | None,
+) -> sqlalchemy.Select:
+    """Apply the group filters that describe the FILAMENT, whatever the query selects from.
+
+    These are the conditions a filament can answer with no spool involved, which is what the
+    include_empty query needs. `filament_id_column` is Spool.filament_id when selecting spools
+    and Filament.id when selecting filaments. Assumes Filament and Vendor are already joined.
+    """
+    stmt = add_where_clause_int(stmt, filament_id_column, filament_id)
+    stmt = add_where_clause_int_opt(stmt, models.Filament.vendor_id, vendor_id)
+    stmt = add_where_clause_str(stmt, models.Vendor.name, vendor_name)
+    stmt = add_where_clause_str_opt(stmt, models.Filament.name, filament_name)
+    stmt = add_where_clause_str_opt(stmt, models.Filament.material, filament_material)
+    return add_where_clause_str_opt(stmt, models.Filament.multi_color_direction, filament_multi_color_direction)
 
 
 def _apply_group_filters(
@@ -1127,55 +1161,110 @@ def _apply_group_filters(
     refactored to share this builder.
     """
     stmt = stmt.join(models.Spool.filament, isouter=True).join(models.Filament.vendor, isouter=True)
-    stmt = add_where_clause_int(stmt, models.Spool.filament_id, filament_id)
-    stmt = add_where_clause_int_opt(stmt, models.Filament.vendor_id, vendor_id)
-    stmt = add_where_clause_str(stmt, models.Vendor.name, vendor_name)
-    stmt = add_where_clause_str_opt(stmt, models.Filament.name, filament_name)
-    stmt = add_where_clause_str_opt(stmt, models.Filament.material, filament_material)
-    stmt = add_where_clause_str_opt(stmt, models.Filament.multi_color_direction, filament_multi_color_direction)
+    stmt = _apply_group_filament_filters(
+        stmt,
+        filament_id_column=models.Spool.filament_id,
+        filament_name=filament_name,
+        filament_id=filament_id,
+        filament_material=filament_material,
+        filament_multi_color_direction=filament_multi_color_direction,
+        vendor_name=vendor_name,
+        vendor_id=vendor_id,
+    )
     stmt = add_where_clause_str_opt(stmt, models.Spool.location, location)
     stmt = add_where_clause_str_opt(stmt, models.Spool.lot_nr, lot_nr)
     if not allow_archived:
-        # Since the archived field is nullable, and default is false, we need to check for both false or null
-        stmt = stmt.where(
-            sqlalchemy.or_(
-                models.Spool.archived.is_(False),
-                models.Spool.archived.is_(None),
-            ),
-        )
+        stmt = stmt.where(_not_archived())
     return stmt
 
 
-async def find_groups(
+def _reject_spool_scoped_filters(
+    group_by: str,
+    *,
+    location: str | None,
+    lot_nr: str | None,
+    extra_field_filters: dict[str, str] | None,
+) -> None:
+    """Refuse an include_empty query that also filters on the spools themselves.
+
+    "Which of these filaments are on Shelf A" has no answer for a filament that is nowhere: the
+    filter would either drop every empty group (making the flag a no-op) or return the whole
+    catalogue as empty. Both are worse than saying so. The Svelte client never sends the flag
+    together with such a filter.
+    """
+    if group_by != "filament":
+        raise ValueError(f"include_empty is only supported when grouping by filament, not by '{group_by}'.")
+    named = [name for name, value in (("location", location), ("lot_nr", lot_nr)) if value is not None]
+    if extra_field_filters:
+        named.append("spool extra fields")
+    if named:
+        raise ValueError(
+            f"include_empty cannot be combined with filters on the spools themselves "
+            f"({', '.join(named)}); a filament with no spools has no value for them.",
+        )
+
+
+def _filaments_with_their_spools_stmt(
+    *,
+    aggregates: tuple[ColumnElement, ...],
+    allow_archived: bool,
+    filament_name: str | None,
+    filament_id: int | Sequence[int] | None,
+    filament_material: str | None,
+    filament_multi_color_direction: str | None,
+    vendor_name: str | None,
+    vendor_id: int | Sequence[int] | None,
+) -> sqlalchemy.Select:
+    """Select every matching filament with its spools outer-joined on, aggregates and all.
+
+    The inverse of the usual group query: rows come from the filaments, so a filament with no
+    spools still produces one, and _group_aggregates is written to come out as zero for it.
+    The archived rule is the one spool condition that reaches this query, and it rides in the
+    JOIN rather than the WHERE: hiding a filament's archived spools must leave the filament
+    standing as an empty group, where a WHERE would delete its row.
+    """
+    join_cond = [models.Spool.filament_id == models.Filament.id]
+    if not allow_archived:
+        join_cond.append(_not_archived())
+    stmt = (
+        sqlalchemy.select(models.Filament.id.label("group_key"), *aggregates)
+        .select_from(models.Filament)
+        .outerjoin(models.Spool, sqlalchemy.and_(*join_cond))
+        .join(models.Filament.vendor, isouter=True)
+    )
+    return _apply_group_filament_filters(
+        stmt,
+        filament_id_column=models.Filament.id,
+        filament_name=filament_name,
+        filament_id=filament_id,
+        filament_material=filament_material,
+        filament_multi_color_direction=filament_multi_color_direction,
+        vendor_name=vendor_name,
+        vendor_id=vendor_id,
+    )
+
+
+async def _spools_grouped_stmt(
     *,
     db: AsyncSession,
     group_by: str,
-    filament_name: str | None = None,
-    filament_id: int | Sequence[int] | None = None,
-    filament_material: str | None = None,
-    filament_multi_color_direction: str | None = None,
-    vendor_name: str | None = None,
-    vendor_id: int | Sequence[int] | None = None,
-    location: str | None = None,
-    lot_nr: str | None = None,
-    allow_archived: bool = False,
-    extra_field_filters: dict[str, str] | None = None,
-    filament_extra_field_filters: dict[str, str] | None = None,
-    vendor_extra_field_filters: dict[str, str] | None = None,
-    sort_by: dict[str, SortOrder] | None = None,
-    limit: int | None = None,
-    offset: int = 0,
-) -> tuple[list[SpoolGroupResult], int]:
-    """Group matching spools by one axis and return per-group aggregates.
+    aggregates: tuple[ColumnElement, ...],
+    filament_name: str | None,
+    filament_id: int | Sequence[int] | None,
+    filament_material: str | None,
+    filament_multi_color_direction: str | None,
+    vendor_name: str | None,
+    vendor_id: int | Sequence[int] | None,
+    location: str | None,
+    lot_nr: str | None,
+    allow_archived: bool,
+    extra_field_filters: dict[str, str] | None,
+) -> tuple[sqlalchemy.Select, ColumnElement, ColumnElement]:
+    """Build the usual group query, reading its groups off the matching spools.
 
-    Aggregation, group ordering and pagination happen in the database. Pagination is over
-    groups, so a group is never split across pages and its aggregates are always complete.
-
-    Returns a tuple of the requested page of groups and the total number of matching groups.
+    Returns the statement (filtered, not yet grouped) with the column to group on and the one
+    that titles each group.
     """
-    aggregates = _group_aggregates()
-    spool_count, in_use_count, total_remaining, last_used_agg = aggregates
-
     group_col, title_col, extra_join = await _resolve_group_by(db, group_by)
     stmt = _apply_group_filters(
         sqlalchemy.select(group_col.label("group_key"), *aggregates),
@@ -1199,13 +1288,86 @@ async def find_groups(
         extra_field_filters=extra_field_filters,
         sort_by=None,
     )
-    # A filament's (or its vendor's) extra fields describe the filament, so they apply to the
-    # spools grouped through it -- reached here through Spool.filament_id (the default link_column).
+    return stmt, group_col, title_col
+
+
+async def find_groups(
+    *,
+    db: AsyncSession,
+    group_by: str,
+    filament_name: str | None = None,
+    filament_id: int | Sequence[int] | None = None,
+    filament_material: str | None = None,
+    filament_multi_color_direction: str | None = None,
+    vendor_name: str | None = None,
+    vendor_id: int | Sequence[int] | None = None,
+    location: str | None = None,
+    lot_nr: str | None = None,
+    allow_archived: bool = False,
+    extra_field_filters: dict[str, str] | None = None,
+    filament_extra_field_filters: dict[str, str] | None = None,
+    vendor_extra_field_filters: dict[str, str] | None = None,
+    sort_by: dict[str, SortOrder] | None = None,
+    limit: int | None = None,
+    offset: int = 0,
+    include_empty: bool = False,
+) -> tuple[list[SpoolGroupResult], int]:
+    """Group matching spools by one axis and return per-group aggregates.
+
+    Aggregation, group ordering and pagination happen in the database. Pagination is over
+    groups, so a group is never split across pages and its aggregates are always complete.
+
+    `include_empty` adds the filaments that match but hold no matching spools, as groups of
+    zero (upstream issue 1092, fork #444). Grouping normally reads its groups off the spools,
+    so a filament nobody owns a spool of cannot produce one and vanishes -- which reads as "in
+    stock" when it means the opposite. The flag selects FROM the filaments and outer-joins the
+    spools onto them instead; ordering, paging and hydration are the same code either way.
+    Only group_by="filament" supports it, and only without spool-level filters.
+
+    Returns a tuple of the requested page of groups and the total number of matching groups.
+    """
+    aggregates = _group_aggregates()
+    spool_count, in_use_count, total_remaining, last_used_agg = aggregates
+
+    if include_empty:
+        _reject_spool_scoped_filters(
+            group_by, location=location, lot_nr=lot_nr, extra_field_filters=extra_field_filters
+        )
+        group_col, title_col = models.Filament.id, models.Filament.name
+        stmt = _filaments_with_their_spools_stmt(
+            aggregates=aggregates,
+            allow_archived=allow_archived,
+            filament_name=filament_name,
+            filament_id=filament_id,
+            filament_material=filament_material,
+            filament_multi_color_direction=filament_multi_color_direction,
+            vendor_name=vendor_name,
+            vendor_id=vendor_id,
+        )
+    else:
+        stmt, group_col, title_col = await _spools_grouped_stmt(
+            db=db,
+            group_by=group_by,
+            aggregates=aggregates,
+            filament_name=filament_name,
+            filament_id=filament_id,
+            filament_material=filament_material,
+            filament_multi_color_direction=filament_multi_color_direction,
+            vendor_name=vendor_name,
+            vendor_id=vendor_id,
+            location=location,
+            lot_nr=lot_nr,
+            allow_archived=allow_archived,
+            extra_field_filters=extra_field_filters,
+        )
+    # A filament's (or its vendor's) extra fields describe the filament, so they apply either
+    # way -- reached through the spool in one query and off the filament directly in the other.
     stmt = await apply_spool_related_extra_filters(
         db=db,
         stmt=stmt,
         filament_filters=filament_extra_field_filters,
         vendor_filters=vendor_extra_field_filters,
+        link_column=models.Filament.id if include_empty else models.Spool.filament_id,
     )
     stmt = stmt.group_by(group_col)
 
