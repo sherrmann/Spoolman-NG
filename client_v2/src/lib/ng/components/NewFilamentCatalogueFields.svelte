@@ -87,12 +87,15 @@
 </div>
 
 <style>
-	/* The grid and field look of NewFilamentCards' own `.form`, whose styles are scoped to it. */
+	/* The grid and field sizes of NewFilamentCards' own `.form`, whose styles are scoped to it. The
+	   one difference is the background: its text inputs are transparent, but a transparent
+	   <select> leaves the open option list on the browser's default colours, light text on white
+	   in the dark theme. `--input-bg`, as the custom-field selects in the same card use. */
 	.form {
 		display: grid;
 		grid-template-columns: 1fr 1fr 1fr;
 		gap: 12px;
-		margin-top: 12px;
+		margin-top: 14px;
 	}
 	label {
 		display: block;
@@ -102,9 +105,9 @@
 	select {
 		width: 100%;
 		border: 1px solid var(--border-strong);
-		background: var(--input-bg, none);
+		background: var(--input-bg);
 		border-radius: 7px;
-		padding: 8px 10px;
+		padding: 9px 12px;
 		color: var(--text);
 		font-size: 13px;
 		margin-top: 5px;

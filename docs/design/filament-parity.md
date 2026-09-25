@@ -93,8 +93,8 @@ widen the seam further than one more line each.
   its source, as the React client's clone does; that includes "Add & new", which starts from the
   filament just created. On create, unknown is left out of the body and `false` is sent: unlike
   a catalogue import, a `false` here was chosen or copied from a stored value. The upstream
-  edits are one line each in `lib/filament/draft.ts`, `spoolSource.createFilament` and
-  `NewFilamentCards.svelte`.
+  edits are one-line seams in `lib/filament/draft.ts` (four), `lib/api/spoolSource.ts` (three)
+  and `NewFilamentCards.svelte` (two), listed in the fork-additions ledger.
 
 ### Step 2: reference images
 
