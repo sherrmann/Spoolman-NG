@@ -592,5 +592,14 @@
 	"filament_pattern_options_marble": "Marmorat",
 	"filament_pattern_options_sparkle": "Cu sclipici",
 	"yes": "Da",
-	"no": "Nu"
+	"no": "Nu",
+	"filament_fields_image": "Fotografie",
+	"filament_image_upload": "Încarcă fotografia",
+	"filament_image_replace": "Înlocuiește fotografia",
+	"filament_image_remove": "Elimină fotografia",
+	"filament_image_uploaded": "Fotografia a fost salvată",
+	"filament_image_upload_error": "Fotografia nu a putut fi salvată",
+	"filament_image_removed": "Fotografia a fost eliminată",
+	"filament_image_remove_error": "Fotografia nu a putut fi eliminată",
+	"filament_image_prepare_error": "Fișierul imagine nu a putut fi citit"
 }

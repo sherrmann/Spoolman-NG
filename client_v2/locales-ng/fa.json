@@ -582,5 +582,14 @@
 	"filament_pattern_options_marble": "ماربل",
 	"filament_pattern_options_sparkle": "اکلیلی",
 	"yes": "بله",
-	"no": "خیر"
+	"no": "خیر",
+	"filament_fields_image": "عکس",
+	"filament_image_upload": "آپلود عکس",
+	"filament_image_replace": "جایگزینی عکس",
+	"filament_image_remove": "حذف عکس",
+	"filament_image_uploaded": "عکس ذخیره شد",
+	"filament_image_upload_error": "ذخیره عکس ممکن نبود.",
+	"filament_image_removed": "عکس حذف شد",
+	"filament_image_remove_error": "حذف عکس ممکن نبود.",
+	"filament_image_prepare_error": "خواندن آن فایل تصویر ممکن نبود."
 }

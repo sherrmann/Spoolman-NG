@@ -592,5 +592,14 @@
 	"filament_pattern_options_marble": "Mramorový",
 	"filament_pattern_options_sparkle": "Třpytivý",
 	"yes": "Ano",
-	"no": "Ne"
+	"no": "Ne",
+	"filament_fields_image": "Fotografie",
+	"filament_image_upload": "Nahrát fotografii",
+	"filament_image_replace": "Nahradit fotografii",
+	"filament_image_remove": "Odebrat fotografii",
+	"filament_image_uploaded": "Fotografie uložena",
+	"filament_image_upload_error": "Fotografii se nepodařilo uložit",
+	"filament_image_removed": "Fotografie odebrána",
+	"filament_image_remove_error": "Fotografii se nepodařilo odebrat",
+	"filament_image_prepare_error": "Tento soubor obrázku se nepodařilo přečíst"
 }

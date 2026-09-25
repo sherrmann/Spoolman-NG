@@ -591,5 +591,14 @@
 	"filament_pattern_options_marble": "Marbré",
 	"filament_pattern_options_sparkle": "Pailleté",
 	"yes": "Oui",
-	"no": "Non"
+	"no": "Non",
+	"filament_fields_image": "Photo",
+	"filament_image_upload": "Téléverser une photo",
+	"filament_image_replace": "Remplacer la photo",
+	"filament_image_remove": "Supprimer la photo",
+	"filament_image_uploaded": "Photo enregistrée",
+	"filament_image_upload_error": "Impossible d'enregistrer la photo",
+	"filament_image_removed": "Photo supprimée",
+	"filament_image_remove_error": "Impossible de supprimer la photo",
+	"filament_image_prepare_error": "Impossible de lire ce fichier image"
 }

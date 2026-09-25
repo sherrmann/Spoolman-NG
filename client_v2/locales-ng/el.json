@@ -582,5 +582,14 @@
 	"filament_pattern_options_marble": "Μάρμαρο",
 	"filament_pattern_options_sparkle": "Γκλίτερ",
 	"yes": "Ναι",
-	"no": "Όχι"
+	"no": "Όχι",
+	"filament_fields_image": "Φωτογραφία",
+	"filament_image_upload": "Μεταφόρτωση φωτογραφίας",
+	"filament_image_replace": "Αντικατάσταση φωτογραφίας",
+	"filament_image_remove": "Αφαίρεση φωτογραφίας",
+	"filament_image_uploaded": "Η φωτογραφία αποθηκεύτηκε",
+	"filament_image_upload_error": "Δεν ήταν δυνατή η αποθήκευση της φωτογραφίας",
+	"filament_image_removed": "Η φωτογραφία αφαιρέθηκε",
+	"filament_image_remove_error": "Δεν ήταν δυνατή η αφαίρεση της φωτογραφίας",
+	"filament_image_prepare_error": "Δεν ήταν δυνατή η ανάγνωση αυτού του αρχείου εικόνας"
 }

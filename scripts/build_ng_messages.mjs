@@ -383,6 +383,16 @@ const KEYS = [
 	'filament.pattern_options.sparkle',
 	'yes',
 	'no',
+	// A filament's reference photo (#415 step 2).
+	'filament.fields.image',
+	'filament.image.upload',
+	'filament.image.replace',
+	'filament.image.remove',
+	'filament.image.uploaded',
+	'filament.image.upload_error',
+	'filament.image.removed',
+	'filament.image.remove_error',
+	'filament.image.prepare_error',
 ];
 
 /** Flatten nested i18next JSON to dotted keys. */

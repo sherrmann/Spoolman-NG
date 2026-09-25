@@ -26,7 +26,7 @@
 		FINISHES,
 		PATTERNS,
 		SPOOL_TYPES,
-		type FilamentNg
+		type CatalogueFields
 	} from '$lib/ng/filamentCatalogue';
 
 	let { filament }: { filament: Filament } = $props();
@@ -39,14 +39,14 @@
 	// flushes (on unmount, when the inspector clears its selection), and a PATCH would only earn
 	// an error toast under "Filament deleted"; the inspector cancels its own savers for the same
 	// reason, but cannot reach this one.
-	const saver = makeSaver<string, Partial<FilamentNg>>((id, patch) =>
+	const saver = makeSaver<string, Partial<CatalogueFields>>((id, patch) =>
 		inventory.filamentById(id)
 			? trackSave(spoolSource.saveFilament(id, { ng: patch } as FilamentPatch))
 			: Promise.resolve()
 	);
 	$effect(() => () => saver.flush());
 
-	function set(patch: Partial<FilamentNg>) {
+	function set(patch: Partial<CatalogueFields>) {
 		inventory.patchFilament(filament.id, { ng: { ...current, ...patch } });
 		saver.push(filament.id, patch);
 	}

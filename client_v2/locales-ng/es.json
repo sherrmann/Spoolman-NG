@@ -591,5 +591,14 @@
 	"filament_pattern_options_marble": "Mármol",
 	"filament_pattern_options_sparkle": "Purpurina",
 	"yes": "Sí",
-	"no": "No"
+	"no": "No",
+	"filament_fields_image": "Foto",
+	"filament_image_upload": "Subir foto",
+	"filament_image_replace": "Reemplazar foto",
+	"filament_image_remove": "Quitar foto",
+	"filament_image_uploaded": "Foto guardada",
+	"filament_image_upload_error": "No se pudo guardar la foto",
+	"filament_image_removed": "Foto eliminada",
+	"filament_image_remove_error": "No se pudo eliminar la foto",
+	"filament_image_prepare_error": "No se pudo leer ese archivo de imagen"
 }

@@ -21,7 +21,8 @@ describe('mapFilamentNg', () => {
 			finish: 'matte',
 			pattern: 'sparkle',
 			translucent: true,
-			glow: false
+			glow: false,
+			hasImage: false
 		});
 	});
 
@@ -32,6 +33,11 @@ describe('mapFilamentNg', () => {
 		).toEqual(EMPTY_FILAMENT_NG);
 		expect(mapFilamentNg({ translucent: false }).translucent).toBe(false);
 	});
+
+	it('reads whether the filament has a reference photo', () => {
+		expect(mapFilamentNg({ has_image: true }).hasImage).toBe(true);
+		expect(mapFilamentNg({ has_image: null }).hasImage).toBe(false);
+	});
 });
 
 describe('filamentNgPatchToApi', () => {
@@ -41,6 +47,10 @@ describe('filamentNgPatchToApi', () => {
 			spool_type: null,
 			glow: false
 		});
+	});
+
+	it('never sends hasImage, which has endpoints of its own', () => {
+		expect(filamentNgPatchToApi({ ng: { hasImage: true } as never })).toEqual({});
 	});
 
 	it('sends nothing for a patch without catalogue fields', () => {

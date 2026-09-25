@@ -582,5 +582,14 @@
 	"filament_pattern_options_marble": "Marmor",
 	"filament_pattern_options_sparkle": "Glimmer",
 	"yes": "Ja",
-	"no": "Nej"
+	"no": "Nej",
+	"filament_fields_image": "Foto",
+	"filament_image_upload": "Upload foto",
+	"filament_image_replace": "Udskift foto",
+	"filament_image_remove": "Fjern foto",
+	"filament_image_uploaded": "Foto gemt",
+	"filament_image_upload_error": "Kunne ikke gemme fotoet",
+	"filament_image_removed": "Foto fjernet",
+	"filament_image_remove_error": "Kunne ikke fjerne fotoet",
+	"filament_image_prepare_error": "Kunne ikke læse den billedfil"
 }

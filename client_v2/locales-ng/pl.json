@@ -592,5 +592,14 @@
 	"filament_pattern_options_marble": "Marmurowy",
 	"filament_pattern_options_sparkle": "Brokatowy",
 	"yes": "Tak",
-	"no": "Nie"
+	"no": "Nie",
+	"filament_fields_image": "Zdjęcie",
+	"filament_image_upload": "Prześlij zdjęcie",
+	"filament_image_replace": "Zamień zdjęcie",
+	"filament_image_remove": "Usuń zdjęcie",
+	"filament_image_uploaded": "Zdjęcie zapisane",
+	"filament_image_upload_error": "Nie udało się zapisać zdjęcia",
+	"filament_image_removed": "Zdjęcie usunięte",
+	"filament_image_remove_error": "Nie udało się usunąć zdjęcia",
+	"filament_image_prepare_error": "Nie udało się odczytać tego pliku obrazu"
 }

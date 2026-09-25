@@ -1,6 +1,6 @@
 # Filament parity in the Svelte client (#415)
 
-Status: step 1 built; steps 2 and 3 designed, not built.
+Status: steps 1 and 2 built; step 3 designed, not built.
 
 #415 lists five filament features the frozen React client has and `client_v2` lacks. This note
 records where each one attaches to the vendored client, in the order they are built. The rule
@@ -99,13 +99,21 @@ widen the seam further than one more line each.
 
 ### Step 2: reference images
 
-- `hasImage` in `FilamentNg`.
+As built: `lib/ng/filamentImage.ts` (preparation, fetch, upload, delete) and
+`lib/ng/components/FilamentImageSection.svelte`; the inspector gains one import and one line.
+
+- `hasImage` in `FilamentNg`, read-only there: `filamentNgPatchToApi` never sends it.
 - A fork `FilamentImage` section in the inspector's right-hand column, under the manufacturer,
   showing the image with replace and remove, or an upload button when there is none.
 - Fetched with the client's credentials (a bearer token, not a cookie, so `<img src>` does not
   work) into an object URL, with the `ETag` kept to revalidate. Uploads go through a port of the
   React client's `imageTransform.ts`: EXIF rotation applied, longest side at most 1024 px, WebP
   (JPEG where the browser cannot encode WebP).
+- Upload and removal save at once, not through a debounced saver: the photo has its own
+  endpoints. Both endpoints broadcast a filament update, so another open client learns that a
+  photo was added or removed. A photo **replaced** elsewhere keeps `has_image` true, so it shows
+  the next time that filament is opened, when the cached copy is revalidated. Revalidating on
+  every filament update instead would mean a request per spool event during a print.
 - Not on the new-filament form, for the reason given in step 1.
 
 ### Step 3: swatch style and 3MF swatch download
