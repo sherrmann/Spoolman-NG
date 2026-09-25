@@ -497,7 +497,7 @@ async def _create_spool_from_tigertag(  # noqa: C901, PLR0912, PLR0915
             ext_filament = _lookup_tigertag_product(tag_data.id_product)
 
         if ext_filament:
-            vendor_id = await _find_or_create_vendor(db, ext_filament.manufacturer)
+            vendor_id = await vendor_db.find_or_create_by_name(db, ext_filament.manufacturer)
             db_filament = await filament_db.create(
                 db=db,
                 density=ext_filament.density,
@@ -536,7 +536,7 @@ async def _create_spool_from_tigertag(  # noqa: C901, PLR0912, PLR0915
 
             vendor_id = None
             if brand_name:
-                vendor_id = await _find_or_create_vendor(db, brand_name)
+                vendor_id = await vendor_db.find_or_create_by_name(db, brand_name)
 
             db_filament = await filament_db.create(
                 db=db,
@@ -1110,15 +1110,6 @@ class NfcCreateFromTagResponse(BaseModel):
     success: bool
     spool_id: int | None = None
     message: str = ""
-
-
-async def _find_or_create_vendor(db: AsyncSession, name: str) -> int:
-    """Find a vendor by name or create one."""
-    vendors, _ = await vendor_db.find(db=db, name=name)
-    if vendors:
-        return vendors[0].id
-    new_vendor = await vendor_db.create(db=db, name=name)
-    return new_vendor.id
 
 
 async def _find_filament_by_external_id(db: AsyncSession, external_id: str) -> Filament | None:

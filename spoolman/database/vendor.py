@@ -139,6 +139,27 @@ async def find(
     return result, total_count
 
 
+async def find_id_by_exact_name(db: AsyncSession, name: str) -> int | None:
+    """Return the id of the vendor whose name equals ``name``, ignoring case and surrounding whitespace.
+
+    ``find(name=...)`` is a comma-split substring search, so it cannot answer "is there a vendor
+    called X": "Poly" would hit "Polymaker". Compared in Python rather than with SQL ``lower()``,
+    which is ASCII-only on SQLite. The vendor table is small. The oldest vendor wins if several match.
+    """
+    wanted = name.strip().casefold()
+    rows = await db.execute(select(models.Vendor.id, models.Vendor.name).order_by(models.Vendor.id))
+    return next((vid for vid, vname in rows if (vname or "").strip().casefold() == wanted), None)
+
+
+async def find_or_create_by_name(db: AsyncSession, name: str) -> int:
+    """Return the id of the vendor named ``name`` (see find_id_by_exact_name), creating it if absent."""
+    existing_id = await find_id_by_exact_name(db, name)
+    if existing_id is not None:
+        return existing_id
+    new_vendor = await create(db=db, name=name)
+    return new_vendor.id
+
+
 async def update(
     *,
     db: AsyncSession,
