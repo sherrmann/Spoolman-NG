@@ -6,7 +6,9 @@ server-side vision model today, on-device extraction in the companion app later 
 while matching stays plain fuzzy search with no LLM involved: the user's **own
 filament library first** (a known filament just gains a spool, no duplicate
 records), then the **locally-synced SpoolmanDB catalog**, with raw extraction as
-the caller's fallback.
+the caller's fallback. When a decision model is configured (see
+:mod:`spoolman.decision`), it reorders each shortlist; the fuzzy search still
+decides what is on it.
 
 Photos are ephemeral by design: image bytes exist only as request-scoped variables
 on their way to the configured endpoint, are never logged, and are never written to
@@ -23,7 +25,7 @@ from pathlib import Path
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from spoolman import ai, externaldb
+from spoolman import ai, decision, externaldb
 from spoolman.database import filament
 
 logger = logging.getLogger(__name__)
@@ -435,9 +437,81 @@ def match_catalog(extraction: dict) -> list[dict]:
     return candidates[:_MATCH_LIMIT]
 
 
-async def build_matches(db: AsyncSession, extraction: dict) -> dict:
-    """Run both match stages: the user's library first, then the catalog."""
+#: Text fields of the extraction the decision model sees. Numbers other than the nominal weight
+#: are left out: decision models are unreliable with numbers, and temperatures or lot numbers
+#: do not identify a product.
+_RERANK_STATE_KEYS = ("vendor", "name", "material", "weight_g")
+_RERANK_NONE = "none"
+_RERANK_INSTRUCTIONS = (
+    "The state was read from the label of a 3D-printer filament spool. Which listed filament is "
+    "the same product: same manufacturer, same product line and same material? Answer 'none' "
+    "if none of them is."
+)
+
+
+def _candidate_description(candidate: dict) -> str:
+    parts = [candidate.get("vendor"), candidate.get("name")]
+    text = " ".join(str(part) for part in parts if part) or "Unnamed filament"
+    if candidate.get("material"):
+        text += f", material {candidate['material']}"
+    if candidate.get("weight_g"):
+        text += f", {candidate['weight_g']} g"
+    return text
+
+
+def _rerank_question(candidates: list[dict]) -> dict:
+    options = {f"c{index}": _candidate_description(c) for index, c in enumerate(candidates, start=1)}
+    options[_RERANK_NONE] = "None of the listed filaments is the product on the label."
+    return decision.choice_question(_RERANK_INSTRUCTIONS, options)
+
+
+def _apply_rerank(candidates: list[dict], answer: decision.ChoiceAnswer) -> list[dict]:
+    """Order candidates by the model's probability, keeping the fuzzy order for ties.
+
+    Each candidate gains ``rerank_probability``. ``match_percent`` stays the fuzzy score, so the
+    list is no longer sorted by it once reranked.
+    """
+    ranked = []
+    for index, candidate in enumerate(candidates, start=1):
+        probability = answer.probabilities.get(f"c{index}", 1.0 if answer.choice == f"c{index}" else 0.0)
+        ranked.append({**candidate, "rerank_probability": round(probability, 3)})
+    ranked.sort(key=lambda entry: -entry["rerank_probability"])
+    return ranked
+
+
+async def rerank_matches(config: decision.DecisionConfig, extraction: dict, matches: dict) -> dict:
+    """Reorder each non-empty shortlist with one decision-model request.
+
+    Raises decision.DecisionError on failure; :func:`build_matches` then keeps the fuzzy order.
+    """
+    questions = {kind: _rerank_question(candidates) for kind, candidates in matches.items() if candidates}
+    if not questions:
+        return matches
+    state = {key: extraction[key] for key in _RERANK_STATE_KEYS if extraction.get(key) is not None}
+    if not state:
+        return matches
+    answers = await decision.ask_choices(config, state, questions)
     return {
+        kind: _apply_rerank(candidates, answers[kind]) if kind in answers else candidates
+        for kind, candidates in matches.items()
+    }
+
+
+async def build_matches(db: AsyncSession, extraction: dict) -> dict:
+    """Run both match stages: the user's library first, then the catalog.
+
+    With a decision model configured, each shortlist is then reordered by it. Any failure there
+    is logged and the fuzzy order is returned unchanged.
+    """
+    matches = {
         "library": await match_library(db, extraction),
         "catalog": await asyncio.to_thread(match_catalog, extraction),
     }
+    config = decision.resolve_config()
+    if config is None:
+        return matches
+    try:
+        return await rerank_matches(config, extraction, matches)
+    except decision.DecisionError as exc:
+        logger.warning("Keeping the fuzzy match order: %s", exc)
+        return matches
