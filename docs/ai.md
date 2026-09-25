@@ -354,7 +354,8 @@ then reorder the shortlist fuzzy search already picked: it never adds or removes
 a candidate, and it never touches the library-vs-catalog choice. The first entry
 in the reordered list is what the review screen preselects. `match_percent`
 still shows the fuzzy score, unchanged by the reorder — only the order of the
-list reflects the decision model's opinion.
+list reflects the decision model's opinion. If the model answers that none of
+the shortlisted filaments is the product on the label, the fuzzy order is kept.
 
 This is separate from the chat/tool-calling AI configured above. A decision
 model answers typed questions with probabilities rather than generating text, so
@@ -392,8 +393,9 @@ order with a warning logged, never an error the user sees.
 **Evaluating it.** `poe match-rerank-eval` measures whether reranking actually
 helps: for a set of realistic label/shortlist fixtures it computes the fuzzy
 baseline order the same way the product does, reranks it, and reports top-1
-accuracy for both, the cases where they disagree, and how often a shortlist
-with no right answer still gets a confident-looking top pick after reranking.
+accuracy for both, the cases where they disagree, and how often the model
+answers "none of these", both when that is right and when it is not. A case
+whose request fails makes the run fail.
 
 ```bash
 SPOOLMAN_AI_DECISION_BASE_URL=https://api.typesafe.ai SPOOLMAN_AI_DECISION_API_KEY=... uv run poe match-rerank-eval

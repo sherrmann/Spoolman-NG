@@ -3,18 +3,17 @@
 Scan-to-Spool's fuzzy matching (`spoolman.spoolintake.score_candidate`) picks the shortlist;
 a decision model (see `spoolman.decision`) can then reorder it. This measures whether that
 reordering actually helps, or just moves the right answer around without improving on the
-fuzzy order — and, since the reranker never adds a "this isn't any of them" candidate to the
-shortlist itself, how often it still hands a confident-looking top pick when none of the
-candidates is right.
+fuzzy order, and how often the model answers "none of these" when none of the candidates is
+right (the product then keeps the fuzzy order, so the review screen still preselects the
+first candidate either way).
 
 For each fixture case it builds the shortlist exactly as the product's catalog stage does --
 score every candidate with `score_candidate`, drop those under the catalog cut-off, sort by
 `match_percent` descending and keep the top five -- and then reranks that shortlist with
-`spoolintake.rerank_matches`, in the shape `build_matches` passes. It reports
-top-1 accuracy for both against each case's expected candidate, the cases where the two
-orders disagree, and, for the cases where no candidate is right, how often the reranked
-top candidate still gets a probability of 0.5 or more -- a false match a user could accept
-without looking closely.
+the same code `build_matches` uses. It reports top-1 accuracy for both against each case's
+expected candidate, the cases where the two orders disagree, and how often the model
+answered "none". A case whose request failed makes the run fail rather than shrink the
+denominator.
 
 Cases marked `tuned_against_fuzzy` were written by trying label readings until the fuzzy
 score picked the wrong candidate. They show whether reranking can recover such cases, but
@@ -46,11 +45,6 @@ from spoolman import decision, spoolintake
 
 CASES_PATH = Path(__file__).with_name("match_rerank_eval_cases.json")
 
-#: A reranked top candidate at or above this probability is what the review screen's
-#: preselection would hand the user without them touching anything -- the bar for calling it
-#: a false match on a case where none of the candidates is actually right.
-_FALSE_MATCH_THRESHOLD = 0.5
-
 
 @dataclass
 class CaseResult:
@@ -64,6 +58,8 @@ class CaseResult:
     baseline_top1: int | None
     rerank_top1: int | None
     rerank_top1_prob: float | None
+    #: Whether the model answered "none of these".
+    answered_none: bool = False
     error: str | None = None
 
 
@@ -100,8 +96,7 @@ def _score_candidates(extraction: dict, candidates: list[dict]) -> list[dict]:
 async def _run_case(config: decision.DecisionConfig, case: dict) -> CaseResult:
     """Score one fixture; a decision-endpoint failure is recorded, not raised.
 
-    One flaky request must not abort the rest of the eval, and a case that failed is excluded
-    from the accuracy counts below rather than silently scored as wrong.
+    One flaky request must not hide the other results, but it does fail the run (see _main).
     """
     extraction = case["extraction"]
     expected = case["expected"]
@@ -112,7 +107,7 @@ async def _run_case(config: decision.DecisionConfig, case: dict) -> CaseResult:
     shortlisted = expected is None or any(entry["_original_index"] == expected for entry in scored)
 
     try:
-        reranked = await spoolintake.rerank_matches(config, extraction, {"catalog": scored})
+        reranked, answers = await spoolintake._rerank_with_answers(config, extraction, {"catalog": scored})  # noqa: SLF001
     except decision.DecisionError as exc:
         return CaseResult(case["id"], tuned, expected, shortlisted, baseline_top1, None, None, error=str(exc))
 
@@ -120,7 +115,17 @@ async def _run_case(config: decision.DecisionConfig, case: dict) -> CaseResult:
     top = catalog[0] if catalog else None
     rerank_top1 = top["_original_index"] if top else None
     rerank_top1_prob = top.get("rerank_probability") if top else None
-    return CaseResult(case["id"], tuned, expected, shortlisted, baseline_top1, rerank_top1, rerank_top1_prob)
+    answered_none = "catalog" in answers and answers["catalog"].choice == spoolintake._RERANK_NONE  # noqa: SLF001
+    return CaseResult(
+        case["id"],
+        tuned,
+        expected,
+        shortlisted,
+        baseline_top1,
+        rerank_top1,
+        rerank_top1_prob,
+        answered_none=answered_none,
+    )
 
 
 def _accuracy_line(label: str, cases: list[CaseResult]) -> float:
@@ -159,19 +164,21 @@ def _print_report(results: list[CaseResult]) -> float:
         print()
 
     if null_cases:
-        # With nothing right on offer, the review screen still preselects the first shortlisted
-        # candidate; the baseline has no probability, so any non-empty shortlist counts against it.
-        baseline_false = [r for r in null_cases if r.baseline_top1 is not None]
-        rerank_false = [
-            r for r in null_cases if r.rerank_top1_prob is not None and r.rerank_top1_prob >= _FALSE_MATCH_THRESHOLD
-        ]
+        # The product keeps the fuzzy order on a "none" answer, so the review screen preselects a
+        # wrong candidate whenever the shortlist is non-empty, reranked or not. What reranking
+        # adds is the model's "none", which a later UI could show as a warning.
+        preselected = sum(r.baseline_top1 is not None for r in null_cases)
+        said_none = [r for r in null_cases if r.answered_none]
         print(f"Cases with no right candidate ({len(null_cases)}):")
-        print(f"  baseline preselects a wrong candidate  {len(baseline_false)}/{len(null_cases)}")
-        print(
-            f"  reranked top candidate at p >= {_FALSE_MATCH_THRESHOLD:.0%}  {len(rerank_false)}/{len(null_cases)}",
-        )
-        for r in rerank_false:
-            print(f"    {r.case_id}: top candidate {r.rerank_top1} at p={r.rerank_top1_prob}")
+        print(f"  a wrong candidate is preselected  {preselected}/{len(null_cases)}")
+        print(f"  the model answered 'none'         {len(said_none)}/{len(null_cases)}")
+        print()
+
+    wrongly_none = [r for r in ok if r.expected is not None and r.expected_shortlisted and r.answered_none]
+    if wrongly_none:
+        print(f"Model answered 'none' although the right candidate was shortlisted ({len(wrongly_none)}):")
+        for r in wrongly_none:
+            print(f"  {r.case_id}")
         print()
 
     if errored:
@@ -200,6 +207,9 @@ async def _main(min_accuracy: float) -> int:
     results = [await _run_case(config, case) for case in cases]
     rerank_accuracy = _print_report(results)
 
+    if any(r.error is not None for r in results):
+        print("\nFAIL: some cases could not be scored; rerun once the endpoint answers them all.")
+        return 1
     return 0 if rerank_accuracy >= min_accuracy else 1
 
 

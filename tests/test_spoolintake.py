@@ -427,6 +427,26 @@ async def test_rerank_matches_state_only_carries_the_four_identifying_fields() -
     assert sent["state"] == {"vendor": "Prusa", "name": "Galaxy Black", "material": "PLA", "weight_g": 1000}
 
 
+def test_apply_rerank_keeps_the_fuzzy_order_on_a_none_answer_even_with_higher_probabilities() -> None:
+    """A "none" answer must not let a lower-ranked candidate's probability promote it.
+
+    The client preselects the first (fuzzy-ranked) entry, so reordering on a rejected answer
+    would be worse than leaving the fuzzy order alone.
+    """
+    c1, c2 = _library_candidate(1, match_percent=90), _library_candidate(2, match_percent=40)
+    answer = decision.ChoiceAnswer(
+        choice="none",
+        probabilities={"c1": 0.1, "c2": 0.3, "none": 0.6},
+        confidence=None,
+    )
+
+    result = spoolintake._apply_rerank([c1, c2], answer)  # noqa: SLF001
+
+    assert [c["filament_id"] for c in result] == [1, 2], "fuzzy order is kept despite c2's higher probability"
+    assert result[0]["rerank_probability"] == 0.1
+    assert result[1]["rerank_probability"] == 0.3
+
+
 def test_apply_rerank_with_no_probabilities_puts_the_chosen_candidate_first() -> None:
     c1, c2, c3 = (
         _library_candidate(1, match_percent=90),
@@ -484,3 +504,83 @@ async def test_build_matches_keeps_fuzzy_order_and_warns_on_decision_endpoint_fa
 
     assert result == {"library": fuzzy_library, "catalog": []}
     assert "Keeping the fuzzy match order" in caplog.text
+
+
+@respx.mock
+async def test_build_matches_keeps_fuzzy_order_and_warns_when_resolve_config_raises(
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """An optional reorder must never break Scan-to-Spool, even on a bug in resolve_config."""
+    monkeypatch.setenv(decision.ENV_BASE_URL, "https://api.typesafe.ai")
+    fuzzy_library = [_library_candidate(1, match_percent=90), _library_candidate(2, match_percent=40)]
+
+    async def _fake_match_library(db: object, extraction: dict) -> list[dict]:  # noqa: ARG001
+        return fuzzy_library
+
+    def _fake_match_catalog(extraction: dict) -> list[dict]:  # noqa: ARG001
+        return []
+
+    def _raise_resolve_config() -> None:
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(spoolintake, "match_library", _fake_match_library)
+    monkeypatch.setattr(spoolintake, "match_catalog", _fake_match_catalog)
+    monkeypatch.setattr(decision, "resolve_config", _raise_resolve_config)
+
+    with caplog.at_level("WARNING"):
+        result = await spoolintake.build_matches(None, _FULL_EXTRACTION)
+
+    assert result == {"library": fuzzy_library, "catalog": []}
+    assert "unexpected error" in caplog.text
+
+
+@respx.mock
+async def test_build_matches_keeps_fuzzy_order_and_warns_when_rerank_matches_raises_unexpectedly(
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    monkeypatch.setenv(decision.ENV_BASE_URL, "https://api.typesafe.ai")
+    fuzzy_library = [_library_candidate(1, match_percent=90), _library_candidate(2, match_percent=40)]
+
+    async def _fake_match_library(db: object, extraction: dict) -> list[dict]:  # noqa: ARG001
+        return fuzzy_library
+
+    def _fake_match_catalog(extraction: dict) -> list[dict]:  # noqa: ARG001
+        return []
+
+    async def _raise_rerank_matches(config: object, extraction: dict, matches: dict) -> dict:  # noqa: ARG001
+        raise ValueError("boom")
+
+    monkeypatch.setattr(spoolintake, "match_library", _fake_match_library)
+    monkeypatch.setattr(spoolintake, "match_catalog", _fake_match_catalog)
+    monkeypatch.setattr(spoolintake, "rerank_matches", _raise_rerank_matches)
+
+    with caplog.at_level("WARNING"):
+        result = await spoolintake.build_matches(None, _FULL_EXTRACTION)
+
+    assert result == {"library": fuzzy_library, "catalog": []}
+    assert "unexpected error" in caplog.text
+
+
+@respx.mock
+async def test_build_matches_keeps_fuzzy_order_and_makes_no_http_call_with_an_invalid_base_url(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv(decision.ENV_BASE_URL, "http://[::1")
+    fuzzy_library = [_library_candidate(1, match_percent=90)]
+
+    async def _fake_match_library(db: object, extraction: dict) -> list[dict]:  # noqa: ARG001
+        return fuzzy_library
+
+    def _fake_match_catalog(extraction: dict) -> list[dict]:  # noqa: ARG001
+        return []
+
+    monkeypatch.setattr(spoolintake, "match_library", _fake_match_library)
+    monkeypatch.setattr(spoolintake, "match_catalog", _fake_match_catalog)
+    route = respx.post(url__regex=r".*").mock(return_value=Response(200))
+
+    result = await spoolintake.build_matches(None, _FULL_EXTRACTION)
+
+    assert result == {"library": fuzzy_library, "catalog": []}
+    assert route.call_count == 0

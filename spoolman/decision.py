@@ -22,8 +22,9 @@ own heuristic result, so a slow or broken endpoint can never break a feature tha
 without it.
 """
 
-import json
+import asyncio
 import logging
+import math
 import os
 from dataclasses import dataclass
 from urllib.parse import urlsplit
@@ -78,10 +79,21 @@ def resolve_config() -> DecisionConfig | None:
     if base_url is None:
         return None
     base_url = base_url.rstrip("/")
-    if urlsplit(base_url).scheme not in ("http", "https"):
-        logger.warning("Ignoring %s: the URL must start with http:// or https://.", ENV_BASE_URL)
+    try:
+        parts = urlsplit(base_url)
+        _ = parts.port  # raises ValueError for a port that is not a number
+    except ValueError:
+        logger.warning("Ignoring %s: it is not a valid URL.", ENV_BASE_URL)
         return None
-    return DecisionConfig(base_url=base_url, model=_env(ENV_MODEL) or DEFAULT_MODEL, api_key=_env(ENV_API_KEY))
+    if parts.scheme not in ("http", "https") or not parts.hostname:
+        logger.warning("Ignoring %s: the URL must start with http:// or https:// and name a host.", ENV_BASE_URL)
+        return None
+    api_key = _env(ENV_API_KEY)
+    if api_key is not None and not api_key.isascii():
+        # An HTTP header cannot carry it, so every request would fail; say so once here instead.
+        logger.warning("Ignoring the decision endpoint: %s contains non-ASCII characters.", ENV_API_KEY)
+        return None
+    return DecisionConfig(base_url=base_url, model=_env(ENV_MODEL) or DEFAULT_MODEL, api_key=api_key)
 
 
 def choice_question(instructions: str, options: dict[str, str]) -> dict:
@@ -92,22 +104,31 @@ def choice_question(instructions: str, options: dict[str, str]) -> dict:
     return {"type": "choice", "instructions": instructions, "criteria": options}
 
 
+def _unit_interval(value: object) -> float | None:
+    """Return ``value`` as a float if it is a finite number in [0, 1], else None.
+
+    JSON parsing accepts ``NaN`` and ``1e400``; neither may reach a sort key or the API response.
+    """
+    if not isinstance(value, int | float) or isinstance(value, bool):
+        return None
+    number = float(value)
+    return number if math.isfinite(number) and 0.0 <= number <= 1.0 else None
+
+
 def _parse_choice(raw: object, options: dict[str, str]) -> ChoiceAnswer:
     if not isinstance(raw, dict) or raw.get("type") != "choice":
         raise DecisionError("The decision endpoint returned an answer that is not a choice.")
     choice = raw.get("choice")
-    if choice not in options:
+    if not isinstance(choice, str) or choice not in options:
         raise DecisionError("The decision endpoint chose an option that was not offered.")
     raw_probs = raw.get("probabilities")
     probabilities: dict[str, float] = {}
     if isinstance(raw_probs, dict):
         for key, value in raw_probs.items():
-            if key in options and isinstance(value, int | float) and not isinstance(value, bool):
-                probabilities[key] = float(value)
-    confidence = raw.get("confidence")
-    if not isinstance(confidence, int | float) or isinstance(confidence, bool):
-        confidence = None
-    return ChoiceAnswer(choice=choice, probabilities=probabilities, confidence=confidence)
+            number = _unit_interval(value)
+            if key in options and number is not None:
+                probabilities[key] = number
+    return ChoiceAnswer(choice=choice, probabilities=probabilities, confidence=_unit_interval(raw.get("confidence")))
 
 
 async def ask_choices(
@@ -121,24 +142,30 @@ async def ask_choices(
 
     ``questions`` maps a local id to a question built with :func:`choice_question`. Returns
     one :class:`ChoiceAnswer` per id. Raises DecisionError on any failure, including an answer
-    that names an option that was not offered.
+    that names an option that was not offered. ``timeout`` bounds the whole request, not
+    each phase of it.
     """
     payload = {"state": state, "model": config.model, "questions": questions}
     headers = {"Authorization": f"Bearer {config.api_key}"} if config.api_key else {}
     url = f"{config.base_url}/v1/systemone"
-    try:
+
+    async def _post() -> httpx.Response:
         async with httpx.AsyncClient(timeout=timeout, headers=headers) as client:
-            response = await client.post(url, json=payload)
-    except httpx.TimeoutException as exc:
+            return await client.post(url, json=payload)
+
+    try:
+        response = await asyncio.wait_for(_post(), timeout)
+    except (asyncio.TimeoutError, httpx.TimeoutException) as exc:
         raise DecisionError(f"The decision endpoint timed out after {timeout:g} s.") from exc
-    except httpx.HTTPError as exc:
+    except (httpx.HTTPError, httpx.InvalidURL, UnicodeError) as exc:
+        # InvalidURL is not an HTTPError; UnicodeError covers a header or URL httpx cannot encode.
         raise DecisionError(f"The decision endpoint is unreachable: {exc.__class__.__name__}.") from exc
 
     if response.status_code != httpx.codes.OK:
         raise DecisionError(f"The decision endpoint returned HTTP {response.status_code}.")
     try:
         answers = response.json()["answers"]
-    except (json.JSONDecodeError, KeyError, TypeError) as exc:
+    except (ValueError, KeyError, TypeError) as exc:  # ValueError covers JSON and UTF-8 decode errors
         raise DecisionError("The decision endpoint returned an unexpected response shape.") from exc
     if not isinstance(answers, dict):
         raise DecisionError("The decision endpoint returned an unexpected response shape.")

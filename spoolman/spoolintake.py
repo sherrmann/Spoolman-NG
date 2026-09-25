@@ -469,14 +469,35 @@ def _apply_rerank(candidates: list[dict], answer: decision.ChoiceAnswer) -> list
     """Order candidates by the model's probability, keeping the fuzzy order for ties.
 
     Each candidate gains ``rerank_probability``. ``match_percent`` stays the fuzzy score, so the
-    list is no longer sorted by it once reranked.
+    list is no longer sorted by it once reranked. When the model's answer is "none of these",
+    the fuzzy order is kept: the client preselects the first entry, and promoting a candidate
+    the model has just rejected would be worse than leaving the order alone.
     """
     ranked = []
     for index, candidate in enumerate(candidates, start=1):
         probability = answer.probabilities.get(f"c{index}", 1.0 if answer.choice == f"c{index}" else 0.0)
         ranked.append({**candidate, "rerank_probability": round(probability, 3)})
-    ranked.sort(key=lambda entry: -entry["rerank_probability"])
+    if answer.choice != _RERANK_NONE:
+        ranked.sort(key=lambda entry: -entry["rerank_probability"])
     return ranked
+
+
+async def _rerank_with_answers(
+    config: decision.DecisionConfig,
+    extraction: dict,
+    matches: dict,
+) -> tuple[dict, dict[str, decision.ChoiceAnswer]]:
+    """Rerank as :func:`rerank_matches` does and also return the raw answers (for the eval)."""
+    questions = {kind: _rerank_question(candidates) for kind, candidates in matches.items() if candidates}
+    state = {key: extraction[key] for key in _RERANK_STATE_KEYS if extraction.get(key) is not None}
+    if not questions or not state:
+        return matches, {}
+    answers = await decision.ask_choices(config, state, questions)
+    reranked = {
+        kind: _apply_rerank(candidates, answers[kind]) if kind in answers else candidates
+        for kind, candidates in matches.items()
+    }
+    return reranked, answers
 
 
 async def rerank_matches(config: decision.DecisionConfig, extraction: dict, matches: dict) -> dict:
@@ -484,17 +505,8 @@ async def rerank_matches(config: decision.DecisionConfig, extraction: dict, matc
 
     Raises decision.DecisionError on failure; :func:`build_matches` then keeps the fuzzy order.
     """
-    questions = {kind: _rerank_question(candidates) for kind, candidates in matches.items() if candidates}
-    if not questions:
-        return matches
-    state = {key: extraction[key] for key in _RERANK_STATE_KEYS if extraction.get(key) is not None}
-    if not state:
-        return matches
-    answers = await decision.ask_choices(config, state, questions)
-    return {
-        kind: _apply_rerank(candidates, answers[kind]) if kind in answers else candidates
-        for kind, candidates in matches.items()
-    }
+    reranked, _ = await _rerank_with_answers(config, extraction, matches)
+    return reranked
 
 
 async def build_matches(db: AsyncSession, extraction: dict) -> dict:
@@ -507,11 +519,13 @@ async def build_matches(db: AsyncSession, extraction: dict) -> dict:
         "library": await match_library(db, extraction),
         "catalog": await asyncio.to_thread(match_catalog, extraction),
     }
-    config = decision.resolve_config()
-    if config is None:
-        return matches
     try:
+        config = decision.resolve_config()
+        if config is None:
+            return matches
         return await rerank_matches(config, extraction, matches)
     except decision.DecisionError as exc:
         logger.warning("Keeping the fuzzy match order: %s", exc)
-        return matches
+    except Exception:  # noqa: BLE001 - an optional reorder must never break Scan-to-Spool
+        logger.warning("Keeping the fuzzy match order after an unexpected error.", exc_info=True)
+    return matches
