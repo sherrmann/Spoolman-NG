@@ -27,3 +27,22 @@ attribution, and must not be removed or obscured. These are deliberate and corre
 
 The distinction is: naming a vendor because the software talks to it is product content; naming a
 tool because it wrote the diff is attribution. Only the second is banned.
+
+## Working with subagents
+
+Quality comes first; cost and speed come second.
+
+- **Delegate simple and routine coding to Sonnet.** Use the `implementer` agent
+  (`.claude/agents/implementer.md`, pinned to Sonnet) for well-specified changes: a
+  mechanical refactor, a test for a known behaviour, a small bug fix with a clear cause, a
+  search. Keep design decisions, unclear bugs and anything touching data integrity, migrations
+  or security with the main session.
+- **Run independent work in parallel.** Give each agent a disjoint set of files and say so in
+  its prompt.
+- **Review regularly, not only at the end.** After each substantial step (a new module, a
+  change across several files, anything an `implementer` produced), run the `reviewer` agent
+  on the diff and fix or answer every finding before building on it. Run it once more on the
+  full diff before pushing. The reviewer uses the session's model on purpose.
+- The main session stays responsible: read what an agent changed before committing it, and
+  run the checks yourself (`uv run ruff check`, `uv run ruff format --check`, the affected
+  tests).
