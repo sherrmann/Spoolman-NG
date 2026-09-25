@@ -5,7 +5,7 @@ import {
   type Page,
 } from "@playwright/test";
 import zlib from "zlib";
-import { seedFilament } from "./helpers";
+import { seedFilament, unique } from "./helpers";
 
 /**
  * A filament's reference photo in the inspector (#88, #415 step 2): upload, replace, remove,
@@ -238,4 +238,75 @@ test("a file the browser cannot decode is rejected, with no upload sent", async 
   expect((await apiFilament(request, filament.id)).has_image ?? false).toBe(
     false,
   );
+});
+
+test("switching filaments while photos upload keeps each one's buttons locked until its own upload ends", async ({
+  page,
+  request,
+}) => {
+  // The section is reused as the selection moves. With a single "busy" slot, starting an upload
+  // for B released A's lock while A's request was still out, so A could be replaced or removed in
+  // a race with its own upload.
+  const location = unique("PhotoBusy");
+  const a = await seedFilament(request, "PhotoBusyA");
+  const b = await seedFilament(request, "PhotoBusyB");
+  for (const f of [a, b]) {
+    const res = await request.post("/api/v1/spool", {
+      data: { filament_id: f.id, location },
+    });
+    expect(res.ok()).toBeTruthy();
+  }
+
+  // Hold each filament's upload until the test lets it through.
+  const release: Record<number, () => void> = {};
+  const held: Record<number, Promise<void>> = {};
+  for (const f of [a, b]) {
+    held[f.id] = new Promise<void>((r) => (release[f.id] = r));
+    await page.route(`**/api/v1/filament/${f.id}/image`, async (route) => {
+      if (route.request().method() === "PUT") await held[f.id];
+      await route.continue();
+    });
+  }
+
+  await page.goto(
+    `/?f=location%3A${encodeURIComponent(location)}&sel=filament:${a.id}`,
+    { waitUntil: "networkidle" },
+  );
+  const png = {
+    name: "p.png",
+    mimeType: "image/png",
+    buffer: gradientPng(64, 48),
+  };
+  const uploadButton = page.getByRole("button", { name: "Upload photo" });
+  // The group header's link is an overlay across the row, named after the filament. Its centre
+  // lies under the manufacturer link, so it is clicked near its top-left corner.
+  const openGroup = (name: string) =>
+    page
+      .getByRole("link", { name: new RegExp(name) })
+      .click({ position: { x: 4, y: 4 } });
+
+  await fileInput(page).setInputFiles(png);
+  await expect(uploadButton).toBeDisabled();
+
+  await openGroup(b.name);
+  await expect(page).toHaveURL(new RegExp(`sel=filament(:|%3A)${b.id}`));
+  await expect(uploadButton).toBeEnabled();
+  await fileInput(page).setInputFiles(png);
+  await expect(uploadButton).toBeDisabled();
+
+  release[b.id]();
+  await expect(
+    page.getByRole("button", { name: "Replace photo" }),
+  ).toBeEnabled();
+
+  await openGroup(a.name);
+  await expect(page).toHaveURL(new RegExp(`sel=filament(:|%3A)${a.id}`));
+  // A's upload is still out: its buttons must still be locked.
+  await expect(uploadButton).toBeDisabled();
+
+  release[a.id]();
+  await expect(photoImg(page)).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Replace photo" }),
+  ).toBeEnabled();
 });

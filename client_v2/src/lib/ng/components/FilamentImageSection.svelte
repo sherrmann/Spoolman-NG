@@ -8,6 +8,7 @@
 	 * broadcast a filament update, so another open client learns that a photo was added or
 	 * removed; a photo replaced elsewhere shows the next time the filament is opened.
 	 */
+	import { SvelteSet } from 'svelte/reactivity';
 	import SectionLabel from '$lib/components/SectionLabel.svelte';
 	import ImagePlus from '@lucide/svelte/icons/image-plus';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
@@ -31,10 +32,11 @@
 	let id = $derived(filament.id);
 	let hasImage = $derived(filament.ng?.hasImage ?? false);
 	let src = $state<string | null>(null);
-	// The filament an upload or removal is running for. This component is reused as the selection
-	// moves, so a slow upload for one filament must not lock the buttons of the next.
-	let busyFor = $state<string | null>(null);
-	let busy = $derived(busyFor === id);
+	// The filaments an upload or removal is running for. This component is reused as the selection
+	// moves, so a slow upload for one filament must not lock the buttons of the next, and coming
+	// back to one whose request is still running must find its buttons still locked.
+	const busyIds = new SvelteSet<string>();
+	let busy = $derived(busyIds.has(id));
 	// Bumped after an upload, so the same filament's photo is fetched again.
 	let version = $state(0);
 	// Which filament `src` belongs to; plain, since only the effect below reads it.
@@ -72,7 +74,7 @@
 		e.currentTarget.value = '';
 		if (!file) return;
 		const target = id;
-		busyFor = target;
+		busyIds.add(target);
 		try {
 			let prepared;
 			try {
@@ -90,13 +92,13 @@
 			console.error('Failed to upload filament photo', err);
 			toasts.error(ng.filament_image_upload_error());
 		} finally {
-			if (busyFor === target) busyFor = null;
+			busyIds.delete(target);
 		}
 	}
 
 	async function remove() {
 		const target = id;
-		busyFor = target;
+		busyIds.add(target);
 		try {
 			await deleteFilamentImage(target);
 			const f = inventory.filamentById(target);
@@ -106,7 +108,7 @@
 			console.error('Failed to remove filament photo', err);
 			toasts.error(ng.filament_image_remove_error());
 		} finally {
-			if (busyFor === target) busyFor = null;
+			busyIds.delete(target);
 		}
 	}
 </script>
