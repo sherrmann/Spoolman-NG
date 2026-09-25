@@ -15,7 +15,7 @@ areas #411 did not check field by field and found 18 more. Both sets are in sect
 
 | Phase | What | PRs | Gate before the next phase |
 |---|---|---|---|
-| A | Close the parity gaps in `client_v2` | A1–A9 | All merged |
+| A | Close the parity gaps in `client_v2` | A0–A7 | All merged |
 | B | Make the Svelte client the default; the switcher stays | B1 | Released, then a trial period (section 5) |
 | C | Remove every dependency on `client/` from outside it | C1–C4 | All merged |
 | D | Delete `client/` and the code that only served it | D1 | Owner approves the PR |
@@ -30,9 +30,28 @@ Each PR follows the fork rule from
 `client_v2/src/lib/ng/`, an upstream file is changed by a line or two at most, and every such
 change is recorded as Tier 2. Sizes: S = a day or less, M = a few days, L = a week.
 
+**A0 — Languages and the fork's string catalogue (M). Goes first.** This is a parity gap and a
+deletion blocker at once, and every other Phase A PR adds strings, so it has to land before them.
+
+- `scripts/build_ng_messages.mjs` generates `client_v2/locales-ng` *from*
+  `client/public/locales`, and CI fails if the output is stale. The fork's Svelte strings
+  therefore have no source of their own: until this changes, a new string has to be added to the
+  frozen React catalogue and to the generator's key list, and a hand edit to `locales-ng` fails CI.
+  Make `client_v2/locales-ng/*.json` the source, remove the
+  generator and the CI staleness check, and move the translation workflow in `CONTRIBUTING.md`, the
+  PR template, and the `REVIEW.md` for translations to `client_v2`.
+- The classic client offers UK English (the default) and US English separately; the Svelte client
+  has one "English" using UK date and number formats with upstream's wording. Add `en-GB` as the
+  default and keep `en` as US English, matching the classic client and the README.
+- `et`, `hi-Latn`, `ko` and `sl` have upstream locale folders but are not in
+  `client_v2/project-ng.inlang/settings.json` (the fork catalogue's settings; upstream's
+  `project.inlang` is left alone), and have no `locales-ng` file. Add them. The 26 existing
+  `locales-ng` files cover 90–92% of the English keys; fill the missing keys.
+
 **A1 — Links into the classic client keep working (S–M).** Printed labels, bookmarks, Moonraker
 front-ends and custom links use React URLs. Only `/spool/show/:id`, `/filament/show/:id` and
-`/location/show/:id` have a Svelte route today; everything else ends on the 404 page.
+`/location/show/:id` have a Svelte route today, besides the pages both clients share (`/help`,
+`/locations`, `/lowstock`, `/orders`). The rest end on the 404 page.
 
 - `/spool`, `/filament`, `/vendor` → the library
 - `/vendor/show/:id` → `/?sel=vendor:<id>`
@@ -42,6 +61,9 @@ front-ends and custom links use React URLs. Only `/spool/show/:id`, `/filament/s
 - `/settings/<tab>[/<sub>]` → `/settings`, scrolled to that section
 - `/filament/show/:id?tab=calibration` → `/calibration?filament=<id>`; today the redirect drops the
   query
+
+Not a redirect, but a change to record in B1's changelog entry: `/` is Home in the classic client
+and the library in the Svelte client, so bookmarks to `/` land somewhere else.
 
 Needs a URL parameter that opens the add-spool modal. Tests: one browser test per redirect in
 `tests_frontend_ng`.
@@ -86,22 +108,7 @@ designed there. Closes #414.
 (`aiFeatures.ts`, `AiSettings.svelte`) for MCP, which has no client UI in either client. Closes
 #418.
 
-**A8 — Languages and the fork's string catalogue (M).** This is a parity gap and a deletion
-blocker at once.
-
-- `scripts/build_ng_messages.mjs` generates `client_v2/locales-ng` *from*
-  `client/public/locales`, and CI fails if the output is stale. The fork's Svelte strings
-  therefore have no source of their own. Make `client_v2/locales-ng/*.json` the source, remove the
-  generator and the CI staleness check, and move the translation workflow in `CONTRIBUTING.md`, the
-  PR template, and the `REVIEW.md` for translations to `client_v2`.
-- The classic client offers UK English (the default) and US English separately; the Svelte client
-  has one "English" using UK date and number formats with upstream's wording. Add `en-GB` as the
-  default and keep `en` as US English, matching the classic client and the README.
-- `et`, `hi-Latn`, `ko` and `sl` have upstream locale folders but are not in
-  `project.inlang/settings.json`, and have no `locales-ng` file. Add them. The 26 existing
-  `locales-ng` files cover 90–93% of the English keys; fill the missing keys.
-
-**A9 — Accepted losses (no PR, recorded in the B1 changelog entry).** Unless the owner says
+**A8 — Accepted losses (no PR, recorded in the B1 changelog entry).** Unless the owner says
 otherwise, these are not ported:
 
 - The Cmd/Ctrl+K command palette (Refine's `RefineKbar`). Search and the bottom navigation cover
@@ -110,7 +117,7 @@ otherwise, these are not ported:
 - Offline precaching of the app's files. The Svelte client is installable but needs the server to
   load, which it needs for data anyway.
 
-After A1–A8 merge, #411 is updated with the new items ticked and closed.
+After A0–A7 merge, #411 is updated with the new items ticked and closed.
 
 ## 3. Phase B: the default flip
 
@@ -118,7 +125,9 @@ After A1–A8 merge, #411 is updated with the new items ticked and closed.
 
 - `SPOOLMAN_LEGACY_CLIENT` defaults to `FALSE`; the docstrings in `env.py`, the comments in
   `main.py`, `client.py` and the `Dockerfile` stop calling React the default; `/info`'s
-  `client_active` default becomes `"svelte"` (`spoolman/api/v1/models.py:1234`)
+  `client_active` field default becomes `"svelte"` (`spoolman/api/v1/models.py:1234`). That
+  only changes the OpenAPI schema: `/info` always fills the field from the request
+  (`router.py:97`), so the `env.py` default is the actual switch
 - A test that the default with no variable set is the Svelte client
 - `docs/installation.md`, `docs/device-testing-list.md`, `docs/upstream/comparison.md`,
   `docs/design/library-table-parity.md`, `.env.example` (which does not document the variable yet)
@@ -128,7 +137,7 @@ After A1–A8 merge, #411 is updated with the new items ticked and closed.
 - CI keeps setting `SPOOLMAN_LEGACY_CLIENT=FALSE` explicitly where it does today
 - The README screenshot is replaced with the Svelte client
 - A changelog entry that says what changed, how to go back (the switcher, or
-  `SPOOLMAN_LEGACY_CLIENT=TRUE`), and what will not be ported (A9)
+  `SPOOLMAN_LEGACY_CLIENT=TRUE`), and what will not be ported (A8)
 
 A browser that never picked a client moves to the Svelte one on upgrade. One that picked with the
 switcher keeps its choice.
@@ -137,22 +146,32 @@ switcher keeps its choice.
 
 None of these delete anything a user can see. They make D1 a deletion only.
 
-**C1 — Mobile app (S).** `mobile/scripts/sync-shared.mjs` copies `client/src/utils/scan.ts` during
-`npm ci`, so the mobile build fails once `client/` is gone. Point it at the Svelte client's scan
-parser (`client_v2/src/lib/ng/scanCodes.ts`) after checking the two parse the same codes, and keep
-the drift test. Update the comments that name the React client.
+**C1 — Mobile app (S–M).** `mobile/scripts/sync-shared.mjs` copies `client/src/utils/scan.ts`
+during `npm ci`, so the mobile build fails once `client/` is gone. The Svelte client has no
+drop-in replacement: its parser is upstream's `parseSpoolCode` returning `ScannedRef`
+(`client_v2/src/lib/utils/spoolCode.ts`), and the clear-code and retail-barcode helpers are in
+`client_v2/src/lib/ng/scanCodes.ts`. The mobile app imports `parseScanResult` and `ScanTarget`
+(`mobile/src/lib/scanActions.ts`). Copy both Svelte files, adapt `scanActions.ts` to
+`parseSpoolCode`, check against the existing mobile tests that the same codes resolve to the same
+targets, and extend the drift test to both sources. Update the comments that name the React
+client.
 
 **C2 — Release tooling (S).** `spoolman/bump.py` bumps `client/package.json` and its lock file and
 never touches `client_v2/package.json`. Move it to `client_v2`. `lefthook.yml`'s `ci` block runs
 lint, format and type checks for `client/` only; add the same for `client_v2`, so CI still checks a
 frontend once `client/` is gone.
 
-**C3 — Tests that go through the React client but test the server (M).**
-`tests/test_ingress.py`, `tests/test_assetlinks.py` and `tests/integration/test_client_static.py`
-exercise Home Assistant ingress, asset links and static serving through the React serving mode.
-Those server features stay, so the tests are ported to the Svelte serving mode, not deleted.
-`tests_scenarios/assertions/e2e.py` runs `client/e2e/external.spec.ts`; port that spec to
-`tests_frontend_ng`.
+**C3 — Tests that go through the React client but test the server (M–L).**
+
+- `tests/test_ingress.py`, `tests/test_assetlinks.py` and `tests/integration/test_client_static.py`
+  exercise Home Assistant ingress, asset links and static serving through the React serving mode.
+  Those server features stay, so the tests are ported to the Svelte serving mode, not deleted.
+- The React browser suite in `client/e2e/` is also the only browser coverage of ingress and of the
+  PWA manifest under a sub-path: `ingress.spec.ts` and `pwa.spec.ts`, with the harness in
+  `serve.py` and `ingress_gateway.py`. Port the specs and the harness to `tests_frontend_ng`.
+- `tests_scenarios/assertions/e2e.py` runs `client/e2e/external.spec.ts`; port that spec too.
+- Read `client/e2e/journeys/` for server behaviour that no other suite checks, and port those
+  checks. UI-only journeys are covered by the Svelte suites and are not ported.
 
 **C4 — Mutation testing (M).** The weekly Stryker run (`mutation.yml`, a 90% gate) covers only the
 React client. Set it up for `client_v2/src/lib/ng/`, measure the score first, and set the gate at
@@ -221,24 +240,23 @@ behind `SPOOLMAN_LEGACY_CLIENT`.
 
 ## 8. How the work runs
 
-- **One PR at a time on `claude/wonderful-dirac-uu4rap`.** That is the only branch the automated
-  sessions may push to, so PRs are sequential. After a PR merges, the branch is restarted from
-  `master` for the next one.
+- **One PR at a time.** The work is done on a single branch, so PRs are sequential. After a PR
+  merges, the branch is restarted from `master` for the next one.
 - **Each PR:**
-  - An implementer agent does the routine parts. Design decisions, the server code, and anything
-    touching auth, NFC or data writes stay with the main session.
-  - The reviewer agent runs after each substantial step and on the full diff before the push, and
-    every finding is fixed or answered.
+  - Routine parts may be delegated. Design decisions, the server code, and anything touching
+    auth, NFC or data writes are not.
+  - The diff is reviewed after each substantial step and again in full before the push, and every
+    finding is fixed or answered.
   - Before pushing, these must pass:
     - `uv run ruff check`, `uv run ruff format --check` and the affected pytest files
     - in `client_v2`: `npm run lint`, `npm run check` and `npm test`
     - the affected Playwright specs in `tests_frontend_ng`
     - for UI changes, a screenshot at desktop and phone width through the `running-spoolman` skill
   - Every PR has a changelog entry under Unreleased.
-- **After a PR is opened:** the session watches it, fixes CI failures and review findings, and
-  checks in hourly until the PR is green and mergeable.
-- **Between PRs:** when a PR is green and waiting only for a merge, the session starts the next
-  independent step locally but does not push it until the previous PR has merged.
+- **After a PR is opened:** CI failures and review findings are fixed on it until it is green and
+  mergeable.
+- **Between PRs:** when a PR is green and waiting only for a merge, the next independent step is
+  started locally but not pushed until the previous PR has merged.
 - **Tracking:** one issue, "Retire the classic client", with one checklist line per PR above,
   linked from #411.
 
@@ -246,14 +264,14 @@ behind `SPOOLMAN_LEGACY_CLIENT`.
 
 Each has the answer this plan assumes if nobody objects.
 
-1. **Who merges.** Assumed: the owner merges each PR; the session gets it green and says so. If the
-   session may merge PRs once CI is green and review threads are answered, A1–C4 can run without waiting, and
-   only D1 waits for the owner.
+1. **Who merges.** Assumed: the owner merges each PR once it is green. If PRs may be merged as soon
+   as CI is green and review threads are answered, A0–C4 can run without waiting, and only D1
+   waits for the owner.
 2. **Who releases.** Assumed: the owner runs the release workflow. The trial period in section 5
    starts with the release that contains B1.
 3. **Photo intake.** Assumed: port it (A7). The alternative is to drop it and remove the setting.
-4. **Command palette, Ko-fi link, offline precaching.** Assumed: not ported (A9).
+4. **Command palette, Ko-fi link, offline precaching.** Assumed: not ported (A8).
 5. **UK English.** Assumed: `en-GB` becomes the Svelte client's default language, as in the classic
-   client (A8).
+   client (A0).
 6. **Mutation testing.** Assumed: set up for `client_v2`, with the gate at the measured score (C4).
 7. **Trial period.** Assumed: two weeks and two releases (section 5).
