@@ -1095,7 +1095,10 @@
         "apply": "Apply usage",
         "applied": "Recorded usage on {{count}} spool(s).",
         "applied_partial": "Recorded usage on {{ok}} spool(s); {{fail}} failed."
-      }
+      },
+      "entity_label": "Data",
+      "mode_label": "Mode",
+      "format_label": "Format"
     },
     "printers": {
       "tab": "Printers",
