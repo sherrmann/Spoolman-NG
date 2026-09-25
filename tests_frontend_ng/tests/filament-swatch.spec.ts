@@ -197,3 +197,33 @@ test("a long filament name is shortened, and the dialog says so", async ({
     dialog.getByText("Some text was shortened to fit on the card."),
   ).toBeVisible();
 });
+
+test("two quick style changes leave the server on the later one, even if the first save is slow", async ({
+  page,
+  request,
+}) => {
+  // Two saves in flight at once could land in reverse order: the panel would show the later
+  // choice while the server kept the earlier one. Holding the first save open is that race.
+  let releaseFirst!: () => void;
+  const firstHeld = new Promise<void>((r) => (releaseFirst = r));
+  let saves = 0;
+  await page.route(`**/api/v1/setting/${SWATCH_STYLE_KEY}`, async (route) => {
+    if (route.request().method() !== "POST") return route.continue();
+    saves += 1;
+    if (saves === 1) await firstHeld;
+    await route.continue();
+  });
+
+  await page.goto("/settings", { waitUntil: "networkidle" });
+  const select = page.getByRole("combobox", { name: "Default swatch style" });
+  await select.selectOption("hanger");
+  await select.selectOption("card");
+  // Give a second, unordered save the chance to go out and land first.
+  await page.waitForTimeout(500);
+  releaseFirst();
+
+  await expect.poll(() => getSwatchStyle(request)).toBe("card");
+  await page.waitForTimeout(500);
+  expect(await getSwatchStyle(request)).toBe("card");
+  await expect(select).toHaveValue("card");
+});

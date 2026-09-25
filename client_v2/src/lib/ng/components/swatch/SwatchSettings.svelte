@@ -61,18 +61,24 @@
 		return () => ctrl.abort();
 	});
 
-	async function choose(key: string) {
+	// Saves go out one after another, in the order chosen: two in flight at once could land
+	// in reverse order and leave the server on the earlier choice while this shows the later.
+	let queue: Promise<unknown> = Promise.resolve();
+
+	function choose(key: string) {
 		chosen = true;
 		const previous = styleKey;
 		styleKey = key;
-		try {
-			await saveSwatchStyle(key);
-			toasts.success(m['notifications.saveSuccessful']());
-		} catch (e) {
-			// Only undo this choice if it is still the one showing; a later one stands.
-			if (styleKey === key) styleKey = previous;
-			toasts.error(apiErrorMessage(e));
-		}
+		queue = queue.then(async () => {
+			try {
+				await saveSwatchStyle(key);
+				toasts.success(m['notifications.saveSuccessful']());
+			} catch (e) {
+				// Only undo this choice if it is still the one showing; a later one stands.
+				if (styleKey === key) styleKey = previous;
+				toasts.error(apiErrorMessage(e));
+			}
+		});
 	}
 </script>
 
