@@ -382,6 +382,7 @@ it as failed. Advancing past a failure, as first planned, lost the reading. The 
 refuse a gross reading below the tare: it clamps the remaining weight at zero. Readings are parsed with the app's strict
 `parseDecimal` rather than the inspector's `parseFloat`, which reads "12abc" as 12 and "1e2" as
 100. The queue is the selection in the order it was made, and the selection is kept afterwards.
+The reducer's functions are `saved`, `failed`, `skip` and `finish`.
 
 **Upstream lines touched:** none. `BulkBar` gains a "Weigh in" button.
 
