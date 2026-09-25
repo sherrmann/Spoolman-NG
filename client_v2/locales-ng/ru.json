@@ -567,5 +567,8 @@
 	"spool_weigh_title": "Взвешивание катушек",
 	"spool_weigh_save_next": "Сохранить и далее",
 	"spool_weigh_done": "Готово",
-	"spool_weigh_updated": "Обновлено: {name}"
+	"spool_weigh_updated": "Обновлено: {name}",
+	"spool_view_grid": "Вид сеткой",
+	"spool_view_grid_tooltip": "Просмотр катушек в виде цветных плиток",
+	"spool_view_table_tooltip": "Вернуться к полной таблице"
 }

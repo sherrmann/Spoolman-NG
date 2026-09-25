@@ -10,11 +10,15 @@
 	 * and the vendored Playwright suite sees exactly what it was written against. With selection
 	 * on, the checkbox is a SIBLING of the row's link: an <input> inside an <a> is invalid HTML.
 	 * The low-stock page solved the same problem the same way.
+	 *
+	 * In gallery mode (#412 step 3) it renders a card instead, which carries its own checkbox.
 	 */
 	import type { ComponentProps } from 'svelte';
 	import Upstream from '$components/library/SpoolRow.svelte';
 	import { librarySelection } from '$lib/ng/librarySelection.svelte';
 	import { ng } from '$lib/ng/i18n';
+	import { libraryMode } from '$lib/ng/libraryMode.svelte';
+	import SpoolCard from './SpoolCard.svelte';
 
 	let props: ComponentProps<typeof Upstream> = $props();
 
@@ -23,7 +27,9 @@
 	$effect(() => librarySelection.register(props.vm));
 </script>
 
-{#if librarySelection.on}
+{#if libraryMode.mode === 'gallery'}
+	<SpoolCard vm={props.vm} context={props.context} />
+{:else if librarySelection.on}
 	<div class="ng-row">
 		<span class="check" style="padding-left:{Math.max(0, (props.indent ?? 14) - 6)}px">
 			<input

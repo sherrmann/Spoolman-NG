@@ -566,5 +566,8 @@
 	"spool_weigh_title": "Pesar bobinas",
 	"spool_weigh_save_next": "Guardar y siguiente",
 	"spool_weigh_done": "Hecho",
-	"spool_weigh_updated": "Se actualizó {name}"
+	"spool_weigh_updated": "Se actualizó {name}",
+	"spool_view_grid": "Vista de cuadrícula",
+	"spool_view_grid_tooltip": "Explora las bobinas como mosaicos de color",
+	"spool_view_table_tooltip": "Volver a la tabla completa"
 }

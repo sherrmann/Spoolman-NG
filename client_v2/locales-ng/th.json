@@ -551,5 +551,8 @@
 	"spool_weigh_title": "ชั่งน้ำหนักม้วนพลาสติก",
 	"spool_weigh_save_next": "บันทึกและถัดไป",
 	"spool_weigh_done": "เสร็จสิ้น",
-	"spool_weigh_updated": "อัปเดต {name} แล้ว"
+	"spool_weigh_updated": "อัปเดต {name} แล้ว",
+	"spool_view_grid": "มุมมองกริด",
+	"spool_view_grid_tooltip": "ดูม้วนพลาสติกเป็นแผ่นสี",
+	"spool_view_table_tooltip": "กลับไปยังตารางเต็ม"
 }

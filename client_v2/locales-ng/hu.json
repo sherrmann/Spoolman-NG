@@ -559,5 +559,8 @@
 	"spool_weigh_title": "Tekercsek mérése",
 	"spool_weigh_save_next": "Mentés és következő",
 	"spool_weigh_done": "Kész",
-	"spool_weigh_updated": "{name} frissítve"
+	"spool_weigh_updated": "{name} frissítve",
+	"spool_view_grid": "Rácsnézet",
+	"spool_view_grid_tooltip": "Tekercsek böngészése színes csempékként",
+	"spool_view_table_tooltip": "Vissza a teljes táblázathoz"
 }

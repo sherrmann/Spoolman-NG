@@ -559,5 +559,8 @@
 	"spool_weigh_title": "Ζύγιση Καρουλιών",
 	"spool_weigh_save_next": "Αποθήκευση & Επόμενο",
 	"spool_weigh_done": "Τέλος",
-	"spool_weigh_updated": "Ενημερώθηκε: {name}"
+	"spool_weigh_updated": "Ενημερώθηκε: {name}",
+	"spool_view_grid": "Προβολή πλέγματος",
+	"spool_view_grid_tooltip": "Περιήγηση στα καρούλια ως χρωματιστά πλακίδια",
+	"spool_view_table_tooltip": "Επιστροφή στον πλήρη πίνακα"
 }

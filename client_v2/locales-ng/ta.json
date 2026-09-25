@@ -559,5 +559,8 @@
 	"spool_weigh_title": "ச்பூல்களை எடையிடு",
 	"spool_weigh_save_next": "சேமித்து அடுத்தது",
 	"spool_weigh_done": "முடிந்தது",
-	"spool_weigh_updated": "{name} புதுப்பிக்கப்பட்டது"
+	"spool_weigh_updated": "{name} புதுப்பிக்கப்பட்டது",
+	"spool_view_grid": "கட்டக் காட்சி",
+	"spool_view_grid_tooltip": "ச்பூல்களை வண்ணக் கட்டங்களாகப் பார்",
+	"spool_view_table_tooltip": "முழு அட்டவணைக்குத் திரும்பு"
 }

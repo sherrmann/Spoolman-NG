@@ -559,5 +559,8 @@
 	"spool_weigh_title": "Väg spolar",
 	"spool_weigh_save_next": "Spara & nästa",
 	"spool_weigh_done": "Klar",
-	"spool_weigh_updated": "Uppdaterade {name}"
+	"spool_weigh_updated": "Uppdaterade {name}",
+	"spool_view_grid": "Rutnätsvy",
+	"spool_view_grid_tooltip": "Bläddra bland spolar som färgrutor",
+	"spool_view_table_tooltip": "Tillbaka till den fullständiga tabellen"
 }

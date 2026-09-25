@@ -5,14 +5,28 @@
 	 *
 	 * The selection lives exactly as long as this component: the toolbar is on screen for as long
 	 * as the Library is, so unmounting here is what drops a selection when the user leaves.
+	 *
+	 * Also the list/gallery switch (#412 step 3), which is a remembered layout preference.
 	 */
 	import CheckSquare from '@lucide/svelte/icons/square-check';
+	import LayoutGrid from '@lucide/svelte/icons/layout-grid';
+	import { libraryMode } from '$lib/ng/libraryMode.svelte';
 	import { librarySelection } from '$lib/ng/librarySelection.svelte';
 	import { ng } from '$lib/ng/i18n';
 
 	$effect(() => () => librarySelection.setMode(false));
 </script>
 
+<button
+	class="trigger"
+	class:active={libraryMode.mode === 'gallery'}
+	aria-pressed={libraryMode.mode === 'gallery'}
+	title={libraryMode.mode === 'gallery' ? ng.spool_view_table_tooltip() : ng.spool_view_grid_tooltip()}
+	onclick={() => libraryMode.set(libraryMode.mode === 'gallery' ? 'list' : 'gallery')}
+>
+	<LayoutGrid size={14} />
+	{ng.spool_view_grid()}
+</button>
 <button
 	class="trigger"
 	class:active={librarySelection.on}

@@ -551,5 +551,8 @@
 	"spool_weigh_title": "スプールを計量",
 	"spool_weigh_save_next": "保存して次へ",
 	"spool_weigh_done": "完了",
-	"spool_weigh_updated": "{name}を更新しました"
+	"spool_weigh_updated": "{name}を更新しました",
+	"spool_view_grid": "グリッド表示",
+	"spool_view_grid_tooltip": "スプールをカラータイルで表示",
+	"spool_view_table_tooltip": "完全なテーブルに戻る"
 }

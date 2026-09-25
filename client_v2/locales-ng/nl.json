@@ -559,5 +559,8 @@
 	"spool_weigh_title": "Spoelen wegen",
 	"spool_weigh_save_next": "Opslaan & volgende",
 	"spool_weigh_done": "Klaar",
-	"spool_weigh_updated": "{name} bijgewerkt"
+	"spool_weigh_updated": "{name} bijgewerkt",
+	"spool_view_grid": "Rasterweergave",
+	"spool_view_grid_tooltip": "Spoelen bekijken als kleurtegels",
+	"spool_view_table_tooltip": "Terug naar de volledige tabel"
 }

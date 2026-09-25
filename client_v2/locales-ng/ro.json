@@ -567,5 +567,8 @@
 	"spool_weigh_title": "Cântărire bobine",
 	"spool_weigh_save_next": "Salvează și următoarea",
 	"spool_weigh_done": "Gata",
-	"spool_weigh_updated": "S-a actualizat {name}"
+	"spool_weigh_updated": "S-a actualizat {name}",
+	"spool_view_grid": "Vizualizare grilă",
+	"spool_view_grid_tooltip": "Răsfoiește bobinele sub formă de plăcuțe colorate",
+	"spool_view_table_tooltip": "Înapoi la tabelul complet"
 }

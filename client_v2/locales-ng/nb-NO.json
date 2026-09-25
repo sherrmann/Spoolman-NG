@@ -559,5 +559,8 @@
 	"spool_weigh_title": "Vei spoler",
 	"spool_weigh_save_next": "Lagre og neste",
 	"spool_weigh_done": "Ferdig",
-	"spool_weigh_updated": "Oppdaterte {name}"
+	"spool_weigh_updated": "Oppdaterte {name}",
+	"spool_view_grid": "Rutenettvisning",
+	"spool_view_grid_tooltip": "Bla gjennom spoler som fargefliser",
+	"spool_view_table_tooltip": "Tilbake til hele tabellen"
 }

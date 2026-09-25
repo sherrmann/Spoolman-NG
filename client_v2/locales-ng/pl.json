@@ -567,5 +567,8 @@
 	"spool_weigh_title": "Ważenie szpul",
 	"spool_weigh_save_next": "Zapisz i następna",
 	"spool_weigh_done": "Gotowe",
-	"spool_weigh_updated": "Zaktualizowano {name}"
+	"spool_weigh_updated": "Zaktualizowano {name}",
+	"spool_view_grid": "Widok siatki",
+	"spool_view_grid_tooltip": "Przeglądaj szpule jako kolorowe kafelki",
+	"spool_view_table_tooltip": "Wróć do pełnej tabeli"
 }

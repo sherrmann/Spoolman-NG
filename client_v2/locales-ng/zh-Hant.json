@@ -551,5 +551,8 @@
 	"spool_weigh_title": "料盤秤重",
 	"spool_weigh_save_next": "儲存並下一個",
 	"spool_weigh_done": "完成",
-	"spool_weigh_updated": "已更新 {name}"
+	"spool_weigh_updated": "已更新 {name}",
+	"spool_view_grid": "網格檢視",
+	"spool_view_grid_tooltip": "以色塊瀏覽料盤",
+	"spool_view_table_tooltip": "返回完整表格"
 }

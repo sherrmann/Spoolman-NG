@@ -567,5 +567,8 @@
 	"spool_weigh_title": "Зважування котушок",
 	"spool_weigh_save_next": "Зберегти й далі",
 	"spool_weigh_done": "Готово",
-	"spool_weigh_updated": "Оновлено: {name}"
+	"spool_weigh_updated": "Оновлено: {name}",
+	"spool_view_grid": "Вигляд сіткою",
+	"spool_view_grid_tooltip": "Перегляд котушок у вигляді кольорових плиток",
+	"spool_view_table_tooltip": "Повернутися до повної таблиці"
 }

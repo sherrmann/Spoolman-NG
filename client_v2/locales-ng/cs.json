@@ -567,5 +567,8 @@
 	"spool_weigh_title": "Vážit cívky",
 	"spool_weigh_save_next": "Uložit a další",
 	"spool_weigh_done": "Hotovo",
-	"spool_weigh_updated": "Aktualizováno: {name}"
+	"spool_weigh_updated": "Aktualizováno: {name}",
+	"spool_view_grid": "Zobrazení v mřížce",
+	"spool_view_grid_tooltip": "Procházejte cívky jako barevné dlaždice",
+	"spool_view_table_tooltip": "Zpět na úplnou tabulku"
 }
