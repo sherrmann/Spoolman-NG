@@ -287,9 +287,9 @@ def _weight_closeness(a: float | None, b: float | None) -> float:
 
 
 def _material_key(value: str | None) -> str:
-    """Normalise a material name for comparison: case and spaces ignored, "PLA Plus" read as "PLA+"."""
+    """Normalise a material name for comparison: case and spaces ignored, "PLA Plus" and "PLA-Plus" read as "PLA+"."""
     key = re.sub(r"\s+", "", (value or "").upper())
-    return re.sub(r"PLUS$", "+", key) if len(key) > len("PLUS") else key
+    return re.sub(r"-?PLUS$", "+", key) if len(key) > len("PLUS") else key
 
 
 def _material_variant(a: str, b: str) -> bool:

@@ -104,7 +104,7 @@ def _esun(material: str) -> float:
 
 
 def test_a_dropped_plus_is_a_partial_match_not_a_mismatch() -> None:
-    """A PLA+ spool read as "PLA" must still reach the shortlist (it scored 0.29 before)."""
+    """A PLA+ spool read as "PLA" must still reach the shortlist (it scored 0.24 before)."""
     assert _esun("PLA") >= spoolintake._CATALOG_MIN_SCORE  # noqa: SLF001
     assert _esun("PLA") < _esun("PLA+"), "an exact material still wins"
 
@@ -115,7 +115,7 @@ def test_plus_variant_works_both_ways() -> None:
     assert score >= spoolintake._CATALOG_MIN_SCORE  # noqa: SLF001
 
 
-@pytest.mark.parametrize("spelling", ["PLA+", "pla+", "PLA Plus", "PLA PLUS", "PLAPlus", " PLA + "])
+@pytest.mark.parametrize("spelling", ["PLA+", "pla+", "PLA Plus", "PLA PLUS", "PLAPlus", "PLA-Plus", " PLA + "])
 def test_plus_spellings_are_the_same_material(spelling: str) -> None:
     assert _esun(spelling) == _esun("PLA+")
 
