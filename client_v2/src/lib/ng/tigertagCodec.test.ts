@@ -29,6 +29,7 @@ function filament(over: Partial<Filament> = {}): Filament {
 		comment: '',
 		registeredLabel: 'Jan 1',
 		extra: {},
+		tags: [],
 		...over
 	};
 }

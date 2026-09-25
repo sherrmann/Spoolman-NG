@@ -18,6 +18,7 @@
 	import { fields } from '$lib/stores/fields.svelte';
 	import type { EntityType } from '$lib/api/fields';
 	import { externalColors, externalDirection, type ExternalFilament } from '$lib/api/external';
+	import { ExternalSearch } from '$lib/api/externalSearch.svelte';
 	import { roundGrams, weightAuto } from '$lib/utils/format';
 	import { numErr } from '$lib/utils/validate';
 	import {
@@ -59,9 +60,8 @@
 	let query = $state('');
 	let searchInput = $state<HTMLInputElement | undefined>();
 	let localResults = $state<Filament[]>([]);
-	let externalResults = $state<ExternalFilament[]>([]);
+	const extSearch = new ExternalSearch();
 	let searching = $state(false);
-	let extError = $state(false);
 	let chosen = $state<Choice | null>(null);
 	let creating = $state(false);
 	let submitting = $state(false);
@@ -133,17 +133,11 @@
 	}
 	async function runSearch() {
 		searching = true;
-		extError = false;
-		const [local, external] = await Promise.allSettled([
+		const [local] = await Promise.allSettled([
 			spoolSource.searchFilaments(query.trim()),
-			spoolSource.searchExternalFilaments(query.trim())
+			extSearch.search(query)
 		]);
 		localResults = local.status === 'fulfilled' ? local.value : [];
-		if (external.status === 'fulfilled') externalResults = external.value;
-		else {
-			externalResults = [];
-			extError = true;
-		}
 		searching = false;
 	}
 
@@ -361,7 +355,7 @@
 		step = 1;
 		query = '';
 		localResults = [];
-		externalResults = [];
+		extSearch.clear();
 		chosen = null;
 		creating = false;
 		cloneSource = null;
@@ -559,7 +553,7 @@
 						oninput={(e) => onSearch(e.currentTarget.value)}
 						placeholder={m['add.searchPlaceholder']({ name: serverInfo.externalDbName })}
 					/>
-					<div class="results">
+					<div class="results" onscroll={extSearch.onscroll}>
 						<div class="res-hdr">{m['add.yourCatalog']()}</div>
 						{#if searching && localResults.length === 0}
 							<div class="res-note">{m['add.searching']()}</div>
@@ -585,16 +579,16 @@
 						{/if}
 
 						<div class="res-hdr"><span class="hdr-note">{serverInfo.externalDbName}</span></div>
-						{#if extError}
+						{#if extSearch.error}
 							<div class="res-note">{m['add.dbUnavailable']({ name: serverInfo.externalDbName })}</div>
-						{:else if searching && externalResults.length === 0}
+						{:else if searching && extSearch.items.length === 0}
 							<div class="res-note">{m['add.searching']()}</div>
-						{:else if externalResults.length === 0}
+						{:else if extSearch.items.length === 0}
 							<div class="res-note">
 								{query.trim() ? m['add.typeToSearchMatches']() : m['add.typeToSearchAll']()}
 							</div>
 						{:else}
-							{#each externalResults as ext (ext.id)}
+							{#each extSearch.items as ext (ext.id)}
 								<button class="res-item" onclick={() => choose({ source: 'external', ext })}>
 									<Swatch
 										colors={externalColors(ext)}
@@ -616,6 +610,9 @@
 									<span class="tag external">{serverInfo.externalDbName}</span>
 								</button>
 							{/each}
+							{#if extSearch.loadingMore}
+								<div class="res-note">{m['add.searching']()}</div>
+							{/if}
 						{/if}
 					</div>
 
