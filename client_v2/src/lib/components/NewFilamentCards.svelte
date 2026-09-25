@@ -19,6 +19,7 @@
 	import NumberInput from './NumberInput.svelte';
 	import Combobox from './Combobox.svelte';
 	import ExtraFieldsSection from './ExtraFieldsSection.svelte';
+	import NewFilamentCatalogueFields from '$lib/ng/components/NewFilamentCatalogueFields.svelte';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import type { Extra, Filament } from '$lib/types';
@@ -314,6 +315,7 @@
 				<input bind:value={draft.comment} placeholder="—" />
 			</label>
 		</div>
+		<NewFilamentCatalogueFields bind:draft />
 	{/if}
 	<!-- Outside the advanced block: a custom field only exists because someone
 	     defined it, so it isn't an advanced detail to them. The section renders

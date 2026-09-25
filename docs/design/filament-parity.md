@@ -86,16 +86,15 @@ widen the seam further than one more line each.
   storing it would claim "no" where nothing is known. The React client does the same.
 - The library's column manager (#456) gets five columns, hidden by default, like every column
   beyond upstream's row.
-- **Not in step 1:** the fields on the new-filament form. A new filament is usually imported
-  (which now carries them) or typed in for a spool that is being registered right then; the
-  form is upstream's (`NewFilamentCards.svelte`, 450 lines) and a sixth card section would be
-  the largest edit in this plan. They can be set in the inspector straight after. Revisit if
-  asked.
-- **Also not in step 1:** duplicating a filament, and creating one from the change-filament
-  dialog. Both go through the same new-filament draft, so a duplicate starts with the five
-  fields unknown, where the React client's clone copies them. Carrying them means the draft
-  (`lib/filament/draft.ts`) and `spoolSource.createFilament`, both upstream's; see open
-  question 1.
+- **Added after step 3:** the fields on the new-filament form, and carried by duplicate (open
+  question 1, answered yes). The five choices sit in the form's "Advanced specs" block, drawn by
+  the fork's `NewFilamentCatalogueFields.svelte` and written into the draft under `ng`, so the
+  add-spools flow and the change-filament dialog both get them. A duplicate copies all five from
+  its source, as the React client's clone does; that includes "Add & new", which starts from the
+  filament just created. On create, unknown is left out of the body and `false` is sent: unlike
+  a catalogue import, a `false` here was chosen or copied from a stored value. The upstream
+  edits are one line each in `lib/filament/draft.ts`, `spoolSource.createFilament` and
+  `NewFilamentCards.svelte`.
 
 ### Step 2: reference images
 
@@ -114,7 +113,8 @@ As built: `lib/ng/filamentImage.ts` (preparation, fetch, upload, delete) and
   photo was added or removed. A photo **replaced** elsewhere keeps `has_image` true, so it shows
   the next time that filament is opened, when the cached copy is revalidated. Revalidating on
   every filament update instead would mean a request per spool event during a print.
-- Not on the new-filament form, for the reason given in step 1.
+- Not on the new-filament form: the photo endpoints take a filament id, so a photo is added in
+  the inspector once the filament exists.
 
 ### Step 3: swatch style and 3MF swatch download
 
@@ -153,8 +153,8 @@ the link does not resolve. Fixing it belongs in one place for all three, not in 
 
 Each with the answer this design assumes if nobody objects.
 
-1. **Catalogue fields on the new-filament form, and carried by duplicate?** Default: not now
-   (step 1 above). If wanted, both come together, since they share the draft.
+1. **Catalogue fields on the new-filament form, and carried by duplicate?** Answered yes, and
+   built (step 1 above).
 2. **Filter the library by the catalogue fields?** Default: no. Upstream's filter menu reads
    upstream's field list; adding to it is a larger edit than any of these steps, and nobody has
    asked for it.
