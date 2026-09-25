@@ -556,5 +556,7 @@
 	"spool_view_grid_tooltip": "ดูม้วนพลาสติกเป็นแผ่นสี",
 	"spool_view_table_tooltip": "กลับไปยังตารางเต็ม",
 	"spool_totals_shown_other": "แสดง {count} ม้วนพลาสติก",
-	"spool_totals_selected_other": "เลือก {count} ม้วนพลาสติก"
+	"spool_totals_selected_other": "เลือก {count} ม้วนพลาสติก",
+	"buttons_columns": "คอลัมน์",
+	"buttons_columnsTooltip": "เลือก จัดลำดับ และซ่อนคอลัมน์ของตาราง"
 }

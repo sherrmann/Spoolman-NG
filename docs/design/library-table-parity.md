@@ -1,6 +1,6 @@
 # Library table parity in the Svelte client (#412)
 
-**Status:** steps 1 (selection, bulk edit, bulk archive), 2 (weigh-in), 3 (gallery) and 4 (totals) built; step 5 in progress. **Date:** 2026-09-07. **Fork:** `client_v2` subtree at
+**Status:** all five steps built: selection, bulk edit and bulk archive (1), weigh-in (2), gallery (3), totals (4) and the column manager (5). **Date:** 2026-09-07. **Fork:** `client_v2` subtree at
 upstream `42721c7` (2026-08-27); upstream HEAD `81636f25` (2026-09-04).
 
 Issue #412 groups four things the frozen React client does and the Svelte library cannot:
@@ -536,6 +536,15 @@ the DOM; reorder persists across reload; reset restores upstream's `.row` markup
 changes the header cell width and the change survives reload).
 
 **Tier 2 rows to append:** the `ListToolbar` import swap.
+
+*As built:* built at the owner's request despite the recommendation below. The fork's cell
+row is used only in the flat list and only once columns have been configured; until then, and
+after Reset, the row is upstream's. Every row and the header share one grid template and one
+minimum width, so when the columns are wider than the pane the list scrolls sideways with the
+header following it (`.groups` gains `overflow-x: auto`, scoped to a list that has the header as
+its sibling). A column the saved configuration has never seen (a new extra field) starts hidden.
+The name column cannot be hidden. The starting widths are upstream's row's, so the first
+configuration fits where that row fits.
 
 **Recommendation on this step:** do not schedule it. Ship steps 1 to 4, then ask in #412
 whether anyone still wants it. The comparison doc sized it L for a reason, and that L now

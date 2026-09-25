@@ -576,5 +576,7 @@
 	"spool_totals_shown_many": "Показано {count} котушок",
 	"spool_totals_selected_one": "Вибрано {count} котушку",
 	"spool_totals_selected_few": "Вибрано {count} котушки",
-	"spool_totals_selected_many": "Вибрано {count} котушок"
+	"spool_totals_selected_many": "Вибрано {count} котушок",
+	"buttons_columns": "Колонки",
+	"buttons_columnsTooltip": "Вибір, порядок і приховування колонок таблиці"
 }

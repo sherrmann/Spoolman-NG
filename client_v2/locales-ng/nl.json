@@ -566,5 +566,7 @@
 	"spool_totals_shown_one": "{count} spoel getoond",
 	"spool_totals_shown_other": "{count} spoelen getoond",
 	"spool_totals_selected_one": "{count} spoel geselecteerd",
-	"spool_totals_selected_other": "{count} spoelen geselecteerd"
+	"spool_totals_selected_other": "{count} spoelen geselecteerd",
+	"buttons_columns": "Kolommen",
+	"buttons_columnsTooltip": "Tabelkolommen kiezen, herschikken en verbergen"
 }

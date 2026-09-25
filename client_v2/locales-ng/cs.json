@@ -576,5 +576,7 @@
 	"spool_totals_shown_other": "Zobrazeno {count} cívek",
 	"spool_totals_selected_one": "Vybrána {count} cívka",
 	"spool_totals_selected_few": "Vybrány {count} cívky",
-	"spool_totals_selected_other": "Vybráno {count} cívek"
+	"spool_totals_selected_other": "Vybráno {count} cívek",
+	"buttons_columns": "Sloupce",
+	"buttons_columnsTooltip": "Vyberte, přeuspořádejte a skryjte sloupce tabulky"
 }

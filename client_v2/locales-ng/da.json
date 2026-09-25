@@ -566,5 +566,7 @@
 	"spool_totals_shown_one": "{count} spole vist",
 	"spool_totals_shown_other": "{count} spoler vist",
 	"spool_totals_selected_one": "{count} spole valgt",
-	"spool_totals_selected_other": "{count} spoler valgt"
+	"spool_totals_selected_other": "{count} spoler valgt",
+	"buttons_columns": "Kolonner",
+	"buttons_columnsTooltip": "Vælg, omarrangér og skjul tabelkolonner"
 }

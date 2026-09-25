@@ -1,5 +1,6 @@
 <script lang="ts">
-	import ListToolbar from './ListToolbar.svelte';
+	// Spoolman NG fork seam (#412 step 5): upstream's toolbar, then the column header.
+	import ListToolbar from '$lib/ng/components/library/LibraryToolbar.svelte';
 	import GroupRow from './GroupRow.svelte';
 	// Spoolman NG fork seams (#412): the row with a selection checkbox, and the footer with the
 	// bulk bar. Both render upstream's own component; see docs/upstream/client-v2-fork-additions.md.

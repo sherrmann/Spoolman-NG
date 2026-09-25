@@ -612,5 +612,12 @@
 	"spool_totals_shown_one": "{count} spool shown",
 	"spool_totals_shown_other": "{count} spools shown",
 	"spool_totals_selected_one": "{count} spool selected",
-	"spool_totals_selected_other": "{count} spools selected"
+	"spool_totals_selected_other": "{count} spools selected",
+	"buttons_columns": "Columns",
+	"buttons_columnsTooltip": "Choose, reorder and hide table columns",
+	"spool_columns_progress": "Fill level",
+	"spool_columns_reset": "Reset columns",
+	"spool_columns_move_up": "Move {name} up",
+	"spool_columns_move_down": "Move {name} down",
+	"spool_columns_resize": "Resize {name}"
 }

@@ -566,5 +566,7 @@
 	"spool_totals_shown_one": "{count} قرقره نمایش داده می‌شود",
 	"spool_totals_shown_other": "تعداد {count} قرقره نمایش داده می‌شود",
 	"spool_totals_selected_one": "{count} قرقره انتخاب شد",
-	"spool_totals_selected_other": "تعداد {count} قرقره انتخاب شد"
+	"spool_totals_selected_other": "تعداد {count} قرقره انتخاب شد",
+	"buttons_columns": "ستون‌ها",
+	"buttons_columnsTooltip": "انتخاب، جابه‌جایی و پنهان کردن ستون‌های جدول"
 }

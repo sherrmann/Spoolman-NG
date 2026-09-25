@@ -576,5 +576,7 @@
 	"spool_totals_shown_other": "Rodoma {count} ričių",
 	"spool_totals_selected_one": "Pasirinkta {count} ritė",
 	"spool_totals_selected_few": "Pasirinktos {count} ritės",
-	"spool_totals_selected_other": "Pasirinkta {count} ričių"
+	"spool_totals_selected_other": "Pasirinkta {count} ričių",
+	"buttons_columns": "Stulpeliai",
+	"buttons_columnsTooltip": "Pasirinkite, pertvarkykite ir slėpkite lentelės stulpelius"
 }

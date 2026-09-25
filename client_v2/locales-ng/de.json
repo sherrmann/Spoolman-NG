@@ -566,5 +566,7 @@
 	"spool_totals_shown_one": "{count} Spule angezeigt",
 	"spool_totals_shown_other": "{count} Spulen angezeigt",
 	"spool_totals_selected_one": "{count} Spule ausgewählt",
-	"spool_totals_selected_other": "{count} Spulen ausgewählt"
+	"spool_totals_selected_other": "{count} Spulen ausgewählt",
+	"buttons_columns": "Spalten",
+	"buttons_columnsTooltip": "Tabellenspalten auswählen, neu anordnen und ausblenden"
 }
