@@ -157,14 +157,17 @@
 				{#each EXPORT_ENTITIES as e (e)}
 					<li>
 						<span class="name">{entityLabel[e]()}</span>
-						{#each ['csv', 'json'] as const as f (f)}
-							<Button
-								variant="outline"
-								disabled={exporting !== null}
-								ariaLabel={`${entityLabel[e]()} · ${f.toUpperCase()}`}
-								onclick={() => exportAs(e, f)}><Download size={13} /> {f.toUpperCase()}</Button
-							>
-						{/each}
+						<!-- One unit, so on a narrow screen the pair wraps under the name together. -->
+						<span class="formats">
+							{#each ['csv', 'json'] as const as f (f)}
+								<Button
+									variant="outline"
+									disabled={exporting !== null}
+									ariaLabel={`${entityLabel[e]()} · ${f.toUpperCase()}`}
+									onclick={() => exportAs(e, f)}><Download size={13} /> {f.toUpperCase()}</Button
+								>
+							{/each}
+						</span>
 					</li>
 				{/each}
 			</ul>
@@ -269,12 +272,17 @@
 	}
 	.exports li {
 		display: flex;
+		flex-wrap: wrap;
 		align-items: center;
-		gap: 8px;
+		gap: 6px 8px;
 		font-size: 13px;
 	}
 	.name {
 		min-width: 120px;
+	}
+	.formats {
+		display: flex;
+		gap: 8px;
 	}
 	fieldset {
 		display: contents;
@@ -296,8 +304,15 @@
 	}
 	.file {
 		display: inline-flex;
+		flex-wrap: wrap;
 		align-items: center;
 		gap: 6px;
+		max-width: 100%;
+	}
+	/* A file input's own width is about 270px, wider than a phone's card. */
+	.file input {
+		min-width: 0;
+		max-width: 100%;
 	}
 	.file span {
 		color: var(--text-2);
