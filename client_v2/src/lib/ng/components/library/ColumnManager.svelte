@@ -17,25 +17,43 @@
 	import { columnsView } from '$lib/ng/libraryColumnsView.svelte';
 
 	let open = $state(false);
+	let trigger = $state<HTMLButtonElement>();
+	let panel = $state<HTMLDivElement>();
 	let order = $derived(normaliseConfig(libraryColumns.config, columnsView.ids).order);
 	let shown = $derived(new Set(columnsView.visible));
 
 	$effect(() => {
 		if (open) fields.ensure('spool');
 	});
+
+	// Into the panel when it opens, and back to the button when it closes from inside, so a
+	// keyboard user neither has to tab to it nor lands on the page body afterwards.
+	$effect(() => {
+		panel?.querySelector<HTMLElement>('input:not(:disabled), button:not(:disabled)')?.focus();
+	});
+
+	function onKey(e: KeyboardEvent) {
+		if (open && e.key === 'Escape') close();
+	}
+
+	function close() {
+		const within = panel?.contains(document.activeElement) ?? false;
+		open = false;
+		if (within) trigger?.focus();
+	}
 </script>
 
-<svelte:window
-	onkeydown={(e) => {
-		if (open && e.key === 'Escape') open = false;
-	}}
-/>
+<!-- Escape is also handled on the button and the panel themselves: upstream's toolbar, which
+     this sits in, stops keydown from reaching the window. -->
+<svelte:window onkeydown={onKey} />
 
 <div class="wrap">
 	<button
+		bind:this={trigger}
 		class="trigger"
 		class:active={open || columnsView.custom}
 		aria-expanded={open}
+		onkeydown={onKey}
 		title={ng.buttons_columnsTooltip()}
 		onclick={() => (open = !open)}
 	>
@@ -43,12 +61,17 @@
 		{ng.buttons_columns()}
 	</button>
 	{#if open}
-		<div class="panel" role="dialog" aria-label={ng.buttons_columns()}>
+		<div
+			class="panel"
+			role="dialog"
+			aria-label={ng.buttons_columns()}
+			tabindex="-1"
+			bind:this={panel}
+			onkeydown={onKey}
+		>
 			<div class="head">
 				<span class="title">{ng.buttons_columns()}</span>
-				<button class="x" onclick={() => (open = false)} aria-label={m['buttons.close']()}
-					><X size={14} /></button
-				>
+				<button class="x" onclick={close} aria-label={m['buttons.close']()}><X size={14} /></button>
 			</div>
 			<ul>
 				{#each order as id, i (id)}

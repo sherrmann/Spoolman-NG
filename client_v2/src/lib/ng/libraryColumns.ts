@@ -65,18 +65,22 @@ export function initialConfig(catalogue: readonly string[]): ColumnsConfig {
 export function normaliseConfig(config: ColumnsConfig | null, catalogue: readonly string[]): ColumnsConfig {
 	const c = config ?? initialConfig(catalogue);
 	const seen = new Set([...c.order, ...c.hidden]);
-	const unseen = catalogue.filter((id) => !seen.has(id));
-	return { ...c, order: effectiveOrder(c.order, catalogue), hidden: [...c.hidden, ...unseen] };
+	const unseen = catalogue.filter((id) => !seen.has(id) && id !== FLEX_COLUMN);
+	const hidden = [...c.hidden, ...unseen].filter((id) => id !== FLEX_COLUMN);
+	return { ...c, order: effectiveOrder(c.order, catalogue), hidden };
 }
 
 /**
  * The columns to render, in order. A column the saved configuration has never seen is hidden:
- * a new extra field should not appear in everyone's list uninvited.
+ * a new extra field should not appear in everyone's list uninvited. The name is always shown,
+ * whatever a stored configuration says, as the one column that tells the rows apart.
  */
 export function visibleColumns(config: ColumnsConfig, catalogue: readonly string[]): string[] {
 	const hidden = new Set(config.hidden);
 	const seenBefore = new Set([...config.order, ...config.hidden]);
-	return effectiveOrder(config.order, catalogue).filter((id) => seenBefore.has(id) && !hidden.has(id));
+	return effectiveOrder(config.order, catalogue).filter(
+		(id) => id === FLEX_COLUMN || (seenBefore.has(id) && !hidden.has(id))
+	);
 }
 
 export function clampWidth(width: number): number {

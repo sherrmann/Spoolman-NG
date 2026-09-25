@@ -59,6 +59,17 @@ describe('visibleColumns', () => {
 		expect(visibleColumns(config, ['id', 'name', 'lot'])).toEqual(['name', 'lot']);
 	});
 
+	it('always shows the name, even when a stored configuration hides it or never saw it', () => {
+		expect(visibleColumns({ order: ['id', 'name'], hidden: ['name'], widths: {} }, ['id', 'name'])).toEqual([
+			'id',
+			'name'
+		]);
+		expect(visibleColumns({ order: ['id'], hidden: [], widths: {} }, ['id', 'name'])).toEqual(['id', 'name']);
+		expect(normaliseConfig({ order: [], hidden: ['name'], widths: {} }, ['id', 'name']).hidden).toEqual([
+			'id'
+		]);
+	});
+
 	it('does not show a column added after the configuration was saved', () => {
 		// A new extra field should not appear in everyone's list uninvited.
 		const config = { order: ['id', 'name'], hidden: [], widths: {} };

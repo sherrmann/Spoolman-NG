@@ -56,7 +56,7 @@ async function openColumnsDialog(page: Page) {
   return dialog;
 }
 
-/** Closes the columns panel via its own close button, more reliable than a bare Escape press. */
+/** Closes the columns panel via its own close button (Escape has a test of its own). */
 async function closeColumnsDialog(page: Page) {
   await page.getByRole("button", { name: "Close", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "Columns" })).toHaveCount(0);
@@ -80,6 +80,26 @@ test("default: no header, upstream rows, nothing stored", async ({
   await expect(page.locator("a.cells")).toHaveCount(0);
   await expect(page.locator(".ng-col-header")).toHaveCount(0);
   expect(await storedConfig(page)).toBeNull();
+});
+
+test("the columns panel takes focus when opened and gives it back to its button on Escape", async ({
+  page,
+  request,
+}) => {
+  await clearColumnsOnLoad(page);
+  const { location } = await seedOneSpool(request, "ColFocus");
+  await openAt(page, location);
+
+  const dialog = await openColumnsDialog(page);
+  await expect
+    .poll(() => dialog.evaluate((d) => d.contains(document.activeElement)))
+    .toBe(true);
+
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Columns", exact: true }),
+  ).toBeFocused();
 });
 
 test("showing a column switches the list to the fork's cell row", async ({
