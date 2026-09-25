@@ -43,7 +43,7 @@ describe('bulkEditBody', () => {
 	});
 
 	it('refuses a price that is not a non-negative number', () => {
-		for (const price of ['abc', '-1', 'Infinity']) {
+		for (const price of ['abc', '-1', 'Infinity', '1e2', '0x10', '1.2.3']) {
 			expect(bulkEditBody(form({ price: true }, { price }))).toEqual({ error: 'price' });
 		}
 	});

@@ -10,6 +10,7 @@
 	import { spoolSource } from '$lib/api/spoolSource';
 	import { BULK_FIELDS, bulkEditBody, type BulkField } from '$lib/ng/bulkEditBody';
 	import type { SpoolPatch } from '$lib/types';
+	import { numericInput } from '$lib/utils/numeric';
 
 	interface Props {
 		count: number;
@@ -72,12 +73,21 @@
 					oninput={() => (ticked.comment = true)}
 					disabled={busy}
 					aria-label={labels.comment()}></textarea>
+			{:else if field === 'price'}
+				<input
+					class="in"
+					bind:value={values.price}
+					oninput={() => (ticked.price = true)}
+					inputmode="decimal"
+					use:numericInput={{ negative: false }}
+					disabled={busy}
+					aria-label={labels.price()}
+				/>
 			{:else}
 				<input
 					class="in"
 					bind:value={values[field]}
 					oninput={() => (ticked[field] = true)}
-					inputmode={field === 'price' ? 'decimal' : undefined}
 					list={field === 'location' ? listId : undefined}
 					disabled={busy}
 					aria-label={labels[field]()}

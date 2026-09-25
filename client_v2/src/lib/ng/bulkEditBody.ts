@@ -7,6 +7,7 @@
  * empty box alone cannot tell "clear it" from "leave it".
  */
 import type { SpoolPatch } from '$lib/types';
+import { parseDecimal } from '$lib/utils/numeric';
 
 export const BULK_FIELDS = ['location', 'lot', 'price', 'comment'] as const;
 export type BulkField = (typeof BULK_FIELDS)[number];
@@ -30,8 +31,10 @@ export function bulkEditBody({ ticked, values }: BulkEditForm): BulkEditBody {
 			// Clears the spool's own price, so it falls back to the filament's again.
 			patch.price = undefined;
 		} else {
-			const price = Number(raw.replace(',', '.'));
-			if (!Number.isFinite(price) || price < 0) return { error: 'price' };
+			// The app's strict decimal parser, not Number(): "1e2" or "0x10" would otherwise
+			// set 100 or 16 as the price of every selected spool.
+			const price = parseDecimal(raw);
+			if (price === null || price < 0) return { error: 'price' };
 			patch.price = price;
 		}
 	}
