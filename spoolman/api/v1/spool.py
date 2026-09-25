@@ -622,6 +622,17 @@ async def find_groups(
         bool,
         Query(title="Allow Archived", description="Whether to include archived spools in the aggregates."),
     ] = False,
+    include_empty: Annotated[
+        bool,
+        Query(
+            title="Include Empty",
+            description=(
+                "Also return matching filaments that hold no matching spools, as groups of zero. Only "
+                "valid with group_by=filament, and not together with filters on the spools themselves "
+                "(location, lot_nr, spool extra fields), which a filament with no spools has no value for."
+            ),
+        ),
+    ] = False,
     sort: Annotated[
         str | None,
         Query(
@@ -666,6 +677,7 @@ async def find_groups(
             location=location,
             lot_nr=lot_nr,
             allow_archived=allow_archived,
+            include_empty=include_empty,
             extra_field_filters=spool_extra or None,
             filament_extra_field_filters=filament_extra or None,
             vendor_extra_field_filters=vendor_extra or None,
