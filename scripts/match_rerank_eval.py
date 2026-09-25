@@ -20,6 +20,12 @@ score picked the wrong candidate. They show whether reranking can recover such c
 they are chosen against the baseline, so they are reported separately and left out of the
 headline accuracy.
 
+Real-catalog mode (``--catalog``, ``--photos``, ``--generated``) lets the product build each
+shortlist itself with spoolintake.match_catalog over a SpoolmanDB catalog, from your own photos'
+extractions (ai_eval_vision.py --dump-extractions) or from generated readings
+(match_eval_noise.py). It also reports how often the right product is shortlisted at all, which
+bounds both orders. ``--baseline-only`` runs it without a decision endpoint. See docs/ai.md.
+
 Needs a live decision-model endpoint, so it is not part of CI -- run it before a release and
 whenever the reranker's prompt or scoring changes:
 
