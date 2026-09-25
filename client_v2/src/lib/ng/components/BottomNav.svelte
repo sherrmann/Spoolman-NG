@@ -48,7 +48,31 @@
 	});
 
 	function keydown(e: KeyboardEvent) {
-		if (open && e.key === 'Escape') close();
+		if (!open) return;
+		if (e.key === 'Escape') close();
+		else if (e.key === 'Tab') keepFocusInSheet(e);
+	}
+
+	// The sheet is modal, so Tab must not walk out of it into the page behind the scrim, where a
+	// keyboard or switch user could still activate controls. Wrap at both ends, and pull focus
+	// back in if it is somehow outside.
+	function keepFocusInSheet(e: KeyboardEvent) {
+		if (!sheetEl) return;
+		const items = Array.from(sheetEl.querySelectorAll<HTMLElement>('a[href], button:not([disabled])'));
+		if (items.length === 0) return;
+		const first = items[0];
+		const last = items[items.length - 1];
+		const active = document.activeElement;
+		if (!sheetEl.contains(active)) {
+			e.preventDefault();
+			(e.shiftKey ? last : first).focus();
+		} else if (e.shiftKey && active === first) {
+			e.preventDefault();
+			last.focus();
+		} else if (!e.shiftKey && active === last) {
+			e.preventDefault();
+			first.focus();
+		}
 	}
 </script>
 

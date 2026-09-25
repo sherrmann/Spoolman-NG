@@ -242,6 +242,25 @@ test.describe("navigation", () => {
     });
   });
 
+  test("the More sheet keeps keyboard focus inside it", async ({ page }) => {
+    // It is modal: tabbing past its last control must wrap to its first, and back, rather than
+    // walk into the page behind the backdrop.
+    await open(page, "/");
+    await bottomNav(page).getByRole("button", { name: "More" }).tap();
+    const sheet = moreSheet(page);
+    await expect(sheet.locator("a[href]").first()).toBeFocused();
+    const count = await sheet.locator("a[href], button:not([disabled])").count();
+    const inSheet = () => sheet.evaluate((el) => el.contains(document.activeElement));
+    for (let i = 0; i < count + 2; i++) {
+      await page.keyboard.press("Tab");
+      expect(await inSheet(), `after ${i + 1} Tab presses`).toBe(true);
+    }
+    for (let i = 0; i < count + 2; i++) {
+      await page.keyboard.press("Shift+Tab");
+      expect(await inSheet(), `after ${i + 1} Shift+Tab presses`).toBe(true);
+    }
+  });
+
   test("the More sheet carries the version and this project's links", async ({ page }) => {
     await open(page, "/");
     await bottomNav(page).getByRole("button", { name: "More" }).tap();
