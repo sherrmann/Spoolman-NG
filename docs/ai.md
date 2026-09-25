@@ -345,6 +345,64 @@ whether a scan finds the right filament — `name`, `vendor`, `material`, `weigh
 are the only ones `score_candidate` weights. A wrong value in those is worse than a blank
 one, because it drags the match toward the wrong record.
 
+## Decision model for Scan-to-Spool matching (prototype)
+
+Scan-to-Spool's matching stays plain fuzzy search — the library first, then the
+SpoolmanDB catalog, scored by `score_candidate` (name, vendor, material, weight)
+as described above. Optionally, a **decision model** such as TypeSafe's Jev can
+then reorder the shortlist fuzzy search already picked: it never adds or removes
+a candidate, and it never touches the library-vs-catalog choice. The first entry
+in the reordered list is what the review screen preselects. `match_percent`
+still shows the fuzzy score, unchanged by the reorder — only the order of the
+list reflects the decision model's opinion. If the model answers that none of
+the shortlisted filaments is the product on the label, the fuzzy order is kept.
+
+This is separate from the chat/tool-calling AI configured above. A decision
+model answers typed questions with probabilities rather than generating text, so
+it needs its own wire format and its own configuration, environment-only while
+this is a prototype:
+
+| Environment variable | Purpose |
+|---|---|
+| `SPOOLMAN_AI_DECISION_BASE_URL` | The decision endpoint; required to enable reranking |
+| `SPOOLMAN_AI_DECISION_API_KEY` | Bearer token for the endpoint |
+| `SPOOLMAN_AI_DECISION_MODEL` | Model name (default `jev-latest`) |
+
+Two endpoints work today:
+
+| Provider | Base URL | Model |
+|---|---|---|
+| TypeSafe | `https://api.typesafe.ai` | `jev-latest` |
+| OpenRouter | `https://openrouter.ai/api` | `jev-1.13` |
+
+Requesty and other routers that only offer an OpenAI-style
+`/chat/completions` endpoint cannot be used here: a decision model answers
+typed Choice questions over the System One API (`POST {base_url}/v1/systemone`),
+and there is no chat-completions equivalent to route through. Local models
+such as Ollama don't work either, for the same reason.
+
+**What is sent.** One request per scan carries the label's vendor, name,
+material and nominal weight (`weight_g`), plus a plain-text description of each
+shortlisted filament (vendor, name, and material and weight where set) — never the photo, which has already been discarded
+by this point, and never temperatures, lot numbers or article numbers.
+
+**Failure is silent to the user.** The request gets 5 seconds; a slow or
+unreachable endpoint, or any unexpected response, falls back to the fuzzy
+order with a warning logged, never an error the user sees.
+
+**Evaluating it.** `poe match-rerank-eval` measures whether reranking actually
+helps: for a set of realistic label/shortlist fixtures it computes the fuzzy
+baseline order the same way the product does, reranks it, and reports top-1
+accuracy for both, the cases where they disagree, and how often the model
+answers "none of these", both when that is right and when it is not. A case
+whose request fails makes the run fail.
+
+```bash
+SPOOLMAN_AI_DECISION_BASE_URL=https://api.typesafe.ai SPOOLMAN_AI_DECISION_API_KEY=... uv run poe match-rerank-eval
+```
+
+It needs a live decision endpoint, so it is **not part of CI**.
+
 ## Privacy
 
 - With a **local endpoint** (Ollama, LM Studio, llama.cpp, vLLM on your own
@@ -352,6 +410,9 @@ one, because it drags the match toward the wrong record.
 - With a **cloud provider**, whatever a feature sends (chat messages, photos for
   Scan-to-Spool) goes to that provider under their terms. You chose the endpoint;
   Spoolman adds no telemetry and no middleman.
+- The **decision model** for Scan-to-Spool matching (prototype, above) is a
+  separate cloud endpoint. When configured, it receives the label's text fields
+  and the shortlisted filaments' descriptions, never the photo.
 - Feature toggles are all **off by default** and independent, so you can, for
   example, enable natural-language search against a local model and leave photo
   features off entirely.
