@@ -43,6 +43,15 @@ async function definitions(api: APIRequestContext, entity: string) {
   }[];
 }
 
+/**
+ * The editor has saved and closed. Waiting only for "Save field" to go is not enough: while the
+ * request is in flight the same button reads "Saving...", so that wait ends as the save starts,
+ * and a read-back straight after it can beat the write to the server.
+ */
+async function expectEditorClosed(page: Page) {
+  await expect(page.getByRole("button", { name: /^(Save field|Saving)/ })).toHaveCount(0);
+}
+
 async function deleteField(api: APIRequestContext, entity: string, key: string) {
   await api.delete(`/api/v1/field/${entity}/${key}`);
 }
@@ -61,7 +70,7 @@ test("a location field can be defined from the manager's own tab", async ({ page
     await page.getByRole("button", { name: "Save field" }).click();
 
     // The editor closes and the definition joins the table on this tab.
-    await expect(page.getByRole("button", { name: "Save field" })).toHaveCount(0);
+    await expectEditorClosed(page);
     await expect(page.getByText(key, { exact: true })).toBeVisible();
 
     // And it really went to the location registry, not to the spool one the page opens on.
@@ -85,7 +94,7 @@ test("a printer field can be defined from the manager's own tab", async ({ page,
     await page.getByPlaceholder("Display name").fill(name);
     await page.getByRole("button", { name: "Save field" }).click();
 
-    await expect(page.getByRole("button", { name: "Save field" })).toHaveCount(0);
+    await expectEditorClosed(page);
     await expect(page.getByText(key, { exact: true })).toBeVisible();
 
     expect((await definitions(request, "printer")).map((f) => f.key)).toContain(key);
@@ -113,7 +122,7 @@ test("a link field renders its value as the expanded template", async ({ page, r
     await page.getByRole("combobox", { name: "Type" }).selectOption("link");
     await page.getByLabel("Link URL").fill("https://example.invalid/dp/{}");
     await page.getByRole("button", { name: "Save field" }).click();
-    await expect(page.getByRole("button", { name: "Save field" })).toHaveCount(0);
+    await expectEditorClosed(page);
 
     const saved = (await definitions(request, "filament")).find((f) => f.key === key);
     expect(saved?.field_type).toBe("link");
