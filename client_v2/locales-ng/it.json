@@ -567,5 +567,8 @@
 	"spool_weigh_title": "Pesa bobine",
 	"spool_weigh_save_next": "Salva e successiva",
 	"spool_weigh_done": "Fatto",
-	"spool_weigh_updated": "Aggiornato: {name}"
+	"spool_weigh_updated": "Aggiornato: {name}",
+	"spool_view_grid": "Vista griglia",
+	"spool_view_grid_tooltip": "Sfoglia le bobine come riquadri colorati",
+	"spool_view_table_tooltip": "Torna alla tabella completa"
 }

@@ -1,6 +1,6 @@
 # Library table parity in the Svelte client (#412)
 
-**Status:** steps 1 (selection, bulk edit, bulk archive) and 2 (weigh-in) built; steps 3 to 5 still proposals. **Date:** 2026-09-07. **Fork:** `client_v2` subtree at
+**Status:** steps 1 (selection, bulk edit, bulk archive), 2 (weigh-in) and 3 (gallery) built; steps 4 and 5 still proposals. **Date:** 2026-09-07. **Fork:** `client_v2` subtree at
 upstream `42721c7` (2026-08-27); upstream HEAD `81636f25` (2026-09-04).
 
 Issue #412 groups four things the frozen React client does and the Svelte library cannot:
@@ -453,6 +453,12 @@ inline-flex; width: 168px; vertical-align: top`, so they flow and wrap inside up
   list restores `.row` elements; selection mode works on cards.
 
 **Tier 2 rows to append:** none.
+
+*As built:* one "Grid view" toggle (pressed while the gallery is on) rather than a pair of
+buttons, so only `spool.view.grid` and the two tooltips are used. Card titles wrap to two lines
+instead of one, because the colour name usually comes last in "Vendor Colour" titles. Mixed
+flow is expected: a collapsed pile of identical unused spools (`UnusedRow`) and upstream's
+"show more" button are full-width rows between the cards.
 
 **Hazard:** the inline flow depends on `.groups` being a block container. If upstream ever
 makes it a flex column, cards stack one per line; the fix is one `:global(.groups)` rule in

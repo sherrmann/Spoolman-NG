@@ -353,6 +353,10 @@ const KEYS = [
 	'spool.weigh.status_updated',
 	'spool.weigh.status_skipped',
 	'spool.weigh.status_failed',
+	// The Library's list/gallery switch (#412 step 3).
+	'spool.view.grid',
+	'spool.view.grid_tooltip',
+	'spool.view.table_tooltip',
 ];
 
 /** Flatten nested i18next JSON to dotted keys. */

@@ -566,5 +566,8 @@
 	"spool_weigh_title": "Pesar Carretéis",
 	"spool_weigh_save_next": "Salvar e Próximo",
 	"spool_weigh_done": "Concluir",
-	"spool_weigh_updated": "{name} atualizado"
+	"spool_weigh_updated": "{name} atualizado",
+	"spool_view_grid": "Visualização em grade",
+	"spool_view_grid_tooltip": "Navegar pelos carretéis como blocos coloridos",
+	"spool_view_table_tooltip": "Voltar à tabela completa"
 }

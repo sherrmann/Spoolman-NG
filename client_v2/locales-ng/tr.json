@@ -559,5 +559,8 @@
 	"spool_weigh_title": "Makaraları Tart",
 	"spool_weigh_save_next": "Kaydet ve Sonraki",
 	"spool_weigh_done": "Bitti",
-	"spool_weigh_updated": "{name} güncellendi"
+	"spool_weigh_updated": "{name} güncellendi",
+	"spool_view_grid": "Izgara görünümü",
+	"spool_view_grid_tooltip": "Makaralara renkli kutucuklar halinde göz atın",
+	"spool_view_table_tooltip": "Tam tabloya geri dön"
 }

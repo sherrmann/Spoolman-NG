@@ -551,5 +551,8 @@
 	"spool_weigh_title": "料盘称重",
 	"spool_weigh_save_next": "保存并下一个",
 	"spool_weigh_done": "完成",
-	"spool_weigh_updated": "已更新 {name}"
+	"spool_weigh_updated": "已更新 {name}",
+	"spool_view_grid": "网格视图",
+	"spool_view_grid_tooltip": "以色块形式浏览料盘",
+	"spool_view_table_tooltip": "返回完整表格"
 }

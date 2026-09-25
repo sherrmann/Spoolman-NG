@@ -559,5 +559,8 @@
 	"spool_weigh_title": "وزن‌کشی قرقره‌ها",
 	"spool_weigh_save_next": "ذخیره و بعدی",
 	"spool_weigh_done": "پایان",
-	"spool_weigh_updated": "{name} به‌روزرسانی شد"
+	"spool_weigh_updated": "{name} به‌روزرسانی شد",
+	"spool_view_grid": "نمای شبکه‌ای",
+	"spool_view_grid_tooltip": "مرور قرقره‌ها به‌صورت کاشی‌های رنگی",
+	"spool_view_table_tooltip": "بازگشت به جدول کامل"
 }

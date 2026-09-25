@@ -605,5 +605,8 @@
 	"spool_weigh_summary": "{updated} updated, {skipped} skipped, {failed} failed",
 	"spool_weigh_status_updated": "Updated",
 	"spool_weigh_status_skipped": "Skipped",
-	"spool_weigh_status_failed": "Failed"
+	"spool_weigh_status_failed": "Failed",
+	"spool_view_grid": "Grid view",
+	"spool_view_grid_tooltip": "Browse spools as color tiles",
+	"spool_view_table_tooltip": "Back to the full table"
 }

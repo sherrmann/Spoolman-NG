@@ -567,5 +567,8 @@
 	"spool_weigh_title": "Sverti rites",
 	"spool_weigh_save_next": "Išsaugoti ir kitą",
 	"spool_weigh_done": "Atlikta",
-	"spool_weigh_updated": "Atnaujinta {name}"
+	"spool_weigh_updated": "Atnaujinta {name}",
+	"spool_view_grid": "Tinklelio rodinys",
+	"spool_view_grid_tooltip": "Naršyti rites kaip spalvų plyteles",
+	"spool_view_table_tooltip": "Grįžti į pilną lentelę"
 }
