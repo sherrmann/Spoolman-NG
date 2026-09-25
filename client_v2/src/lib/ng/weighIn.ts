@@ -41,6 +41,17 @@ export function parseReading(raw: string, mode: AdjustMode): Reading {
 	return { value };
 }
 
+/**
+ * A fresh Idempotency-Key: 32 hex characters from crypto.getRandomValues.
+ *
+ * Not crypto.randomUUID(), which browsers only provide in a secure context, and Spoolman is
+ * often served over plain HTTP on a home network. The server accepts up to 64 characters.
+ */
+export function newIdempotencyKey(): string {
+	const bytes = crypto.getRandomValues(new Uint8Array(16));
+	return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
 export type WeighStatus = 'updated' | 'skipped' | 'failed';
 
 export interface WeighResult {

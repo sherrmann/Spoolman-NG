@@ -6,6 +6,7 @@ import {
 	failed,
 	finish,
 	isFinished,
+	newIdempotencyKey,
 	parseAdjustMode,
 	parseReading,
 	saved,
@@ -75,6 +76,14 @@ describe('the weigh-in stepper', () => {
 				{ id: 4, status: 'failed', error: 'x' }
 			])
 		).toEqual({ updated: 2, skipped: 1, failed: 1 });
+	});
+});
+
+describe('newIdempotencyKey', () => {
+	it('is 32 hex characters, well inside the server’s limit of 64, and different each time', () => {
+		const keys = new Set(Array.from({ length: 50 }, newIdempotencyKey));
+		expect(keys.size).toBe(50);
+		for (const k of keys) expect(k).toMatch(/^[0-9a-f]{32}$/);
 	});
 });
 

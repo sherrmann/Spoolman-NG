@@ -383,6 +383,11 @@ refuse a gross reading below the tare: it clamps the remaining weight at zero. R
 `parseDecimal` rather than the inspector's `parseFloat`, which reads "12abc" as 12 and "1e2" as
 100. The queue is the selection in the order it was made, and the selection is kept afterwards.
 The reducer's functions are `saved`, `failed`, `skip` and `finish`.
+Because a failed save can be retried, each spool's reading carries one `Idempotency-Key`, kept
+across retries and replaced on moving on (`recordReading` in `lib/ng/api.ts`; `putJson` gained an
+extra-headers argument for it). Without it, a request that committed but whose response was lost
+would be applied a second time. And `SpoolInspector`'s `openAdjust()` now re-reads the stored
+mode, so a change made in the weigh-in reaches an inspector already on screen (Tier 2).
 
 **Upstream lines touched:** none. `BulkBar` gains a "Weigh in" button.
 

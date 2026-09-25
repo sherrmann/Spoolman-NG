@@ -2,8 +2,9 @@
 	/**
 	 * Spoolman NG fork addition (#412 step 2): weigh the selected spools one after another.
 	 *
-	 * Put a spool on the scale, type the reading, Enter, next. Each save is one request through
-	 * the same spoolSource calls the inspector's Adjust panel makes, and the mode is shared with
+	 * Put a spool on the scale, type the reading, Enter, next. Each save is one request to the
+	 * endpoint the inspector's Adjust panel uses, with an Idempotency-Key so a retry cannot count
+	 * a reading twice (see recordReading), and the mode is shared with
 	 * that panel (see ADJUST_MODE_KEY). The order, skipping and failure handling live in
 	 * $lib/ng/weighIn, where they are unit-tested.
 	 */
@@ -13,7 +14,7 @@
 	import NgFormModal from '../NgFormModal.svelte';
 	import * as m from '$lib/paraglide/messages';
 	import { ng } from '$lib/ng/i18n';
-	import { spoolSource } from '$lib/api/spoolSource';
+	import { recordReading } from '$lib/ng/api';
 	import { inventory } from '$lib/stores/inventory.svelte';
 	import { HttpError } from '$lib/api/http';
 	import { rowIdentity, type SpoolVM } from '$lib/utils/library';
@@ -25,6 +26,7 @@
 		failed,
 		finish,
 		isFinished,
+		newIdempotencyKey,
 		parseAdjustMode,
 		parseReading,
 		saved,
@@ -61,6 +63,9 @@
 	let error = $state<string | null>(null);
 	let busy = $state(false);
 	let lastSaved = $state<string | null>(null);
+	// One key per spool, kept across retries and replaced only on moving on: a retry after a
+	// response that was lost on the way back must not consume the filament twice.
+	let attemptKey = newIdempotencyKey();
 	let field = $state<HTMLDivElement>();
 
 	let current = $derived.by(() => {
@@ -118,10 +123,9 @@
 		busy = true;
 		const vm = current;
 		try {
-			if (mode === 'length') await spoolSource.useSpoolLength(vm.spool.id, parsed.value);
-			else if (mode === 'weight') await spoolSource.useSpoolWeight(vm.spool.id, parsed.value);
-			else await spoolSource.measureSpool(vm.spool.id, parsed.value);
+			inventory.upsertSpool(await recordReading(vm.spool.id, mode, parsed.value, attemptKey));
 			weigh = saved(weigh);
+			attemptKey = newIdempotencyKey();
 			reading = '';
 			lastSaved = ng.spool_weigh_updated({ name: name(vm) });
 		} catch (e) {
@@ -139,6 +143,7 @@
 
 	function next() {
 		weigh = skip(weigh);
+		attemptKey = newIdempotencyKey();
 		reading = '';
 		error = null;
 	}

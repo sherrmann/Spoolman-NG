@@ -199,3 +199,83 @@ test("the chosen weigh-in mode is remembered under its localStorage key", async 
     )
     .toBe("measured_weight");
 });
+
+test("a retry after a lost response does not consume the filament twice", async ({
+  page,
+  request,
+}) => {
+  // The request reaches the server and commits, but the browser is told it failed: the case
+  // a flaky connection produces. The weigh-in keeps the reading for a retry, and the retry
+  // carries the same Idempotency-Key, so the server answers it without applying it again.
+  const { location, ids } = await seedTwo(request);
+  const usedBefore = (
+    (await (await request.get(`/api/v1/spool/${ids[0]}`)).json()) as {
+      used_weight: number;
+    }
+  ).used_weight;
+  await openAt(page, location);
+  await selectAndOpenWeighIn(page, [ids[0]]);
+  await dialog(page)
+    .getByRole("button", { name: "Weight", exact: true })
+    .click();
+
+  let lost = false;
+  const keys: (string | undefined)[] = [];
+  await page.route(`**/api/v1/spool/${ids[0]}/use`, async (route) => {
+    keys.push(route.request().headers()["idempotency-key"]);
+    if (lost) return route.continue();
+    lost = true;
+    await route.fetch(); // the server applies it...
+    await route.abort("connectionreset"); // ...and the answer never arrives
+  });
+
+  await dialog(page).getByRole("textbox").fill("25");
+  await page.getByRole("button", { name: "Save & Next" }).click();
+  await expect(dialog(page).getByRole("alert")).toBeVisible();
+  await expect(dialog(page)).toContainText("1 of 1");
+
+  await page.getByRole("button", { name: "Save & Next" }).click();
+  await expect(dialog(page).getByRole("status")).toHaveText(
+    "1 updated, 0 skipped, 0 failed",
+  );
+
+  expect(keys).toHaveLength(2);
+  expect(keys[0]).toMatch(/^[0-9a-f]{32}$/);
+  expect(keys[1]).toBe(keys[0]);
+  const usedAfter = (
+    (await (await request.get(`/api/v1/spool/${ids[0]}`)).json()) as {
+      used_weight: number;
+    }
+  ).used_weight;
+  expect(usedAfter).toBeCloseTo(usedBefore + 25, 3);
+});
+
+test("the mode picked here is what an already-open inspector's Adjust panel shows", async ({
+  page,
+  request,
+}) => {
+  const { location, ids } = await seedTwo(request);
+  await openAt(page, location);
+  await page.evaluate(() =>
+    localStorage.setItem("spoolman-v2-adjust-mode", "length"),
+  );
+  // Open the inspector on the spool first, so it is mounted before the mode changes.
+  await page
+    .locator("a.row", {
+      has: page.locator(".id", { hasText: new RegExp(`^#${ids[0]}$`) }),
+    })
+    .click();
+  await expect(page).toHaveURL(new RegExp(`sel=spool(%3A|:)${ids[0]}`));
+
+  await selectAndOpenWeighIn(page, [ids[0]]);
+  await pickMeasuredWeightMode(page);
+  await page.getByRole("button", { name: "Done" }).click();
+  await dialog(page)
+    .getByRole("button", { name: "Close", exact: true })
+    .last()
+    .click();
+  await expect(dialog(page)).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Adjust weight" }).click();
+  await expect(page.locator(".mode-btn.active")).toHaveText("Measured Weight");
+});

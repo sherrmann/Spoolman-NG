@@ -142,11 +142,16 @@ export async function patchJson<T = unknown>(path: string, body: unknown): Promi
 	return (await res.json()) as T;
 }
 
-export async function putJson<T = unknown>(path: string, body: unknown): Promise<T> {
+// Spoolman NG fork addition: `extra` headers, so a caller can send an Idempotency-Key (#412).
+export async function putJson<T = unknown>(
+	path: string,
+	body: unknown,
+	extra: Record<string, string> = {}
+): Promise<T> {
 	const res = await ensureOk(
 		await fetch(API_BASE + path, {
 			method: 'PUT',
-			headers: headers({ 'content-type': 'application/json' }),
+			headers: headers({ ...extra, 'content-type': 'application/json' }),
 			body: JSON.stringify(body)
 		}),
 		'PUT',
