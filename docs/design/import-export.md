@@ -13,8 +13,9 @@ both exists and needs no change. The rule from
 
 - `GET /export/{spools,filaments,vendors}?fmt=csv|json` returns a file download
   (`Content-Disposition: attachment`). Rows are flattened (`filament.vendor.name`,
-  `extra.<key>`), CSV cells that start with `= + - @` are escaped, and archived spools are left
-  out unless `allow_archived=true`.
+  `extra.<key>`), and CSV cells that start with `= + - @` are escaped. The spools export
+  includes archived spools (`allow_archived` defaults to true), which suits a backup; the
+  report leaves them out, as the home page does.
 - `POST /import/{vendor,filament,spool}?fmt=&mode=create|upsert|skip_existing&dry_run=` takes
   the raw CSV or JSON as the body, in the shape the export produces. It returns
   `{created, updated, skipped, dry_run, errors: string[]}`, one string per bad row.
@@ -97,7 +98,7 @@ in `lib/ng/importExport.ts` with unit tests.
 Each with the answer this design assumes if nobody objects.
 
 1. **Dry run on by default?** Default: yes (see step 1).
-2. **Export archived spools?** Default: no, as in the classic client and the server's default.
-   A checkbox would be one line if asked for.
+2. **Export archived spools?** Default: yes, as in the classic client and the server's default,
+   since an export is most often a backup. A checkbox to leave them out would be one line.
 3. **PrusaSlicer 3MF files in the matcher?** Default: not now. The classic client supports
    Bambu/Orca only, and so will the port; the error message says so.

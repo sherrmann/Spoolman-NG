@@ -3,6 +3,7 @@
  * browser's print dialog, the technique the label designer uses (`lib/labels/print.ts`). Built
  * with DOM nodes and `textContent`, so a material name can never be read as markup.
  */
+import { getLocale } from '$lib/paraglide/runtime';
 import type { InventoryReport } from './importExport';
 
 export interface ReportLabels {
@@ -49,7 +50,7 @@ function el<K extends keyof HTMLElementTagNameMap>(
 /** Build the report's DOM. Separate from printing so it can be checked without a print dialog. */
 export function buildReport(report: InventoryReport, labels: ReportLabels, when: Date): HTMLDivElement {
 	const root = el('div', undefined, 'inventory-report-root');
-	root.append(el('h1', labels.heading), el('p', when.toLocaleString(), 'when'));
+	root.append(el('h1', labels.heading), el('p', when.toLocaleString(getLocale()), 'when'));
 
 	const dl = el('dl');
 	for (const [k, v] of [
@@ -80,8 +81,14 @@ export function buildReport(report: InventoryReport, labels: ReportLabels, when:
 }
 
 export function printReport(report: InventoryReport, labels: ReportLabels): void {
+	// A report still on the page (a browser that never fired afterprint, or a second click)
+	// would print twice, so it goes first.
+	document
+		.querySelectorAll('.inventory-report-root, style[data-inventory-report]')
+		.forEach((n) => n.remove());
 	const root = buildReport(report, labels, new Date());
 	const style = el('style', CSS);
+	style.dataset.inventoryReport = '';
 	document.body.append(style, root);
 	const cleanup = () => {
 		root.remove();

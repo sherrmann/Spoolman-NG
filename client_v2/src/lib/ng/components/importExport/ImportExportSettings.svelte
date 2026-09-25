@@ -77,6 +77,12 @@
 	let file = $state<File | null>(null);
 	let importing = $state(false);
 	let result = $state<ImportResult | null>(null);
+	let fileInput = $state<HTMLInputElement>();
+
+	/** A result describes the form as it was run; once the form changes it no longer applies. */
+	function forget() {
+		result = null;
+	}
 
 	function picked(e: Event & { currentTarget: HTMLInputElement }) {
 		file = e.currentTarget.files?.[0] ?? null;
@@ -94,7 +100,13 @@
 		result = null;
 		try {
 			result = await importData(importEntityFor(entity), fmt, mode, dryRun, await file.text());
-			if (importSucceeded(result) && !result.dryRun) toasts.success(summary(result));
+			if (importSucceeded(result) && !result.dryRun) {
+				toasts.success(summary(result));
+				// Done with this file: left selected, a second click would import it again, and in
+				// "create" mode, which ignores ids, that inserts every row a second time.
+				file = null;
+				if (fileInput) fileInput.value = '';
+			}
 		} catch (err) {
 			toasts.error(apiErrorMessage(err));
 		} finally {
@@ -163,26 +175,47 @@
 				<h3 id="ie-import">{ng.settings_import_export_import_title()}</h3>
 				<p class="help">{ng.settings_import_export_import_help()}</p>
 				<form class="import" onsubmit={runImport}>
-					<select class="sel" bind:value={entity} aria-label={ng.settings_import_export_entity_label()}>
+					<select
+						class="sel"
+						bind:value={entity}
+						onchange={forget}
+						aria-label={ng.settings_import_export_entity_label()}
+					>
 						{#each EXPORT_ENTITIES as e (e)}
 							<option value={e}>{entityLabel[e]()}</option>
 						{/each}
 					</select>
-					<select class="sel" bind:value={mode} aria-label={ng.settings_import_export_mode_label()}>
+					<select
+						class="sel"
+						bind:value={mode}
+						onchange={forget}
+						aria-label={ng.settings_import_export_mode_label()}
+					>
 						{#each IMPORT_MODES as m (m)}
 							<option value={m}>{modeLabel[m]()}</option>
 						{/each}
 					</select>
-					<select class="sel" bind:value={fmt} aria-label={ng.settings_import_export_format_label()}>
+					<select
+						class="sel"
+						bind:value={fmt}
+						onchange={forget}
+						aria-label={ng.settings_import_export_format_label()}
+					>
 						<option value="csv">CSV</option>
 						<option value="json">JSON</option>
 					</select>
 					<label class="file">
 						<span>{ng.settings_import_export_choose_file()}</span>
-						<input type="file" accept=".csv,.json,text/csv,application/json" onchange={picked} />
+						<input
+							bind:this={fileInput}
+							type="file"
+							accept=".csv,.json,text/csv,application/json"
+							onchange={picked}
+						/>
 					</label>
 					<label class="chk"
-						><input type="checkbox" bind:checked={dryRun} /> {ng.settings_import_export_dry_run()}</label
+						><input type="checkbox" bind:checked={dryRun} onchange={forget} />
+						{ng.settings_import_export_dry_run()}</label
 					>
 					<Button type="submit" variant={dryRun ? 'outline' : 'primary'} disabled={importing || !file}>
 						{dryRun ? ng.settings_import_export_validate() : ng.settings_import_export_import_button()}
