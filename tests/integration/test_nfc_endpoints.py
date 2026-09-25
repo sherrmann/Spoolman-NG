@@ -362,3 +362,45 @@ async def test_openprinttag_auto_create_is_idempotent_per_uid(client: AsyncClien
     assert "auto-created" not in body2["message"]
 
     assert await _spool_count(client) == before + 1
+
+
+def _openprinttag_branded_b64(brand: str) -> str:
+    """Build an OpenPrintTag payload carrying a brand name (MF_BRAND_NAME) and no UUIDs."""
+    mf_material_type, mf_brand_name = 9, 11
+    payload, _, _, _ = _build_payload({mf_material_type: 0, mf_brand_name: brand})
+    return base64.b64encode(_build_memory(payload)).decode()
+
+
+async def _auto_create_vendor_id(client: AsyncClient, brand: str, uid: str) -> int:
+    resp = await client.post(
+        f"{NFC}/lookup",
+        json={
+            "raw_data_b64": _openprinttag_branded_b64(brand),
+            "tag_type": "openprinttag",
+            "auto_create": True,
+            "nfc_tag_uid": uid,
+        },
+    )
+    body = resp.json()
+    assert body["success"] is True, body
+    spool = await client.get(f"{SPOOL}/{body['spool_id']}")
+    return spool.json()["filament"]["vendor"]["id"]
+
+
+async def test_auto_create_matches_vendor_by_exact_name_not_substring(client: AsyncClient):
+    """A tag brand that is only a substring of an existing vendor gets its own vendor.
+
+    The old helper ran the comma-split ILIKE %name% search and took the first hit, so a tag
+    branded "Poly" was filed under an existing "Polymaker".
+    """
+    polymaker = await client.post("/api/v1/vendor", json={"name": "Polymaker"})
+    assert polymaker.status_code == 200, polymaker.text
+    polymaker_id = polymaker.json()["id"]
+
+    poly_id = await _auto_create_vendor_id(client, "Poly", "0A0B0C01")
+    assert poly_id != polymaker_id
+    vendor = await client.get(f"/api/v1/vendor/{poly_id}")
+    assert vendor.json()["name"] == "Poly"
+
+    # Same name in different case and with stray whitespace reuses the existing vendor.
+    assert await _auto_create_vendor_id(client, " POLYMAKER ", "0A0B0C02") == polymaker_id

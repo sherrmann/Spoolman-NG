@@ -106,7 +106,7 @@ async def create_spool_from_openprinttag(db: AsyncSession, tag_data: OpenPrintTa
     if db_spool is None:
         vendor_id = None
         if tag_data.brand_name:
-            vendor_id = await _find_or_create_vendor(db, tag_data.brand_name)
+            vendor_id = await vendor_db.find_or_create_by_name(db, tag_data.brand_name)
 
         if tag_data.material_name:
             name = tag_data.material_name
@@ -177,12 +177,3 @@ async def _find_spool_by_filament_external_id(db: AsyncSession, external_id: str
     )
     result = await db.execute(stmt)
     return result.unique().scalar_one_or_none()
-
-
-async def _find_or_create_vendor(db: AsyncSession, name: str) -> int:
-    """Find a vendor by name or create one."""
-    vendors, _ = await vendor_db.find(db=db, name=name)
-    if vendors:
-        return vendors[0].id
-    new_vendor = await vendor_db.create(db=db, name=name)
-    return new_vendor.id

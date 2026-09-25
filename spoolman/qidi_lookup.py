@@ -172,7 +172,7 @@ async def create_spool_from_qidi_tag(
     Creates a Qidi vendor (if needed), filament with the tag's material/color,
     and a spool linked to it. Binds the tag UID if available.
     """
-    vendor_id = await _find_or_create_vendor(db, QIDI_VENDOR_NAME)
+    vendor_id = await vendor_db.find_or_create_by_name(db, QIDI_VENDOR_NAME)
     name = f"Qidi {tag_data.material_name}"
     color_hex = tag_data.color_hex if tag_data.color_hex != "000000" else None
 
@@ -204,12 +204,3 @@ async def create_spool_from_qidi_tag(
                 logger.warning("Could not bind new spool %d to uid %s: already claimed", db_spool.id, uid)
 
     return db_spool
-
-
-async def _find_or_create_vendor(db: AsyncSession, name: str) -> int:
-    """Find a vendor by name or create one."""
-    vendors, _ = await vendor_db.find(db=db, name=name)
-    if vendors:
-        return vendors[0].id
-    new_vendor = await vendor_db.create(db=db, name=name)
-    return new_vendor.id
