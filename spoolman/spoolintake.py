@@ -390,6 +390,17 @@ _CATALOG_MIN_SCORE = 0.5
 _MATCH_LIMIT = 5
 
 
+def _best(scored: list[tuple[float, dict]], limit: int | None = None) -> list[dict]:
+    """Return the entries of (score, entry) pairs best first, keeping input order for equal scores.
+
+    Sorted on the score itself, not on the whole-number ``match_percent`` shown to the user: the
+    name tie-break is worth a fraction of a percent, and rounding first would hand every such
+    tie back to catalogue order.
+    """
+    scored.sort(key=lambda pair: -pair[0])
+    return [entry for _, entry in scored[: _MATCH_LIMIT if limit is None else limit]]
+
+
 def _rank_library(rows: list[dict], extraction: dict, aggregates: dict) -> list[dict]:
     """Score already-loaded filament rows against the extraction (best first).
 
@@ -409,16 +420,18 @@ def _rank_library(rows: list[dict], extraction: dict, aggregates: dict) -> list[
             continue
         spool_count, remaining = aggregates.get(row["filament_id"], (0, 0.0))
         candidates.append(
-            {
-                "kind": "library",
-                **row,
-                "active_spool_count": spool_count,
-                "remaining_weight_g": round(remaining, 1),
-                "match_percent": int(score * 100),
-            },
+            (
+                score,
+                {
+                    "kind": "library",
+                    **row,
+                    "active_spool_count": spool_count,
+                    "remaining_weight_g": round(remaining, 1),
+                    "match_percent": int(score * 100),
+                },
+            ),
         )
-    candidates.sort(key=lambda entry: -entry["match_percent"])
-    return candidates[:_MATCH_LIMIT]
+    return _best(candidates)
 
 
 async def match_library(db: AsyncSession, extraction: dict) -> list[dict]:
@@ -493,19 +506,21 @@ def match_catalog(extraction: dict) -> list[dict]:
         if score < _CATALOG_MIN_SCORE:
             continue
         candidates.append(
-            {
-                "kind": "catalog",
-                "external_id": entry.get("id"),
-                "vendor": entry.get("manufacturer"),
-                "name": entry.get("name"),
-                "material": entry.get("material"),
-                "weight_g": entry.get("weight"),
-                "diameter_mm": entry.get("diameter"),
-                "match_percent": int(score * 100),
-            },
+            (
+                score,
+                {
+                    "kind": "catalog",
+                    "external_id": entry.get("id"),
+                    "vendor": entry.get("manufacturer"),
+                    "name": entry.get("name"),
+                    "material": entry.get("material"),
+                    "weight_g": entry.get("weight"),
+                    "diameter_mm": entry.get("diameter"),
+                    "match_percent": int(score * 100),
+                },
+            ),
         )
-    candidates.sort(key=lambda entry: -entry["match_percent"])
-    return candidates[:_MATCH_LIMIT]
+    return _best(candidates)
 
 
 #: Text fields of the extraction the decision model sees. Numbers other than the nominal weight

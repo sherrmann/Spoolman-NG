@@ -195,6 +195,32 @@ def test_an_exact_name_beats_a_word_match_once_the_material_is_set_aside() -> No
     assert exact > plain
 
 
+def test_catalog_ranking_keeps_the_tie_break_that_rounding_would_lose(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Both rows show 58 %, but "PLA - Black" scores higher and must come first whatever the file order."""
+    entries = [
+        _catalog_entry("plain", "3DJAKE", "Black", "PLA", 1000),
+        _catalog_entry("flashforge", "FlashForge", "PLA - Black", "PLA", 1000),
+    ]
+    monkeypatch.setattr(spoolintake, "load_catalog", lambda: entries)
+
+    matches = spoolintake.match_catalog({"vendor": None, "name": "PLA Black", "material": "PLA", "weight_g": None})
+
+    assert [m["external_id"] for m in matches] == ["flashforge", "plain"]
+    assert matches[0]["match_percent"] == matches[1]["match_percent"], "the shown percentage is the same"
+
+
+def test_library_ranking_keeps_the_tie_break_that_rounding_would_lose() -> None:
+    rows = [
+        {"filament_id": 1, "vendor": "3DJAKE", "name": "Black", "material": "PLA", "weight_g": 1000},
+        {"filament_id": 2, "vendor": "FlashForge", "name": "PLA - Black", "material": "PLA", "weight_g": 1000},
+    ]
+    reading = {"vendor": None, "name": "PLA Black", "material": "PLA", "weight_g": None}
+
+    ranked = spoolintake._rank_library(rows, reading, {})  # noqa: SLF001
+
+    assert [r["filament_id"] for r in ranked] == [2, 1]
+
+
 def test_a_short_generic_candidate_gets_no_word_bonus() -> None:
     """The reverse direction must not lift every maker's plain "Green" for a reading of "Si1k Green"."""
     generic = score_candidate(

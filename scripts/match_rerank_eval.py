@@ -363,6 +363,17 @@ def generated_cases(catalog: list[dict], n: int, seed: int) -> list[CatalogCase]
     ]
 
 
+def _raw_score(extraction: dict, candidate: dict) -> float:
+    """Recompute the unrounded score match_catalog sorted by (match_percent is rounded for display)."""
+    return spoolintake.score_candidate(
+        extraction,
+        vendor=candidate.get("vendor"),
+        name=candidate.get("name"),
+        material=candidate.get("material"),
+        weight_g=spoolintake.coerce_number(candidate.get("weight_g")),
+    )
+
+
 async def run_catalog_case(
     config: decision.DecisionConfig | None,
     case: CatalogCase,
@@ -385,7 +396,7 @@ async def run_catalog_case(
         top_tied=(
             expected is not None
             and len(shortlist) > 1
-            and shortlist[0]["match_percent"] == shortlist[1]["match_percent"]
+            and _raw_score(case.extraction, shortlist[0]) == _raw_score(case.extraction, shortlist[1])
             and same_product(shortlist[0], expected, case.extraction)
             != same_product(shortlist[1], expected, case.extraction)
         ),
