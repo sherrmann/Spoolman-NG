@@ -22,6 +22,7 @@ from spoolman.database.utils import (
     add_where_clause_int_opt,
     add_where_clause_str,
     add_where_clause_str_opt,
+    any_of,
     escape_like,
     order_by_expression,
     parse_nested_field,
@@ -306,7 +307,7 @@ async def find(  # noqa: C901
     if search is not None:
         search_conditions = _build_search_filters(search)
         if search_conditions:
-            stmt = stmt.where(sqlalchemy.or_(*search_conditions))
+            stmt = stmt.where(any_of(search_conditions, "search"))
 
     total_count = None
 

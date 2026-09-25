@@ -21,6 +21,7 @@ from spoolman import extra_field_registry
 from spoolman.api.v1 import (
     ai,
     auth,
+    calibration,
     export,
     field,
     filament,
@@ -68,6 +69,7 @@ async def client(tmp_path: Path) -> AsyncIterator[AsyncClient]:
     # ItemNotFoundError is deliberately NOT installed: several tests assert it propagates.
     app.add_exception_handler(RequestValidationError, validation_exception_handler)
     app.include_router(filament.router, prefix="/api/v1")
+    app.include_router(calibration.router, prefix="/api/v1")
     app.include_router(vendor.router, prefix="/api/v1")
     app.include_router(shop.router, prefix="/api/v1")
     app.include_router(order.router, prefix="/api/v1")

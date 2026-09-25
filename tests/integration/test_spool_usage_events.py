@@ -4,7 +4,10 @@ Drives the real PUT /use, PUT /measure, PATCH /spool and GET /spool/{id}/events 
 the temp DB, asserting the events recorded and that an Idempotency-Key makes a retry a no-op.
 """
 
+import pytest
 from httpx import AsyncClient
+
+from spoolman.database import spool as spool_db
 
 FIL = "/api/v1/filament"
 SPOOL = "/api/v1/spool"
@@ -93,6 +96,36 @@ async def test_idempotency_key_makes_use_a_no_op_on_retry(client: AsyncClient):
     assert second.headers.get("Idempotency-Replayed") == "true"
 
     # Exactly one event was recorded.
+    assert len(await _events(client, spool["id"])) == 1
+
+
+@pytest.mark.parametrize(
+    ("action", "body", "used"),
+    [("use", {"use_weight": 100}, 100), ("measure", {"weight": 1100}, 100)],
+)
+async def test_a_key_that_loses_the_race_is_a_replay_not_a_crash(
+    client: AsyncClient, monkeypatch: pytest.MonkeyPatch, action: str, body: dict, used: float
+):
+    """Two requests with one key can both pass the lookup before either commits.
+
+    The second then fails on the unique constraint instead. The endpoint rolls back and answers as a
+    replay; reloading the spool after the rollback used to raise MissingGreenlet, a 500.
+    """
+    spool = await _make_spool(client)
+    headers = {"Idempotency-Key": "raced"}
+
+    async def not_seen_yet(*_args: object) -> None:
+        return None
+
+    monkeypatch.setattr(spool_db, "find_usage_event_by_key", not_seen_yet)
+
+    first = await client.put(f"{SPOOL}/{spool['id']}/{action}", json=body, headers=headers)
+    second = await client.put(f"{SPOOL}/{spool['id']}/{action}", json=body, headers=headers)
+
+    assert first.status_code == 200, first.text
+    assert second.status_code == 200, second.text
+    assert second.headers.get("Idempotency-Replayed") == "true"
+    assert second.json()["used_weight"] == pytest.approx(used)
     assert len(await _events(client, spool["id"])) == 1
 
 

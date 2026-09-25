@@ -191,6 +191,54 @@ def split_filter_values(value: str) -> list[str]:
         start = end + 1
 
 
+# How many alternatives one filter may OR together. SQLite parses `a OR b OR c ...` into a tree
+# as deep as the chain is long and refuses one deeper than 1000 ("Expression tree is too large"),
+# a 500 for what is really an oversized request. SQLAlchemy flattens nested ORs back into one
+# chain, so the tree cannot be balanced; the chain is kept short instead. Exact matches do not
+# count against this: they are collected into one IN list, which SQLite does not nest.
+MAX_FILTER_ALTERNATIVES = 500
+
+
+def any_of(conditions: Sequence[ColumnElement[bool]], what: str) -> ColumnElement[bool]:
+    """OR `conditions` together, refusing a chain too long for every backend to parse.
+
+    Raises ValueError, which the list endpoints turn into a 400, naming `what` was filtered on.
+    """
+    if len(conditions) > MAX_FILTER_ALTERNATIVES:
+        raise ValueError(
+            f"Too many alternatives in the '{what}' filter ({len(conditions)}). At most "
+            f"{MAX_FILTER_ALTERNATIVES} are supported; exact matches in double quotes do not count.",
+        )
+    return sqlalchemy.or_(*conditions)
+
+
+def _str_filter_conditions(
+    field: attributes.InstrumentedAttribute[Any],
+    value: str,
+    *,
+    empty_means_null: bool,
+) -> ColumnElement[bool]:
+    """Build the condition for a comma-separated string filter value (see add_where_clause_str)."""
+    conditions: list[ColumnElement[bool]] = []
+    exact: list[str] = []
+    for value_part in split_filter_values(value):
+        # If part is empty, search for empty fields
+        if len(value_part) == 0:
+            if empty_means_null:
+                conditions.append(field.is_(None))
+            conditions.append(field == "")
+        # Do exact match if value_part is surrounded by quotes
+        elif value_part[0] == '"' and value_part[-1] == '"':
+            exact.append(value_part[1:-1])
+        # Do fuzzy match if value_part is not surrounded by quotes
+        else:
+            conditions.append(field.ilike(f"%{escape_like(value_part)}%", escape=LIKE_ESCAPE))
+    if exact:
+        # One IN list however many values: `field = x` per value would lengthen the OR chain.
+        conditions.append(field == exact[0] if len(exact) == 1 else field.in_(exact))
+    return any_of(conditions, f"{field.class_.__tablename__}.{field.key}")
+
+
 def add_where_clause_str_opt(
     stmt: Select,
     field: attributes.InstrumentedAttribute[str | None],
@@ -198,20 +246,7 @@ def add_where_clause_str_opt(
 ) -> Select:
     """Add a where clause to a select statement for an optional string field."""
     if value is not None:
-        conditions = []
-        for value_part in split_filter_values(value):
-            # If part is empty, search for empty fields
-            if len(value_part) == 0:
-                conditions.append(field.is_(None))
-                conditions.append(field == "")
-            # Do exact match if value_part is surrounded by quotes
-            elif value_part[0] == '"' and value_part[-1] == '"':
-                conditions.append(field == value_part[1:-1])
-            # Do fuzzy match if value_part is not surrounded by quotes
-            else:
-                conditions.append(field.ilike(f"%{escape_like(value_part)}%", escape=LIKE_ESCAPE))
-
-        stmt = stmt.where(sqlalchemy.or_(*conditions))
+        stmt = stmt.where(_str_filter_conditions(field, value, empty_means_null=True))
     return stmt
 
 
@@ -222,19 +257,7 @@ def add_where_clause_str(
 ) -> Select:
     """Add a where clause to a select statement for a string field."""
     if value is not None:
-        conditions = []
-        for value_part in split_filter_values(value):
-            # If part is empty, search for empty fields
-            if len(value_part) == 0:
-                conditions.append(field == "")
-            # Do exact match if value_part is surrounded by quotes
-            elif value_part[0] == '"' and value_part[-1] == '"':
-                conditions.append(field == value_part[1:-1])
-            # Do fuzzy match if value_part is not surrounded by quotes
-            else:
-                conditions.append(field.ilike(f"%{escape_like(value_part)}%", escape=LIKE_ESCAPE))
-
-        stmt = stmt.where(sqlalchemy.or_(*conditions))
+        stmt = stmt.where(_str_filter_conditions(field, value, empty_means_null=False))
     return stmt
 
 
@@ -285,12 +308,12 @@ def add_where_clause_int_opt(
     if value is not None:
         if isinstance(value, int):
             value = [value]
-        statements = []
-        for value_part in value:
-            if value_part == -1:
-                statements.append(field.is_(None))
-            else:
-                statements.append(field == value_part)
+        # -1 asks for rows with no value; every other id goes in one IN list, which unlike an
+        # `id = x OR ...` chain does not get deeper with each id (see any_of).
+        ids = [v for v in value if v != -1]
+        statements: list[ColumnElement[bool]] = [field.in_(ids)] if ids else []
+        if len(ids) < len(value):
+            statements.append(field.is_(None))
         stmt = stmt.where(sqlalchemy.or_(*statements))
     return stmt
 

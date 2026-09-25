@@ -16,6 +16,7 @@ from spoolman.database import models
 from spoolman.database.utils import (
     LIKE_ESCAPE,
     SortOrder,
+    any_of,
     escape_like,
     order_by_clauses,
     split_datetime_range_filter,
@@ -504,7 +505,7 @@ def add_where_clause_extra_field(  # noqa: C901, PLR0912, PLR0915
     if not conditions:
         return stmt
 
-    return stmt.where(sqlalchemy.or_(*conditions))
+    return stmt.where(any_of(conditions, f"extra.{field_key}"))
 
 
 async def find_extra_field_values(
