@@ -111,7 +111,10 @@ def parse_sort(sort: str | None) -> dict[str, "SortOrder"]:
             raise ValueError(
                 f"Invalid sort item '{sort_item}'. Expected '<field>:asc' or '<field>:desc'.",
             )
-        sort_by[field] = SortOrder[direction.upper()]
+        # The first mention of a field decides its order, as it would in SQL: `ORDER BY id DESC, id ASC`
+        # sorts descending. Overwriting instead turned the Svelte client's `id:asc` tie-breaker into the
+        # primary order whenever the user sorted by ID descending.
+        sort_by.setdefault(field, SortOrder[direction.upper()])
     return sort_by
 
 

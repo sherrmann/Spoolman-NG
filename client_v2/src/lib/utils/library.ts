@@ -220,6 +220,9 @@ export const FIXED_SORTS: SortDef[] = [
 	{ key: 'price', labelKey: m['spool.fields.price'], section: 'spool' },
 	{ key: 'location', labelKey: m['spool.fields.location'], section: 'spool' },
 	{ key: 'lot_nr', labelKey: m['spool.fields.lotNr'], section: 'spool' },
+	// Spoolman NG fork addition: the spool's own number, the one printed on its label
+	// (upstream issue 1154).
+	{ key: 'id', labelKey: m['spool.fields.id'], section: 'spool' },
 	// Filament
 	{ key: 'filament.name', labelKey: m['filament.fields.name'], section: 'filament' },
 	{ key: 'filament.material', labelKey: m['filament.fields.material'], section: 'filament' },
@@ -263,7 +266,9 @@ const ASC_DEFAULT_SORTS = new Set([
 	'filament.material',
 	'filament.vendor.name',
 	'location',
-	'lot_nr'
+	'lot_nr',
+	// Spoolman NG fork addition: labels are numbered upwards, so the list reads the same way.
+	'id'
 ]);
 
 /** Default direction (ascending?) for a freshly-selected sort key. */
