@@ -621,6 +621,5 @@
 	"printing_qrcode_useHTTPUrl_options_url": "URL",
 	"settings_swatch_tab": "Campioni",
 	"settings_swatch_default_style_label": "Stile campione predefinito",
-	"settings_swatch_default_style_tooltip": "Lo stile preselezionato quando si scarica un campione di filamento stampabile in 3D. Nuovi stili possono essere aggiunti a Spoolman in client/src/utils/swatch/styles.ts.",
 	"settings_swatch_preview_description": "Anteprima con due filamenti di esempio — il testo e il codice QR vengono stampati automaticamente in nero o bianco, a seconda di cosa contrasta meglio con il colore del filamento:"
 }

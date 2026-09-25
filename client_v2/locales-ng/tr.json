@@ -611,6 +611,5 @@
 	"printing_qrcode_useHTTPUrl_options_url": "URL",
 	"settings_swatch_tab": "Numuneler",
 	"settings_swatch_default_style_label": "Varsayılan numune stili",
-	"settings_swatch_default_style_tooltip": "3D yazdırılabilir filament numunesi indirilirken önceden seçili olan stil. Yeni stiller client/src/utils/swatch/styles.ts dosyasında Spoolman'a eklenebilir.",
 	"settings_swatch_preview_description": "İki örnek filamentle önizleme — metin ve QR kodu, filament rengiyle hangisi daha iyi kontrast oluşturuyorsa otomatik olarak siyah veya beyaz yazdırılır:"
 }

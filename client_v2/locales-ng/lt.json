@@ -621,6 +621,5 @@
 	"printing_qrcode_useHTTPUrl_options_url": "URL",
 	"settings_swatch_tab": "Pavyzdžiai",
 	"settings_swatch_default_style_label": "Numatytasis pavyzdžio stilius",
-	"settings_swatch_default_style_tooltip": "Stilius, iš anksto parenkamas atsisiunčiant 3D spausdinamą gijos pavyzdį. Naujų stilių galima pridėti prie Spoolman faile client/src/utils/swatch/styles.ts.",
 	"settings_swatch_preview_description": "Peržiūra su dviem pavyzdinėmis gijomis — tekstas ir QR kodas automatiškai spausdinami juodai arba baltai, atsižvelgiant į tai, kas geriau kontrastuoja su gijos spalva:"
 }

@@ -611,6 +611,5 @@
 	"printing_qrcode_useHTTPUrl_options_url": "URL",
 	"settings_swatch_tab": "Δείγματα",
 	"settings_swatch_default_style_label": "Προεπιλεγμένο στυλ δείγματος",
-	"settings_swatch_default_style_tooltip": "Το στυλ που είναι προεπιλεγμένο κατά τη λήψη δείγματος νήματος εκτυπώσιμου σε 3D. Νέα στυλ μπορούν να προστεθούν στο Spoolman στο client/src/utils/swatch/styles.ts.",
 	"settings_swatch_preview_description": "Προεπισκόπηση με δύο ενδεικτικά νήματα — το κείμενο και ο κωδικός QR εκτυπώνονται αυτόματα σε μαύρο ή λευκό, ανάλογα με το τι κάνει καλύτερη αντίθεση με το χρώμα του νήματος:"
 }

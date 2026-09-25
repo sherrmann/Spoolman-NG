@@ -611,6 +611,5 @@
 	"printing_qrcode_useHTTPUrl_options_url": "URL",
 	"settings_swatch_tab": "Mintakártyák",
 	"settings_swatch_default_style_label": "Alapértelmezett mintakártya-stílus",
-	"settings_swatch_default_style_tooltip": "A 3D-nyomtatható filament-mintakártya letöltésekor előre kiválasztott stílus. Új stílusokkal a client/src/utils/swatch/styles.ts fájlban lehet hozzájárulni a Spoolmanhoz.",
 	"settings_swatch_preview_description": "Előnézet két példa filamenttel — a szöveg és a QR-kód automatikusan feketével vagy fehérrel nyomtatódik, attól függően, melyik üt el jobban a filament színétől:"
 }

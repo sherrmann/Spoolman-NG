@@ -601,6 +601,5 @@
 	"printing_qrcode_useHTTPUrl_options_url": "URL",
 	"settings_swatch_tab": "サンプルカード",
 	"settings_swatch_default_style_label": "デフォルトのサンプルスタイル",
-	"settings_swatch_default_style_tooltip": "3Dプリント可能なフィラメントサンプルをダウンロードする際に事前選択されるスタイルです。新しいスタイルは client/src/utils/swatch/styles.ts でSpoolmanに追加できます。",
 	"settings_swatch_preview_description": "2つのサンプルフィラメントでのプレビュー — テキストとQRコードは、フィラメントの色とのコントラストが高い黒または白で自動的にプリントされます:"
 }

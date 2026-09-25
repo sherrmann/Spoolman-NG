@@ -128,7 +128,14 @@ the 3MF is identical for all five styles. The QR matrices themselves differ, bec
 and `qrcode-generator` choose different masks; each of the port's codes was decoded back to its
 payload with zxing. The classic tests that parse the 3MF's XML used the browser's `DOMParser`,
 which the client's node test environment lacks; they run against a small test-only parser
-(`xmlTestHelpers.ts`) rather than a new dependency.
+(`xmlTestHelpers.ts`) rather than a new dependency. It throws where DOMParser would report a
+parse error (mismatched or unclosed tags, an unescaped `&` or `<`), so a broken escape still
+fails the escaping test.
+
+Known limitation, shared with the label designer and the classic client: the link form of the
+QR code is `<base URL setting>/filament/show/<id>`, or the page's origin when that setting is
+empty. Under a sub-path deployment with no base URL set, the origin lacks the path prefix and
+the link does not resolve. Fixing it belongs in one place for all three, not in the swatch.
 
 - `client/src/utils/swatch/*.ts` (about 1,250 lines, framework-free) and its tests are copied to
   `lib/ng/swatch/`. The one change: its QR module uses `qrcode-generator`, which `client_v2`

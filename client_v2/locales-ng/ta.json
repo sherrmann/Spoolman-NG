@@ -611,6 +611,5 @@
 	"printing_qrcode_useHTTPUrl_options_url": "முகவரி",
 	"settings_swatch_tab": "மாதிரிகள்",
 	"settings_swatch_default_style_label": "இயல்புநிலை மாதிரி பாணி",
-	"settings_swatch_default_style_tooltip": "3D அச்சிடக்கூடிய இழை மாதிரியைப் பதிவிறக்கும்போது முன்தேர்வு செய்யப்படும் பாணி. புதிய பாணிகளை client/src/utils/swatch/styles.ts இல் Spoolman க்கு பங்களிக்கலாம்.",
 	"settings_swatch_preview_description": "இரண்டு எடுத்துக்காட்டு இழைகளுடன் முன்னோட்டம் — உரையும் QR குறியீடும் இழையின் நிறத்துடன் எது சிறந்த மாறுபாடு தருகிறதோ அதற்கேற்ப கருப்பு அல்லது வெள்ளையில் தானாக அச்சிடப்படும்:"
 }

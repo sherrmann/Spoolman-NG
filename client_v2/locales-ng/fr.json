@@ -620,6 +620,5 @@
 	"printing_qrcode_useHTTPUrl_options_url": "URL",
 	"settings_swatch_tab": "Échantillons",
 	"settings_swatch_default_style_label": "Style d'échantillon par défaut",
-	"settings_swatch_default_style_tooltip": "Le style présélectionné lors du téléchargement d'un échantillon de filament imprimable en 3D. De nouveaux styles peuvent être proposés à Spoolman dans client/src/utils/swatch/styles.ts.",
 	"settings_swatch_preview_description": "Aperçu avec deux filaments d'exemple — le texte et le code QR sont automatiquement imprimés en noir ou en blanc, selon ce qui contraste le mieux avec la couleur du filament :"
 }

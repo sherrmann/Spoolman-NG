@@ -601,6 +601,5 @@
 	"printing_qrcode_useHTTPUrl_options_url": "URL",
 	"settings_swatch_tab": "色卡",
 	"settings_swatch_default_style_label": "默认色卡样式",
-	"settings_swatch_default_style_tooltip": "下载可3D打印的耗材色卡时预选的样式。可在 client/src/utils/swatch/styles.ts 中为 Spoolman 贡献新样式。",
 	"settings_swatch_preview_description": "使用两种示例耗材预览 — 文字和二维码会自动以黑色或白色打印，取决于哪种与耗材颜色对比度更高："
 }

@@ -611,6 +611,5 @@
 	"printing_qrcode_useHTTPUrl_options_url": "URL",
 	"settings_swatch_tab": "Provkort",
 	"settings_swatch_default_style_label": "Standardstil för provkort",
-	"settings_swatch_default_style_tooltip": "Stilen som är förvald när du laddar ner ett 3D-printbart filamentprovkort. Nya stilar kan bidras till Spoolman i client/src/utils/swatch/styles.ts.",
 	"settings_swatch_preview_description": "Förhandsvisning med två exempelfilament — texten och QR-koden skrivs automatiskt ut i svart eller vitt, beroende på vad som ger bäst kontrast mot filamentets färg:"
 }

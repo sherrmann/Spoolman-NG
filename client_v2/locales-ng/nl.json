@@ -611,6 +611,5 @@
 	"printing_qrcode_useHTTPUrl_options_url": "URL",
 	"settings_swatch_tab": "Kleurstalen",
 	"settings_swatch_default_style_label": "Standaard staalstijl",
-	"settings_swatch_default_style_tooltip": "De stijl die vooraf geselecteerd is bij het downloaden van een 3D-printbare filamentstaal. Nieuwe stijlen kunnen aan Spoolman worden bijgedragen in client/src/utils/swatch/styles.ts.",
 	"settings_swatch_preview_description": "Voorbeeld met twee voorbeeldfilamenten — de tekst en QR-code worden automatisch in zwart of wit geprint, afhankelijk van wat het best contrasteert met de filamentkleur:"
 }

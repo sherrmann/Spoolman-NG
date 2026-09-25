@@ -611,6 +611,5 @@
 	"printing_qrcode_useHTTPUrl_options_url": "URL",
 	"settings_swatch_tab": "Musterkarten",
 	"settings_swatch_default_style_label": "Standard-Musterkartenstil",
-	"settings_swatch_default_style_tooltip": "Der beim Herunterladen einer 3D-druckbaren Filament-Musterkarte vorausgewählte Stil. Neue Stile können in client/src/utils/swatch/styles.ts zu Spoolman beigetragen werden.",
 	"settings_swatch_preview_description": "Vorschau mit zwei Beispiel-Filamenten — Text und QR-Code werden automatisch in Schwarz oder Weiß gedruckt, je nachdem, was besser mit der Filamentfarbe kontrastiert:"
 }

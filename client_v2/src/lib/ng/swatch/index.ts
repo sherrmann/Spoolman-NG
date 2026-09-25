@@ -40,6 +40,13 @@ function definedTemp(value: number | undefined): number | undefined {
 }
 
 /**
+ * What client_v2's `mapFilament` shows for a filament that has no name. It is a screen label,
+ * not a name, so it must not be printed on the card: the classic client leaves the name line
+ * out and titles the card by its vendor, and so does this.
+ */
+const UNNAMED = '(unnamed filament)';
+
+/**
  * client_v2 stores colors as "#rrggbb" (see colorsFromApi in $lib/api/map.ts),
  * while the classic client passed color_hex values as stored by the API,
  * without the leading "#". Strip it here so the swatch gets exactly the
@@ -56,7 +63,7 @@ export function swatchInputFromFilament(
 ): SwatchInput {
 	return {
 		id: Number(filament.id),
-		name: filament.name || undefined,
+		name: filament.name && filament.name !== UNNAMED ? filament.name : undefined,
 		vendorName: options.vendorName,
 		material: filament.material || undefined,
 		diameterMm: filament.diameter,

@@ -110,7 +110,14 @@ const ENTITIES: Record<string, string> = {
 	apos: "'"
 };
 
+/** Thrown for input DOMParser would report as a parsererror, so a malformed file fails its test. */
+export class XmlParseError extends Error {}
+
+// An `&` that does not start one of these is not well-formed XML.
+const BARE_AMPERSAND = /&(?!(?:#\d+|#x[0-9a-fA-F]+|amp|lt|gt|quot|apos);)/;
+
 function decodeEntities(text: string): string {
+	if (BARE_AMPERSAND.test(text)) throw new XmlParseError(`Unescaped '&' in ${JSON.stringify(text)}`);
 	return text.replace(/&(#\d+|#x[0-9a-fA-F]+|[a-zA-Z]+);/g, (whole, entity: string) => {
 		if (entity[0] === '#') {
 			const codePoint =
@@ -126,9 +133,12 @@ function decodeEntities(text: string): string {
 const ATTRIBUTE_RE = /([a-zA-Z_:][-\w:.]*)\s*=\s*"([^"]*)"/g;
 
 /**
- * Parse a small, well-formed, self-produced XML document. Not a general
- * XML parser: it assumes double-quoted attribute values and no CDATA,
- * comments, or DOCTYPE content beyond what `<!...>`/`<?...?>` skipping covers.
+ * Parse a small, self-produced XML document. Not a general XML parser: it
+ * assumes double-quoted attribute values and no CDATA, comments, or DOCTYPE
+ * content beyond what `<!...>`/`<?...?>` skipping covers. It is strict where
+ * the generator could go wrong -- mismatched or unclosed tags, an unescaped
+ * `&` or `<`, stray text inside a tag -- and throws XmlParseError there, as
+ * DOMParser would produce a parsererror, so a regression fails its test.
  */
 export function parseXml(text: string): XmlDocument {
 	const root = new XmlElement('#document', '#document', null, new Map(), new Map());
@@ -152,9 +162,14 @@ export function parseXml(text: string): XmlDocument {
 			continue;
 		}
 		const gt = text.indexOf('>', lt);
-		if (gt === -1) break;
+		if (gt === -1) throw new XmlParseError('Unterminated tag');
 		const tagContent = text.slice(lt + 1, gt);
 		if (tagContent.startsWith('/')) {
+			const name = tagContent.slice(1).trim();
+			const open = stack[stack.length - 1];
+			if (stack.length < 2 || open.tagName !== name) {
+				throw new XmlParseError(`Closing </${name}> does not match <${open.tagName}>`);
+			}
 			stack.pop();
 			i = gt + 1;
 			continue;
@@ -168,7 +183,11 @@ export function parseXml(text: string): XmlDocument {
 		let match: RegExpExecArray | null;
 		ATTRIBUTE_RE.lastIndex = 0;
 		while ((match = ATTRIBUTE_RE.exec(attrsStr))) {
+			if (match[2].includes('<')) throw new XmlParseError(`Unescaped '<' in attribute ${match[1]}`);
 			attributes.set(match[1], decodeEntities(match[2]));
+		}
+		if (attrsStr.replace(ATTRIBUTE_RE, '').trim() !== '') {
+			throw new XmlParseError(`Malformed attributes in <${tagName}>`);
 		}
 		const colonIndex = tagName.indexOf(':');
 		const prefix = colonIndex === -1 ? null : tagName.slice(0, colonIndex);
@@ -186,5 +205,6 @@ export function parseXml(text: string): XmlDocument {
 		if (!selfClosing) stack.push(element);
 		i = gt + 1;
 	}
+	if (stack.length !== 1) throw new XmlParseError(`Unclosed <${stack[stack.length - 1].tagName}>`);
 	return new XmlDocument(root);
 }

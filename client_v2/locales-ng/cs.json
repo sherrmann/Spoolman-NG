@@ -621,6 +621,5 @@
 	"printing_qrcode_useHTTPUrl_options_url": "URL",
 	"settings_swatch_tab": "Vzorky",
 	"settings_swatch_default_style_label": "Výchozí styl vzorku",
-	"settings_swatch_default_style_tooltip": "Styl předvybraný při stahování vzorku filamentu pro 3D tisk. Nové styly lze do Spoolmanu přispět v souboru client/src/utils/swatch/styles.ts.",
 	"settings_swatch_preview_description": "Náhled se dvěma ukázkovými filamenty — text a QR kód se automaticky tisknou černě nebo bíle podle toho, co lépe kontrastuje s barvou filamentu:"
 }

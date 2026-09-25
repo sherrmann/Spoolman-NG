@@ -611,6 +611,5 @@
 	"printing_qrcode_useHTTPUrl_options_url": "لینک",
 	"settings_swatch_tab": "نمونه‌ها",
 	"settings_swatch_default_style_label": "سبک پیش‌فرض نمونه",
-	"settings_swatch_default_style_tooltip": "سبکی که هنگام دانلود نمونه فیلامنت قابل چاپ سه‌بعدی از پیش انتخاب می‌شود. سبک‌های جدید را می‌توان در client/src/utils/swatch/styles.ts به Spoolman افزود.",
 	"settings_swatch_preview_description": "پیش‌نمایش با دو فیلامنت نمونه — متن و کد QR به‌طور خودکار به رنگ مشکی یا سفید چاپ می‌شوند، هر کدام که با رنگ فیلامنت کنتراست بهتری داشته باشد:"
 }

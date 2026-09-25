@@ -621,6 +621,5 @@
 	"printing_qrcode_useHTTPUrl_options_url": "URL",
 	"settings_swatch_tab": "Mostre",
 	"settings_swatch_default_style_label": "Stil implicit de mostră",
-	"settings_swatch_default_style_tooltip": "Stilul preselectat la descărcarea unei mostre de filament imprimabile 3D. Stiluri noi pot fi contribuite la Spoolman în client/src/utils/swatch/styles.ts.",
 	"settings_swatch_preview_description": "Previzualizare cu două filamente de exemplu — textul și codul QR se imprimă automat în negru sau alb, în funcție de ce contrastează mai bine cu culoarea filamentului:"
 }

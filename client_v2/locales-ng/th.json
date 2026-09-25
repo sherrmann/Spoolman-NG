@@ -601,6 +601,5 @@
 	"printing_qrcode_useHTTPUrl_options_url": "URL",
 	"settings_swatch_tab": "ตัวอย่าง",
 	"settings_swatch_default_style_label": "สไตล์ตัวอย่างเริ่มต้น",
-	"settings_swatch_default_style_tooltip": "สไตล์ที่ถูกเลือกไว้ล่วงหน้าเมื่อดาวน์โหลดการ์ดตัวอย่างเส้นพลาสติกแบบพิมพ์ 3D ได้ สามารถร่วมเพิ่มสไตล์ใหม่ให้ Spoolman ได้ที่ client/src/utils/swatch/styles.ts",
 	"settings_swatch_preview_description": "ตัวอย่างแสดงด้วยเส้นพลาสติกตัวอย่างสองชนิด — ข้อความและคิวอาร์โค้ดจะพิมพ์เป็นสีดำหรือขาวโดยอัตโนมัติ ตามที่ตัดกับสีของเส้นพลาสติกได้ดีที่สุด:"
 }

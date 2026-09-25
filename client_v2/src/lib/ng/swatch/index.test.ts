@@ -76,6 +76,17 @@ describe('swatchInputFromFilament', () => {
 		expect(input.articleNumber).toBeUndefined();
 	});
 
+	it('does not print the "(unnamed filament)" screen label as a name', () => {
+		// mapFilament shows a nameless filament under that label; the card leaves the name out
+		// and is titled by its vendor, as in the classic client.
+		const input = swatchInputFromFilament(
+			{ ...FILAMENT, name: '(unnamed filament)' },
+			{ qrPayload: 'x', vendorName: 'Acme' }
+		);
+		expect(input.name).toBeUndefined();
+		expect(swatchFilename(input)).not.toContain('unnamed');
+	});
+
 	it('maps a missing (zero) temperature to undefined, as client_v2 stores no-temperature as 0', () => {
 		const input = swatchInputFromFilament({ ...FILAMENT, nozzleTemp: 0, bedTemp: 0 }, { qrPayload: 'x' });
 		expect(input.extruderTempC).toBeUndefined();

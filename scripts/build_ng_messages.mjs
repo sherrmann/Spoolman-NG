@@ -413,7 +413,6 @@ const KEYS = [
 	'printing.qrcode.useHTTPUrl.options.url',
 	'settings.swatch.tab',
 	'settings.swatch.default_style.label',
-	'settings.swatch.default_style.tooltip',
 	'settings.swatch.preview_description',
 ];
 

@@ -621,6 +621,5 @@
 	"printing_qrcode_useHTTPUrl_options_url": "URL",
 	"settings_swatch_tab": "Образцы",
 	"settings_swatch_default_style_label": "Стиль образца по умолчанию",
-	"settings_swatch_default_style_tooltip": "Стиль, выбранный по умолчанию при скачивании образца филамента для 3D-печати. Новые стили можно добавить в Spoolman в файле client/src/utils/swatch/styles.ts.",
 	"settings_swatch_preview_description": "Предпросмотр с двумя примерами филамента — текст и QR-код автоматически печатаются чёрным или белым, в зависимости от того, что лучше контрастирует с цветом филамента:"
 }

@@ -46,24 +46,31 @@
 
 	let show = $state(false);
 	let styleKey = $state(getSwatchStyle(null).key);
+	// Set once the administrator has chosen, so a load that lands after that choice does not
+	// put the old value back on screen.
+	let chosen = false;
 
 	$effect(() => {
 		currentUserIsAdmin()
 			.then((admin) => (show = admin))
 			.catch(() => {});
 		const ctrl = new AbortController();
-		loadSwatchStyle(ctrl.signal).then((k) => (styleKey = k));
+		loadSwatchStyle(ctrl.signal).then((k) => {
+			if (!chosen) styleKey = k;
+		});
 		return () => ctrl.abort();
 	});
 
 	async function choose(key: string) {
+		chosen = true;
 		const previous = styleKey;
 		styleKey = key;
 		try {
 			await saveSwatchStyle(key);
 			toasts.success(m['notifications.saveSuccessful']());
 		} catch (e) {
-			styleKey = previous;
+			// Only undo this choice if it is still the one showing; a later one stands.
+			if (styleKey === key) styleKey = previous;
 			toasts.error(apiErrorMessage(e));
 		}
 	}
@@ -73,9 +80,7 @@
 	<NgSettingsSection title={ng.settings_swatch_tab()}>
 		<div class="body">
 			<label class="row">
-				<span class="lbl" title={ng.settings_swatch_default_style_tooltip()}
-					>{ng.settings_swatch_default_style_label()}</span
-				>
+				<span class="lbl">{ng.settings_swatch_default_style_label()}</span>
 				<select class="sel" value={styleKey} onchange={(e) => choose(e.currentTarget.value)}>
 					{#each SWATCH_STYLES as s (s.key)}
 						<option value={s.key}>{swatchStyleName(s.key)}</option>

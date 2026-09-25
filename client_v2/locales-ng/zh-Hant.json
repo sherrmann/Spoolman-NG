@@ -601,6 +601,5 @@
 	"printing_qrcode_useHTTPUrl_options_url": "URL",
 	"settings_swatch_tab": "色卡",
 	"settings_swatch_default_style_label": "預設色卡樣式",
-	"settings_swatch_default_style_tooltip": "下載可3D列印的線材色卡時預選的樣式。可在 client/src/utils/swatch/styles.ts 中為 Spoolman 貢獻新樣式。",
 	"settings_swatch_preview_description": "使用兩種範例線材預覽 — 文字和 QR 碼會自動以黑色或白色列印，取決於哪種與線材顏色對比度更高："
 }
