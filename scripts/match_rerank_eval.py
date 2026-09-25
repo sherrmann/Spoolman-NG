@@ -30,6 +30,7 @@ whenever the reranker's prompt or scoring changes:
 
 import argparse
 import asyncio
+import hashlib
 import json
 import sys
 from dataclasses import dataclass
@@ -40,8 +41,10 @@ from pathlib import Path
 # sys.path[0], not the repo root, and spoolman is not pip-installed here -- so the repo root
 # has to be added by hand before the local-package import below can resolve.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+# Sibling modules in scripts/ (match_eval_noise) import as top-level modules.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from spoolman import decision, spoolintake
+from spoolman import decision, externaldb, spoolintake
 
 CASES_PATH = Path(__file__).with_name("match_rerank_eval_cases.json")
 
@@ -190,14 +193,312 @@ def _print_report(results: list[CaseResult]) -> float:
     return rerank_accuracy
 
 
+# --- Real-catalog mode --------------------------------------------------------------------
+#
+# The fixture cases above hand-pick two to five candidates. The modes below instead let the
+# product build the shortlist itself, with spoolintake.match_catalog over a real SpoolmanDB
+# catalog, so they measure what a scan would actually offer.
+
+
+@dataclass
+class CatalogCase:
+    """One label reading with the catalog entry it should match (None: not in the catalog)."""
+
+    case_id: str
+    source: str
+    extraction: dict
+    catalog_id: str | None
+
+
+@dataclass
+class CatalogResult:
+    """How one catalog-mode case went."""
+
+    case: CatalogCase
+    #: Whether the right product is on the fuzzy shortlist at all; reranking cannot fix a miss.
+    shortlisted: bool
+    #: Whether the shortlist was empty (nothing to preselect, nothing to ask the model).
+    empty: bool
+    baseline_ok: bool
+    rerank_ok: bool | None = None
+    answered_none: bool = False
+    error: str | None = None
+
+
+def _norm(value: object) -> str:
+    return " ".join(str(value or "").lower().split())
+
+
+def same_product(candidate: dict, expected: dict, extraction: dict) -> bool:
+    """Whether a shortlisted candidate is the expected catalog entry's product.
+
+    SpoolmanDB lists one product several times, once per diameter and spool size, and a label
+    that shows neither cannot tell them apart. So manufacturer, name, material and weight must
+    match, and the diameter only when the label gave one.
+    """
+    if (
+        _norm(candidate.get("vendor")) != _norm(expected.get("manufacturer"))
+        or _norm(candidate.get("name")) != _norm(expected.get("name"))
+        or _norm(candidate.get("material")) != _norm(expected.get("material"))
+        or spoolintake.coerce_number(candidate.get("weight_g")) != spoolintake.coerce_number(expected.get("weight"))
+    ):
+        return False
+    diameter = extraction.get("diameter_mm")
+    if diameter is None:
+        return True
+    return spoolintake.coerce_number(candidate.get("diameter_mm")) == spoolintake.coerce_number(diameter)
+
+
+def load_catalog_file(path: Path | None) -> tuple[list[dict], str]:
+    """Load the catalog from ``path`` (default: Spoolman's synced cache) and describe it.
+
+    The description carries the entry count and a SHA-256, because every number this mode prints
+    depends on the catalog version.
+    """
+    source = path or externaldb.get_filaments_file()
+    try:
+        raw = source.read_bytes()
+    except OSError:
+        return [], f"{source} (missing)"
+    try:
+        parsed = json.loads(raw)
+    except json.JSONDecodeError:
+        return [], f"{source} (not JSON)"
+    entries = [entry for entry in parsed if isinstance(entry, dict)] if isinstance(parsed, list) else []
+    return entries, f"{source}: {len(entries)} entries, sha256 {hashlib.sha256(raw).hexdigest()[:16]}"
+
+
+def photo_cases(photos: Path, extractions: Path | None) -> tuple[list[CatalogCase], list[CatalogCase]]:
+    """Pair the photo folder's cases.json labels with extractions dumped by ai_eval_vision.py.
+
+    A case counts once its entry in cases.json has a ``catalog_id`` key: a SpoolmanDB id, or null
+    for a spool that is not in the catalog. Returns the labelled cases and the unlabelled ones.
+    """
+    labels = json.loads((photos / "cases.json").read_text(encoding="utf-8"))
+    dumped = {}
+    for line in (extractions or photos / "extractions.jsonl").read_text(encoding="utf-8").splitlines():
+        if line.strip():
+            record = json.loads(line)
+            dumped[record["file"]] = record["extraction"]
+    cases, unlabelled = [], []
+    for label in labels:
+        if label["file"] not in dumped:
+            continue
+        if "catalog_id" not in label:
+            unlabelled.append(CatalogCase(label["file"], "photos", dumped[label["file"]], None))
+            continue
+        cases.append(CatalogCase(label["file"], "photos", dumped[label["file"]], label["catalog_id"]))
+    return cases, unlabelled
+
+
+def generated_cases(catalog: list[dict], n: int, seed: int) -> list[CatalogCase]:
+    """Label readings generated from catalog entries (see scripts/match_eval_noise.py)."""
+    import match_eval_noise  # noqa: PLC0415 - a sibling script module, only needed for this mode
+
+    return [
+        CatalogCase(case["id"], "generated", case["extraction"], case["catalog_id"])
+        for case in match_eval_noise.generate_cases(catalog, n, seed)
+    ]
+
+
+async def run_catalog_case(
+    config: decision.DecisionConfig | None,
+    case: CatalogCase,
+    by_id: dict[str, dict],
+) -> CatalogResult:
+    """Shortlist one reading with the product's own catalog stage, then rerank it (unless config is None)."""
+    shortlist = spoolintake.match_catalog(case.extraction)
+    expected = by_id.get(case.catalog_id) if case.catalog_id is not None else None
+
+    def ok(candidates: list[dict]) -> bool:
+        if expected is None:
+            return False
+        return bool(candidates) and same_product(candidates[0], expected, case.extraction)
+
+    result = CatalogResult(
+        case=case,
+        shortlisted=expected is None or any(same_product(c, expected, case.extraction) for c in shortlist),
+        empty=not shortlist,
+        baseline_ok=ok(shortlist),
+    )
+    if config is None:
+        return result
+    try:
+        reranked, answers = await spoolintake._rerank_with_answers(  # noqa: SLF001
+            config,
+            case.extraction,
+            {"catalog": shortlist},
+        )
+    except decision.DecisionError as exc:
+        result.error = str(exc)
+        return result
+    result.rerank_ok = ok(reranked["catalog"])
+    result.answered_none = "catalog" in answers and answers["catalog"].choice == spoolintake._RERANK_NONE  # noqa: SLF001
+    return result
+
+
+def print_catalog_report(results: list[CatalogResult]) -> None:
+    """Print fuzzy vs reranked per source, the recall ceiling and the 'none' answers."""
+    for source in sorted({r.case.source for r in results}):
+        group = [r for r in results if r.case.source == source and r.error is None]
+        matchable = [r for r in group if r.case.catalog_id is not None]
+        absent = [r for r in group if r.case.catalog_id is None]
+        print(f"== {source}: {len(group)} cases ({len(matchable)} in the catalog, {len(absent)} not)")
+        if matchable:
+            total = len(matchable)
+            shortlisted = sum(r.shortlisted for r in matchable)
+            print(f"  right product on the fuzzy shortlist  {shortlisted}/{total} ({shortlisted / total:.0%})")
+            baseline = sum(r.baseline_ok for r in matchable)
+            print(f"  top-1, fuzzy order                    {baseline}/{total} ({baseline / total:.0%})")
+            if any(r.rerank_ok is not None for r in matchable):
+                reranked = sum(bool(r.rerank_ok) for r in matchable)
+                print(f"  top-1, reranked                       {reranked}/{total} ({reranked / total:.0%})")
+                wrongly_none = sum(r.answered_none for r in matchable if r.shortlisted)
+                print(f"  'none' although it was shortlisted    {wrongly_none}")
+                changed = [r for r in matchable if r.rerank_ok != r.baseline_ok]
+                for r in changed[:15]:
+                    verdict = "fixed" if r.rerank_ok else "broke"
+                    print(f"    {verdict}: {r.case.case_id} {json.dumps(r.case.extraction, ensure_ascii=False)}")
+        if absent:
+            asked = [r for r in absent if not r.empty]
+            said_none = sum(r.answered_none for r in asked)
+            print(f"  not in catalog, wrong entry preselected  {len(asked)}/{len(absent)}")
+            if any(r.rerank_ok is not None for r in absent):
+                print(f"  not in catalog, model answered 'none'    {said_none}/{len(asked)}")
+        print()
+    errored = [r for r in results if r.error is not None]
+    if errored:
+        print(f"{len(errored)} case(s) failed with a decision-endpoint error:")
+        for r in errored:
+            print(f"  {r.case.case_id}: {r.error}")
+
+
+def print_suggestions(cases: list[CatalogCase], catalog: list[dict], limit: int = 10) -> None:
+    """For labelling photos: the closest catalog rows per reading, below the shortlist cut-off too.
+
+    Ranked by the fuzzy score, which is what is being evaluated, so the list deliberately goes
+    past the product's cut-off and top five: the right row must be findable even where fuzzy
+    matching would miss it.
+    """
+    for case in cases:
+        scored = sorted(
+            (
+                (
+                    spoolintake.score_candidate(
+                        case.extraction,
+                        vendor=entry.get("manufacturer"),
+                        name=entry.get("name"),
+                        material=entry.get("material"),
+                        weight_g=spoolintake.coerce_number(entry.get("weight")),
+                    ),
+                    entry,
+                )
+                for entry in catalog
+            ),
+            key=lambda pair: -pair[0],
+        )
+        print(f"{case.case_id}: {json.dumps(case.extraction, ensure_ascii=False)}")
+        for score, entry in scored[:limit]:
+            print(
+                f"  {score:.2f}  {entry.get('id')}  ({entry.get('manufacturer')} / {entry.get('name')} / "
+                f"{entry.get('material')} / {entry.get('weight')} g / {entry.get('diameter')} mm)",
+            )
+        print()
+
+
+def print_find(catalog: list[dict], query: str, limit: int = 25) -> None:
+    """List catalog rows whose id, manufacturer or name contains every word of ``query``.
+
+    The fuzzy-ranked suggestions can miss the right row entirely (SpoolmanDB renames products,
+    e.g. PolyTerra became "Panchroma Matte (Formerly PolyTerra)"), so labelling needs a search
+    that does not depend on the score being evaluated.
+    """
+    words = _norm(query).split()
+    hits = [
+        entry
+        for entry in catalog
+        if all(word in _norm(f"{entry.get('id')} {entry.get('manufacturer')} {entry.get('name')}") for word in words)
+    ]
+    for entry in hits[:limit]:
+        print(
+            f"  {entry.get('id')}  ({entry.get('manufacturer')} / {entry.get('name')} / "
+            f"{entry.get('material')} / {entry.get('weight')} g / {entry.get('diameter')} mm)",
+        )
+    if len(hits) > limit:
+        print(f"  ... {len(hits) - limit} more; narrow the search")
+    if not hits:
+        print("  no rows match")
+
+
+async def _catalog_main(args: argparse.Namespace) -> int:
+    catalog, description = load_catalog_file(args.catalog)
+    if not catalog:
+        print(
+            f"No catalog to match against ({description}). Download SpoolmanDB's filaments.json and pass it "
+            "with --catalog, e.g. curl -o filaments.json https://sherrmann.github.io/SpoolmanDB/filaments.json",
+            file=sys.stderr,
+        )
+        return 2
+    print(f"Catalog: {description}\n")
+    if args.find:
+        print_find(catalog, args.find)
+        return 0
+    # Make the product's catalog stage read this catalog, so match_catalog runs unchanged.
+    original_loader = spoolintake.load_catalog
+    spoolintake.load_catalog = lambda: catalog
+    try:
+        return await _run_catalog_modes(args, catalog)
+    finally:
+        spoolintake.load_catalog = original_loader
+
+
+async def _run_catalog_modes(args: argparse.Namespace, catalog: list[dict]) -> int:
+    by_id = {entry.get("id"): entry for entry in catalog}
+    cases: list[CatalogCase] = []
+    if args.photos:
+        photo, unlabelled = photo_cases(args.photos, args.extractions)
+        if args.suggest:
+            print_suggestions(unlabelled + photo, catalog)
+            return 0
+        cases += photo
+        if unlabelled:
+            names = ", ".join(c.case_id for c in unlabelled)
+            print(f"Unlabelled photos, left out (add a catalog_id to cases.json): {names}\n")
+        unknown = [c.case_id for c in photo if c.catalog_id is not None and c.catalog_id not in by_id]
+        if unknown:
+            print(f"catalog_id not found in this catalog: {', '.join(unknown)}", file=sys.stderr)
+            return 2
+    if args.generated:
+        cases += generated_cases(catalog, args.generated, args.seed)
+    if not cases:
+        print("No cases to run.", file=sys.stderr)
+        return 2
+
+    config = None
+    if not args.baseline_only:
+        config = decision.resolve_config()
+        if config is None:
+            print(_NO_ENDPOINT, file=sys.stderr)
+            return 2
+    results = [await run_catalog_case(config, case, by_id) for case in cases]
+    print_catalog_report(results)
+    if any(r.error is not None for r in results):
+        print("\nFAIL: some cases could not be scored; rerun once the endpoint answers them all.")
+        return 1
+    return 0
+
+
+_NO_ENDPOINT = (
+    "No decision-model endpoint configured. Set SPOOLMAN_AI_DECISION_BASE_URL "
+    "(and optionally SPOOLMAN_AI_DECISION_API_KEY / SPOOLMAN_AI_DECISION_MODEL), "
+    "or pass --baseline-only for the fuzzy numbers alone."
+)
+
+
 async def _main(min_accuracy: float) -> int:
     config = decision.resolve_config()
     if config is None:
-        print(
-            "No decision-model endpoint configured. Set SPOOLMAN_AI_DECISION_BASE_URL "
-            "(and optionally SPOOLMAN_AI_DECISION_API_KEY / SPOOLMAN_AI_DECISION_MODEL).",
-            file=sys.stderr,
-        )
+        print(_NO_ENDPOINT, file=sys.stderr)
         return 2
 
     cases = json.loads(CASES_PATH.read_text(encoding="utf-8"))
@@ -216,9 +517,21 @@ async def _main(min_accuracy: float) -> int:
 
 def main() -> None:
     """Entry point for `poe match-rerank-eval`."""
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--min-accuracy", type=float, default=0.7)
-    sys.exit(asyncio.run(_main(parser.parse_args().min_accuracy)))
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--min-accuracy", type=float, default=0.7, help="fixture mode: fail below this")
+    real = parser.add_argument_group("real-catalog mode (shortlists built by the product from SpoolmanDB)")
+    real.add_argument("--catalog", type=Path, help="SpoolmanDB filaments.json (default: Spoolman's synced copy)")
+    real.add_argument("--photos", type=Path, help="photo folder with cases.json (entries carry catalog_id)")
+    real.add_argument("--extractions", type=Path, help="JSONL from ai_eval_vision.py --dump-extractions")
+    real.add_argument("--suggest", action="store_true", help="list the closest catalog rows per photo, to label")
+    real.add_argument("--find", metavar="TEXT", help="search catalog rows by id, maker and name, to label")
+    real.add_argument("--generated", type=int, default=0, metavar="N", help="also run N generated label readings")
+    real.add_argument("--seed", type=int, default=1, help="seed for --generated")
+    real.add_argument("--baseline-only", action="store_true", help="fuzzy numbers only; no decision endpoint")
+    args = parser.parse_args()
+    if args.photos or args.generated or args.catalog or args.find:
+        sys.exit(asyncio.run(_catalog_main(args)))
+    sys.exit(asyncio.run(_main(args.min_accuracy)))
 
 
 if __name__ == "__main__":

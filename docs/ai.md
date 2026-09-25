@@ -403,6 +403,63 @@ SPOOLMAN_AI_DECISION_BASE_URL=https://api.typesafe.ai SPOOLMAN_AI_DECISION_API_K
 
 It needs a live decision endpoint, so it is **not part of CI**.
 
+### Measuring it against the real catalog
+
+The fixture cases above use hand-picked candidate lists. To measure what a scan would really
+offer, the eval can let the product build the shortlist itself from a SpoolmanDB catalog. It
+reports three numbers per set:
+
+- how often the right product is on the fuzzy shortlist at all (reranking only reorders that
+  list, so this is the ceiling for both orders);
+- top-1 accuracy in the fuzzy order;
+- top-1 accuracy after reranking.
+
+Download the catalog once:
+
+```bash
+curl -o filaments.json https://sherrmann.github.io/SpoolmanDB/filaments.json
+```
+
+**Generated readings.** These need no photos. `--generated 300` samples 300 catalog entries
+across manufacturers and adds label-style noise from a fixed list: a missing vendor, the
+material folded into the name, a dropped word, an OCR-style character swap, and so on (see
+`scripts/match_eval_noise.py`). `--baseline-only` prints the fuzzy numbers without a decision
+endpoint:
+
+```bash
+uv run python scripts/match_rerank_eval.py --catalog filaments.json --generated 300 --seed 1 --baseline-only
+```
+
+**Your own photos.** Keep them in a folder of your own; they don't belong in the repository.
+
+1. List the photos in `cases.json` in that folder, in the same format as
+   `scripts/ai_eval_vision_cases/cases.json`.
+2. Read them with your vision model and save what it extracted:
+
+   ```bash
+   uv run python scripts/ai_eval_vision.py --photos ~/spool-photos --dump-extractions ~/spool-photos/extractions.jsonl
+   ```
+
+3. Label each photo with the SpoolmanDB id it shows, as `"catalog_id"` in its `cases.json`
+   entry, or `null` if the spool isn't in the catalog. `--suggest` lists the closest rows for
+   each photo. `--find` searches by id, maker and name, for when the right row is not among
+   them: SpoolmanDB renames products, and the fuzzy score can miss the new name entirely.
+
+   ```bash
+   uv run python scripts/match_rerank_eval.py --catalog filaments.json --photos ~/spool-photos --suggest
+   uv run python scripts/match_rerank_eval.py --catalog filaments.json --find "polyterra charcoal"
+   ```
+
+4. Run it, with or without a decision endpoint:
+
+   ```bash
+   uv run python scripts/match_rerank_eval.py --catalog filaments.json --photos ~/spool-photos --generated 300
+   ```
+
+A pick counts as right when it is the same product as the labelled row: same maker, name,
+material and weight, and the same diameter only when the label shows one. SpoolmanDB lists
+one product once per diameter and spool size.
+
 ## Privacy
 
 - With a **local endpoint** (Ollama, LM Studio, llama.cpp, vLLM on your own
