@@ -1,0 +1,208 @@
+[
+  {
+    "id": "prusament-vendor-name-split",
+    "extraction": {"vendor": "Prusa Polymers", "name": "Galaxy Black", "material": "PLA", "weight_g": 1000},
+    "candidates": [
+      {"vendor": "Prusament", "name": "PLA Galaxy Black", "material": "PLA", "weight_g": 1000},
+      {"vendor": "Prusament", "name": "PLA Jet Black", "material": "PLA", "weight_g": 1000}
+    ],
+    "expected": 0
+  },
+  {
+    "id": "polyterra-vs-polylite",
+    "tuned_against_fuzzy": true,
+    "extraction": {"vendor": "Polymaker", "name": "PLA Black", "material": "PLA", "weight_g": 1000},
+    "candidates": [
+      {"vendor": "Polymaker", "name": "PolyLite PLA Black", "material": "PLA", "weight_g": 1000},
+      {"vendor": "Polymaker", "name": "PolyTerra PLA Charcoal Black", "material": "PLA", "weight_g": 1000}
+    ],
+    "expected": 1
+  },
+  {
+    "id": "bambu-basic-vs-matte",
+    "tuned_against_fuzzy": true,
+    "extraction": {"vendor": "Bambu Lab", "name": "Matte Black", "material": "PLA", "weight_g": 1000},
+    "candidates": [
+      {"vendor": "Bambu Lab", "name": "PLA Matte Black", "material": "PLA", "weight_g": 1000},
+      {"vendor": "Bambu Lab", "name": "PLA Basic Black", "material": "PLA", "weight_g": 1000}
+    ],
+    "expected": 1
+  },
+  {
+    "id": "esun-plus-vs-plain",
+    "tuned_against_fuzzy": true,
+    "extraction": {"vendor": "eSUN", "name": "PLA Black", "material": "PLA", "weight_g": 1000},
+    "candidates": [
+      {"vendor": "eSUN", "name": "PLA Black", "material": "PLA", "weight_g": 1000},
+      {"vendor": "eSUN", "name": "PLA+ Black", "material": "PLA", "weight_g": 1000}
+    ],
+    "expected": 1
+  },
+  {
+    "id": "sunlu-silk-word-order",
+    "extraction": {"vendor": "Sunlu", "name": "Silk Gold PLA", "material": "PLA", "weight_g": 1000},
+    "candidates": [
+      {"vendor": "Sunlu", "name": "PLA Silk Gold", "material": "PLA", "weight_g": 1000},
+      {"vendor": "Sunlu", "name": "PLA Gold", "material": "PLA", "weight_g": 1000}
+    ],
+    "expected": 0
+  },
+  {
+    "id": "elegoo-vendor-missing",
+    "extraction": {"vendor": null, "name": "Rapid PETG Grey", "material": "PETG", "weight_g": 1000},
+    "candidates": [
+      {"vendor": "Elegoo", "name": "PETG Grey", "material": "PETG", "weight_g": 1000},
+      {"vendor": "Elegoo", "name": "Rapid PETG Grey", "material": "PETG", "weight_g": 1000},
+      {"vendor": "Sunlu", "name": "PETG Grey", "material": "PETG", "weight_g": 1000}
+    ],
+    "expected": 1
+  },
+  {
+    "id": "overture-matte-vs-basic",
+    "extraction": {"vendor": "Overture", "name": "Matte White PLA", "material": "PLA", "weight_g": 1000},
+    "candidates": [
+      {"vendor": "Overture", "name": "PLA Basic White", "material": "PLA", "weight_g": 1000},
+      {"vendor": "Overture", "name": "PLA Matte White", "material": "PLA", "weight_g": 1000}
+    ],
+    "expected": 1
+  },
+  {
+    "id": "fillamentum-extrafill-typo",
+    "extraction": {"vendor": "Filamentum", "name": "Extrafil Vertigo Grey", "material": "PLA", "weight_g": 750},
+    "candidates": [
+      {"vendor": "Fillamentum", "name": "Extrafill Vertigo Grey", "material": "PLA", "weight_g": 750},
+      {"vendor": "Fillamentum", "name": "Extrafill Traffic Grey", "material": "PLA", "weight_g": 750}
+    ],
+    "expected": 0
+  },
+  {
+    "id": "extrudr-greentec-abbrev",
+    "extraction": {"vendor": "Extrudr", "name": "GreenTEC Pro Blk", "material": "PLA", "weight_g": 800},
+    "candidates": [
+      {"vendor": "Extrudr", "name": "GreenTEC Pro Black", "material": "PLA", "weight_g": 800},
+      {"vendor": "Extrudr", "name": "GreenTEC Black", "material": "PLA", "weight_g": 800}
+    ],
+    "expected": 0
+  },
+  {
+    "id": "das-filament-marketing-name",
+    "extraction": {"vendor": "das Filament", "name": "Kirschrot", "material": "PLA", "weight_g": 1000},
+    "candidates": [
+      {"vendor": "das Filament", "name": "PLA Kirschrot", "material": "PLA", "weight_g": 1000},
+      {"vendor": "das Filament", "name": "PLA Rot", "material": "PLA", "weight_g": 1000}
+    ],
+    "expected": 0
+  },
+  {
+    "id": "prusament-vendor-abbrev",
+    "extraction": {"vendor": "Prusa", "name": "PETG Prusa Orange", "material": "PETG", "weight_g": 1000},
+    "candidates": [
+      {"vendor": "Prusament", "name": "PETG Prusa Orange", "material": "PETG", "weight_g": 1000},
+      {"vendor": "Prusament", "name": "PETG Urban Grey", "material": "PETG", "weight_g": 1000}
+    ],
+    "expected": 0
+  },
+  {
+    "id": "bambu-aero-light-spool",
+    "extraction": {"vendor": "Bambu Lab", "name": "PLA Aero", "material": "PLA", "weight_g": 690},
+    "candidates": [
+      {"vendor": "Bambu Lab", "name": "PLA Basic", "material": "PLA", "weight_g": 1000},
+      {"vendor": "Bambu Lab", "name": "PLA Aero", "material": "PLA", "weight_g": 700}
+    ],
+    "expected": 1
+  },
+  {
+    "id": "elegoo-abs-vs-asa",
+    "extraction": {"vendor": "Elegoo", "name": "Rapid ABS Black", "material": "ABS", "weight_g": 1000},
+    "candidates": [
+      {"vendor": "Elegoo", "name": "Rapid ASA Black", "material": "ASA", "weight_g": 1000},
+      {"vendor": "Elegoo", "name": "Rapid ABS Black", "material": "ABS", "weight_g": 1000}
+    ],
+    "expected": 1
+  },
+  {
+    "id": "sunlu-vendor-typo",
+    "extraction": {"vendor": "Sunly", "name": "PLA Meta Black", "material": "PLA", "weight_g": 1000},
+    "candidates": [
+      {"vendor": "Sunlu", "name": "PLA Meta Black", "material": "PLA", "weight_g": 1000},
+      {"vendor": "eSUN", "name": "PLA Black", "material": "PLA", "weight_g": 1000}
+    ],
+    "expected": 0
+  },
+  {
+    "id": "overture-vs-polymaker-petg",
+    "extraction": {"vendor": "Overture", "name": "PETG Transparent", "material": "PETG", "weight_g": 1000},
+    "candidates": [
+      {"vendor": "Overture", "name": "PETG Transparent", "material": "PETG", "weight_g": 1000},
+      {"vendor": "Polymaker", "name": "PolyLite PETG Transparent", "material": "PETG", "weight_g": 1000}
+    ],
+    "expected": 0
+  },
+  {
+    "id": "fillamentum-vendor-missing",
+    "extraction": {"vendor": null, "name": "Extrafill Signal White PLA", "material": "PLA", "weight_g": 750},
+    "candidates": [
+      {"vendor": "Fillamentum", "name": "Extrafill Signal White", "material": "PLA", "weight_g": 750},
+      {"vendor": "Extrudr", "name": "PLA NX2 White", "material": "PLA", "weight_g": 1000}
+    ],
+    "expected": 0
+  },
+  {
+    "id": "esun-petg-five-candidates",
+    "extraction": {"vendor": "esun", "name": "PETG Solid Black", "material": "PETG", "weight_g": 1000},
+    "candidates": [
+      {"vendor": "eSUN", "name": "PETG Black", "material": "PETG", "weight_g": 1000},
+      {"vendor": "eSUN", "name": "PETG Solid Black", "material": "PETG", "weight_g": 1000},
+      {"vendor": "eSUN", "name": "PETG Translucent Black", "material": "PETG", "weight_g": 1000},
+      {"vendor": "Sunlu", "name": "PETG Black", "material": "PETG", "weight_g": 1000},
+      {"vendor": "Polymaker", "name": "PolyLite PETG Black", "material": "PETG", "weight_g": 1000}
+    ],
+    "expected": 1
+  },
+  {
+    "id": "polymaker-marble-vendor-missing",
+    "extraction": {"vendor": null, "name": "Marble White Black", "material": "PLA", "weight_g": 750},
+    "candidates": [
+      {"vendor": "Polymaker", "name": "PolyTerra PLA Marble", "material": "PLA", "weight_g": 1000},
+      {"vendor": "Polymaker", "name": "PLA Marble White Black", "material": "PLA", "weight_g": 750}
+    ],
+    "expected": 1
+  },
+  {
+    "id": "none-unrelated-vendor",
+    "extraction": {"vendor": "NoName", "name": "Generic Grey", "material": "PLA", "weight_g": 1000},
+    "candidates": [
+      {"vendor": "Sunlu", "name": "PLA Grey", "material": "PLA", "weight_g": 1000},
+      {"vendor": "eSUN", "name": "PLA Grey", "material": "PLA", "weight_g": 1000}
+    ],
+    "expected": null
+  },
+  {
+    "id": "none-material-mismatch",
+    "extraction": {"vendor": "Prusament", "name": "PLA Galaxy Black", "material": "PLA", "weight_g": 1000},
+    "candidates": [
+      {"vendor": "Prusament", "name": "PETG Galaxy Black", "material": "PETG", "weight_g": 1000},
+      {"vendor": "Prusament", "name": "ASA Galaxy Black", "material": "ASA", "weight_g": 1000}
+    ],
+    "expected": null
+  },
+  {
+    "id": "none-wrong-colour",
+    "extraction": {"vendor": "Bambu Lab", "name": "PLA Basic Purple", "material": "PLA", "weight_g": 1000},
+    "candidates": [
+      {"vendor": "Bambu Lab", "name": "PLA Basic Black", "material": "PLA", "weight_g": 1000},
+      {"vendor": "Bambu Lab", "name": "PLA Basic White", "material": "PLA", "weight_g": 1000},
+      {"vendor": "Bambu Lab", "name": "PLA Matte Ice Blue", "material": "PLA", "weight_g": 1000}
+    ],
+    "expected": null
+  },
+  {
+    "id": "none-same-vendor-different-line",
+    "extraction": {"vendor": "Elegoo", "name": "Rapid PLA Skin", "material": "PLA", "weight_g": 1000},
+    "candidates": [
+      {"vendor": "Elegoo", "name": "Rapid PLA+ Cyan", "material": "PLA", "weight_g": 1000},
+      {"vendor": "Elegoo", "name": "PLA Marble Grey", "material": "PLA", "weight_g": 1000}
+    ],
+    "expected": null
+  }
+]

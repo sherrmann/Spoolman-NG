@@ -146,6 +146,10 @@ help = "Tool-selection accuracy for the curated AI tool layer. Needs a configure
 cmd = "python scripts/ai_eval_vision.py"
 help = "Scan-to-Spool extraction accuracy on label photos. Needs a configured AI endpoint."
 
+[tool.poe.tasks.match-rerank-eval]
+cmd = "python scripts/match_rerank_eval.py"
+help = "Whether the decision-model reranker improves Scan-to-Spool matching. Needs a configured decision endpoint."
+
 [tool.ruff]
 line-length = 120
 target-version = "py310"
