@@ -42,9 +42,11 @@
 			else toasts.error(plural('spool_bulk_applied_partial', ok.length, { failed: failed.length }));
 			// What failed stays selected, so it can be retried; everything else is done.
 			librarySelection.retain(failed.map((f) => f.id));
+			// On a partial failure the edit form stays open with what was typed, so retrying the
+			// spools still selected is one click rather than a retype.
+			if (failed.length === 0) editing = false;
 		} finally {
 			busy = false;
-			editing = false;
 			confirming = null;
 		}
 	}

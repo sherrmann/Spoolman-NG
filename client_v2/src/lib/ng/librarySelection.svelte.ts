@@ -12,6 +12,7 @@
  * and opening the inspector, and is dropped by Clear, by turning the mode off, by a bulk action
  * that succeeded, and by leaving the Library (see LibraryModeControls).
  */
+import { untrack } from 'svelte';
 import { SvelteMap } from 'svelte/reactivity';
 import type { SpoolVM } from '$lib/utils/library';
 
@@ -69,12 +70,21 @@ export class LibrarySelection {
 		this.selected.clear();
 	}
 
-	/** A row came on screen, or re-rendered with newer data. Returns its unregister function. */
+	/**
+	 * A row came on screen, or re-rendered with newer data. Returns its unregister function.
+	 *
+	 * Called from each row's effect, so nothing here may be tracked. Reading `selected` would
+	 * make every row re-register whenever any checkbox changes; worse, two rows showing the same
+	 * spool with different view models (a group that has reloaded beside one that has not yet)
+	 * would each overwrite the other's entry and wake the other's effect, without end.
+	 */
 	register(vm: SpoolVM): () => void {
 		const id = vm.spool.id;
 		const entry = this.#shown.get(id);
 		this.#shown.set(id, { vm, count: (entry?.count ?? 0) + 1 });
-		if (this.selected.has(id) && this.selected.get(id) !== vm) this.selected.set(id, vm);
+		untrack(() => {
+			if (this.selected.has(id) && this.selected.get(id) !== vm) this.selected.set(id, vm);
+		});
 		return () => {
 			const current = this.#shown.get(id);
 			if (!current) return;

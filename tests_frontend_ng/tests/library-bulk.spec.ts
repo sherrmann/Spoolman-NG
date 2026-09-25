@@ -45,9 +45,17 @@ test("with selection off the library is upstream's: no checkboxes, and a row sti
   const { location, ids } = await seedThree(request);
   await openAt(page, location);
 
-  await expect(page.locator("a.row", { hasText: `#${ids[0]}` })).toBeVisible();
+  await expect(
+    page.locator("a.row", {
+      has: page.locator(".id", { hasText: new RegExp(`^#${ids[0]}$`) }),
+    }),
+  ).toBeVisible();
   await expect(page.getByRole("checkbox")).toHaveCount(0);
-  await page.locator("a.row", { hasText: `#${ids[0]}` }).click();
+  await page
+    .locator("a.row", {
+      has: page.locator(".id", { hasText: new RegExp(`^#${ids[0]}$`) }),
+    })
+    .click();
   await expect(page).toHaveURL(new RegExp(`sel=spool(%3A|:)${ids[0]}`));
 });
 
@@ -57,8 +65,12 @@ test("bulk edit moves exactly the ticked spools", async ({ page, request }) => {
   await openAt(page, location);
 
   await page.getByRole("button", { name: "Select", exact: true }).click();
-  await page.getByRole("checkbox", { name: `Select spool #${ids[0]}` }).check();
-  await page.getByRole("checkbox", { name: `Select spool #${ids[1]}` }).check();
+  await page
+    .getByRole("checkbox", { name: `Select spool #${ids[0]}`, exact: true })
+    .check();
+  await page
+    .getByRole("checkbox", { name: `Select spool #${ids[1]}`, exact: true })
+    .check();
   await expect(bar(page)).toContainText("2 selected");
 
   await bar(page).getByRole("button", { name: "Edit" }).click();
@@ -87,7 +99,9 @@ test("bulk edit with nothing ticked says so and changes nothing", async ({
   await openAt(page, location);
 
   await page.getByRole("button", { name: "Select", exact: true }).click();
-  await page.getByRole("checkbox", { name: `Select spool #${ids[0]}` }).check();
+  await page
+    .getByRole("checkbox", { name: `Select spool #${ids[0]}`, exact: true })
+    .check();
   await bar(page).getByRole("button", { name: "Edit" }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Apply" }).click();
 
@@ -111,8 +125,12 @@ test("archive the selection, then unarchive it from the archived view", async ({
   await openAt(page, location);
 
   await page.getByRole("button", { name: "Select", exact: true }).click();
-  await page.getByRole("checkbox", { name: `Select spool #${ids[0]}` }).check();
-  await page.getByRole("checkbox", { name: `Select spool #${ids[1]}` }).check();
+  await page
+    .getByRole("checkbox", { name: `Select spool #${ids[0]}`, exact: true })
+    .check();
+  await page
+    .getByRole("checkbox", { name: `Select spool #${ids[1]}`, exact: true })
+    .check();
   // Nothing archived is selected, so there is nothing to unarchive.
   await expect(
     bar(page).getByRole("button", { name: "Unarchive", exact: true }),
@@ -129,8 +147,12 @@ test("archive the selection, then unarchive it from the archived view", async ({
 
   await openAt(page, location, "&arch=1");
   await page.getByRole("button", { name: "Select", exact: true }).click();
-  await page.getByRole("checkbox", { name: `Select spool #${ids[0]}` }).check();
-  await page.getByRole("checkbox", { name: `Select spool #${ids[2]}` }).check();
+  await page
+    .getByRole("checkbox", { name: `Select spool #${ids[0]}`, exact: true })
+    .check();
+  await page
+    .getByRole("checkbox", { name: `Select spool #${ids[2]}`, exact: true })
+    .check();
   // A mixed selection is ordinary with archived spools listed: both actions are offered.
   await expect(
     bar(page).getByRole("button", { name: "Archive", exact: true }),
@@ -163,7 +185,9 @@ test("select all shown, clear, and turning the mode off", async ({
   await bar(page).getByRole("button", { name: "Clear selection" }).click();
   await expect(bar(page)).toHaveCount(0);
 
-  await page.getByRole("checkbox", { name: `Select spool #${ids[0]}` }).check();
+  await page
+    .getByRole("checkbox", { name: `Select spool #${ids[0]}`, exact: true })
+    .check();
   await page.getByRole("button", { name: "Select", exact: true }).click();
   await expect(page.getByRole("checkbox")).toHaveCount(0);
   await expect(bar(page)).toHaveCount(0);
@@ -184,6 +208,6 @@ test("grouped by filament, the checkboxes sit under the group header", async ({
   await page.getByRole("button", { name: "Select", exact: true }).click();
   for (const id of ids)
     await expect(
-      page.getByRole("checkbox", { name: `Select spool #${id}` }),
+      page.getByRole("checkbox", { name: `Select spool #${id}`, exact: true }),
     ).toBeVisible();
 });
