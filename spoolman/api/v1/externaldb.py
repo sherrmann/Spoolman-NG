@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Annotated
 
 import httpx
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Response
 from fastapi.responses import FileResponse
 from pydantic import ValidationError
 
@@ -44,7 +44,10 @@ def _load_filament_source(path: Path, source: str) -> list[dict]:
             return []
         data = json.loads(path.read_bytes())
         for entry in data:
-            entry.setdefault("source", source)
+            # Not setdefault: the synced SpoolmanDB file is written through ExternalFilament, so
+            # every entry already carries "source": null, which setdefault would leave alone.
+            if entry.get("source") is None:
+                entry["source"] = source
     except Exception:
         logger.exception("Failed to load %s filaments", source)
         return []
@@ -131,6 +134,90 @@ async def filaments(
         result = [f for f in result if f.id == external_id]
 
     return result
+
+
+# The merged catalog, parsed once and kept until a source file changes. Paired with each
+# entry's lowercased "manufacturer name material" search text, built once rather than per
+# search: a search pages through the whole catalog, once per page.
+#
+# The key holds each source file's mtime and size rather than mtime alone, since a filesystem
+# with one-second mtime granularity reports the same stamp for two writes in the same second,
+# and whether TigerTag is enabled, since that decides which sources are merged.
+_CatalogKey = tuple[tuple[float, int] | None, tuple[float, int] | None, bool]
+_catalog_cache: tuple[_CatalogKey, list[tuple[str, ExternalFilament]]] | None = None
+
+
+def _file_stamp(path: Path) -> tuple[float, int] | None:
+    try:
+        stat = path.stat()
+    except OSError:
+        return None
+    return (stat.st_mtime, stat.st_size)
+
+
+def _load_search_catalog() -> list[tuple[str, ExternalFilament]]:
+    """Return the merged SpoolmanDB and TigerTag catalog with each entry's search text."""
+    global _catalog_cache  # noqa: PLW0603
+    tigertag = is_tigertag_enabled()
+    key: _CatalogKey = (
+        _file_stamp(get_filaments_file()),
+        _file_stamp(get_tigertag_filaments_file()) if tigertag else None,
+        tigertag,
+    )
+    if _catalog_cache is None or _catalog_cache[0] != key:
+        merged = _load_filament_source(get_filaments_file(), "spoolmandb")
+        if tigertag:
+            merged.extend(_load_filament_source(get_tigertag_filaments_file(), "tigertag"))
+        models = [model for model in (_validate_external_filament(e) for e in merged) if model is not None]
+        _catalog_cache = (key, [(f"{f.manufacturer} {f.name} {f.material}".lower(), f) for f in models])
+    return _catalog_cache[1]
+
+
+def search_filaments(query: str, limit: int, offset: int = 0) -> tuple[list[ExternalFilament], int]:
+    """Search the merged external catalog: every whitespace-separated word must appear.
+
+    Words match case-insensitively as substrings of "manufacturer name material". Matches
+    keep catalog order (SpoolmanDB first, then TigerTag), so `offset` and `limit` page
+    through them consistently. Returns the requested page and the total number of matches.
+    """
+    words = query.lower().split()
+    if not words:
+        return [], 0
+    matches = [f for haystack, f in _load_search_catalog() if all(word in haystack for word in words)]
+    return matches[offset : offset + limit], len(matches)
+
+
+@router.get(
+    "/filament/search",
+    name="Search external filaments",
+    response_model_exclude_none=True,
+)
+async def search_external_filaments(
+    response: Response,
+    query: Annotated[
+        str,
+        Query(
+            description="Search query, matched word by word against manufacturer, name and material.",
+            examples=["polymaker pla"],
+        ),
+    ],
+    limit: Annotated[
+        int,
+        Query(ge=1, le=100, description="Maximum number of results to return."),
+    ] = 20,
+    offset: Annotated[
+        int,
+        Query(ge=0, description="Number of matches to skip, for paging through the results."),
+    ] = 0,
+) -> list[ExternalFilament]:
+    """Search the external filament catalog (SpoolmanDB, plus TigerTag when enabled).
+
+    Filters server-side so a client does not have to download the whole catalog to search
+    it. The total number of matches is returned in the x-total-count header.
+    """
+    items, total = search_filaments(query, limit, offset)
+    response.headers["x-total-count"] = str(total)
+    return items
 
 
 @router.get(
