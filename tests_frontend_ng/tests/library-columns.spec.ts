@@ -226,7 +226,15 @@ test("resizing a column with the keyboard widens both header and row cell, and s
   // With Lot Nr shown the columns are wider than the pane, so its handle starts partly
   // off-screen. Focusing it (what Tab does) makes the browser scroll the header to it; the list
   // has to follow, or the header and the cells below it stop lining up.
+  const list = page.locator(".ng-col-header ~ .groups");
+  expect(
+    await list.evaluate((el) => el.scrollWidth > el.clientWidth),
+    "the columns must overflow the pane for this check to mean anything",
+  ).toBe(true);
   await lotHandle.focus();
+  await expect
+    .poll(() => list.evaluate((el) => el.scrollLeft))
+    .toBeGreaterThan(0);
   await expect
     .poll(async () => {
       const h = (await lotHcell.boundingBox())!.x;
@@ -255,6 +263,92 @@ test("resizing a column with the keyboard widens both header and row cell, and s
     hcellBoxAfter.width - 1,
   );
   expect(hcellBoxReloaded.width).toBeLessThanOrEqual(hcellBoxAfter.width + 1);
+});
+
+test("nudging the name column narrower lowers its minimum, not raises it to the drawn width", async ({
+  page,
+  request,
+}) => {
+  await clearColumnsOnLoad(page);
+  const { location } = await seedOneSpool(request, "ColName");
+  await openAt(page, location);
+  const dialog = await openColumnsDialog(page);
+  await dialog
+    .getByRole("checkbox", { name: "Location", exact: true })
+    .uncheck();
+  await closeColumnsDialog(page);
+
+  // The name takes the space left over, so it is drawn far wider than its 100 px minimum.
+  const handle = page.getByRole("separator", { name: /^Resize Name/ });
+  expect(
+    (await page.locator(".hcell[data-col='name']").boundingBox())!.width,
+  ).toBeGreaterThan(150);
+  await expect(handle).toHaveAttribute("aria-valuenow", "100");
+
+  await handle.focus();
+  await page.keyboard.press("ArrowLeft");
+  await expect(handle).toHaveAttribute("aria-valuenow", "90");
+  await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("ArrowRight");
+  await expect(handle).toHaveAttribute("aria-valuenow", "110");
+});
+
+test("a change made before the extra fields have loaded does not lose a shown extra-field column", async ({
+  page,
+  request,
+}) => {
+  const key = unique("earlyfield")
+    .toLowerCase()
+    .replace(/[^a-z0-9_]/g, "_");
+  const fieldName = unique("Early");
+  const fieldRes = await request.post(`/api/v1/field/spool/${key}`, {
+    data: { name: fieldName, field_type: "text" },
+  });
+  expect(fieldRes.ok()).toBeTruthy();
+
+  try {
+    const { location } = await seedOneSpool(request, "ColEarly");
+    await openAt(page, location);
+    await page.evaluate(() =>
+      localStorage.removeItem("spoolman-ng-library-columns"),
+    );
+    const dialog = await openColumnsDialog(page);
+    await dialog
+      .getByRole("checkbox", { name: fieldName, exact: true })
+      .check();
+    await closeColumnsDialog(page);
+    const extraHeader = page.locator(`.hcell[data-col='extra.${key}']`);
+    await expect(extraHeader).toBeVisible();
+
+    // Hold the field definitions back on the next load, and change a column meanwhile.
+    let release!: () => void;
+    const released = new Promise<void>((r) => (release = r));
+    await page.route("**/api/v1/field/spool", async (route) => {
+      await released;
+      await route.continue();
+    });
+    await page.reload({ waitUntil: "domcontentloaded" });
+    const idHandle = page.getByRole("separator", { name: "Resize ID" });
+    await idHandle.focus();
+    await page.keyboard.press("ArrowRight");
+    const panel = await openColumnsDialog(page);
+    await expect(
+      panel.getByRole("checkbox", { name: "Lot Nr", exact: true }),
+    ).toBeDisabled();
+    await closeColumnsDialog(page);
+
+    release();
+    await expect(extraHeader).toBeVisible();
+    const stored = JSON.parse((await storedConfig(page))!) as {
+      order: string[];
+      hidden: string[];
+    };
+    expect(stored.order).toContain(`extra.${key}`);
+    expect(stored.hidden).not.toContain(`extra.${key}`);
+  } finally {
+    await page.unrouteAll({ behavior: "ignoreErrors" });
+    await request.delete(`/api/v1/field/spool/${key}`);
+  }
 });
 
 test("a spool extra field's column shows its stored value", async ({

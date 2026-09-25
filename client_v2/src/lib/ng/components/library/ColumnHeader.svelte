@@ -10,6 +10,7 @@
 	import { librarySelection } from '$lib/ng/librarySelection.svelte';
 	import { libraryColumns } from '$lib/ng/libraryColumns.svelte';
 	import { columnsView } from '$lib/ng/libraryColumnsView.svelte';
+	import { FLEX_COLUMN, MIN_WIDTH } from '$lib/ng/libraryColumns';
 	import { ng } from '$lib/ng/i18n';
 
 	const STEP = 10;
@@ -39,15 +40,22 @@
 		};
 	});
 
-	function widthOf(el: HTMLElement): number {
-		return el.getBoundingClientRect().width;
+	/**
+	 * The width a resize starts from. For the name column that is its stored minimum, not what it
+	 * is drawn at: it takes whatever space is left, so starting from the drawn width would set
+	 * the minimum to nearly all of it on the first nudge, and it could never be brought back down.
+	 */
+	function startWidth(col: string, cell: HTMLElement): number {
+		if (col === FLEX_COLUMN)
+			return libraryColumns.config?.widths[col] ?? columnsView.byId.get(col)?.width ?? MIN_WIDTH;
+		return cell.getBoundingClientRect().width;
 	}
 
 	function startDrag(e: PointerEvent, col: string) {
 		const handle = e.currentTarget as HTMLElement;
 		const cell = handle.parentElement as HTMLElement;
 		const startX = e.clientX;
-		const startW = widthOf(cell);
+		const startW = startWidth(col, cell);
 		handle.setPointerCapture(e.pointerId);
 		const move = (ev: PointerEvent) =>
 			libraryColumns.setWidth(col, startW + ev.clientX - startX, columnsView.ids);
@@ -66,7 +74,11 @@
 	function keyResize(e: KeyboardEvent, col: string) {
 		if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
 		const cell = (e.currentTarget as HTMLElement).parentElement as HTMLElement;
-		libraryColumns.setWidth(col, widthOf(cell) + (e.key === 'ArrowRight' ? STEP : -STEP), columnsView.ids);
+		libraryColumns.setWidth(
+			col,
+			startWidth(col, cell) + (e.key === 'ArrowRight' ? STEP : -STEP),
+			columnsView.ids
+		);
 		libraryColumns.persist();
 		e.preventDefault();
 	}

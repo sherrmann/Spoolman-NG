@@ -81,20 +81,20 @@
 							<input
 								type="checkbox"
 								checked={shown.has(id)}
-								disabled={id === FLEX_COLUMN}
+								disabled={id === FLEX_COLUMN || !libraryColumns.ready}
 								onchange={() => libraryColumns.toggle(id, columnsView.ids)}
 							/>
 							{def?.label()}
 						</label>
 						<button
 							class="move"
-							disabled={i === 0}
+							disabled={i === 0 || !libraryColumns.ready}
 							aria-label={ng.spool_columns_move_up({ name: def?.label() ?? id })}
 							onclick={() => libraryColumns.move(id, -1, columnsView.ids)}><ArrowUp size={13} /></button
 						>
 						<button
 							class="move"
-							disabled={i === order.length - 1}
+							disabled={i === order.length - 1 || !libraryColumns.ready}
 							aria-label={ng.spool_columns_move_down({ name: def?.label() ?? id })}
 							onclick={() => libraryColumns.move(id, 1, columnsView.ids)}><ArrowDown size={13} /></button
 						>
