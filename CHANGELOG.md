@@ -4,6 +4,7 @@
 
 ## Unreleased
 
+- **Added: import, export and the inventory report in the Svelte client** (#414) — Settings → Import / Export downloads spools, filaments or manufacturers as CSV or JSON, imports a file in the same shape (administrators only; a dry run is on by default and every row error is listed), and prints an inventory report.
 - **Added: 3D-printable filament swatches in the Svelte client** (#415) — the filament inspector's swatch button previews and downloads a printable sample card (3MF) in any of the five styles, with the QR code as a scan code or a link; the default style is set in Settings → Swatches.
 - **Added: filament reference photos in the Svelte client** (#415) — the filament inspector shows a filament's photo and can upload, replace or remove it. Photos are shrunk to at most 1024 px and re-encoded in the browser before upload, which also drops the photo's location metadata.
 - **Added: SpoolmanDB catalogue fields in the Svelte client** (#415) — a filament's spool type, finish, pattern, translucency and glow can be seen and set in the filament inspector, and shown as columns in the library's list. **Fixed:** importing a filament from SpoolmanDB in the Svelte client dropped these five fields; it now copies them, as the classic client does.

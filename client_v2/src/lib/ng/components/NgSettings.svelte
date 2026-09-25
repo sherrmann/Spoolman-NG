@@ -18,6 +18,7 @@
 	import PrinterSettings from './PrinterSettings.svelte';
 	import UserSettings from './UserSettings.svelte';
 	import SwatchSettings from './swatch/SwatchSettings.svelte';
+	import ImportExportSettings from './importExport/ImportExportSettings.svelte';
 
 	const braces = {
 		id: '{id}',
@@ -46,4 +47,5 @@
 />
 <UserSettings />
 <SwatchSettings />
+<ImportExportSettings />
 <AiSettings />
