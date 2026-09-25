@@ -65,3 +65,14 @@ test("the current page's tab stays in view when the tab row is too narrow", asyn
   // The row scrolled, not the page.
   expect(await page.evaluate(() => window.scrollX)).toBe(0);
 });
+
+test("narrowing the window keeps the current page's tab in view", async ({ page }) => {
+  // Snapping a window to half the screen or opening devtools narrows the row without a new page
+  // or any change to the tabs themselves.
+  await page.setViewportSize({ width: 1700, height: 800 });
+  await page.goto("/settings", { waitUntil: "networkidle" });
+  for (const width of [1200, 1000, 900]) {
+    await page.setViewportSize({ width, height: 800 });
+    await expect(page.locator(".nav-desktop a.tab.active"), `at ${width}px`).toBeInViewport({ ratio: 1 });
+  }
+});

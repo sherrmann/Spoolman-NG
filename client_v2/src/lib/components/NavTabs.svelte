@@ -18,7 +18,7 @@
 	// Spoolman NG fork addition: when the row is narrower than its tabs (TopBar lets it shrink
 	// and scroll), keep the current page's tab in view. Only the row itself is scrolled --
 	// scrollIntoView would also scroll the document -- and only on a change of page, not of
-	// query string, or every filter change would yank the row back. Re-run when the row's
+	// query string, or every filter change would yank the row back. Re-run when the row or its
 	// content changes width: the low-stock badge and custom links arrive after first paint.
 	let navEl: HTMLElement;
 	let pathname = $derived($page.url.pathname);
@@ -41,6 +41,8 @@
 	$effect(() => {
 		const observer = new ResizeObserver(() => revealActive());
 		observer.observe(navEl);
+		// And when the row itself changes width (a narrower window), which the tabs do not.
+		if (navEl.parentElement) observer.observe(navEl.parentElement);
 		return () => observer.disconnect();
 	});
 </script>
