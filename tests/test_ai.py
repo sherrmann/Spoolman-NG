@@ -67,6 +67,11 @@ def test_all_feature_toggles_are_registered_settings() -> None:
         assert key in SETTINGS, f"feature toggle {key} must be a registered setting"
 
 
+def test_duplicate_check_feature_is_registered() -> None:
+    assert "ai_feature_duplicate_check" in ai.FEATURE_SETTINGS
+    assert ai.FEATURE_SETTINGS["ai_feature_duplicate_check"] == "duplicate_check"
+
+
 def test_provider_settings_are_registered() -> None:
     for key in (
         ai.SETTING_BASE_URL,

@@ -61,7 +61,7 @@ const baseStatus: AIStatus = {
   decision_model: null,
   decision_api_key_set: false,
   env_locked: [],
-  features: { chat: false, scan_to_spool: false, nl_search: false, mcp: false, voice: false },
+  features: { chat: false, scan_to_spool: false, nl_search: false, mcp: false, voice: false, duplicate_check: false },
   capabilities: null,
 };
 
@@ -175,6 +175,25 @@ describe("AISettings (#359)", () => {
     const [overrides] = probeMutate.mock.calls[0];
     expect(overrides).toMatchObject({ base_url: "http://o:11434/v1", model: "m" });
     expect(overrides).not.toHaveProperty("api_key");
+  });
+
+  it("shows the duplicate manufacturer check's hint text and blocks it until a decision model is configured", () => {
+    render(<AISettings />);
+
+    expect(screen.getByText("settings.ai.features.duplicate_check_hint")).toBeInTheDocument();
+    expect(screen.getByTestId("toggle-duplicate_check")).toBeDisabled();
+    expect(screen.getByText("settings.ai.features.requires_decision")).toBeInTheDocument();
+  });
+
+  it("lets the duplicate manufacturer check be enabled once a decision model is configured", async () => {
+    statusMock.mockReturnValue({ ...baseStatus, decision_configured: true });
+    const user = userEvent.setup();
+    render(<AISettings />);
+
+    const toggle = screen.getByTestId("toggle-duplicate_check") as HTMLInputElement;
+    expect(toggle).toBeEnabled();
+    await user.click(toggle);
+    expect(setSettingMutate).toHaveBeenCalledWith("ai_feature_duplicate_check", true);
   });
 
   it("lets the MCP server be enabled even while no provider is configured (#360)", () => {

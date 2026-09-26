@@ -132,3 +132,6 @@ register_setting("ai_feature_scan_to_spool", SettingType.BOOLEAN, json.dumps(obj
 register_setting("ai_feature_nl_search", SettingType.BOOLEAN, json.dumps(obj=False))
 register_setting("ai_feature_mcp", SettingType.BOOLEAN, json.dumps(obj=False))
 register_setting("ai_feature_voice", SettingType.BOOLEAN, json.dumps(obj=False))
+# Ask the decision model whether a new manufacturer duplicates an existing one (see
+# spoolman/duplicates.py). The exact-name check needs no toggle and is always on.
+register_setting("ai_feature_duplicate_check", SettingType.BOOLEAN, json.dumps(obj=False))

@@ -30,6 +30,7 @@ import { PreparedImage } from "../../utils/imageTransform";
 import { formatNumberOnUserInput, numberParser, numberParserAllowEmpty } from "../../utils/parsing";
 import { ExternalFilament, fetchExternalProfile } from "../../utils/queryExternalDB";
 import { EntityType, useGetFields } from "../../utils/queryFields";
+import { useSimilarVendor } from "../../utils/querySimilar";
 import { getCurrencySymbol, useCurrency } from "../../utils/settings";
 import { createVendor, getOrCreateVendorFromExternal } from "../vendors/functions";
 import { IVendor } from "../vendors/model";
@@ -134,6 +135,10 @@ export const FilamentCreate = (props: IResourceComponentsProps & CreateOrClonePr
     pagination: { mode: "off" },
   });
 
+  // Server-side duplicate hint for the inline "new vendor" name above (#125 + duplicate-check AI
+  // feature): warns before creating a vendor that already exists under another spelling.
+  const similarVendor = useSimilarVendor(newVendorName);
+
   const importFilament = async (filament: ExternalFilament) => {
     const vendor = await getOrCreateVendorFromExternal(filament.manufacturer);
     await invalidate({
@@ -168,6 +173,13 @@ export const FilamentCreate = (props: IResourceComponentsProps & CreateOrClonePr
       translucent: filament.translucent || undefined,
       glow: filament.glow || undefined,
     });
+  };
+
+  // Duplicate-check hint: select the existing vendor the server matched instead of creating a
+  // new one for what is probably the same manufacturer written differently.
+  const useSuggestedVendor = (vendorId: number) => {
+    form.setFieldValue("vendor_id", vendorId);
+    setNewVendorName("");
   };
 
   // #125: create a vendor inline from the picker without leaving the filament form. After the POST
@@ -321,6 +333,24 @@ export const FilamentCreate = (props: IResourceComponentsProps & CreateOrClonePr
                     {t("buttons.create")}
                   </Button>
                 </Space.Compact>
+                {(() => {
+                  const match = similarVendor.exact ?? similarVendor.suggestion;
+                  if (!match) return null;
+                  return (
+                    <div style={{ padding: "4px 8px 8px" }}>
+                      <Typography.Text type="warning">
+                        {similarVendor.exact
+                          ? t("settings.ai.duplicate.exact", { name: match.name })
+                          : t("settings.ai.duplicate.suggestion", { name: match.name })}
+                      </Typography.Text>
+                      <div>
+                        <Button size="small" onClick={() => useSuggestedVendor(match.id)}>
+                          {t("settings.ai.duplicate.use", { name: match.name })}
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })()}
               </>
             )}
           />

@@ -44,6 +44,7 @@ async function resetAi(request: APIRequestContext) {
     "ai_feature_voice",
     "ai_feature_nl_search",
     "ai_voice_autosend",
+    "ai_feature_duplicate_check",
   ]) {
     await setSetting(request, k, false);
   }

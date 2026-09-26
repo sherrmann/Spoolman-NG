@@ -1039,6 +1039,9 @@
         "nl_search": "Natural-language search",
         "mcp": "MCP server",
         "voice": "Voice input",
+        "duplicate_check": "Duplicate manufacturer check (decision model)",
+        "duplicate_check_hint": "While you type a new manufacturer's name, asks the decision model whether it is an existing manufacturer written differently. Sends the name and your manufacturers' names to the decision endpoint. Exact matches are always checked, without this.",
+        "requires_decision": "Configure and save a decision model endpoint first.",
         "requires_config": "Configure and save an endpoint and chat model first.",
         "requires_vision": "The connection test reports no vision support for the configured model.",
         "requires_stt": "Configure and save a speech-to-text endpoint and model first.",
@@ -1046,6 +1049,11 @@
         "voice_unavailable": "Not available yet - this arrives with the voice input feature.",
         "absent_here": "Available in the classic interface. Enabling it here switches it on for that client.",
         "blocked": "Unavailable"
+      },
+      "duplicate": {
+        "exact": "A manufacturer named {{name}} already exists.",
+        "suggestion": "This looks like {{name}}, which already exists.",
+        "use": "Use {{name}}"
       },
       "mcp": {
         "title": "MCP server",

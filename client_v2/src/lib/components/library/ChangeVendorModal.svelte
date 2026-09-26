@@ -20,6 +20,7 @@
 	import type { Filament, Vendor } from '$lib/types';
 	import { spoolSource } from '$lib/api/spoolSource';
 	import { toasts } from '$lib/stores/toasts.svelte';
+	import DuplicateHint from '$lib/ng/components/DuplicateHint.svelte';
 	import * as m from '$lib/paraglide/messages';
 
 	interface Props {
@@ -266,6 +267,19 @@
 									<span class="rs">{m['changeVendor.createHint']()}</span>
 								</div>
 							</button>
+							<DuplicateHint
+								name={trimmed}
+								onuse={(v) => {
+									query = v.name;
+									// The list this dialog already holds is the source of truth for a
+									// Vendor object; falling back to 'new' with the exact existing name
+									// still links it rather than creating a duplicate, since apply()
+									// resolves a 'new' name through getOrCreateVendor, which matches
+									// case-insensitively.
+									const existing = vendors.find((x) => x.name.toLowerCase() === v.name.toLowerCase());
+									chosen = existing ? { kind: 'vendor', vendor: existing } : { kind: 'new', name: v.name };
+								}}
+							/>
 						{/if}
 						{#if current}
 							<button

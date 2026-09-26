@@ -71,6 +71,7 @@
 	let ready = $derived({
 		configured: status?.configured ?? false,
 		sttConfigured: status?.sttConfigured ?? false,
+		decisionConfigured: status?.decisionConfigured ?? false,
 		vision: (capabilities?.vision ?? 'unknown') as TriState
 	});
 	let urlsValid = $derived(
@@ -240,7 +241,8 @@
 		ai_feature_voice: ng.settings_ai_features_voice,
 		ai_feature_nl_search: ng.settings_ai_features_nl_search,
 		ai_feature_scan_to_spool: ng.settings_ai_features_scan_to_spool,
-		ai_feature_mcp: ng.settings_ai_features_mcp
+		ai_feature_mcp: ng.settings_ai_features_mcp,
+		ai_feature_duplicate_check: ng.settings_ai_features_duplicate_check
 	};
 
 	function reasonText(key: FeatureKey): string | undefined {
@@ -249,6 +251,9 @@
 		if (reason === 'requires_config') return ng.settings_ai_features_requires_config();
 		if (reason === 'requires_stt') return ng.settings_ai_features_requires_stt();
 		if (reason === 'requires_vision') return ng.settings_ai_features_requires_vision();
+		if (reason === 'requires_decision') return ng.settings_ai_features_requires_decision();
+		// It sends names to the decision endpoint, so say what it does before it is switched on.
+		if (key === 'ai_feature_duplicate_check') return ng.settings_ai_features_duplicate_check_hint();
 		// Not a blocker, just the truth about this client: the setting is server-wide and the
 		// React client does implement these.
 		return def.absentHere ? ng.settings_ai_features_absent_here() : undefined;

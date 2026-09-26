@@ -1,0 +1,825 @@
+[
+  {
+    "typed": "eSUN 3D",
+    "existing": [
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Hatchbox",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Fillamentum"
+    ],
+    "expected": "eSUN"
+  },
+  {
+    "typed": "Bambu",
+    "existing": [
+      "Bambu Lab",
+      "eSUN",
+      "Sunlu",
+      "Polymaker",
+      "Overture",
+      "Prusament",
+      "Hatchbox",
+      "Elegoo",
+      "3DJAKE"
+    ],
+    "expected": "Bambu Lab"
+  },
+  {
+    "typed": "Poly Maker",
+    "existing": [
+      "Polymaker",
+      "eSUN",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Fillamentum",
+      "Elegoo"
+    ],
+    "expected": "Polymaker"
+  },
+  {
+    "typed": "Sunlu 3D",
+    "existing": [
+      "SUNLU",
+      "eSUN",
+      "Polymaker",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox",
+      "3DJAKE"
+    ],
+    "expected": "SUNLU"
+  },
+  {
+    "typed": "Elegoo",
+    "existing": [
+      "ELEGOO",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox"
+    ],
+    "expected": "ELEGOO"
+  },
+  {
+    "typed": "3DJake",
+    "existing": [
+      "3DJAKE",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Fillamentum"
+    ],
+    "expected": "3DJAKE"
+  },
+  {
+    "typed": "Overture 3D",
+    "existing": [
+      "Overture",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox",
+      "Elegoo"
+    ],
+    "expected": "Overture"
+  },
+  {
+    "typed": "Das Filament",
+    "existing": [
+      "DAS FILAMENT",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Fillamentum"
+    ],
+    "expected": "DAS FILAMENT"
+  },
+  {
+    "typed": "Extrudr",
+    "existing": [
+      "extrudr",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Fillamentum"
+    ],
+    "expected": "extrudr"
+  },
+  {
+    "typed": "Fillamentum",
+    "existing": [
+      "Fillamentum Manufacturing",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Elegoo"
+    ],
+    "expected": "Fillamentum Manufacturing"
+  },
+  {
+    "typed": "Geeetech",
+    "existing": [
+      "Geetech",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox"
+    ],
+    "expected": "Geetech",
+    "note": "Geeetech is the real spelling; the existing record is the misspelling and should still be caught."
+  },
+  {
+    "typed": "Sain Smart",
+    "existing": [
+      "SainSmart",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Elegoo"
+    ],
+    "expected": "SainSmart"
+  },
+  {
+    "typed": "IEMAI 3D",
+    "existing": [
+      "IEMAI",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox"
+    ],
+    "expected": "IEMAI"
+  },
+  {
+    "typed": "Devil Design",
+    "existing": [
+      "Devil Design",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Elegoo"
+    ],
+    "expected": "Devil Design"
+  },
+  {
+    "typed": "Kingroon 3D",
+    "existing": [
+      "Kingroon",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox"
+    ],
+    "expected": "Kingroon"
+  },
+  {
+    "typed": "Creality 3D",
+    "existing": [
+      "Creality",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Elegoo"
+    ],
+    "expected": "Creality"
+  },
+  {
+    "typed": "Anycubic 3D",
+    "existing": [
+      "Anycubic",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox"
+    ],
+    "expected": "Anycubic"
+  },
+  {
+    "typed": "Voxelab 3D",
+    "existing": [
+      "Voxelab",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Elegoo"
+    ],
+    "expected": "Voxelab"
+  },
+  {
+    "typed": "Fiberlogy Poland",
+    "existing": [
+      "Fiberlogy",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox"
+    ],
+    "expected": "Fiberlogy"
+  },
+  {
+    "typed": "Formfutura Filaments",
+    "existing": [
+      "Formfutura",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Elegoo"
+    ],
+    "expected": "Formfutura"
+  },
+  {
+    "typed": "Verbatim 3D",
+    "existing": [
+      "Verbatim",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox"
+    ],
+    "expected": "Verbatim"
+  },
+  {
+    "typed": "Polymaker Technology",
+    "existing": [
+      "Polymaker",
+      "eSUN",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox",
+      "Elegoo"
+    ],
+    "expected": "Polymaker"
+  },
+  {
+    "typed": "PolyLite",
+    "existing": [
+      "Polymaker",
+      "eSUN",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox",
+      "Elegoo"
+    ],
+    "expected": null,
+    "note": "PolyLite is a Polymaker product line, not the manufacturer's own name."
+  },
+  {
+    "typed": "PolyTerra",
+    "existing": [
+      "Polymaker",
+      "eSUN",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox",
+      "Elegoo"
+    ],
+    "expected": null,
+    "note": "PolyTerra is a Polymaker product line, not the manufacturer's own name."
+  },
+  {
+    "typed": "Sunlu",
+    "existing": [
+      "Sun Filament",
+      "eSUN",
+      "Polymaker",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox",
+      "Elegoo"
+    ],
+    "expected": null,
+    "note": "Sunlu and Sun Filament are unrelated brands despite the similar name."
+  },
+  {
+    "typed": "Eryone",
+    "existing": [
+      "Eono",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox"
+    ],
+    "expected": null,
+    "note": "Eryone and Eono are different brands despite the similar spelling."
+  },
+  {
+    "typed": "Prusa",
+    "existing": [
+      "Prima",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Bambu Lab",
+      "Hatchbox",
+      "Elegoo"
+    ],
+    "expected": null,
+    "note": "Prusa and Prima are unrelated companies despite the similar spelling."
+  },
+  {
+    "typed": "Bambu Lab",
+    "existing": [
+      "Bambu Lab",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Hatchbox",
+      "Elegoo"
+    ],
+    "expected": "Bambu Lab",
+    "note": "Exact match; the exact tier alone should already catch this."
+  },
+  {
+    "typed": "e s u n",
+    "existing": [
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox",
+      "Elegoo"
+    ],
+    "expected": "eSUN"
+  },
+  {
+    "typed": "SUNLU Filament",
+    "existing": [
+      "SUNLU",
+      "eSUN",
+      "Polymaker",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox",
+      "Elegoo"
+    ],
+    "expected": "SUNLU"
+  },
+  {
+    "typed": "Prima Filaments",
+    "existing": [
+      "Prima",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox"
+    ],
+    "expected": "Prima"
+  },
+  {
+    "typed": "3D-Fuel",
+    "existing": [
+      "3D Fuel",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox"
+    ],
+    "expected": "3D Fuel"
+  },
+  {
+    "typed": "Filamentworld",
+    "existing": [
+      "Filament Worldwide",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox"
+    ],
+    "expected": null,
+    "note": "Similar spelling, but no evidence these are the same company; left as a negative."
+  },
+  {
+    "typed": "Colorfabb",
+    "existing": [
+      "colorFabb",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox"
+    ],
+    "expected": "colorFabb"
+  },
+  {
+    "typed": "Eryone Filament",
+    "existing": [
+      "Eryone",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox"
+    ],
+    "expected": "Eryone"
+  },
+  {
+    "typed": "Recreus",
+    "existing": [
+      "Recreus",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox"
+    ],
+    "expected": "Recreus"
+  },
+  {
+    "typed": "Atomic Filament",
+    "existing": [
+      "Atomic Filament",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox"
+    ],
+    "expected": "Atomic Filament"
+  },
+  {
+    "typed": "3DXTECH",
+    "existing": [
+      "3DXTech",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox"
+    ],
+    "expected": "3DXTech"
+  },
+  {
+    "typed": "Duramic 3D",
+    "existing": [
+      "Duramic",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox"
+    ],
+    "expected": "Duramic"
+  },
+  {
+    "typed": "Inland",
+    "existing": [
+      "Inland",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox"
+    ],
+    "expected": "Inland"
+  },
+  {
+    "typed": "Esun Industrial",
+    "existing": [
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox",
+      "Elegoo"
+    ],
+    "expected": "eSUN"
+  },
+  {
+    "typed": "AMOLEN 3D",
+    "existing": [
+      "AMOLEN",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox"
+    ],
+    "expected": "AMOLEN"
+  },
+  {
+    "typed": "Proto-Pasta",
+    "existing": [
+      "Proto-pasta",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox"
+    ],
+    "expected": "Proto-pasta"
+  },
+  {
+    "typed": "MatterHackers",
+    "existing": [
+      "MatterHackers",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox"
+    ],
+    "expected": "MatterHackers"
+  },
+  {
+    "typed": "ColorFabb Netherlands",
+    "existing": [
+      "colorFabb",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox"
+    ],
+    "expected": "colorFabb"
+  },
+  {
+    "typed": "Polymaker Inc",
+    "existing": [
+      "Polymaker",
+      "eSUN",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox",
+      "Elegoo"
+    ],
+    "expected": "Polymaker"
+  },
+  {
+    "typed": "Hatchbox3D",
+    "existing": [
+      "Hatchbox",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Elegoo"
+    ],
+    "expected": "Hatchbox"
+  },
+  {
+    "typed": "Eryone Tech",
+    "existing": [
+      "Eryone",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox"
+    ],
+    "expected": "Eryone"
+  },
+  {
+    "typed": "Filamentive UK",
+    "existing": [
+      "Filamentive",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox"
+    ],
+    "expected": "Filamentive"
+  },
+  {
+    "typed": "Filatech",
+    "existing": [
+      "Filamentive",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox"
+    ],
+    "expected": null,
+    "note": "Similar-sounding name; no evidence these are the same manufacturer."
+  },
+  {
+    "typed": "ZIRO Filament",
+    "existing": [
+      "ZIRO",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox"
+    ],
+    "expected": "ZIRO"
+  },
+  {
+    "typed": "Polyalchemy",
+    "existing": [
+      "PolyAlchemy",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox"
+    ],
+    "expected": "PolyAlchemy"
+  },
+  {
+    "typed": "PolyAlchemy Elixir",
+    "existing": [
+      "PolyAlchemy",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox"
+    ],
+    "expected": null,
+    "note": "Elixir is a PolyAlchemy product line, not the manufacturer's own name."
+  },
+  {
+    "typed": "Prusament CZ",
+    "existing": [
+      "Prusament",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Bambu Lab",
+      "Hatchbox",
+      "Elegoo"
+    ],
+    "expected": "Prusament"
+  },
+  {
+    "typed": "Bambulab",
+    "existing": [
+      "Bambu Lab",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Hatchbox",
+      "Elegoo"
+    ],
+    "expected": "Bambu Lab"
+  },
+  {
+    "typed": "3DJAKE Austria",
+    "existing": [
+      "3DJAKE",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox"
+    ],
+    "expected": "3DJAKE"
+  },
+  {
+    "typed": "Das Filament GmbH",
+    "existing": [
+      "DAS FILAMENT",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Overture",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox"
+    ],
+    "expected": "DAS FILAMENT"
+  },
+  {
+    "typed": "Overture Filaments",
+    "existing": [
+      "Overture",
+      "eSUN",
+      "Polymaker",
+      "Sunlu",
+      "Prusament",
+      "Bambu Lab",
+      "Hatchbox",
+      "Elegoo"
+    ],
+    "expected": "Overture"
+  }
+]

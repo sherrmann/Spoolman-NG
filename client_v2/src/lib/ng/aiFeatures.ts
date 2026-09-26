@@ -17,7 +17,8 @@ export type FeatureKey =
 	| 'ai_feature_voice'
 	| 'ai_feature_nl_search'
 	| 'ai_feature_scan_to_spool'
-	| 'ai_feature_mcp';
+	| 'ai_feature_mcp'
+	| 'ai_feature_duplicate_check';
 
 /** Why a feature cannot be switched on, or null when it can. */
 export type BlockedReason =
@@ -26,7 +27,9 @@ export type BlockedReason =
 	/** No speech-to-text endpoint and model saved yet. */
 	| 'requires_stt'
 	/** The capability probe says the configured model cannot see images. */
-	| 'requires_vision';
+	| 'requires_vision'
+	/** No decision-model endpoint saved yet. */
+	| 'requires_decision';
 
 export interface FeatureDef {
 	key: FeatureKey;
@@ -34,6 +37,7 @@ export interface FeatureDef {
 	needsProvider: boolean;
 	needsStt?: boolean;
 	needsVision?: boolean;
+	needsDecision?: boolean;
 	/**
 	 * True when this client has no UI for the feature. It is NOT a reason to block the toggle:
 	 * the setting is server-wide and the React client does implement it, so switching it on here
@@ -49,12 +53,15 @@ export const FEATURES: FeatureDef[] = [
 	// Photo intake: a React-client page with no Svelte equivalent yet.
 	{ key: 'ai_feature_scan_to_spool', needsProvider: true, needsVision: true, absentHere: true },
 	// MCP is a server the operator points a client at; it needs no LLM of its own.
-	{ key: 'ai_feature_mcp', needsProvider: false, absentHere: true }
+	{ key: 'ai_feature_mcp', needsProvider: false, absentHere: true },
+	// The duplicate-manufacturer check asks the decision model, not the chat provider.
+	{ key: 'ai_feature_duplicate_check', needsProvider: false, needsDecision: true }
 ];
 
 export interface Readiness {
 	configured: boolean;
 	sttConfigured: boolean;
+	decisionConfigured: boolean;
 	/** From the probe. 'unknown' must not block: most endpoints cannot report capabilities. */
 	vision: 'yes' | 'no' | 'unknown';
 }
@@ -63,6 +70,7 @@ export interface Readiness {
 export function blockedReason(feature: FeatureDef, ready: Readiness): BlockedReason | null {
 	if (feature.needsProvider && !ready.configured) return 'requires_config';
 	if (feature.needsStt && !ready.sttConfigured) return 'requires_stt';
+	if (feature.needsDecision && !ready.decisionConfigured) return 'requires_decision';
 	// Only a definite "no" blocks. An endpoint that does not report capabilities returns
 	// 'unknown', and refusing on that would make the feature unreachable on every provider
 	// except Ollama.
