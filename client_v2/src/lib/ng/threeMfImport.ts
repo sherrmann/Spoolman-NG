@@ -53,8 +53,12 @@ export function parseSliceInfo(xml: string): ThreeMfFilament[] {
 	const doc = new DOMParser().parseFromString(xml, 'application/xml');
 	if (doc.getElementsByTagName('parsererror').length > 0) throw new ThreeMfError('invalid_file');
 	const byId = new Map<string, ThreeMfFilament>();
+	// Slicers always write an id; one without gets a key no real id can take, so it cannot be
+	// summed into another filament's row. (The classic client numbered it by position, which
+	// could collide.)
+	let anonymous = 0;
 	for (const el of Array.from(doc.getElementsByTagName('filament'))) {
-		const id = el.getAttribute('id') ?? String(byId.size + 1);
+		const id = el.getAttribute('id') ?? `noid-${++anonymous}`;
 		const usedWeight = Number.parseFloat(el.getAttribute('used_g') ?? '0') || 0;
 		const existing = byId.get(id);
 		if (existing) {

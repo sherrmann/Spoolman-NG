@@ -64,7 +64,12 @@
 		const mine = ++generation;
 		result = null;
 		rows = [];
-		if (!file) return;
+		if (!file) {
+			// Some browsers report a cancelled picker as a change with no file; an earlier load
+			// that is still running has just been superseded, so its indicator goes too.
+			loading = false;
+			return;
+		}
 		loading = true;
 		try {
 			const [parsed, spools, filaments, vendors] = await Promise.all([
@@ -106,17 +111,21 @@
 		result = null;
 		let ok = 0;
 		const failed: Row[] = [];
+		let firstError: unknown;
 		for (const row of rows) {
 			if (row.spoolId === undefined) continue;
 			try {
 				inventory.upsertSpool(await recordReading(row.spoolId, 'weight', row.usedWeight, row.attemptKey));
 				ok += 1;
-			} catch {
+			} catch (err) {
 				failed.push(row);
+				firstError ??= err;
 			}
 		}
 		applying = false;
 		if (failed.length > 0) {
+			// Why, so a refused or deleted spool can be told from a dropped connection.
+			toasts.error(apiErrorMessage(firstError));
 			rows = failed;
 			result = {
 				text: ng.settings_import_export_threemf_applied_partial({ ok, fail: failed.length }),
@@ -161,7 +170,14 @@
 								<select
 									class="sel"
 									value={row.spoolId === undefined ? '' : String(row.spoolId)}
-									aria-label={`${ng.settings_import_export_threemf_col_spool()}: ${row.type ?? '?'} ${row.colorHex ?? ''}`.trim()}
+									aria-label={[
+										`${ng.settings_import_export_threemf_col_spool()}:`,
+										row.type ?? '?',
+										row.colorHex,
+										weightAuto(row.usedWeight)
+									]
+										.filter(Boolean)
+										.join(' ')}
 									onchange={(e) => choose(row, e.currentTarget.value)}
 								>
 									<option value="">{ng.settings_import_export_threemf_no_match()}</option>
@@ -181,7 +197,7 @@
 			</div>
 		{/if}
 	</fieldset>
-	{#if loading}<p class="help">…</p>{/if}
+	{#if loading}<p class="help" role="status">{ng.loading()}</p>{/if}
 	{#if result}
 		<p class="result" class:ok={result.ok} role="status">{result.text}</p>
 	{/if}

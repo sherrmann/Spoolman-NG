@@ -91,8 +91,9 @@ administrators only.
   - Its matching: a spool whose filament has exactly the same colour, preferring one of the same
     material. With no colour match the row has no suggestion. There is no nearest-colour
     matching.
-  - Errors carry a code (`invalid_file`, `no_slice_info`) and the page shows them translated;
-    the classic client threw fixed English text.
+  - Errors carry a code (`invalid_file`, `no_slice_info`) and the page shows them through the
+    string catalogue; the classic client threw fixed English text. The two strings are new in the
+    classic catalogue, so they are English only for now.
 - The parser uses `DOMParser`, which the browser has but the client's node test environment
   does not. The tests install a DOMParser shim built on the swatch port's strict test parser
   (`lib/ng/swatch/xmlTestHelpers.ts`), rather than a new dependency. The parser uses

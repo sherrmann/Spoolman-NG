@@ -129,7 +129,7 @@ describe('parseSliceInfo', () => {
 		const xml = '<config><plate><filament type="PLA" color="#FF0000" used_g="5"/></plate></config>';
 		const result = parseSliceInfo(xml);
 		expect(result).toHaveLength(1);
-		expect(result[0].key).toBe('1');
+		expect(result[0].key).toBe('noid-1');
 		expect(result[0].usedWeight).toBe(5);
 	});
 });
@@ -221,10 +221,30 @@ describe('autoMatchSpoolId', () => {
 	});
 
 	it('compares material case-insensitively', () => {
-		const lower = [filament('f-lower', { material: 'PLA', colors: ['#FF0000'] })];
-		const lowerSpools = [spool(5, 'f-lower')];
+		// A red PETG spool first: a case-sensitive comparison would find no material match and fall
+		// back to it, so only a case-insensitive one picks spool 5.
+		const lower = [
+			filament('f-petg-red', { material: 'PETG', colors: ['#FF0000'] }),
+			filament('f-lower', { material: 'PLA', colors: ['#FF0000'] })
+		];
+		const lowerSpools = [spool(6, 'f-petg-red'), spool(5, 'f-lower')];
 		expect(
 			autoMatchSpoolId({ key: '1', type: 'pla', colorHex: '#FF0000', usedWeight: 5 }, lowerSpools, lower)
 		).toBe(5);
+	});
+
+	it('drops a filament whose used grams are not a number', () => {
+		const xml = '<config><plate><filament id="1" type="PLA" color="#000000" used_g="abc"/></plate></config>';
+		expect(parseSliceInfo(xml)).toEqual([]);
+	});
+
+	it('never merges a filament without an id into another row', () => {
+		const xml =
+			'<config><plate><filament id="2" type="PETG" color="#00FF00" used_g="4"/>' +
+			'<filament type="PLA" color="#FF0000" used_g="5"/></plate></config>';
+		expect(parseSliceInfo(xml).map((f) => [f.type, f.usedWeight])).toEqual([
+			['PETG', 4],
+			['PLA', 5]
+		]);
 	});
 });
