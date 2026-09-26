@@ -10,6 +10,7 @@
 	import ExtraFieldsSection from './ExtraFieldsSection.svelte';
 	import NewFilamentCards from './NewFilamentCards.svelte';
 	import PrinterPicker from '$lib/ng/components/PrinterPicker.svelte';
+	import type { SimilarFilamentMatch } from '$lib/ng/similarApi';
 	import type { Filament, Extra, MultiColorDirection } from '$lib/types';
 	import { inventory } from '$lib/stores/inventory.svelte';
 	import { settings } from '$lib/stores/settings.svelte';
@@ -304,6 +305,19 @@
 		price = p ? String(p) : '';
 		resetSpoolForm();
 		step = 2;
+	}
+
+	/**
+	 * FilamentDuplicateHint's "Use" button, on the new-filament form: switch onto the existing
+	 * filament it found exactly as picking it from the search results does. The local catalog
+	 * only holds what has already been listed or searched for, so a match found by id alone (the
+	 * common case -- the hint fires well before anyone has typed enough to appear in a search)
+	 * is fetched rather than assumed missing.
+	 */
+	async function useExistingFilament(match: SimilarFilamentMatch): Promise<void> {
+		const id = String(match.id);
+		const f = inventory.filamentById(id) ?? (await spoolSource.fetchFilament(id));
+		if (f) choose({ source: 'catalog', filament: f });
 	}
 
 	function startCreate() {
@@ -645,6 +659,7 @@
 							{cloneSource}
 							backLabel={m['add.useExisting']()}
 							onback={() => (step = 1)}
+							onuseexisting={useExistingFilament}
 						/>
 					{:else if chosen}
 						<!-- No card here: the chosen-filament row is already a self-contained

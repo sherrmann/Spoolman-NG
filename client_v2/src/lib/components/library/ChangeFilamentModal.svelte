@@ -14,6 +14,7 @@
 	import X from '@lucide/svelte/icons/x';
 	import Plus from '@lucide/svelte/icons/plus';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import type { SimilarFilamentMatch } from '$lib/ng/similarApi';
 	import type { Extra, Filament, Spool } from '$lib/types';
 	import { inventory } from '$lib/stores/inventory.svelte';
 	import { serverInfo } from '$lib/stores/serverInfo.svelte';
@@ -96,6 +97,22 @@
 	function stopCreate() {
 		creating = false;
 		clearValidation();
+	}
+
+	/**
+	 * FilamentDuplicateHint's "Use" button, on the new-filament form: switch onto the existing
+	 * filament it found, the same way picking it from the search results does (`chosen =
+	 * {source: 'catalog', filament}` with `creating` cleared). The local catalog only holds
+	 * what has already been listed or searched for, so a match found by id alone is fetched
+	 * rather than assumed missing.
+	 */
+	async function useExistingFilament(match: SimilarFilamentMatch): Promise<void> {
+		const id = String(match.id);
+		const f = inventory.filamentById(id) ?? (await spoolSource.fetchFilament(id));
+		if (f) {
+			creating = false;
+			chosen = { source: 'catalog', filament: f };
+		}
 	}
 	function clearValidation() {
 		touched = {};
@@ -418,6 +435,8 @@
 						showWeights
 						backLabel={m['changeFilament.useExisting']()}
 						onback={stopCreate}
+						excludeId={Number(current.id)}
+						onuseexisting={useExistingFilament}
 					/>
 				{:else}
 					<input
