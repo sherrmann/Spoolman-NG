@@ -1500,5 +1500,13 @@
     "update_error": "Nem sikerült frissíteni a rendelést. Próbáld újra.",
     "delete_error": "Nem sikerült törölni a rendelést. Próbáld újra.",
     "delete_confirm": "Törlöd ezt a rendelést? A hozzá tartozó sorok is törlődnek."
+  },
+  "mobile_nav": {
+    "more": "Több",
+    "more_pages": "További oldalak",
+    "about": "Névjegy",
+    "sponsor_upstream": "A Spoolman eredeti szerzőjének támogatása",
+    "documentation": "Dokumentáció",
+    "report_issue": "Hiba bejelentése"
   }
 }

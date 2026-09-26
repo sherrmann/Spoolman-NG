@@ -1469,5 +1469,13 @@
     "update_error": "注文を更新できませんでした。もう一度お試しください。",
     "delete_error": "注文を削除できませんでした。もう一度お試しください。",
     "delete_confirm": "この注文を削除しますか? 明細も削除されます。"
+  },
+  "mobile_nav": {
+    "more": "その他",
+    "more_pages": "その他のページ",
+    "about": "このアプリについて",
+    "sponsor_upstream": "Spoolman の原作者を支援する",
+    "documentation": "ドキュメント",
+    "report_issue": "問題を報告"
   }
 }

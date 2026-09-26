@@ -693,5 +693,7 @@
 	"mobile_nav_more": "More",
 	"mobile_nav_more_pages": "More pages",
 	"mobile_nav_about": "About",
-	"mobile_nav_sponsor_upstream": "Sponsor Spoolman's original author"
+	"mobile_nav_sponsor_upstream": "Sponsor Spoolman's original author",
+	"mobile_nav_documentation": "Documentation",
+	"mobile_nav_report_issue": "Report an issue"
 }

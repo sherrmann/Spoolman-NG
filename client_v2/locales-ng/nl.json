@@ -635,5 +635,11 @@
 	"settings_import_export_no_file": "Kies eerst een bestand.",
 	"settings_import_export_result": "{created} aangemaakt, {updated} bijgewerkt, {skipped} overgeslagen.",
 	"settings_import_export_import_errors": "Import mislukt",
-	"filament_fields_spool_count": "Spoelen"
+	"filament_fields_spool_count": "Spoelen",
+	"mobile_nav_more": "Meer",
+	"mobile_nav_more_pages": "Meer pagina's",
+	"mobile_nav_about": "Over",
+	"mobile_nav_sponsor_upstream": "De oorspronkelijke maker van Spoolman steunen",
+	"mobile_nav_documentation": "Documentatie",
+	"mobile_nav_report_issue": "Probleem melden"
 }

@@ -1506,5 +1506,13 @@
     "update_error": "Não foi possível atualizar o pedido. Tente novamente.",
     "delete_error": "Não foi possível excluir o pedido. Tente novamente.",
     "delete_confirm": "Excluir este pedido? Suas linhas também serão excluídas."
+  },
+  "mobile_nav": {
+    "more": "Mais",
+    "more_pages": "Mais páginas",
+    "about": "Sobre",
+    "sponsor_upstream": "Apoiar o autor original do Spoolman",
+    "documentation": "Documentação",
+    "report_issue": "Relatar um problema"
   }
 }

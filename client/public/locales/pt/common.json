@@ -1519,5 +1519,13 @@
     "delete_error": "Não foi possível excluir a encomenda. Tente novamente.",
     "delete_confirm": "Excluir esta encomenda? As suas linhas também serão excluídas.",
     "filaments_count_many": "{{count}} filamentos"
+  },
+  "mobile_nav": {
+    "more": "Mais",
+    "more_pages": "Mais páginas",
+    "about": "Acerca de",
+    "sponsor_upstream": "Apoiar o autor original do Spoolman",
+    "documentation": "Documentação",
+    "report_issue": "Comunicar um problema"
   }
 }

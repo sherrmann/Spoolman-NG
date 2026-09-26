@@ -1,4 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { post, seedLocation, seedOrder, unique } from "../helpers";
 import { expectCleanLayout, expectInViewport, PHONE_WIDTHS } from "./layout";
 
@@ -270,6 +272,38 @@ test.describe("navigation", () => {
       "href",
       "https://github.com/sherrmann/Spoolman-NG/issues",
     );
+  });
+
+  test("no bottom-bar label is cut off in any language", async ({ page }) => {
+    // Five labels share a phone's width, and translations run long: German "Niedriger Bestand",
+    // French "Bibliothèque". Labels may take two lines; none may be clipped. Languages are read
+    // from the Svelte client's own message project, so a new one is covered without editing this.
+    const settings = path.resolve(__dirname, "../../../client_v2/project-ng.inlang/settings.json");
+    const locales = (JSON.parse(readFileSync(settings, "utf8")) as { locales: string[] }).locales;
+    expect(locales.length).toBeGreaterThan(20);
+
+    // Two widths times every language is a lot of page loads; wait for what the measurement
+    // needs (the bar rendered, fonts settled), not for the network to go idle.
+    test.setTimeout(240_000);
+    await open(page, "/help");
+    for (const width of [320, 393]) {
+      await page.setViewportSize({ width, height: 700 });
+      for (const locale of locales) {
+        await page.evaluate((l) => localStorage.setItem("PARAGLIDE_LOCALE", l), locale);
+        await page.reload({ waitUntil: "domcontentloaded" });
+        await expect(bottomNav(page).locator(".label").first()).toBeVisible();
+        await page.evaluate(() => document.fonts.ready);
+        const clipped = await bottomNav(page)
+          .locator(".label")
+          .evaluateAll((els) =>
+            els
+              .filter((e) => e.scrollWidth > e.clientWidth + 1 || e.scrollHeight > e.clientHeight + 1)
+              .map((e) => e.textContent),
+          );
+        expect(clipped, `${locale} at ${width}px`).toEqual([]);
+      }
+    }
+    await page.evaluate(() => localStorage.removeItem("PARAGLIDE_LOCALE"));
   });
 
   test("the library toolbar takes at most two rows", async ({ page }) => {

@@ -635,5 +635,11 @@
 	"settings_import_export_no_file": "Velg en fil først.",
 	"settings_import_export_result": "Opprettet {created}, oppdaterte {updated}, hoppet over {skipped}.",
 	"settings_import_export_import_errors": "Importen mislyktes",
-	"filament_fields_spool_count": "Spoler"
+	"filament_fields_spool_count": "Spoler",
+	"mobile_nav_more": "Mer",
+	"mobile_nav_more_pages": "Flere sider",
+	"mobile_nav_about": "Om",
+	"mobile_nav_sponsor_upstream": "Støtt den opprinnelige utvikleren av Spoolman",
+	"mobile_nav_documentation": "Dokumentasjon",
+	"mobile_nav_report_issue": "Rapporter et problem"
 }

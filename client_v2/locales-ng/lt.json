@@ -645,5 +645,11 @@
 	"settings_import_export_no_file": "Pirmiausia pasirinkite failą.",
 	"settings_import_export_result": "Sukurta: {created}, atnaujinta: {updated}, praleista: {skipped}.",
 	"settings_import_export_import_errors": "Importuoti nepavyko",
-	"filament_fields_spool_count": "Ritės"
+	"filament_fields_spool_count": "Ritės",
+	"mobile_nav_more": "Daugiau",
+	"mobile_nav_more_pages": "Daugiau puslapių",
+	"mobile_nav_about": "Apie",
+	"mobile_nav_sponsor_upstream": "Paremti pirminį Spoolman autorių",
+	"mobile_nav_documentation": "Dokumentacija",
+	"mobile_nav_report_issue": "Pranešti apie problemą"
 }

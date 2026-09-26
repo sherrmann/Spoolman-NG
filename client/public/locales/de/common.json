@@ -1500,5 +1500,13 @@
     "update_error": "Die Bestellung konnte nicht aktualisiert werden. Bitte versuche es erneut.",
     "delete_error": "Die Bestellung konnte nicht gelöscht werden. Bitte versuche es erneut.",
     "delete_confirm": "Diese Bestellung löschen? Ihre Positionen werden ebenfalls gelöscht."
+  },
+  "mobile_nav": {
+    "more": "Mehr",
+    "more_pages": "Weitere Seiten",
+    "about": "Über",
+    "sponsor_upstream": "Den ursprünglichen Autor von Spoolman unterstützen",
+    "documentation": "Dokumentation",
+    "report_issue": "Problem melden"
   }
 }

@@ -448,6 +448,10 @@ const KEYS = [
 	'mobile_nav.more_pages',
 	'mobile_nav.about',
 	'mobile_nav.sponsor_upstream',
+	// Also the About block's two project links. Upstream's own footer.* strings cover them, but are
+	// untranslated in most of its catalogue, and that catalogue is vendored and not ours to edit.
+	'mobile_nav.documentation',
+	'mobile_nav.report_issue',
 ];
 
 /** Flatten nested i18next JSON to dotted keys. */
