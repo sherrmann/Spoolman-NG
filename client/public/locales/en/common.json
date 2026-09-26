@@ -1040,7 +1040,7 @@
         "mcp": "MCP server",
         "voice": "Voice input",
         "duplicate_check": "Duplicate check (decision model)",
-        "duplicate_check_hint": "While you type a new manufacturer or filament, asks the decision model whether it already exists under another name. Sends what you type and the names of similar existing manufacturers or filaments to the decision endpoint; colours are compared in Spoolman and never sent. Exact matches are always checked, without this.",
+        "duplicate_check_hint": "While you type a new manufacturer or filament, asks the decision model whether it already exists under another name. Sends what you type and the names of similar existing manufacturers or filaments to the decision endpoint; colour values are compared in Spoolman and never sent. Exact matches are always checked, without this.",
         "requires_decision": "Configure and save a decision model endpoint first.",
         "requires_config": "Configure and save an endpoint and chat model first.",
         "requires_vision": "The connection test reports no vision support for the configured model.",

@@ -565,7 +565,8 @@ SPOOLMAN_AI_DECISION_BASE_URL=https://api.typesafe.ai SPOOLMAN_AI_DECISION_API_K
   separate cloud endpoint. When configured, it receives the label's text fields
   and the shortlisted filaments' descriptions, never the photo. With the
   duplicate check on, it also receives the manufacturer or filament you are
-  typing and the names of similar manufacturers or filaments, never a colour.
+  typing and the names of similar manufacturers or filaments (which can contain
+  a colour word, such as "Charcoal Black"), never a colour value.
 - Feature toggles are all **off by default** and independent, so you can, for
   example, enable natural-language search against a local model and leave photo
   features off entirely.
