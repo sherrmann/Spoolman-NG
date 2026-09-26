@@ -1519,5 +1519,13 @@
     "delete_confirm": "Видалити це замовлення? Його рядки також будуть видалені.",
     "filaments_count_few": "{{count}} філаменти",
     "filaments_count_many": "{{count}} філаментів"
+  },
+  "mobile_nav": {
+    "more": "Ще",
+    "more_pages": "Інші сторінки",
+    "about": "Про програму",
+    "sponsor_upstream": "Підтримати початкового автора Spoolman",
+    "documentation": "Документація",
+    "report_issue": "Повідомити про проблему"
   }
 }

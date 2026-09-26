@@ -1500,5 +1500,13 @@
     "update_error": "Kunne ikke opdatere ordren. Prøv igen.",
     "delete_error": "Kunne ikke slette ordren. Prøv igen.",
     "delete_confirm": "Slet denne ordre? Dens linjer bliver også slettet."
+  },
+  "mobile_nav": {
+    "more": "Mere",
+    "more_pages": "Flere sider",
+    "about": "Om",
+    "sponsor_upstream": "Støt Spoolmans oprindelige forfatter",
+    "documentation": "Dokumentation",
+    "report_issue": "Rapportér et problem"
   }
 }

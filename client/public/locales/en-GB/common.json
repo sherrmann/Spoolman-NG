@@ -1486,5 +1486,13 @@
     "update_error": "Couldn't update the order. Please try again.",
     "delete_error": "Couldn't delete the order. Please try again.",
     "delete_confirm": "Delete this order? Its lines will be deleted too."
+  },
+  "mobile_nav": {
+    "more": "More",
+    "more_pages": "More pages",
+    "about": "About",
+    "sponsor_upstream": "Sponsor Spoolman's original author",
+    "documentation": "Documentation",
+    "report_issue": "Report an issue"
   }
 }

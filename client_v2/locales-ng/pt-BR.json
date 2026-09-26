@@ -644,5 +644,11 @@
 	"settings_import_export_no_file": "Escolha um arquivo primeiro.",
 	"settings_import_export_result": "Criados: {created}, atualizados: {updated}, ignorados: {skipped}.",
 	"settings_import_export_import_errors": "Falha na importação",
-	"filament_fields_spool_count": "Carretéis"
+	"filament_fields_spool_count": "Carretéis",
+	"mobile_nav_more": "Mais",
+	"mobile_nav_more_pages": "Mais páginas",
+	"mobile_nav_about": "Sobre",
+	"mobile_nav_sponsor_upstream": "Apoiar o autor original do Spoolman",
+	"mobile_nav_documentation": "Documentação",
+	"mobile_nav_report_issue": "Relatar um problema"
 }

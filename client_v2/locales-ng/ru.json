@@ -645,5 +645,11 @@
 	"settings_import_export_no_file": "Сначала выберите файл.",
 	"settings_import_export_result": "Создано: {created}, обновлено: {updated}, пропущено: {skipped}.",
 	"settings_import_export_import_errors": "Импорт не удался",
-	"filament_fields_spool_count": "Катушки"
+	"filament_fields_spool_count": "Катушки",
+	"mobile_nav_more": "Ещё",
+	"mobile_nav_more_pages": "Другие страницы",
+	"mobile_nav_about": "О программе",
+	"mobile_nav_sponsor_upstream": "Поддержать первоначального автора Spoolman",
+	"mobile_nav_documentation": "Документация",
+	"mobile_nav_report_issue": "Сообщить о проблеме"
 }

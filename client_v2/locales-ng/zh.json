@@ -625,5 +625,11 @@
 	"settings_import_export_no_file": "请先选择文件。",
 	"settings_import_export_result": "已创建 {created} 项，更新 {updated} 项，跳过 {skipped} 项。",
 	"settings_import_export_import_errors": "导入失败",
-	"filament_fields_spool_count": "料盘数"
+	"filament_fields_spool_count": "料盘数",
+	"mobile_nav_more": "更多",
+	"mobile_nav_more_pages": "更多页面",
+	"mobile_nav_about": "关于",
+	"mobile_nav_sponsor_upstream": "赞助 Spoolman 原作者",
+	"mobile_nav_documentation": "文档",
+	"mobile_nav_report_issue": "反馈问题"
 }

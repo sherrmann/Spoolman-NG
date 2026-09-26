@@ -21,7 +21,6 @@
 	 * gone -- on a phone it cost a permanent strip of screen for links nobody needs twice -- so
 	 * this sits on the Help page and at the bottom of the phone layout's More sheet instead.
 	 */
-	import * as m from '$lib/paraglide/messages';
 	import { ng } from '$lib/ng/i18n';
 	import { PROJECT_LINKS } from '$lib/ng/nav';
 
@@ -49,11 +48,13 @@
 	<ul class="links">
 		<li>
 			<a href={PROJECT_LINKS.documentation} target="_blank" rel="noopener noreferrer"
-				>{m['footer.documentation']()}</a
+				>{ng.mobile_nav_documentation()}</a
 			>
 		</li>
 		<li>
-			<a href={PROJECT_LINKS.issues} target="_blank" rel="noopener noreferrer">{m['footer.reportIssue']()}</a>
+			<a href={PROJECT_LINKS.issues} target="_blank" rel="noopener noreferrer"
+				>{ng.mobile_nav_report_issue()}</a
+			>
 		</li>
 		<li>
 			<a href={PROJECT_LINKS.sponsor} target="_blank" rel="noopener noreferrer"

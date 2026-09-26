@@ -645,5 +645,11 @@
 	"settings_import_export_no_file": "Nejprve prosím vyberte soubor.",
 	"settings_import_export_result": "Vytvořeno: {created}, aktualizováno: {updated}, přeskočeno: {skipped}.",
 	"settings_import_export_import_errors": "Import se nezdařil",
-	"filament_fields_spool_count": "Cívky"
+	"filament_fields_spool_count": "Cívky",
+	"mobile_nav_more": "Více",
+	"mobile_nav_more_pages": "Další stránky",
+	"mobile_nav_about": "O aplikaci",
+	"mobile_nav_sponsor_upstream": "Podpořit původního autora Spoolmanu",
+	"mobile_nav_documentation": "Dokumentace",
+	"mobile_nav_report_issue": "Nahlásit problém"
 }

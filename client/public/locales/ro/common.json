@@ -1519,5 +1519,13 @@
     "delete_error": "Comanda nu a putut fi ștearsă. Încercați din nou.",
     "delete_confirm": "Ștergi această comandă? Liniile ei vor fi șterse și ele.",
     "filaments_count_few": "{{count}} filamente"
+  },
+  "mobile_nav": {
+    "more": "Mai mult",
+    "more_pages": "Mai multe pagini",
+    "about": "Despre",
+    "sponsor_upstream": "Susțineți autorul original al Spoolman",
+    "documentation": "Documentație",
+    "report_issue": "Raportați o problemă"
   }
 }

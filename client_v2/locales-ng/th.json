@@ -625,5 +625,11 @@
 	"settings_import_export_no_file": "กรุณาเลือกไฟล์ก่อน",
 	"settings_import_export_result": "สร้าง {created} รายการ อัปเดต {updated} รายการ ข้าม {skipped} รายการ",
 	"settings_import_export_import_errors": "การนำเข้าล้มเหลว",
-	"filament_fields_spool_count": "จำนวนม้วน"
+	"filament_fields_spool_count": "จำนวนม้วน",
+	"mobile_nav_more": "เพิ่มเติม",
+	"mobile_nav_more_pages": "หน้าเพิ่มเติม",
+	"mobile_nav_about": "เกี่ยวกับ",
+	"mobile_nav_sponsor_upstream": "สนับสนุนผู้สร้าง Spoolman ดั้งเดิม",
+	"mobile_nav_documentation": "เอกสารคู่มือ",
+	"mobile_nav_report_issue": "รายงานปัญหา"
 }

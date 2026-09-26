@@ -1519,5 +1519,13 @@
     "delete_error": "Impossibile eliminare l'ordine. Riprova.",
     "delete_confirm": "Eliminare questo ordine? Anche le sue righe verranno eliminate.",
     "filaments_count_many": "{{count}} filamenti"
+  },
+  "mobile_nav": {
+    "more": "Altro",
+    "more_pages": "Altre pagine",
+    "about": "Informazioni",
+    "sponsor_upstream": "Sostieni l'autore originale di Spoolman",
+    "documentation": "Documentazione",
+    "report_issue": "Segnala un problema"
   }
 }

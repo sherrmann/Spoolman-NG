@@ -1488,5 +1488,13 @@
     "update_error": "Order update nahi ho paya. Kripya dobara koshish karein.",
     "delete_error": "Order delete nahi ho paya. Kripya dobara koshish karein.",
     "delete_confirm": "Yeh order delete karein? Iski lines bhi delete ho jayengi."
+  },
+  "mobile_nav": {
+    "more": "Aur",
+    "more_pages": "Aur pages",
+    "about": "About",
+    "sponsor_upstream": "Spoolman ke original author ko sponsor karein",
+    "documentation": "Documentation",
+    "report_issue": "Issue report karein"
   }
 }

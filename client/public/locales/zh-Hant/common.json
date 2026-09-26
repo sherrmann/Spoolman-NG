@@ -1469,5 +1469,13 @@
     "update_error": "無法更新訂單。請再試一次。",
     "delete_error": "無法刪除訂單。請再試一次。",
     "delete_confirm": "要刪除此訂單嗎？其所有項目也將一併刪除。"
+  },
+  "mobile_nav": {
+    "more": "更多",
+    "more_pages": "更多頁面",
+    "about": "關於",
+    "sponsor_upstream": "贊助 Spoolman 原作者",
+    "documentation": "說明文件",
+    "report_issue": "回報問題"
   }
 }

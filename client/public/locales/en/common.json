@@ -176,7 +176,9 @@
     "more": "More",
     "more_pages": "More pages",
     "about": "About",
-    "sponsor_upstream": "Sponsor Spoolman's original author"
+    "sponsor_upstream": "Sponsor Spoolman's original author",
+    "documentation": "Documentation",
+    "report_issue": "Report an issue"
   },
   "tags": {
     "clone": "Clone"
