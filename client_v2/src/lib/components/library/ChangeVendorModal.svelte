@@ -89,6 +89,26 @@
 		if (open && searchInput) searchInput.focus();
 	});
 
+	/**
+	 * "Use" on a duplicate hint: select the existing manufacturer as a real Vendor, so the preview
+	 * shows its own empty-spool weight rather than treating it as a new one. It may be missing from
+	 * the list loaded on open (created since, or the list failed to load); then fetch it by id.
+	 */
+	async function useExisting(match: { id: number; name: string }) {
+		query = match.name;
+		let vendor = vendors.find((v) => Number(v.id) === match.id);
+		if (!vendor) {
+			try {
+				vendor = await spoolSource.fetchVendor(String(match.id));
+			} catch (e) {
+				console.error('Failed to load the suggested manufacturer', e);
+			}
+			if (vendor) vendors = [...vendors, vendor];
+		}
+		// Unresolvable: leave the choice alone rather than preview it as a new manufacturer.
+		if (vendor) chosen = { kind: 'vendor', vendor };
+	}
+
 	async function load() {
 		loading = true;
 		try {
@@ -275,16 +295,7 @@
 							<DuplicateHint
 								name={trimmed}
 								excludeId={current ? Number(current.id) : undefined}
-								onuse={(v) => {
-									query = v.name;
-									// The list this dialog already holds is the source of truth for a
-									// Vendor object; falling back to 'new' with the exact existing name
-									// still links it rather than creating a duplicate, since apply()
-									// resolves a 'new' name through getOrCreateVendor, which matches
-									// case-insensitively.
-									const existing = vendors.find((x) => x.name.toLowerCase() === v.name.toLowerCase());
-									chosen = existing ? { kind: 'vendor', vendor: existing } : { kind: 'new', name: v.name };
-								}}
+								onuse={useExisting}
 							/>
 						{/if}
 						{#if current}
