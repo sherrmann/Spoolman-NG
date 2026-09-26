@@ -13,6 +13,8 @@ const settingsMock = vi.fn<() => Record<string, { value: string }> | undefined>(
 const probeMutate = vi.fn();
 const setKeyMutate = vi.fn();
 const setSettingMutate = vi.fn();
+const decisionTestMutate = vi.fn();
+const setDecisionKeyMutate = vi.fn();
 
 vi.mock("@refinedev/core", () => ({ useTranslate: () => (key: string) => key }));
 vi.mock("@tanstack/react-query", () => ({ useQueryClient: () => ({ invalidateQueries: vi.fn() }) }));
@@ -21,6 +23,12 @@ vi.mock("../../utils/queryAI", () => ({
   useAIProbe: () => ({ mutate: probeMutate, isPending: false, isError: false, error: null }),
   useSetAIKey: () => ({ mutate: setKeyMutate, mutateAsync: vi.fn(), isPending: false }),
   useSetSTTKey: () => ({ mutate: vi.fn(), mutateAsync: vi.fn(), isPending: false }),
+  useSetDecisionKey: () => ({
+    mutate: setDecisionKeyMutate,
+    mutateAsync: async (value: unknown) => setDecisionKeyMutate(value),
+    isPending: false,
+  }),
+  useDecisionTest: () => ({ mutate: decisionTestMutate, isPending: false, isError: false, error: null }),
   // The managed-pull section renders when the probe reports an Ollama endpoint; it has its
   // own dedicated test file, so here we only stub the two exports it reaches for.
   useOllamaModels: () => ({ data: { is_ollama: true, installed: [] } }),
@@ -31,7 +39,7 @@ vi.mock("../../utils/querySettings", async (importOriginal) => ({
   useGetSettings: () => ({ data: settingsMock() }),
   useSetSetting: (key: string) => ({
     mutate: (value: unknown) => setSettingMutate(key, value),
-    mutateAsync: vi.fn(),
+    mutateAsync: async (value: unknown) => setSettingMutate(key, value),
     isPending: false,
   }),
 }));
@@ -48,6 +56,10 @@ const baseStatus: AIStatus = {
   stt_base_url: null,
   stt_model: null,
   stt_api_key_set: false,
+  decision_configured: false,
+  decision_base_url: null,
+  decision_model: null,
+  decision_api_key_set: false,
   env_locked: [],
   features: { chat: false, scan_to_spool: false, nl_search: false, mcp: false, voice: false },
   capabilities: null,
@@ -186,6 +198,58 @@ describe("AISettings (#359)", () => {
     statusMock.mockReturnValue({ ...baseStatus, stt_configured: true });
     rerender(<AISettings />);
     expect(screen.getByTestId("toggle-voice")).toBeEnabled();
+  });
+
+  it("renders the decision model section (#365)", () => {
+    render(<AISettings />);
+    expect(screen.getByText("settings.ai.decision.title")).toBeInTheDocument();
+    expect(screen.getByText("settings.ai.decision.base_url.label")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("https://api.typesafe.ai")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("jev-latest")).toBeInTheDocument();
+  });
+
+  it("saves the decision model base URL, model and key on submit", async () => {
+    const user = userEvent.setup();
+    render(<AISettings />);
+
+    await user.type(screen.getByPlaceholderText("https://api.typesafe.ai"), "https://api.typesafe.ai");
+    await user.type(screen.getByPlaceholderText("jev-latest"), "jev-latest");
+    const keyInputs = screen.getAllByPlaceholderText("settings.ai.api_key.placeholder_unset");
+    await user.type(keyInputs[keyInputs.length - 1], "secret");
+    await user.click(screen.getByRole("button", { name: "buttons.save" }));
+
+    expect(setSettingMutate).toHaveBeenCalledWith("ai_decision_base_url", "https://api.typesafe.ai");
+    expect(setSettingMutate).toHaveBeenCalledWith("ai_decision_model", "jev-latest");
+    expect(setDecisionKeyMutate).toHaveBeenCalledWith("secret");
+  });
+
+  it("disables env-locked decision fields and says why", () => {
+    statusMock.mockReturnValue({
+      ...baseStatus,
+      decision_base_url: "https://env.example.com",
+      env_locked: ["decision_base_url", "decision_model"],
+    });
+    render(<AISettings />);
+
+    expect(screen.getByPlaceholderText("https://api.typesafe.ai")).toBeDisabled();
+    expect(screen.getByPlaceholderText("jev-latest")).toBeDisabled();
+    expect(screen.getAllByText("settings.ai.env_locked")).toHaveLength(2);
+  });
+
+  it("sends unsaved form values with the decision model test", async () => {
+    statusMock.mockReturnValue({
+      ...baseStatus,
+      decision_base_url: "https://api.typesafe.ai",
+      decision_model: "jev-latest",
+    });
+    const user = userEvent.setup();
+    render(<AISettings />);
+
+    await user.click(screen.getByRole("button", { name: "settings.ai.decision.test" }));
+    expect(decisionTestMutate).toHaveBeenCalledTimes(1);
+    const [overrides] = decisionTestMutate.mock.calls[0];
+    expect(overrides).toMatchObject({ base_url: "https://api.typesafe.ai", model: "jev-latest" });
+    expect(overrides).not.toHaveProperty("api_key");
   });
 
   it("shows a copyable MCP config block only once MCP is enabled", () => {

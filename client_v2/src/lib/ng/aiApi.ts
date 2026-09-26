@@ -314,6 +314,11 @@ export interface AiAdminStatus extends AiStatus {
 	sttBaseUrl: string;
 	sttModel: string;
 	sttApiKeySet: boolean;
+	/** The decision model reorders Scan-to-Spool matches; unrelated to the chat/STT endpoints. */
+	decisionConfigured: boolean;
+	decisionBaseUrl: string;
+	decisionModel: string;
+	decisionApiKeySet: boolean;
 	/** Attribute names fixed by environment variables, which the form must not pretend to own. */
 	envLocked: string[];
 	features: Record<string, boolean>;
@@ -349,6 +354,10 @@ export async function aiAdminStatus(signal?: AbortSignal): Promise<AiAdminStatus
 		sttBaseUrl: str(r.stt_base_url),
 		sttModel: str(r.stt_model),
 		sttApiKeySet: Boolean(r.stt_api_key_set),
+		decisionConfigured: Boolean(r.decision_configured),
+		decisionBaseUrl: str(r.decision_base_url),
+		decisionModel: str(r.decision_model),
+		decisionApiKeySet: Boolean(r.decision_api_key_set),
 		envLocked: Array.isArray(r.env_locked) ? r.env_locked.map(String) : [],
 		features: (r.features as Record<string, boolean> | undefined) ?? {},
 		capabilities: mapCapabilities(r.capabilities as Record<string, unknown> | null)
@@ -384,11 +393,50 @@ export async function aiProbe(overrides: {
  * what makes "save the form without retyping your key" work -- the server acts only on keys
  * actually present in the body.
  */
-export async function setAiKeys(keys: { apiKey?: string | null; sttApiKey?: string | null }): Promise<void> {
+export async function setAiKeys(keys: {
+	apiKey?: string | null;
+	sttApiKey?: string | null;
+	decisionApiKey?: string | null;
+}): Promise<void> {
 	const body: Record<string, unknown> = {};
 	if (keys.apiKey !== undefined) body.api_key = keys.apiKey;
 	if (keys.sttApiKey !== undefined) body.stt_api_key = keys.sttApiKey;
+	if (keys.decisionApiKey !== undefined) body.decision_api_key = keys.decisionApiKey;
 	await postJson('/ai/config', body);
+}
+
+/** What `decisionTest` reports back: unlike `aiProbe`, there is no model list to browse. */
+export interface AiDecisionTestResult {
+	ok: boolean;
+	error?: string;
+	latencyMs?: number;
+	/** The model the test actually asked, echoed back so an override is visibly in effect. */
+	model?: string;
+}
+
+/**
+ * Ask the decision-model endpoint one small question, optionally with unsaved form values.
+ *
+ * Deliberately separate from `aiProbe`: the decision model speaks TypeSafe's System One API,
+ * not OpenAI chat completions, so there is no model list or capability trio to report -- only
+ * whether it answered and how long that took.
+ */
+export async function decisionTest(overrides: {
+	baseUrl?: string;
+	apiKey?: string;
+	model?: string;
+}): Promise<AiDecisionTestResult> {
+	const body: Record<string, unknown> = {};
+	if (overrides.baseUrl) body.base_url = overrides.baseUrl;
+	if (overrides.apiKey) body.api_key = overrides.apiKey;
+	if (overrides.model) body.model = overrides.model;
+	const raw = await postJson<Record<string, unknown>>('/ai/decision/test', body);
+	return {
+		ok: Boolean(raw.ok),
+		error: raw.error == null ? undefined : String(raw.error),
+		latencyMs: raw.latency_ms == null ? undefined : Number(raw.latency_ms),
+		model: raw.model == null ? undefined : String(raw.model)
+	};
 }
 
 export interface OllamaModels {

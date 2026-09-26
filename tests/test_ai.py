@@ -14,8 +14,10 @@ Oracle strategy:
 import pytest
 import respx
 from httpx import ConnectError, Response
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from spoolman import ai
+from spoolman.database import setting as setting_db
 from spoolman.settings import SETTINGS
 
 
@@ -23,7 +25,15 @@ from spoolman.settings import SETTINGS
 def _reset_module_state(monkeypatch: pytest.MonkeyPatch) -> None:
     """Isolate the probe cache and the SPOOLMAN_AI_* env between tests."""
     monkeypatch.setattr(ai, "_state", ai._AIState())  # noqa: SLF001
-    for name in (ai.ENV_BASE_URL, ai.ENV_API_KEY, ai.ENV_MODEL, ai.ENV_VISION_MODEL):
+    for name in (
+        ai.ENV_BASE_URL,
+        ai.ENV_API_KEY,
+        ai.ENV_MODEL,
+        ai.ENV_VISION_MODEL,
+        ai.ENV_DECISION_BASE_URL,
+        ai.ENV_DECISION_API_KEY,
+        ai.ENV_DECISION_MODEL,
+    ):
         monkeypatch.delenv(name, raising=False)
 
 
@@ -44,6 +54,11 @@ def test_stt_api_key_storage_key_is_never_a_registered_setting() -> None:
     assert ai.STT_API_KEY_DB_KEY not in SETTINGS
 
 
+def test_decision_api_key_storage_key_is_never_a_registered_setting() -> None:
+    """The write-only decision-model key must also stay out of the settings registry."""
+    assert ai.DECISION_API_KEY_DB_KEY not in SETTINGS
+
+
 def test_all_feature_toggles_are_registered_settings() -> None:
     for key in ai.FEATURE_SETTINGS:
         assert key in SETTINGS, f"feature toggle {key} must be a registered setting"
@@ -56,8 +71,69 @@ def test_provider_settings_are_registered() -> None:
         ai.SETTING_VISION_MODEL,
         ai.SETTING_STT_BASE_URL,
         ai.SETTING_STT_MODEL,
+        ai.SETTING_DECISION_BASE_URL,
+        ai.SETTING_DECISION_MODEL,
     ):
         assert key in SETTINGS
+
+
+# --- resolve_config: decision fields (env-over-DB) ----------------------------------
+
+
+async def test_resolve_config_reads_decision_fields_from_db(db_session: AsyncSession) -> None:
+    base_url_setting = SETTINGS[ai.SETTING_DECISION_BASE_URL]
+    model_setting = SETTINGS[ai.SETTING_DECISION_MODEL]
+    await setting_db.update(db=db_session, definition=base_url_setting, value='"https://db.example.com"')
+    await setting_db.update(db=db_session, definition=model_setting, value='"jev-db"')
+
+    config = await ai.resolve_config(db_session)
+
+    assert config.decision_base_url == "https://db.example.com"
+    assert config.decision_model == "jev-db"
+    assert config.sources["decision_base_url"] == "db"
+    assert config.sources["decision_model"] == "db"
+
+
+async def test_resolve_config_decision_env_wins_per_field_over_db(
+    db_session: AsyncSession,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    base_url_setting = SETTINGS[ai.SETTING_DECISION_BASE_URL]
+    model_setting = SETTINGS[ai.SETTING_DECISION_MODEL]
+    await setting_db.update(db=db_session, definition=base_url_setting, value='"https://db.example.com"')
+    await setting_db.update(db=db_session, definition=model_setting, value='"jev-db"')
+    monkeypatch.setenv(ai.ENV_DECISION_MODEL, "jev-env")
+
+    config = await ai.resolve_config(db_session)
+
+    assert config.decision_base_url == "https://db.example.com"
+    assert config.sources["decision_base_url"] == "db"
+    assert config.decision_model == "jev-env"
+    assert config.sources["decision_model"] == "env"
+
+
+async def test_resolve_config_decision_api_key_env_wins_over_stored(
+    db_session: AsyncSession,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    await ai.set_stored_decision_api_key(db_session, "sk-stored")
+    monkeypatch.setenv(ai.ENV_DECISION_API_KEY, "sk-env")
+
+    config = await ai.resolve_config(db_session)
+
+    assert config.decision_api_key == "sk-env"
+    assert config.sources["decision_api_key"] == "env"
+
+
+async def test_resolve_config_strips_trailing_slash_from_decision_base_url(
+    monkeypatch: pytest.MonkeyPatch,
+    db_session: AsyncSession,
+) -> None:
+    monkeypatch.setenv(ai.ENV_DECISION_BASE_URL, "https://api.typesafe.ai/")
+
+    config = await ai.resolve_config(db_session)
+
+    assert config.decision_base_url == "https://api.typesafe.ai"
 
 
 # --- URL helpers -------------------------------------------------------------------

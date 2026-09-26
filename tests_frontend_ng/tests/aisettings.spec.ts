@@ -52,6 +52,8 @@ async function resetAi(request: APIRequestContext) {
     "ai_model",
     "ai_stt_base_url",
     "ai_stt_model",
+    "ai_decision_base_url",
+    "ai_decision_model",
   ]) {
     await setSetting(request, k, "");
   }
@@ -168,6 +170,35 @@ test("the API key field never shows a stored key", async ({
     exact: true,
   });
   await expect(key).toHaveValue("");
+});
+
+test("saving the decision model endpoint and model persists them", async ({
+  page,
+}) => {
+  // Modelled on "saving an endpoint and model unblocks the features that needed them", but the
+  // decision model gates nothing in this client -- it only reorders Scan-to-Spool matches
+  // server-side -- so what is asserted here is that Save actually wrote the two settings,
+  // checked by reloading and reading the fields back.
+  await page.goto("/settings", { waitUntil: "networkidle" });
+
+  await panel(page)
+    .getByRole("textbox", { name: "Decision model endpoint URL", exact: true })
+    .fill("https://api.typesafe.ai");
+  await panel(page)
+    .getByRole("textbox", { name: "Decision model name", exact: true })
+    .fill("jev-latest");
+  await panel(page).getByRole("button", { name: "Save" }).click();
+
+  await page.reload({ waitUntil: "networkidle" });
+  await expect(
+    panel(page).getByRole("textbox", {
+      name: "Decision model endpoint URL",
+      exact: true,
+    }),
+  ).toHaveValue("https://api.typesafe.ai");
+  await expect(
+    panel(page).getByRole("textbox", { name: "Decision model name", exact: true }),
+  ).toHaveValue("jev-latest");
 });
 
 test("its fields do not collide with the settings page's own labels", async ({

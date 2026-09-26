@@ -753,6 +753,21 @@ def test_apply_rerank_with_no_probabilities_puts_the_chosen_candidate_first() ->
 # --- build_matches: reranking integration -----------------------------------------
 
 
+async def _env_only_resolve_config(_db: object) -> decision.DecisionConfig | None:
+    """Stand in for decision.resolve_config(db) using only the env, ignoring the DB.
+
+    build_matches now awaits decision.resolve_config(db), but these tests pass db=None (there is
+    no DB in this unit-test file). Swapping in this stub keeps the existing env-based tests
+    meaning what they did before decision-model config gained Settings storage.
+    """
+    return decision.resolve_env_config()
+
+
+@pytest.fixture(autouse=True)
+def _stub_decision_resolve_config(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(decision, "resolve_config", _env_only_resolve_config)
+
+
 @respx.mock
 async def test_build_matches_makes_no_http_call_without_config(monkeypatch: pytest.MonkeyPatch) -> None:
     fuzzy_library = [_library_candidate(1, match_percent=90)]
@@ -811,7 +826,7 @@ async def test_build_matches_keeps_fuzzy_order_and_warns_when_resolve_config_rai
     def _fake_match_catalog(extraction: dict) -> list[dict]:  # noqa: ARG001
         return []
 
-    def _raise_resolve_config() -> None:
+    async def _raise_resolve_config(_db: object) -> None:
         raise RuntimeError("boom")
 
     monkeypatch.setattr(spoolintake, "match_library", _fake_match_library)

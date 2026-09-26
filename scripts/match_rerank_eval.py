@@ -765,7 +765,7 @@ async def _run_catalog_modes(args: argparse.Namespace, catalog: list[dict]) -> i
 
     config = None
     if not args.baseline_only:
-        config = decision.resolve_config()
+        config = decision.resolve_env_config()
         if config is None:
             print(_NO_ENDPOINT, file=sys.stderr)
             return 2
@@ -787,7 +787,7 @@ _NO_ENDPOINT = (
 
 
 async def _main(min_accuracy: float) -> int:
-    config = decision.resolve_config()
+    config = decision.resolve_env_config()
     if config is None:
         print(_NO_ENDPOINT, file=sys.stderr)
         return 2
