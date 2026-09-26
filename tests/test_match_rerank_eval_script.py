@@ -1135,3 +1135,23 @@ def test_compare_headline_leaves_out_failed_reranks_too(
     assert "== generated: 1 cases compared" in flat
     assert "top-1 0/1 -> 0/1" in flat
     assert "0 case(s) better, 0 worse" in flat
+
+
+def test_compare_does_not_pair_cases_that_name_different_catalogue_rows(
+    eval_module: ModuleType,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Generated ids repeat across seeds; the same id must not pair two different readings."""
+    row = {"source": "generated", "shortlisted": True, "baseline_ok": False, "rerank_ok": None, "error": None}
+    old = [{**row, "case_id": "gen-0000", "catalog_id": "x"}, {**row, "case_id": "gen-0001", "catalog_id": "y"}]
+    new = [
+        {**row, "case_id": "gen-0000", "catalog_id": "other", "baseline_ok": True},
+        {**row, "case_id": "gen-0001", "catalog_id": "y"},
+    ]
+
+    eval_module.print_comparison(old, new)
+
+    flat = " ".join(capsys.readouterr().out.split())
+    assert "1 case id(s) name different catalogue rows" in flat
+    assert "== generated: 1 cases compared" in flat
+    assert "0 case(s) better, 0 worse" in flat

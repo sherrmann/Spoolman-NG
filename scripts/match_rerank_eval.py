@@ -561,23 +561,30 @@ def read_dumped_results(path: Path) -> list[dict]:
 _WORSE_SHOWN = 15
 
 
-def _comparable_pairs(old: list[dict], new: list[dict]) -> tuple[list[tuple[dict, dict]], list[str]]:
-    """Pair cases present in both dumps; leave out any whose decision request failed in either.
+def _comparable_pairs(
+    old: list[dict],
+    new: list[dict],
+) -> tuple[list[tuple[dict, dict]], list[str], list[str]]:
+    """Pair the same cases across two dumps; return (pairs, errored ids, mismatched ids).
 
-    A failed rerank falls back to the fuzzy order, so comparing it against a real rerank would
-    count a change that never happened, in the headline as much as case by case.
+    Cases pair by source and id, and only when both name the same catalogue row: generated ids
+    such as ``gen-0000`` repeat across seeds and catalogue versions, so an id alone could pair two
+    unrelated readings. A pair whose decision request failed in either run is left out too: the
+    failed rerank falls back to the fuzzy order, which would count a change that never happened.
     """
-    new_by_id = {row["case_id"]: row for row in new}
-    pairs, errored = [], []
+    new_by_key = {(row["source"], row["case_id"]): row for row in new}
+    pairs, errored, mismatched = [], [], []
     for row in old:
-        new_row = new_by_id.get(row["case_id"])
+        new_row = new_by_key.get((row["source"], row["case_id"]))
         if new_row is None:
             continue
-        if row.get("error") or new_row.get("error"):
+        if row.get("catalog_id") != new_row.get("catalog_id"):
+            mismatched.append(row["case_id"])
+        elif row.get("error") or new_row.get("error"):
             errored.append(row["case_id"])
         else:
             pairs.append((row, new_row))
-    return pairs, errored
+    return pairs, errored, mismatched
 
 
 def print_comparison(old: list[dict], new: list[dict]) -> None:
@@ -585,7 +592,12 @@ def print_comparison(old: list[dict], new: list[dict]) -> None:
 
     Counts cover only the cases both dumps contain and scored without a decision-request error.
     """
-    pairs, errored = _comparable_pairs(old, new)
+    pairs, errored, mismatched = _comparable_pairs(old, new)
+    if mismatched:
+        print(
+            f"{len(mismatched)} case id(s) name different catalogue rows in the two dumps and are left out; "
+            "run both with the same --generated, --seed and catalogue.\n",
+        )
     for source in sorted({row["source"] for row in old} | {row["source"] for row in new}):
         group = [(a, b) for a, b in pairs if a["source"] == source]
         total = len(group)
