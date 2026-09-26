@@ -29,6 +29,21 @@ the UI are stored in the database like other settings — except the API key:
 - **The API key is write-only.** It is stored outside the regular settings
   registry, no API endpoint ever returns it, and the UI only shows whether a key
   is set. Replace it by typing a new value; remove it with "Clear stored key".
+- **A stored key only goes to the base URL it was saved with.** Change the base
+  URL and the stored key counts as not set: enter the key for the new endpoint
+  (or clear the old one). Switching back to the original URL uses it again. This
+  holds for the chat, speech-to-text and decision-model keys alike, and the
+  connection tests follow it too: testing a different URL sends no saved key
+  unless you type one. Keys stored by an earlier version are tied to the base URL
+  in effect the first time the new version starts; one stored while its endpoint
+  had no base URL could never be used, and has to be entered again. Save the base
+  URL before the key: `POST /api/v1/ai/config` refuses a key (409) for an
+  endpoint with no base URL.
+- A key set by environment variable (`SPOOLMAN_AI_API_KEY`,
+  `SPOOLMAN_AI_STT_API_KEY`) is used with whatever base URL is in effect,
+  including one entered in Settings, so anyone who can change that URL can send
+  the key elsewhere. If that matters, set the URL by environment variable as
+  well, which locks it. The decision-model key is stricter; see below.
 - Setting or clearing the key (and running connection tests) requires an
   administrator account once user accounts exist. On a default no-auth install,
   anyone with network access to Spoolman can change settings — the same trust
@@ -362,10 +377,8 @@ model answers typed questions with probabilities rather than generating text, so
 it needs its own wire format and its own configuration. Set it under
 **Settings → AI → Decision model**: pick a preset or enter the base URL, the
 API key and the model, save, and use **Test** to ask the endpoint one small
-question. The key is write-only, like the other AI keys, and is only sent to
-the base URL that was in effect when it was saved, so a new URL never receives
-the old key: after changing the URL, enter the key for the new endpoint (or
-Clear the old one). The same values can be set by environment variables, which win field by
+question. The key is write-only and tied to its base URL, like the other AI
+keys (see Configuration above). The same values can be set by environment variables, which win field by
 field and lock the matching input in Settings. `SPOOLMAN_AI_DECISION_API_KEY`
 is only used together with `SPOOLMAN_AI_DECISION_BASE_URL`, for the same
 reason:

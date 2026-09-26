@@ -311,9 +311,13 @@ export interface AiAdminStatus extends AiStatus {
 	model: string;
 	visionModel: string;
 	apiKeySet: boolean;
+	/** A stored key, even one not in use because it was saved for another base URL. */
+	apiKeyStored: boolean;
 	sttBaseUrl: string;
 	sttModel: string;
 	sttApiKeySet: boolean;
+	/** A stored key, even one not in use because it was saved for another base URL. */
+	sttApiKeyStored: boolean;
 	/** The decision model reorders Scan-to-Spool matches; unrelated to the chat/STT endpoints. */
 	decisionConfigured: boolean;
 	decisionBaseUrl: string;
@@ -353,9 +357,11 @@ export async function aiAdminStatus(signal?: AbortSignal): Promise<AiAdminStatus
 		model: str(r.model),
 		visionModel: str(r.vision_model),
 		apiKeySet: Boolean(r.api_key_set),
+		apiKeyStored: Boolean(r.api_key_stored),
 		sttBaseUrl: str(r.stt_base_url),
 		sttModel: str(r.stt_model),
 		sttApiKeySet: Boolean(r.stt_api_key_set),
+		sttApiKeyStored: Boolean(r.stt_api_key_stored),
 		decisionConfigured: Boolean(r.decision_configured),
 		decisionBaseUrl: str(r.decision_base_url),
 		decisionModel: str(r.decision_model),

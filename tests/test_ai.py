@@ -12,6 +12,7 @@ Oracle strategy:
 """
 
 import json
+from datetime import datetime, timezone
 
 import pytest
 import respx
@@ -33,6 +34,9 @@ def _reset_module_state(monkeypatch: pytest.MonkeyPatch) -> None:
         ai.ENV_API_KEY,
         ai.ENV_MODEL,
         ai.ENV_VISION_MODEL,
+        ai.ENV_STT_BASE_URL,
+        ai.ENV_STT_API_KEY,
+        ai.ENV_STT_MODEL,
         ai.ENV_DECISION_BASE_URL,
         ai.ENV_DECISION_API_KEY,
         ai.ENV_DECISION_MODEL,
@@ -164,7 +168,7 @@ async def test_stored_decision_key_is_dropped_when_the_url_changes(
 
     assert config.decision_api_key is None
     assert "decision_api_key" not in config.sources
-    assert "different decision base URL" in caplog.text
+    assert "decision-model API key: it was saved for a different base URL" in caplog.text
     assert "sk-stored" not in caplog.text
 
     # Back on the URL it was saved for, the key applies again.
@@ -178,7 +182,7 @@ async def test_stored_decision_key_and_its_url_are_one_row_and_clear_together(db
 
     row = await db_session.get(models.Setting, ai.DECISION_API_KEY_DB_KEY)
     assert row is not None
-    assert json.loads(row.value) == {"base_url": "https://api.typesafe.ai", "key": "sk-stored"}
+    assert json.loads(row.value) == {"v": 1, "base_url": "https://api.typesafe.ai", "key": "sk-stored"}
 
     await ai.set_stored_decision_api_key(db_session, None)
     assert await db_session.get(models.Setting, ai.DECISION_API_KEY_DB_KEY) is None
@@ -211,7 +215,7 @@ async def test_an_unused_decision_key_is_warned_about_once(
         for _ in range(3):
             await ai.resolve_config(db_session)
 
-    assert caplog.text.count("Not using the decision-model API key") == 1
+    assert caplog.text.count("Not using the AI decision-model API key") == 1
 
 
 async def test_stored_decision_key_saved_before_any_url_is_not_used(db_session: AsyncSession) -> None:
@@ -246,6 +250,285 @@ async def test_resolve_config_strips_trailing_slash_from_decision_base_url(
     config = await ai.resolve_config(db_session)
 
     assert config.decision_base_url == "https://api.typesafe.ai"
+
+
+# --- The chat and STT keys only go to the endpoint they belong to -------------------
+
+
+async def _set_base_url(db: AsyncSession, url: str) -> None:
+    await setting_db.update(db=db, definition=SETTINGS[ai.SETTING_BASE_URL], value=json.dumps(url))
+
+
+async def _set_stt_base_url(db: AsyncSession, url: str) -> None:
+    await setting_db.update(db=db, definition=SETTINGS[ai.SETTING_STT_BASE_URL], value=json.dumps(url))
+
+
+async def test_stored_chat_key_is_used_with_the_url_it_was_saved_for(db_session: AsyncSession) -> None:
+    await _set_base_url(db_session, "https://api.example.com/v1")
+    await ai.set_stored_api_key(db_session, "sk-chat")
+
+    config = await ai.resolve_config(db_session)
+
+    assert config.api_key == "sk-chat"
+    assert config.sources["api_key"] == "db"
+
+
+async def test_stored_chat_key_is_dropped_when_the_url_changes(db_session: AsyncSession) -> None:
+    await _set_base_url(db_session, "https://api.example.com/v1")
+    await ai.set_stored_api_key(db_session, "sk-chat")
+    await _set_base_url(db_session, "https://attacker.example/v1")
+
+    config = await ai.resolve_config(db_session)
+
+    assert config.api_key is None
+    assert config.api_key_stored is True
+    assert "api_key" not in config.sources
+
+    # Back on the URL it was saved for, the key applies again.
+    await _set_base_url(db_session, "https://api.example.com/v1")
+    assert (await ai.resolve_config(db_session)).api_key == "sk-chat"
+
+
+async def test_stored_stt_key_is_used_with_the_url_it_was_saved_for(db_session: AsyncSession) -> None:
+    await _set_stt_base_url(db_session, "https://stt.example.com/v1")
+    await ai.set_stored_stt_api_key(db_session, "sk-stt")
+
+    config = await ai.resolve_config(db_session)
+
+    assert config.stt_api_key == "sk-stt"
+    assert config.sources["stt_api_key"] == "db"
+
+
+async def test_stored_stt_key_is_dropped_when_the_url_changes(db_session: AsyncSession) -> None:
+    await _set_stt_base_url(db_session, "https://stt.example.com/v1")
+    await ai.set_stored_stt_api_key(db_session, "sk-stt")
+    await _set_stt_base_url(db_session, "https://attacker.example/v1")
+
+    config = await ai.resolve_config(db_session)
+
+    assert config.stt_api_key is None
+    assert config.stt_api_key_stored is True
+    assert "stt_api_key" not in config.sources
+
+    # Back on the URL it was saved for, the key applies again.
+    await _set_stt_base_url(db_session, "https://stt.example.com/v1")
+    assert (await ai.resolve_config(db_session)).stt_api_key == "sk-stt"
+
+
+async def test_env_chat_key_with_db_base_url_is_still_used(
+    db_session: AsyncSession,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Unlike the decision key, the chat key never required an env-set base URL too."""
+    await _set_base_url(db_session, "https://api.example.com/v1")
+    monkeypatch.setenv(ai.ENV_API_KEY, "sk-env")
+
+    config = await ai.resolve_config(db_session)
+
+    assert config.api_key == "sk-env"
+    assert config.sources["api_key"] == "env"
+
+
+async def test_env_stt_key_with_db_base_url_is_still_used(
+    db_session: AsyncSession,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    await _set_stt_base_url(db_session, "https://stt.example.com/v1")
+    monkeypatch.setenv(ai.ENV_STT_API_KEY, "sk-env")
+
+    config = await ai.resolve_config(db_session)
+
+    assert config.stt_api_key == "sk-env"
+    assert config.sources["stt_api_key"] == "env"
+
+
+async def test_warnings_for_chat_and_stt_keys_name_no_key_value(
+    db_session: AsyncSession,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    await _set_base_url(db_session, "https://api.example.com/v1")
+    await ai.set_stored_api_key(db_session, "sk-chat-secret")
+    await _set_base_url(db_session, "https://attacker.example/v1")
+    await _set_stt_base_url(db_session, "https://stt.example.com/v1")
+    await ai.set_stored_stt_api_key(db_session, "sk-stt-secret")
+    await _set_stt_base_url(db_session, "https://attacker.example/v1")
+
+    with caplog.at_level("WARNING"):
+        await ai.resolve_config(db_session)
+
+    assert "Not using the AI API key" in caplog.text
+    assert "Not using the AI speech-to-text API key" in caplog.text
+    assert "sk-chat-secret" not in caplog.text
+    assert "sk-stt-secret" not in caplog.text
+
+
+# --- upgrade_stored_keys: binding a pre-existing plain-text key -----------------------
+
+
+async def _write_plain_key_row(db: AsyncSession, db_key: str, value: str) -> None:
+    """Write a key row the way it looked before keys were tied to their base URL."""
+    await db.merge(models.Setting(key=db_key, value=value, last_updated=datetime.now(tz=timezone.utc)))
+    await db.commit()
+
+
+async def test_a_plain_text_key_row_is_never_used_before_the_upgrade(db_session: AsyncSession) -> None:
+    await _write_plain_key_row(db_session, ai.API_KEY_DB_KEY, "sk-old")
+    await _set_base_url(db_session, "https://api.example.com/v1")
+
+    config = await ai.resolve_config(db_session)
+
+    assert config.api_key is None
+    assert config.api_key_stored is True
+
+
+async def test_upgrade_stored_keys_binds_a_plain_text_key_to_the_current_url(db_session: AsyncSession) -> None:
+    await _write_plain_key_row(db_session, ai.API_KEY_DB_KEY, "sk-old")
+    await _set_base_url(db_session, "https://api.example.com/v1/")
+
+    await ai.upgrade_stored_keys(db_session)
+
+    row = await db_session.get(models.Setting, ai.API_KEY_DB_KEY)
+    assert json.loads(row.value) == {"v": 1, "base_url": "https://api.example.com/v1", "key": "sk-old"}
+    assert (await ai.resolve_config(db_session)).api_key == "sk-old"
+
+
+async def test_upgrade_stored_keys_leaves_a_key_with_no_url_as_plain_text(db_session: AsyncSession) -> None:
+    await _write_plain_key_row(db_session, ai.API_KEY_DB_KEY, "sk-old")
+
+    await ai.upgrade_stored_keys(db_session)
+
+    row = await db_session.get(models.Setting, ai.API_KEY_DB_KEY)
+    assert row.value == "sk-old"
+    config = await ai.resolve_config(db_session)
+    assert config.api_key is None
+    assert config.api_key_stored is True
+
+
+async def test_upgrade_stored_keys_is_idempotent(db_session: AsyncSession) -> None:
+    await _write_plain_key_row(db_session, ai.API_KEY_DB_KEY, "sk-old")
+    await _set_base_url(db_session, "https://api.example.com/v1")
+
+    await ai.upgrade_stored_keys(db_session)
+    row_after_first = (await db_session.get(models.Setting, ai.API_KEY_DB_KEY)).value
+
+    await ai.upgrade_stored_keys(db_session)
+    row_after_second = (await db_session.get(models.Setting, ai.API_KEY_DB_KEY)).value
+
+    assert row_after_first == row_after_second
+
+
+async def test_upgrade_stored_keys_binds_to_an_env_base_url(
+    db_session: AsyncSession,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    await _write_plain_key_row(db_session, ai.API_KEY_DB_KEY, "sk-old")
+    monkeypatch.setenv(ai.ENV_BASE_URL, "https://env.example.com/v1")
+
+    await ai.upgrade_stored_keys(db_session)
+
+    row = await db_session.get(models.Setting, ai.API_KEY_DB_KEY)
+    assert json.loads(row.value) == {"v": 1, "base_url": "https://env.example.com/v1", "key": "sk-old"}
+
+
+@pytest.mark.parametrize("plain", ["12345", '"abc"', "null", "true", "[1]", '{"foo": 1}'])
+async def test_a_plain_key_that_parses_as_json_is_upgraded_unchanged(db_session: AsyncSession, plain: str) -> None:
+    """A real key can happen to be valid JSON; only a {"key": ...} object counts as the new format."""
+    await _write_plain_key_row(db_session, ai.API_KEY_DB_KEY, plain)
+    await _set_base_url(db_session, "https://api.example.com/v1")
+
+    assert (await ai.resolve_config(db_session)).api_key is None
+    await ai.upgrade_stored_keys(db_session)
+
+    row = await db_session.get(models.Setting, ai.API_KEY_DB_KEY)
+    assert json.loads(row.value) == {"v": 1, "base_url": "https://api.example.com/v1", "key": plain}
+    assert (await ai.resolve_config(db_session)).api_key == plain
+
+
+@pytest.mark.parametrize("legacy", ['{"key": "secret"}', '{"base_url": null, "key": "secret"}'])
+async def test_a_legacy_chat_key_shaped_like_a_record_is_still_upgraded(db_session: AsyncSession, legacy: str) -> None:
+    """Any string used to be accepted as a key; only the versioned record counts as bound."""
+    await _write_plain_key_row(db_session, ai.API_KEY_DB_KEY, legacy)
+    await _set_base_url(db_session, "https://api.example.com/v1")
+
+    await ai.upgrade_stored_keys(db_session)
+
+    assert (await ai.resolve_config(db_session)).api_key == legacy
+
+
+async def test_a_decision_key_saved_before_the_version_marker_is_still_bound(db_session: AsyncSession) -> None:
+    """Decision keys were stored as {"base_url", "key"} with no marker; they keep working."""
+    await _write_plain_key_row(
+        db_session,
+        ai.DECISION_API_KEY_DB_KEY,
+        json.dumps({"base_url": "https://api.typesafe.ai", "key": "sk-decision"}),
+    )
+    await _set_decision_base_url(db_session, "https://api.typesafe.ai")
+
+    assert (await ai.resolve_config(db_session)).decision_api_key == "sk-decision"
+    await _set_decision_base_url(db_session, "https://elsewhere.example.com")
+    assert (await ai.resolve_config(db_session)).decision_api_key is None
+
+
+async def test_upgrade_stored_keys_binds_the_stt_and_decision_keys_to_their_own_urls(db_session: AsyncSession) -> None:
+    await _write_plain_key_row(db_session, ai.STT_API_KEY_DB_KEY, "sk-stt")
+    await _write_plain_key_row(db_session, ai.DECISION_API_KEY_DB_KEY, "sk-decision")
+    await _set_base_url(db_session, "https://chat.example.com/v1")
+    await _set_stt_base_url(db_session, "https://stt.example.com/v1")
+    await _set_decision_base_url(db_session, "https://api.typesafe.ai")
+
+    await ai.upgrade_stored_keys(db_session)
+
+    stt = await db_session.get(models.Setting, ai.STT_API_KEY_DB_KEY)
+    decision = await db_session.get(models.Setting, ai.DECISION_API_KEY_DB_KEY)
+    assert json.loads(stt.value) == {"v": 1, "base_url": "https://stt.example.com/v1", "key": "sk-stt"}
+    assert json.loads(decision.value) == {"v": 1, "base_url": "https://api.typesafe.ai", "key": "sk-decision"}
+    config = await ai.resolve_config(db_session)
+    assert (config.api_key, config.stt_api_key, config.decision_api_key) == (None, "sk-stt", "sk-decision")
+
+
+async def test_upgrade_stored_keys_never_rebinds_a_key_already_bound_elsewhere(db_session: AsyncSession) -> None:
+    """A key bound to URL A must not follow the URL to B just because the upgrade runs again."""
+    await _set_base_url(db_session, "https://a.example.com/v1")
+    await ai.set_stored_api_key(db_session, "sk-a")
+    await _set_base_url(db_session, "https://b.example.com/v1")
+
+    await ai.upgrade_stored_keys(db_session)
+
+    row = await db_session.get(models.Setting, ai.API_KEY_DB_KEY)
+    assert json.loads(row.value) == {"v": 1, "base_url": "https://a.example.com/v1", "key": "sk-a"}
+    assert (await ai.resolve_config(db_session)).api_key is None
+
+
+async def test_upgrade_stored_keys_logs_a_failure_instead_of_raising(
+    db_session: AsyncSession,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Startup calls it; a failure leaves the old keys unused but must not stop Spoolman."""
+
+    async def _broken(_db: AsyncSession) -> ai.AIConfig:
+        raise RuntimeError("database gone")
+
+    monkeypatch.setattr(ai, "_resolve_values", _broken)
+    with caplog.at_level("ERROR"):
+        await ai.upgrade_stored_keys(db_session)
+    assert "Could not tie stored AI keys" in caplog.text
+
+
+async def test_chat_key_warning_is_logged_once_and_not_without_a_url(
+    db_session: AsyncSession,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    await _write_plain_key_row(db_session, ai.API_KEY_DB_KEY, "sk-old")
+    with caplog.at_level("WARNING"):
+        await ai.resolve_config(db_session)
+    assert "Not using the AI API key" not in caplog.text  # no URL: nothing would be sent anyway
+
+    await _set_base_url(db_session, "https://api.example.com/v1")
+    with caplog.at_level("WARNING"):
+        for _ in range(3):
+            await ai.resolve_config(db_session)
+    assert caplog.text.count("Not using the AI API key") == 1
 
 
 # --- URL helpers -------------------------------------------------------------------

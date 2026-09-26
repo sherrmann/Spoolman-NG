@@ -327,7 +327,7 @@
 							? ng.settings_ai_api_key_placeholder_set()
 							: ng.settings_ai_api_key_placeholder_unset()}
 					/>
-					{#if status?.apiKeySet && !locked.has('api_key')}
+					{#if status?.apiKeyStored && !locked.has('api_key')}
 						<button class="link" onclick={() => clearKey('chat')}>
 							{ng.settings_ai_api_key_clear()}
 						</button>
@@ -392,7 +392,7 @@
 							? ng.settings_ai_api_key_placeholder_set()
 							: ng.settings_ai_api_key_placeholder_unset()}
 					/>
-					{#if status?.sttApiKeySet && !locked.has('stt_api_key')}
+					{#if status?.sttApiKeyStored && !locked.has('stt_api_key')}
 						<button class="link" onclick={() => clearKey('stt')}>
 							{ng.settings_ai_api_key_clear()}
 						</button>

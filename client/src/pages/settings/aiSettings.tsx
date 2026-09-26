@@ -273,7 +273,7 @@ export function AISettings() {
             autoComplete="off"
           />
         </Form.Item>
-        {status.data?.api_key_set && !envLocked.has("api_key") && (
+        {status.data?.api_key_stored && !envLocked.has("api_key") && (
           <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
             <Button size="small" loading={setKey.isPending} onClick={() => setKey.mutate(null)}>
               {t("settings.ai.api_key.clear")}
@@ -321,7 +321,7 @@ export function AISettings() {
             autoComplete="off"
           />
         </Form.Item>
-        {status.data?.stt_api_key_set && !envLocked.has("stt_api_key") && (
+        {status.data?.stt_api_key_stored && !envLocked.has("stt_api_key") && (
           <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
             <Button size="small" loading={setSTTKey.isPending} onClick={() => setSTTKey.mutate(null)}>
               {t("settings.ai.api_key.clear")}

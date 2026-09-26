@@ -12,6 +12,7 @@ const statusMock = vi.fn<() => AIStatus | undefined>();
 const settingsMock = vi.fn<() => Record<string, { value: string }> | undefined>();
 const probeMutate = vi.fn();
 const setKeyMutate = vi.fn();
+const setSTTKeyMutate = vi.fn();
 const setSettingMutate = vi.fn();
 const decisionTestMutate = vi.fn();
 const setDecisionKeyMutate = vi.fn();
@@ -22,7 +23,7 @@ vi.mock("../../utils/queryAI", () => ({
   useAIStatus: () => ({ data: statusMock() }),
   useAIProbe: () => ({ mutate: probeMutate, isPending: false, isError: false, error: null }),
   useSetAIKey: () => ({ mutate: setKeyMutate, mutateAsync: vi.fn(), isPending: false }),
-  useSetSTTKey: () => ({ mutate: vi.fn(), mutateAsync: vi.fn(), isPending: false }),
+  useSetSTTKey: () => ({ mutate: setSTTKeyMutate, mutateAsync: vi.fn(), isPending: false }),
   useSetDecisionKey: () => ({
     mutate: setDecisionKeyMutate,
     mutateAsync: async (value: unknown) => setDecisionKeyMutate(value),
@@ -142,7 +143,7 @@ describe("AISettings (#359)", () => {
   });
 
   it("never shows a stored key, offers replace-and-clear instead", async () => {
-    statusMock.mockReturnValue({ ...baseStatus, api_key_set: true });
+    statusMock.mockReturnValue({ ...baseStatus, api_key_set: true, api_key_stored: true });
     const user = userEvent.setup();
     render(<AISettings />);
 
@@ -151,6 +152,31 @@ describe("AISettings (#359)", () => {
 
     await user.click(screen.getByRole("button", { name: "settings.ai.api_key.clear" }));
     expect(setKeyMutate).toHaveBeenCalledWith(null);
+  });
+
+  it("offers Clear for a stored-but-unused chat key (base URL changed since it was saved)", async () => {
+    statusMock.mockReturnValue({ ...baseStatus, api_key_set: false, api_key_stored: true });
+    const user = userEvent.setup();
+    render(<AISettings />);
+
+    await user.click(screen.getByRole("button", { name: "settings.ai.api_key.clear" }));
+    expect(setKeyMutate).toHaveBeenCalledWith(null);
+  });
+
+  it("offers Clear for a stored STT key", async () => {
+    statusMock.mockReturnValue({ ...baseStatus, stt_api_key_set: false, stt_api_key_stored: true });
+    const user = userEvent.setup();
+    render(<AISettings />);
+
+    await user.click(screen.getByRole("button", { name: "settings.ai.api_key.clear" }));
+    expect(setSTTKeyMutate).toHaveBeenCalledWith(null);
+  });
+
+  it("hides Clear when nothing is stored", () => {
+    statusMock.mockReturnValue({ ...baseStatus, api_key_set: false, api_key_stored: false, stt_api_key_stored: false });
+    render(<AISettings />);
+
+    expect(screen.queryByRole("button", { name: "settings.ai.api_key.clear" })).not.toBeInTheDocument();
   });
 
   it("disables env-locked fields and says why", () => {
