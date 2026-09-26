@@ -403,6 +403,8 @@ def _catalog_args(**overrides: object) -> argparse.Namespace:
         "generated": 0,
         "seed": 1,
         "baseline_only": False,
+        "flip_diameter": False,
+        "dump_results": None,
     }
     return argparse.Namespace(**{**defaults, **overrides})
 
@@ -722,6 +724,323 @@ def test_main_rejects_suggest_misuse(
 
     assert exit_info.value.code == 2
     assert message in capsys.readouterr().err
+
+
+# --- flip_diameter_reading ------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("diameter_mm", "expected"),
+    [
+        (1.75, 2.85),
+        (2.85, 1.75),
+        (3.0, 1.75),
+        (None, None),
+    ],
+)
+def test_flip_diameter_reading(eval_module: ModuleType, diameter_mm: float | None, expected: float | None) -> None:
+    extraction = {"vendor": "Acme", "diameter_mm": diameter_mm}
+
+    flipped = eval_module.flip_diameter_reading(extraction)
+
+    assert flipped["diameter_mm"] == expected
+    assert flipped["vendor"] == "Acme", "other fields are untouched"
+
+
+def test_flip_diameter_reading_leaves_the_original_dict_alone(eval_module: ModuleType) -> None:
+    extraction = {"diameter_mm": 1.75}
+
+    eval_module.flip_diameter_reading(extraction)
+
+    assert extraction == {"diameter_mm": 1.75}
+
+
+def test_flip_diameter_still_judged_against_the_labelled_row(eval_module: ModuleType) -> None:
+    """A flipped generated reading must still be scored against the true (unflipped) product."""
+    labelled = {"manufacturer": "Acme", "name": "Pro PLA", "material": "PLA", "weight": 1000, "diameter": 1.75}
+    candidate = {"vendor": "Acme", "name": "Pro PLA", "material": "PLA", "weight_g": 1000, "diameter_mm": 1.75}
+    reading = {"diameter_mm": 1.75}
+
+    flipped_reading = eval_module.flip_diameter_reading(reading)
+
+    assert flipped_reading["diameter_mm"] == 2.85
+    assert eval_module.same_product(candidate, labelled, flipped_reading) is True, (
+        "the flipped reading is still judged against the labelled row, not against itself"
+    )
+
+
+async def test_collect_catalog_cases_flips_generated_and_photo_diameters(
+    eval_module: ModuleType,
+    tmp_path: Path,
+) -> None:
+    photos = tmp_path / "photos"
+    _write_photo_case(photos)  # a.jpg's extraction has no diameter_mm at all
+    args = _catalog_args(photos=photos, generated=2, seed=1, flip_diameter=True)
+
+    cases = eval_module._collect_catalog_cases(args, _CATALOG, {e["id"]: e for e in _CATALOG})  # noqa: SLF001
+
+    generated = [c for c in cases if c.source == "generated"]
+    assert generated, "the tiny catalog must still yield generated cases"
+    for case in generated:
+        original_diameter = case.extraction.get("diameter_mm")
+        assert original_diameter in (None, 2.85, 1.75), "flipped away from the catalog's raw 1.75/2.85"
+    photo_case = next(c for c in cases if c.source == "photos")
+    assert photo_case.extraction.get("diameter_mm") is None, "no diameter to flip: left alone"
+
+
+async def test_collect_catalog_cases_without_flip_diameter_keeps_original_readings(
+    eval_module: ModuleType,
+) -> None:
+    args = _catalog_args(generated=2, seed=1, flip_diameter=False)
+
+    with_flip = eval_module._collect_catalog_cases(  # noqa: SLF001
+        _catalog_args(generated=2, seed=1, flip_diameter=True),
+        _CATALOG,
+        {e["id"]: e for e in _CATALOG},
+    )
+    without_flip = eval_module._collect_catalog_cases(args, _CATALOG, {e["id"]: e for e in _CATALOG})  # noqa: SLF001
+
+    assert [c.extraction.get("diameter_mm") for c in without_flip] == [1.75, 1.75]
+    assert [c.extraction.get("diameter_mm") for c in with_flip] == [2.85, 2.85]
+
+
+async def test_catalog_main_flip_diameter_end_to_end(
+    eval_module: ModuleType,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    catalog_path = tmp_path / "filaments.json"
+    catalog_path.write_text(json.dumps(_CATALOG), encoding="utf-8")
+    args = _catalog_args(catalog=catalog_path, generated=2, baseline_only=True, flip_diameter=True)
+
+    result = await eval_module._catalog_main(args)  # noqa: SLF001
+
+    assert result == 0
+    assert "== generated: 2 cases" in capsys.readouterr().out
+
+
+# --- dump-results / --compare -----------------------------------------------------------------
+
+
+def test_write_and_read_dumped_results_round_trip(eval_module: ModuleType, tmp_path: Path) -> None:
+    case_cls, result_cls = eval_module.CatalogCase, eval_module.CatalogResult
+    results = [
+        result_cls(
+            case=case_cls("p1", "photos", {}, "id1"),
+            shortlisted=True,
+            empty=False,
+            baseline_ok=True,
+            rerank_ok=True,
+            top_tied=False,
+            right_rank=1,
+        ),
+        result_cls(
+            case=case_cls("p2", "photos", {}, "id2"),
+            shortlisted=False,
+            empty=True,
+            baseline_ok=False,
+            rerank_ok=None,
+            top_tied=False,
+            right_rank=None,
+        ),
+    ]
+    out_path = tmp_path / "dump.jsonl"
+
+    eval_module.write_results(out_path, results)
+    rows = eval_module.read_dumped_results(out_path)
+
+    assert rows == [
+        {
+            "case_id": "p1",
+            "source": "photos",
+            "catalog_id": "id1",
+            "shortlisted": True,
+            "baseline_ok": True,
+            "rerank_ok": True,
+            "top_tied": False,
+            "right_rank": 1,
+        },
+        {
+            "case_id": "p2",
+            "source": "photos",
+            "catalog_id": "id2",
+            "shortlisted": False,
+            "baseline_ok": False,
+            "rerank_ok": None,
+            "top_tied": False,
+            "right_rank": None,
+        },
+    ]
+
+
+def test_write_results_overwrites_the_file(eval_module: ModuleType, tmp_path: Path) -> None:
+    out_path = tmp_path / "dump.jsonl"
+    out_path.write_text("stale content that must not survive\n", encoding="utf-8")
+    case_cls, result_cls = eval_module.CatalogCase, eval_module.CatalogResult
+    results = [result_cls(case=case_cls("p1", "photos", {}, "id1"), shortlisted=True, empty=False, baseline_ok=True)]
+
+    eval_module.write_results(out_path, results)
+
+    rows = eval_module.read_dumped_results(out_path)
+    assert [row["case_id"] for row in rows] == ["p1"]
+
+
+async def test_run_catalog_case_right_rank_is_the_first_accepted_position(
+    eval_module: ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(eval_module.spoolintake, "load_catalog", lambda: _RERANK_CATALOG)
+    by_id = {entry["id"]: entry for entry in _RERANK_CATALOG}
+    case = eval_module.CatalogCase("case-1", "test", _RERANK_EXTRACTION, "right")
+
+    result = await eval_module.run_catalog_case(None, case, by_id)
+
+    assert result.right_rank == 2, "'right' scores below 'wrong' on fuzzy but is still shortlisted second"
+
+
+async def test_run_catalog_case_right_rank_none_when_not_shortlisted(
+    eval_module: ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    catalog = [
+        {
+            "id": "unrelated",
+            "manufacturer": "Bizarro",
+            "name": "Zzz Totally Unrelated",
+            "material": "ABS",
+            "weight": 9999,
+            "diameter": 3.0,
+        },
+    ]
+    monkeypatch.setattr(eval_module.spoolintake, "load_catalog", lambda: catalog)
+    by_id = {entry["id"]: entry for entry in catalog}
+    extraction = {"vendor": "Acme", "name": "Pro PLA", "material": "PLA", "weight_g": 1000}
+    case = eval_module.CatalogCase("case-1", "test", extraction, "unrelated")
+
+    result = await eval_module.run_catalog_case(None, case, by_id)
+
+    assert result.right_rank is None
+
+
+def test_print_comparison(eval_module: ModuleType, capsys: pytest.CaptureFixture[str]) -> None:
+    def row(case_id: str, source: str, *, shortlisted: bool, baseline_ok: bool, rerank_ok: bool | None) -> dict:
+        return {
+            "case_id": case_id,
+            "source": source,
+            "catalog_id": "id",
+            "shortlisted": shortlisted,
+            "baseline_ok": baseline_ok,
+            "rerank_ok": rerank_ok,
+            "top_tied": False,
+            "right_rank": 1 if shortlisted else None,
+        }
+
+    old = [
+        row("g1", "generated", shortlisted=True, baseline_ok=True, rerank_ok=None),
+        row("g2", "generated", shortlisted=True, baseline_ok=False, rerank_ok=None),
+        row("g3", "generated", shortlisted=False, baseline_ok=False, rerank_ok=None),
+    ]
+    new = [
+        row("g1", "generated", shortlisted=True, baseline_ok=True, rerank_ok=None),
+        row("g2", "generated", shortlisted=True, baseline_ok=True, rerank_ok=None),  # fixed
+        row("g3", "generated", shortlisted=False, baseline_ok=False, rerank_ok=None),
+    ]
+
+    eval_module.print_comparison(old, new)
+    flat = " ".join(capsys.readouterr().out.split())
+
+    assert "== generated: 3 cases old, 3 new" in flat
+    assert "shortlisted 2/3 -> 2/3" in flat
+    assert "top-1 1/3 -> 2/3" in flat
+    assert "1 case(s) better, 0 worse" in flat
+
+
+def test_print_comparison_lists_worse_cases_capped_at_15(
+    eval_module: ModuleType,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    def row(case_id: str, *, ok: bool) -> dict:
+        return {
+            "case_id": case_id,
+            "source": "generated",
+            "catalog_id": "id",
+            "shortlisted": True,
+            "baseline_ok": ok,
+            "rerank_ok": None,
+            "top_tied": False,
+            "right_rank": 1,
+        }
+
+    ids = [f"g{i}" for i in range(20)]
+    old = [row(case_id, ok=True) for case_id in ids]
+    new = [row(case_id, ok=False) for case_id in ids]
+
+    eval_module.print_comparison(old, new)
+    out = capsys.readouterr().out
+
+    assert "20 case(s) better, 20 worse" not in out
+    assert "0 case(s) better, 20 worse" in out
+    assert "g19" not in out.split("worse:")[1].split("more")[0], "capped at 15 shown"
+    assert "5 more" in out
+
+
+def test_compare_main_reports_a_bad_file(
+    eval_module: ModuleType,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    bad = tmp_path / "bad.jsonl"
+    bad.write_text("not json\n", encoding="utf-8")
+    good = tmp_path / "good.jsonl"
+    good.write_text("", encoding="utf-8")
+
+    result = eval_module._compare_main(bad, good)  # noqa: SLF001
+
+    assert result == 2
+    assert "not a --dump-results file" in capsys.readouterr().err
+
+
+def test_main_compare_mode_runs_without_a_catalog_or_endpoint(
+    eval_module: ModuleType,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    old = tmp_path / "old.jsonl"
+    new = tmp_path / "new.jsonl"
+    row = {
+        "case_id": "g1",
+        "source": "generated",
+        "catalog_id": "id",
+        "shortlisted": True,
+        "baseline_ok": True,
+        "rerank_ok": None,
+        "top_tied": False,
+        "right_rank": 1,
+    }
+    old.write_text(json.dumps(row) + "\n", encoding="utf-8")
+    new.write_text(json.dumps(row) + "\n", encoding="utf-8")
+    monkeypatch.setattr(sys, "argv", ["match_rerank_eval.py", "--compare", str(old), str(new)])
+
+    with pytest.raises(SystemExit) as exit_info:
+        eval_module.main()
+
+    assert exit_info.value.code == 0
+    assert "== generated" in capsys.readouterr().out
+
+
+def test_main_compare_rejects_being_combined_with_catalog_mode(
+    eval_module: ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(sys, "argv", ["match_rerank_eval.py", "--compare", "a.jsonl", "b.jsonl", "--generated", "5"])
+
+    with pytest.raises(SystemExit) as exit_info:
+        eval_module.main()
+
+    assert exit_info.value.code == 2
+    assert "--compare stands alone" in capsys.readouterr().err
 
 
 async def test_a_tie_between_variants_of_the_right_product_is_not_counted(
