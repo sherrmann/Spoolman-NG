@@ -351,10 +351,11 @@ _MATERIAL_VARIANT_SCORE = 0.5
 #: Filament comes in two sizes: 1.75 mm, and 2.85 mm, which some makers call 3 mm. Anything below
 #: this is the small one.
 _DIAMETER_CLASS_SPLIT_MM = 2.3
-#: Subtracted when the reading and the candidate are different filament sizes. Small, so a misread
-#: diameter only reorders otherwise-equal rows and cannot push the right one off the shortlist;
-#: enough to decide the tie between the 1.75 mm and 2.85 mm rows of the same product.
-_DIAMETER_MISMATCH_PENALTY = 0.03
+#: Subtracted when the reading and the candidate are different filament sizes. It only has to
+#: decide the tie between the 1.75 mm and 2.85 mm rows of the same product: on generated readings
+#: 0.001 to 0.05 all fixed the same ties, and every step up only cost more when the diameter was
+#: misread. It stays above the three-decimal rounding of the score and below the name tie-break.
+_DIAMETER_MISMATCH_PENALTY = 0.005
 
 
 def _diameter_class(value: object) -> bool | None:
