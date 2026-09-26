@@ -307,8 +307,27 @@ class _StoredKey:
     bound: bool
 
 
+#: Marks a stored key row as the bound format. Before it, any string was accepted as a key, so a
+#: key that is itself JSON with a "key" member must not be mistaken for a bound record.
+_KEY_RECORD_VERSION = 1
+
+
+def _key_record(bound_url: str | None, key: str) -> str:
+    return json.dumps({"v": _KEY_RECORD_VERSION, "base_url": bound_url, "key": key})
+
+
+def _is_key_record(record: object, spec: _KeySpec) -> bool:
+    if not isinstance(record, dict):
+        return False
+    if record.get("v") == _KEY_RECORD_VERSION:
+        return True
+    # Decision keys were stored as {"base_url", "key"} without the marker for a while; nothing
+    # else was ever stored under that row, so the exact shape is unambiguous there.
+    return spec.key_attr == "decision_api_key" and set(record) == {"base_url", "key"}
+
+
 async def _read_stored_key(db: AsyncSession, spec: _KeySpec) -> _StoredKey | None:
-    """Read a stored key row: JSON ``{"base_url", "key"}``, or plain text from before binding."""
+    """Read a stored key row: a bound record (see _key_record), or plain text from before binding."""
     raw = await _get_stored_key(db, spec.db_key)
     if raw is None:
         return None
@@ -316,7 +335,7 @@ async def _read_stored_key(db: AsyncSession, spec: _KeySpec) -> _StoredKey | Non
         record = json.loads(raw)
     except json.JSONDecodeError:
         record = None
-    if not (isinstance(record, dict) and "key" in record):
+    if not _is_key_record(record, spec):
         return _StoredKey(key=raw, bound_url=None, bound=False)
     key = record.get("key")
     if not isinstance(key, str) or not key:
@@ -337,7 +356,7 @@ async def _store_key(db: AsyncSession, spec: _KeySpec, value: str | None) -> Non
     record = None
     if value:
         bound_url = getattr(await resolve_config(db), spec.url_attr)
-        record = json.dumps({"base_url": bound_url, "key": value})
+        record = _key_record(bound_url, value)
     await _set_stored_key(db, spec.db_key, record, spec.label)
 
 
@@ -391,7 +410,7 @@ async def upgrade_stored_keys(db: AsyncSession) -> None:
             url = getattr(config, spec.url_attr)
             if stored is None or stored.bound or not url:
                 continue
-            await _set_stored_key(db, spec.db_key, json.dumps({"base_url": url, "key": stored.key}), spec.label)
+            await _set_stored_key(db, spec.db_key, _key_record(url, stored.key), spec.label)
             logger.info("%s is now tied to its base URL.", spec.label)
     except Exception:
         logger.exception("Could not tie stored AI keys to their base URLs; they stay unused until entered again.")

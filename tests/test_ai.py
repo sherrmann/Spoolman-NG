@@ -182,7 +182,7 @@ async def test_stored_decision_key_and_its_url_are_one_row_and_clear_together(db
 
     row = await db_session.get(models.Setting, ai.DECISION_API_KEY_DB_KEY)
     assert row is not None
-    assert json.loads(row.value) == {"base_url": "https://api.typesafe.ai", "key": "sk-stored"}
+    assert json.loads(row.value) == {"v": 1, "base_url": "https://api.typesafe.ai", "key": "sk-stored"}
 
     await ai.set_stored_decision_api_key(db_session, None)
     assert await db_session.get(models.Setting, ai.DECISION_API_KEY_DB_KEY) is None
@@ -388,7 +388,7 @@ async def test_upgrade_stored_keys_binds_a_plain_text_key_to_the_current_url(db_
     await ai.upgrade_stored_keys(db_session)
 
     row = await db_session.get(models.Setting, ai.API_KEY_DB_KEY)
-    assert json.loads(row.value) == {"base_url": "https://api.example.com/v1", "key": "sk-old"}
+    assert json.loads(row.value) == {"v": 1, "base_url": "https://api.example.com/v1", "key": "sk-old"}
     assert (await ai.resolve_config(db_session)).api_key == "sk-old"
 
 
@@ -427,7 +427,7 @@ async def test_upgrade_stored_keys_binds_to_an_env_base_url(
     await ai.upgrade_stored_keys(db_session)
 
     row = await db_session.get(models.Setting, ai.API_KEY_DB_KEY)
-    assert json.loads(row.value) == {"base_url": "https://env.example.com/v1", "key": "sk-old"}
+    assert json.loads(row.value) == {"v": 1, "base_url": "https://env.example.com/v1", "key": "sk-old"}
 
 
 @pytest.mark.parametrize("plain", ["12345", '"abc"', "null", "true", "[1]", '{"foo": 1}'])
@@ -440,8 +440,33 @@ async def test_a_plain_key_that_parses_as_json_is_upgraded_unchanged(db_session:
     await ai.upgrade_stored_keys(db_session)
 
     row = await db_session.get(models.Setting, ai.API_KEY_DB_KEY)
-    assert json.loads(row.value) == {"base_url": "https://api.example.com/v1", "key": plain}
+    assert json.loads(row.value) == {"v": 1, "base_url": "https://api.example.com/v1", "key": plain}
     assert (await ai.resolve_config(db_session)).api_key == plain
+
+
+@pytest.mark.parametrize("legacy", ['{"key": "secret"}', '{"base_url": null, "key": "secret"}'])
+async def test_a_legacy_chat_key_shaped_like_a_record_is_still_upgraded(db_session: AsyncSession, legacy: str) -> None:
+    """Any string used to be accepted as a key; only the versioned record counts as bound."""
+    await _write_plain_key_row(db_session, ai.API_KEY_DB_KEY, legacy)
+    await _set_base_url(db_session, "https://api.example.com/v1")
+
+    await ai.upgrade_stored_keys(db_session)
+
+    assert (await ai.resolve_config(db_session)).api_key == legacy
+
+
+async def test_a_decision_key_saved_before_the_version_marker_is_still_bound(db_session: AsyncSession) -> None:
+    """Decision keys were stored as {"base_url", "key"} with no marker; they keep working."""
+    await _write_plain_key_row(
+        db_session,
+        ai.DECISION_API_KEY_DB_KEY,
+        json.dumps({"base_url": "https://api.typesafe.ai", "key": "sk-decision"}),
+    )
+    await _set_decision_base_url(db_session, "https://api.typesafe.ai")
+
+    assert (await ai.resolve_config(db_session)).decision_api_key == "sk-decision"
+    await _set_decision_base_url(db_session, "https://elsewhere.example.com")
+    assert (await ai.resolve_config(db_session)).decision_api_key is None
 
 
 async def test_upgrade_stored_keys_binds_the_stt_and_decision_keys_to_their_own_urls(db_session: AsyncSession) -> None:
@@ -455,8 +480,8 @@ async def test_upgrade_stored_keys_binds_the_stt_and_decision_keys_to_their_own_
 
     stt = await db_session.get(models.Setting, ai.STT_API_KEY_DB_KEY)
     decision = await db_session.get(models.Setting, ai.DECISION_API_KEY_DB_KEY)
-    assert json.loads(stt.value) == {"base_url": "https://stt.example.com/v1", "key": "sk-stt"}
-    assert json.loads(decision.value) == {"base_url": "https://api.typesafe.ai", "key": "sk-decision"}
+    assert json.loads(stt.value) == {"v": 1, "base_url": "https://stt.example.com/v1", "key": "sk-stt"}
+    assert json.loads(decision.value) == {"v": 1, "base_url": "https://api.typesafe.ai", "key": "sk-decision"}
     config = await ai.resolve_config(db_session)
     assert (config.api_key, config.stt_api_key, config.decision_api_key) == (None, "sk-stt", "sk-decision")
 
@@ -470,7 +495,7 @@ async def test_upgrade_stored_keys_never_rebinds_a_key_already_bound_elsewhere(d
     await ai.upgrade_stored_keys(db_session)
 
     row = await db_session.get(models.Setting, ai.API_KEY_DB_KEY)
-    assert json.loads(row.value) == {"base_url": "https://a.example.com/v1", "key": "sk-a"}
+    assert json.loads(row.value) == {"v": 1, "base_url": "https://a.example.com/v1", "key": "sk-a"}
     assert (await ai.resolve_config(db_session)).api_key is None
 
 
