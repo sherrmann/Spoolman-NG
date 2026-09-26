@@ -256,6 +256,153 @@ def test_unrelated_candidate_scores_low() -> None:
     assert score < spoolintake._LIBRARY_MIN_SCORE  # noqa: SLF001
 
 
+# --- Diameter mismatch penalty ------------------------------------------------------
+#
+# score_candidate ignored diameter entirely, so the 1.75 mm and 2.85 mm rows of the same
+# product tied and catalogue order alone decided which one a scan matched. A small penalty
+# now breaks that tie in favour of the reading's own size, without being able to push a
+# genuinely better match off the shortlist.
+
+_TWIN_ARGS = {"vendor": "Prusament", "name": "Galaxy Black", "material": "PLA", "weight_g": 1000}
+
+
+def _twin_extraction(diameter_mm: object) -> dict:
+    return {**_EXTRACTION, "diameter_mm": diameter_mm}
+
+
+def test_diameter_mismatch_penalizes_the_other_size() -> None:
+    reading_175 = _twin_extraction(1.75)
+    score_175 = score_candidate(reading_175, diameter_mm=1.75, **_TWIN_ARGS)
+    score_285 = score_candidate(reading_175, diameter_mm=2.85, **_TWIN_ARGS)
+    assert score_175 > score_285
+    assert score_175 - score_285 == pytest.approx(spoolintake._DIAMETER_MISMATCH_PENALTY)  # noqa: SLF001
+
+    reading_285 = _twin_extraction(2.85)
+    score_175_b = score_candidate(reading_285, diameter_mm=1.75, **_TWIN_ARGS)
+    score_285_b = score_candidate(reading_285, diameter_mm=2.85, **_TWIN_ARGS)
+    assert score_285_b > score_175_b
+
+
+@pytest.mark.parametrize("catalogue_order", [("175", "285"), ("285", "175")])
+def test_match_catalog_prefers_the_readings_diameter_whatever_the_catalogue_order(
+    monkeypatch: pytest.MonkeyPatch,
+    catalogue_order: tuple[str, str],
+) -> None:
+    entry_175 = _catalog_entry("twin-175", "Prusament", "Galaxy Black", "PLA", 1000)
+    entry_175["diameter"] = 1.75
+    entry_285 = _catalog_entry("twin-285", "Prusament", "Galaxy Black", "PLA", 1000)
+    entry_285["diameter"] = 2.85
+    by_id = {"175": entry_175, "285": entry_285}
+    entries = [by_id[key] for key in catalogue_order]
+    monkeypatch.setattr(spoolintake, "load_catalog", lambda: entries)
+
+    matches_175 = spoolintake.match_catalog(_twin_extraction(1.75))
+    matches_285 = spoolintake.match_catalog(_twin_extraction(2.85))
+
+    assert matches_175[0]["external_id"] == "twin-175"
+    assert matches_285[0]["external_id"] == "twin-285"
+
+
+@pytest.mark.parametrize("reading_diameter", [None, 0, "not a number"])
+def test_no_penalty_when_the_readings_diameter_is_unknown(reading_diameter: object) -> None:
+    extraction = _twin_extraction(reading_diameter)
+    with_diameter = score_candidate(extraction, diameter_mm=2.85, **_TWIN_ARGS)
+    without_keyword = score_candidate(extraction, **_TWIN_ARGS)
+    assert with_diameter == without_keyword
+
+
+@pytest.mark.parametrize("candidate_diameter", [None, 0, "not a number"])
+def test_no_penalty_when_the_candidates_diameter_is_unknown(candidate_diameter: object) -> None:
+    extraction = _twin_extraction(1.75)
+    with_diameter = score_candidate(extraction, diameter_mm=candidate_diameter, **_TWIN_ARGS)
+    without_keyword = score_candidate(extraction, **_TWIN_ARGS)
+    assert with_diameter == without_keyword
+
+
+def test_285_and_3mm_are_the_same_size_and_a_string_diameter_is_coerced() -> None:
+    extraction = _twin_extraction(2.85)
+    score_3mm = score_candidate(extraction, diameter_mm=3.0, **_TWIN_ARGS)
+    score_285 = score_candidate(extraction, diameter_mm=2.85, **_TWIN_ARGS)
+    assert score_3mm == score_285
+
+    score_string = score_candidate(_twin_extraction("1.75"), diameter_mm="1.75", **_TWIN_ARGS)
+    score_number = score_candidate(_twin_extraction(1.75), diameter_mm=1.75, **_TWIN_ARGS)
+    assert score_string == score_number
+
+
+def test_a_penalised_exact_match_still_clears_both_thresholds() -> None:
+    score = score_candidate(_twin_extraction(1.75), diameter_mm=2.85, **_TWIN_ARGS)
+    assert score >= spoolintake._CATALOG_MIN_SCORE  # noqa: SLF001
+    assert score >= spoolintake._LIBRARY_MIN_SCORE  # noqa: SLF001
+
+
+def test_the_penalty_never_makes_a_score_negative(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(spoolintake, "_DIAMETER_MISMATCH_PENALTY", 999.0)
+    score = score_candidate(
+        {"vendor": None, "name": None, "material": None, "weight_g": None, "diameter_mm": 1.75},
+        vendor=None,
+        name=None,
+        material=None,
+        weight_g=None,
+        diameter_mm=2.85,
+    )
+    assert score == 0.0
+
+
+def test_rank_library_orders_twins_by_diameter_and_tolerates_missing_diameter() -> None:
+    rows = [
+        {
+            "filament_id": 1,
+            "vendor": "Prusament",
+            "name": "Galaxy Black",
+            "material": "PLA",
+            "weight_g": 1000,
+            "diameter_mm": 1.75,
+        },
+        {
+            "filament_id": 2,
+            "vendor": "Prusament",
+            "name": "Galaxy Black",
+            "material": "PLA",
+            "weight_g": 1000,
+            "diameter_mm": 2.85,
+        },
+        {
+            # No diameter_mm key at all -- older rows and any that .get() must tolerate.
+            "filament_id": 3,
+            "vendor": "Prusament",
+            "name": "Galaxy Black",
+            "material": "PLA",
+            "weight_g": 1000,
+        },
+    ]
+    reading = _twin_extraction(2.85)
+
+    ranked = spoolintake._rank_library(rows, reading, {})  # noqa: SLF001
+
+    assert ranked[0]["filament_id"] == 2, "the matching size comes first"
+    assert {r["filament_id"] for r in ranked} == {1, 2, 3}
+
+
+def test_without_the_penalty_catalogue_order_alone_decides_the_twin_tie(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Confirms the penalty -- not something else -- is what orders the twins above.
+
+    With the penalty zeroed the two otherwise-identical rows tie exactly, and ``_best``'s
+    documented tie-break (stable sort, input order kept) takes over: whichever twin is listed
+    first in the catalogue wins, regardless of the reading's diameter.
+    """
+    monkeypatch.setattr(spoolintake, "_DIAMETER_MISMATCH_PENALTY", 0.0)
+    entry_175 = _catalog_entry("twin-175", "Prusament", "Galaxy Black", "PLA", 1000)
+    entry_175["diameter"] = 1.75
+    entry_285 = _catalog_entry("twin-285", "Prusament", "Galaxy Black", "PLA", 1000)
+    entry_285["diameter"] = 2.85
+    monkeypatch.setattr(spoolintake, "load_catalog", lambda: [entry_175, entry_285])
+
+    matches = spoolintake.match_catalog(_twin_extraction(2.85))
+
+    assert matches[0]["external_id"] == "twin-175", "catalogue order wins once the penalty is gone"
+
+
 # --- Catalog matching --------------------------------------------------------------
 
 
