@@ -37,6 +37,22 @@ async function setSetting(
     throw new Error(`setting ${key} -> ${res.status()} ${await res.text()}`);
 }
 
+/**
+ * Clear the stored chat, speech-to-text and decision-model API keys.
+ *
+ * There is no settings key for these -- they live behind /ai/config, write-only, and a null
+ * there is what actually removes them (see spoolman/api/v1/ai.py). Without this, a key stored
+ * by one test survives into the next, bound to whatever base URL that later test saves.
+ */
+async function clearAiKeys(request: APIRequestContext) {
+  const res = await request.post("/api/v1/ai/config", {
+    headers: { "Content-Type": "application/json" },
+    data: JSON.stringify({ api_key: null, stt_api_key: null, decision_api_key: null }),
+  });
+  if (!res.ok())
+    throw new Error(`ai/config clear -> ${res.status()} ${await res.text()}`);
+}
+
 /** Put the server back to first-run, so each test states its own preconditions. */
 async function resetAi(request: APIRequestContext) {
   for (const k of [
@@ -44,6 +60,7 @@ async function resetAi(request: APIRequestContext) {
     "ai_feature_voice",
     "ai_feature_nl_search",
     "ai_voice_autosend",
+    "ai_feature_duplicate_check",
   ]) {
     await setSetting(request, k, false);
   }
@@ -52,9 +69,12 @@ async function resetAi(request: APIRequestContext) {
     "ai_model",
     "ai_stt_base_url",
     "ai_stt_model",
+    "ai_decision_base_url",
+    "ai_decision_model",
   ]) {
     await setSetting(request, k, "");
   }
+  await clearAiKeys(request);
 }
 
 /** The panel's own region. The General section has a "Base URL" too, so scoping is required. */
@@ -170,6 +190,35 @@ test("the API key field never shows a stored key", async ({
   await expect(key).toHaveValue("");
 });
 
+test("saving the decision model endpoint and model persists them", async ({
+  page,
+}) => {
+  // Modelled on "saving an endpoint and model unblocks the features that needed them", but the
+  // decision model gates nothing in this client -- it only reorders Scan-to-Spool matches
+  // server-side -- so what is asserted here is that Save actually wrote the two settings,
+  // checked by reloading and reading the fields back.
+  await page.goto("/settings", { waitUntil: "networkidle" });
+
+  await panel(page)
+    .getByRole("textbox", { name: "Decision model endpoint URL", exact: true })
+    .fill("https://api.typesafe.ai");
+  await panel(page)
+    .getByRole("textbox", { name: "Decision model name", exact: true })
+    .fill("jev-latest");
+  await panel(page).getByRole("button", { name: "Save" }).click();
+
+  await page.reload({ waitUntil: "networkidle" });
+  await expect(
+    panel(page).getByRole("textbox", {
+      name: "Decision model endpoint URL",
+      exact: true,
+    }),
+  ).toHaveValue("https://api.typesafe.ai");
+  await expect(
+    panel(page).getByRole("textbox", { name: "Decision model name", exact: true }),
+  ).toHaveValue("jev-latest");
+});
+
 test("its fields do not collide with the settings page's own labels", async ({
   page,
 }) => {
@@ -182,4 +231,39 @@ test("its fields do not collide with the settings page's own labels", async ({
   await expect(page.getByLabel("Base URL")).toHaveCount(1);
   await expect(page.getByLabel("Currency")).toHaveCount(1);
   await expect(page.getByLabel("Round prices")).toHaveCount(1);
+});
+
+test("a stored chat key survives a base-URL change only as something to clear", async ({
+  page,
+  request,
+}) => {
+  // Since #471, a stored key is bound to the base URL it was saved with. Changing the URL
+  // makes the old key unusable without silently discarding it: the field has to read as unset
+  // (it would not work), while still offering Clear so the operator can see it is there and
+  // get rid of it, exactly as the decision key already does.
+  await setSetting(request, "ai_base_url", "http://localhost:11434/v1");
+  const configRes = await request.post("/api/v1/ai/config", {
+    headers: { "Content-Type": "application/json" },
+    data: JSON.stringify({ api_key: "sk-test-key" }),
+  });
+  if (!configRes.ok())
+    throw new Error(`ai/config -> ${configRes.status()} ${await configRes.text()}`);
+
+  await setSetting(request, "ai_base_url", "http://localhost:8000/v1");
+  await page.goto("/settings", { waitUntil: "networkidle" });
+
+  const key = panel(page).getByRole("textbox", { name: "API key", exact: true });
+  await expect(key).toHaveValue("");
+  await expect(key).toHaveAttribute("placeholder", "No key stored");
+
+  const clearLink = panel(page).getByRole("button", { name: "Clear stored key" });
+  await expect(clearLink).toBeVisible();
+  await clearLink.click();
+  // clearKey() awaits the clear and a status refresh before this link can disappear, so
+  // waiting for it to go proves the server-side clear has already happened.
+  await expect(clearLink).toHaveCount(0);
+
+  const statusRes = await request.get("/api/v1/ai/status");
+  const status = await statusRes.json();
+  expect(status.api_key_stored).toBe(false);
 });

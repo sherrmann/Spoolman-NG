@@ -31,6 +31,40 @@ export const AI_PRESETS: AiPreset[] = [
 	}
 ];
 
+/** A decision-model preset also names a model: unlike the chat presets, there is no discovery. */
+export interface DecisionPreset {
+	key: string;
+	label: string;
+	baseUrl: string;
+	model: string;
+	needsKey: boolean;
+}
+
+/**
+ * Providers for the decision model, which reorders Scan-to-Spool matches.
+ *
+ * These speak TypeSafe's System One API -- a typed-question, probability-returning protocol --
+ * not OpenAI chat completions, so an OpenAI-compatible endpoint (including the chat presets
+ * above) will not work here. Both listed providers require a key: there is no local, anonymous
+ * option the way Ollama is for chat.
+ */
+export const DECISION_PRESETS: DecisionPreset[] = [
+	{
+		key: 'typesafe',
+		label: 'TypeSafe',
+		baseUrl: 'https://api.typesafe.ai',
+		model: 'jev-latest',
+		needsKey: true
+	},
+	{
+		key: 'openrouter',
+		label: 'OpenRouter',
+		baseUrl: 'https://openrouter.ai/api',
+		model: 'jev-1.13',
+		needsKey: true
+	}
+];
+
 /** Models worth offering to pull on an Ollama endpoint, and what each is for. */
 export const OLLAMA_SUGGESTIONS: { model: string; purpose: 'chat' | 'vision' }[] = [
 	{ model: 'qwen3:8b', purpose: 'chat' },
