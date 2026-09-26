@@ -105,13 +105,25 @@
 	 * {source: 'catalog', filament}` with `creating` cleared). The local catalog only holds
 	 * what has already been listed or searched for, so a match found by id alone is fetched
 	 * rather than assumed missing.
+	 *
+	 * Both ways this can fail stay silent otherwise: `fetchFilament` resolves to `undefined` for
+	 * a filament deleted since the hint found it, and rejects on anything else (a dropped
+	 * connection, a 500). Either way the person pressed a button and nothing happened, which
+	 * reads as broken rather than as "no such filament" -- so both get the same toast `apply()`
+	 * already shows for a failed change of filament, just below.
 	 */
 	async function useExistingFilament(match: SimilarFilamentMatch): Promise<void> {
-		const id = String(match.id);
-		const f = inventory.filamentById(id) ?? (await spoolSource.fetchFilament(id));
-		if (f) {
-			creating = false;
-			chosen = { source: 'catalog', filament: f };
+		try {
+			const id = String(match.id);
+			const f = inventory.filamentById(id) ?? (await spoolSource.fetchFilament(id));
+			if (f) {
+				creating = false;
+				chosen = { source: 'catalog', filament: f };
+			} else {
+				toasts.error(m['changeFilament.failed']());
+			}
+		} catch {
+			toasts.error(m['changeFilament.failed']());
 		}
 	}
 	function clearValidation() {

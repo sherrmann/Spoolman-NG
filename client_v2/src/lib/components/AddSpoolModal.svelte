@@ -17,6 +17,7 @@
 	import { serverInfo } from '$lib/stores/serverInfo.svelte';
 	import { spoolSource } from '$lib/api/spoolSource';
 	import { fields } from '$lib/stores/fields.svelte';
+	import { toasts } from '$lib/stores/toasts.svelte';
 	import type { EntityType } from '$lib/api/fields';
 	import { externalColors, externalDirection, type ExternalFilament } from '$lib/api/external';
 	import { ExternalSearch } from '$lib/api/externalSearch.svelte';
@@ -313,11 +314,22 @@
 	 * only holds what has already been listed or searched for, so a match found by id alone (the
 	 * common case -- the hint fires well before anyone has typed enough to appear in a search)
 	 * is fetched rather than assumed missing.
+	 *
+	 * Both ways this can fail stay silent otherwise: `fetchFilament` resolves to `undefined` for
+	 * a filament deleted since the hint found it, and rejects on anything else (a dropped
+	 * connection, a 500). Either way the person pressed a button and nothing happened, which
+	 * reads as broken rather than as "no such filament" -- so both are reported the same way a
+	 * failed change of filament always is here.
 	 */
 	async function useExistingFilament(match: SimilarFilamentMatch): Promise<void> {
-		const id = String(match.id);
-		const f = inventory.filamentById(id) ?? (await spoolSource.fetchFilament(id));
-		if (f) choose({ source: 'catalog', filament: f });
+		try {
+			const id = String(match.id);
+			const f = inventory.filamentById(id) ?? (await spoolSource.fetchFilament(id));
+			if (f) choose({ source: 'catalog', filament: f });
+			else toasts.error(m['changeFilament.failed']());
+		} catch {
+			toasts.error(m['changeFilament.failed']());
+		}
 	}
 
 	function startCreate() {

@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { post, unique } from "./helpers";
+import { post, seedFilament, unique } from "./helpers";
 
 /**
  * `FilamentDuplicateHint` (client_v2/src/lib/ng/components/FilamentDuplicateHint.svelte),
@@ -100,6 +100,44 @@ test("an exact spelling/case/punctuation match offers the existing filament, and
   ).json()) as { filament: { id: number } }[];
   expect(spools.length).toBeGreaterThan(0);
   expect(spools.every((s) => s.filament.id === filamentId)).toBe(true);
+});
+
+test("ChangeFilamentModal: using a hint switches the slot onto the existing filament", async ({
+  page,
+  request,
+}) => {
+  // The spool being changed, so its own filament is what excludeId keeps out of the check --
+  // otherwise typing its own name/material/colour back would just offer itself.
+  const current = await seedFilament(request, "CFCurrent");
+  const spool = await post(request, "/spool", { filament_id: current.id });
+  const { vendorName, name, filamentId } = await seedGalaxyBlack(request);
+
+  await page.goto(`/?sel=spool:${spool.id}`, { waitUntil: "networkidle" });
+  await page.getByRole("button", { name: "Change", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole("button", { name: /^Create a new filament/ }).click();
+
+  await fillMatchingDraft(dialog, vendorName, name);
+  await dialog.getByPlaceholder("hex").fill("000000");
+
+  const label = `${vendorName} ${name} (PLA)`;
+  const useButton = dialog.getByRole("button", { name: `Use ${label}` });
+  await expect(useButton).toBeVisible();
+  await useButton.click();
+
+  // The "Change to" side now shows the existing filament, the same as picking it from the
+  // search results would.
+  const nextSide = dialog.locator(".side").nth(1);
+  await expect(nextSide).toContainText(name);
+  await expect(nextSide).toContainText(vendorName);
+
+  await dialog.getByRole("button", { name: "Change filament", exact: true }).click();
+  await expect(dialog).toBeHidden();
+
+  const res = await request.get(`/api/v1/spool/${spool.id}`);
+  const body = (await res.json()) as { filament: { id: number } };
+  expect(body.filament.id).toBe(filamentId);
 });
 
 test("changing the colour hides the hint immediately, not once a new answer arrives", async ({
