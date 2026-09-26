@@ -97,6 +97,20 @@ class AIStatus(BaseModel):
         description=f"Configured decision model; unset means '{decision.DEFAULT_MODEL}'.",
     )
     decision_api_key_set: bool = Field(default=False, description="Whether a decision-model API key is configured.")
+    api_key_stored: bool = Field(
+        default=False,
+        description=(
+            "Whether a chat API key is stored, even one not in use because it was saved for a "
+            "different base URL. Admins only."
+        ),
+    )
+    stt_api_key_stored: bool = Field(
+        default=False,
+        description=(
+            "Whether a speech-to-text API key is stored, even one not in use because it was saved "
+            "for a different base URL. Admins only."
+        ),
+    )
     decision_api_key_stored: bool = Field(
         default=False,
         description=(
@@ -209,6 +223,8 @@ async def status(
         decision_base_url=config.decision_base_url,
         decision_model=config.decision_model,
         decision_api_key_set=config.decision_api_key is not None,
+        api_key_stored=config.api_key_stored,
+        stt_api_key_stored=config.stt_api_key_stored,
         decision_api_key_stored=config.decision_api_key_stored,
         env_locked=sorted(attr for attr, source in config.sources.items() if source == "env"),
         features=features,
@@ -231,12 +247,16 @@ async def run_probe(
     body: AIProbeRequest,
 ) -> AIProbeResult:
     config = await ai.resolve_config(db)
+    saved_base_url = config.base_url
     provided = body.model_dump(exclude_unset=True)
     for attr in ("base_url", "model", "vision_model", "api_key"):
         if attr in provided:
             value = provided[attr]
             setattr(config, attr, value.strip() or None if isinstance(value, str) else None)
     config.base_url = ai.normalize_base_url(config.base_url)
+    if "api_key" not in provided and config.base_url != saved_base_url:
+        # The saved key belongs to the saved endpoint; never send it to a different host.
+        config.api_key = None
     return AIProbeResult.from_result(await ai.probe(config))
 
 
@@ -246,8 +266,11 @@ async def run_probe(
     description=(
         "Store or clear the AI provider, speech-to-text and decision-model API keys. Write-only: no "
         "endpoint ever returns a key. Only fields present in the request are changed (a present "
-        "null clears that key). The SPOOLMAN_AI_*_API_KEY env vars override whatever is stored here."
+        "null clears that key). The SPOOLMAN_AI_*_API_KEY env vars override whatever is stored here. "
+        "A key is tied to its endpoint's base URL as it is when the key is saved, and only sent there: "
+        "save the base URL first. 409 when a key is given for an endpoint with no base URL."
     ),
+    responses={409: {"model": Message}},
 )
 async def set_key(
     db: Annotated[AsyncSession, Depends(get_db_session)],
@@ -255,6 +278,21 @@ async def set_key(
     body: AIKeyRequest,
 ) -> AIKeyResponse:
     provided = body.model_dump(exclude_unset=True)
+    # A key is tied to the base URL in effect when it is saved, and only ever sent there. Saved
+    # with no base URL it could never be used, so refuse it rather than store it silently.
+    current = await ai.resolve_config(db)
+    for key_field, url_field, what in (
+        ("api_key", "base_url", "an AI endpoint"),
+        ("stt_api_key", "stt_base_url", "a speech-to-text endpoint"),
+        ("decision_api_key", "decision_base_url", "a decision-model endpoint"),
+    ):
+        if provided.get(key_field) and str(provided[key_field]).strip() and not getattr(current, url_field):
+            raise HTTPException(
+                status_code=409,
+                detail=(
+                    f"Save the base URL of {what} before its API key: a key is only sent to the URL it was saved with."
+                ),
+            )
     if "api_key" in provided:
         await ai.set_stored_api_key(db, body.api_key.strip() if body.api_key else None)
     if "stt_api_key" in provided:

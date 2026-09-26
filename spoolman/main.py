@@ -14,7 +14,7 @@ from prometheus_client import generate_latest
 from scheduler.asyncio.scheduler import Scheduler
 from starlette.routing import Route
 
-from spoolman import env, externaldb, mcp_server, security, tigertagdb, updatecheck
+from spoolman import ai, env, externaldb, mcp_server, security, tigertagdb, updatecheck
 from spoolman.api.v1.router import app as v1_app
 from spoolman.assetlinks import register_assetlinks_route
 from spoolman.auth import auth_state, initialize_auth_state
@@ -351,6 +351,9 @@ async def startup() -> None:
     session = await session_gen.__anext__()
     try:
         await initialize_auth_state(session)
+        # AI keys stored before keys were tied to their base URL are bound to the URL in effect
+        # now, so an existing install keeps working and a later URL change drops the key.
+        await ai.upgrade_stored_keys(session)
     finally:
         await session_gen.aclose()
 

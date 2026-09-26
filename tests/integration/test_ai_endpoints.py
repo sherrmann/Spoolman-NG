@@ -53,6 +53,8 @@ async def test_status_defaults_are_inert(client: AsyncClient) -> None:
     assert status["base_url"] is None
     assert status["model"] is None
     assert status["api_key_set"] is False
+    assert status["api_key_stored"] is False
+    assert status["stt_api_key_stored"] is False
     assert status["env_locked"] == []
     assert status["features"] == {
         "chat": False,
@@ -100,6 +102,8 @@ async def test_env_overrides_db_and_reports_lock(
 
 async def test_api_key_is_write_only(client: AsyncClient) -> None:
     secret = "sk-super-secret-value"  # noqa: S105
+    # A key is bound to the base URL in effect when it is saved; without one it is never used.
+    await _set_setting(client, "ai_base_url", "https://api.example.com/v1")
 
     set_response = await client.post("/api/v1/ai/config", json={"api_key": secret})
     assert set_response.status_code == 200
@@ -237,8 +241,8 @@ async def test_probe_endpoint_with_overrides_and_status_cache(client: AsyncClien
 @respx.mock
 async def test_probe_uses_stored_key_without_ever_returning_it(client: AsyncClient) -> None:
     secret = "sk-outbound-only"  # noqa: S105
-    await client.post("/api/v1/ai/config", json={"api_key": secret})
     await _set_setting(client, "ai_base_url", "https://api.example.com/v1")
+    await client.post("/api/v1/ai/config", json={"api_key": secret})
     await _set_setting(client, "ai_model", "test-model")
     respx.get("https://api.example.com/api/tags").mock(return_value=Response(404))
     route = respx.get("https://api.example.com/v1/models").mock(
@@ -250,6 +254,56 @@ async def test_probe_uses_stored_key_without_ever_returning_it(client: AsyncClie
     assert probe.status_code == 200
     assert route.calls.last.request.headers["Authorization"] == f"Bearer {secret}"
     assert secret not in probe.text
+
+
+@respx.mock
+async def test_probe_override_to_a_different_host_sends_no_saved_key(client: AsyncClient) -> None:
+    """The saved key belongs to the saved endpoint; it must never be sent to a different host."""
+    await _set_setting(client, "ai_base_url", "https://saved.example.com/v1")
+    await client.post("/api/v1/ai/config", json={"api_key": "sk-saved"})
+    respx.get("https://override.example.com/api/tags").mock(return_value=Response(404))
+    route = respx.get("https://override.example.com/v1/models").mock(
+        return_value=Response(200, json={"data": [{"id": "m"}]}),
+    )
+
+    probe = await client.post("/api/v1/ai/probe", json={"base_url": "https://override.example.com/v1"})
+
+    assert probe.status_code == 200
+    assert "Authorization" not in route.calls.last.request.headers
+
+
+@respx.mock
+async def test_probe_override_with_only_a_trailing_slash_still_sends_the_saved_key(client: AsyncClient) -> None:
+    """The same host once normalised must still count as unchanged."""
+    await _set_setting(client, "ai_base_url", "https://api.example.com/v1")
+    await client.post("/api/v1/ai/config", json={"api_key": "sk-saved"})
+    respx.get("https://api.example.com/api/tags").mock(return_value=Response(404))
+    route = respx.get("https://api.example.com/v1/models").mock(
+        return_value=Response(200, json={"data": [{"id": "m"}]}),
+    )
+
+    probe = await client.post("/api/v1/ai/probe", json={"base_url": "https://api.example.com/v1/"})
+
+    assert probe.status_code == 200
+    assert route.calls.last.request.headers["Authorization"] == "Bearer sk-saved"
+
+
+@respx.mock
+async def test_probe_uses_an_explicit_api_key_override_even_to_a_different_host(client: AsyncClient) -> None:
+    await _set_setting(client, "ai_base_url", "https://saved.example.com/v1")
+    await client.post("/api/v1/ai/config", json={"api_key": "sk-saved"})
+    respx.get("https://override.example.com/api/tags").mock(return_value=Response(404))
+    route = respx.get("https://override.example.com/v1/models").mock(
+        return_value=Response(200, json={"data": [{"id": "m"}]}),
+    )
+
+    probe = await client.post(
+        "/api/v1/ai/probe",
+        json={"base_url": "https://override.example.com/v1", "api_key": "sk-override"},
+    )
+
+    assert probe.status_code == 200
+    assert route.calls.last.request.headers["Authorization"] == "Bearer sk-override"
 
 
 @respx.mock
@@ -304,6 +358,23 @@ async def test_status_gives_admins_the_full_configuration(client: AsyncClient) -
     body = (await client.get("/api/v1/ai/status")).json()
     assert body["base_url"] == "http://prov/v1"
     assert body["model"] == "test-model"
+
+
+async def test_status_includes_stored_flags_for_the_chat_and_stt_keys(client: AsyncClient) -> None:
+    """A key saved for a base URL that later changed is still reported as stored (Clear)."""
+    await _set_setting(client, "ai_base_url", "https://api.example.com/v1")
+    await client.post("/api/v1/ai/config", json={"api_key": "sk-chat"})
+    await _set_setting(client, "ai_stt_base_url", "https://stt.example.com/v1")
+    await client.post("/api/v1/ai/config", json={"stt_api_key": "sk-stt"})
+    await _set_setting(client, "ai_base_url", "https://attacker.example/v1")
+    await _set_setting(client, "ai_stt_base_url", "https://attacker.example/v1")
+
+    status = (await client.get("/api/v1/ai/status")).json()
+
+    assert status["api_key_set"] is False
+    assert status["api_key_stored"] is True
+    assert status["stt_api_key_set"] is False
+    assert status["stt_api_key_stored"] is True
 
 
 # --- POST /ai/decision/test -----------------------------------------------------------
@@ -476,3 +547,26 @@ async def test_decision_test_uses_a_provided_override_key_even_to_a_different_ho
 
     assert response.status_code == 200
     assert route.calls.last.request.headers["Authorization"] == "Bearer sk-override"
+
+
+@pytest.mark.parametrize(
+    ("field", "url_setting"),
+    [("api_key", "ai_base_url"), ("stt_api_key", "ai_stt_base_url"), ("decision_api_key", "ai_decision_base_url")],
+)
+async def test_a_key_for_an_endpoint_with_no_base_url_is_refused(
+    client: AsyncClient,
+    field: str,
+    url_setting: str,
+) -> None:
+    """Stored without a URL it could never be used; say so instead of storing it silently."""
+    response = await client.post("/api/v1/ai/config", json={field: "sk-too-early"})
+    assert response.status_code == 409
+    assert "sk-too-early" not in response.text
+    assert (await client.get("/api/v1/ai/status")).json()[f"{field}_stored"] is False
+
+    # Clearing never needs a URL, and with the URL saved first the key is accepted.
+    assert (await client.post("/api/v1/ai/config", json={field: None})).status_code == 200
+    await _set_setting(client, url_setting, "https://api.example.com/v1")
+    accepted = await client.post("/api/v1/ai/config", json={field: "sk-in-order"})
+    assert accepted.status_code == 200
+    assert accepted.json()[f"{field}_set"] is True

@@ -25,10 +25,15 @@ export interface AIStatus {
   model: string | null;
   vision_model: string | null;
   api_key_set: boolean;
+  // A stored key not in use because it was saved for another base URL still counts here, so it
+  // can be cleared. Admins only.
+  api_key_stored?: boolean;
   stt_configured: boolean;
   stt_base_url: string | null;
   stt_model: string | null;
   stt_api_key_set: boolean;
+  // As above, for the STT key.
+  stt_api_key_stored?: boolean;
   decision_configured: boolean;
   decision_base_url: string | null;
   decision_model: string | null;
