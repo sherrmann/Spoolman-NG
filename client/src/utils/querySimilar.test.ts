@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { useSimilarVendor } from "./querySimilar";
+import { SimilarFilamentDraft, useSimilarFilament, useSimilarVendor } from "./querySimilar";
 
 // Behavioral tests for useSimilarVendor: the debounced client for POST /vendor/similar.
 // Oracle: the documented contract - debounce 500ms, skip short names, clear a stale result the
@@ -174,6 +174,168 @@ describe("useSimilarVendor", () => {
     expect(result.current.suggestion).not.toBeNull();
 
     rerender({ name: "esun" });
+    await act(() => vi.advanceTimersByTimeAsync(500));
+    expect(result.current).toEqual({ exact: null, suggestion: null });
+  });
+});
+
+// Behavioral tests for useSimilarFilament: the debounced client for POST /filament/similar.
+// Modelled on useSimilarVendor above (same debounce/abort/silent-on-error contract), plus its own
+// two rules: skip unless the trimmed name is 2+ characters (a material alone never matches the
+// backend's exact check), and clear the result the instant any watched field changes, not only
+// the name.
+
+describe("useSimilarFilament", () => {
+  it("does not call the server when only a material is set, with no name", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderHook(() => useSimilarFilament({ material: "PLA", diameter: 1.75 }));
+    await vi.advanceTimersByTimeAsync(1000);
+
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("does not call the server for a name shorter than two characters", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderHook(() => useSimilarFilament({ name: "e", material: "PLA" }));
+    await vi.advanceTimersByTimeAsync(1000);
+
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("waits 500ms after the last change before calling the server", async () => {
+    const fetchMock = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({ exact: null, suggestion: null }),
+    })) as unknown as typeof fetch;
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { rerender } = renderHook(({ draft }) => useSimilarFilament(draft), {
+      initialProps: { draft: { name: "es" } as SimilarFilamentDraft },
+    });
+    await act(() => vi.advanceTimersByTimeAsync(300));
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    rerender({ draft: { name: "esu" } });
+    await act(() => vi.advanceTimersByTimeAsync(300));
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    await act(() => vi.advanceTimersByTimeAsync(500));
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [, init] = (fetchMock as unknown as ReturnType<typeof vi.fn>).mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(init.body as string)).toEqual({ name: "esu" });
+  });
+
+  it("returns the exact and suggestion matches from a successful response, passing exclude_id through", async () => {
+    const fetchMock = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({
+        exact: { id: 1, name: "eSUN PLA Black", probability: null },
+        suggestion: null,
+      }),
+    })) as unknown as typeof fetch;
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { result } = renderHook(() => useSimilarFilament({ name: "esun black" }, 42));
+    await act(() => vi.advanceTimersByTimeAsync(500));
+
+    expect(result.current).toEqual({ exact: { id: 1, name: "eSUN PLA Black", probability: null }, suggestion: null });
+    const [, init] = (fetchMock as unknown as ReturnType<typeof vi.fn>).mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(init.body as string)).toEqual({ name: "esun black", exclude_id: 42 });
+  });
+
+  it("clears the result immediately once any watched field changes, before the next debounce can fire", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => ({ exact: { id: 1, name: "eSUN PLA Black", probability: null }, suggestion: null }),
+      })) as unknown as typeof fetch,
+    );
+
+    const { rerender, result } = renderHook(({ draft }) => useSimilarFilament(draft), {
+      initialProps: { draft: { name: "esun black" } as SimilarFilamentDraft },
+    });
+    await act(() => vi.advanceTimersByTimeAsync(500));
+    expect(result.current.exact).not.toBeNull();
+
+    // No time has passed, but a hint for the old draft must already be gone once a field the
+    // backend's similarity check considers - here color_hex, not name - has changed.
+    rerender({ draft: { name: "esun black", color_hex: "000000" } });
+    expect(result.current).toEqual({ exact: null, suggestion: null });
+  });
+
+  it("cancels a stale request, and a late out-of-order response for the old draft never wins", async () => {
+    const responses = [deferredResponse(), deferredResponse()];
+    let callIndex = 0;
+    const fetchMock = vi.fn((_input: RequestInfo | URL, init?: RequestInit) => {
+      const current = responses[callIndex++];
+      init?.signal?.addEventListener("abort", () => current.reject(new DOMException("Aborted", "AbortError")));
+      return current.promise;
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { rerender, result } = renderHook(({ draft }) => useSimilarFilament(draft), {
+      initialProps: { draft: { name: "esun black" } as SimilarFilamentDraft },
+    });
+    await act(() => vi.advanceTimersByTimeAsync(500));
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    rerender({ draft: { name: "esun red" } });
+    await act(() => vi.advanceTimersByTimeAsync(500));
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+
+    await act(async () => {
+      responses[1].resolve({ exact: { id: 2, name: "eSUN PLA Red", probability: null }, suggestion: null });
+    });
+    expect(result.current).toEqual({ exact: { id: 2, name: "eSUN PLA Red", probability: null }, suggestion: null });
+
+    await act(async () => {
+      responses[0].resolve({ exact: { id: 9, name: "Old Match", probability: null }, suggestion: null });
+    });
+    // The stale response for "esun black" never displaces the current, fresher result.
+    expect(result.current).toEqual({ exact: { id: 2, name: "eSUN PLA Red", probability: null }, suggestion: null });
+  });
+
+  it("clears a previous result once the next draft gets a 403 from a read-only user", async () => {
+    const fetchMock = vi.fn();
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ exact: { id: 1, name: "eSUN PLA Black", probability: null }, suggestion: null }),
+    } as Response);
+    fetchMock.mockResolvedValueOnce({ ok: false, status: 403 } as Response);
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { rerender, result } = renderHook(({ draft }) => useSimilarFilament(draft), {
+      initialProps: { draft: { name: "esun black" } as SimilarFilamentDraft },
+    });
+    await act(() => vi.advanceTimersByTimeAsync(500));
+    expect(result.current.exact).not.toBeNull();
+
+    rerender({ draft: { name: "esun red" } });
+    await act(() => vi.advanceTimersByTimeAsync(500));
+    expect(result.current).toEqual({ exact: null, suggestion: null });
+  });
+
+  it("clears a previous result once the next draft hits a network failure", async () => {
+    const fetchMock = vi.fn();
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ exact: null, suggestion: { id: 5, name: "eSUN PLA Red", probability: 0.8 } }),
+    } as Response);
+    fetchMock.mockRejectedValueOnce(new Error("network down"));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { rerender, result } = renderHook(({ draft }) => useSimilarFilament(draft), {
+      initialProps: { draft: { name: "esun red" } as SimilarFilamentDraft },
+    });
+    await act(() => vi.advanceTimersByTimeAsync(500));
+    expect(result.current.suggestion).not.toBeNull();
+
+    rerender({ draft: { name: "esun black" } });
     await act(() => vi.advanceTimersByTimeAsync(500));
     expect(result.current).toEqual({ exact: null, suggestion: null });
   });

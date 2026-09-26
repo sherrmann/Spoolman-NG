@@ -1,11 +1,11 @@
-"""Endpoint behavior for POST /api/v1/vendor/similar (manufacturer duplicate check).
+"""Endpoint behavior for POST /api/v1/filament/similar (filament duplicate check).
 
 Oracle strategy: the shared in-process harness (tests/integration/conftest.py's ``client``
-fixture) drives the real vendor router against a throwaway DB, exactly like the other
+fixture) drives the real filament router against a throwaway DB, exactly like the other
 integration suites here; the decision-model boundary is mocked with respx, as in
-tests/integration/test_ai_endpoints.py. The readonly-403 case needs the real auth
+tests/integration/test_vendor_similar.py. The readonly-403 case needs the real auth
 middleware, which the shared harness does not install, so it builds its own small
-app + client, mirroring tests/test_auth.py's pattern.
+app + client, mirroring tests/integration/test_vendor_similar.py's pattern.
 """
 
 import json
@@ -21,14 +21,14 @@ from sqlalchemy.engine import URL
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from spoolman import ai
-from spoolman.api.v1 import vendor as vendor_api
+from spoolman.api.v1 import filament as filament_api
 from spoolman.auth import AuthMiddleware, AuthState
 from spoolman.database import database as db_module
 from spoolman.database.models import Base
 from spoolman.users import ROLE_READONLY, mint_token
 
 _DECISION_URL = "https://api.typesafe.ai/v1/systemone"
-_SECRET = b"vendor-similar-test-signing-secret-012345"
+_SECRET = b"filament-similar-test-signing-secret-01234"
 
 
 @pytest.fixture(autouse=True)
@@ -62,28 +62,40 @@ def _answer_payload(choice: str, *, probabilities: dict | None = None) -> dict:
     answer: dict = {"type": "choice", "choice": choice}
     if probabilities is not None:
         answer["probabilities"] = probabilities
-    return {"model": "jev-1.13.0", "answers": {"vendor": answer}, "usage": {}}
+    return {"model": "jev-1.13.0", "answers": {"filament": answer}, "usage": {}}
 
 
-# --- POST /vendor/similar ------------------------------------------------------------
+async def _create_filament(client: AsyncClient, **overrides: object) -> dict:
+    body = {"name": "PolyLite PLA", "material": "PLA", "density": 1.24, "diameter": 1.75, "color_hex": "ff0000"}
+    body.update(overrides)
+    response = await client.post("/api/v1/filament", json=body)
+    assert response.status_code == 200, response.text
+    return response.json()
+
+
+# --- POST /filament/similar -----------------------------------------------------------
 
 
 async def test_similar_returns_an_exact_match(client: AsyncClient) -> None:
-    created = (await client.post("/api/v1/vendor", json={"name": "eSUN"})).json()
+    created = await _create_filament(client, name="PolyLite PLA", material="PLA", color_hex="ff0000")
 
-    response = await client.post("/api/v1/vendor/similar", json={"name": "e-sun"})
+    response = await client.post(
+        "/api/v1/filament/similar",
+        json={"name": "poly-lite pla!", "material": "pla", "diameter": 1.75, "color_hex": "fe0101"},
+    )
 
     assert response.status_code == 200
     body = response.json()
-    assert body["exact"] == {"id": created["id"], "name": "eSUN", "probability": None}
+    assert body["exact"]["id"] == created["id"]
+    assert body["exact"]["probability"] is None
     assert body["suggestion"] is None
     assert body["source"] == "exact"
 
 
-async def test_similar_returns_nothing_for_an_unrelated_name(client: AsyncClient) -> None:
-    await client.post("/api/v1/vendor", json={"name": "Polymaker"})
+async def test_similar_returns_nothing_for_an_unrelated_filament(client: AsyncClient) -> None:
+    await _create_filament(client, name="PolyLite PLA", material="PLA")
 
-    response = await client.post("/api/v1/vendor/similar", json={"name": "Totally Different Co"})
+    response = await client.post("/api/v1/filament/similar", json={"name": "Totally Different Product"})
 
     assert response.status_code == 200
     body = response.json()
@@ -94,42 +106,82 @@ async def test_similar_returns_nothing_for_an_unrelated_name(client: AsyncClient
 
 @respx.mock
 async def test_similar_returns_a_model_suggestion(client: AsyncClient) -> None:
-    bambu = (await client.post("/api/v1/vendor", json={"name": "Bambu Lab"})).json()
+    bambu = await _create_filament(client, name="Bambu PLA Basic", material="PLA", color_hex="ff0000")
     await _enable_model_tier(client)
     respx.post(_DECISION_URL).mock(
-        return_value=Response(200, json=_answer_payload(f"v{bambu['id']}", probabilities={f"v{bambu['id']}": 0.9})),
+        return_value=Response(
+            200,
+            json=_answer_payload(f"f{bambu['id']}", probabilities={f"f{bambu['id']}": 0.9}),
+        ),
     )
 
-    response = await client.post("/api/v1/vendor/similar", json={"name": "Bambu"})
+    response = await client.post(
+        "/api/v1/filament/similar",
+        json={"name": "Bambu Basic PLA", "material": "PLA", "diameter": 1.75, "color_hex": "ff0000"},
+    )
 
     assert response.status_code == 200
     body = response.json()
-    assert body["suggestion"] == {"id": bambu["id"], "name": "Bambu Lab", "probability": 0.9}
     assert body["exact"] is None
+    assert body["suggestion"]["id"] == bambu["id"]
+    assert body["suggestion"]["probability"] == 0.9
     assert body["source"] == "model"
 
 
-async def test_similar_rejects_a_name_over_64_characters(client: AsyncClient) -> None:
-    response = await client.post("/api/v1/vendor/similar", json={"name": "x" * 65})
+async def test_similar_rejects_a_diameter_of_zero(client: AsyncClient) -> None:
+    response = await client.post("/api/v1/filament/similar", json={"name": "PLA", "diameter": 0})
 
     assert response.status_code == 422
 
 
-async def test_creating_a_vendor_with_a_duplicate_name_still_succeeds(client: AsyncClient) -> None:
-    """The check is only a hint offered before creating -- it must never block the create itself."""
-    await client.post("/api/v1/vendor", json={"name": "eSUN"})
+@pytest.mark.parametrize("field", ["vendor_id", "exclude_id"])
+async def test_similar_rejects_an_id_the_database_cannot_hold(client: AsyncClient, field: str) -> None:
+    """Too large for an integer column: a 422, never a 500 from the database driver."""
+    response = await client.post(
+        "/api/v1/filament/similar",
+        json={"name": "PolyTerra", "material": "PLA", field: 1180591620717411303424},
+    )
 
-    response = await client.post("/api/v1/vendor", json={"name": "e-sun"})
+    assert response.status_code == 422
+
+
+async def test_similar_accepts_a_colour_with_alpha_and_a_hash(client: AsyncClient) -> None:
+    await _create_filament(client, color_hex="ff0000")
+
+    response = await client.post(
+        "/api/v1/filament/similar",
+        json={"name": "PolyLite PLA", "material": "PLA", "diameter": 1.75, "color_hex": "#FF0000FF"},
+    )
 
     assert response.status_code == 200
-    assert response.json()["name"] == "e-sun"
+    assert response.json()["source"] == "exact"
 
 
-# --- Readonly principal: 403 ----------------------------------------------------------
+async def test_similar_rejects_a_name_over_64_characters(client: AsyncClient) -> None:
+    response = await client.post("/api/v1/filament/similar", json={"name": "x" * 65})
+
+    assert response.status_code == 422
+
+
+async def test_creating_a_filament_with_a_duplicate_still_succeeds(client: AsyncClient) -> None:
+    """The check is only a hint offered before creating -- it must never block the create itself."""
+    await _create_filament(client, name="PolyLite PLA", material="PLA", color_hex="ff0000")
+
+    response = await client.post(
+        "/api/v1/filament",
+        json={"name": "PolyLite PLA", "material": "PLA", "density": 1.24, "diameter": 1.75, "color_hex": "ff0000"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["name"] == "PolyLite PLA"
+
+
+# --- Readonly principal: 403 -----------------------------------------------------------
 #
 # The shared ``client`` fixture doesn't install AuthMiddleware (see its module docstring),
 # so it can never observe the readonly policy; this builds its own tiny app + client that
-# does, mirroring tests/test_auth.py, over a real DB so the vendor route still works.
+# does, mirroring tests/integration/test_vendor_similar.py, over a real DB so the filament
+# route still works.
 
 
 @pytest_asyncio.fixture
@@ -145,7 +197,7 @@ async def readonly_client(tmp_path: Path) -> AsyncIterator[AsyncClient]:
     db_module.setup_db(url)
 
     app = FastAPI()
-    app.include_router(vendor_api.router, prefix="/api/v1")
+    app.include_router(filament_api.router, prefix="/api/v1")
     state = AuthState(signing_secret=_SECRET, accounts_enabled=True, user_roles={"bob": ROLE_READONLY})
     app.add_middleware(AuthMiddleware, state=state)
 
@@ -161,15 +213,6 @@ async def readonly_client(tmp_path: Path) -> AsyncIterator[AsyncClient]:
 
 
 async def test_similar_is_forbidden_for_a_readonly_user(readonly_client: AsyncClient) -> None:
-    response = await readonly_client.post("/api/v1/vendor/similar", json={"name": "Bambu"})
+    response = await readonly_client.post("/api/v1/filament/similar", json={"name": "PLA"})
 
     assert response.status_code == 403
-
-
-async def test_similar_vendor_rejects_an_exclude_id_the_database_cannot_hold(client: AsyncClient) -> None:
-    response = await client.post(
-        "/api/v1/vendor/similar",
-        json={"name": "eSUN", "exclude_id": 1180591620717411303424},
-    )
-
-    assert response.status_code == 422

@@ -3,7 +3,12 @@ import userEvent from "@testing-library/user-event";
 import { FormInstance } from "antd";
 import { MemoryRouter } from "react-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { SimilarVendorMatch, useSimilarVendor } from "../../utils/querySimilar";
+import {
+  SimilarFilamentMatch,
+  SimilarVendorMatch,
+  useSimilarFilament,
+  useSimilarVendor,
+} from "../../utils/querySimilar";
 
 // The page is heavy (image upload, external-catalog import, colour pickers), so everything but
 // the piece under test - the inline "new vendor" duplicate-check hint (#125 + duplicate-check AI
@@ -15,6 +20,7 @@ let capturedForm: FormInstance | undefined;
 
 vi.mock("@refinedev/core", () => ({
   useInvalidate: () => vi.fn(),
+  useNavigation: () => ({ showUrl: (_resource: string, id: number) => `/filament/show/${id}` }),
   useTranslate: () => (key: string) => key,
 }));
 vi.mock("@refinedev/antd", async () => {
@@ -74,16 +80,26 @@ vi.mock("../../utils/queryFields", () => ({
 }));
 vi.mock("../../utils/querySimilar", () => ({
   useSimilarVendor: vi.fn(),
+  useSimilarFilament: vi.fn(),
 }));
 
 import { FilamentCreate } from "./create";
 
 const mockedUseSimilarVendor = vi.mocked(useSimilarVendor);
+const mockedUseSimilarFilament = vi.mocked(useSimilarFilament);
 
 // Mirrors the real hook's contract closely enough for this page: nothing for an empty query,
 // `result` once a name is actually typed. The real hook never returns a match before any typing.
 function mockSimilar(result: { exact: SimilarVendorMatch | null; suggestion: SimilarVendorMatch | null }) {
   mockedUseSimilarVendor.mockImplementation((name: string) => (name ? result : { exact: null, suggestion: null }));
+}
+
+// Mirrors the real useSimilarFilament's skip rule closely enough for this page: nothing unless
+// the draft has a name of at least two characters, `result` otherwise.
+function mockSimilarFilament(result: { exact: SimilarFilamentMatch | null; suggestion: SimilarFilamentMatch | null }) {
+  mockedUseSimilarFilament.mockImplementation(({ name }) =>
+    (name?.trim().length ?? 0) >= 2 ? result : { exact: null, suggestion: null },
+  );
 }
 
 function renderPage() {
@@ -98,6 +114,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   capturedForm = undefined;
   mockSimilar({ exact: null, suggestion: null });
+  mockSimilarFilament({ exact: null, suggestion: null });
 });
 
 describe("FilamentCreate inline new-vendor duplicate hint (#125)", () => {
@@ -117,5 +134,41 @@ describe("FilamentCreate inline new-vendor duplicate hint (#125)", () => {
 
     expect(capturedForm?.getFieldValue("vendor_id")).toBe(5);
     expect((newVendorInput as HTMLInputElement).value).toBe("");
+  });
+});
+
+describe("FilamentCreate duplicate-check hint (server-side)", () => {
+  it("shows the exact hint with a link to the matched filament's show page", async () => {
+    mockSimilarFilament({ exact: { id: 7, name: "eSUN PLA Black", probability: null }, suggestion: null });
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.type(screen.getByLabelText("filament.fields.name"), "black pla");
+
+    expect(screen.getByText("settings.ai.duplicate.filament_exact")).toBeInTheDocument();
+    const link = screen.getByRole("link", { name: "settings.ai.duplicate.open" });
+    expect(link).toHaveAttribute("href", "/filament/show/7");
+  });
+
+  it("shows the suggestion hint with a link to the matched filament's show page", async () => {
+    mockSimilarFilament({ exact: null, suggestion: { id: 8, name: "eSUN PLA+ Black", probability: 0.7 } });
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.type(screen.getByLabelText("filament.fields.name"), "black pla");
+
+    expect(screen.getByText("settings.ai.duplicate.filament_suggestion")).toBeInTheDocument();
+    const link = screen.getByRole("link", { name: "settings.ai.duplicate.open" });
+    expect(link).toHaveAttribute("href", "/filament/show/8");
+  });
+
+  it("shows no hint when the server finds nothing", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.type(screen.getByLabelText("filament.fields.name"), "acme spool");
+
+    expect(screen.queryByText("settings.ai.duplicate.filament_exact")).not.toBeInTheDocument();
+    expect(screen.queryByText("settings.ai.duplicate.filament_suggestion")).not.toBeInTheDocument();
   });
 });

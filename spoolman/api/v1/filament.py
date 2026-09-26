@@ -2,7 +2,7 @@
 
 import asyncio
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, Path, Query, Request, Response, WebSocket, WebSocketDisconnect
 from fastapi.encoders import jsonable_encoder
@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator, model_validator
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from spoolman import duplicates
 from spoolman.api.v1.models import (
     Filament,
     FilamentCascadeRequired,
@@ -625,6 +626,79 @@ async def create(  # noqa: ANN201
     # The stock aggregates are a read-time view; POST returns the stored resource unchanged so the
     # create response shape stays identical to before this feature (integrations POSTing are unaffected).
     return Filament.from_db(db_item)
+
+
+class SimilarFilamentRequest(BaseModel):
+    vendor_id: int | None = Field(None, ge=1, le=2**31 - 1, description="The chosen manufacturer, if an existing one.")
+    vendor_name: str | None = Field(None, max_length=64, description="A manufacturer typed by name, if a new one.")
+    name: str | None = Field(None, max_length=64, description="The filament name being typed.")
+    material: str | None = Field(None, max_length=64)
+    color_hex: str | None = Field(None, max_length=9)
+    multi_color_hexes: str | None = Field(None, max_length=512)
+    diameter: float | None = Field(None, gt=0, le=10)
+    exclude_id: int | None = Field(
+        None,
+        ge=1,
+        le=2**31 - 1,
+        description="A filament to leave out, such as the one being edited.",
+    )
+
+
+class SimilarFilament(BaseModel):
+    id: int
+    name: str = Field(description="Manufacturer, name and material, for display.")
+    probability: float | None = Field(None, description="The decision model's probability; null for an exact match.")
+
+
+class SimilarFilamentResponse(BaseModel):
+    exact: SimilarFilament | None = Field(
+        None,
+        description=(
+            "A filament with the same manufacturer, name, material and filament size, and the same "
+            "colour, ignoring case, spacing and punctuation in the name."
+        ),
+    )
+    suggestion: SimilarFilament | None = Field(
+        None,
+        description=(
+            "A filament the decision model thinks is the same product. Only with the duplicate check "
+            "on, and never one whose colour is known to differ."
+        ),
+    )
+    source: Literal["exact", "model"] | None = Field(None, description="Which check produced the hint.")
+
+
+@router.post(
+    "/similar",
+    name="Find a similar filament",
+    description=(
+        "Check whether a filament being created duplicates an existing one. An exact match (the same "
+        "manufacturer, name, material, filament size and colour) is always checked. With the "
+        "duplicate-check AI feature on and a decision model configured, the model is also asked "
+        "whether it is an existing product named differently; that sends the typed fields and the "
+        "names of up to five similar filaments to the decision endpoint, never a colour. Never creates "
+        "anything, and a failing model gives no suggestion rather than an error."
+    ),
+)
+async def similar(
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+    body: SimilarFilamentRequest,
+) -> SimilarFilamentResponse:
+    draft = duplicates.FilamentDraft(
+        vendor_id=body.vendor_id,
+        vendor_name=body.vendor_name,
+        name=body.name,
+        material=body.material,
+        color_hex=body.color_hex,
+        multi_color_hexes=body.multi_color_hexes,
+        diameter=body.diameter,
+    )
+    result = await duplicates.similar_filament(db, draft, exclude_id=body.exclude_id)
+
+    def _out(match: duplicates.Match | None) -> SimilarFilament | None:
+        return None if match is None else SimilarFilament(id=match.id, name=match.name, probability=match.probability)
+
+    return SimilarFilamentResponse(exact=_out(result.exact), suggestion=_out(result.suggestion), source=result.source)
 
 
 @router.patch(
