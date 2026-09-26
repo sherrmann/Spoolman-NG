@@ -24,17 +24,25 @@ const EMPTY_RESULT: SimilarVendorResult = { exact: null, suggestion: null };
  * exists under another spelling. Debounces 500ms, skips names under two characters, and
  * cancels a request that is superseded by a newer keystroke before it resolves.
  *
+ * A response is tagged with the (trimmed) name it was fetched for, and only ever returned while
+ * that name is still the current one - so an in-flight or already-resolved answer for "e-sun"
+ * never lingers on screen once the field has moved on to "e-sun pro", regardless of the order in
+ * which requests happen to resolve.
+ *
  * Silent on any failure - a read-only user's 403, a network error, or a non-OK response all
  * just yield nulls rather than surfacing anything, since this is a soft hint alongside the
  * local exact-match warning, never a blocking check.
  */
 export function useSimilarVendor(name: string, excludeId?: number): SimilarVendorResult {
-  const [result, setResult] = useState<SimilarVendorResult>(EMPTY_RESULT);
+  const trimmed = name.trim();
+  const [tagged, setTagged] = useState<{ name: string; result: SimilarVendorResult }>({
+    name: "",
+    result: EMPTY_RESULT,
+  });
 
   useEffect(() => {
-    const trimmed = name.trim();
     if (trimmed.length < MIN_NAME_LENGTH) {
-      setResult(EMPTY_RESULT);
+      setTagged({ name: trimmed, result: EMPTY_RESULT });
       return;
     }
 
@@ -48,14 +56,16 @@ export function useSimilarVendor(name: string, excludeId?: number): SimilarVendo
       })
         .then((response) => (response.ok ? response.json() : null))
         .then((data: SimilarVendorResult | null) => {
-          setResult(data ? { exact: data.exact ?? null, suggestion: data.suggestion ?? null } : EMPTY_RESULT);
+          setTagged({
+            name: trimmed,
+            result: data ? { exact: data.exact ?? null, suggestion: data.suggestion ?? null } : EMPTY_RESULT,
+          });
         })
         .catch(() => {
-          // A superseded request is aborted deliberately - let the request that replaced it
-          // stand rather than clobbering it back to empty. Any other failure (network error,
-          // malformed response) stays silent too, per the module's contract.
+          // A superseded request's own tag can never win once a newer name has replaced it (see
+          // the render-time check below), so there is nothing to protect here - just stay silent.
           if (!controller.signal.aborted) {
-            setResult(EMPTY_RESULT);
+            setTagged({ name: trimmed, result: EMPTY_RESULT });
           }
         });
     }, DEBOUNCE_MS);
@@ -64,7 +74,12 @@ export function useSimilarVendor(name: string, excludeId?: number): SimilarVendo
       clearTimeout(timer);
       controller.abort();
     };
-  }, [name, excludeId]);
+  }, [trimmed, excludeId]);
 
-  return result;
+  // The stored result only counts while it is still tagged with the name currently being asked
+  // about. This is what makes a stale answer disappear the instant the name changes, rather than
+  // lingering for up to a debounce period - and what makes response order irrelevant: an older
+  // request resolving after a newer one can never overwrite what is shown, since by then its tag
+  // no longer matches.
+  return tagged.name === trimmed ? tagged.result : EMPTY_RESULT;
 }

@@ -177,7 +177,7 @@ export const FilamentCreate = (props: IResourceComponentsProps & CreateOrClonePr
 
   // Duplicate-check hint: select the existing vendor the server matched instead of creating a
   // new one for what is probably the same manufacturer written differently.
-  const useSuggestedVendor = (vendorId: number) => {
+  const selectSuggestedVendor = (vendorId: number) => {
     form.setFieldValue("vendor_id", vendorId);
     setNewVendorName("");
   };
@@ -344,7 +344,7 @@ export const FilamentCreate = (props: IResourceComponentsProps & CreateOrClonePr
                           : t("settings.ai.duplicate.suggestion", { name: match.name })}
                       </Typography.Text>
                       <div>
-                        <Button size="small" onClick={() => useSuggestedVendor(match.id)}>
+                        <Button size="small" onClick={() => selectSuggestedVendor(match.id)}>
                           {t("settings.ai.duplicate.use", { name: match.name })}
                         </Button>
                       </div>
