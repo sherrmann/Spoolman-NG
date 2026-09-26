@@ -121,6 +121,10 @@ register_setting("ai_vision_model", SettingType.STRING, json.dumps(""))
 # and lives outside the registry (see spoolman/ai.py), like the chat key.
 register_setting("ai_stt_base_url", SettingType.STRING, json.dumps(""))
 register_setting("ai_stt_model", SettingType.STRING, json.dumps(""))
+# Decision-model endpoint (typed questions, e.g. TypeSafe's Jev; see spoolman/decision.py). Its
+# key is write-only and lives outside the registry, like the two keys above.
+register_setting("ai_decision_base_url", SettingType.STRING, json.dumps(""))
+register_setting("ai_decision_model", SettingType.STRING, json.dumps(""))
 # Auto-send a voice transcript instead of dropping it into the box to review first.
 register_setting("ai_voice_autosend", SettingType.BOOLEAN, json.dumps(obj=False))
 register_setting("ai_feature_chat", SettingType.BOOLEAN, json.dumps(obj=False))

@@ -11,7 +11,8 @@ serves it at ``https://api.typesafe.ai`` and OpenRouter at ``https://openrouter.
 through an OpenAI-style ``/chat/completions`` router cannot carry typed questions, so this is
 deliberately separate from :mod:`spoolman.ai`.
 
-Configuration is environment-only while this is a prototype:
+It is configured in Settings -> AI, or by environment variables, which win field by field
+(the storage and env-over-DB resolution live in :mod:`spoolman.ai`):
 
 * ``SPOOLMAN_AI_DECISION_BASE_URL`` (required to enable), e.g. ``https://api.typesafe.ai``
 * ``SPOOLMAN_AI_DECISION_API_KEY``
@@ -26,16 +27,19 @@ import asyncio
 import logging
 import math
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from urllib.parse import urlsplit
 
 import httpx
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from spoolman import ai
 
 logger = logging.getLogger(__name__)
 
-ENV_BASE_URL = "SPOOLMAN_AI_DECISION_BASE_URL"
-ENV_API_KEY = "SPOOLMAN_AI_DECISION_API_KEY"
-ENV_MODEL = "SPOOLMAN_AI_DECISION_MODEL"
+ENV_BASE_URL = ai.ENV_DECISION_BASE_URL
+ENV_API_KEY = ai.ENV_DECISION_API_KEY
+ENV_MODEL = ai.ENV_DECISION_MODEL
 DEFAULT_MODEL = "jev-latest"
 
 #: The model answers in about 100 ms. Anything much slower costs the user more than the
@@ -56,7 +60,8 @@ class DecisionConfig:
 
     base_url: str
     model: str
-    api_key: str | None = None
+    #: Left out of repr so an accidental ``%r`` in a log line cannot print it.
+    api_key: str | None = field(default=None, repr=False)
 
 
 @dataclass(frozen=True)
@@ -73,29 +78,56 @@ def _env(name: str) -> str | None:
     return value or None
 
 
-def resolve_config() -> DecisionConfig | None:
-    """Return the configured decision endpoint, or None when it is not configured or unusable."""
-    base_url = _env(ENV_BASE_URL)
-    if base_url is None:
+def validated_config(
+    base_url: str | None,
+    api_key: str | None,
+    model: str | None,
+    *,
+    source: str = "the decision-model base URL",
+) -> DecisionConfig | None:
+    """Return a usable config from raw values, or None when unset or unusable.
+
+    ``source`` names where the base URL came from, for the log line that says why it was ignored.
+    """
+    base_url = (base_url or "").strip().rstrip("/")
+    if not base_url:
         return None
-    base_url = base_url.rstrip("/")
     try:
         parts = urlsplit(base_url)
         _ = parts.port  # raises ValueError for a port that is not a number
     except ValueError:
-        logger.warning("Ignoring %s: it is not a valid URL.", ENV_BASE_URL)
+        logger.warning("Ignoring %s: it is not a valid URL.", source)
         return None
     if parts.scheme not in ("http", "https") or not parts.hostname:
-        logger.warning("Ignoring %s: the URL must start with http:// or https:// and name a host.", ENV_BASE_URL)
+        logger.warning("Ignoring %s: the URL must start with http:// or https:// and name a host.", source)
         return None
-    api_key = _env(ENV_API_KEY)
+    api_key = (api_key or "").strip() or None
     if api_key is not None and not api_key.isascii():
         # An HTTP header cannot carry it, so every request would fail; say why here instead.
-        # The variable name is spelt out rather than passed as ENV_API_KEY: code scanning treats
-        # any value named like a key as the secret itself.
-        logger.warning("Ignoring the decision endpoint: SPOOLMAN_AI_DECISION_API_KEY contains non-ASCII characters.")
+        # The key's name is spelt out rather than passed in: code scanning treats any value
+        # named like a key as the secret itself.
+        logger.warning("Ignoring the decision endpoint: its API key contains non-ASCII characters.")
         return None
-    return DecisionConfig(base_url=base_url, model=_env(ENV_MODEL) or DEFAULT_MODEL, api_key=api_key)
+    return DecisionConfig(base_url=base_url, model=(model or "").strip() or DEFAULT_MODEL, api_key=api_key)
+
+
+def resolve_env_config() -> DecisionConfig | None:
+    """Return the endpoint set by environment variables alone, without opening the database.
+
+    For the evaluation scripts; the server uses :func:`resolve_config`.
+    """
+    return validated_config(_env(ENV_BASE_URL), _env(ENV_API_KEY), _env(ENV_MODEL), source=ENV_BASE_URL)
+
+
+def from_ai_config(config: ai.AIConfig) -> DecisionConfig | None:
+    """Return the decision endpoint from a resolved AI config, or None when unset or unusable."""
+    source = ENV_BASE_URL if config.sources.get("decision_base_url") == "env" else "the decision-model base URL setting"
+    return validated_config(config.decision_base_url, config.decision_api_key, config.decision_model, source=source)
+
+
+async def resolve_config(db: AsyncSession) -> DecisionConfig | None:
+    """Return the configured decision endpoint (env over Settings), or None when unset or unusable."""
+    return from_ai_config(await ai.resolve_config(db))
 
 
 def choice_question(instructions: str, options: dict[str, str]) -> dict:

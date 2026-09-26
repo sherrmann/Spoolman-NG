@@ -359,14 +359,26 @@ the shortlisted filaments is the product on the label, the fuzzy order is kept.
 
 This is separate from the chat/tool-calling AI configured above. A decision
 model answers typed questions with probabilities rather than generating text, so
-it needs its own wire format and its own configuration, environment-only while
-this is a prototype:
+it needs its own wire format and its own configuration. Set it under
+**Settings → AI → Decision model**: pick a preset or enter the base URL, the
+API key and the model, save, and use **Test** to ask the endpoint one small
+question. The key is write-only, like the other AI keys, and is only sent to
+the base URL that was in effect when it was saved, so a new URL never receives
+the old key: after changing the URL, enter the key for the new endpoint (or
+Clear the old one). The same values can be set by environment variables, which win field by
+field and lock the matching input in Settings. `SPOOLMAN_AI_DECISION_API_KEY`
+is only used together with `SPOOLMAN_AI_DECISION_BASE_URL`, for the same
+reason:
 
 | Environment variable | Purpose |
 |---|---|
 | `SPOOLMAN_AI_DECISION_BASE_URL` | The decision endpoint; required to enable reranking |
 | `SPOOLMAN_AI_DECISION_API_KEY` | Bearer token for the endpoint |
 | `SPOOLMAN_AI_DECISION_MODEL` | Model name (default `jev-latest`) |
+
+Reranking runs whenever a base URL is set; it has no separate feature toggle,
+because it only changes the order of a list Scan-to-Spool shows anyway.
+`poe match-rerank-eval` reads the environment variables only, not Settings.
 
 Two endpoints work today:
 

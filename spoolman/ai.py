@@ -51,6 +51,12 @@ ENV_VISION_MODEL = "SPOOLMAN_AI_VISION_MODEL"
 ENV_STT_BASE_URL = "SPOOLMAN_AI_STT_BASE_URL"
 ENV_STT_API_KEY = "SPOOLMAN_AI_STT_API_KEY"
 ENV_STT_MODEL = "SPOOLMAN_AI_STT_MODEL"
+# Decision model (a typed-question endpoint such as TypeSafe's Jev; see spoolman/decision.py).
+# It is not OpenAI-compatible, so it has its own base URL, model and (write-only) key. This
+# module only stores and resolves them; spoolman/decision.py validates and uses them.
+ENV_DECISION_BASE_URL = "SPOOLMAN_AI_DECISION_BASE_URL"
+ENV_DECISION_API_KEY = "SPOOLMAN_AI_DECISION_API_KEY"
+ENV_DECISION_MODEL = "SPOOLMAN_AI_DECISION_MODEL"
 
 # Registered (non-secret) DB settings — see the registrations in spoolman/settings.py.
 SETTING_BASE_URL = "ai_base_url"
@@ -58,6 +64,8 @@ SETTING_MODEL = "ai_model"
 SETTING_VISION_MODEL = "ai_vision_model"
 SETTING_STT_BASE_URL = "ai_stt_base_url"
 SETTING_STT_MODEL = "ai_stt_model"
+SETTING_DECISION_BASE_URL = "ai_decision_base_url"
+SETTING_DECISION_MODEL = "ai_decision_model"
 
 #: Feature-toggle setting key -> feature name as reported by /ai/status. All default off:
 #: AI must be invisible unless explicitly enabled.
@@ -73,6 +81,10 @@ FEATURE_SETTINGS = {
 #: registry on purpose; tests/test_ai.py asserts they never get registered.
 API_KEY_DB_KEY = "ai_api_key"
 STT_API_KEY_DB_KEY = "ai_stt_api_key"
+#: Unlike the two keys above, its row holds JSON: the key and the decision base URL it was saved
+#: for, in one row so they are written together. The key is only used with that URL, so
+#: changing the URL in Settings can never send the old key to a new host.
+DECISION_API_KEY_DB_KEY = "ai_decision_api_key"
 
 _PROBE_TIMEOUT = 10.0
 #: Vision inference on local hardware is legitimately slow; give it room.
@@ -102,6 +114,14 @@ class AIConfig:
     stt_base_url: str | None = None
     stt_api_key: str | None = None
     stt_model: str | None = None
+    #: Decision-model endpoint, independent of both endpoints above. The model may be left
+    #: unset; spoolman/decision.py then uses its default.
+    decision_base_url: str | None = None
+    decision_api_key: str | None = None
+    decision_model: str | None = None
+    #: Whether a decision key is stored, even one not in use because the base URL changed.
+    #: The UI needs it to offer Clear for such a key.
+    decision_api_key_stored: bool = False
     #: field name -> "env" | "db" for every field that has a value.
     sources: dict[str, str] = field(default_factory=dict)
 
@@ -114,6 +134,11 @@ class AIConfig:
     def stt_configured(self) -> bool:
         """Whether a speech-to-text endpoint and model are present (voice input needs both)."""
         return bool(self.stt_base_url and self.stt_model)
+
+    @property
+    def decision_configured(self) -> bool:
+        """Whether a decision-model endpoint is set (the model has a default)."""
+        return bool(self.decision_base_url)
 
 
 @dataclass
@@ -146,6 +171,9 @@ class _AIState:
     #: at most one /api/show per model per process. Only successful lookups are stored; a
     #: transient failure must not permanently disable the tuning below.
     capabilities: dict[tuple[str, str], set[str]] = field(default_factory=dict)
+    #: The last "not using the decision key" reason logged, so the warning is logged once per
+    #: change rather than on every resolve_config call.
+    decision_key_warning: str | None = None
 
 
 _state = _AIState()
@@ -249,6 +277,65 @@ async def set_stored_stt_api_key(db: AsyncSession, value: str | None) -> None:
     await _set_stored_key(db, STT_API_KEY_DB_KEY, value, "AI speech-to-text API key")
 
 
+async def _get_stored_decision_key(db: AsyncSession) -> tuple[str | None, str | None]:
+    """Return the stored decision key and the base URL it was saved for; (None, None) when unset."""
+    raw = await _get_stored_key(db, DECISION_API_KEY_DB_KEY)
+    if raw is None:
+        return None, None
+    try:
+        record = json.loads(raw)
+    except json.JSONDecodeError:
+        record = None
+    if not isinstance(record, dict) or not isinstance(record.get("key"), str) or not record["key"]:
+        return None, None
+    bound_url = record.get("base_url")
+    return record["key"], normalize_base_url(bound_url) if isinstance(bound_url, str) else None
+
+
+async def get_stored_decision_api_key(db: AsyncSession) -> str | None:
+    """Read the stored decision-model API key, whichever base URL it belongs to. None when unset."""
+    return (await _get_stored_decision_key(db))[0]
+
+
+async def set_stored_decision_api_key(db: AsyncSession, value: str | None) -> None:
+    """Set or clear the stored decision-model API key, bound to the base URL in effect now.
+
+    Save the base URL first: the key is only ever sent to the URL it was saved with.
+    """
+    record = None
+    if value:
+        bound_url = (await resolve_config(db)).decision_base_url
+        record = json.dumps({"base_url": bound_url, "key": value})
+    await _set_stored_key(db, DECISION_API_KEY_DB_KEY, record, "AI decision-model API key")
+
+
+async def _decision_key_for_endpoint(db: AsyncSession, config: AIConfig) -> None:
+    """Drop a decision key that belongs to a different endpoint than the one now in effect.
+
+    A key set by environment variable is only used with a base URL set the same way, and a
+    stored key only with the base URL it was saved for. Otherwise changing the URL alone would
+    send the old key to the new host.
+    """
+    stored_key, bound_url = await _get_stored_decision_key(db)
+    config.decision_api_key_stored = stored_key is not None
+    source = config.sources.get("decision_api_key")
+    reason = None
+    if source == "env" and config.sources.get("decision_base_url") != "env":
+        reason = "the decision base URL is not set by environment variable too"
+    elif source == "db" and (bound_url is None or bound_url != config.decision_base_url):
+        reason = "it was saved for a different decision base URL"
+    if reason is None:
+        _state.decision_key_warning = None
+        return
+    config.decision_api_key = None
+    if source == "db":
+        del config.sources["decision_api_key"]
+    # Without a base URL nothing is sent anyway, so there is nothing to warn about.
+    if config.decision_base_url and _state.decision_key_warning != reason:
+        _state.decision_key_warning = reason
+        logger.warning("Not using the decision-model API key: %s.", reason)
+
+
 # --- Config resolution -------------------------------------------------------------
 
 
@@ -268,6 +355,8 @@ async def resolve_config(db: AsyncSession) -> AIConfig:
         ("vision_model", ENV_VISION_MODEL, SETTING_VISION_MODEL),
         ("stt_base_url", ENV_STT_BASE_URL, SETTING_STT_BASE_URL),
         ("stt_model", ENV_STT_MODEL, SETTING_STT_MODEL),
+        ("decision_base_url", ENV_DECISION_BASE_URL, SETTING_DECISION_BASE_URL),
+        ("decision_model", ENV_DECISION_MODEL, SETTING_DECISION_MODEL),
     ):
         env_value = _env(env_name)
         if env_value is not None:
@@ -282,6 +371,7 @@ async def resolve_config(db: AsyncSession) -> AIConfig:
     for attr, env_name, getter in (
         ("api_key", ENV_API_KEY, get_stored_api_key),
         ("stt_api_key", ENV_STT_API_KEY, get_stored_stt_api_key),
+        ("decision_api_key", ENV_DECISION_API_KEY, get_stored_decision_api_key),
     ):
         env_key = _env(env_name)
         if env_key is not None:
@@ -295,6 +385,8 @@ async def resolve_config(db: AsyncSession) -> AIConfig:
 
     config.base_url = normalize_base_url(config.base_url)
     config.stt_base_url = normalize_base_url(config.stt_base_url)
+    config.decision_base_url = normalize_base_url(config.decision_base_url)
+    await _decision_key_for_endpoint(db, config)
     return config
 
 

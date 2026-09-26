@@ -27,3 +27,25 @@ export const AI_PRESETS: AIPreset[] = [
     needsKey: true,
   },
 ];
+
+// Presets for the decision-model endpoint. These speak TypeSafe's System One API (a
+// classification/choice API), not OpenAI chat completions, so they need their own model
+// field and are kept separate from AI_PRESETS above.
+export interface DecisionPreset {
+  key: string;
+  label: string;
+  baseUrl: string;
+  model: string;
+  needsKey: boolean;
+}
+
+export const DECISION_PRESETS: DecisionPreset[] = [
+  { key: "typesafe", label: "TypeSafe", baseUrl: "https://api.typesafe.ai", model: "jev-latest", needsKey: true },
+  {
+    key: "openrouter",
+    label: "OpenRouter",
+    baseUrl: "https://openrouter.ai/api",
+    model: "jev-1.13",
+    needsKey: true,
+  },
+];

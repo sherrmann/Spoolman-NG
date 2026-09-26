@@ -29,12 +29,14 @@
 		setAiKeys,
 		ollamaModels,
 		pullOllamaModel,
+		decisionTest,
 		type AiAdminStatus,
 		type AiCapabilities,
+		type AiDecisionTestResult,
 		type TriState
 	} from '$lib/ng/aiApi';
 	import { currentUserIsAdmin } from '$lib/ng/me';
-	import { AI_PRESETS, OLLAMA_SUGGESTIONS } from '$lib/ng/aiPresets';
+	import { AI_PRESETS, OLLAMA_SUGGESTIONS, DECISION_PRESETS } from '$lib/ng/aiPresets';
 	import { FEATURES, blockedReason, toggleDisabled, type FeatureKey } from '$lib/ng/aiFeatures';
 
 	let admin = $state(false);
@@ -49,6 +51,9 @@
 	let sttBaseUrl = $state('');
 	let sttModel = $state('');
 	let sttApiKey = $state('');
+	let decisionBaseUrl = $state('');
+	let decisionModel = $state('');
+	let decisionApiKey = $state('');
 
 	let saving = $state(false);
 	let probing = $state(false);
@@ -58,6 +63,8 @@
 	let installed = $state<string[]>([]);
 	let pulling = $state<string | null>(null);
 	let pullPercent = $state<number | null>(null);
+	let decisionTesting = $state(false);
+	let decisionResult = $state<AiDecisionTestResult | null>(null);
 
 	let capabilities = $derived(probed ?? status?.capabilities ?? null);
 	let locked = $derived(new Set(status?.envLocked ?? []));
@@ -67,7 +74,9 @@
 		vision: (capabilities?.vision ?? 'unknown') as TriState
 	});
 	let urlsValid = $derived(
-		(!baseUrl || /^https?:\/\/.+/.test(baseUrl)) && (!sttBaseUrl || /^https?:\/\/.+/.test(sttBaseUrl))
+		(!baseUrl || /^https?:\/\/.+/.test(baseUrl)) &&
+			(!sttBaseUrl || /^https?:\/\/.+/.test(sttBaseUrl)) &&
+			(!decisionBaseUrl || /^https?:\/\/.+/.test(decisionBaseUrl))
 	);
 
 	$effect(() => {
@@ -88,6 +97,8 @@
 			visionModel = s.visionModel;
 			sttBaseUrl = s.sttBaseUrl;
 			sttModel = s.sttModel;
+			decisionBaseUrl = s.decisionBaseUrl;
+			decisionModel = s.decisionModel;
 			flags = Object.fromEntries(FEATURES.map((f) => [f.key, parseSetting(settingsMap[f.key], false)]));
 			flags.ai_voice_autosend = parseSetting(settingsMap.ai_voice_autosend, false);
 			loaded = true;
@@ -111,16 +122,20 @@
 				locked.has('model') ? null : setSetting('ai_model', model),
 				locked.has('vision_model') ? null : setSetting('ai_vision_model', visionModel),
 				locked.has('stt_base_url') ? null : setSetting('ai_stt_base_url', sttBaseUrl),
-				locked.has('stt_model') ? null : setSetting('ai_stt_model', sttModel)
+				locked.has('stt_model') ? null : setSetting('ai_stt_model', sttModel),
+				locked.has('decision_base_url') ? null : setSetting('ai_decision_base_url', decisionBaseUrl),
+				locked.has('decision_model') ? null : setSetting('ai_decision_model', decisionModel)
 			]);
 			// Only sent when something was typed. An empty box means "keep the stored key".
-			if (apiKey || sttApiKey) {
+			if (apiKey || sttApiKey || decisionApiKey) {
 				await setAiKeys({
 					apiKey: apiKey || undefined,
-					sttApiKey: sttApiKey || undefined
+					sttApiKey: sttApiKey || undefined,
+					decisionApiKey: decisionApiKey || undefined
 				});
 				apiKey = '';
 				sttApiKey = '';
+				decisionApiKey = '';
 			}
 			await refreshStatus();
 			toasts.success(ng.buttons_save());
@@ -131,9 +146,15 @@
 		}
 	}
 
-	async function clearKey(which: 'chat' | 'stt') {
+	async function clearKey(which: 'chat' | 'stt' | 'decision') {
 		try {
-			await setAiKeys(which === 'chat' ? { apiKey: null } : { sttApiKey: null });
+			const body =
+				which === 'chat'
+					? { apiKey: null }
+					: which === 'stt'
+						? { sttApiKey: null }
+						: { decisionApiKey: null };
+			await setAiKeys(body);
 			await refreshStatus();
 		} catch {
 			toasts.error(ng.settings_ai_probe_failed());
@@ -165,6 +186,24 @@
 			};
 		} finally {
 			probing = false;
+		}
+	}
+
+	async function testDecision() {
+		if (decisionTesting) return;
+		decisionTesting = true;
+		try {
+			// Same reasoning as probe(): the form's current values, not what is stored, so a new
+			// endpoint can be tried without first overwriting a working one.
+			decisionResult = await decisionTest({
+				baseUrl: locked.has('decision_base_url') ? undefined : decisionBaseUrl,
+				apiKey: decisionApiKey || undefined,
+				model: locked.has('decision_model') ? undefined : decisionModel
+			});
+		} catch {
+			decisionResult = { ok: false, error: ng.settings_ai_probe_failed() };
+		} finally {
+			decisionTesting = false;
 		}
 	}
 
@@ -364,6 +403,117 @@
 				/>
 			</SettingRow>
 		</Card>
+
+		<div class="sec-label">{ng.settings_ai_decision_title()}</div>
+		<p class="intro">{ng.settings_ai_decision_hint()}</p>
+		<Card divided>
+			<SettingRow title={ng.settings_ai_decision_preset_label()}>
+				<!-- Its own aria-label rather than the same "Preset" as the chat provider's select
+				     above: two comboboxes sharing one accessible name is the exact strict-mode
+				     collision the base-URL fields already work around (see this file's header). -->
+				<select
+					class="ctl"
+					aria-label={`${ng.settings_ai_decision_title()} ${ng.settings_ai_decision_preset_label()}`}
+					disabled={locked.has('decision_base_url')}
+					onchange={(e) => {
+						const p = DECISION_PRESETS.find((x) => x.key === e.currentTarget.value);
+						if (!p) return;
+						if (!locked.has('decision_base_url')) decisionBaseUrl = p.baseUrl;
+						if (!locked.has('decision_model')) decisionModel = p.model;
+					}}
+				>
+					<option value="">{ng.settings_ai_preset_placeholder()}</option>
+					{#each DECISION_PRESETS as p (p.key)}
+						<option value={p.key}>{p.label}</option>
+					{/each}
+				</select>
+			</SettingRow>
+
+			<SettingRow
+				title={ng.settings_ai_decision_base_url_label()}
+				desc={locked.has('decision_base_url')
+					? ng.settings_ai_env_locked()
+					: ng.settings_ai_decision_base_url_tooltip()}
+			>
+				<input
+					class="ctl"
+					aria-label={ng.settings_ai_a11y_decision_base_url()}
+					bind:value={decisionBaseUrl}
+					disabled={locked.has('decision_base_url')}
+					placeholder="https://api.typesafe.ai"
+					aria-invalid={!!decisionBaseUrl && !/^https?:\/\/.+/.test(decisionBaseUrl)}
+				/>
+			</SettingRow>
+
+			<SettingRow
+				title={ng.settings_ai_decision_api_key_label()}
+				desc={locked.has('decision_api_key') ? ng.settings_ai_env_locked() : undefined}
+			>
+				<div class="stack">
+					<input
+						class="ctl"
+						type="password"
+						autocomplete="off"
+						aria-label={ng.settings_ai_decision_api_key_label()}
+						bind:value={decisionApiKey}
+						disabled={locked.has('decision_api_key')}
+						placeholder={status?.decisionApiKeySet
+							? ng.settings_ai_api_key_placeholder_set()
+							: ng.settings_ai_api_key_placeholder_unset()}
+					/>
+					{#if status?.decisionApiKeyStored && !locked.has('decision_api_key')}
+						<button class="link" onclick={() => clearKey('decision')}>
+							{ng.settings_ai_api_key_clear()}
+						</button>
+					{/if}
+				</div>
+			</SettingRow>
+
+			<SettingRow
+				title={ng.settings_ai_decision_model_label()}
+				desc={ng.settings_ai_decision_model_tooltip()}
+			>
+				<input
+					class="ctl"
+					aria-label={ng.settings_ai_decision_model_label()}
+					bind:value={decisionModel}
+					disabled={locked.has('decision_model')}
+					placeholder="jev-latest"
+				/>
+			</SettingRow>
+		</Card>
+
+		<div class="actions">
+			<!-- Same "Test connection" text as the chat provider's button below, so its own
+			     accessible name distinguishes the two -- see the preset select above. -->
+			<Button
+				variant="outline"
+				disabled={decisionTesting}
+				onclick={testDecision}
+				ariaLabel={`${ng.settings_ai_decision_title()} ${ng.settings_ai_decision_test()}`}
+			>
+				{ng.settings_ai_decision_test()}
+			</Button>
+		</div>
+
+		{#if decisionResult}
+			<Card>
+				<div class="probe">
+					{#if decisionResult.ok}
+						<div class="probe-head">
+							{ng.settings_ai_decision_test_success({
+								latency: decisionResult.latencyMs ?? 0,
+								model: decisionResult.model ?? ''
+							})}
+						</div>
+					{:else}
+						<div class="probe-head bad">
+							{decisionResult.error ?? ng.settings_ai_decision_test_failed()}
+						</div>
+					{/if}
+				</div>
+			</Card>
+		{/if}
 
 		<div class="actions">
 			{#if !urlsValid}<span class="err">{ng.settings_ai_base_url_invalid()}</span>{/if}

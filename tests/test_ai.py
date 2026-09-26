@@ -11,11 +11,16 @@ Oracle strategy:
     tests/integration/test_ai_endpoints.py (no endpoint ever returns the key).
 """
 
+import json
+
 import pytest
 import respx
 from httpx import ConnectError, Response
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from spoolman import ai
+from spoolman.database import models
+from spoolman.database import setting as setting_db
 from spoolman.settings import SETTINGS
 
 
@@ -23,7 +28,15 @@ from spoolman.settings import SETTINGS
 def _reset_module_state(monkeypatch: pytest.MonkeyPatch) -> None:
     """Isolate the probe cache and the SPOOLMAN_AI_* env between tests."""
     monkeypatch.setattr(ai, "_state", ai._AIState())  # noqa: SLF001
-    for name in (ai.ENV_BASE_URL, ai.ENV_API_KEY, ai.ENV_MODEL, ai.ENV_VISION_MODEL):
+    for name in (
+        ai.ENV_BASE_URL,
+        ai.ENV_API_KEY,
+        ai.ENV_MODEL,
+        ai.ENV_VISION_MODEL,
+        ai.ENV_DECISION_BASE_URL,
+        ai.ENV_DECISION_API_KEY,
+        ai.ENV_DECISION_MODEL,
+    ):
         monkeypatch.delenv(name, raising=False)
 
 
@@ -44,6 +57,11 @@ def test_stt_api_key_storage_key_is_never_a_registered_setting() -> None:
     assert ai.STT_API_KEY_DB_KEY not in SETTINGS
 
 
+def test_decision_api_key_storage_key_is_never_a_registered_setting() -> None:
+    """The write-only decision-model key must also stay out of the settings registry."""
+    assert ai.DECISION_API_KEY_DB_KEY not in SETTINGS
+
+
 def test_all_feature_toggles_are_registered_settings() -> None:
     for key in ai.FEATURE_SETTINGS:
         assert key in SETTINGS, f"feature toggle {key} must be a registered setting"
@@ -56,8 +74,173 @@ def test_provider_settings_are_registered() -> None:
         ai.SETTING_VISION_MODEL,
         ai.SETTING_STT_BASE_URL,
         ai.SETTING_STT_MODEL,
+        ai.SETTING_DECISION_BASE_URL,
+        ai.SETTING_DECISION_MODEL,
     ):
         assert key in SETTINGS
+
+
+# --- resolve_config: decision fields (env-over-DB) ----------------------------------
+
+
+async def test_resolve_config_reads_decision_fields_from_db(db_session: AsyncSession) -> None:
+    base_url_setting = SETTINGS[ai.SETTING_DECISION_BASE_URL]
+    model_setting = SETTINGS[ai.SETTING_DECISION_MODEL]
+    await setting_db.update(db=db_session, definition=base_url_setting, value='"https://db.example.com"')
+    await setting_db.update(db=db_session, definition=model_setting, value='"jev-db"')
+
+    config = await ai.resolve_config(db_session)
+
+    assert config.decision_base_url == "https://db.example.com"
+    assert config.decision_model == "jev-db"
+    assert config.sources["decision_base_url"] == "db"
+    assert config.sources["decision_model"] == "db"
+
+
+async def test_resolve_config_decision_env_wins_per_field_over_db(
+    db_session: AsyncSession,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    base_url_setting = SETTINGS[ai.SETTING_DECISION_BASE_URL]
+    model_setting = SETTINGS[ai.SETTING_DECISION_MODEL]
+    await setting_db.update(db=db_session, definition=base_url_setting, value='"https://db.example.com"')
+    await setting_db.update(db=db_session, definition=model_setting, value='"jev-db"')
+    monkeypatch.setenv(ai.ENV_DECISION_MODEL, "jev-env")
+
+    config = await ai.resolve_config(db_session)
+
+    assert config.decision_base_url == "https://db.example.com"
+    assert config.sources["decision_base_url"] == "db"
+    assert config.decision_model == "jev-env"
+    assert config.sources["decision_model"] == "env"
+
+
+async def test_resolve_config_decision_api_key_env_wins_over_stored(
+    db_session: AsyncSession,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv(ai.ENV_DECISION_BASE_URL, "https://api.typesafe.ai")
+    await ai.set_stored_decision_api_key(db_session, "sk-stored")
+    monkeypatch.setenv(ai.ENV_DECISION_API_KEY, "sk-env")
+
+    config = await ai.resolve_config(db_session)
+
+    assert config.decision_api_key == "sk-env"
+    assert config.sources["decision_api_key"] == "env"
+
+
+# --- The decision key only goes to the endpoint it belongs to ------------------------
+
+
+async def _set_decision_base_url(db: AsyncSession, url: str) -> None:
+    await setting_db.update(db=db, definition=SETTINGS[ai.SETTING_DECISION_BASE_URL], value=json.dumps(url))
+
+
+async def test_stored_decision_key_is_used_with_the_url_it_was_saved_for(db_session: AsyncSession) -> None:
+    await _set_decision_base_url(db_session, "https://api.typesafe.ai/")
+    await ai.set_stored_decision_api_key(db_session, "sk-stored")
+
+    config = await ai.resolve_config(db_session)
+
+    assert config.decision_api_key == "sk-stored"
+    assert config.sources["decision_api_key"] == "db"
+
+
+async def test_stored_decision_key_is_dropped_when_the_url_changes(
+    db_session: AsyncSession,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    await _set_decision_base_url(db_session, "https://api.typesafe.ai")
+    await ai.set_stored_decision_api_key(db_session, "sk-stored")
+    await _set_decision_base_url(db_session, "https://attacker.example")
+
+    with caplog.at_level("WARNING"):
+        config = await ai.resolve_config(db_session)
+
+    assert config.decision_api_key is None
+    assert "decision_api_key" not in config.sources
+    assert "different decision base URL" in caplog.text
+    assert "sk-stored" not in caplog.text
+
+    # Back on the URL it was saved for, the key applies again.
+    await _set_decision_base_url(db_session, "https://api.typesafe.ai")
+    assert (await ai.resolve_config(db_session)).decision_api_key == "sk-stored"
+
+
+async def test_stored_decision_key_and_its_url_are_one_row_and_clear_together(db_session: AsyncSession) -> None:
+    await _set_decision_base_url(db_session, "https://api.typesafe.ai")
+    await ai.set_stored_decision_api_key(db_session, "sk-stored")
+
+    row = await db_session.get(models.Setting, ai.DECISION_API_KEY_DB_KEY)
+    assert row is not None
+    assert json.loads(row.value) == {"base_url": "https://api.typesafe.ai", "key": "sk-stored"}
+
+    await ai.set_stored_decision_api_key(db_session, None)
+    assert await db_session.get(models.Setting, ai.DECISION_API_KEY_DB_KEY) is None
+    config = await ai.resolve_config(db_session)
+    assert config.decision_api_key is None
+    assert config.decision_api_key_stored is False
+
+
+async def test_a_stale_decision_key_is_still_reported_as_stored(db_session: AsyncSession) -> None:
+    """So the UI can offer Clear for a key that is no longer used."""
+    await _set_decision_base_url(db_session, "https://api.typesafe.ai")
+    await ai.set_stored_decision_api_key(db_session, "sk-stored")
+    await _set_decision_base_url(db_session, "https://openrouter.ai/api")
+
+    config = await ai.resolve_config(db_session)
+
+    assert config.decision_api_key is None
+    assert config.decision_api_key_stored is True
+
+
+async def test_an_unused_decision_key_is_warned_about_once(
+    db_session: AsyncSession,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    await _set_decision_base_url(db_session, "https://api.typesafe.ai")
+    await ai.set_stored_decision_api_key(db_session, "sk-stored")
+    await _set_decision_base_url(db_session, "https://openrouter.ai/api")
+
+    with caplog.at_level("WARNING"):
+        for _ in range(3):
+            await ai.resolve_config(db_session)
+
+    assert caplog.text.count("Not using the decision-model API key") == 1
+
+
+async def test_stored_decision_key_saved_before_any_url_is_not_used(db_session: AsyncSession) -> None:
+    await ai.set_stored_decision_api_key(db_session, "sk-stored")
+    await _set_decision_base_url(db_session, "https://api.typesafe.ai")
+
+    assert (await ai.resolve_config(db_session)).decision_api_key is None
+
+
+async def test_env_decision_key_needs_an_env_base_url(
+    db_session: AsyncSession,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv(ai.ENV_DECISION_API_KEY, "sk-env")
+    await _set_decision_base_url(db_session, "https://attacker.example")
+
+    config = await ai.resolve_config(db_session)
+    assert config.decision_api_key is None
+    # Still reported as env-locked: a stored key cannot take its place.
+    assert config.sources["decision_api_key"] == "env"
+
+    monkeypatch.setenv(ai.ENV_DECISION_BASE_URL, "https://api.typesafe.ai")
+    assert (await ai.resolve_config(db_session)).decision_api_key == "sk-env"
+
+
+async def test_resolve_config_strips_trailing_slash_from_decision_base_url(
+    monkeypatch: pytest.MonkeyPatch,
+    db_session: AsyncSession,
+) -> None:
+    monkeypatch.setenv(ai.ENV_DECISION_BASE_URL, "https://api.typesafe.ai/")
+
+    config = await ai.resolve_config(db_session)
+
+    assert config.decision_base_url == "https://api.typesafe.ai"
 
 
 # --- URL helpers -------------------------------------------------------------------

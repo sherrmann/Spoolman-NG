@@ -997,6 +997,27 @@
           "tooltip": "The transcription model, e.g. whisper-1 or Systran/faster-whisper-base."
         }
       },
+      "decision": {
+        "title": "Decision model",
+        "hint": "Optional. A decision model answers typed questions with probabilities instead of generating text. Spoolman uses it to reorder Scan-to-Spool matches. It speaks TypeSafe's System One API, so an OpenAI-compatible endpoint will not work here.",
+        "preset": {
+          "label": "Preset"
+        },
+        "base_url": {
+          "label": "Decision base URL",
+          "tooltip": "The System One API endpoint to use, e.g. TypeSafe or OpenRouter."
+        },
+        "api_key": {
+          "label": "Decision API key"
+        },
+        "model": {
+          "label": "Decision model name",
+          "tooltip": "The decision model to ask, e.g. jev-latest."
+        },
+        "test": "Test connection",
+        "test_success": "The endpoint answered in {{latency}} ms (model {{model}}).",
+        "test_failed": "The connection test failed."
+      },
       "env_locked": "Set via environment variable and locked here",
       "test": "Test connection",
       "probe": {
@@ -1046,7 +1067,8 @@
       },
       "a11y": {
         "base_url": "AI endpoint URL",
-        "stt_base_url": "Transcription endpoint URL"
+        "stt_base_url": "Transcription endpoint URL",
+        "decision_base_url": "Decision model endpoint URL"
       }
     },
     "swatch": {

@@ -10,6 +10,8 @@ Three endpoints, all inert until the user configures an endpoint:
   server performs an outbound request to a caller-influenced URL.
 * ``POST /ai/config`` — set or clear the write-only API key. Admin-gated. The key is
   never echoed back by any endpoint; responses only ever say whether one is set.
+* ``POST /ai/decision/test`` — ask the decision-model endpoint one small question, so
+  Settings can check unsaved values. Admin-gated for the same reason as the probe.
 """
 
 import asyncio
@@ -17,6 +19,7 @@ import base64
 import binascii
 import json
 import logging
+import time
 from collections.abc import AsyncIterator
 from datetime import datetime
 from typing import Annotated, Literal
@@ -26,7 +29,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from spoolman import ai, ai_tools, aichat, nlsearch, ollama, spoolintake, voice
+from spoolman import ai, ai_tools, aichat, decision, nlsearch, ollama, spoolintake, voice
 from spoolman.api.v1 import bodylimit
 from spoolman.api.v1.auth import _principal, require_admin
 from spoolman.api.v1.models import Message
@@ -84,6 +87,23 @@ class AIStatus(BaseModel):
     stt_base_url: str | None = Field(default=None, description="Effective speech-to-text base URL.")
     stt_model: str | None = Field(default=None, description="Effective speech-to-text model.")
     stt_api_key_set: bool = Field(default=False, description="Whether a speech-to-text API key is configured.")
+    decision_configured: bool = Field(
+        default=False,
+        description="Whether a decision-model endpoint is configured (it reorders Scan-to-Spool matches).",
+    )
+    decision_base_url: str | None = Field(default=None, description="Effective decision-model base URL.")
+    decision_model: str | None = Field(
+        default=None,
+        description=f"Configured decision model; unset means '{decision.DEFAULT_MODEL}'.",
+    )
+    decision_api_key_set: bool = Field(default=False, description="Whether a decision-model API key is configured.")
+    decision_api_key_stored: bool = Field(
+        default=False,
+        description=(
+            "Whether a decision-model API key is stored, even one not in use because it was saved "
+            "for a different base URL. Admins only."
+        ),
+    )
     env_locked: list[str] = Field(
         default_factory=list,
         description="Fields set via SPOOLMAN_AI_* env vars; the UI disables these inputs.",
@@ -112,12 +132,35 @@ class AIKeyRequest(BaseModel):
     # request body are acted on (a present null clears that key).
     api_key: str | None = Field(default=None, description="The chat API key to store, or null to clear it.")
     stt_api_key: str | None = Field(default=None, description="The speech-to-text API key to store, or null to clear.")
+    decision_api_key: str | None = Field(
+        default=None,
+        description="The decision-model API key to store, or null to clear it.",
+    )
 
 
 class AIKeyResponse(BaseModel):
     api_key_set: bool = Field(description="Whether a chat API key is now in effect (env or stored).")
     env_locked: bool = Field(description="True when SPOOLMAN_AI_API_KEY is set, which overrides the stored key.")
     stt_api_key_set: bool = Field(default=False, description="Whether a speech-to-text API key is now in effect.")
+    decision_api_key_set: bool = Field(
+        default=False,
+        description="Whether a decision-model API key is now in effect.",
+    )
+
+
+class AIDecisionTestRequest(BaseModel):
+    """Overrides for 'Test' with unsaved form values; omitted fields use the saved config."""
+
+    base_url: str | None = None
+    api_key: str | None = None
+    model: str | None = None
+
+
+class AIDecisionTestResult(BaseModel):
+    ok: bool = Field(description="Whether the endpoint answered the test question with a valid choice.")
+    error: str | None = Field(default=None, description="Human-readable failure reason when ok is false.")
+    latency_ms: int | None = Field(default=None, description="Round-trip time of the test request.")
+    model: str | None = Field(default=None, description="The model the test asked.")
 
 
 @router.get(
@@ -146,6 +189,8 @@ async def status(
             api_key_set=config.api_key is not None,
             stt_configured=config.stt_configured,
             stt_api_key_set=config.stt_api_key is not None,
+            decision_configured=config.decision_configured,
+            decision_api_key_set=config.decision_api_key is not None,
             features=features,
         )
 
@@ -160,6 +205,11 @@ async def status(
         stt_base_url=config.stt_base_url,
         stt_model=config.stt_model,
         stt_api_key_set=config.stt_api_key is not None,
+        decision_configured=config.decision_configured,
+        decision_base_url=config.decision_base_url,
+        decision_model=config.decision_model,
+        decision_api_key_set=config.decision_api_key is not None,
+        decision_api_key_stored=config.decision_api_key_stored,
         env_locked=sorted(attr for attr, source in config.sources.items() if source == "env"),
         features=features,
         capabilities=AIProbeResult.from_result(cached) if cached is not None else None,
@@ -194,7 +244,7 @@ async def run_probe(
     "/config",
     name="Set the AI API keys",
     description=(
-        "Store or clear the AI provider API key and/or the speech-to-text API key. Write-only: no "
+        "Store or clear the AI provider, speech-to-text and decision-model API keys. Write-only: no "
         "endpoint ever returns a key. Only fields present in the request are changed (a present "
         "null clears that key). The SPOOLMAN_AI_*_API_KEY env vars override whatever is stored here."
     ),
@@ -209,11 +259,68 @@ async def set_key(
         await ai.set_stored_api_key(db, body.api_key.strip() if body.api_key else None)
     if "stt_api_key" in provided:
         await ai.set_stored_stt_api_key(db, body.stt_api_key.strip() if body.stt_api_key else None)
+    if "decision_api_key" in provided:
+        await ai.set_stored_decision_api_key(db, body.decision_api_key.strip() if body.decision_api_key else None)
     config = await ai.resolve_config(db)
     return AIKeyResponse(
         api_key_set=config.api_key is not None,
         env_locked=config.sources.get("api_key") == "env",
         stt_api_key_set=config.stt_api_key is not None,
+        decision_api_key_set=config.decision_api_key is not None,
+    )
+
+
+#: One small question with an obvious answer: enough to show that the endpoint, key and model
+#: work, without depending on the user's data.
+_DECISION_TEST_QUESTION = decision.choice_question(
+    "Which option names a colour?",
+    {"red": "The word 'red'.", "table": "The word 'table'."},
+)
+
+
+@router.post(
+    "/decision/test",
+    name="Test the decision-model endpoint",
+    description=(
+        "Ask the decision-model endpoint one small question, with optional overrides for unsaved "
+        "form values. Failures are reported in the response body, not as HTTP errors."
+    ),
+)
+async def run_decision_test(
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+    _admin: Annotated[Principal, Depends(require_admin)],
+    body: AIDecisionTestRequest,
+) -> AIDecisionTestResult:
+    config = await ai.resolve_config(db)
+    saved_base_url = config.decision_base_url
+    provided = body.model_dump(exclude_unset=True)
+    for field_name in ("base_url", "model", "api_key"):
+        if field_name in provided:
+            value = provided[field_name]
+            setattr(config, f"decision_{field_name}", value.strip() or None if isinstance(value, str) else None)
+            config.sources.pop(f"decision_{field_name}", None)
+    config.decision_base_url = ai.normalize_base_url(config.decision_base_url)
+    if "api_key" not in provided and config.decision_base_url != saved_base_url:
+        # The saved key belongs to the saved endpoint; never send it to a different host.
+        config.decision_api_key = None
+    target = decision.from_ai_config(config)
+    if target is None:
+        if not config.decision_base_url:
+            error = "No base URL configured."
+        elif decision.validated_config(config.decision_base_url, None, None) is None:
+            error = "No usable base URL: it must start with http:// or https:// and name a host."
+        else:
+            error = "The API key contains characters that an HTTP header cannot carry."
+        return AIDecisionTestResult(ok=False, error=error)
+    started = time.perf_counter()
+    try:
+        await decision.ask_choices(target, "A quick connection test.", {"test": _DECISION_TEST_QUESTION})
+    except decision.DecisionError as exc:
+        return AIDecisionTestResult(ok=False, error=str(exc), model=target.model)
+    return AIDecisionTestResult(
+        ok=True,
+        latency_ms=round((time.perf_counter() - started) * 1000),
+        model=target.model,
     )
 
 

@@ -635,7 +635,7 @@ async def build_matches(db: AsyncSession, extraction: dict) -> dict:
         "catalog": await asyncio.to_thread(match_catalog, extraction),
     }
     try:
-        config = decision.resolve_config()
+        config = await decision.resolve_config(db)
         if config is None:
             return matches
         return await rerank_matches(config, extraction, matches)

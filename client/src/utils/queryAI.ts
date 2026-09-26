@@ -29,6 +29,13 @@ export interface AIStatus {
   stt_base_url: string | null;
   stt_model: string | null;
   stt_api_key_set: boolean;
+  decision_configured: boolean;
+  decision_base_url: string | null;
+  decision_model: string | null;
+  decision_api_key_set: boolean;
+  // A stored key not in use because it was saved for another base URL still counts here, so it
+  // can be cleared. Admins only.
+  decision_api_key_stored?: boolean;
   env_locked: string[];
   features: Record<string, boolean>;
   capabilities: AIProbeResult | null;
@@ -68,6 +75,37 @@ export function useAIProbe() {
     onSuccess: () => {
       // The probe result is cached server-side and mirrored into /ai/status.
       queryClient.invalidateQueries({ queryKey: ["ai-status"] });
+    },
+  });
+}
+
+// --- Decision model ----------------------------------------------------------------
+
+export interface AIDecisionTestRequest {
+  base_url?: string;
+  api_key?: string;
+  model?: string;
+}
+
+export interface AIDecisionTestResult {
+  ok: boolean;
+  error: string | null;
+  latency_ms: number | null;
+  model: string | null;
+}
+
+export function useDecisionTest() {
+  return useMutation<AIDecisionTestResult, Error, AIDecisionTestRequest>({
+    mutationFn: async (overrides) => {
+      const response = await apiFetch(`${getAPIURL()}/ai/decision/test`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(overrides),
+      });
+      if (!response.ok) {
+        throw new Error((await response.json()).message ?? `HTTP ${response.status}`);
+      }
+      return response.json();
     },
   });
 }
@@ -124,10 +162,15 @@ export function useSpoolIntakeExtract() {
 }
 
 // Set (or clear, with null) one of the write-only keys via /ai/config. `field` picks which:
-// "api_key" for the chat provider, "stt_api_key" for the speech-to-text endpoint (#363).
-function useSetKey(field: "api_key" | "stt_api_key") {
+// "api_key" for the chat provider, "stt_api_key" for the speech-to-text endpoint (#363),
+// "decision_api_key" for the decision-model endpoint.
+function useSetKey(field: "api_key" | "stt_api_key" | "decision_api_key") {
   const queryClient = useQueryClient();
-  return useMutation<{ api_key_set: boolean; env_locked: boolean; stt_api_key_set: boolean }, Error, string | null>({
+  return useMutation<
+    { api_key_set: boolean; env_locked: boolean; stt_api_key_set: boolean; decision_api_key_set: boolean },
+    Error,
+    string | null
+  >({
     mutationFn: async (value) => {
       const response = await apiFetch(`${getAPIURL()}/ai/config`, {
         method: "POST",
@@ -151,6 +194,10 @@ export function useSetAIKey() {
 
 export function useSetSTTKey() {
   return useSetKey("stt_api_key");
+}
+
+export function useSetDecisionKey() {
+  return useSetKey("decision_api_key");
 }
 
 // --- Managed Ollama model pull (#364, F2) ------------------------------------------
