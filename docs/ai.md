@@ -533,7 +533,8 @@ integration can use it too. It never creates anything.
   filament of that material.
 - **With the decision model:** Spoolman shortlists up to five of your filaments
   whose manufacturer, name, material and size score as close (the same scoring
-  Scan-to-Spool uses), drops every one whose colour is known to differ, and asks
+  Scan-to-Spool uses), drops every one whose colour is known to differ or that is
+  the other filament size, and asks
   the model which remaining one, if any, is the same product. The request
   carries the typed manufacturer, name, material and size, and the shortlisted
   filaments' names with "same colour" or "colour unknown"; colour values never

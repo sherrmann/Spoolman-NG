@@ -194,8 +194,9 @@ _HEX_COLOUR = re.compile(r"^#?([0-9a-fA-F]{6})(?:[0-9a-fA-F]{2})?$")
 _FILAMENT_INSTRUCTIONS = (
     "The state describes a new 3D-printer filament a user is about to add to their inventory. Is "
     "it the same product as one of the listed existing filaments: the same manufacturer, the same "
-    "product line and the same material? A product may be named differently, for example with or "
-    "without the material or colour in its name. Each listed filament says whether its colour "
+    "product line, the same material and the same filament size? A product may be named "
+    "differently, for example with or without the material or colour in its name. Each listed "
+    "filament says whether its colour "
     "matches the new one. Answer 'none' if it is a different product, or if you are unsure."
 )
 
@@ -331,9 +332,15 @@ async def _model_filament(
         return None
     reading = {"vendor": vendor_name, "name": draft.name, "material": draft.material, "diameter_mm": draft.diameter}
     ranked = await asyncio.to_thread(spoolintake._rank_library, rows, reading, {})  # noqa: SLF001
-    # Colour is decided here, not by the model: a filament known to be another colour is a
-    # different product however alike the names are.
-    candidates = [row for row in ranked if colour_relation(colours, row["colours"]) != "different colour"]
+    # Colour and size are decided here, not by the model: a filament known to be another colour
+    # or the other filament size is a different product however alike the names are. The
+    # ranking only nudges a size mismatch down, so it has to be removed explicitly.
+    candidates = [
+        row
+        for row in ranked
+        if colour_relation(colours, row["colours"]) != "different colour"
+        and _same_size(draft.diameter, row["diameter_mm"])
+    ]
     if not candidates:
         return None
     try:

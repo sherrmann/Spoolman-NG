@@ -766,6 +766,47 @@ async def test_filament_model_never_suggested_when_only_colour_differs_even_with
 
 @respx.mock
 @pytest.mark.usefixtures("_model_ready")
+async def test_filament_model_never_offers_the_other_filament_size(db_session: AsyncSession) -> None:
+    """A 2.85 mm row is another product for a 1.75 mm draft, whatever its name and colour."""
+    vendor = await vendor_db.create(db=db_session, name="Bambu Lab")
+    same_size = await _create_filament(
+        db_session, vendor_id=vendor.id, name="Bambu PLA Basic", material="PLA", diameter=1.75, color_hex="ff0000"
+    )
+    other_size = await _create_filament(
+        db_session, vendor_id=vendor.id, name="Bambu PLA Basic", material="PLA", diameter=2.85, color_hex="ff0000"
+    )
+    route = respx.post(_DECISION_URL).mock(return_value=Response(200, json=_filament_answer_payload("none")))
+
+    draft = duplicates.FilamentDraft(
+        vendor_id=vendor.id, name="Bambu Basic PLA", material="PLA", diameter=1.75, color_hex="ff0000"
+    )
+    await duplicates.similar_filament(db_session, draft)
+
+    offered_ids = set(json.loads(route.calls.last.request.content)["questions"]["filament"]["criteria"])
+    assert f"f{same_size.id}" in offered_ids
+    assert f"f{other_size.id}" not in offered_ids
+
+
+@respx.mock
+@pytest.mark.usefixtures("_model_ready")
+async def test_filament_model_is_not_asked_when_only_the_other_size_is_similar(db_session: AsyncSession) -> None:
+    vendor = await vendor_db.create(db=db_session, name="Bambu Lab")
+    await _create_filament(
+        db_session, vendor_id=vendor.id, name="Bambu PLA Basic", material="PLA", diameter=2.85, color_hex="ff0000"
+    )
+    route = respx.post(_DECISION_URL).mock(return_value=Response(200, json=_filament_answer_payload("none")))
+
+    draft = duplicates.FilamentDraft(
+        vendor_id=vendor.id, name="Bambu Basic PLA", material="PLA", diameter=1.75, color_hex="ff0000"
+    )
+    result = await duplicates.similar_filament(db_session, draft)
+
+    assert route.call_count == 0
+    assert result.suggestion is None
+
+
+@respx.mock
+@pytest.mark.usefixtures("_model_ready")
 async def test_filament_model_pick_at_or_above_threshold_is_suggested(db_session: AsyncSession) -> None:
     vendor = await vendor_db.create(db=db_session, name="Bambu Lab")
     bambu = await _create_filament(
