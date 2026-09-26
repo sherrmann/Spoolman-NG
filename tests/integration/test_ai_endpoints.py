@@ -173,7 +173,7 @@ async def test_decision_api_key_is_write_only(client: AsyncClient) -> None:
 
     # The generic /setting API must not know the key exists, let alone its value.
     all_settings = await client.get("/api/v1/setting/")
-    assert "ai_decision_api_key" not in all_settings.json()
+    assert not [key for key in all_settings.json() if key.startswith("ai_decision_api_key")]
     assert secret not in all_settings.text
     assert (await client.get("/api/v1/setting/ai_decision_api_key")).status_code == 404
     assert (await client.post("/api/v1/setting/ai_decision_api_key", json="x")).status_code == 404
@@ -440,6 +440,24 @@ async def test_decision_test_keeps_the_saved_key_for_the_same_host(client: Async
 
     assert response.status_code == 200
     assert route.calls.last.request.headers["Authorization"] == "Bearer sk-saved"
+
+
+@respx.mock
+async def test_decision_test_sends_no_stale_key_even_to_the_saved_url(client: AsyncClient) -> None:
+    """A key saved for another URL stays unused, whatever the override says."""
+    await _set_setting(client, "ai_decision_base_url", "https://old.example.com")
+    await client.post("/api/v1/ai/config", json={"decision_api_key": "sk-old"})
+    await _set_setting(client, "ai_decision_base_url", "https://api.typesafe.ai")
+    route = respx.post("https://api.typesafe.ai/v1/systemone").mock(
+        return_value=Response(200, json=_decision_answer_payload()),
+    )
+
+    await client.post("/api/v1/ai/decision/test", json={"base_url": "https://api.typesafe.ai"})
+
+    assert "Authorization" not in route.calls.last.request.headers
+    status = (await client.get("/api/v1/ai/status")).json()
+    assert status["decision_api_key_set"] is False
+    assert status["decision_api_key_stored"] is True
 
 
 @respx.mock

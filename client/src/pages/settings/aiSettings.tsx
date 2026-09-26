@@ -361,7 +361,7 @@ export function AISettings() {
             autoComplete="off"
           />
         </Form.Item>
-        {status.data?.decision_api_key_set && !envLocked.has("decision_api_key") && (
+        {status.data?.decision_api_key_stored && !envLocked.has("decision_api_key") && (
           <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
             <Button size="small" loading={setDecisionKey.isPending} onClick={() => setDecisionKey.mutate(null)}>
               {t("settings.ai.api_key.clear")}

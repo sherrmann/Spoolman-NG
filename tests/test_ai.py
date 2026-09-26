@@ -19,6 +19,7 @@ from httpx import ConnectError, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from spoolman import ai
+from spoolman.database import models
 from spoolman.database import setting as setting_db
 from spoolman.settings import SETTINGS
 
@@ -164,6 +165,48 @@ async def test_stored_decision_key_is_dropped_when_the_url_changes(
     # Back on the URL it was saved for, the key applies again.
     await _set_decision_base_url(db_session, "https://api.typesafe.ai")
     assert (await ai.resolve_config(db_session)).decision_api_key == "sk-stored"
+
+
+async def test_stored_decision_key_and_its_url_are_one_row_and_clear_together(db_session: AsyncSession) -> None:
+    await _set_decision_base_url(db_session, "https://api.typesafe.ai")
+    await ai.set_stored_decision_api_key(db_session, "sk-stored")
+
+    row = await db_session.get(models.Setting, ai.DECISION_API_KEY_DB_KEY)
+    assert row is not None
+    assert json.loads(row.value) == {"base_url": "https://api.typesafe.ai", "key": "sk-stored"}
+
+    await ai.set_stored_decision_api_key(db_session, None)
+    assert await db_session.get(models.Setting, ai.DECISION_API_KEY_DB_KEY) is None
+    config = await ai.resolve_config(db_session)
+    assert config.decision_api_key is None
+    assert config.decision_api_key_stored is False
+
+
+async def test_a_stale_decision_key_is_still_reported_as_stored(db_session: AsyncSession) -> None:
+    """So the UI can offer Clear for a key that is no longer used."""
+    await _set_decision_base_url(db_session, "https://api.typesafe.ai")
+    await ai.set_stored_decision_api_key(db_session, "sk-stored")
+    await _set_decision_base_url(db_session, "https://openrouter.ai/api")
+
+    config = await ai.resolve_config(db_session)
+
+    assert config.decision_api_key is None
+    assert config.decision_api_key_stored is True
+
+
+async def test_an_unused_decision_key_is_warned_about_once(
+    db_session: AsyncSession,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    await _set_decision_base_url(db_session, "https://api.typesafe.ai")
+    await ai.set_stored_decision_api_key(db_session, "sk-stored")
+    await _set_decision_base_url(db_session, "https://openrouter.ai/api")
+
+    with caplog.at_level("WARNING"):
+        for _ in range(3):
+            await ai.resolve_config(db_session)
+
+    assert caplog.text.count("Not using the decision-model API key") == 1
 
 
 async def test_stored_decision_key_saved_before_any_url_is_not_used(db_session: AsyncSession) -> None:

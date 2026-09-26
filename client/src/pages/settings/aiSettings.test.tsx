@@ -223,6 +223,17 @@ describe("AISettings (#359)", () => {
     expect(setDecisionKeyMutate).toHaveBeenCalledWith("secret");
   });
 
+  it("offers Clear for a stored decision key that is no longer used", async () => {
+    // Saved for another base URL: not in use, but still stored, so it must be clearable.
+    statusMock.mockReturnValue({ ...baseStatus, decision_api_key_set: false, decision_api_key_stored: true });
+    const user = userEvent.setup();
+    render(<AISettings />);
+
+    const clearButtons = screen.getAllByRole("button", { name: "settings.ai.api_key.clear" });
+    await user.click(clearButtons[clearButtons.length - 1]);
+    expect(setDecisionKeyMutate).toHaveBeenCalledWith(null);
+  });
+
   it("disables env-locked decision fields and says why", () => {
     statusMock.mockReturnValue({
       ...baseStatus,

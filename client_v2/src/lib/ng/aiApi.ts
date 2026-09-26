@@ -319,6 +319,8 @@ export interface AiAdminStatus extends AiStatus {
 	decisionBaseUrl: string;
 	decisionModel: string;
 	decisionApiKeySet: boolean;
+	/** A stored key, even one not in use because it was saved for another base URL. */
+	decisionApiKeyStored: boolean;
 	/** Attribute names fixed by environment variables, which the form must not pretend to own. */
 	envLocked: string[];
 	features: Record<string, boolean>;
@@ -358,6 +360,7 @@ export async function aiAdminStatus(signal?: AbortSignal): Promise<AiAdminStatus
 		decisionBaseUrl: str(r.decision_base_url),
 		decisionModel: str(r.decision_model),
 		decisionApiKeySet: Boolean(r.decision_api_key_set),
+		decisionApiKeyStored: Boolean(r.decision_api_key_stored),
 		envLocked: Array.isArray(r.env_locked) ? r.env_locked.map(String) : [],
 		features: (r.features as Record<string, boolean> | undefined) ?? {},
 		capabilities: mapCapabilities(r.capabilities as Record<string, unknown> | null)

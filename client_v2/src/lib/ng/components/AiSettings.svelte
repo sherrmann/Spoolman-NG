@@ -461,7 +461,7 @@
 							? ng.settings_ai_api_key_placeholder_set()
 							: ng.settings_ai_api_key_placeholder_unset()}
 					/>
-					{#if status?.decisionApiKeySet && !locked.has('decision_api_key')}
+					{#if status?.decisionApiKeyStored && !locked.has('decision_api_key')}
 						<button class="link" onclick={() => clearKey('decision')}>
 							{ng.settings_ai_api_key_clear()}
 						</button>

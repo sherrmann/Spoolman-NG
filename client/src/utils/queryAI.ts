@@ -33,6 +33,9 @@ export interface AIStatus {
   decision_base_url: string | null;
   decision_model: string | null;
   decision_api_key_set: boolean;
+  // A stored key not in use because it was saved for another base URL still counts here, so it
+  // can be cleared. Admins only.
+  decision_api_key_stored?: boolean;
   env_locked: string[];
   features: Record<string, boolean>;
   capabilities: AIProbeResult | null;

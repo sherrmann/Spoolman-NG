@@ -97,6 +97,13 @@ class AIStatus(BaseModel):
         description=f"Configured decision model; unset means '{decision.DEFAULT_MODEL}'.",
     )
     decision_api_key_set: bool = Field(default=False, description="Whether a decision-model API key is configured.")
+    decision_api_key_stored: bool = Field(
+        default=False,
+        description=(
+            "Whether a decision-model API key is stored, even one not in use because it was saved "
+            "for a different base URL. Admins only."
+        ),
+    )
     env_locked: list[str] = Field(
         default_factory=list,
         description="Fields set via SPOOLMAN_AI_* env vars; the UI disables these inputs.",
@@ -202,6 +209,7 @@ async def status(
         decision_base_url=config.decision_base_url,
         decision_model=config.decision_model,
         decision_api_key_set=config.decision_api_key is not None,
+        decision_api_key_stored=config.decision_api_key_stored,
         env_locked=sorted(attr for attr, source in config.sources.items() if source == "env"),
         features=features,
         capabilities=AIProbeResult.from_result(cached) if cached is not None else None,

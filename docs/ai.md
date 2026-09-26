@@ -363,9 +363,9 @@ it needs its own wire format and its own configuration. Set it under
 **Settings → AI → Decision model**: pick a preset or enter the base URL, the
 API key and the model, save, and use **Test** to ask the endpoint one small
 question. The key is write-only, like the other AI keys, and is only sent to
-the base URL that was in effect when it was saved: change the URL and the key
-counts as unset until you enter it again, so a new URL never receives the old
-key. The same values can be set by environment variables, which win field by
+the base URL that was in effect when it was saved, so a new URL never receives
+the old key: after changing the URL, enter the key for the new endpoint (or
+Clear the old one). The same values can be set by environment variables, which win field by
 field and lock the matching input in Settings. `SPOOLMAN_AI_DECISION_API_KEY`
 is only used together with `SPOOLMAN_AI_DECISION_BASE_URL`, for the same
 reason:
