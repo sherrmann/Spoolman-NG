@@ -859,6 +859,7 @@ def test_write_and_read_dumped_results_round_trip(eval_module: ModuleType, tmp_p
             "rerank_ok": True,
             "top_tied": False,
             "right_rank": 1,
+            "error": None,
         },
         {
             "case_id": "p2",
@@ -869,6 +870,7 @@ def test_write_and_read_dumped_results_round_trip(eval_module: ModuleType, tmp_p
             "rerank_ok": None,
             "top_tied": False,
             "right_rank": None,
+            "error": None,
         },
     ]
 
@@ -1060,3 +1062,58 @@ async def test_a_tie_between_variants_of_the_right_product_is_not_counted(
 
     assert result.baseline_ok is True
     assert result.top_tied is False
+
+
+# --- review fixes: flip by size, errored cases in --compare, --compare flag checks ----------
+
+
+@pytest.mark.parametrize(("reading", "flipped"), [(1.75, 2.85), (1.76, 2.85), (2.85, 1.75), (2.88, 1.75), (3.0, 1.75)])
+def test_flip_diameter_goes_by_filament_size(eval_module: ModuleType, reading: float, flipped: float) -> None:
+    assert eval_module.flip_diameter_reading({"diameter_mm": reading})["diameter_mm"] == flipped
+
+
+def test_flip_diameter_leaves_an_unknown_diameter_alone(eval_module: ModuleType) -> None:
+    assert eval_module.flip_diameter_reading({"diameter_mm": None}) == {"diameter_mm": None}
+
+
+def test_compare_leaves_out_cases_whose_rerank_failed(
+    eval_module: ModuleType,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    row = {"source": "generated", "shortlisted": True, "baseline_ok": False, "rerank_ok": None, "error": None}
+    old = [{**row, "case_id": "a"}, {**row, "case_id": "b"}]
+    new = [
+        {**row, "case_id": "a", "rerank_ok": True},
+        {**row, "case_id": "b", "baseline_ok": True, "error": "HTTP 429"},
+    ]
+
+    eval_module.print_comparison(old, new)
+
+    out = capsys.readouterr().out
+    assert "1 case(s) better, 0 worse" in out
+    assert "left out, a decision request failed in one run: b" in out
+
+
+@pytest.mark.parametrize(
+    ("extra", "flag"),
+    [
+        (["--min-accuracy", "0"], "--min-accuracy"),
+        (["--flip-diameter"], "--flip-diameter"),
+        (["--baseline-only"], "--baseline-only"),
+        (["--seed", "7"], "--seed"),
+    ],
+)
+def test_compare_rejects_flags_it_would_ignore(
+    eval_module: ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    extra: list[str],
+    flag: str,
+) -> None:
+    monkeypatch.setattr(sys, "argv", ["match_rerank_eval.py", "--compare", "a.jsonl", "b.jsonl", *extra])
+
+    with pytest.raises(SystemExit) as exit_info:
+        eval_module.main()
+
+    assert exit_info.value.code == 2
+    assert flag in capsys.readouterr().err

@@ -911,3 +911,8 @@ def test_apply_rerank_sorts_on_unrounded_probabilities() -> None:
 
     assert [c["filament_id"] for c in ranked] == [2, 1]
     assert ranked[0]["rerank_probability"] == ranked[1]["rerank_probability"] == 0.5
+
+
+@pytest.mark.parametrize("diameter", [float("nan"), float("inf")])
+def test_a_non_finite_diameter_counts_as_unknown(diameter: float) -> None:
+    assert spoolintake._diameter_class(diameter) is None  # noqa: SLF001

@@ -19,6 +19,7 @@ import asyncio
 import difflib
 import json
 import logging
+import math
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -361,7 +362,7 @@ _DIAMETER_MISMATCH_PENALTY = 0.005
 def _diameter_class(value: object) -> bool | None:
     """Classify a diameter: True for 1.75 mm filament, False for 2.85/3 mm, None when unknown."""
     number = coerce_number(value)
-    if number is None or number <= 0:
+    if number is None or not math.isfinite(number) or number <= 0:
         return None
     return number < _DIAMETER_CLASS_SPLIT_MM
 

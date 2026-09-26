@@ -25,7 +25,7 @@ shortlist itself with spoolintake.match_catalog over a SpoolmanDB catalog, from 
 extractions (ai_eval_vision.py --dump-extractions) or from generated readings
 (match_eval_noise.py). It also reports how often the right product is shortlisted at all, which
 bounds both orders. ``--baseline-only`` runs it without a decision endpoint. ``--flip-diameter``
-simulates a misread diameter in generated readings. ``--dump-results FILE`` writes one JSON line
+simulates a misread diameter in every reading, generated or from photos. ``--dump-results FILE`` writes one JSON line
 per case, for a later ``--compare OLD.jsonl NEW.jsonl`` between two code versions, with no
 catalog or endpoint needed. See docs/ai.md.
 
@@ -370,20 +370,17 @@ def generated_cases(catalog: list[dict], n: int, seed: int) -> list[CatalogCase]
 
 
 def flip_diameter_reading(extraction: dict) -> dict:
-    """Simulate a misread diameter (``--flip-diameter``): 1.75 <-> 2.85, and 3.0 read as 1.75 too.
+    """Simulate a misread diameter (``--flip-diameter``): a 1.75 mm reading becomes 2.85, a 2.85/3 mm one 1.75.
 
     A missing diameter is left alone. `same_product` always checks against the labelled row's
     true diameter, not the reading, so flipping it here still leaves a flipped case judged
     against the real product rather than mistaken for a different one.
     """
-    diameter = extraction.get("diameter_mm")
-    if diameter == 1.75:  # noqa: PLR2004 - the three catalog diameters, not magic thresholds
-        flipped = 2.85
-    elif diameter in (2.85, 3.0):
-        flipped = 1.75
-    else:
+    # By filament size, as the scorer sees it, so a photo reading of 1.76 or 2.88 flips too.
+    size = spoolintake._diameter_class(extraction.get("diameter_mm"))  # noqa: SLF001
+    if size is None:
         return extraction
-    return {**extraction, "diameter_mm": flipped}
+    return {**extraction, "diameter_mm": 2.85 if size else 1.75}
 
 
 def _raw_score(extraction: dict, candidate: dict) -> float:
@@ -532,6 +529,7 @@ def write_results(path: Path, results: list[CatalogResult]) -> None:
                 "rerank_ok": r.rerank_ok,
                 "top_tied": r.top_tied,
                 "right_rank": r.right_rank,
+                "error": r.error,
             },
             ensure_ascii=False,
         )
@@ -579,10 +577,15 @@ def print_comparison(old: list[dict], new: list[dict]) -> None:
                 f"  top-1        {sum(_top1(row) for row in old_group)}/{len(old_group)} -> "
                 f"{sum(_top1(row) for row in new_group)}/{len(new_group)}",
             )
-    better, worse = [], []
+    better, worse, errored = [], [], []
     for row in old:
         new_row = new_by_id.get(row["case_id"])
         if new_row is None:
+            continue
+        if row.get("error") or new_row.get("error"):
+            # A failed rerank falls back to the fuzzy order; comparing that against a real
+            # rerank would count a change that never happened.
+            errored.append(row["case_id"])
             continue
         old_ok, new_ok = _top1(row), _top1(new_row)
         if not old_ok and new_ok:
@@ -590,6 +593,8 @@ def print_comparison(old: list[dict], new: list[dict]) -> None:
         elif old_ok and not new_ok:
             worse.append(row["case_id"])
     print(f"\n{len(better)} case(s) better, {len(worse)} worse")
+    if errored:
+        print(f"  left out, a decision request failed in one run: {', '.join(errored[:_WORSE_SHOWN])}")
     if worse:
         shown = ", ".join(worse[:_WORSE_SHOWN])
         more = f" ... {len(worse) - _WORSE_SHOWN} more" if len(worse) > _WORSE_SHOWN else ""
@@ -820,7 +825,12 @@ def main() -> None:
                 ("--generated", args.generated),
                 ("--find", args.find),
                 ("--dump-results", args.dump_results),
-                ("--min-accuracy", args.min_accuracy),
+                ("--extractions", args.extractions),
+                ("--min-accuracy", args.min_accuracy is not None),
+                ("--seed", args.seed != 1),
+                ("--suggest", args.suggest),
+                ("--flip-diameter", args.flip_diameter),
+                ("--baseline-only", args.baseline_only),
             )
             if value
         ]
