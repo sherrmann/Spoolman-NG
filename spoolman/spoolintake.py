@@ -19,6 +19,7 @@ import asyncio
 import difflib
 import json
 import logging
+import math
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -348,6 +349,24 @@ def _material_variant(a: str, b: str) -> bool:
 _MATERIAL_VARIANT_SCORE = 0.5
 
 
+#: Filament comes in two sizes: 1.75 mm, and 2.85 mm, which some makers call 3 mm. Anything below
+#: this is the small one.
+_DIAMETER_CLASS_SPLIT_MM = 2.3
+#: Subtracted when the reading and the candidate are different filament sizes. It only has to
+#: decide the tie between the 1.75 mm and 2.85 mm rows of the same product: on generated readings
+#: 0.001 to 0.05 all fixed the same ties, and every step up only cost more when the diameter was
+#: misread. It stays above the three-decimal rounding of the score and below the name tie-break.
+_DIAMETER_MISMATCH_PENALTY = 0.005
+
+
+def _diameter_class(value: object) -> bool | None:
+    """Classify a diameter: True for 1.75 mm filament, False for 2.85/3 mm, None when unknown."""
+    number = coerce_number(value)
+    if number is None or not math.isfinite(number) or number <= 0:
+        return None
+    return number < _DIAMETER_CLASS_SPLIT_MM
+
+
 def score_candidate(
     extraction: dict,
     *,
@@ -355,12 +374,15 @@ def score_candidate(
     name: str | None,
     material: str | None,
     weight_g: float | None,
+    diameter_mm: float | None = None,
 ) -> float:
     """Score a filament candidate against an extraction; pure and unit-testable.
 
     Name 0.4 + vendor 0.3 + material 0.2 + weight 0.1; a definite material mismatch
     scales the whole score down hard (a PETG label must not match a PLA record). A material
-    and its plus variant ("PLA" and "PLA+") get partial credit instead of the penalty.
+    and its plus variant ("PLA" and "PLA+") get partial credit instead of the penalty. When
+    both sides give a diameter and they are different filament sizes, a small penalty applies;
+    without a diameter on either side the score is as before.
     """
     materials = _words(extraction.get("material")) | _words(material)
     name_score = _name_similarity(extraction.get("name"), name, materials)
@@ -382,6 +404,9 @@ def score_candidate(
     score = 0.4 * name_score + 0.3 * vendor_score + 0.2 * material_score + 0.1 * weight_score
     if mismatch:
         score *= 0.3
+    size_a, size_b = _diameter_class(extraction.get("diameter_mm")), _diameter_class(diameter_mm)
+    if size_a is not None and size_b is not None and size_a != size_b:
+        score = max(0.0, score - _DIAMETER_MISMATCH_PENALTY)
     return round(score, 3)
 
 
@@ -415,6 +440,7 @@ def _rank_library(rows: list[dict], extraction: dict, aggregates: dict) -> list[
             name=row["name"],
             material=row["material"],
             weight_g=row["weight_g"],
+            diameter_mm=row.get("diameter_mm"),
         )
         if score < _LIBRARY_MIN_SCORE:
             continue
@@ -445,6 +471,7 @@ async def match_library(db: AsyncSession, extraction: dict) -> list[dict]:
             "name": item.name,
             "material": item.material,
             "weight_g": item.weight,
+            "diameter_mm": item.diameter,
         }
         for item in items
     ]
@@ -502,6 +529,7 @@ def match_catalog(extraction: dict) -> list[dict]:
             name=entry.get("name"),
             material=entry.get("material"),
             weight_g=coerce_number(entry.get("weight")),
+            diameter_mm=coerce_number(entry.get("diameter")),
         )
         if score < _CATALOG_MIN_SCORE:
             continue

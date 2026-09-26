@@ -24,7 +24,10 @@ Real-catalog mode (``--catalog``, ``--photos``, ``--generated``) lets the produc
 shortlist itself with spoolintake.match_catalog over a SpoolmanDB catalog, from your own photos'
 extractions (ai_eval_vision.py --dump-extractions) or from generated readings
 (match_eval_noise.py). It also reports how often the right product is shortlisted at all, which
-bounds both orders. ``--baseline-only`` runs it without a decision endpoint. See docs/ai.md.
+bounds both orders. ``--baseline-only`` runs it without a decision endpoint. ``--flip-diameter``
+simulates a misread diameter in every reading, generated or from photos. ``--dump-results FILE`` writes one JSON line
+per case, for a later ``--compare OLD.jsonl NEW.jsonl`` between two code versions, with no
+catalog or endpoint needed. See docs/ai.md.
 
 Needs a live decision-model endpoint, so it is not part of CI -- run it before a release and
 whenever the reranker's prompt or scoring changes:
@@ -39,7 +42,7 @@ import asyncio
 import hashlib
 import json
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 # Run directly as `python scripts/match_rerank_eval.py` (poe's invocation, and the documented
@@ -232,6 +235,9 @@ class CatalogResult:
     #: catalog's file order, not the score, decided the fuzzy top-1 result.
     top_tied: bool = False
     rerank_ok: bool | None = None
+    #: 1-based position of the first shortlisted candidate `same_product` accepts, or None if
+    #: there is no expected candidate or none of the shortlist is it.
+    right_rank: int | None = None
     answered_none: bool = False
     error: str | None = None
 
@@ -363,6 +369,20 @@ def generated_cases(catalog: list[dict], n: int, seed: int) -> list[CatalogCase]
     ]
 
 
+def flip_diameter_reading(extraction: dict) -> dict:
+    """Simulate a misread diameter (``--flip-diameter``): a 1.75 mm reading becomes 2.85, a 2.85/3 mm one 1.75.
+
+    A missing diameter is left alone. `same_product` always checks against the labelled row's
+    true diameter, not the reading, so flipping it here still leaves a flipped case judged
+    against the real product rather than mistaken for a different one.
+    """
+    # By filament size, as the scorer sees it, so a photo reading of 1.76 or 2.88 flips too.
+    size = spoolintake._diameter_class(extraction.get("diameter_mm"))  # noqa: SLF001
+    if size is None:
+        return extraction
+    return {**extraction, "diameter_mm": 2.85 if size else 1.75}
+
+
 def _raw_score(extraction: dict, candidate: dict) -> float:
     """Recompute the unrounded score match_catalog sorted by (match_percent is rounded for display)."""
     return spoolintake.score_candidate(
@@ -371,6 +391,7 @@ def _raw_score(extraction: dict, candidate: dict) -> float:
         name=candidate.get("name"),
         material=candidate.get("material"),
         weight_g=spoolintake.coerce_number(candidate.get("weight_g")),
+        diameter_mm=spoolintake.coerce_number(candidate.get("diameter_mm")),
     )
 
 
@@ -388,11 +409,19 @@ async def run_catalog_case(
             return False
         return bool(candidates) and same_product(candidates[0], expected, case.extraction)
 
+    right_rank = None
+    if expected is not None:
+        right_rank = next(
+            (index + 1 for index, c in enumerate(shortlist) if same_product(c, expected, case.extraction)),
+            None,
+        )
+
     result = CatalogResult(
         case=case,
-        shortlisted=expected is None or any(same_product(c, expected, case.extraction) for c in shortlist),
+        shortlisted=expected is None or right_rank is not None,
         empty=not shortlist,
         baseline_ok=ok(shortlist),
+        right_rank=right_rank,
         top_tied=(
             expected is not None
             and len(shortlist) > 1
@@ -483,6 +512,105 @@ def print_catalog_report(results: list[CatalogResult]) -> None:
             print(f"  {r.case.case_id}: {r.error}")
 
 
+def write_results(path: Path, results: list[CatalogResult]) -> None:
+    """Write one JSON line per catalog-mode case, for a later ``--compare`` between two runs.
+
+    Overwrites ``path``. The point is per-case before/after comparisons between two code
+    versions -- run this on each, then ``--compare`` the two files -- rather than an ad-hoc script.
+    """
+    lines = (
+        json.dumps(
+            {
+                "case_id": r.case.case_id,
+                "source": r.case.source,
+                "catalog_id": r.case.catalog_id,
+                "shortlisted": r.shortlisted,
+                "baseline_ok": r.baseline_ok,
+                "rerank_ok": r.rerank_ok,
+                "top_tied": r.top_tied,
+                "right_rank": r.right_rank,
+                "error": r.error,
+            },
+            ensure_ascii=False,
+        )
+        for r in results
+    )
+    path.write_text("".join(f"{line}\n" for line in lines), encoding="utf-8")
+
+
+def _top1(row: dict) -> bool:
+    """Return the row's effective top-1 verdict: reranked when it ran, fuzzy order otherwise."""
+    return bool(row["rerank_ok"] if row["rerank_ok"] is not None else row["baseline_ok"])
+
+
+def read_dumped_results(path: Path) -> list[dict]:
+    """Read a file written by ``write_results``."""
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError as exc:
+        msg = f"Cannot read {path}: {exc.strerror or exc}."
+        raise EvalInputError(msg) from exc
+    try:
+        return [json.loads(line) for line in lines if line.strip()]
+    except json.JSONDecodeError as exc:
+        msg = f"{path}: not a --dump-results file ({exc})."
+        raise EvalInputError(msg) from exc
+
+
+#: Cap on the worse-case ids listed by --compare, same as print_catalog_report's changed-cases list.
+_WORSE_SHOWN = 15
+
+
+def print_comparison(old: list[dict], new: list[dict]) -> None:
+    """Print, per source, shortlisted and top-1 counts old vs new, and which cases flipped."""
+    new_by_id = {row["case_id"]: row for row in new}
+    for source in sorted({row["source"] for row in old} | {row["source"] for row in new}):
+        old_group = [row for row in old if row["source"] == source]
+        new_group = [row for row in new if row["source"] == source]
+        print(f"== {source}: {len(old_group)} cases old, {len(new_group)} new")
+        if old_group and new_group:
+            print(
+                f"  shortlisted  {sum(row['shortlisted'] for row in old_group)}/{len(old_group)} -> "
+                f"{sum(row['shortlisted'] for row in new_group)}/{len(new_group)}",
+            )
+            print(
+                f"  top-1        {sum(_top1(row) for row in old_group)}/{len(old_group)} -> "
+                f"{sum(_top1(row) for row in new_group)}/{len(new_group)}",
+            )
+    better, worse, errored = [], [], []
+    for row in old:
+        new_row = new_by_id.get(row["case_id"])
+        if new_row is None:
+            continue
+        if row.get("error") or new_row.get("error"):
+            # A failed rerank falls back to the fuzzy order; comparing that against a real
+            # rerank would count a change that never happened.
+            errored.append(row["case_id"])
+            continue
+        old_ok, new_ok = _top1(row), _top1(new_row)
+        if not old_ok and new_ok:
+            better.append(row["case_id"])
+        elif old_ok and not new_ok:
+            worse.append(row["case_id"])
+    print(f"\n{len(better)} case(s) better, {len(worse)} worse")
+    if errored:
+        print(f"  left out, a decision request failed in one run: {', '.join(errored[:_WORSE_SHOWN])}")
+    if worse:
+        shown = ", ".join(worse[:_WORSE_SHOWN])
+        more = f" ... {len(worse) - _WORSE_SHOWN} more" if len(worse) > _WORSE_SHOWN else ""
+        print(f"  worse: {shown}{more}")
+
+
+def _compare_main(old_path: Path, new_path: Path) -> int:
+    try:
+        old, new = read_dumped_results(old_path), read_dumped_results(new_path)
+    except EvalInputError as exc:
+        print(exc, file=sys.stderr)
+        return 2
+    print_comparison(old, new)
+    return 0
+
+
 def print_suggestions(cases: list[CatalogCase], catalog: list[dict], limit: int = 10) -> None:
     """For labelling photos: the closest catalog rows per reading, below the shortlist cut-off too.
 
@@ -500,6 +628,7 @@ def print_suggestions(cases: list[CatalogCase], catalog: list[dict], limit: int 
                         name=entry.get("name"),
                         material=entry.get("material"),
                         weight_g=spoolintake.coerce_number(entry.get("weight")),
+                        diameter_mm=spoolintake.coerce_number(entry.get("diameter")),
                     ),
                     entry,
                 )
@@ -584,21 +713,31 @@ def _load_photos(photos: PhotoSet, by_id: dict[str, dict]) -> list[CatalogCase]:
     return photos.cases
 
 
-async def _run_catalog_modes(args: argparse.Namespace, catalog: list[dict]) -> int:
-    by_id = {entry.get("id"): entry for entry in catalog}
+def _collect_catalog_cases(args: argparse.Namespace, catalog: list[dict], by_id: dict[str, dict]) -> list[CatalogCase]:
+    """Gather this run's cases from --photos and/or --generated, applying --flip-diameter."""
     cases: list[CatalogCase] = []
     if args.photos:
-        try:
-            photos = photo_cases(args.photos, args.extractions)
-            if args.suggest:
-                print_suggestions(photos.unlabelled + photos.cases, catalog)
-                return 0
-            cases += _load_photos(photos, by_id)
-        except EvalInputError as exc:
-            print(exc, file=sys.stderr)
-            return 2
+        photos = photo_cases(args.photos, args.extractions)
+        if args.suggest:
+            print_suggestions(photos.unlabelled + photos.cases, catalog)
+            return []
+        cases += _load_photos(photos, by_id)
     if args.generated:
         cases += generated_cases(catalog, args.generated, args.seed)
+    if args.flip_diameter:
+        cases = [replace(case, extraction=flip_diameter_reading(case.extraction)) for case in cases]
+    return cases
+
+
+async def _run_catalog_modes(args: argparse.Namespace, catalog: list[dict]) -> int:
+    by_id = {entry.get("id"): entry for entry in catalog}
+    try:
+        cases = _collect_catalog_cases(args, catalog, by_id)
+    except EvalInputError as exc:
+        print(exc, file=sys.stderr)
+        return 2
+    if args.suggest:
+        return 0
     if not cases:
         print("No cases to run.", file=sys.stderr)
         return 2
@@ -611,6 +750,8 @@ async def _run_catalog_modes(args: argparse.Namespace, catalog: list[dict]) -> i
             return 2
     results = [await run_catalog_case(config, case, by_id) for case in cases]
     print_catalog_report(results)
+    if args.dump_results:
+        write_results(args.dump_results, results)
     if any(r.error is not None for r in results):
         print("\nFAIL: some cases could not be scored; rerun once the endpoint answers them all.")
         return 1
@@ -657,7 +798,45 @@ def main() -> None:
     real.add_argument("--generated", type=int, default=0, metavar="N", help="also run N generated label readings")
     real.add_argument("--seed", type=int, default=1, help="seed for --generated")
     real.add_argument("--baseline-only", action="store_true", help="fuzzy numbers only; no decision endpoint")
+    real.add_argument(
+        "--flip-diameter",
+        action="store_true",
+        help="simulate a misread diameter in generated (and, if given too, photo) readings",
+    )
+    real.add_argument(
+        "--dump-results",
+        type=Path,
+        metavar="FILE",
+        help="write one JSON line per case to FILE, for a later --compare",
+    )
+    parser.add_argument(
+        "--compare",
+        nargs=2,
+        metavar=("OLD.jsonl", "NEW.jsonl"),
+        help="compare two --dump-results files (no catalog or endpoint needed) and exit",
+    )
     args = parser.parse_args()
+    if args.compare:
+        other = [
+            name
+            for name, value in (
+                ("--catalog", args.catalog),
+                ("--photos", args.photos),
+                ("--generated", args.generated),
+                ("--find", args.find),
+                ("--dump-results", args.dump_results),
+                ("--extractions", args.extractions),
+                ("--min-accuracy", args.min_accuracy is not None),
+                ("--seed", args.seed != 1),
+                ("--suggest", args.suggest),
+                ("--flip-diameter", args.flip_diameter),
+                ("--baseline-only", args.baseline_only),
+            )
+            if value
+        ]
+        if other:
+            parser.error(f"--compare stands alone; it needs no catalog or endpoint (drop {', '.join(other)})")
+        sys.exit(_compare_main(Path(args.compare[0]), Path(args.compare[1])))
     if args.suggest and not args.photos:
         parser.error("--suggest lists catalog rows for photos; it needs --photos")
     if args.suggest and args.generated:

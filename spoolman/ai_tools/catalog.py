@@ -53,6 +53,7 @@ def _rank(extraction: dict, limit: int) -> list[dict]:
             name=entry.get("name"),
             material=entry.get("material"),
             weight_g=spoolintake.coerce_number(entry.get("weight")),
+            diameter_mm=spoolintake.coerce_number(entry.get("diameter")),
         )
         if score >= MIN_SCORE:
             scored.append((score, entry_row(entry, score=score)))

@@ -466,6 +466,13 @@ A pick counts as right when it is the same product as the labelled row: same mak
 material and weight, and the same diameter only when the label shows one. SpoolmanDB lists
 one product once per diameter, spool type and spool size.
 
+`--flip-diameter` swaps 1.75mm and 2.85mm/3.0mm readings, to see how much a misread diameter
+alone costs (meant for `--generated`; it also applies to photo readings when both are given, since
+it acts on whatever readings are in play). `--dump-results FILE` writes one JSON line per case
+with its shortlisted/top-1 verdicts, so two runs -- before and after a scoring change -- can be
+compared case by case with `--compare OLD.jsonl NEW.jsonl`, which needs neither a catalog nor a
+decision endpoint.
+
 ## Privacy
 
 - With a **local endpoint** (Ollama, LM Studio, llama.cpp, vLLM on your own
