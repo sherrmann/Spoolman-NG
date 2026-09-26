@@ -352,7 +352,7 @@
       "Elegoo"
     ],
     "expected": null,
-    "note": "Sunlu and Sun Filament are unrelated brands despite the similar name."
+    "note": "Treated as different: no evidence Sunlu and Sun Filament are the same company."
   },
   {
     "typed": "Eryone",
@@ -367,7 +367,7 @@
       "Hatchbox"
     ],
     "expected": null,
-    "note": "Eryone and Eono are different brands despite the similar spelling."
+    "note": "Treated as different: no evidence Eryone and Eono are the same company."
   },
   {
     "typed": "Prusa",
@@ -750,7 +750,7 @@
       "Hatchbox"
     ],
     "expected": null,
-    "note": "Elixir is a PolyAlchemy product line, not the manufacturer's own name."
+    "note": "Treated as not a manufacturer name: Elixir is used as a product-line name here."
   },
   {
     "typed": "Prusament CZ",
@@ -821,5 +821,208 @@
       "Elegoo"
     ],
     "expected": "Overture"
+  },
+  {
+    "typed": "PolyAlchemy",
+    "existing": [
+      "Polymaker",
+      "eSUN",
+      "SUNLU",
+      "ELEGOO",
+      "Eryone",
+      "Proto-pasta",
+      "Prusament",
+      "Fiberlogy",
+      "Fillamentum",
+      "3D-Fuel",
+      "3DXTech",
+      "Bambu Lab",
+      "Creality"
+    ],
+    "expected": null,
+    "note": "A different company sharing the 'Poly' prefix with Polymaker."
+  },
+  {
+    "typed": "Polymaker",
+    "existing": [
+      "PolyAlchemy",
+      "eSUN",
+      "SUNLU",
+      "ELEGOO",
+      "Eryone",
+      "Proto-pasta",
+      "Prusament",
+      "Fiberlogy",
+      "Fillamentum",
+      "3D-Fuel",
+      "3DXTech",
+      "Bambu Lab",
+      "Creality"
+    ],
+    "expected": null,
+    "note": "A different company sharing the 'Poly' prefix with PolyAlchemy."
+  },
+  {
+    "typed": "eSUN",
+    "existing": [
+      "Polymaker",
+      "PolyAlchemy",
+      "SUNLU",
+      "ELEGOO",
+      "Eryone",
+      "Proto-pasta",
+      "Prusament",
+      "Fiberlogy",
+      "Fillamentum",
+      "3D-Fuel",
+      "3DXTech",
+      "Bambu Lab",
+      "Creality"
+    ],
+    "expected": null,
+    "note": "Shares 'sun' with SUNLU; different companies."
+  },
+  {
+    "typed": "SUNLU",
+    "existing": [
+      "Polymaker",
+      "PolyAlchemy",
+      "eSUN",
+      "ELEGOO",
+      "Eryone",
+      "Proto-pasta",
+      "Prusament",
+      "Fiberlogy",
+      "Fillamentum",
+      "3D-Fuel",
+      "3DXTech",
+      "Bambu Lab",
+      "Creality"
+    ],
+    "expected": null,
+    "note": "Shares 'sun' with eSUN; different companies."
+  },
+  {
+    "typed": "Eryone",
+    "existing": [
+      "Polymaker",
+      "PolyAlchemy",
+      "eSUN",
+      "SUNLU",
+      "ELEGOO",
+      "Proto-pasta",
+      "Prusament",
+      "Fiberlogy",
+      "Fillamentum",
+      "3D-Fuel",
+      "3DXTech",
+      "Bambu Lab",
+      "Creality"
+    ],
+    "expected": null,
+    "note": "Shares the first letter and length with ELEGOO; different companies."
+  },
+  {
+    "typed": "3D-Fuel",
+    "existing": [
+      "Polymaker",
+      "PolyAlchemy",
+      "eSUN",
+      "SUNLU",
+      "ELEGOO",
+      "Eryone",
+      "Proto-pasta",
+      "Prusament",
+      "Fiberlogy",
+      "Fillamentum",
+      "3DXTech",
+      "Bambu Lab",
+      "Creality"
+    ],
+    "expected": null,
+    "note": "Shares the '3D' prefix with 3DXTech; different companies."
+  },
+  {
+    "typed": "Fiberlogy",
+    "existing": [
+      "Polymaker",
+      "PolyAlchemy",
+      "eSUN",
+      "SUNLU",
+      "ELEGOO",
+      "Eryone",
+      "Proto-pasta",
+      "Prusament",
+      "Fillamentum",
+      "3D-Fuel",
+      "3DXTech",
+      "Bambu Lab",
+      "Creality"
+    ],
+    "expected": null,
+    "note": "Shares 'Fi' and the filament theme with Fillamentum; different companies."
+  },
+  {
+    "typed": "Silk PLA",
+    "existing": [
+      "Polymaker",
+      "PolyAlchemy",
+      "eSUN",
+      "SUNLU",
+      "ELEGOO",
+      "Eryone",
+      "Proto-pasta",
+      "Prusament",
+      "Fiberlogy",
+      "Fillamentum",
+      "3D-Fuel",
+      "3DXTech",
+      "Bambu Lab",
+      "Creality"
+    ],
+    "expected": null,
+    "note": "A finish and material, not a manufacturer."
+  },
+  {
+    "typed": "PETG",
+    "existing": [
+      "Polymaker",
+      "PolyAlchemy",
+      "eSUN",
+      "SUNLU",
+      "ELEGOO",
+      "Eryone",
+      "Proto-pasta",
+      "Prusament",
+      "Fiberlogy",
+      "Fillamentum",
+      "3D-Fuel",
+      "3DXTech",
+      "Bambu Lab",
+      "Creality"
+    ],
+    "expected": null,
+    "note": "A material, not a manufacturer."
+  },
+  {
+    "typed": "Matte",
+    "existing": [
+      "Polymaker",
+      "PolyAlchemy",
+      "eSUN",
+      "SUNLU",
+      "ELEGOO",
+      "Eryone",
+      "Proto-pasta",
+      "Prusament",
+      "Fiberlogy",
+      "Fillamentum",
+      "3D-Fuel",
+      "3DXTech",
+      "Bambu Lab",
+      "Creality"
+    ],
+    "expected": null,
+    "note": "A finish, not a manufacturer."
   }
 ]

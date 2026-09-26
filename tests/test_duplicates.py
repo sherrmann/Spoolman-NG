@@ -141,9 +141,13 @@ async def test_model_not_called_when_toggle_off_even_with_url_set(db_session: As
     await _set_decision_base_url(db_session, "https://api.typesafe.ai")
     await vendor_db.create(db=db_session, name="Bambu Lab")
 
+    # A registered route, not a bare respx.mock: an unmocked call would raise inside
+    # similar_vendor, where the catch-all turns it into "no suggestion" and the test would pass.
     with respx.mock:
+        route = respx.post(_DECISION_URL).mock(return_value=Response(200, json=_answer_payload("none")))
         result = await duplicates.similar_vendor(db_session, "Bambu")
 
+    assert route.call_count == 0
     assert result.suggestion is None
 
 
@@ -151,9 +155,13 @@ async def test_model_not_called_when_url_unset_even_with_toggle_on(db_session: A
     await _enable_duplicate_check(db_session)
     await vendor_db.create(db=db_session, name="Bambu Lab")
 
+    # A registered route, not a bare respx.mock: an unmocked call would raise inside
+    # similar_vendor, where the catch-all turns it into "no suggestion" and the test would pass.
     with respx.mock:
+        route = respx.post(_DECISION_URL).mock(return_value=Response(200, json=_answer_payload("none")))
         result = await duplicates.similar_vendor(db_session, "Bambu")
 
+    assert route.call_count == 0
     assert result.suggestion is None
 
 
@@ -163,9 +171,13 @@ async def test_model_not_called_for_a_name_too_short_once_normalized(db_session:
     await _set_decision_base_url(db_session, "https://api.typesafe.ai")
     await vendor_db.create(db=db_session, name="Bambu Lab")
 
+    # A registered route, not a bare respx.mock: an unmocked call would raise inside
+    # similar_vendor, where the catch-all turns it into "no suggestion" and the test would pass.
     with respx.mock:
+        route = respx.post(_DECISION_URL).mock(return_value=Response(200, json=_answer_payload("none")))
         result = await duplicates.similar_vendor(db_session, name)
 
+    assert route.call_count == 0
     assert result.suggestion is None
 
 

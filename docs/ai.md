@@ -488,8 +488,9 @@ decision endpoint.
 ## Duplicate manufacturer check
 
 When you create a manufacturer, or type a new one's name while adding a filament,
-Spoolman checks whether it already exists and says so under the name field. It
-never blocks saving.
+Spoolman checks whether it already exists and says so under the name field.
+Where the name is typed as part of a filament, a button uses the existing
+manufacturer instead. It never blocks saving.
 
 - **Exact matches are always checked**, with no AI involved: names that are equal
   once case, spacing, punctuation and full-width or other compatibility forms are
