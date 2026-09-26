@@ -1,6 +1,6 @@
 # Import, export and the 3MF matcher in the Svelte client (#414)
 
-Status: step 1 built; step 2 designed.
+Status: both steps built.
 
 #414 lists two settings features the frozen React client has and `client_v2` lacks. The backend for
 both exists and needs no change. The rule from
@@ -80,18 +80,34 @@ in `lib/ng/importExport.ts` with unit tests.
 
 ### Step 2: the 3MF slice-import matcher
 
-- `client/src/utils/threeMfImport.ts` (98 lines, framework-free) and its tests are copied to
-  `lib/ng/`. The only change is the spool type it reads.
+As built: `lib/ng/threeMfImport.ts` with its tests, and
+`lib/ng/components/importExport/ThreeMfImport.svelte`, shown under the import form to
+administrators only.
+
+- The parser and matcher are a port of `client/src/utils/threeMfImport.ts`, reading the Svelte
+  view model.
   - It reads Bambu Studio / OrcaSlicer's `Metadata/slice_info.config` and sums grams per
     filament across plates.
-  - Its matching: the same colour exactly, then the same material. It has no nearest-colour
+  - Its matching: a spool whose filament has exactly the same colour, preferring one of the same
+    material. With no colour match the row has no suggestion. There is no nearest-colour
     matching.
+  - Errors carry a code (`invalid_file`, `no_slice_info`) and the page shows them translated;
+    the classic client threw fixed English text.
 - The parser uses `DOMParser`, which the browser has but the client's node test environment
   does not. The tests install a DOMParser shim built on the swatch port's strict test parser
-  (`lib/ng/swatch/xmlTestHelpers.ts`), rather than a new dependency.
-- UI: a file picker, then one row per filament used, showing its swatch, material and grams, and
-  a spool picker pre-filled by the matcher. An "Apply" button records each row's usage in turn
-  and reports how many succeeded.
+  (`lib/ng/swatch/xmlTestHelpers.ts`), rather than a new dependency. The parser uses
+  `getElementsByTagName`, which both provide.
+- UI: a file picker, then one row per filament used, showing its colour, material and grams, and
+  a spool picker pre-filled by the matcher. "Apply usage" records each row's grams in turn.
+- Two changes from the classic client, both about counting a print once:
+  - Each row sends an `Idempotency-Key`, through the call the weigh-in uses (`recordReading`).
+    The server scopes a key to a spool, so a row keeps one key for its life, even when its
+    spool is changed: retrying a row whose response was lost, or going back to that spool,
+    replays the first request instead of recording the grams again.
+  - A partial failure keeps the failed rows, with their keys, so "Apply usage" retries just
+    those. The classic client cleared the table either way.
+- Not handled: applying the same file twice, on purpose or not, records the print twice. A
+  new pick of a file gets new keys; nothing identifies a print across picks.
 
 ## 4. Open questions
 

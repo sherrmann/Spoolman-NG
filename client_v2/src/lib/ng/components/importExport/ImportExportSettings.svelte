@@ -35,6 +35,7 @@
 	} from '$lib/ng/importExport';
 	import { printReport } from '$lib/ng/reportPrint';
 	import ImportResultView from './ImportResultView.svelte';
+	import ThreeMfImport from './ThreeMfImport.svelte';
 
 	let admin = $state(false);
 	$effect(() => {
@@ -233,6 +234,7 @@
 					<ImportResultView {result} summary={summary(result)} />
 				{/if}
 			</section>
+			<ThreeMfImport />
 		{/if}
 
 		<section aria-labelledby="ie-report">
