@@ -54,8 +54,11 @@ test("typing a punctuation-different spelling of an existing manufacturer offers
   await expect(useButton).toBeHidden();
 });
 
-test("a name too short to check yet shows no hint", async ({ page, request }) => {
-  const vendorName = unique("Sh");
+test("changing the name after a hint shows hides it immediately, not once a new answer arrives", async ({
+  page,
+  request,
+}) => {
+  const vendorName = unique("eSUN");
   await post(request, "/vendor", { name: vendorName });
 
   await page.goto("/", { waitUntil: "networkidle" });
@@ -63,7 +66,39 @@ test("a name too short to check yet shows no hint", async ({ page, request }) =>
   await dialog.getByRole("button", { name: /^Create a new filament/ }).click();
 
   const manufacturer = dialog.getByPlaceholder("e.g. Polymaker");
+  await manufacturer.fill(vendorName.replace("eSUN", "e-Sun"));
+
+  const useButton = dialog.getByRole("button", { name: `Use ${vendorName}` });
+  await expect(useButton).toBeVisible();
+
+  // Extend the name into something no longer close to the seeded vendor. The hint is keyed to
+  // the name it was found for, so it must disappear right away -- a tight timeout, well under
+  // the 500 ms debounce -- rather than staying visible and clickable until a fresh answer for
+  // the new text happens to arrive.
+  await manufacturer.fill(vendorName.replace("eSUN", "e-Sun") + " Pro");
+  await expect(useButton).toBeHidden({ timeout: 100 });
+});
+
+test("a name too short to check yet fires no similar-vendor request", async ({ page, request }) => {
+  // Its exact key ("s") is exactly what typing "S" would key against -- so if the length floor
+  // ever stopped gating the request, this is a match the exact tier would find and show. Not
+  // uniquified: a one-letter name is what "too short" means, so unique() cannot be used here
+  // without changing its key, and a stray leftover from an earlier run changes nothing this
+  // test checks.
+  await post(request, "/vendor", { name: "S." });
+
+  await page.goto("/", { waitUntil: "networkidle" });
+  const dialog = await openAddSpoolModal(page);
+  await dialog.getByRole("button", { name: /^Create a new filament/ }).click();
+
+  const manufacturer = dialog.getByPlaceholder("e.g. Polymaker");
+
+  const sawRequest = page
+    .waitForRequest((r) => r.url().includes("/vendor/similar"), { timeout: 1000 })
+    .then(() => true)
+    .catch(() => false);
   await manufacturer.fill("S");
 
+  expect(await sawRequest).toBe(false);
   await expect(dialog.getByRole("button", { name: /^Use / })).toHaveCount(0);
 });

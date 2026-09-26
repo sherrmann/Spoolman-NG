@@ -29,6 +29,10 @@
 
 	let match = $state<SimilarVendorMatch | null>(null);
 	let isExact = $state(false);
+	/** The typed name `match` was found for. A result only renders while this still equals the
+	 *  current name -- otherwise a slow answer for "e-sun" would keep offering "eSUN" for half a
+	 *  second after the field has moved on to "e-sun pro", which is no longer a match at all. */
+	let matchFor = $state('');
 
 	let reqId = 0;
 	let controller: AbortController | undefined;
@@ -47,6 +51,7 @@
 			controller = new AbortController();
 			similarVendor(typed, exclude, controller.signal).then((result) => {
 				if (mine !== reqId) return;
+				matchFor = typed;
 				if (result.exact) {
 					match = result.exact;
 					isExact = true;
@@ -63,17 +68,19 @@
 		}, DEBOUNCE_MS);
 		return () => clearTimeout(timer);
 	});
+
+	let shown = $derived(match && matchFor === name.trim() ? match : null);
 </script>
 
-{#if match}
+{#if shown}
 	<div class="hint" role="status">
 		<span class="txt">
 			{isExact
-				? ng.settings_ai_duplicate_exact({ name: match.name })
-				: ng.settings_ai_duplicate_suggestion({ name: match.name })}
+				? ng.settings_ai_duplicate_exact({ name: shown.name })
+				: ng.settings_ai_duplicate_suggestion({ name: shown.name })}
 		</span>
-		<button type="button" class="use" onclick={() => onuse(match!)}>
-			{ng.settings_ai_duplicate_use({ name: match.name })}
+		<button type="button" class="use" onclick={() => onuse(shown)}>
+			{ng.settings_ai_duplicate_use({ name: shown.name })}
 		</button>
 	</div>
 {/if}

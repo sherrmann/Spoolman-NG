@@ -267,8 +267,14 @@
 									<span class="rs">{m['changeVendor.createHint']()}</span>
 								</div>
 							</button>
+							<!-- excludeId leaves the current manufacturer out of the check: a typed
+							     name that only differs from it by punctuation would otherwise offer
+							     to "Use" the very manufacturer this filament is already filed under,
+							     which the results list above disables selecting for the same reason
+							     (isCurrent). -->
 							<DuplicateHint
 								name={trimmed}
+								excludeId={current ? Number(current.id) : undefined}
 								onuse={(v) => {
 									query = v.name;
 									// The list this dialog already holds is the source of truth for a
