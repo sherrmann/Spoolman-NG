@@ -329,6 +329,49 @@ test("a colour with no matching spool leaves the row unmatched, and Apply disabl
   ).toBeEnabled();
 });
 
+test("a row left without a spool stays on screen after the others are recorded", async ({
+  page,
+  request,
+}) => {
+  // Dropping it would leave part of the print unrecorded while the page reports success.
+  const color = randomHex();
+  const matched = await seedSpoolOf(
+    request,
+    unique("ThreeMfKept"),
+    "PLA",
+    color,
+    0,
+  );
+  const filePath = writeThreeMf(
+    sliceInfoXml([
+      [
+        { id: "1", type: "PLA", color: `#${color}FF`, usedG: 6 },
+        { id: "2", type: "ABS", color: `#${randomHex()}FF`, usedG: 3 },
+      ],
+    ]),
+  );
+
+  const threeMf = await openThreeMfSection(page);
+  await threeMf.getByLabel("Choose .3mf file").setInputFiles(filePath);
+  await expect(threeMf.getByLabel(/^Spool to adjust: PLA/)).toHaveValue(
+    String(matched.spoolId),
+  );
+  await expect(threeMf.getByLabel(/^Spool to adjust: ABS/)).toHaveValue("");
+
+  await threeMf.getByRole("button", { name: "Apply usage" }).click();
+  await expect(threeMf.getByRole("status")).toHaveText(
+    "Recorded usage on 1 spool(s).",
+  );
+  expect(await spoolUsedWeight(request, matched.spoolId)).toBe(6);
+
+  const rows = threeMf.locator("tbody tr");
+  await expect(rows).toHaveCount(1);
+  await expect(threeMf.getByLabel(/^Spool to adjust: ABS/)).toHaveValue("");
+  await expect(
+    threeMf.getByRole("button", { name: "Apply usage" }),
+  ).toBeDisabled();
+});
+
 test("a zip with no slice info, and a file that is not a zip at all, each show their own toast", async ({
   page,
 }) => {

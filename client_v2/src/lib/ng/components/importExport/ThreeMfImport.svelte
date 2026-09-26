@@ -7,8 +7,8 @@
 	 * The file is read in the browser (see $lib/ng/threeMfImport). Each filament the print used
 	 * becomes a row with a suggested spool, which can be changed or cleared. Apply records each
 	 * row's grams through the same `/use` call and Idempotency-Key the weigh-in uses, so retrying
-	 * a row whose response was lost cannot count it twice. Unlike the classic client, a partial
-	 * failure keeps the failed rows, with their keys, for a retry.
+	 * a row whose response was lost cannot count it twice. Unlike the classic client, what is left
+	 * after Apply stays: failed rows, with their keys, for a retry, and rows still without a spool.
 	 */
 	import Button from '$components/Button.svelte';
 	import Upload from '@lucide/svelte/icons/upload';
@@ -123,16 +123,22 @@
 			}
 		}
 		applying = false;
+		// What is left to do stays on screen: the rows that failed, with their keys, and the rows
+		// that had no spool. Dropping the latter would leave part of the print unrecorded while the
+		// page reports success. (The classic client dropped both.)
+		const failedRows = new Set(failed);
+		const left = rows.filter((r) => r.spoolId === undefined || failedRows.has(r));
 		if (failed.length > 0) {
 			// Why, so a refused or deleted spool can be told from a dropped connection.
 			toasts.error(apiErrorMessage(firstError));
-			rows = failed;
+			rows = left;
 			result = {
 				text: ng.settings_import_export_threemf_applied_partial({ ok, fail: failed.length }),
 				ok: false
 			};
 		} else {
-			clear();
+			if (left.length > 0) rows = left;
+			else clear();
 			result = { text: ng.settings_import_export_threemf_applied({ count: ok }), ok: true };
 		}
 	}

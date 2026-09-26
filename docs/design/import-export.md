@@ -105,8 +105,10 @@ administrators only.
     The server scopes a key to a spool, so a row keeps one key for its life, even when its
     spool is changed: retrying a row whose response was lost, or going back to that spool,
     replays the first request instead of recording the grams again.
-  - A partial failure keeps the failed rows, with their keys, so "Apply usage" retries just
-    those. The classic client cleared the table either way.
+  - What is left after "Apply usage" stays on screen: failed rows, with their keys, so a second
+    click retries just those, and rows still without a spool, whose usage would otherwise go
+    unrecorded while the page reported success. The classic client cleared the table either
+    way.
 - Not handled: applying the same file twice, on purpose or not, records the print twice. A
   new pick of a file gets new keys; nothing identifies a print across picks.
 
