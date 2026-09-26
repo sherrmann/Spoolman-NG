@@ -951,7 +951,7 @@ def test_print_comparison(eval_module: ModuleType, capsys: pytest.CaptureFixture
     eval_module.print_comparison(old, new)
     flat = " ".join(capsys.readouterr().out.split())
 
-    assert "== generated: 3 cases old, 3 new" in flat
+    assert "== generated: 3 cases compared" in flat
     assert "shortlisted 2/3 -> 2/3" in flat
     assert "top-1 1/3 -> 2/3" in flat
     assert "1 case(s) better, 0 worse" in flat
@@ -1117,3 +1117,41 @@ def test_compare_rejects_flags_it_would_ignore(
 
     assert exit_info.value.code == 2
     assert flag in capsys.readouterr().err
+
+
+def test_compare_headline_leaves_out_failed_reranks_too(
+    eval_module: ModuleType,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A failed rerank must not move the top-1 totals any more than the per-case counts."""
+    row = {"source": "generated", "shortlisted": True, "baseline_ok": True, "rerank_ok": None, "error": None}
+    old = [{**row, "case_id": "a", "rerank_ok": False}, {**row, "case_id": "b", "rerank_ok": False}]
+    # b's new run failed and fell back to the fuzzy order, which happens to be right.
+    new = [{**row, "case_id": "a", "rerank_ok": False}, {**row, "case_id": "b", "error": "timeout"}]
+
+    eval_module.print_comparison(old, new)
+
+    flat = " ".join(capsys.readouterr().out.split())
+    assert "== generated: 1 cases compared" in flat
+    assert "top-1 0/1 -> 0/1" in flat
+    assert "0 case(s) better, 0 worse" in flat
+
+
+def test_compare_does_not_pair_cases_that_name_different_catalogue_rows(
+    eval_module: ModuleType,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Generated ids repeat across seeds; the same id must not pair two different readings."""
+    row = {"source": "generated", "shortlisted": True, "baseline_ok": False, "rerank_ok": None, "error": None}
+    old = [{**row, "case_id": "gen-0000", "catalog_id": "x"}, {**row, "case_id": "gen-0001", "catalog_id": "y"}]
+    new = [
+        {**row, "case_id": "gen-0000", "catalog_id": "other", "baseline_ok": True},
+        {**row, "case_id": "gen-0001", "catalog_id": "y"},
+    ]
+
+    eval_module.print_comparison(old, new)
+
+    flat = " ".join(capsys.readouterr().out.split())
+    assert "1 case id(s) name different catalogue rows" in flat
+    assert "== generated: 1 cases compared" in flat
+    assert "0 case(s) better, 0 worse" in flat

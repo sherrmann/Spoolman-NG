@@ -561,37 +561,58 @@ def read_dumped_results(path: Path) -> list[dict]:
 _WORSE_SHOWN = 15
 
 
-def print_comparison(old: list[dict], new: list[dict]) -> None:
-    """Print, per source, shortlisted and top-1 counts old vs new, and which cases flipped."""
-    new_by_id = {row["case_id"]: row for row in new}
-    for source in sorted({row["source"] for row in old} | {row["source"] for row in new}):
-        old_group = [row for row in old if row["source"] == source]
-        new_group = [row for row in new if row["source"] == source]
-        print(f"== {source}: {len(old_group)} cases old, {len(new_group)} new")
-        if old_group and new_group:
-            print(
-                f"  shortlisted  {sum(row['shortlisted'] for row in old_group)}/{len(old_group)} -> "
-                f"{sum(row['shortlisted'] for row in new_group)}/{len(new_group)}",
-            )
-            print(
-                f"  top-1        {sum(_top1(row) for row in old_group)}/{len(old_group)} -> "
-                f"{sum(_top1(row) for row in new_group)}/{len(new_group)}",
-            )
-    better, worse, errored = [], [], []
+def _comparable_pairs(
+    old: list[dict],
+    new: list[dict],
+) -> tuple[list[tuple[dict, dict]], list[str], list[str]]:
+    """Pair the same cases across two dumps; return (pairs, errored ids, mismatched ids).
+
+    Cases pair by source and id, and only when both name the same catalogue row: generated ids
+    such as ``gen-0000`` repeat across seeds and catalogue versions, so an id alone could pair two
+    unrelated readings. A pair whose decision request failed in either run is left out too: the
+    failed rerank falls back to the fuzzy order, which would count a change that never happened.
+    """
+    new_by_key = {(row["source"], row["case_id"]): row for row in new}
+    pairs, errored, mismatched = [], [], []
     for row in old:
-        new_row = new_by_id.get(row["case_id"])
+        new_row = new_by_key.get((row["source"], row["case_id"]))
         if new_row is None:
             continue
-        if row.get("error") or new_row.get("error"):
-            # A failed rerank falls back to the fuzzy order; comparing that against a real
-            # rerank would count a change that never happened.
+        if row.get("catalog_id") != new_row.get("catalog_id"):
+            mismatched.append(row["case_id"])
+        elif row.get("error") or new_row.get("error"):
             errored.append(row["case_id"])
-            continue
-        old_ok, new_ok = _top1(row), _top1(new_row)
-        if not old_ok and new_ok:
-            better.append(row["case_id"])
-        elif old_ok and not new_ok:
-            worse.append(row["case_id"])
+        else:
+            pairs.append((row, new_row))
+    return pairs, errored, mismatched
+
+
+def print_comparison(old: list[dict], new: list[dict]) -> None:
+    """Print, per source, shortlisted and top-1 counts old vs new, and which cases flipped.
+
+    Counts cover only the cases both dumps contain and scored without a decision-request error.
+    """
+    pairs, errored, mismatched = _comparable_pairs(old, new)
+    if mismatched:
+        print(
+            f"{len(mismatched)} case id(s) name different catalogue rows in the two dumps and are left out; "
+            "run both with the same --generated, --seed and catalogue.\n",
+        )
+    for source in sorted({row["source"] for row in old} | {row["source"] for row in new}):
+        group = [(a, b) for a, b in pairs if a["source"] == source]
+        total = len(group)
+        print(f"== {source}: {total} cases compared")
+        if group:
+            print(
+                f"  shortlisted  {sum(a['shortlisted'] for a, _ in group)}/{total} -> "
+                f"{sum(b['shortlisted'] for _, b in group)}/{total}",
+            )
+            print(
+                f"  top-1        {sum(_top1(a) for a, _ in group)}/{total} -> "
+                f"{sum(_top1(b) for _, b in group)}/{total}",
+            )
+    better = [a["case_id"] for a, b in pairs if not _top1(a) and _top1(b)]
+    worse = [a["case_id"] for a, b in pairs if _top1(a) and not _top1(b)]
     print(f"\n{len(better)} case(s) better, {len(worse)} worse")
     if errored:
         print(f"  left out, a decision request failed in one run: {', '.join(errored[:_WORSE_SHOWN])}")
