@@ -172,3 +172,47 @@ describe("FilamentCreate duplicate-check hint (server-side)", () => {
     expect(screen.queryByText("settings.ai.duplicate.filament_suggestion")).not.toBeInTheDocument();
   });
 });
+
+describe("FilamentCreate duplicate-check draft: vendor_id vs. vendor_name", () => {
+  function lastDraft() {
+    const calls = mockedUseSimilarFilament.mock.calls;
+    return calls[calls.length - 1][0];
+  }
+
+  it("sends vendor_id, not vendor_name, once an existing vendor is selected - even with leftover text in the new-vendor box", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    // Open the vendor picker's dropdown, leave stray text in the inline "new vendor" box without
+    // creating it, then pick an existing vendor from the Select instead.
+    await user.click(screen.getByLabelText("filament.fields.vendor", { selector: "input" }));
+    const newVendorInput = await screen.findByPlaceholderText("filament.form.new_vendor_prompt");
+    await user.type(newVendorInput, "Stray Text");
+    await user.click(await screen.findByText("Bambu Lab"));
+
+    expect(capturedForm?.getFieldValue("vendor_id")).toBe(5);
+    expect(lastDraft()).toMatchObject({ vendor_id: 5, vendor_name: undefined });
+  });
+
+  it("sends vendor_name only when no vendor is selected, trimmed of surrounding whitespace", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(screen.getByLabelText("filament.fields.vendor", { selector: "input" }));
+    const newVendorInput = await screen.findByPlaceholderText("filament.form.new_vendor_prompt");
+    await user.type(newVendorInput, "  Polymaker  ");
+
+    expect(lastDraft()).toMatchObject({ vendor_id: undefined, vendor_name: "Polymaker" });
+  });
+
+  it("sends neither vendor_id nor vendor_name when the new-vendor box holds only spaces", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(screen.getByLabelText("filament.fields.vendor", { selector: "input" }));
+    const newVendorInput = await screen.findByPlaceholderText("filament.form.new_vendor_prompt");
+    await user.type(newVendorInput, "   ");
+
+    expect(lastDraft()).toMatchObject({ vendor_id: undefined, vendor_name: undefined });
+  });
+});

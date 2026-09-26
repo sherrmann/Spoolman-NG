@@ -140,10 +140,10 @@ function normalizeFilamentDraft(draft: SimilarFilamentDraft): NormalizedFilament
  * The draft is skipped (no request) unless it has a name of at least two characters - a material
  * alone never matches, so there is nothing worth asking the server about without one.
  *
- * A response is tagged with a stable JSON key of the (trimmed) draft it was fetched for, and only
- * ever returned while that key still matches the current draft - so a hint for one combination of
- * fields never lingers once any of them has changed, regardless of the order in which requests
- * happen to resolve.
+ * A response is tagged with a stable JSON key of the (trimmed) draft it was fetched for, plus
+ * `excludeId`, and only ever returned while that key still matches the current draft - so a hint
+ * for one combination of fields never lingers once any of them (or `excludeId`) has changed,
+ * regardless of the order in which requests happen to resolve.
  */
 export function useSimilarFilament(draft: SimilarFilamentDraft, excludeId?: number): SimilarFilamentResult {
   const normalized = useMemo(
@@ -158,7 +158,10 @@ export function useSimilarFilament(draft: SimilarFilamentDraft, excludeId?: numb
       draft.diameter,
     ],
   );
-  const key = useMemo(() => JSON.stringify(normalized), [normalized]);
+  // excludeId is folded into the key (not just the request body) so that changing which filament
+  // is excluded - e.g. the edit form loading a different record - hides the old result at once,
+  // the same as any other field changing.
+  const key = useMemo(() => JSON.stringify({ ...normalized, exclude_id: excludeId }), [normalized, excludeId]);
   const skip = (normalized.name?.length ?? 0) < MIN_NAME_LENGTH;
 
   const [tagged, setTagged] = useState<{ key: string; result: SimilarFilamentResult }>({

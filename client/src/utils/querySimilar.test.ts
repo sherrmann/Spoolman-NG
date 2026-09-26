@@ -268,6 +268,27 @@ describe("useSimilarFilament", () => {
     expect(result.current).toEqual({ exact: null, suggestion: null });
   });
 
+  it("clears the result immediately once excludeId changes, even though the draft itself did not", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => ({ exact: { id: 1, name: "eSUN PLA Black", probability: null }, suggestion: null }),
+      })) as unknown as typeof fetch,
+    );
+
+    const { rerender, result } = renderHook(({ excludeId }) => useSimilarFilament({ name: "esun black" }, excludeId), {
+      initialProps: { excludeId: 1 as number | undefined },
+    });
+    await act(() => vi.advanceTimersByTimeAsync(500));
+    expect(result.current.exact).not.toBeNull();
+
+    // excludeId is folded into the tag, so switching which record is excluded - e.g. an edit form
+    // loading a different filament - hides the old result at once, the same as any draft field.
+    rerender({ excludeId: 2 });
+    expect(result.current).toEqual({ exact: null, suggestion: null });
+  });
+
   it("cancels a stale request, and a late out-of-order response for the old draft never wins", async () => {
     const responses = [deferredResponse(), deferredResponse()];
     let callIndex = 0;

@@ -141,8 +141,11 @@ export const FilamentCreate = (props: IResourceComponentsProps & CreateOrClonePr
 
   // Server-side duplicate hint for the filament itself (duplicate-check AI feature): warns before
   // creating a filament that already exists. Watches every field the backend's similarity check
-  // considers, so the hint disappears as soon as any of them changes. While a new vendor name is
-  // being typed inline above, that takes precedence over whatever vendor is (still) selected.
+  // considers, so the hint disappears as soon as any of them changes. An actually selected vendor
+  // (vendor_id) always wins over the inline new-vendor box: picking an existing vendor from the
+  // Select does not itself clear that box, so leftover text there must not silently override the
+  // vendor that will really be saved - and a box full of only spaces must not either, so it is
+  // trimmed before the check.
   const { showUrl } = useNavigation();
   const vendorIdValue = Form.useWatch<number | undefined>(["vendor_id"], form);
   const nameValue = Form.useWatch<string | undefined>(["name"], form);
@@ -151,8 +154,8 @@ export const FilamentCreate = (props: IResourceComponentsProps & CreateOrClonePr
   const multiColorHexesValue = Form.useWatch<string | undefined>(["multi_color_hexes"], form);
   const diameterValue = Form.useWatch<number | undefined>(["diameter"], form);
   const similarFilament = useSimilarFilament({
-    vendor_id: newVendorName ? undefined : vendorIdValue,
-    vendor_name: newVendorName || undefined,
+    vendor_id: vendorIdValue ?? undefined,
+    vendor_name: vendorIdValue ? undefined : newVendorName.trim() || undefined,
     name: nameValue,
     material: materialValue,
     color_hex: colorHexValue,
