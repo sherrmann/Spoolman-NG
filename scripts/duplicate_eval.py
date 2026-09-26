@@ -266,8 +266,13 @@ def _entry_colours(entry: dict) -> tuple[str, ...] | None:
 
 
 def _group_key(entry: dict) -> tuple:
-    """Return the product line an entry belongs to: same manufacturer, material and nominal size."""
-    return (entry["manufacturer"], entry["material"], entry.get("diameter"), entry.get("weight"))
+    """Return the product line an entry belongs to: same manufacturer, material and nominal size.
+
+    Not spool weight: the backend's own duplicate check never looks at it (`_same_vendor` and
+    `_same_size` in `spoolman.duplicates` do not compare weight), so two rows differing only in
+    the size sold are the same product -- a genuine duplicate, not a different colour or line.
+    """
+    return (entry["manufacturer"], entry["material"], entry.get("diameter"))
 
 
 def _draft_colour_fields(colours: tuple[str, ...] | None) -> tuple[str | None, str | None]:
@@ -376,8 +381,10 @@ def _negative_product_cases(
 ) -> list[FilamentCase]:
     """Build "different product, same manufacturer" negatives.
 
-    Adds each case's other product to the library, and keeps its typed product out of it
-    (`excluded_ids`).
+    Adds each case's other product to the library, and keeps its typed product -- and every other
+    spool weight of that same product (`_group_key` does not distinguish them) -- out of it
+    (`excluded_ids`), so a weight variant can never later slip into the library and quietly turn
+    this "different product" negative into a real duplicate.
     """
     cases: list[FilamentCase] = []
     attempts = 0
@@ -389,12 +396,19 @@ def _negative_product_cases(
         lines = list(dict.fromkeys(_group_key(e) for e in by_manufacturer[manufacturer]))
         rng.shuffle(lines)
         line_a, line_b = lines[0], lines[1]
-        entry_a = rng.choice([e for e in by_manufacturer[manufacturer] if _group_key(e) == line_a])
-        entry_b = rng.choice([e for e in by_manufacturer[manufacturer] if _group_key(e) == line_b])
-        if entry_b["id"] in library_index:
-            continue  # already in the library elsewhere: no longer a fair "missing product" case
-        add_to_library(entry_a)
-        excluded_ids.add(entry_b["id"])
+        line_a_entries = [e for e in by_manufacturer[manufacturer] if _group_key(e) == line_a]
+        line_b_entries = [e for e in by_manufacturer[manufacturer] if _group_key(e) == line_b]
+        if any(e["id"] in excluded_ids for e in line_a_entries) or any(
+            e["id"] in library_index for e in line_b_entries
+        ):
+            # line_a: an earlier case already promised this whole product is missing from the
+            # library -- adding any spool weight of it now would undo that. line_b: some spool
+            # weight of it is in the library elsewhere, so typing another is no longer a fair
+            # "missing product" case.
+            continue
+        add_to_library(rng.choice(line_a_entries))
+        entry_b = rng.choice(line_b_entries)
+        excluded_ids.update(e["id"] for e in line_b_entries)  # every spool weight of it stays out
         colours = _entry_colours(entry_b)
         color_hex, multi_color_hexes = _draft_colour_fields(colours)
         draft = duplicates.FilamentDraft(
@@ -439,6 +453,11 @@ def _positive_cases(
     return cases
 
 
+#: Share of "other colour" negatives that leave the colour unset, rather than giving a real
+#: different colour: the Svelte form's starting state, before the swatch is picked.
+_COLOURLESS_DRAFT_PROBABILITY = 0.5
+
+
 def _negative_colour_cases(
     rng: random.Random,
     catalog: list[dict],
@@ -447,14 +466,22 @@ def _negative_colour_cases(
     add_to_library: Callable[[dict], int],
     target: int,
 ) -> list[FilamentCase]:
-    """Build "same product, another colour" negatives; adds each one's product to the library."""
+    """Build "same product, another colour" negatives; adds each one's product to the library.
+
+    Half (`_COLOURLESS_DRAFT_PROBABILITY`) give the draft a genuinely different real colour, taken
+    from a same-line sibling; the other half leave the colour unset altogether, so the model tier
+    sees "colour unknown" rather than "different colour" and must judge by name alone -- the form's
+    starting state, and a harder version of the same false-warning risk.
+    """
     pool = [e for e in catalog if e["id"] not in excluded_ids and e["id"] in colour_siblings]
     rng.shuffle(pool)
     cases = []
     for entry in pool[:target]:
         add_to_library(entry)  # the library must hold it: it is the "other colour" being warned about
-        sibling_colours = _entry_colours(rng.choice(colour_siblings[entry["id"]]))
-        color_hex, multi_color_hexes = _draft_colour_fields(sibling_colours)
+        colours = None
+        if rng.random() >= _COLOURLESS_DRAFT_PROBABILITY:
+            colours = _entry_colours(rng.choice(colour_siblings[entry["id"]]))
+        color_hex, multi_color_hexes = _draft_colour_fields(colours)
         draft = duplicates.FilamentDraft(
             vendor_name=entry["manufacturer"],
             name=_noisy_name(rng, entry["name"], entry["material"], entry["manufacturer"]),
@@ -463,8 +490,21 @@ def _negative_colour_cases(
             multi_color_hexes=multi_color_hexes,
             diameter=entry.get("diameter"),
         )
-        cases.append(FilamentCase("negative_colour", draft, sibling_colours, None, draft.name or ""))
+        cases.append(FilamentCase("negative_colour", draft, colours, None, draft.name or ""))
     return cases
+
+
+def _negatives_that_are_duplicates(rows: list[dict], cases: list[FilamentCase]) -> list[str]:
+    """Return the typed labels of "negative" cases the exact tier would itself flag as duplicates.
+
+    A hit here is a case-generation bug, not a finding about the tool being evaluated: the eval
+    invented a "not a duplicate" case that is secretly a real duplicate of its own library row.
+    """
+    return [
+        case.typed
+        for case in cases
+        if case.expected is None and duplicates._exact_filament(case.draft, case.colours, rows) is not None  # noqa: SLF001
+    ]
 
 
 def _build_filament_dataset(catalog: list[dict], *, seed: int, count: int) -> tuple[list[dict], list[FilamentCase]]:
@@ -532,6 +572,12 @@ def _build_filament_dataset(catalog: list[dict], *, seed: int, count: int) -> tu
         }
 
     rng.shuffle(cases)
+
+    bad = _negatives_that_are_duplicates(rows, cases)
+    if bad:
+        msg = f"{len(bad)} negative case(s) are exact-tier duplicates of their own library row: {bad}"
+        raise AssertionError(msg)
+
     return rows, cases
 
 
@@ -593,7 +639,10 @@ def _print_filament_report(results: list[FilamentCaseResult]) -> None:
     if other_colour:
         print()
         scores = _score(other_colour, lambda r: r.model_pick(duplicates.SUGGEST_MIN_PROBABILITY))
-        print(f"Other-colour false-warning rate (shipped threshold): {_fmt(scores.false_warning_rate)}")
+        print(
+            "Other-colour false-warning rate (same product, a real different colour or none set "
+            f"yet; shipped threshold): {_fmt(scores.false_warning_rate)}",
+        )
 
 
 async def _main_filaments(*, catalog_path: Path, seed: int, count: int, baseline_only: bool) -> int:

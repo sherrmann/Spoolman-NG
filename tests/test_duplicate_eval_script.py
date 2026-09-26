@@ -438,8 +438,12 @@ def test_negative_colour_cases_use_a_genuinely_different_colour(
         assert case.kind == "negative_colour"
         entry = by_name[case.draft.name]
         assert entry["id"] in library_index, "the library must hold the colour being warned about"
+        # Either a real, genuinely different colour, or the colour left unset altogether; never
+        # the library row's own colour (that would make it a real duplicate, not a negative case).
         original_colours = eval_module._entry_colours(entry)  # noqa: SLF001
-        assert duplicates.colour_relation(case.colours, original_colours) == "different colour"
+        assert duplicates.colour_relation(case.colours, original_colours) in ("different colour", "colour unknown")
+        has_hex = case.draft.color_hex is not None or case.draft.multi_color_hexes is not None
+        assert has_hex == (case.colours is not None)
 
 
 def test_negative_product_cases_pick_a_different_product_line(eval_module: ModuleType) -> None:
@@ -501,6 +505,159 @@ def test_positive_cases_keep_the_same_colour_and_a_nonempty_name(eval_module: Mo
         source_id = next(eid for eid, fid in library_index.items() if fid == case.expected)
         original_colours = eval_module._entry_colours(by_id[source_id])  # noqa: SLF001
         assert duplicates.colour_relation(case.colours, original_colours) == "same colour"
+
+
+def test_negative_colour_cases_sometimes_leave_the_colour_unset(eval_module: ModuleType) -> None:
+    by_group, _ = eval_module._group_catalog(_TINY_CATALOG)  # noqa: SLF001
+    siblings = eval_module._colour_siblings(by_group)  # noqa: SLF001
+    saw_colourless = saw_a_real_colour = False
+
+    for seed in range(20):
+        rng = random.Random(seed)  # noqa: S311
+        library_index: dict[str, int] = {}
+
+        def add_to_library(entry: dict, library_index: dict[str, int] = library_index) -> int:
+            library_index.setdefault(entry["id"], len(library_index))
+            return library_index[entry["id"]]
+
+        cases = eval_module._negative_colour_cases(rng, _TINY_CATALOG, siblings, set(), add_to_library, 2)  # noqa: SLF001
+        saw_colourless = saw_colourless or any(case.colours is None for case in cases)
+        saw_a_real_colour = saw_a_real_colour or any(case.colours is not None for case in cases)
+
+    assert saw_colourless, "some drafts should leave the colour unset, the Svelte form's starting state"
+    assert saw_a_real_colour, "some drafts should still carry a real, different colour"
+
+
+def test_group_key_ignores_spool_weight(eval_module: ModuleType) -> None:
+    same_product_smaller_spool = {"manufacturer": "Formfutura", "material": "rPET", "diameter": 1.75, "weight": 250}
+    same_product_larger_spool = {"manufacturer": "Formfutura", "material": "rPET", "diameter": 1.75, "weight": 1000}
+
+    assert eval_module._group_key(same_product_smaller_spool) == eval_module._group_key(same_product_larger_spool)  # noqa: SLF001
+
+
+def test_negative_product_cases_never_add_an_excluded_entry_as_entry_a(eval_module: ModuleType) -> None:
+    # Two lines with two colours each, so entries repeat quickly across attempts and an id picked
+    # as entry_b (typed, excluded) is very likely to also come up as an entry_a candidate later.
+    catalog = [
+        {
+            "id": f"creality-{material.lower()}-{colour.lower()}",
+            "manufacturer": "Creality",
+            "name": colour,
+            "material": material,
+            "diameter": 1.75,
+            "weight": 1000,
+            "color_hex": colour_hex,
+            "color_hexes": None,
+        }
+        for material in ("ABS", "PLA")
+        for colour, colour_hex in (("White", "FFFFFF"), ("Black", "000000"))
+    ]
+    _, by_manufacturer = eval_module._group_catalog(catalog)  # noqa: SLF001
+    multi_line = ["Creality"]
+
+    for seed in range(20):
+        rng = random.Random(seed)  # noqa: S311
+        library_index: dict[str, int] = {}
+        excluded_ids: set[str] = set()
+
+        def add_to_library(entry: dict, library_index: dict[str, int] = library_index) -> int:
+            library_index.setdefault(entry["id"], len(library_index))
+            return library_index[entry["id"]]
+
+        eval_module._negative_product_cases(  # noqa: SLF001
+            rng,
+            by_manufacturer,
+            multi_line,
+            library_index,
+            excluded_ids,
+            add_to_library,
+            10,
+        )
+
+        clash = excluded_ids & library_index.keys()
+        assert not clash, f"seed {seed}: an excluded (typed) product ended up in the library too: {clash}"
+
+
+def test_negatives_that_are_duplicates_detects_an_exact_tier_hit(eval_module: ModuleType) -> None:
+    rows = [
+        {
+            "filament_id": 0,
+            "vendor_id": 1,
+            "vendor": "Acme",
+            "name": "Red",
+            "material": "PLA",
+            "weight_g": 1000,
+            "diameter_mm": 1.75,
+            "colours": ("ff0000",),
+        },
+    ]
+    draft = duplicates.FilamentDraft(vendor_name="Acme", name="RED", material="PLA", color_hex="ff0000", diameter=1.75)
+    # Mislabelled: this is an exact-tier duplicate of the row above, not a genuine negative.
+    case = eval_module.FilamentCase("negative_product", draft, ("ff0000",), None, "RED")
+
+    bad = eval_module._negatives_that_are_duplicates(rows, [case])  # noqa: SLF001
+
+    assert bad == ["RED"]
+
+
+def test_negatives_that_are_duplicates_ignores_positive_cases(eval_module: ModuleType) -> None:
+    rows = [
+        {
+            "filament_id": 0,
+            "vendor_id": 1,
+            "vendor": "Acme",
+            "name": "Red",
+            "material": "PLA",
+            "weight_g": 1000,
+            "diameter_mm": 1.75,
+            "colours": ("ff0000",),
+        },
+    ]
+    draft = duplicates.FilamentDraft(vendor_name="Acme", name="RED", material="PLA", color_hex="ff0000", diameter=1.75)
+    case = eval_module.FilamentCase("positive", draft, ("ff0000",), 0, "RED")
+
+    assert eval_module._negatives_that_are_duplicates(rows, [case]) == []  # noqa: SLF001
+
+
+def test_build_filament_dataset_never_treats_a_weight_variant_as_a_negative(eval_module: ModuleType) -> None:
+    # "ReForm - rPET Orange" sold in two spool sizes, plus a genuinely different Formfutura line so
+    # there is still something to build a real "different product" negative from.
+    catalog = [
+        {
+            "id": "formfutura-reform-orange-250",
+            "manufacturer": "Formfutura",
+            "name": "ReForm - rPET Orange",
+            "material": "rPET",
+            "diameter": 1.75,
+            "weight": 250,
+            "color_hex": "FF8800",
+            "color_hexes": None,
+        },
+        {
+            "id": "formfutura-reform-orange-1000",
+            "manufacturer": "Formfutura",
+            "name": "ReForm - rPET Orange",
+            "material": "rPET",
+            "diameter": 1.75,
+            "weight": 1000,
+            "color_hex": "FF8800",
+            "color_hexes": None,
+        },
+        {
+            "id": "formfutura-easyfil-white",
+            "manufacturer": "Formfutura",
+            "name": "EasyFil PLA White",
+            "material": "PLA",
+            "diameter": 1.75,
+            "weight": 1000,
+            "color_hex": "FFFFFF",
+            "color_hexes": None,
+        },
+    ]
+
+    for seed in range(6):
+        # Raises AssertionError if a negative case turns out to be an exact-tier duplicate.
+        eval_module._build_filament_dataset(catalog, seed=seed, count=6)  # noqa: SLF001
 
 
 # --- Filaments: scoring --------------------------------------------------------------------
@@ -658,7 +815,8 @@ def test_print_filament_report_includes_the_other_colour_rate(
     assert "3 cases (1 duplicates, 2 not)" in out
     assert "Code tier only (exact match)" in out
     assert "Code tier plus decision model" in out
-    assert "Other-colour false-warning rate (shipped threshold): 100%" in out
+    assert "Other-colour false-warning rate (same product, a real different colour or none set yet" in out
+    assert out.rstrip().endswith("100%")
 
 
 # --- Filaments: CLI -------------------------------------------------------------------------
