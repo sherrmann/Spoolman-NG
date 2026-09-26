@@ -82,6 +82,9 @@ FEATURE_SETTINGS = {
 API_KEY_DB_KEY = "ai_api_key"
 STT_API_KEY_DB_KEY = "ai_stt_api_key"
 DECISION_API_KEY_DB_KEY = "ai_decision_api_key"
+#: The decision base URL the stored decision key was saved for. The key is only used with that
+#: URL, so changing the URL in Settings can never send the old key to a new host.
+DECISION_API_KEY_URL_DB_KEY = "ai_decision_api_key_url"
 
 _PROBE_TIMEOUT = 10.0
 #: Vision inference on local hardware is legitimately slow; give it room.
@@ -274,8 +277,37 @@ async def get_stored_decision_api_key(db: AsyncSession) -> str | None:
 
 
 async def set_stored_decision_api_key(db: AsyncSession, value: str | None) -> None:
-    """Set or clear the stored decision-model API key."""
+    """Set or clear the stored decision-model API key, bound to the base URL in effect now.
+
+    Save the base URL first: the key is only ever sent to the URL it was saved with.
+    """
+    bound_url = (await resolve_config(db)).decision_base_url if value else None
+    await _set_stored_key(db, DECISION_API_KEY_URL_DB_KEY, bound_url, "AI decision-model API key's endpoint")
     await _set_stored_key(db, DECISION_API_KEY_DB_KEY, value, "AI decision-model API key")
+
+
+async def _decision_key_for_endpoint(db: AsyncSession, config: AIConfig) -> None:
+    """Drop a decision key that belongs to a different endpoint than the one now in effect.
+
+    A key set by environment variable is only used with a base URL set the same way, and a
+    stored key only with the base URL it was saved for. Otherwise changing the URL alone would
+    send the old key to the new host.
+    """
+    source = config.sources.get("decision_api_key")
+    if source == "env":
+        keep = config.sources.get("decision_base_url") == "env"
+        reason = "the decision base URL is not set by environment variable too"
+    elif source == "db":
+        bound_url = normalize_base_url(await _get_stored_key(db, DECISION_API_KEY_URL_DB_KEY))
+        keep = bound_url is not None and bound_url == config.decision_base_url
+        reason = "it was saved for a different decision base URL; enter it again"
+    else:
+        return
+    if not keep:
+        logger.warning("Not using the decision-model API key: %s.", reason)
+        config.decision_api_key = None
+        if source == "db":
+            del config.sources["decision_api_key"]
 
 
 # --- Config resolution -------------------------------------------------------------
@@ -328,6 +360,7 @@ async def resolve_config(db: AsyncSession) -> AIConfig:
     config.base_url = normalize_base_url(config.base_url)
     config.stt_base_url = normalize_base_url(config.stt_base_url)
     config.decision_base_url = normalize_base_url(config.decision_base_url)
+    await _decision_key_for_endpoint(db, config)
     return config
 
 

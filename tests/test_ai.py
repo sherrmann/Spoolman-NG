@@ -11,6 +11,8 @@ Oracle strategy:
     tests/integration/test_ai_endpoints.py (no endpoint ever returns the key).
 """
 
+import json
+
 import pytest
 import respx
 from httpx import ConnectError, Response
@@ -116,6 +118,7 @@ async def test_resolve_config_decision_api_key_env_wins_over_stored(
     db_session: AsyncSession,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    monkeypatch.setenv(ai.ENV_DECISION_BASE_URL, "https://api.typesafe.ai")
     await ai.set_stored_decision_api_key(db_session, "sk-stored")
     monkeypatch.setenv(ai.ENV_DECISION_API_KEY, "sk-env")
 
@@ -123,6 +126,67 @@ async def test_resolve_config_decision_api_key_env_wins_over_stored(
 
     assert config.decision_api_key == "sk-env"
     assert config.sources["decision_api_key"] == "env"
+
+
+# --- The decision key only goes to the endpoint it belongs to ------------------------
+
+
+async def _set_decision_base_url(db: AsyncSession, url: str) -> None:
+    await setting_db.update(db=db, definition=SETTINGS[ai.SETTING_DECISION_BASE_URL], value=json.dumps(url))
+
+
+async def test_stored_decision_key_is_used_with_the_url_it_was_saved_for(db_session: AsyncSession) -> None:
+    await _set_decision_base_url(db_session, "https://api.typesafe.ai/")
+    await ai.set_stored_decision_api_key(db_session, "sk-stored")
+
+    config = await ai.resolve_config(db_session)
+
+    assert config.decision_api_key == "sk-stored"
+    assert config.sources["decision_api_key"] == "db"
+
+
+async def test_stored_decision_key_is_dropped_when_the_url_changes(
+    db_session: AsyncSession,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    await _set_decision_base_url(db_session, "https://api.typesafe.ai")
+    await ai.set_stored_decision_api_key(db_session, "sk-stored")
+    await _set_decision_base_url(db_session, "https://attacker.example")
+
+    with caplog.at_level("WARNING"):
+        config = await ai.resolve_config(db_session)
+
+    assert config.decision_api_key is None
+    assert "decision_api_key" not in config.sources
+    assert "different decision base URL" in caplog.text
+    assert "sk-stored" not in caplog.text
+
+    # Back on the URL it was saved for, the key applies again.
+    await _set_decision_base_url(db_session, "https://api.typesafe.ai")
+    assert (await ai.resolve_config(db_session)).decision_api_key == "sk-stored"
+
+
+async def test_stored_decision_key_saved_before_any_url_is_not_used(db_session: AsyncSession) -> None:
+    await ai.set_stored_decision_api_key(db_session, "sk-stored")
+    await _set_decision_base_url(db_session, "https://api.typesafe.ai")
+
+    assert (await ai.resolve_config(db_session)).decision_api_key is None
+
+
+async def test_env_decision_key_needs_an_env_base_url(
+    db_session: AsyncSession,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv(ai.ENV_DECISION_API_KEY, "sk-env")
+    await _set_decision_base_url(db_session, "https://attacker.example")
+
+    config = await ai.resolve_config(db_session)
+    assert config.decision_api_key is None
+    # Still reported as env-locked: a stored key cannot take its place.
+    assert config.sources["decision_api_key"] == "env"
+
+    monkeypatch.setenv(ai.ENV_DECISION_BASE_URL, "https://api.typesafe.ai")
+    assert (await ai.resolve_config(db_session)).decision_api_key == "sk-env"
 
 
 async def test_resolve_config_strips_trailing_slash_from_decision_base_url(

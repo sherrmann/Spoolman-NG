@@ -155,6 +155,7 @@ async def test_env_api_key_wins_over_stored(
 
 async def test_decision_api_key_is_write_only(client: AsyncClient) -> None:
     secret = "sk-decision-secret-value"  # noqa: S105
+    await _set_setting(client, "ai_decision_base_url", "https://api.typesafe.ai")
 
     set_response = await client.post("/api/v1/ai/config", json={"decision_api_key": secret})
     assert set_response.status_code == 200
@@ -193,6 +194,7 @@ async def test_env_decision_api_key_wins_over_stored(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     await client.post("/api/v1/ai/config", json={"decision_api_key": "sk-decision-stored"})
+    monkeypatch.setenv(ai.ENV_DECISION_BASE_URL, "https://api.typesafe.ai")
     monkeypatch.setenv(ai.ENV_DECISION_API_KEY, "sk-decision-from-env")
 
     response = await client.post("/api/v1/ai/config", json={"decision_api_key": None})
@@ -427,8 +429,8 @@ async def test_decision_test_drops_the_saved_key_when_overriding_to_a_different_
 
 @respx.mock
 async def test_decision_test_keeps_the_saved_key_for_the_same_host(client: AsyncClient) -> None:
-    await client.post("/api/v1/ai/config", json={"decision_api_key": "sk-saved"})
     await _set_setting(client, "ai_decision_base_url", "https://api.typesafe.ai")
+    await client.post("/api/v1/ai/config", json={"decision_api_key": "sk-saved"})
     route = respx.post("https://api.typesafe.ai/v1/systemone").mock(
         return_value=Response(200, json=_decision_answer_payload()),
     )
