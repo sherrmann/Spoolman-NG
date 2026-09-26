@@ -5,11 +5,24 @@ const feature = (key: string): FeatureDef => FEATURES.find((f) => f.key === key)
 const ready = (over: Partial<Readiness> = {}): Readiness => ({
 	configured: true,
 	sttConfigured: true,
+	decisionConfigured: true,
 	vision: 'yes',
 	...over
 });
 
 describe('blockedReason', () => {
+	it('blocks the duplicate check until a decision model is configured, not the chat provider', () => {
+		expect(
+			blockedReason(
+				feature('ai_feature_duplicate_check'),
+				ready({ configured: false, decisionConfigured: true })
+			)
+		).toBeNull();
+		expect(blockedReason(feature('ai_feature_duplicate_check'), ready({ decisionConfigured: false }))).toBe(
+			'requires_decision'
+		);
+	});
+
 	it('blocks a provider feature until an endpoint and model are saved', () => {
 		expect(blockedReason(feature('ai_feature_chat'), ready({ configured: false }))).toBe('requires_config');
 	});

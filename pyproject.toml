@@ -150,6 +150,10 @@ help = "Scan-to-Spool extraction accuracy on label photos. Needs a configured AI
 cmd = "python scripts/match_rerank_eval.py"
 help = "Whether the decision-model reranker improves Scan-to-Spool matching. Needs a configured decision endpoint."
 
+[tool.poe.tasks.duplicate-eval]
+cmd = "python scripts/duplicate_eval.py"
+help = "Precision/recall of the vendor duplicate check's code and decision-model tiers. Needs a configured decision endpoint."
+
 [tool.ruff]
 line-length = 120
 target-version = "py310"

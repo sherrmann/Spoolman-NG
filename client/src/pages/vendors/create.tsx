@@ -1,14 +1,16 @@
 import { Create, useForm } from "@refinedev/antd";
-import { HttpError, IResourceComponentsProps, useList, useTranslate } from "@refinedev/core";
+import { HttpError, IResourceComponentsProps, useList, useNavigation, useTranslate } from "@refinedev/core";
 import { Button, Form, Input, InputNumber, Typography } from "antd";
 import TextArea from "antd/es/input/TextArea";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { useEffect } from "react";
+import { Link } from "react-router";
 import { ExtraFieldFormItem, ParsedExtras, StringifiedExtras } from "../../components/extraFields";
 import { StickyFooterBar } from "../../components/stickyFooterBar";
 import { formatNumberOnUserInput, numberParserAllowEmpty } from "../../utils/parsing";
 import { EntityType, useGetFields } from "../../utils/queryFields";
+import { useSimilarVendor } from "../../utils/querySimilar";
 import { isDuplicateVendorName } from "./functions";
 import { IVendor, IVendorParsedExtras } from "./model";
 
@@ -58,6 +60,25 @@ export const VendorCreate = (props: IResourceComponentsProps & CreateOrCloneProp
     (existingVendors?.data ?? []).map((v) => v.name),
   );
 
+  // Server-side hint (duplicate-check AI feature): only shown once the instant local check above
+  // has not already fired, so the two never stack. Purely advisory, same as the local check.
+  const { showUrl } = useNavigation();
+  const similarVendor = useSimilarVendor(duplicateName ? "" : (nameValue ?? ""));
+  let serverHint: React.ReactNode = undefined;
+  if (!duplicateName) {
+    if (similarVendor.exact) {
+      serverHint = t("settings.ai.duplicate.exact", { name: similarVendor.exact.name });
+    } else if (similarVendor.suggestion) {
+      const match = similarVendor.suggestion;
+      serverHint = (
+        <>
+          {t("settings.ai.duplicate.suggestion", { name: match.name })}{" "}
+          <Link to={showUrl("vendor", match.id)}>{match.name}</Link>
+        </>
+      );
+    }
+  }
+
   // Use useEffect to update the form's initialValues when the extra fields are loaded
   // This is necessary because the form is rendered before the extra fields are loaded
   useEffect(() => {
@@ -95,8 +116,10 @@ export const VendorCreate = (props: IResourceComponentsProps & CreateOrCloneProp
             },
           ]}
           // Advisory warning only — does not add a rule, so submission is never blocked (#82).
-          validateStatus={duplicateName ? "warning" : undefined}
-          help={duplicateName ? t("vendor.form.duplicate_name_warning") : undefined}
+          // The server hint (duplicate-check AI feature) only ever appears once the local check
+          // above has not already fired, so the two never stack.
+          validateStatus={duplicateName || serverHint ? "warning" : undefined}
+          help={duplicateName ? t("vendor.form.duplicate_name_warning") : serverHint}
         >
           {/* Auto-focus the first field so the form is ready to type into (#127). */}
           <Input maxLength={64} autoFocus />

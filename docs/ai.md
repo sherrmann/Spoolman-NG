@@ -485,6 +485,37 @@ with its shortlisted/top-1 verdicts, so two runs -- before and after a scoring c
 compared case by case with `--compare OLD.jsonl NEW.jsonl`, which needs neither a catalog nor a
 decision endpoint.
 
+## Duplicate manufacturer check
+
+When you create a manufacturer, or type a new one's name while adding a filament,
+Spoolman checks whether it already exists and says so under the name field.
+Where the name is typed as part of a filament, a button uses the existing
+manufacturer instead. It never blocks saving.
+
+- **Exact matches are always checked**, with no AI involved: names that are equal
+  once case, spacing, punctuation and full-width or other compatibility forms are
+  ignored ("eSUN", "e-Sun" and "E SUN").
+- **Other spellings need the decision model.** Turn on *Duplicate manufacturer
+  check* under Settings → AI → Features; it needs a decision model endpoint (see
+  above). On each pause in typing, the typed name and up to 50 of your
+  manufacturers' names (the closest spellings, when you have more) go to that
+  endpoint as one Choice question, and it answers which existing manufacturer
+  this is, or none. "Bambu" and "Bambu Lab" are the kind of case this catches.
+  The answer is shown only when the model gives it a probability of at least 0.6.
+  A failed or slow request shows nothing.
+
+The check is `POST /api/v1/vendor/similar` (`{name, exclude_id}`), so an
+integration can use it too. It never creates anything.
+
+**Evaluating it.** `poe duplicate-eval` scores the exact check alone, and the
+exact check plus the model at several probability thresholds, on handwritten
+cases of real brands:
+
+```bash
+uv run poe duplicate-eval -- --baseline-only        # the exact check alone
+SPOOLMAN_AI_DECISION_BASE_URL=https://api.typesafe.ai SPOOLMAN_AI_DECISION_API_KEY=... uv run poe duplicate-eval
+```
+
 ## Privacy
 
 - With a **local endpoint** (Ollama, LM Studio, llama.cpp, vLLM on your own
@@ -494,7 +525,9 @@ decision endpoint.
   Spoolman adds no telemetry and no middleman.
 - The **decision model** for Scan-to-Spool matching (prototype, above) is a
   separate cloud endpoint. When configured, it receives the label's text fields
-  and the shortlisted filaments' descriptions, never the photo.
+  and the shortlisted filaments' descriptions, never the photo. With the
+  duplicate manufacturer check on, it also receives the manufacturer name you
+  are typing and your manufacturers' names.
 - Feature toggles are all **off by default** and independent, so you can, for
   example, enable natural-language search against a local model and leave photo
   features off entirely.

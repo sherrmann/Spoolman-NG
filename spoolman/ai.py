@@ -75,6 +75,7 @@ FEATURE_SETTINGS = {
     "ai_feature_nl_search": "nl_search",
     "ai_feature_mcp": "mcp",
     "ai_feature_voice": "voice",
+    "ai_feature_duplicate_check": "duplicate_check",
 }
 
 #: Unregistered settings-table keys for the write-only API keys. Kept out of the settings

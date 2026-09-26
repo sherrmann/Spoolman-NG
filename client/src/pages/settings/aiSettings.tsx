@@ -27,9 +27,13 @@ const FEATURE_ROWS: {
   settingKey: string;
   statusKey: string;
   labelKey: string;
+  // Shown as secondary text under the row's label, whether or not it is blocked.
+  helpKey?: string;
   requiresVision?: boolean;
   // Voice (#363) needs a speech-to-text endpoint configured, not the chat endpoint.
   requiresStt?: boolean;
+  // The duplicate manufacturer check needs a decision model endpoint, not the chat endpoint.
+  requiresDecision?: boolean;
   // Most features need a configured LLM endpoint; the MCP server (#360) does not — it only
   // needs the toggle, so it stays enable-able even before an endpoint is set.
   requiresProvider?: boolean;
@@ -55,6 +59,14 @@ const FEATURE_ROWS: {
     labelKey: "settings.ai.features.voice",
     requiresProvider: false,
     requiresStt: true,
+  },
+  {
+    settingKey: "ai_feature_duplicate_check",
+    statusKey: "duplicate_check",
+    labelKey: "settings.ai.features.duplicate_check",
+    helpKey: "settings.ai.features.duplicate_check_hint",
+    requiresProvider: false,
+    requiresDecision: true,
   },
 ];
 
@@ -99,6 +111,7 @@ export function AISettings() {
     ai_feature_nl_search: useSetSetting<boolean>("ai_feature_nl_search"),
     ai_feature_mcp: useSetSetting<boolean>("ai_feature_mcp"),
     ai_feature_voice: useSetSetting<boolean>("ai_feature_voice"),
+    ai_feature_duplicate_check: useSetSetting<boolean>("ai_feature_duplicate_check"),
   } as Record<string, ReturnType<typeof useSetSetting<boolean>>>;
   const [form] = Form.useForm();
   const [messageApi, contextHolder] = message.useMessage();
@@ -458,6 +471,8 @@ export function AISettings() {
             reasonKey = "settings.ai.features.requires_stt";
           } else if (row.requiresVision && capabilities?.vision === "no") {
             reasonKey = "settings.ai.features.requires_vision";
+          } else if (row.requiresDecision && !status.data?.decision_configured) {
+            reasonKey = "settings.ai.features.requires_decision";
           }
           // A blocked toggle can always be turned OFF, never ON.
           const disabled = reasonKey !== null && !enabled;
@@ -471,6 +486,13 @@ export function AISettings() {
               >
                 {t(row.labelKey)}
               </Checkbox>
+              {row.helpKey && (
+                <div>
+                  <Text type="secondary" style={{ marginLeft: 24 }}>
+                    {t(row.helpKey)}
+                  </Text>
+                </div>
+              )}
               {reasonKey && (
                 <div>
                   <Text type="secondary" style={{ marginLeft: 24 }}>

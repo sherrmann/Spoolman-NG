@@ -60,6 +60,7 @@ async def test_status_defaults_are_inert(client: AsyncClient) -> None:
         "nl_search": False,
         "mcp": False,
         "voice": False,
+        "duplicate_check": False,
     }
     assert status["capabilities"] is None
 

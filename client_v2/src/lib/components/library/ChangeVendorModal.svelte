@@ -20,6 +20,7 @@
 	import type { Filament, Vendor } from '$lib/types';
 	import { spoolSource } from '$lib/api/spoolSource';
 	import { toasts } from '$lib/stores/toasts.svelte';
+	import DuplicateHint from '$lib/ng/components/DuplicateHint.svelte';
 	import * as m from '$lib/paraglide/messages';
 
 	interface Props {
@@ -87,6 +88,26 @@
 	$effect(() => {
 		if (open && searchInput) searchInput.focus();
 	});
+
+	/**
+	 * "Use" on a duplicate hint: select the existing manufacturer as a real Vendor, so the preview
+	 * shows its own empty-spool weight rather than treating it as a new one. It may be missing from
+	 * the list loaded on open (created since, or the list failed to load); then fetch it by id.
+	 */
+	async function useExisting(match: { id: number; name: string }) {
+		query = match.name;
+		let vendor = vendors.find((v) => Number(v.id) === match.id);
+		if (!vendor) {
+			try {
+				vendor = await spoolSource.fetchVendor(String(match.id));
+			} catch (e) {
+				console.error('Failed to load the suggested manufacturer', e);
+			}
+			if (vendor) vendors = [...vendors, vendor];
+		}
+		// Unresolvable: leave the choice alone rather than preview it as a new manufacturer.
+		if (vendor) chosen = { kind: 'vendor', vendor };
+	}
 
 	async function load() {
 		loading = true;
@@ -266,6 +287,16 @@
 									<span class="rs">{m['changeVendor.createHint']()}</span>
 								</div>
 							</button>
+							<!-- excludeId leaves the current manufacturer out of the check: a typed
+							     name that only differs from it by punctuation would otherwise offer
+							     to "Use" the very manufacturer this filament is already filed under,
+							     which the results list above disables selecting for the same reason
+							     (isCurrent). -->
+							<DuplicateHint
+								name={trimmed}
+								excludeId={current ? Number(current.id) : undefined}
+								onuse={useExisting}
+							/>
 						{/if}
 						{#if current}
 							<button
