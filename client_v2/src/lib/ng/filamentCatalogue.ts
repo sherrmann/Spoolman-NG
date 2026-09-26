@@ -111,3 +111,34 @@ export function catalogueFromExternal(ext: object): Json {
 	}
 	return out;
 }
+
+/**
+ * The catalogue fields of an existing filament, to start a copy of it from: the duplicate flow
+ * carries them, as the classic client's clone does. Undefined when the filament has none mapped.
+ */
+export function catalogueFieldsOf(f: FilamentNg | undefined): CatalogueFields | undefined {
+	if (!f) return undefined;
+	return {
+		spoolType: f.spoolType,
+		finish: f.finish,
+		pattern: f.pattern,
+		translucent: f.translucent,
+		glow: f.glow
+	};
+}
+
+/**
+ * The catalogue fields to send when creating a filament from the new-filament form. Unknown
+ * (null) is left out, which the server stores as unknown anyway. Unlike
+ * {@link catalogueFromExternal}, `false` is sent: here it is an answer someone chose, or copied
+ * from a filament where it was stored.
+ */
+export function catalogueForCreate(ng: Partial<CatalogueFields> | undefined): Json {
+	const out: Json = {};
+	if (!ng) return out;
+	for (const [key, api] of Object.entries(API_NAMES) as [CatalogueKey, string][]) {
+		const v = ng[key];
+		if (v !== null && v !== undefined) out[api] = v;
+	}
+	return out;
+}

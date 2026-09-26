@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
 	EMPTY_FILAMENT_NG,
+	catalogueFieldsOf,
+	catalogueForCreate,
 	catalogueFromExternal,
 	filamentNgPatchToApi,
 	mapFilamentNg
@@ -80,5 +82,28 @@ describe('catalogueFromExternal', () => {
 
 	it('leaves out what the entry does not have or this server does not accept', () => {
 		expect(catalogueFromExternal({ id: 'x', finish: 'silk', spool_type: null })).toEqual({});
+	});
+});
+
+describe('catalogueFieldsOf', () => {
+	it('copies the five fields and leaves the photo flag behind', () => {
+		const f = { ...EMPTY_FILAMENT_NG, finish: 'matte' as const, translucent: false, hasImage: true };
+		expect(catalogueFieldsOf(f)).toEqual({
+			spoolType: null,
+			finish: 'matte',
+			pattern: null,
+			translucent: false,
+			glow: null
+		});
+		expect(catalogueFieldsOf(undefined)).toBeUndefined();
+	});
+});
+
+describe('catalogueForCreate', () => {
+	it('sends chosen values, including false, and leaves unknown out', () => {
+		expect(
+			catalogueForCreate({ spoolType: 'cardboard', finish: null, translucent: false, glow: true })
+		).toEqual({ spool_type: 'cardboard', translucent: false, glow: true });
+		expect(catalogueForCreate(undefined)).toEqual({});
 	});
 });
