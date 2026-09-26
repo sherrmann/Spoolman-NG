@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { AIStatus } from "../../utils/queryAI";
@@ -200,7 +200,7 @@ describe("AISettings (#359)", () => {
     expect(screen.getByTestId("toggle-voice")).toBeEnabled();
   });
 
-  it("renders the decision model section (#365)", () => {
+  it("renders the decision model section", () => {
     render(<AISettings />);
     expect(screen.getByText("settings.ai.decision.title")).toBeInTheDocument();
     expect(screen.getByText("settings.ai.decision.base_url.label")).toBeInTheDocument();
@@ -245,10 +245,31 @@ describe("AISettings (#359)", () => {
     const user = userEvent.setup();
     render(<AISettings />);
 
+    const baseUrlInput = screen.getByPlaceholderText("https://api.typesafe.ai");
+    await user.clear(baseUrlInput);
+    await user.type(baseUrlInput, "https://openrouter.ai/api");
+    // An emptied model box means "use the default", so it is sent as "" rather than left out.
+    await user.clear(screen.getByPlaceholderText("jev-latest"));
+    const keyInputs = screen.getAllByPlaceholderText("settings.ai.api_key.placeholder_unset");
+    await user.type(keyInputs[keyInputs.length - 1], "sk-typed");
     await user.click(screen.getByRole("button", { name: "settings.ai.decision.test" }));
+
     expect(decisionTestMutate).toHaveBeenCalledTimes(1);
+    const [overrides, options] = decisionTestMutate.mock.calls[0];
+    expect(overrides).toEqual({ base_url: "https://openrouter.ai/api", model: "", api_key: "sk-typed" });
+
+    act(() => options.onSuccess({ ok: true, error: null, latency_ms: 42, model: "jev-latest" }));
+    expect(screen.getByTestId("decision-test-result").textContent).toContain("settings.ai.decision.test_success");
+  });
+
+  it("leaves the key out of the decision model test when none is typed", async () => {
+    statusMock.mockReturnValue({ ...baseStatus, decision_base_url: "https://api.typesafe.ai" });
+    const user = userEvent.setup();
+    render(<AISettings />);
+
+    await user.click(screen.getByRole("button", { name: "settings.ai.decision.test" }));
     const [overrides] = decisionTestMutate.mock.calls[0];
-    expect(overrides).toMatchObject({ base_url: "https://api.typesafe.ai", model: "jev-latest" });
+    expect(overrides).toMatchObject({ base_url: "https://api.typesafe.ai" });
     expect(overrides).not.toHaveProperty("api_key");
   });
 

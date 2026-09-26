@@ -360,6 +360,11 @@ async def test_decision_test_reports_a_non_ascii_key_without_leaking_it(client: 
     assert "kéy" not in response.text
 
 
+async def test_decision_test_reports_a_bad_url_before_a_bad_key(client: AsyncClient) -> None:
+    response = await client.post("/api/v1/ai/decision/test", json={"base_url": "ftp://x", "api_key": "kéy"})
+    assert response.json()["error"] == "No usable base URL: it must start with http:// or https:// and name a host."
+
+
 @respx.mock
 async def test_decision_test_succeeds(client: AsyncClient) -> None:
     respx.post("https://api.typesafe.ai/v1/systemone").mock(return_value=Response(200, json=_decision_answer_payload()))

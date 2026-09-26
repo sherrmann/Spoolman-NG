@@ -299,10 +299,10 @@ async def run_decision_test(
     if target is None:
         if not config.decision_base_url:
             error = "No base URL configured."
-        elif config.decision_api_key is not None and not config.decision_api_key.isascii():
-            error = "The API key contains characters that an HTTP header cannot carry."
-        else:
+        elif decision.validated_config(config.decision_base_url, None, None) is None:
             error = "No usable base URL: it must start with http:// or https:// and name a host."
+        else:
+            error = "The API key contains characters that an HTTP header cannot carry."
         return AIDecisionTestResult(ok=False, error=error)
     started = time.perf_counter()
     try:

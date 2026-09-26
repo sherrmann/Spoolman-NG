@@ -76,7 +76,7 @@ export function useAIProbe() {
   });
 }
 
-// --- Decision model (#365) ----------------------------------------------------------
+// --- Decision model ----------------------------------------------------------------
 
 export interface AIDecisionTestRequest {
   base_url?: string;

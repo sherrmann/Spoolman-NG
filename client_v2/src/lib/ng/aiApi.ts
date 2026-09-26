@@ -427,9 +427,11 @@ export async function decisionTest(overrides: {
 	model?: string;
 }): Promise<AiDecisionTestResult> {
 	const body: Record<string, unknown> = {};
-	if (overrides.baseUrl) body.base_url = overrides.baseUrl;
+	// An empty URL or model is sent as "": it means "none" or "the default", not "use the saved
+	// value". An empty key box does mean "use the saved key", so only a typed key is sent.
+	if (overrides.baseUrl !== undefined) body.base_url = overrides.baseUrl;
 	if (overrides.apiKey) body.api_key = overrides.apiKey;
-	if (overrides.model) body.model = overrides.model;
+	if (overrides.model !== undefined) body.model = overrides.model;
 	const raw = await postJson<Record<string, unknown>>('/ai/decision/test', body);
 	return {
 		ok: Boolean(raw.ok),
