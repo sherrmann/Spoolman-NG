@@ -188,3 +188,51 @@ def test_rank_sorts_on_the_score_not_the_rounded_percentage(monkeypatch: pytest.
     rows = catalog._rank({"name": "PLA Black", "material": "PLA"}, limit=10)  # noqa: SLF001
 
     assert [row["external_id"] for row in rows] == ["flashforge", "plain"]
+
+
+# --- Diameter mismatch penalty ------------------------------------------------------
+
+
+def _twin_entries() -> list[dict]:
+    return [
+        {
+            "id": "twin-175",
+            "manufacturer": "Prusament",
+            "name": "Galaxy Black",
+            "material": "PLA",
+            "weight": 1000,
+            "diameter": 1.75,
+        },
+        {
+            "id": "twin-285",
+            "manufacturer": "Prusament",
+            "name": "Galaxy Black",
+            "material": "PLA",
+            "weight": 1000,
+            "diameter": 2.85,
+        },
+    ]
+
+
+def test_rank_orders_twins_by_diameter_when_the_extraction_carries_one(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(spoolintake, "load_catalog", lambda: _twin_entries())
+    extraction = {"vendor": "Prusament", "name": "Galaxy Black", "material": "PLA", "diameter_mm": 2.85}
+
+    rows = catalog._rank(extraction, limit=10)  # noqa: SLF001
+
+    assert rows[0]["external_id"] == "twin-285"
+
+
+async def test_build_extraction_sets_no_diameter_so_twins_stay_in_catalogue_order(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """catalog_lookup's arguments have no diameter field, so build_extraction never sets one.
+
+    With neither side giving a diameter, score_candidate applies no penalty at all and the
+    two otherwise-identical twins tie -- ``_best`` then keeps them in catalogue order.
+    """
+    monkeypatch.setattr(spoolintake, "load_catalog", lambda: _twin_entries())
+
+    result = await _lookup({"vendor": "Prusament", "name": "Galaxy Black", "material": "PLA"})
+
+    assert [row["external_id"] for row in result["matches"]] == ["twin-175", "twin-285"]

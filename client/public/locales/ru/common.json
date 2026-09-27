@@ -1519,5 +1519,13 @@
     "delete_confirm": "Удалить этот заказ? Его строки также будут удалены.",
     "filaments_count_few": "{{count}} филамента",
     "filaments_count_many": "{{count}} филаментов"
+  },
+  "mobile_nav": {
+    "more": "Ещё",
+    "more_pages": "Другие страницы",
+    "about": "О программе",
+    "sponsor_upstream": "Поддержать первоначального автора Spoolman",
+    "documentation": "Документация",
+    "report_issue": "Сообщить о проблеме"
   }
 }

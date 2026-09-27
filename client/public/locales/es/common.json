@@ -1518,5 +1518,13 @@
     "update_error": "No se pudo actualizar el pedido. Inténtalo de nuevo.",
     "delete_error": "No se pudo borrar el pedido. Inténtalo de nuevo.",
     "delete_confirm": "¿Borrar este pedido? Sus líneas también se borrarán."
+  },
+  "mobile_nav": {
+    "more": "Más",
+    "more_pages": "Más páginas",
+    "about": "Acerca de",
+    "sponsor_upstream": "Patrocinar al autor original de Spoolman",
+    "documentation": "Documentación",
+    "report_issue": "Informar de un problema"
   }
 }

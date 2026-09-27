@@ -1519,5 +1519,13 @@
     "delete_error": "Objednávku se nepodařilo smazat. Zkuste to prosím znovu.",
     "delete_confirm": "Smazat tuto objednávku? Její řádky budou smazány také.",
     "filaments_count_few": "{{count}} filamenty"
+  },
+  "mobile_nav": {
+    "more": "Více",
+    "more_pages": "Další stránky",
+    "about": "O aplikaci",
+    "sponsor_upstream": "Podpořit původního autora Spoolmanu",
+    "documentation": "Dokumentace",
+    "report_issue": "Nahlásit problém"
   }
 }

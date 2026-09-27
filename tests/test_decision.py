@@ -14,9 +14,12 @@ import httpx
 import pytest
 import respx
 from httpx import Response
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from spoolman import decision
+from spoolman.database import setting as setting_db
 from spoolman.decision import ChoiceAnswer, DecisionConfig, DecisionError
+from spoolman.settings import SETTINGS
 
 _ENV_NAMES = (decision.ENV_BASE_URL, decision.ENV_API_KEY, decision.ENV_MODEL)
 
@@ -28,90 +31,167 @@ def _clean_env(monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.delenv(name, raising=False)
 
 
-# --- resolve_config ------------------------------------------------------------------
+# --- resolve_env_config ----------------------------------------------------------------
 
 
-def test_resolve_config_unset_is_none() -> None:
-    assert decision.resolve_config() is None
+def test_resolve_env_config_unset_is_none() -> None:
+    assert decision.resolve_env_config() is None
 
 
-def test_resolve_config_blank_is_none(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_resolve_env_config_blank_is_none(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv(decision.ENV_BASE_URL, "   ")
-    assert decision.resolve_config() is None
+    assert decision.resolve_env_config() is None
 
 
-def test_resolve_config_strips_trailing_slash(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_resolve_env_config_strips_trailing_slash(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv(decision.ENV_BASE_URL, "https://api.typesafe.ai/")
-    config = decision.resolve_config()
+    config = decision.resolve_env_config()
     assert config is not None
     assert config.base_url == "https://api.typesafe.ai"
 
 
-def test_resolve_config_rejects_non_http_scheme(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_resolve_env_config_rejects_non_http_scheme(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv(decision.ENV_BASE_URL, "ftp://api.typesafe.ai")
-    assert decision.resolve_config() is None
+    assert decision.resolve_env_config() is None
 
 
-def test_resolve_config_defaults_model(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_resolve_env_config_defaults_model(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv(decision.ENV_BASE_URL, "https://api.typesafe.ai")
-    config = decision.resolve_config()
+    config = decision.resolve_env_config()
     assert config is not None
     assert config.model == decision.DEFAULT_MODEL
     assert config.api_key is None
 
 
-def test_resolve_config_reads_model_and_key(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_resolve_env_config_reads_model_and_key(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv(decision.ENV_BASE_URL, "https://api.typesafe.ai")
     monkeypatch.setenv(decision.ENV_MODEL, "jev-1.13")
     monkeypatch.setenv(decision.ENV_API_KEY, "sk-secret")
-    config = decision.resolve_config()
+    config = decision.resolve_env_config()
     assert config is not None
     assert config.model == "jev-1.13"
     assert config.api_key == "sk-secret"
 
 
-def test_resolve_config_rejects_invalid_ipv6_host(
+def test_resolve_env_config_rejects_invalid_ipv6_host(
     monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     monkeypatch.setenv(decision.ENV_BASE_URL, "http://[::1")
     with caplog.at_level("WARNING"):
-        assert decision.resolve_config() is None
+        assert decision.resolve_env_config() is None
     assert "not a valid URL" in caplog.text
 
 
 @pytest.mark.parametrize("base_url", ["http://a:notaport", "http://a:99999"])
-def test_resolve_config_rejects_an_unparsable_port(
+def test_resolve_env_config_rejects_an_unparsable_port(
     monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
     base_url: str,
 ) -> None:
     monkeypatch.setenv(decision.ENV_BASE_URL, base_url)
     with caplog.at_level("WARNING"):
-        assert decision.resolve_config() is None
+        assert decision.resolve_env_config() is None
     assert "not a valid URL" in caplog.text
 
 
-def test_resolve_config_rejects_a_url_with_no_host(
+def test_resolve_env_config_rejects_a_url_with_no_host(
     monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     monkeypatch.setenv(decision.ENV_BASE_URL, "http://")
     with caplog.at_level("WARNING"):
-        assert decision.resolve_config() is None
+        assert decision.resolve_env_config() is None
     assert "name a host" in caplog.text
 
 
-def test_resolve_config_rejects_a_non_ascii_api_key(
+def test_resolve_env_config_rejects_a_non_ascii_api_key(
     monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     monkeypatch.setenv(decision.ENV_BASE_URL, "https://api.typesafe.ai")
     monkeypatch.setenv(decision.ENV_API_KEY, "kéy")
     with caplog.at_level("WARNING"):
-        assert decision.resolve_config() is None
+        assert decision.resolve_env_config() is None
     assert "non-ASCII" in caplog.text
     assert "kéy" not in caplog.text
+
+
+# --- validated_config --------------------------------------------------------------------
+
+
+def test_validated_config_names_the_given_source_in_the_warning(caplog: pytest.LogCaptureFixture) -> None:
+    with caplog.at_level("WARNING"):
+        assert decision.validated_config("ftp://host", None, None, source="the decision-model base URL setting") is None
+    assert "the decision-model base URL setting" in caplog.text
+
+
+def test_validated_config_strips_the_api_key() -> None:
+    config = decision.validated_config("https://api.typesafe.ai", "  sk-secret  ", None)
+    assert config is not None
+    assert config.api_key == "sk-secret"
+
+
+def test_validated_config_blank_model_uses_the_default() -> None:
+    config = decision.validated_config("https://api.typesafe.ai", None, "   ")
+    assert config is not None
+    assert config.model == decision.DEFAULT_MODEL
+
+
+def test_decision_config_repr_never_shows_the_api_key() -> None:
+    assert "sk-x" not in repr(DecisionConfig(base_url="https://api.typesafe.ai", model="m", api_key="sk-x"))
+
+
+# --- resolve_config: env-over-DB, via ai.resolve_config ---------------------------------
+
+
+async def _store_decision_setting(db_session: AsyncSession, key: str, value: str) -> None:
+    await setting_db.update(db=db_session, definition=SETTINGS[key], value=json.dumps(value))
+
+
+async def test_resolve_config_db_only(db_session: AsyncSession) -> None:
+    await _store_decision_setting(db_session, "ai_decision_base_url", "https://db.example.com")
+    await _store_decision_setting(db_session, "ai_decision_model", "jev-db")
+
+    config = await decision.resolve_config(db_session)
+
+    assert config is not None
+    assert config.base_url == "https://db.example.com"
+    assert config.model == "jev-db"
+
+
+async def test_resolve_config_env_wins_per_field_over_db(
+    db_session: AsyncSession,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    await _store_decision_setting(db_session, "ai_decision_base_url", "https://db.example.com")
+    await _store_decision_setting(db_session, "ai_decision_model", "jev-db")
+    monkeypatch.setenv(decision.ENV_MODEL, "jev-env")
+
+    config = await decision.resolve_config(db_session)
+
+    assert config is not None
+    # base_url still comes from the DB, model is overridden by the env var.
+    assert config.base_url == "https://db.example.com"
+    assert config.model == "jev-env"
+
+
+async def test_resolve_config_an_invalid_db_url_returns_none_and_names_the_setting(
+    db_session: AsyncSession,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    await _store_decision_setting(db_session, "ai_decision_base_url", "ftp://db.example.com")
+
+    with caplog.at_level("WARNING"):
+        config = await decision.resolve_config(db_session)
+
+    assert config is None
+    assert "the decision-model base URL setting" in caplog.text
+    assert decision.ENV_BASE_URL not in caplog.text
+
+
+async def test_resolve_config_nothing_stored_is_none(db_session: AsyncSession) -> None:
+    assert await decision.resolve_config(db_session) is None
 
 
 # --- choice_question -------------------------------------------------------------------

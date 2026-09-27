@@ -635,5 +635,11 @@
 	"settings_import_export_no_file": "Lütfen önce bir dosya seçin.",
 	"settings_import_export_result": "{created} oluşturuldu, {updated} güncellendi, {skipped} atlandı.",
 	"settings_import_export_import_errors": "İçe aktarma başarısız",
-	"filament_fields_spool_count": "Makaralar"
+	"filament_fields_spool_count": "Makaralar",
+	"mobile_nav_more": "Diğer",
+	"mobile_nav_more_pages": "Diğer sayfalar",
+	"mobile_nav_about": "Hakkında",
+	"mobile_nav_sponsor_upstream": "Spoolman'in asıl geliştiricisini destekle",
+	"mobile_nav_documentation": "Belgeler",
+	"mobile_nav_report_issue": "Sorun bildir"
 }

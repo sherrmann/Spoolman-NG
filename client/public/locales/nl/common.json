@@ -1500,5 +1500,13 @@
     "update_error": "Kon de order niet bijwerken. Probeer het opnieuw.",
     "delete_error": "Kon de order niet verwijderen. Probeer het opnieuw.",
     "delete_confirm": "Deze order verwijderen? De bijbehorende regels worden ook verwijderd."
+  },
+  "mobile_nav": {
+    "more": "Meer",
+    "more_pages": "Meer pagina's",
+    "about": "Over",
+    "sponsor_upstream": "De oorspronkelijke maker van Spoolman steunen",
+    "documentation": "Documentatie",
+    "report_issue": "Probleem melden"
   }
 }

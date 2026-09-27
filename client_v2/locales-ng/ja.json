@@ -625,5 +625,11 @@
 	"settings_import_export_no_file": "先にファイルを選択してください。",
 	"settings_import_export_result": "作成 {created}件、更新 {updated}件、スキップ {skipped}件。",
 	"settings_import_export_import_errors": "インポートに失敗しました",
-	"filament_fields_spool_count": "スプール数"
+	"filament_fields_spool_count": "スプール数",
+	"mobile_nav_more": "その他",
+	"mobile_nav_more_pages": "その他のページ",
+	"mobile_nav_about": "このアプリについて",
+	"mobile_nav_sponsor_upstream": "Spoolman の原作者を支援する",
+	"mobile_nav_documentation": "ドキュメント",
+	"mobile_nav_report_issue": "問題を報告"
 }

@@ -16,6 +16,7 @@ import { parseDecimal } from '$lib/utils/numeric';
 import { HEX_RE, numErr } from '$lib/utils/validate';
 import type { MaterialSpec } from '$lib/data/materials';
 import * as m from '$lib/paraglide/messages';
+import { catalogueFieldsOf, type CatalogueFields } from '$lib/ng/filamentCatalogue';
 
 /** What identifies and specifies a filament, as typed into a form. */
 export interface FilamentDraft {
@@ -30,6 +31,8 @@ export interface FilamentDraft {
 	bedTemp: string;
 	articleNumber: string;
 	comment: string;
+	/** Spoolman NG fork addition: the SpoolmanDB catalogue fields; unset means all unknown. */
+	ng?: Partial<CatalogueFields>;
 }
 
 /**
@@ -83,7 +86,8 @@ export function filamentDraftFrom(f: Filament, vendorName: string): FilamentDraf
 		nozzleTemp: f.nozzleTemp ? String(f.nozzleTemp) : '',
 		bedTemp: f.bedTemp ? String(f.bedTemp) : '',
 		articleNumber: '',
-		comment: f.comment
+		comment: f.comment,
+		ng: catalogueFieldsOf(f.ng)
 	};
 }
 
@@ -210,6 +214,7 @@ export function toNewFilamentDraft(
 		price: numPos(weights.price),
 		articleNumber: draft.articleNumber.trim() || undefined,
 		comment: draft.comment.trim() || undefined,
-		extra
+		extra,
+		ng: draft.ng
 	};
 }

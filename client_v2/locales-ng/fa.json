@@ -635,5 +635,11 @@
 	"settings_import_export_no_file": "لطفاً ابتدا یک فایل انتخاب کنید.",
 	"settings_import_export_result": "{created} ساخته شد، {updated} به‌روزرسانی شد، {skipped} رد شد.",
 	"settings_import_export_import_errors": "وارد کردن ناموفق بود",
-	"filament_fields_spool_count": "قرقره‌ها"
+	"filament_fields_spool_count": "قرقره‌ها",
+	"mobile_nav_more": "بیشتر",
+	"mobile_nav_more_pages": "صفحه‌های بیشتر",
+	"mobile_nav_about": "درباره",
+	"mobile_nav_sponsor_upstream": "حمایت از سازنده اصلی Spoolman",
+	"mobile_nav_documentation": "مستندات",
+	"mobile_nav_report_issue": "گزارش مشکل"
 }

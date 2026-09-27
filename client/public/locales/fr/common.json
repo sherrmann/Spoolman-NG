@@ -1518,5 +1518,13 @@
     "update_error": "Impossible de mettre à jour la commande. Veuillez réessayer.",
     "delete_error": "Impossible de supprimer la commande. Veuillez réessayer.",
     "delete_confirm": "Supprimer cette commande ? Ses lignes seront également supprimées."
+  },
+  "mobile_nav": {
+    "more": "Plus",
+    "more_pages": "Autres pages",
+    "about": "À propos",
+    "sponsor_upstream": "Soutenir l'auteur original de Spoolman",
+    "documentation": "Documentation",
+    "report_issue": "Signaler un problème"
   }
 }

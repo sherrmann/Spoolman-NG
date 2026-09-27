@@ -645,5 +645,11 @@
 	"settings_import_export_no_file": "Scegli prima un file.",
 	"settings_import_export_result": "Creati {created}, aggiornati {updated}, saltati {skipped}.",
 	"settings_import_export_import_errors": "Importazione non riuscita",
-	"filament_fields_spool_count": "Bobine"
+	"filament_fields_spool_count": "Bobine",
+	"mobile_nav_more": "Altro",
+	"mobile_nav_more_pages": "Altre pagine",
+	"mobile_nav_about": "Informazioni",
+	"mobile_nav_sponsor_upstream": "Sostieni l'autore originale di Spoolman",
+	"mobile_nav_documentation": "Documentazione",
+	"mobile_nav_report_issue": "Segnala un problema"
 }

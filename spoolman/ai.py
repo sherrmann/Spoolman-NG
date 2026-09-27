@@ -51,6 +51,12 @@ ENV_VISION_MODEL = "SPOOLMAN_AI_VISION_MODEL"
 ENV_STT_BASE_URL = "SPOOLMAN_AI_STT_BASE_URL"
 ENV_STT_API_KEY = "SPOOLMAN_AI_STT_API_KEY"
 ENV_STT_MODEL = "SPOOLMAN_AI_STT_MODEL"
+# Decision model (a typed-question endpoint such as TypeSafe's Jev; see spoolman/decision.py).
+# It is not OpenAI-compatible, so it has its own base URL, model and (write-only) key. This
+# module only stores and resolves them; spoolman/decision.py validates and uses them.
+ENV_DECISION_BASE_URL = "SPOOLMAN_AI_DECISION_BASE_URL"
+ENV_DECISION_API_KEY = "SPOOLMAN_AI_DECISION_API_KEY"
+ENV_DECISION_MODEL = "SPOOLMAN_AI_DECISION_MODEL"
 
 # Registered (non-secret) DB settings — see the registrations in spoolman/settings.py.
 SETTING_BASE_URL = "ai_base_url"
@@ -58,6 +64,8 @@ SETTING_MODEL = "ai_model"
 SETTING_VISION_MODEL = "ai_vision_model"
 SETTING_STT_BASE_URL = "ai_stt_base_url"
 SETTING_STT_MODEL = "ai_stt_model"
+SETTING_DECISION_BASE_URL = "ai_decision_base_url"
+SETTING_DECISION_MODEL = "ai_decision_model"
 
 #: Feature-toggle setting key -> feature name as reported by /ai/status. All default off:
 #: AI must be invisible unless explicitly enabled.
@@ -67,12 +75,17 @@ FEATURE_SETTINGS = {
     "ai_feature_nl_search": "nl_search",
     "ai_feature_mcp": "mcp",
     "ai_feature_voice": "voice",
+    "ai_feature_duplicate_check": "duplicate_check",
 }
 
 #: Unregistered settings-table keys for the write-only API keys. Kept out of the settings
 #: registry on purpose; tests/test_ai.py asserts they never get registered.
 API_KEY_DB_KEY = "ai_api_key"
 STT_API_KEY_DB_KEY = "ai_stt_api_key"
+#: Unlike the two keys above, its row holds JSON: the key and the decision base URL it was saved
+#: for, in one row so they are written together. The key is only used with that URL, so
+#: changing the URL in Settings can never send the old key to a new host.
+DECISION_API_KEY_DB_KEY = "ai_decision_api_key"
 
 _PROBE_TIMEOUT = 10.0
 #: Vision inference on local hardware is legitimately slow; give it room.
@@ -102,6 +115,16 @@ class AIConfig:
     stt_base_url: str | None = None
     stt_api_key: str | None = None
     stt_model: str | None = None
+    #: Decision-model endpoint, independent of both endpoints above. The model may be left
+    #: unset; spoolman/decision.py then uses its default.
+    decision_base_url: str | None = None
+    decision_api_key: str | None = None
+    decision_model: str | None = None
+    #: Whether each key is stored, even one not in use because the base URL changed since it
+    #: was saved. The UI needs these to offer Clear for such a key.
+    api_key_stored: bool = False
+    stt_api_key_stored: bool = False
+    decision_api_key_stored: bool = False
     #: field name -> "env" | "db" for every field that has a value.
     sources: dict[str, str] = field(default_factory=dict)
 
@@ -114,6 +137,11 @@ class AIConfig:
     def stt_configured(self) -> bool:
         """Whether a speech-to-text endpoint and model are present (voice input needs both)."""
         return bool(self.stt_base_url and self.stt_model)
+
+    @property
+    def decision_configured(self) -> bool:
+        """Whether a decision-model endpoint is set (the model has a default)."""
+        return bool(self.decision_base_url)
 
 
 @dataclass
@@ -146,6 +174,9 @@ class _AIState:
     #: at most one /api/show per model per process. Only successful lookups are stored; a
     #: transient failure must not permanently disable the tuning below.
     capabilities: dict[tuple[str, str], set[str]] = field(default_factory=dict)
+    #: Key attribute -> the last "not using this key" reason logged, so each warning is logged
+    #: once per change rather than on every resolve_config call.
+    key_warnings: dict[str, str] = field(default_factory=dict)
 
 
 _state = _AIState()
@@ -229,24 +260,197 @@ async def _set_stored_key(db: AsyncSession, db_key: str, value: str | None, labe
     logger.info("%s has been %s.", label, "updated" if value else "cleared")
 
 
+@dataclass(frozen=True)
+class _KeySpec:
+    """One write-only key and the base URL it may be sent to."""
+
+    key_attr: str
+    url_attr: str
+    db_key: str
+    env_key: str
+    label: str
+    #: A key set by environment variable is only used with a base URL set the same way. Off for
+    #: the chat and speech-to-text keys, which operators already combine with a URL entered in
+    #: Settings; on for the decision key, which never supported that.
+    env_key_needs_env_url: bool
+
+
+_KEY_SPECS = (
+    _KeySpec("api_key", "base_url", API_KEY_DB_KEY, ENV_API_KEY, "AI API key", env_key_needs_env_url=False),
+    _KeySpec(
+        "stt_api_key",
+        "stt_base_url",
+        STT_API_KEY_DB_KEY,
+        ENV_STT_API_KEY,
+        "AI speech-to-text API key",
+        env_key_needs_env_url=False,
+    ),
+    _KeySpec(
+        "decision_api_key",
+        "decision_base_url",
+        DECISION_API_KEY_DB_KEY,
+        ENV_DECISION_API_KEY,
+        "AI decision-model API key",
+        env_key_needs_env_url=True,
+    ),
+)
+_KEY_SPEC = {spec.key_attr: spec for spec in _KEY_SPECS}
+
+
+@dataclass(frozen=True)
+class _StoredKey:
+    """A stored key and the base URL it was saved for."""
+
+    key: str
+    bound_url: str | None
+    #: False for a row written before keys were tied to their URL: plain text, no URL.
+    bound: bool
+
+
+#: Marks a stored key row as the bound format. Before it, any string was accepted as a key, so a
+#: key that is itself JSON with a "key" member must not be mistaken for a bound record.
+_KEY_RECORD_VERSION = 1
+
+
+def _key_record(bound_url: str | None, key: str) -> str:
+    return json.dumps({"v": _KEY_RECORD_VERSION, "base_url": bound_url, "key": key})
+
+
+def _is_key_record(record: object, spec: _KeySpec) -> bool:
+    if not isinstance(record, dict):
+        return False
+    if record.get("v") == _KEY_RECORD_VERSION:
+        return True
+    # Decision keys were stored as {"base_url", "key"} without the marker for a while; nothing
+    # else was ever stored under that row, so the exact shape is unambiguous there.
+    return spec.key_attr == "decision_api_key" and set(record) == {"base_url", "key"}
+
+
+async def _read_stored_key(db: AsyncSession, spec: _KeySpec) -> _StoredKey | None:
+    """Read a stored key row: a bound record (see _key_record), or plain text from before binding."""
+    raw = await _get_stored_key(db, spec.db_key)
+    if raw is None:
+        return None
+    try:
+        record = json.loads(raw)
+    except json.JSONDecodeError:
+        record = None
+    if not _is_key_record(record, spec):
+        return _StoredKey(key=raw, bound_url=None, bound=False)
+    key = record.get("key")
+    if not isinstance(key, str) or not key:
+        return None
+    bound_url = record.get("base_url")
+    return _StoredKey(
+        key=key,
+        bound_url=normalize_base_url(bound_url) if isinstance(bound_url, str) else None,
+        bound=True,
+    )
+
+
+async def _store_key(db: AsyncSession, spec: _KeySpec, value: str | None) -> None:
+    """Set or clear a stored key, bound to the base URL in effect now.
+
+    Save the base URL first: the key is only ever sent to the URL it was saved with.
+    """
+    record = None
+    if value:
+        bound_url = getattr(await resolve_config(db), spec.url_attr)
+        record = _key_record(bound_url, value)
+    await _set_stored_key(db, spec.db_key, record, spec.label)
+
+
 async def get_stored_api_key(db: AsyncSession) -> str | None:
-    """Read the stored chat-provider API key. None when unset."""
-    return await _get_stored_key(db, API_KEY_DB_KEY)
+    """Read the stored chat-provider API key, whichever base URL it belongs to. None when unset."""
+    stored = await _read_stored_key(db, _KEY_SPEC["api_key"])
+    return stored.key if stored else None
 
 
 async def set_stored_api_key(db: AsyncSession, value: str | None) -> None:
-    """Set or clear the stored chat-provider API key."""
-    await _set_stored_key(db, API_KEY_DB_KEY, value, "AI API key")
+    """Set or clear the stored chat-provider API key, bound to the chat base URL in effect now."""
+    await _store_key(db, _KEY_SPEC["api_key"], value)
 
 
 async def get_stored_stt_api_key(db: AsyncSession) -> str | None:
-    """Read the stored speech-to-text API key (#363). None when unset."""
-    return await _get_stored_key(db, STT_API_KEY_DB_KEY)
+    """Read the stored speech-to-text API key (#363), whichever base URL it belongs to."""
+    stored = await _read_stored_key(db, _KEY_SPEC["stt_api_key"])
+    return stored.key if stored else None
 
 
 async def set_stored_stt_api_key(db: AsyncSession, value: str | None) -> None:
-    """Set or clear the stored speech-to-text API key (#363)."""
-    await _set_stored_key(db, STT_API_KEY_DB_KEY, value, "AI speech-to-text API key")
+    """Set or clear the stored speech-to-text API key, bound to the STT base URL in effect now."""
+    await _store_key(db, _KEY_SPEC["stt_api_key"], value)
+
+
+async def get_stored_decision_api_key(db: AsyncSession) -> str | None:
+    """Read the stored decision-model API key, whichever base URL it belongs to. None when unset."""
+    stored = await _read_stored_key(db, _KEY_SPEC["decision_api_key"])
+    return stored.key if stored else None
+
+
+async def set_stored_decision_api_key(db: AsyncSession, value: str | None) -> None:
+    """Set or clear the stored decision-model API key, bound to the decision base URL in effect now."""
+    await _store_key(db, _KEY_SPEC["decision_api_key"], value)
+
+
+async def upgrade_stored_keys(db: AsyncSession) -> None:
+    """Bind keys stored before keys were tied to their URL to the base URL in effect now.
+
+    Run once at startup. A plain-text key row becomes ``{"base_url", "key"}`` for the URL that is
+    configured now, so an existing install keeps working, and a later URL change no longer carries
+    the key along. A key with no base URL in effect is left as it is: it is not used until it is
+    entered again. Running it twice changes nothing.
+    """
+    # A failure only leaves the old keys unused (resolve_config never sends an unbound key), so
+    # it is logged rather than allowed to stop Spoolman starting.
+    try:
+        config = await _resolve_values(db)
+        for spec in _KEY_SPECS:
+            stored = await _read_stored_key(db, spec)
+            url = getattr(config, spec.url_attr)
+            if stored is None or stored.bound or not url:
+                continue
+            await _set_stored_key(db, spec.db_key, _key_record(url, stored.key), spec.label)
+            logger.info("%s is now tied to its base URL.", spec.label)
+    except Exception:
+        logger.exception("Could not tie stored AI keys to their base URLs; they stay unused until entered again.")
+
+
+def _key_problem(spec: _KeySpec, config: AIConfig, stored: _StoredKey | None) -> str | None:
+    """Why the key in ``config`` must not be sent to the base URL in effect, or None when it may."""
+    source = config.sources.get(spec.key_attr)
+    if source == "env":
+        if spec.env_key_needs_env_url and config.sources.get(spec.url_attr) != "env":
+            return "the base URL is not set by environment variable too"
+        return None
+    if source != "db" or stored is None:
+        return None
+    if not stored.bound:
+        return "it was saved before keys were tied to their base URL; enter it again"
+    if stored.bound_url is None or stored.bound_url != getattr(config, spec.url_attr):
+        return "it was saved for a different base URL"
+    return None
+
+
+async def _keys_for_endpoints(db: AsyncSession, config: AIConfig) -> None:
+    """Drop every key that belongs to a different endpoint than the one now in effect.
+
+    Otherwise changing a base URL alone would send the old key to the new host.
+    """
+    for spec in _KEY_SPECS:
+        stored = await _read_stored_key(db, spec)
+        setattr(config, f"{spec.key_attr}_stored", stored is not None)
+        reason = _key_problem(spec, config, stored)
+        if reason is None:
+            _state.key_warnings.pop(spec.key_attr, None)
+            continue
+        setattr(config, spec.key_attr, None)
+        if config.sources.get(spec.key_attr) == "db":
+            del config.sources[spec.key_attr]
+        # Without a base URL nothing is sent anyway, so there is nothing to warn about.
+        if getattr(config, spec.url_attr) and _state.key_warnings.get(spec.key_attr) != reason:
+            _state.key_warnings[spec.key_attr] = reason
+            logger.warning("Not using the %s: %s.", spec.label, reason)
 
 
 # --- Config resolution -------------------------------------------------------------
@@ -259,8 +463,8 @@ def normalize_base_url(value: str | None) -> str | None:
     return value.rstrip("/") or None
 
 
-async def resolve_config(db: AsyncSession) -> AIConfig:
-    """Resolve the effective provider config: env vars win over DB settings."""
+async def _resolve_values(db: AsyncSession) -> AIConfig:
+    """Env-over-DB values with URLs normalised, before any key is checked against its URL."""
     config = AIConfig()
     for attr, env_name, setting_key in (
         ("base_url", ENV_BASE_URL, SETTING_BASE_URL),
@@ -268,6 +472,8 @@ async def resolve_config(db: AsyncSession) -> AIConfig:
         ("vision_model", ENV_VISION_MODEL, SETTING_VISION_MODEL),
         ("stt_base_url", ENV_STT_BASE_URL, SETTING_STT_BASE_URL),
         ("stt_model", ENV_STT_MODEL, SETTING_STT_MODEL),
+        ("decision_base_url", ENV_DECISION_BASE_URL, SETTING_DECISION_BASE_URL),
+        ("decision_model", ENV_DECISION_MODEL, SETTING_DECISION_MODEL),
     ):
         env_value = _env(env_name)
         if env_value is not None:
@@ -279,22 +485,30 @@ async def resolve_config(db: AsyncSession) -> AIConfig:
                 setattr(config, attr, db_value)
                 config.sources[attr] = "db"
 
-    for attr, env_name, getter in (
-        ("api_key", ENV_API_KEY, get_stored_api_key),
-        ("stt_api_key", ENV_STT_API_KEY, get_stored_stt_api_key),
-    ):
-        env_key = _env(env_name)
+    for spec in _KEY_SPECS:
+        env_key = _env(spec.env_key)
         if env_key is not None:
-            setattr(config, attr, env_key)
-            config.sources[attr] = "env"
+            setattr(config, spec.key_attr, env_key)
+            config.sources[spec.key_attr] = "env"
         else:
-            stored = await getter(db)
+            stored = await _read_stored_key(db, spec)
             if stored is not None:
-                setattr(config, attr, stored)
-                config.sources[attr] = "db"
+                setattr(config, spec.key_attr, stored.key)
+                config.sources[spec.key_attr] = "db"
 
     config.base_url = normalize_base_url(config.base_url)
     config.stt_base_url = normalize_base_url(config.stt_base_url)
+    config.decision_base_url = normalize_base_url(config.decision_base_url)
+    return config
+
+
+async def resolve_config(db: AsyncSession) -> AIConfig:
+    """Resolve the effective provider config: env vars win over DB settings.
+
+    A stored key is only returned with the base URL it was saved for (see _keys_for_endpoints).
+    """
+    config = await _resolve_values(db)
+    await _keys_for_endpoints(db, config)
     return config
 
 

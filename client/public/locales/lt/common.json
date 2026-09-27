@@ -1507,5 +1507,13 @@
     "delete_error": "Nepavyko ištrinti užsakymo. Bandykite dar kartą.",
     "delete_confirm": "Ištrinti šį užsakymą? Jo eilutės taip pat bus ištrintos.",
     "filaments_count_few": "{{count}} gijos"
+  },
+  "mobile_nav": {
+    "more": "Daugiau",
+    "more_pages": "Daugiau puslapių",
+    "about": "Apie",
+    "sponsor_upstream": "Paremti pirminį Spoolman autorių",
+    "documentation": "Dokumentacija",
+    "report_issue": "Pranešti apie problemą"
   }
 }

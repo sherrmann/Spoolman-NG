@@ -3,10 +3,20 @@ import { useTranslate } from "@refinedev/core";
 import { useQueryClient } from "@tanstack/react-query";
 import { Alert, AutoComplete, Button, Checkbox, Divider, Form, Input, Select, Space, Typography, message } from "antd";
 import { useEffect, useState } from "react";
-import { AIProbeResult, AITriState, useAIProbe, useAIStatus, useSetAIKey, useSetSTTKey } from "../../utils/queryAI";
+import {
+  AIDecisionTestResult,
+  AIProbeResult,
+  AITriState,
+  useAIProbe,
+  useAIStatus,
+  useDecisionTest,
+  useSetAIKey,
+  useSetDecisionKey,
+  useSetSTTKey,
+} from "../../utils/queryAI";
 import { parseBooleanSettingValue, useGetSettings, useSetSetting } from "../../utils/querySettings";
 import { getBasePath } from "../../utils/url";
-import { AI_PRESETS } from "./aiPresets";
+import { AI_PRESETS, DECISION_PRESETS } from "./aiPresets";
 import { OllamaModelsSection } from "./ollamaModels";
 
 const { Text, Paragraph } = Typography;
@@ -17,9 +27,13 @@ const FEATURE_ROWS: {
   settingKey: string;
   statusKey: string;
   labelKey: string;
+  // Shown as secondary text under the row's label, whether or not it is blocked.
+  helpKey?: string;
   requiresVision?: boolean;
   // Voice (#363) needs a speech-to-text endpoint configured, not the chat endpoint.
   requiresStt?: boolean;
+  // The duplicate manufacturer check needs a decision model endpoint, not the chat endpoint.
+  requiresDecision?: boolean;
   // Most features need a configured LLM endpoint; the MCP server (#360) does not — it only
   // needs the toggle, so it stays enable-able even before an endpoint is set.
   requiresProvider?: boolean;
@@ -45,6 +59,14 @@ const FEATURE_ROWS: {
     labelKey: "settings.ai.features.voice",
     requiresProvider: false,
     requiresStt: true,
+  },
+  {
+    settingKey: "ai_feature_duplicate_check",
+    statusKey: "duplicate_check",
+    labelKey: "settings.ai.features.duplicate_check",
+    helpKey: "settings.ai.features.duplicate_check_hint",
+    requiresProvider: false,
+    requiresDecision: true,
   },
 ];
 
@@ -73,11 +95,15 @@ export function AISettings() {
   const probe = useAIProbe();
   const setKey = useSetAIKey();
   const setSTTKey = useSetSTTKey();
+  const setDecisionKey = useSetDecisionKey();
+  const decisionTest = useDecisionTest();
   const setBaseUrl = useSetSetting<string>("ai_base_url");
   const setModel = useSetSetting<string>("ai_model");
   const setVisionModel = useSetSetting<string>("ai_vision_model");
   const setSTTBaseUrl = useSetSetting<string>("ai_stt_base_url");
   const setSTTModel = useSetSetting<string>("ai_stt_model");
+  const setDecisionBaseUrl = useSetSetting<string>("ai_decision_base_url");
+  const setDecisionModel = useSetSetting<string>("ai_decision_model");
   const setVoiceAutosend = useSetSetting<boolean>("ai_voice_autosend");
   const featureMutations = {
     ai_feature_chat: useSetSetting<boolean>("ai_feature_chat"),
@@ -85,11 +111,13 @@ export function AISettings() {
     ai_feature_nl_search: useSetSetting<boolean>("ai_feature_nl_search"),
     ai_feature_mcp: useSetSetting<boolean>("ai_feature_mcp"),
     ai_feature_voice: useSetSetting<boolean>("ai_feature_voice"),
+    ai_feature_duplicate_check: useSetSetting<boolean>("ai_feature_duplicate_check"),
   } as Record<string, ReturnType<typeof useSetSetting<boolean>>>;
   const [form] = Form.useForm();
   const [messageApi, contextHolder] = message.useMessage();
   // The most recent probe: either just run from this form, or the server-cached one.
   const [probeResult, setProbeResult] = useState<AIProbeResult | null>(null);
+  const [decisionTestResult, setDecisionTestResult] = useState<AIDecisionTestResult | null>(null);
   const capabilities = probeResult ?? status.data?.capabilities ?? null;
   const envLocked = new Set(status.data?.env_locked ?? []);
 
@@ -114,15 +142,29 @@ export function AISettings() {
         vision_model: status.data.vision_model ?? "",
         stt_base_url: status.data.stt_base_url ?? "",
         stt_model: status.data.stt_model ?? "",
+        decision_base_url: status.data.decision_base_url ?? "",
+        decision_model: status.data.decision_model ?? "",
       });
     }
-    // The api_key/stt_api_key fields are deliberately never populated: the server never returns them.
+    // The api_key/stt_api_key/decision_api_key fields are deliberately never populated: the
+    // server never returns them.
   }, [status.data, form]);
 
   const applyPreset = (key: string) => {
     const preset = AI_PRESETS.find((entry) => entry.key === key);
     if (preset && !envLocked.has("base_url")) {
       form.setFieldValue("base_url", preset.baseUrl);
+    }
+  };
+
+  const applyDecisionPreset = (key: string) => {
+    const preset = DECISION_PRESETS.find((entry) => entry.key === key);
+    if (!preset) return;
+    if (!envLocked.has("decision_base_url")) {
+      form.setFieldValue("decision_base_url", preset.baseUrl);
+    }
+    if (!envLocked.has("decision_model")) {
+      form.setFieldValue("decision_model", preset.model);
     }
   };
 
@@ -137,6 +179,17 @@ export function AISettings() {
     probe.mutate(overrides, { onSuccess: setProbeResult });
   };
 
+  const runDecisionTest = async () => {
+    const values = form.getFieldsValue();
+    const overrides: Record<string, string> = {};
+    for (const field of ["decision_base_url", "decision_model"] as const) {
+      if (!envLocked.has(field)) overrides[field.replace("decision_", "")] = values[field] ?? "";
+    }
+    // Only send a key override when the user typed one; otherwise the stored/env key is used.
+    if (values.decision_api_key) overrides.api_key = values.decision_api_key;
+    decisionTest.mutate(overrides, { onSuccess: setDecisionTestResult });
+  };
+
   const onFinish = async (values: {
     base_url?: string;
     model?: string;
@@ -145,6 +198,9 @@ export function AISettings() {
     stt_base_url?: string;
     stt_model?: string;
     stt_api_key?: string;
+    decision_base_url?: string;
+    decision_model?: string;
+    decision_api_key?: string;
   }) => {
     try {
       if (!envLocked.has("base_url")) await setBaseUrl.mutateAsync(values.base_url ?? "");
@@ -152,6 +208,8 @@ export function AISettings() {
       if (!envLocked.has("vision_model")) await setVisionModel.mutateAsync(values.vision_model ?? "");
       if (!envLocked.has("stt_base_url")) await setSTTBaseUrl.mutateAsync(values.stt_base_url ?? "");
       if (!envLocked.has("stt_model")) await setSTTModel.mutateAsync(values.stt_model ?? "");
+      if (!envLocked.has("decision_base_url")) await setDecisionBaseUrl.mutateAsync(values.decision_base_url ?? "");
+      if (!envLocked.has("decision_model")) await setDecisionModel.mutateAsync(values.decision_model ?? "");
       if (values.api_key) {
         await setKey.mutateAsync(values.api_key);
         form.setFieldValue("api_key", "");
@@ -159,6 +217,10 @@ export function AISettings() {
       if (values.stt_api_key) {
         await setSTTKey.mutateAsync(values.stt_api_key);
         form.setFieldValue("stt_api_key", "");
+      }
+      if (values.decision_api_key) {
+        await setDecisionKey.mutateAsync(values.decision_api_key);
+        form.setFieldValue("decision_api_key", "");
       }
       messageApi.success(t("notifications.saveSuccessful"));
     } catch (error) {
@@ -211,7 +273,7 @@ export function AISettings() {
             autoComplete="off"
           />
         </Form.Item>
-        {status.data?.api_key_set && !envLocked.has("api_key") && (
+        {status.data?.api_key_stored && !envLocked.has("api_key") && (
           <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
             <Button size="small" loading={setKey.isPending} onClick={() => setKey.mutate(null)}>
               {t("settings.ai.api_key.clear")}
@@ -259,7 +321,7 @@ export function AISettings() {
             autoComplete="off"
           />
         </Form.Item>
-        {status.data?.stt_api_key_set && !envLocked.has("stt_api_key") && (
+        {status.data?.stt_api_key_stored && !envLocked.has("stt_api_key") && (
           <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
             <Button size="small" loading={setSTTKey.isPending} onClick={() => setSTTKey.mutate(null)}>
               {t("settings.ai.api_key.clear")}
@@ -274,6 +336,84 @@ export function AISettings() {
         >
           <Input placeholder="whisper-1" disabled={envLocked.has("stt_model")} />
         </Form.Item>
+
+        <Divider orientation="left" plain>
+          {t("settings.ai.decision.title")}
+        </Divider>
+        <Paragraph type="secondary">{t("settings.ai.decision.hint")}</Paragraph>
+        <Form.Item label={t("settings.ai.decision.preset.label")}>
+          <Select
+            placeholder={t("settings.ai.preset.placeholder")}
+            options={DECISION_PRESETS.map((preset) => ({ value: preset.key, label: preset.label }))}
+            onChange={applyDecisionPreset}
+            disabled={envLocked.has("decision_base_url")}
+            data-testid="decision-preset"
+          />
+        </Form.Item>
+        <Form.Item
+          label={t("settings.ai.decision.base_url.label")}
+          name="decision_base_url"
+          extra={envLockedHint("decision_base_url")}
+          tooltip={t("settings.ai.decision.base_url.tooltip")}
+          rules={[{ pattern: /^https?:\/\/.+$/, message: t("settings.ai.base_url.invalid") }]}
+        >
+          <Input placeholder="https://api.typesafe.ai" disabled={envLocked.has("decision_base_url")} />
+        </Form.Item>
+        <Form.Item
+          label={t("settings.ai.decision.api_key.label")}
+          name="decision_api_key"
+          extra={envLockedHint("decision_api_key")}
+        >
+          <Input.Password
+            placeholder={
+              status.data?.decision_api_key_set
+                ? t("settings.ai.api_key.placeholder_set")
+                : t("settings.ai.api_key.placeholder_unset")
+            }
+            disabled={envLocked.has("decision_api_key")}
+            autoComplete="off"
+          />
+        </Form.Item>
+        {status.data?.decision_api_key_stored && !envLocked.has("decision_api_key") && (
+          <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
+            <Button size="small" loading={setDecisionKey.isPending} onClick={() => setDecisionKey.mutate(null)}>
+              {t("settings.ai.api_key.clear")}
+            </Button>
+          </Form.Item>
+        )}
+        <Form.Item
+          label={t("settings.ai.decision.model.label")}
+          name="decision_model"
+          extra={envLockedHint("decision_model")}
+          tooltip={t("settings.ai.decision.model.tooltip")}
+        >
+          <Input placeholder="jev-latest" disabled={envLocked.has("decision_model")} />
+        </Form.Item>
+        <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
+          <Button onClick={runDecisionTest} loading={decisionTest.isPending}>
+            {t("settings.ai.decision.test")}
+          </Button>
+        </Form.Item>
+        {decisionTestResult && (
+          <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
+            {decisionTestResult.ok ? (
+              <div data-testid="decision-test-result">
+                <CheckCircleOutlined style={{ color: "#52c41a" }} />{" "}
+                {t("settings.ai.decision.test_success", {
+                  latency: decisionTestResult.latency_ms,
+                  model: decisionTestResult.model,
+                })}
+              </div>
+            ) : (
+              <Alert
+                type="warning"
+                showIcon
+                data-testid="decision-test-result"
+                message={decisionTestResult.error ?? t("settings.ai.decision.test_failed")}
+              />
+            )}
+          </Form.Item>
+        )}
 
         <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
           <Space>
@@ -331,6 +471,8 @@ export function AISettings() {
             reasonKey = "settings.ai.features.requires_stt";
           } else if (row.requiresVision && capabilities?.vision === "no") {
             reasonKey = "settings.ai.features.requires_vision";
+          } else if (row.requiresDecision && !status.data?.decision_configured) {
+            reasonKey = "settings.ai.features.requires_decision";
           }
           // A blocked toggle can always be turned OFF, never ON.
           const disabled = reasonKey !== null && !enabled;
@@ -344,6 +486,13 @@ export function AISettings() {
               >
                 {t(row.labelKey)}
               </Checkbox>
+              {row.helpKey && (
+                <div>
+                  <Text type="secondary" style={{ marginLeft: 24 }}>
+                    {t(row.helpKey)}
+                  </Text>
+                </div>
+              )}
               {reasonKey && (
                 <div>
                   <Text type="secondary" style={{ marginLeft: 24 }}>

@@ -635,5 +635,11 @@
 	"settings_import_export_no_file": "Vælg venligst en fil først.",
 	"settings_import_export_result": "{created} oprettet, {updated} opdateret, {skipped} sprunget over.",
 	"settings_import_export_import_errors": "Importen mislykkedes",
-	"filament_fields_spool_count": "Spoler"
+	"filament_fields_spool_count": "Spoler",
+	"mobile_nav_more": "Mere",
+	"mobile_nav_more_pages": "Flere sider",
+	"mobile_nav_about": "Om",
+	"mobile_nav_sponsor_upstream": "Støt Spoolmans oprindelige forfatter",
+	"mobile_nav_documentation": "Dokumentation",
+	"mobile_nav_report_issue": "Rapportér et problem"
 }

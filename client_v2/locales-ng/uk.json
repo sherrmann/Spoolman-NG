@@ -645,5 +645,11 @@
 	"settings_import_export_no_file": "Спочатку виберіть файл.",
 	"settings_import_export_result": "Створено: {created}, оновлено: {updated}, пропущено: {skipped}.",
 	"settings_import_export_import_errors": "Імпорт не вдався",
-	"filament_fields_spool_count": "Котушки"
+	"filament_fields_spool_count": "Котушки",
+	"mobile_nav_more": "Ще",
+	"mobile_nav_more_pages": "Інші сторінки",
+	"mobile_nav_about": "Про програму",
+	"mobile_nav_sponsor_upstream": "Підтримати початкового автора Spoolman",
+	"mobile_nav_documentation": "Документація",
+	"mobile_nav_report_issue": "Повідомити про проблему"
 }

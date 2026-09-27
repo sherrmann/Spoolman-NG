@@ -645,5 +645,11 @@
 	"settings_import_export_no_file": "Najpierw wybierz plik.",
 	"settings_import_export_result": "Utworzono: {created}, zaktualizowano: {updated}, pominięto: {skipped}.",
 	"settings_import_export_import_errors": "Import nie powiódł się",
-	"filament_fields_spool_count": "Szpule"
+	"filament_fields_spool_count": "Szpule",
+	"mobile_nav_more": "Więcej",
+	"mobile_nav_more_pages": "Więcej stron",
+	"mobile_nav_about": "Informacje",
+	"mobile_nav_sponsor_upstream": "Wesprzyj pierwotnego autora Spoolmana",
+	"mobile_nav_documentation": "Dokumentacja",
+	"mobile_nav_report_issue": "Zgłoś problem"
 }

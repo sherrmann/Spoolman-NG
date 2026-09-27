@@ -171,7 +171,7 @@
 			flex-direction: column;
 			align-items: center;
 			justify-content: center;
-			gap: 3px;
+			gap: 2px;
 			padding: 0 2px;
 			border: none;
 			background: none;
@@ -180,6 +180,19 @@
 			font-size: 11px;
 			text-decoration: none;
 			cursor: pointer;
+		}
+		/* Narrow phones: a notch smaller, so single long words ("Bestellungen", "Bibliothèque")
+		   still fit a fifth of a 320px screen where the browser cannot hyphenate them. */
+		@media (max-width: 360px) {
+			.item {
+				font-size: 10px;
+			}
+		}
+		@media (max-width: 340px) {
+			.item {
+				font-size: 9.5px;
+				padding: 0;
+			}
 		}
 		.item.active {
 			color: var(--accent-soft);
@@ -196,11 +209,19 @@
 			left: 14px;
 			margin: 0;
 		}
+		/* Up to two lines: in most languages "Low stock" and the like are two words that do not
+		   fit a fifth of a phone's width on one line. A single word that is still too long is
+		   hyphenated where the browser knows the language, else cut off with an ellipsis. */
 		.label {
 			max-width: 100%;
+			display: -webkit-box;
+			-webkit-box-orient: vertical;
+			-webkit-line-clamp: 2;
+			line-clamp: 2;
 			overflow: hidden;
-			text-overflow: ellipsis;
-			white-space: nowrap;
+			text-align: center;
+			line-height: 1.15;
+			hyphens: auto;
 		}
 
 		.scrim {

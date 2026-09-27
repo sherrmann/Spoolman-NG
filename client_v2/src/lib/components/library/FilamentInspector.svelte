@@ -336,7 +336,8 @@
 					/>
 				</span>
 				<span class="rem mono">{weightAuto(s.remaining)}</span>
-				<span class="loc">{s.location ?? ''}</span>
+				<!-- Spoolman NG fork addition: the title shows a location the row has cut short. -->
+				<span class="loc" title={s.location ?? ''}>{s.location ?? ''}</span>
 			</a>
 		{/each}
 	</div>
@@ -603,7 +604,14 @@
 	}
 	.loc {
 		color: var(--text-dim);
-		flex: none;
+		/* Spoolman NG fork addition: was flex: none, so a long location name with no spaces
+		   ("WeighShelf-3b7f-110") pushed the row past the phone layout's bottom sheet, which then
+		   scrolled sideways. It gives way now and is cut off with an ellipsis instead. */
+		flex: 0 1 auto;
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 	/* Specs on the left, the manufacturer's own fields on the right — same split as
 	   the manufacturer view, which puts its filament list in the second column. */

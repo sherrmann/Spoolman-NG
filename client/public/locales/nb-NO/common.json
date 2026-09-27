@@ -1500,5 +1500,13 @@
     "update_error": "Kunne ikke oppdatere bestillingen. Prøv igjen.",
     "delete_error": "Kunne ikke slette bestillingen. Prøv igjen.",
     "delete_confirm": "Slette denne bestillingen? Linjene slettes også."
+  },
+  "mobile_nav": {
+    "more": "Mer",
+    "more_pages": "Flere sider",
+    "about": "Om",
+    "sponsor_upstream": "Støtt den opprinnelige utvikleren av Spoolman",
+    "documentation": "Dokumentasjon",
+    "report_issue": "Rapporter et problem"
   }
 }

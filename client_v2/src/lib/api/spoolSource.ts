@@ -28,7 +28,7 @@ import type { EntityType } from './fields';
 import { type ExternalFilament } from './external';
 import { searchAll } from './search';
 // Spoolman NG fork addition (#415): SpoolmanDB's catalogue fields on an imported filament.
-import { catalogueFromExternal } from '$lib/ng/filamentCatalogue';
+import { catalogueForCreate, catalogueFromExternal, type CatalogueFields } from '$lib/ng/filamentCatalogue';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Json = Record<string, any>;
@@ -57,6 +57,8 @@ export interface NewFilamentDraft {
 	extra?: Extra;
 	/** Custom-field values for the manufacturer, applied only if it is created here. */
 	vendorExtra?: Extra;
+	/** Spoolman NG fork addition: the SpoolmanDB catalogue fields. */
+	ng?: Partial<CatalogueFields>;
 }
 
 // Map a filter chip prop → API query param. Values are quoted for exact match.
@@ -345,7 +347,8 @@ class HttpSpoolSource {
 			article_number: draft.articleNumber || undefined,
 			comment: draft.comment || undefined,
 			extra: draft.extra && Object.keys(draft.extra).length ? draft.extra : undefined,
-			...colorFieldsToApi(draft.colors, draft.multiColorDirection)
+			...colorFieldsToApi(draft.colors, draft.multiColorDirection),
+			...catalogueForCreate(draft.ng)
 		};
 		const created = await postJson<Json>('/filament', body);
 		const f = mapFilament(created);

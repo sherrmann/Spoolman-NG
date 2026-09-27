@@ -635,5 +635,11 @@
 	"settings_import_export_no_file": "Bitte wähle zuerst eine Datei aus.",
 	"settings_import_export_result": "{created} erstellt, {updated} aktualisiert, {skipped} übersprungen.",
 	"settings_import_export_import_errors": "Import fehlgeschlagen",
-	"filament_fields_spool_count": "Spulen"
+	"filament_fields_spool_count": "Spulen",
+	"mobile_nav_more": "Mehr",
+	"mobile_nav_more_pages": "Weitere Seiten",
+	"mobile_nav_about": "Über",
+	"mobile_nav_sponsor_upstream": "Den ursprünglichen Autor von Spoolman unterstützen",
+	"mobile_nav_documentation": "Dokumentation",
+	"mobile_nav_report_issue": "Problem melden"
 }

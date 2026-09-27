@@ -1,7 +1,7 @@
 """Vendor related endpoints."""
 
 import asyncio
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, Query, Request, WebSocket, WebSocketDisconnect
 from fastapi.encoders import jsonable_encoder
@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from spoolman import duplicates
 from spoolman.api.v1.models import Message, Vendor, VendorEvent
 from spoolman.database import vendor
 from spoolman.database.database import get_db_session
@@ -255,6 +256,49 @@ async def create(  # noqa: ANN201
     # The stock aggregates are a read-time view; POST returns the stored resource unchanged so the
     # create response shape stays identical to before this feature (integrations POSTing are unaffected).
     return Vendor.from_db(db_item)
+
+
+class SimilarVendorRequest(BaseModel):
+    name: str = Field(max_length=64, description="The vendor name being typed.")
+    exclude_id: int | None = Field(None, description="A vendor to leave out, such as the one being renamed.")
+
+
+class SimilarVendor(BaseModel):
+    id: int
+    name: str
+    probability: float | None = Field(None, description="The decision model's probability; null for an exact match.")
+
+
+class SimilarVendorResponse(BaseModel):
+    exact: SimilarVendor | None = Field(None, description="A vendor with the same name, ignoring case and punctuation.")
+    suggestion: SimilarVendor | None = Field(
+        None,
+        description="A vendor the decision model thinks is the same company. Only with the duplicate check on.",
+    )
+    source: Literal["exact", "model"] | None = Field(None, description="Which check produced the hint.")
+
+
+@router.post(
+    "/similar",
+    name="Find a similar vendor",
+    description=(
+        "Check whether a vendor name duplicates an existing vendor, before creating it. An exact match "
+        "(ignoring case, spacing and punctuation) is always checked. With the duplicate-check AI feature "
+        "on and a decision model configured, the model is also asked whether the name is an existing "
+        "vendor written differently; that sends the name and the existing vendor names to the decision "
+        "endpoint. Never creates anything, and a failing model gives no suggestion rather than an error."
+    ),
+)
+async def similar(
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+    body: SimilarVendorRequest,
+) -> SimilarVendorResponse:
+    result = await duplicates.similar_vendor(db, body.name, exclude_id=body.exclude_id)
+
+    def _out(match: duplicates.Match | None) -> SimilarVendor | None:
+        return None if match is None else SimilarVendor(id=match.id, name=match.name, probability=match.probability)
+
+    return SimilarVendorResponse(exact=_out(result.exact), suggestion=_out(result.suggestion), source=result.source)
 
 
 @router.patch(

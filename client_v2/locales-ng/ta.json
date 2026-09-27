@@ -635,5 +635,11 @@
 	"settings_import_export_no_file": "முதலில் ஒரு கோப்பைத் தேர்ந்தெடுக்கவும்.",
 	"settings_import_export_result": "{created} உருவாக்கப்பட்டன, {updated} புதுப்பிக்கப்பட்டன, {skipped} தவிர்க்கப்பட்டன.",
 	"settings_import_export_import_errors": "இறக்குமதி தோல்வியடைந்தது",
-	"filament_fields_spool_count": "ச்பூல்கள்"
+	"filament_fields_spool_count": "ச்பூல்கள்",
+	"mobile_nav_more": "மேலும்",
+	"mobile_nav_more_pages": "மேலும் பக்கங்கள்",
+	"mobile_nav_about": "பற்றி",
+	"mobile_nav_sponsor_upstream": "Spoolman-இன் அசல் ஆசிரியரை ஆதரி",
+	"mobile_nav_documentation": "ஆவணங்கள்",
+	"mobile_nav_report_issue": "சிக்கலைப் புகாரளி"
 }

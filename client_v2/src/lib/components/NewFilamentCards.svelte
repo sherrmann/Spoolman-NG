@@ -19,6 +19,8 @@
 	import NumberInput from './NumberInput.svelte';
 	import Combobox from './Combobox.svelte';
 	import ExtraFieldsSection from './ExtraFieldsSection.svelte';
+	import NewFilamentCatalogueFields from '$lib/ng/components/NewFilamentCatalogueFields.svelte';
+	import DuplicateHint from '$lib/ng/components/DuplicateHint.svelte';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import type { Extra, Filament } from '$lib/types';
@@ -152,6 +154,7 @@
 	     while the typed name will create a manufacturer. Linking an existing one
 	     must not offer to rewrite its custom fields (#1055). -->
 	{#if vendorIsNew}
+		<DuplicateHint name={vendorTrimmed} onuse={(v) => (draft.vendorName = v.name)} />
 		<ExtraFieldsSection entity="vendor" extra={vendorExtra} onchange={onVendorExtra} />
 	{/if}
 </section>
@@ -314,6 +317,7 @@
 				<input bind:value={draft.comment} placeholder="—" />
 			</label>
 		</div>
+		<NewFilamentCatalogueFields bind:draft />
 	{/if}
 	<!-- Outside the advanced block: a custom field only exists because someone
 	     defined it, so it isn't an advanced detail to them. The section renders

@@ -29,6 +29,21 @@ the UI are stored in the database like other settings — except the API key:
 - **The API key is write-only.** It is stored outside the regular settings
   registry, no API endpoint ever returns it, and the UI only shows whether a key
   is set. Replace it by typing a new value; remove it with "Clear stored key".
+- **A stored key only goes to the base URL it was saved with.** Change the base
+  URL and the stored key counts as not set: enter the key for the new endpoint
+  (or clear the old one). Switching back to the original URL uses it again. This
+  holds for the chat, speech-to-text and decision-model keys alike, and the
+  connection tests follow it too: testing a different URL sends no saved key
+  unless you type one. Keys stored by an earlier version are tied to the base URL
+  in effect the first time the new version starts; one stored while its endpoint
+  had no base URL could never be used, and has to be entered again. Save the base
+  URL before the key: `POST /api/v1/ai/config` refuses a key (409) for an
+  endpoint with no base URL.
+- A key set by environment variable (`SPOOLMAN_AI_API_KEY`,
+  `SPOOLMAN_AI_STT_API_KEY`) is used with whatever base URL is in effect,
+  including one entered in Settings, so anyone who can change that URL can send
+  the key elsewhere. If that matters, set the URL by environment variable as
+  well, which locks it. The decision-model key is stricter; see below.
 - Setting or clearing the key (and running connection tests) requires an
   administrator account once user accounts exist. On a default no-auth install,
   anyone with network access to Spoolman can change settings — the same trust
@@ -359,14 +374,24 @@ the shortlisted filaments is the product on the label, the fuzzy order is kept.
 
 This is separate from the chat/tool-calling AI configured above. A decision
 model answers typed questions with probabilities rather than generating text, so
-it needs its own wire format and its own configuration, environment-only while
-this is a prototype:
+it needs its own wire format and its own configuration. Set it under
+**Settings → AI → Decision model**: pick a preset or enter the base URL, the
+API key and the model, save, and use **Test** to ask the endpoint one small
+question. The key is write-only and tied to its base URL, like the other AI
+keys (see Configuration above). The same values can be set by environment variables, which win field by
+field and lock the matching input in Settings. `SPOOLMAN_AI_DECISION_API_KEY`
+is only used together with `SPOOLMAN_AI_DECISION_BASE_URL`, for the same
+reason:
 
 | Environment variable | Purpose |
 |---|---|
 | `SPOOLMAN_AI_DECISION_BASE_URL` | The decision endpoint; required to enable reranking |
 | `SPOOLMAN_AI_DECISION_API_KEY` | Bearer token for the endpoint |
 | `SPOOLMAN_AI_DECISION_MODEL` | Model name (default `jev-latest`) |
+
+Reranking runs whenever a base URL is set; it has no separate feature toggle,
+because it only changes the order of a list Scan-to-Spool shows anyway.
+`poe match-rerank-eval` reads the environment variables only, not Settings.
 
 Two endpoints work today:
 
@@ -466,6 +491,44 @@ A pick counts as right when it is the same product as the labelled row: same mak
 material and weight, and the same diameter only when the label shows one. SpoolmanDB lists
 one product once per diameter, spool type and spool size.
 
+`--flip-diameter` swaps 1.75mm and 2.85mm/3.0mm readings, to see how much a misread diameter
+alone costs (meant for `--generated`; it also applies to photo readings when both are given, since
+it acts on whatever readings are in play). `--dump-results FILE` writes one JSON line per case
+with its shortlisted/top-1 verdicts, so two runs -- before and after a scoring change -- can be
+compared case by case with `--compare OLD.jsonl NEW.jsonl`, which needs neither a catalog nor a
+decision endpoint.
+
+## Duplicate manufacturer check
+
+When you create a manufacturer, or type a new one's name while adding a filament,
+Spoolman checks whether it already exists and says so under the name field.
+Where the name is typed as part of a filament, a button uses the existing
+manufacturer instead. It never blocks saving.
+
+- **Exact matches are always checked**, with no AI involved: names that are equal
+  once case, spacing, punctuation and full-width or other compatibility forms are
+  ignored ("eSUN", "e-Sun" and "E SUN").
+- **Other spellings need the decision model.** Turn on *Duplicate manufacturer
+  check* under Settings → AI → Features; it needs a decision model endpoint (see
+  above). On each pause in typing, the typed name and up to 50 of your
+  manufacturers' names (the closest spellings, when you have more) go to that
+  endpoint as one Choice question, and it answers which existing manufacturer
+  this is, or none. "Bambu" and "Bambu Lab" are the kind of case this catches.
+  The answer is shown only when the model gives it a probability of at least 0.6.
+  A failed or slow request shows nothing.
+
+The check is `POST /api/v1/vendor/similar` (`{name, exclude_id}`), so an
+integration can use it too. It never creates anything.
+
+**Evaluating it.** `poe duplicate-eval` scores the exact check alone, and the
+exact check plus the model at several probability thresholds, on handwritten
+cases of real brands:
+
+```bash
+uv run poe duplicate-eval -- --baseline-only        # the exact check alone
+SPOOLMAN_AI_DECISION_BASE_URL=https://api.typesafe.ai SPOOLMAN_AI_DECISION_API_KEY=... uv run poe duplicate-eval
+```
+
 ## Privacy
 
 - With a **local endpoint** (Ollama, LM Studio, llama.cpp, vLLM on your own
@@ -475,7 +538,9 @@ one product once per diameter, spool type and spool size.
   Spoolman adds no telemetry and no middleman.
 - The **decision model** for Scan-to-Spool matching (prototype, above) is a
   separate cloud endpoint. When configured, it receives the label's text fields
-  and the shortlisted filaments' descriptions, never the photo.
+  and the shortlisted filaments' descriptions, never the photo. With the
+  duplicate manufacturer check on, it also receives the manufacturer name you
+  are typing and your manufacturers' names.
 - Feature toggles are all **off by default** and independent, so you can, for
   example, enable natural-language search against a local model and leave photo
   features off entirely.

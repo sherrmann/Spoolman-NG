@@ -133,7 +133,10 @@ async def test_transcribe_rejects_empty_upload(client: AsyncClient) -> None:
 
 
 async def test_stt_key_is_independent_of_chat_key(client: AsyncClient) -> None:
-    # Setting the chat key must not touch the STT key and vice versa.
+    # Setting the chat key must not touch the STT key and vice versa. Each key is bound to its
+    # own endpoint's base URL, so both URLs are set first.
+    await _set_setting(client, "ai_base_url", "http://chat:11434/v1")
+    await _set_setting(client, "ai_stt_base_url", "http://stt:9000/v1")
     await client.post("/api/v1/ai/config", json={"api_key": "chat-key"})
     after_chat = (await client.get("/api/v1/ai/status")).json()
     assert after_chat["api_key_set"] is True

@@ -1488,5 +1488,13 @@
     "update_error": "Sipariş güncellenemedi. Lütfen tekrar deneyin.",
     "delete_error": "Sipariş silinemedi. Lütfen tekrar deneyin.",
     "delete_confirm": "Bu sipariş silinsin mi? Satırları da silinecektir."
+  },
+  "mobile_nav": {
+    "more": "Diğer",
+    "more_pages": "Diğer sayfalar",
+    "about": "Hakkında",
+    "sponsor_upstream": "Spoolman'in asıl geliştiricisini destekle",
+    "documentation": "Belgeler",
+    "report_issue": "Sorun bildir"
   }
 }

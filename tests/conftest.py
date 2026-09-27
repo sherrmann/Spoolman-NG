@@ -17,8 +17,32 @@ collide there and make a fresh test see someone else's backup as already up to d
 
 import os
 import tempfile
+from collections.abc import AsyncIterator
 from pathlib import Path
+
+import pytest_asyncio
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 _TMP_DIR = Path(tempfile.mkdtemp(prefix="spoolman-unit-tests-"))
 
 os.environ.setdefault("SPOOLMAN_DIR_DATA", str(_TMP_DIR / "data"))
+
+
+@pytest_asyncio.fixture
+async def db_session() -> AsyncIterator[AsyncSession]:
+    """Yield a throwaway in-memory-SQLite DB session, schema created, for async resolve_config tests.
+
+    Kept minimal on purpose (no FastAPI app, no ASGI transport, unlike
+    tests/integration/conftest.py's ``client`` fixture): these tests only need a session that
+    spoolman.database.setting.update() and ai.set_stored_*_api_key() can write through.
+    """
+    # Imported here, not at the top: spoolman modules must load after SPOOLMAN_DIR_DATA is set.
+    from spoolman.database.models import Base  # noqa: PLC0415
+
+    engine = create_async_engine("sqlite+aiosqlite://")
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    session_maker = async_sessionmaker(engine, expire_on_commit=False)
+    async with session_maker() as session:
+        yield session
+    await engine.dispose()

@@ -1481,5 +1481,13 @@
     "update_error": "无法更新订单。请重试。",
     "delete_error": "无法删除订单。请重试。",
     "delete_confirm": "删除此订单？其订单行也将一并删除。"
+  },
+  "mobile_nav": {
+    "more": "更多",
+    "more_pages": "更多页面",
+    "about": "关于",
+    "sponsor_upstream": "赞助 Spoolman 原作者",
+    "documentation": "文档",
+    "report_issue": "反馈问题"
   }
 }
