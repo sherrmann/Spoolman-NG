@@ -203,7 +203,7 @@
 	.error {
 		margin: 0;
 		font-size: 13px;
-		color: var(--danger, #e5484d);
+		color: var(--danger);
 	}
 	.fld {
 		display: flex;
@@ -216,10 +216,10 @@
 	}
 	.fld input {
 		padding: 8px 10px;
-		background: var(--bg-elevated, var(--bg));
+		background: var(--bg);
 		color: var(--text);
 		border: 1px solid var(--border-strong);
-		border-radius: var(--radius-md, 8px);
+		border-radius: var(--radius-md);
 		font: inherit;
 	}
 	.foot {
@@ -230,8 +230,8 @@
 	.primary {
 		padding: 8px 16px;
 		border: 1px solid var(--border-strong);
-		border-radius: var(--radius-md, 8px);
-		background: var(--accent, #dc7734);
+		border-radius: var(--radius-md);
+		background: var(--accent-fill);
 		color: #fff;
 		font: inherit;
 		cursor: pointer;

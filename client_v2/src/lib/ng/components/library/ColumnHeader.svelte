@@ -113,7 +113,7 @@
 	.ng-col-header {
 		display: flex;
 		border-top: 1px solid var(--border);
-		background: var(--bg-subtle);
+		background: var(--surface-2);
 		/* Reserve the list's scrollbar width here too, or every fixed column would sit a
 		   scrollbar's width to the right of the cells below it on systems that show one. */
 		overflow: hidden;
