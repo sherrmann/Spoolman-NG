@@ -50,7 +50,7 @@
 		padding-left: 18px;
 		max-height: 180px;
 		overflow-y: auto;
-		font-family: var(--font-mono, monospace);
+		font-family: var(--font-mono);
 		font-size: 11.5px;
 	}
 </style>
