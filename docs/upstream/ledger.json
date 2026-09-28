@@ -1135,6 +1135,28 @@
       "released_in": "v2026.9.1"
     },
     {
+      "fork_issue": 441,
+      "upstream": [
+        1169
+      ],
+      "title": "",
+      "kind": "",
+      "pri": "",
+      "pr": null,
+      "released_in": null
+    },
+    {
+      "fork_issue": 442,
+      "upstream": [
+        1165
+      ],
+      "title": "",
+      "kind": "",
+      "pri": "",
+      "pr": null,
+      "released_in": null
+    },
+    {
       "fork_issue": 443,
       "upstream": [
         1136
@@ -1155,24 +1177,6 @@
       "title": "Add Bambu Lab AMS/Cloud integration to sync spool assignment and usage",
       "kind": "feature",
       "pri": "P1"
-    },
-    {
-      "fork_issue": 441,
-      "upstream": [
-        1169
-      ],
-      "title": "",
-      "kind": "",
-      "pri": ""
-    },
-    {
-      "fork_issue": 442,
-      "upstream": [
-        1165
-      ],
-      "title": "",
-      "kind": "",
-      "pri": ""
     }
   ],
   "skipped": [
