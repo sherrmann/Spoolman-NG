@@ -38,6 +38,7 @@
 	import { weightAuto } from '$lib/utils/format';
 	import { truncTitle } from '$lib/actions/truncated';
 	import Swatch from '$components/Swatch.svelte';
+	import Button from '$components/Button.svelte';
 	import BreakdownBar from '$lib/ng/components/BreakdownBar.svelte';
 	import Timeline from '$lib/ng/components/Timeline.svelte';
 	import UsageChart from '$lib/ng/components/UsageChart.svelte';
@@ -46,9 +47,8 @@
 	import MarkOrderedDialog from '$lib/ng/components/MarkOrderedDialog.svelte';
 	import { lowStockBadge } from '$lib/ng/lowStockBadge.svelte';
 	import Database from '@lucide/svelte/icons/database';
-	import Highlighter from '@lucide/svelte/icons/highlighter';
+	import Plus from '@lucide/svelte/icons/plus';
 	import Store from '@lucide/svelte/icons/store';
-	import ShoppingBag from '@lucide/svelte/icons/shopping-bag';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import LayoutGrid from '@lucide/svelte/icons/layout-grid';
 	import FlaskConical from '@lucide/svelte/icons/flask-conical';
@@ -246,11 +246,11 @@
 		<div class="state error">
 			<h2>{ng.home_load_error_title()}</h2>
 			<p>{ng.home_load_error_desc()}</p>
-			<button class="retry" onclick={refresh}>{ng.buttons_refresh()}</button>
+			<Button onclick={refresh}>{ng.buttons_refresh()}</Button>
 		</div>
 	{:else if !hasSpools}
 		<div class="empty-hero">
-			<div class="empty-hero-icon"><Database size={40} /></div>
+			<div class="empty-hero-icon"><Database size={24} /></div>
 			<h2>{ng.home_welcome()}</h2>
 			<p>
 				{#each description as node, i (i)}
@@ -258,22 +258,23 @@
 						>{:else}{node.text}{/if}
 				{/each}
 			</p>
-			<button class="empty-hero-btn" onclick={() => ui.openAddModal()}>{ng.spool_titles_create()}</button>
+			<Button onclick={() => ui.openAddModal()}>
+				<Plus size={15} />
+				{ng.spool_titles_create()}
+			</Button>
 		</div>
 	{:else}
 		<div class="kpi-grid">
 			<a class="kpi-card" href={spoolListHref}>
-				<Database class="kpi-bg-icon" />
 				<div class="kpi-label">{ng.spool_spool()}</div>
 				<div class="kpi-value">{spools.length}</div>
-				<div class="kpi-footer" style="color:var(--success)">
+				<div class="kpi-footer success">
 					+{registeredThisMonth}
 					{ng.home_kpi_this_month()}
 				</div>
 			</a>
 
 			<a class="kpi-card" href={filamentListHref}>
-				<Highlighter class="kpi-bg-icon" />
 				<div class="kpi-label">{ng.filament_filament()}</div>
 				<div class="kpi-value">{filaments.length}</div>
 				<div class="kpi-footer" style="color:var(--accent-soft)">
@@ -282,21 +283,19 @@
 			</a>
 
 			<a class="kpi-card" href={vendorListHref}>
-				<Store class="kpi-bg-icon" />
 				<div class="kpi-label">{ng.vendor_vendor()}</div>
 				<div class="kpi-value">{vendors.length}</div>
 				<div class="kpi-footer muted">{ng.home_kpi_top()}: {topVendorName}</div>
 			</a>
 
 			<a class="kpi-card" href={spoolListHref}>
-				<ShoppingBag class="kpi-bg-icon" />
 				<div class="kpi-label">{ng.home_total_weight()}</div>
 				<div class="kpi-value">{weightParts[0]} <span class="kpi-unit">{weightParts[1]}</span></div>
 				{#if lowStock.count > 0}
 					<div class="kpi-footer danger">
 						<TriangleAlert size={11} />
 						{lowStock.count}
-						{ng.home_low_stock().toUpperCase()}
+						{ng.home_low_stock()}
 					</div>
 				{:else}
 					<div class="kpi-footer muted">
@@ -579,21 +578,6 @@
 		font-size: 13px;
 		max-width: 360px;
 	}
-	.retry {
-		margin-top: 6px;
-		background: var(--accent-fill);
-		color: #fff;
-		border: none;
-		border-radius: var(--radius);
-		padding: 8px 16px;
-		font-size: 13px;
-		font-weight: 600;
-		cursor: pointer;
-	}
-	.retry:hover {
-		background: var(--accent-fill-hover);
-	}
-
 	.empty-hero {
 		flex: 1;
 		display: flex;
@@ -604,51 +588,32 @@
 		text-align: center;
 		gap: 0;
 	}
+	/* Quiet, like the Library's own empty state (FilamentList .empty-cta): a small tinted
+	   icon, a 15px title, a line of help and the primary button. No shadows or motion --
+	   upstream keeps those for things that float over the page. */
 	.empty-hero-icon {
-		width: 88px;
-		height: 88px;
-		border-radius: 20px;
+		width: 48px;
+		height: 48px;
+		border-radius: var(--radius-lg);
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		margin-bottom: 28px;
-		background: var(--accent-fill);
-		color: #fff;
-		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+		margin-bottom: 14px;
+		background: var(--accent-wash);
+		color: var(--accent-soft);
 	}
 	.empty-hero h2 {
-		font-size: 26px;
-		font-weight: 800;
-		letter-spacing: -0.03em;
-		margin: 0 0 8px 0;
+		font-size: 15px;
+		font-weight: 600;
+		color: var(--text-2);
+		margin: 0 0 6px 0;
 	}
 	.empty-hero p {
-		font-size: 14px;
+		font-size: 12.5px;
 		color: var(--text-dim);
-		margin: 0 0 32px 0;
+		margin: 0 0 16px 0;
 		max-width: 400px;
-		line-height: 1.6;
-	}
-	.empty-hero-btn {
-		height: 48px;
-		padding: 0 32px;
-		font-size: 15px;
-		font-weight: 700;
-		border-radius: 10px;
-		letter-spacing: 0.01em;
-		border: none;
-		background: var(--accent-fill);
-		color: #fff;
-		cursor: pointer;
-		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-		transition:
-			transform 0.15s ease,
-			box-shadow 0.15s ease;
-	}
-	.empty-hero-btn:hover {
-		background: var(--accent-fill-hover);
-		transform: translateY(-2px);
-		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+		line-height: 1.5;
 	}
 
 	/* KPI grid */
@@ -671,84 +636,64 @@
 		.kpi-card {
 			padding: 12px 14px;
 		}
-		.kpi-card :global(.kpi-bg-icon) {
-			display: none;
-		}
 		.kpi-card .kpi-value {
 			font-size: 22px;
 		}
 		.kpi-card .kpi-footer {
-			margin-top: 8px;
+			margin-top: 6px;
 		}
 	}
 
+	/* Figures in the type the spool inspector uses for its remaining weight (.big: 28px/600),
+	   labels in upstream's section-label style (SectionLabel), and a card that answers the
+	   pointer with its border, as upstream's outline controls do, rather than by lifting. */
 	.kpi-card {
 		display: block;
-		padding: 20px 24px;
+		padding: 16px 18px;
 		border-radius: var(--radius-lg);
 		background: var(--surface);
 		border: 1px solid var(--border);
-		position: relative;
-		overflow: hidden;
 		color: inherit;
 		text-decoration: none;
-		transition:
-			transform 0.2s ease,
-			box-shadow 0.2s ease;
+		transition: border-color 0.12s;
 	}
 	.kpi-card:hover {
 		color: inherit;
-		transform: translateY(-2px);
-		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+		border-color: var(--accent);
 	}
 	.kpi-card:focus-visible {
 		outline: 2px solid var(--accent);
 		outline-offset: 2px;
 	}
-	.kpi-card :global(.kpi-bg-icon) {
-		position: absolute;
-		right: -4px;
-		bottom: -10px;
-		width: 80px;
-		height: 80px;
-		opacity: 0.05;
-		pointer-events: none;
-		transition: opacity 0.3s ease;
-	}
-	.kpi-card:hover :global(.kpi-bg-icon) {
-		opacity: 0.09;
-	}
 	.kpi-label {
-		font-size: 10px;
+		font-size: 11px;
 		text-transform: uppercase;
-		font-weight: 700;
-		letter-spacing: 0.12em;
-		color: var(--text-faint);
+		letter-spacing: 0.07em;
+		color: var(--text-dim);
 		margin-bottom: 6px;
 	}
 	.kpi-value {
-		font-size: 32px;
-		font-weight: 800;
-		letter-spacing: -0.03em;
+		font-size: 28px;
+		font-weight: 600;
 		line-height: 1.1;
 	}
 	.kpi-unit {
-		font-size: 14px;
+		font-size: 13px;
 		font-weight: 400;
-		color: var(--text-faint);
+		color: var(--text-muted);
 	}
 	.kpi-footer {
-		margin-top: 16px;
-		font-size: 10px;
-		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: 0.04em;
+		margin-top: 12px;
+		font-size: 12px;
 		display: flex;
 		align-items: center;
 		gap: 4px;
 	}
 	.kpi-footer.muted {
-		color: var(--text-faint);
+		color: var(--text-dim);
+	}
+	.kpi-footer.success {
+		color: var(--success);
 	}
 	.kpi-footer.danger {
 		color: var(--danger-soft);
@@ -759,7 +704,10 @@
 		flex: 1 1 0;
 		min-height: 0;
 		display: grid;
-		grid-template-columns: 2fr 1fr;
+		/* minmax(0, …): a grid track's automatic minimum is its content's min-content width, so
+		   one long spool name in the right column's timeline widened that column past the page
+		   and clipped every card in it at the right edge. */
+		grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
 		gap: 16px;
 		overflow: hidden;
 	}
@@ -824,11 +772,10 @@
 
 	/* Low stock */
 	.subhead {
-		font-size: 10px;
-		font-weight: 700;
+		font-size: 11px;
 		text-transform: uppercase;
-		letter-spacing: 0.1em;
-		color: var(--text-faint);
+		letter-spacing: 0.07em;
+		color: var(--text-dim);
 		margin: 16px 0 8px;
 	}
 	.subhead:first-child {
@@ -992,9 +939,9 @@
 		border: 1px solid var(--border);
 	}
 	.section-title {
-		font-size: 15px;
-		font-weight: 700;
-		margin: 0 0 18px;
+		font-size: 13px;
+		font-weight: 600;
+		margin: 0 0 14px;
 		display: flex;
 		align-items: center;
 		gap: 6px;
@@ -1033,12 +980,10 @@
 		white-space: nowrap;
 	}
 	.loc-badge {
-		font-size: 10px;
-		font-weight: 700;
-		text-transform: uppercase;
-		padding: 3px 10px;
+		font-size: 11px;
+		font-weight: 600;
+		padding: 2px 8px;
 		border-radius: 4px;
-		letter-spacing: 0.02em;
 		flex-shrink: 0;
 	}
 	.loc-badge.tier-0 {

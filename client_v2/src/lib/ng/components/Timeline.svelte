@@ -81,10 +81,9 @@
 	.time {
 		display: block;
 		font-size: 10px;
-		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.02em;
-		color: var(--text-faint);
+		color: var(--text-dim);
 	}
 	.name {
 		display: block;

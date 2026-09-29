@@ -211,7 +211,7 @@
 		padding: 6px 10px;
 		font-size: 12.5px;
 		color: var(--text-muted);
-		background: var(--bg-subtle);
+		background: none;
 		border: 1px solid var(--border);
 		border-radius: var(--radius);
 		cursor: pointer;
@@ -220,9 +220,9 @@
 		color: var(--text);
 	}
 	.modes button.active {
-		color: var(--text);
-		background: var(--bg-hover);
-		border-color: var(--border-strong);
+		color: var(--accent-soft);
+		background: var(--accent-wash);
+		border-color: var(--accent-border);
 	}
 	.prompt {
 		display: flex;

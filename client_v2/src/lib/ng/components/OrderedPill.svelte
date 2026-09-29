@@ -36,4 +36,12 @@
 	.pill:hover {
 		background: var(--accent-wash-soft);
 	}
+	/* A finger-sized target on touch screens; the pill is a link to the order. */
+	@media (max-width: 860px), (pointer: coarse) {
+		.pill {
+			display: inline-flex;
+			align-items: center;
+			min-height: 32px;
+		}
+	}
 </style>

@@ -539,17 +539,17 @@
 	}
 	.bubble.user {
 		align-self: flex-end;
-		background: var(--bg-hover);
+		background: var(--accent-wash);
 	}
 	.bubble.assistant {
 		align-self: flex-start;
-		background: var(--bg-subtle);
+		background: var(--surface-raised);
 	}
 	.bubble.error {
 		align-self: stretch;
 		max-width: none;
 		color: var(--danger);
-		background: var(--bg-subtle);
+		background: var(--danger-wash);
 	}
 	.tool {
 		display: flex;
@@ -562,7 +562,7 @@
 		border: 1px solid var(--border-strong);
 		border-radius: var(--radius-md);
 		padding: 10px 12px;
-		background: var(--bg-subtle);
+		background: var(--surface-raised);
 	}
 	.card.destructive {
 		border-color: var(--danger);
@@ -627,7 +627,7 @@
 		font-size: 12.5px;
 		padding: 7px 10px;
 		border-radius: var(--radius-sm);
-		background: var(--bg-subtle);
+		background: var(--surface-raised);
 	}
 	.undo {
 		margin-left: auto;
@@ -660,7 +660,7 @@
 	}
 	.speak.on {
 		color: var(--accent);
-		background: var(--bg-hover);
+		background: var(--accent-wash);
 	}
 	.mic {
 		display: inline-flex;
@@ -669,7 +669,7 @@
 		flex: none;
 		width: 34px;
 		color: var(--text-muted);
-		background: var(--bg-subtle);
+		background: none;
 		border: 1px solid var(--border);
 		border-radius: var(--radius-sm);
 		cursor: pointer;

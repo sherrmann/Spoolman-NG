@@ -66,7 +66,7 @@ Also check on at least one real device per OS:
 - [ ] Sub-path deploys (`SPOOLMAN_BASE_PATH`) still resolve the manifest/icons correctly
 - [ ] Repeat the PWA checks in the Svelte client — it has its own `client_v2/static/manifest.webmanifest` and `sw.js`, separate from the React client's `vite.config.ts` setup
 - [ ] Switching clients in the UI (`SPOOLMAN_UI_SWITCHER`) survives a reload on each browser above, and a printed QR label opens in whichever client the browser picked
-- [ ] Mobile layout: `client_v2/playwright.config.ts` holds a local mobile-accessibility audit emulating a Pixel 5 — emulation, not a real phone, so still spot-check tap targets on a physical device
+- [ ] Mobile and tablet layout: `tests_frontend_ng` runs every page of the Svelte client, plus its main dialogs and the spool inspector, on six emulated devices in CI (`device-*` projects: iPhone SE, Pixel 7, iPad Mini portrait and landscape, a 1366px laptop, a 1920px desktop), checking sideways scroll, controls out of reach or covered, tap targets under 24px on touch screens, and styles outside upstream's design language. The `mobile` project covers the phone-only behaviour (bottom bar, inspector sheet, search overlay). All of it is Chromium emulation, not real hardware, so still spot-check tap targets and the on-screen keyboard on a physical phone and tablet, and Safari's rendering on iOS/iPadOS, which CI does not run
 
 ## 4. Mobile companion app (`mobile/`)
 

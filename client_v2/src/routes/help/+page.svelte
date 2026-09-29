@@ -107,9 +107,8 @@
 	}
 	h1 {
 		margin: 0;
-		font-size: 20px;
-		font-weight: 800;
-		letter-spacing: -0.02em;
+		font-size: 16px;
+		font-weight: 700;
 	}
 	.card {
 		background: var(--surface);

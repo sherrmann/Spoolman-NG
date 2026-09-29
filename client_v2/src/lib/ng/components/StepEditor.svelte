@@ -501,10 +501,9 @@
 	.pass-label {
 		display: block;
 		font-size: 11px;
-		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.06em;
-		color: var(--text-faint);
+		color: var(--text-dim);
 		margin-bottom: 8px;
 	}
 	.pass-label .optional {

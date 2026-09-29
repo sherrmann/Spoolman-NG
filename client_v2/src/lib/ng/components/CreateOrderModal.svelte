@@ -240,10 +240,9 @@
 	}
 	.order-table-head {
 		font-size: 10.5px;
-		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.06em;
-		color: var(--text-faint);
+		color: var(--text-dim);
 		background: var(--surface-2);
 	}
 	.order-table-head span:last-child {

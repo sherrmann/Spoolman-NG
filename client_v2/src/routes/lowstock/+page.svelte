@@ -169,7 +169,7 @@
 		<div class="state">{ng.loading()}</div>
 	{:else if loadError}
 		<div class="state error">
-			<button class="retry" onclick={refresh}>{ng.buttons_refresh()}</button>
+			<Button onclick={refresh}>{ng.buttons_refresh()}</Button>
 		</div>
 	{:else if lowStock.count === 0}
 		<p class="empty">{ng.low_stock_empty()}</p>
@@ -213,7 +213,9 @@
 			<!-- Slot always renders (even empty) so the swatch/name that follows lines up the
 			     same whether or not a checkbox is present -- an already-ordered row can't be
 			     added to another order, so it has none. -->
-			<span class="checkbox-slot">
+			<!-- A <label>, so the finger-sized area around the 13px box (see .checkbox-slot on
+			     touch screens) toggles it too. -->
+			<label class="checkbox-slot">
 				{#if !row.onOrder}
 					<input
 						type="checkbox"
@@ -223,7 +225,7 @@
 						onchange={() => toggleSelect(row.filament.id)}
 					/>
 				{/if}
-			</span>
+			</label>
 			<Swatch
 				colors={row.filament.colors}
 				direction={row.filament.multiColorDirection}
@@ -299,9 +301,8 @@
 	}
 	.header h1 {
 		margin: 0;
-		font-size: 20px;
-		font-weight: 800;
-		letter-spacing: -0.02em;
+		font-size: 16px;
+		font-weight: 700;
 	}
 	.header-actions {
 		display: flex;
@@ -322,19 +323,6 @@
 		color: var(--text-faint);
 		font-size: 13px;
 	}
-	.retry {
-		background: var(--accent-fill);
-		color: #fff;
-		border: none;
-		border-radius: var(--radius);
-		padding: 8px 16px;
-		font-size: 13px;
-		font-weight: 600;
-		cursor: pointer;
-	}
-	.retry:hover {
-		background: var(--accent-fill-hover);
-	}
 
 	.empty {
 		text-align: center;
@@ -350,16 +338,22 @@
 	}
 	.subhead {
 		font-size: 11px;
-		font-weight: 700;
 		text-transform: uppercase;
-		letter-spacing: 0.1em;
-		color: var(--text-faint);
+		letter-spacing: 0.07em;
+		color: var(--text-dim);
 		margin-bottom: 12px;
 	}
 	.list {
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
+		gap: 0;
+		/* One card with a hairline between rows -- upstream's divided Card (settings, the
+		   extra-field manager) -- rather than a stack of separately bordered rows. No
+		   overflow: hidden, so a popover opened from a row is not clipped; the first and last
+		   rows round their own corners instead. */
+		background: var(--surface);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-lg);
 		/* These rows are a semantic list -- `getByRole("listitem")` is how the browser tests
 		   address them -- but not a bulleted one. `display: flex` does NOT suppress an <li>'s
 		   ::marker in Chromium, so without this every row rendered a disc, indented 40px by the
@@ -385,13 +379,21 @@
 		gap: 16px;
 		width: 100%;
 		padding: 14px 16px;
-		border-radius: var(--radius-lg);
-		background: var(--surface);
-		border: 1px solid var(--border);
 		cursor: pointer;
 		text-align: left;
 		font: inherit;
 		color: inherit;
+	}
+	.row + .row {
+		border-top: 1px solid var(--border-soft);
+	}
+	.row:first-child {
+		border-top-left-radius: calc(var(--radius-lg) - 1px);
+		border-top-right-radius: calc(var(--radius-lg) - 1px);
+	}
+	.row:last-child {
+		border-bottom-left-radius: calc(var(--radius-lg) - 1px);
+		border-bottom-right-radius: calc(var(--radius-lg) - 1px);
 	}
 	.row:hover {
 		background: var(--surface-raised);
@@ -419,6 +421,17 @@
 	}
 	.checkbox-slot input {
 		accent-color: var(--accent);
+	}
+	/* On a touch screen the 13px box alone is too small to hit (WCAG 2.2 asks for 24px). The
+	   label grows to a 44px square by padding into the row's own padding and gap, which the
+	   negative margin gives back, so nothing else in the row moves. */
+	@media (max-width: 860px), (pointer: coarse) {
+		.checkbox-slot {
+			box-sizing: content-box;
+			padding: 14px;
+			margin: -14px;
+			cursor: pointer;
+		}
 	}
 	.info {
 		display: flex;
@@ -487,10 +500,9 @@
 		margin: 0 0 8px;
 		padding-right: 16px;
 		font-size: 11px;
-		font-weight: 700;
 		text-transform: uppercase;
-		letter-spacing: 0.08em;
-		color: var(--text-faint);
+		letter-spacing: 0.07em;
+		color: var(--text-dim);
 	}
 	.ch-action,
 	.ch-threshold {

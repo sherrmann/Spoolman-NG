@@ -330,10 +330,9 @@
 	}
 	.lines-header {
 		font-size: 11px;
-		font-weight: 700;
 		text-transform: uppercase;
-		letter-spacing: 0.08em;
-		color: var(--text-faint);
+		letter-spacing: 0.07em;
+		color: var(--text-dim);
 	}
 	.line {
 		display: flex;
@@ -343,6 +342,20 @@
 	.filament-select {
 		flex: 1 1 200px;
 		min-width: 0;
+	}
+	/* Under ~560px the filament picker, two number fields and the remove button do not fit on
+	   one line: the number fields shrank until the quantity box was 16px wide and its steppers
+	   were cut off. The picker takes its own line there, and the numbers keep their width. */
+	@media (max-width: 560px) {
+		.line {
+			flex-wrap: wrap;
+		}
+		.filament-select {
+			flex-basis: 100%;
+		}
+		.line > :global(.ni) {
+			flex: none;
+		}
 	}
 	.sel {
 		background: var(--input-bg);

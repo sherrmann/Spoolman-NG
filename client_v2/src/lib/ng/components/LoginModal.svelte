@@ -17,6 +17,7 @@
 	 * again.
 	 */
 	import X from '@lucide/svelte/icons/x';
+	import Button from '$lib/components/Button.svelte';
 	import * as m from '$lib/paraglide/messages';
 	import { ng } from '$lib/ng/i18n';
 	import { authState } from '$lib/ng/authState.svelte';
@@ -123,9 +124,9 @@
 			{/if}
 
 			<div class="foot">
-				<button class="primary" type="submit" disabled={busy || !canSubmit}>
+				<Button type="submit" disabled={busy || !canSubmit}>
 					{authState.accountsEnabled ? ng.auth_login_submit() : ng.apiToken_submit()}
-				</button>
+				</Button>
 			</div>
 		</form>
 	</div>
@@ -216,7 +217,7 @@
 	}
 	.fld input {
 		padding: 8px 10px;
-		background: var(--bg-elevated, var(--bg));
+		background: var(--input-bg);
 		color: var(--text);
 		border: 1px solid var(--border-strong);
 		border-radius: var(--radius-md, 8px);
@@ -226,18 +227,5 @@
 		display: flex;
 		justify-content: flex-end;
 		padding-top: 4px;
-	}
-	.primary {
-		padding: 8px 16px;
-		border: 1px solid var(--border-strong);
-		border-radius: var(--radius-md, 8px);
-		background: var(--accent, #dc7734);
-		color: #fff;
-		font: inherit;
-		cursor: pointer;
-	}
-	.primary:disabled {
-		opacity: 0.5;
-		cursor: default;
 	}
 </style>

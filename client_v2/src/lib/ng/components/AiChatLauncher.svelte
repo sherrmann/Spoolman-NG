@@ -54,13 +54,13 @@
 		height: 44px;
 		border-radius: 50%;
 		color: var(--text);
-		background: var(--bg-subtle);
+		background: var(--surface-raised);
 		border: 1px solid var(--border-strong);
 		box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
 		cursor: pointer;
 	}
 	.launcher:hover {
-		background: var(--bg-hover);
+		border-color: var(--accent);
 	}
 	/* On a phone the inspector is a bottom sheet (DetailPane, backdrop at z-index 20) and this
 	   button sat on top of its bottom-right corner, over the sheet's own controls. Tuck it

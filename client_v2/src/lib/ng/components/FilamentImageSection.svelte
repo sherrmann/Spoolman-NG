@@ -163,6 +163,12 @@
 	.link.danger {
 		color: var(--danger-soft);
 	}
+	/* WCAG 2.2's 24px floor under a finger; the links sit in a section header with room above. */
+	@media (max-width: 860px), (pointer: coarse) {
+		.link {
+			min-height: 32px;
+		}
+	}
 	.link:disabled {
 		opacity: 0.5;
 		cursor: default;

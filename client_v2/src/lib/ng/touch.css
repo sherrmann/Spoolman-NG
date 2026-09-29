@@ -1,0 +1,36 @@
+/*
+ * Spoolman NG fork addition: touch-sized controls on every touch screen, not only narrow ones.
+ *
+ * Upstream's rule in app.css grows its shared primitives to a 44px tap target at <=860px wide,
+ * which is where it switches to the phone layout. A tablet held in landscape is wider than that,
+ * so it got the desktop's dense 22-30px controls under a finger. This applies the same list, with
+ * the same values, when the primary pointer is coarse, whatever the width. Keep the selector list
+ * in step with app.css's; the device projects in tests_frontend_ng flag any control that falls
+ * under the 24px WCAG floor on a touch device, so a primitive missing here shows up there.
+ */
+@media (pointer: coarse) and (min-width: 861px) {
+	.btn,
+	.chip,
+	.link-btn,
+	.seg-btn,
+	.tab,
+	.logo,
+	.sponsor,
+	.crumb,
+	.arch-toggle,
+	.spool-row,
+	.divider,
+	.res-item,
+	.add-btn,
+	.grabber,
+	select,
+	.search input {
+		min-height: 44px;
+	}
+	.grabber {
+		align-items: center;
+	}
+	.sponsor {
+		min-width: 44px;
+	}
+}

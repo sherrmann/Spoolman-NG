@@ -191,7 +191,7 @@
 		<div class="state">{ng.loading()}</div>
 	{:else if loadError}
 		<div class="state error">
-			<button class="retry" onclick={refresh}>{ng.buttons_refresh()}</button>
+			<Button onclick={refresh}>{ng.buttons_refresh()}</Button>
 		</div>
 	{:else if locations.length === 0}
 		<p class="empty">{ng.locations_empty()}</p>
@@ -323,9 +323,8 @@
 	}
 	.header h1 {
 		margin: 0;
-		font-size: 20px;
-		font-weight: 800;
-		letter-spacing: -0.02em;
+		font-size: 16px;
+		font-weight: 700;
 	}
 
 	.state {
@@ -336,19 +335,6 @@
 		padding: 48px 0;
 		color: var(--text-faint);
 		font-size: 13px;
-	}
-	.retry {
-		background: var(--accent-fill);
-		color: #fff;
-		border: none;
-		border-radius: var(--radius);
-		padding: 8px 16px;
-		font-size: 13px;
-		font-weight: 600;
-		cursor: pointer;
-	}
-	.retry:hover {
-		background: var(--accent-fill-hover);
 	}
 
 	.empty {
@@ -361,7 +347,14 @@
 	.list {
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
+		gap: 0;
+		/* One card with a hairline between rows -- upstream's divided Card (settings, the
+		   extra-field manager) -- rather than a stack of separately bordered rows. No
+		   overflow: hidden, so a popover opened from a row is not clipped; the first and last
+		   rows round their own corners instead. */
+		background: var(--surface);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-lg);
 		/* These rows are a semantic list -- `getByRole("listitem")` is how the browser tests
 		   address them -- but not a bulleted one. `display: flex` does NOT suppress an <li>'s
 		   ::marker in Chromium, so without this every row rendered a disc, indented 40px by the
@@ -384,9 +377,17 @@
 		gap: 16px;
 		width: 100%;
 		padding: 12px 16px;
-		border-radius: var(--radius-lg);
-		background: var(--surface);
-		border: 1px solid var(--border);
+	}
+	.row + .row {
+		border-top: 1px solid var(--border-soft);
+	}
+	.row:first-child {
+		border-top-left-radius: calc(var(--radius-lg) - 1px);
+		border-top-right-radius: calc(var(--radius-lg) - 1px);
+	}
+	.row:last-child {
+		border-bottom-left-radius: calc(var(--radius-lg) - 1px);
+		border-bottom-right-radius: calc(var(--radius-lg) - 1px);
 	}
 	.row:hover {
 		background: var(--surface-raised);
@@ -511,6 +512,13 @@
 	.icon-btn:hover {
 		color: var(--text);
 		background: var(--surface-raised);
+	}
+	/* The same 44px tap target upstream gives its buttons on a phone (app.css). */
+	@media (max-width: 860px), (pointer: coarse) {
+		.icon-btn {
+			min-width: 44px;
+			min-height: 44px;
+		}
 	}
 
 	@media (max-width: 640px) {

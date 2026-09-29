@@ -1,5 +1,6 @@
 <script lang="ts">
 	import '../app.css';
+	import '$lib/ng/touch.css';
 	import TopBar from '$components/TopBar.svelte';
 	// Spoolman NG fork addition: upstream's footer is gone; its version and links moved to the
 	// Help page and the phone layout's More sheet (AboutLinks). BottomNav is the phone layout's

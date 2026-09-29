@@ -351,7 +351,7 @@
 			<div class="state">{ng.loading()}</div>
 		{:else if sessionsError}
 			<div class="state error">
-				<button class="retry" onclick={refreshSessions}>{ng.buttons_refresh()}</button>
+				<Button onclick={refreshSessions}>{ng.buttons_refresh()}</Button>
 			</div>
 		{:else if sessions.length === 0}
 			<p class="empty">{ng.calibration_no_data()}</p>
@@ -556,9 +556,8 @@
 	}
 	.header h1 {
 		margin: 0;
-		font-size: 20px;
-		font-weight: 800;
-		letter-spacing: -0.02em;
+		font-size: 16px;
+		font-weight: 700;
 	}
 	.header-actions {
 		display: flex;
@@ -617,7 +616,7 @@
 	.recommended-card h2 {
 		margin: 0 0 10px;
 		font-size: 11px;
-		font-weight: 700;
+		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.07em;
 		color: var(--success);
@@ -639,10 +638,9 @@
 	.rec-type {
 		display: block;
 		font-size: 10px;
-		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.06em;
-		color: var(--text-faint);
+		color: var(--text-dim);
 		margin-bottom: 6px;
 	}
 	.rec-values {
@@ -679,19 +677,6 @@
 		color: var(--text-faint);
 		font-size: 13px;
 	}
-	.retry {
-		background: var(--accent-fill);
-		color: #fff;
-		border: none;
-		border-radius: var(--radius);
-		padding: 8px 16px;
-		font-size: 13px;
-		font-weight: 600;
-		cursor: pointer;
-	}
-	.retry:hover {
-		background: var(--accent-fill-hover);
-	}
 
 	.empty {
 		text-align: center;
@@ -712,7 +697,14 @@
 		padding: 0;
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
+		gap: 0;
+		/* One card with a hairline between rows -- upstream's divided Card (settings, the
+		   extra-field manager) -- rather than a stack of separately bordered rows. No
+		   overflow: hidden, so a popover opened from a row is not clipped; the first and last
+		   rows round their own corners instead. */
+		background: var(--surface);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-lg);
 	}
 
 	.row {
@@ -722,9 +714,17 @@
 		align-items: center;
 		gap: 12px;
 		padding: 12px 14px;
-		border-radius: var(--radius-lg);
-		background: var(--surface);
-		border: 1px solid var(--border);
+	}
+	.row + .row {
+		border-top: 1px solid var(--border-soft);
+	}
+	.row:first-child {
+		border-top-left-radius: calc(var(--radius-lg) - 1px);
+		border-top-right-radius: calc(var(--radius-lg) - 1px);
+	}
+	.row:last-child {
+		border-bottom-left-radius: calc(var(--radius-lg) - 1px);
+		border-bottom-right-radius: calc(var(--radius-lg) - 1px);
 	}
 	.row:hover {
 		background: var(--surface-raised);
@@ -832,6 +832,13 @@
 		color: var(--text);
 		background: var(--surface-raised);
 	}
+	/* The same 44px tap target upstream gives its buttons on a phone (app.css). */
+	@media (max-width: 860px), (pointer: coarse) {
+		.icon-btn {
+			min-width: 44px;
+			min-height: 44px;
+		}
+	}
 	.icon-btn.danger:hover {
 		color: var(--danger);
 		background: var(--danger-wash);
@@ -851,10 +858,9 @@
 		justify-content: space-between;
 		margin-bottom: 10px;
 		font-size: 11px;
-		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.06em;
-		color: var(--text-faint);
+		color: var(--text-dim);
 	}
 	.empty-inline {
 		margin: 0;

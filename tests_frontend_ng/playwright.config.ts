@@ -55,7 +55,7 @@ export default defineConfig({
   projects: [
     // The desktop suite. The mobile specs are left to their own project below: they need a
     // touch-enabled phone context, and would otherwise run twice.
-    { name: "chromium", testIgnore: /mobile\//, use: { ...devices["Desktop Chrome"] } },
+    { name: "chromium", testIgnore: /(mobile|devices)\//, use: { ...devices["Desktop Chrome"] } },
     {
       // Phone-sized layout and touch flows (tests/mobile/). Pixel 5 emulation: 393x727 CSS px,
       // touch and a mobile user agent, on the same Chromium as every other project here. The
@@ -64,6 +64,27 @@ export default defineConfig({
       testMatch: /mobile\/.*\.spec\.ts/,
       use: { ...devices["Pixel 5"] },
     },
+    // Every page on each class of device (tests/devices/): the same layout, tap-target, overlap and
+    // design checks, from the smallest phone to a desktop monitor. All on Chromium -- the Apple
+    // descriptors default to WebKit, which CI does not install -- with each device's viewport,
+    // pixel ratio, touch support and mobile flag. The client switches layout at 860px, so the
+    // tablet in portrait gets the phone chrome and in landscape the desktop one.
+    // Half of them in the dark theme (the client follows the system's), so the colour check sees
+    // both themes' tokens.
+    ...(
+      [
+        ["device-phone-small", devices["iPhone SE"], "light"], // 320x568, the narrowest phone in use
+        ["device-phone", devices["Pixel 7"], "dark"], // 412x839
+        ["device-tablet", devices["iPad Mini"], "light"], // 768x1024, portrait
+        ["device-tablet-landscape", devices["iPad Mini landscape"], "dark"], // 1024x768
+        ["device-laptop", { ...devices["Desktop Chrome"], viewport: { width: 1366, height: 768 } }, "light"],
+        ["device-desktop", { ...devices["Desktop Chrome"], viewport: { width: 1920, height: 1080 } }, "dark"],
+      ] as const
+    ).map(([name, device, colorScheme]) => ({
+      name,
+      testMatch: /devices\/.*\.spec\.ts/,
+      use: { ...device, browserName: "chromium" as const, colorScheme },
+    })),
     {
       // These override the top-level testDir, so ./tests-auth runs here and nowhere else.
       name: "auth-token",

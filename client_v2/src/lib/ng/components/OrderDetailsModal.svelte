@@ -365,10 +365,9 @@
 	}
 	.lines-header {
 		font-size: 11px;
-		font-weight: 700;
 		text-transform: uppercase;
-		letter-spacing: 0.08em;
-		color: var(--text-faint);
+		letter-spacing: 0.07em;
+		color: var(--text-dim);
 	}
 	.line {
 		display: flex;
