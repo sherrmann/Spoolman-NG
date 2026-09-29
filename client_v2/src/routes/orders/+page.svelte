@@ -298,6 +298,12 @@
 		/* On the row's contents, not the row: the hairline above it belongs to the list. */
 		opacity: 0.55;
 	}
+	/* Any opacity below 1 makes an element its own paint layer, in document order, so the
+	   summary (after .row-left) would be hit-tested above the stretched .order-link::after and
+	   a click on it would do nothing. It is plain text; let the click through to the link. */
+	.row.arrived .lines-summary {
+		pointer-events: none;
+	}
 	/* Briefly calls out the order a `?highlight=` link pointed at (see the $effect above) — a
 	   soft accent ring rather than a background fill, so it reads next to `.row.arrived`'s own
 	   opacity change without the two visually fighting. */

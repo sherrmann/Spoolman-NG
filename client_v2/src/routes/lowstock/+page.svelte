@@ -426,7 +426,7 @@
 	   label grows to a 44px square by padding into the row's own padding and gap, which the
 	   negative margin gives back, so nothing else in the row moves. */
 	@media (max-width: 860px), (pointer: coarse) {
-		.checkbox-slot {
+		.checkbox-slot:has(input) {
 			box-sizing: content-box;
 			padding: 14px;
 			margin: -14px;

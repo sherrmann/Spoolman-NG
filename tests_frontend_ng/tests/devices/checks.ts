@@ -158,15 +158,18 @@ function collect({ touch, scope, waive = [] }: Options): Problem[] {
     return false;
   };
   // Forty identical rows share one layout, and scrolling each into view is the slow part (a
-  // large board has hundreds of chips): check a few of each kind -- same tag and classes, under
-  // a parent with the same classes -- rather than every one.
-  const PER_KIND = 3;
+  // large board has hundreds of chips): check the first two of each kind -- same tag and classes,
+  // under a parent with the same classes -- and the last, rather than every one. The last matters:
+  // content that ends under the bottom bar only hides the end of a list.
+  const kindOf = (el: Element) => `${el.tagName}.${el.className}<${el.parentElement?.className ?? ""}`;
+  const lastOfKind = new Map<string, Element>();
+  for (const el of controls) lastOfKind.set(kindOf(el), el);
   const kinds = new Map<string, number>();
   for (const el of controls) {
-    const kind = `${el.tagName}.${el.className}<${el.parentElement?.className ?? ""}`;
+    const kind = kindOf(el);
     const n = kinds.get(kind) ?? 0;
     kinds.set(kind, n + 1);
-    if (n >= PER_KIND) continue;
+    if (n >= 2 && lastOfKind.get(kind) !== el) continue;
     // A screen-sized backdrop (the inspector sheet's scrim) sits behind what it dims by design.
     const whole = el.getBoundingClientRect();
     if (whole.width >= vw * 0.9 && whole.height >= vh * 0.9) continue;

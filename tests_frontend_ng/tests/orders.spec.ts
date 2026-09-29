@@ -107,6 +107,28 @@ test("marking an order arrived closes it out", async ({ page, request }) => {
     .toBe("arrived");
 });
 
+test("clicking anywhere on an arrived order's row opens it, including its summary text", async ({
+  page,
+  request,
+}) => {
+  // Arrived rows are faded. Fading the row's children makes each its own paint layer, and the
+  // summary text -- laid out after the stretched link -- then sat on top of it, so a click in the
+  // middle of the row hit the text and did nothing.
+  const seeded = await seedOrder(request, "ArrClick");
+  const res = await request.post(`/api/v1/order/${seeded.orderId}/arrive`, { data: {} });
+  expect(res.ok()).toBeTruthy();
+  expect((await orderById(request, seeded.orderId)).state).toBe("arrived");
+
+  await openOrders(page);
+  // By coordinates: locator.click() refuses an element another element intercepts, and the
+  // stretched link intercepting it is exactly what should happen here.
+  const summary = row(page, seeded.orderNumber).locator(".lines-summary");
+  await summary.scrollIntoViewIfNeeded();
+  const box = (await summary.boundingBox())!;
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  await expect(page.getByRole("dialog")).toBeVisible();
+});
+
 test("deleting an order asks first, and removes it once confirmed", async ({
   page,
   request,
