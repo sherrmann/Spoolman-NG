@@ -1,5 +1,5 @@
 import { Create, useForm, useSelect } from "@refinedev/antd";
-import { HttpError, IResourceComponentsProps, useInvalidate, useTranslate } from "@refinedev/core";
+import { HttpError, IResourceComponentsProps, useInvalidate, useNavigation, useTranslate } from "@refinedev/core";
 import {
   Alert,
   Button,
@@ -18,7 +18,7 @@ import TextArea from "antd/es/input/TextArea";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { ExtraFieldFormItem, ParsedExtras, StringifiedExtras } from "../../components/extraFields";
 import { FilamentImagePicker, uploadFilamentImage } from "../../components/filamentImageUpload";
 import { FilamentImportModal } from "../../components/filamentImportModal";
@@ -30,7 +30,7 @@ import { PreparedImage } from "../../utils/imageTransform";
 import { formatNumberOnUserInput, numberParser, numberParserAllowEmpty } from "../../utils/parsing";
 import { ExternalFilament, fetchExternalProfile } from "../../utils/queryExternalDB";
 import { EntityType, useGetFields } from "../../utils/queryFields";
-import { useSimilarVendor } from "../../utils/querySimilar";
+import { useSimilarFilament, useSimilarVendor } from "../../utils/querySimilar";
 import { getCurrencySymbol, useCurrency } from "../../utils/settings";
 import { createVendor, getOrCreateVendorFromExternal } from "../vendors/functions";
 import { IVendor } from "../vendors/model";
@@ -138,6 +138,44 @@ export const FilamentCreate = (props: IResourceComponentsProps & CreateOrClonePr
   // Server-side duplicate hint for the inline "new vendor" name above (#125 + duplicate-check AI
   // feature): warns before creating a vendor that already exists under another spelling.
   const similarVendor = useSimilarVendor(newVendorName);
+
+  // Server-side duplicate hint for the filament itself (duplicate-check AI feature): warns before
+  // creating a filament that already exists. Watches every field the backend's similarity check
+  // considers, so the hint disappears as soon as any of them changes. An actually selected vendor
+  // (vendor_id) always wins over the inline new-vendor box: picking an existing vendor from the
+  // Select does not itself clear that box, so leftover text there must not silently override the
+  // vendor that will really be saved - and a box full of only spaces must not either, so it is
+  // trimmed before the check.
+  const { showUrl } = useNavigation();
+  const vendorIdValue = Form.useWatch<number | undefined>(["vendor_id"], form);
+  const nameValue = Form.useWatch<string | undefined>(["name"], form);
+  const materialValue = Form.useWatch<string | undefined>(["material"], form);
+  const colorHexValue = Form.useWatch<string | undefined>(["color_hex"], form);
+  const multiColorHexesValue = Form.useWatch<string | undefined>(["multi_color_hexes"], form);
+  const diameterValue = Form.useWatch<number | undefined>(["diameter"], form);
+  const similarFilament = useSimilarFilament({
+    vendor_id: vendorIdValue ?? undefined,
+    vendor_name: vendorIdValue ? undefined : newVendorName.trim() || undefined,
+    name: nameValue,
+    material: materialValue,
+    color_hex: colorHexValue,
+    multi_color_hexes: multiColorHexesValue,
+    diameter: diameterValue,
+  });
+  let similarFilamentHint: React.ReactNode = undefined;
+  {
+    const match = similarFilament.exact ?? similarFilament.suggestion;
+    if (match) {
+      similarFilamentHint = (
+        <>
+          {similarFilament.exact
+            ? t("settings.ai.duplicate.filament_exact", { name: match.name })
+            : t("settings.ai.duplicate.filament_suggestion", { name: match.name })}{" "}
+          <Link to={showUrl("filament", match.id)}>{t("settings.ai.duplicate.open", { name: match.name })}</Link>
+        </>
+      );
+    }
+  }
 
   const importFilament = async (filament: ExternalFilament) => {
     const vendor = await getOrCreateVendorFromExternal(filament.manufacturer);
@@ -278,7 +316,10 @@ export const FilamentCreate = (props: IResourceComponentsProps & CreateOrClonePr
         </Form.Item>
         <Form.Item
           label={t("filament.fields.name")}
-          help={t("filament.fields_help.name")}
+          // Duplicate-check hint takes over the field's help text once there is one to show; this
+          // is warning-only and never blocks submission.
+          validateStatus={similarFilamentHint ? "warning" : undefined}
+          help={similarFilamentHint ?? t("filament.fields_help.name")}
           name={["name"]}
           rules={[
             {

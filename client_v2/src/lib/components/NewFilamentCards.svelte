@@ -21,6 +21,8 @@
 	import ExtraFieldsSection from './ExtraFieldsSection.svelte';
 	import NewFilamentCatalogueFields from '$lib/ng/components/NewFilamentCatalogueFields.svelte';
 	import DuplicateHint from '$lib/ng/components/DuplicateHint.svelte';
+	import FilamentDuplicateHint from '$lib/ng/components/FilamentDuplicateHint.svelte';
+	import type { SimilarFilamentMatch } from '$lib/ng/similarApi';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import type { Extra, Filament } from '$lib/types';
@@ -29,6 +31,8 @@
 	import { spoolSource } from '$lib/api/spoolSource';
 	import { settings } from '$lib/stores/settings.svelte';
 	import { loadMaterials, type MaterialSpec } from '$lib/data/materials';
+	import { colorFieldsToApi } from '$lib/api/map';
+	import { parseDecimal } from '$lib/utils/numeric';
 	import * as m from '$lib/paraglide/messages';
 
 	interface Props {
@@ -63,6 +67,18 @@
 		/** Escape hatch in the filament card's heading, e.g. back to picking an existing one. */
 		backLabel?: string;
 		onback?: () => void;
+		/**
+		 * A filament to leave out of the duplicate check -- the one a change-filament dialog is
+		 * in the middle of replacing, say, which would otherwise be offered back as "the filament
+		 * you're already looking at".
+		 */
+		excludeId?: number;
+		/**
+		 * Switch the caller's flow to this existing filament instead of creating a new one, the
+		 * way picking it from a filament picker would. Omit when the caller has no such picker
+		 * state to switch (FilamentDuplicateHint then renders its text with no button).
+		 */
+		onuseexisting?: (filament: SimilarFilamentMatch) => void;
 	}
 	let {
 		draft = $bindable(),
@@ -78,7 +94,9 @@
 		weights = $bindable({ weight: '', spoolWeight: '', price: '' }),
 		showWeights = false,
 		backLabel,
-		onback
+		onback,
+		excludeId,
+		onuseexisting
 	}: Props = $props();
 
 	let nameInput = $state<HTMLInputElement | undefined>();
@@ -116,6 +134,10 @@
 	// Nudge, not an error: Spoolman allows same-named filaments, but keeping the
 	// original's name on a duplicate is almost always an oversight.
 	let nameStillSource = $derived(!!cloneSource && draft.name.trim() === cloneSource.name.trim());
+
+	// The colour half of a POST /filament/similar request (spoolman/api/v1/filament.py), in the
+	// same single-vs-multi-colour shape the create request itself uses (colorFieldsToApi).
+	let similarColorFields = $derived(colorFieldsToApi(draft.colors, draft.multiColorDirection));
 
 	// When duplicating, the name is the one field that must change, so put the
 	// caret in it (at the end — the colour word is usually a suffix, and the rest
@@ -228,6 +250,22 @@
 			{#if err('colorHex')}<span class="err">{err('colorHex')}</span>{/if}
 		</label>
 	</div>
+	<!-- Checked against the filament as a whole -- name, material and colour together -- rather
+	     than under any one field, since it is the combination the server matches on. `onuse` is
+	     `onuseexisting`, passed straight through: this card does not own the picker's "existing
+	     vs. new" state itself (that is the caller's, e.g. AddSpoolModal's `chosen`/`creating`),
+	     so switching the flow onto a match is the caller's job. A caller with no such state to
+	     switch leaves `onuseexisting` unset, and the hint then renders its text with no button. -->
+	<FilamentDuplicateHint
+		vendorName={vendorTrimmed}
+		name={draft.name}
+		material={draft.material}
+		colorHex={similarColorFields.color_hex ?? undefined}
+		multiColorHexes={similarColorFields.multi_color_hexes ?? undefined}
+		diameter={parseDecimal(draft.diameter) ?? undefined}
+		{excludeId}
+		onuse={onuseexisting}
+	/>
 	<button class="adv-toggle" onclick={() => (showAdvanced = !showAdvanced)}>
 		{#if showAdvanced}<ChevronDown size={14} />{:else}<ChevronRight size={14} />{/if}
 		{m['add.advanced']()}
