@@ -1126,7 +1126,9 @@
         "col_spool": "Spool to adjust",
         "apply": "Apply usage",
         "applied": "Recorded usage on {{count}} spool(s).",
-        "applied_partial": "Recorded usage on {{ok}} spool(s); {{fail}} failed."
+        "applied_partial": "Recorded usage on {{ok}} spool(s); {{fail}} failed.",
+        "invalid_file": "This is not a valid 3MF file.",
+        "no_slice_info": "This 3MF has no slice information. Export a sliced project from Bambu Studio or OrcaSlicer."
       },
       "entity_label": "Data",
       "mode_label": "Mode",
