@@ -20,14 +20,19 @@ from spoolman import math as colour_math
 
 _SCRIPT = Path(__file__).resolve().parent.parent / "scripts" / "duplicate_eval.py"
 
-#: A tiny inline catalogue: two colours of one Acme PLA line (siblings for the "other colour"
-#: negative), a second Acme line of a different material (for the "different product" negative),
-#: and an unrelated single-line manufacturer (never eligible for a "different product" negative).
+#: A tiny inline catalogue. Names are three words, "Line Material Colour", since `_same_line`
+#: needs a two-word shared prefix to recognise a pair as the same line (see its docstring):
+#: - "Basic PLA Red" / "Basic PLA Blue": same line, different colour (the "other colour" negative)
+#: - "Turbo PLA Black": a different line, but the very same manufacturer/material/diameter group
+#:   as the two above (the "different product line, same group" case `_same_line` exists for)
+#: - "Speedy PETG Green": a different product by material too (the classic "different product")
+#: - Beta's "Solo ABS White": an unrelated single-line manufacturer, never eligible for a
+#:   "different product" negative.
 _TINY_CATALOG = [
     {
-        "id": "acme-pla-red",
+        "id": "acme-pla-basic-red",
         "manufacturer": "Acme",
-        "name": "Red",
+        "name": "Basic PLA Red",
         "material": "PLA",
         "diameter": 1.75,
         "weight": 1000,
@@ -35,9 +40,9 @@ _TINY_CATALOG = [
         "color_hexes": None,
     },
     {
-        "id": "acme-pla-blue",
+        "id": "acme-pla-basic-blue",
         "manufacturer": "Acme",
-        "name": "Blue",
+        "name": "Basic PLA Blue",
         "material": "PLA",
         "diameter": 1.75,
         "weight": 1000,
@@ -45,9 +50,19 @@ _TINY_CATALOG = [
         "color_hexes": None,
     },
     {
-        "id": "acme-petg-speedy",
+        "id": "acme-pla-turbo-black",
         "manufacturer": "Acme",
-        "name": "Speedy",
+        "name": "Turbo PLA Black",
+        "material": "PLA",
+        "diameter": 1.75,
+        "weight": 1000,
+        "color_hex": "000000",
+        "color_hexes": None,
+    },
+    {
+        "id": "acme-petg-speedy-green",
+        "manufacturer": "Acme",
+        "name": "Speedy PETG Green",
         "material": "PETG",
         "diameter": 1.75,
         "weight": 1000,
@@ -55,9 +70,9 @@ _TINY_CATALOG = [
         "color_hexes": None,
     },
     {
-        "id": "beta-abs-solo",
+        "id": "beta-abs-solo-white",
         "manufacturer": "Beta",
-        "name": "Solo",
+        "name": "Solo ABS White",
         "material": "ABS",
         "diameter": 1.75,
         "weight": 1000,
@@ -247,6 +262,30 @@ def test_score_precision_is_none_with_no_warnings_at_all(eval_module: ModuleType
 
     assert scores.precision is None
     assert scores.recall == 0.0
+
+
+def test_correct_accepts_any_id_in_an_expected_set(eval_module: ModuleType) -> None:
+    # A filament case's `expected` can be a set of ids (its spool-weight variants); any one of
+    # them is correct. A vendor case's `expected` stays a single name, compared as before.
+    assert eval_module._correct(1, frozenset({0, 1})) is True  # noqa: SLF001
+    assert eval_module._correct(2, frozenset({0, 1})) is False  # noqa: SLF001
+    assert eval_module._correct("Bambu Lab", "Bambu Lab") is True  # noqa: SLF001
+    assert eval_module._correct(None, frozenset({0, 1})) is False  # noqa: SLF001
+
+
+def test_score_counts_any_id_in_an_expected_set_as_a_true_positive(eval_module: ModuleType) -> None:
+    # As in test_score_counts_true_positives_and_recall, but with a filament-style expected set.
+    results = [
+        eval_module.FilamentCase("positive", None, None, frozenset({0, 1}), "ReForm 250 g"),
+        eval_module.FilamentCase("positive", None, None, frozenset({2}), "EasyFil White"),
+        eval_module.FilamentCase("negative_product", None, None, None, "Speedy"),
+    ]
+
+    scores = eval_module._score(results, lambda r: {"ReForm 250 g": 1, "EasyFil White": 5}.get(r.typed))  # noqa: SLF001
+
+    assert scores.precision == 0.5, "the ReForm pick (1, a member of {0, 1}) is correct; the White pick is not"
+    assert scores.recall == 0.5
+    assert scores.false_warning_rate == 0.0
 
 
 # --- _print_report / _main -----------------------------------------------------------------
@@ -452,7 +491,7 @@ def test_negative_product_cases_pick_a_different_product_line(eval_module: Modul
     multi_line = [
         name
         for name, entries in by_manufacturer.items()
-        if len({eval_module._group_key(e) for e in entries}) > 1  # noqa: SLF001
+        if len(entries) >= 2 and eval_module._has_multiple_lines(entries)  # noqa: SLF001
     ]
     library_index: dict[str, int] = {}
     excluded_ids: set[str] = set()
@@ -482,7 +521,7 @@ def test_negative_product_cases_pick_a_different_product_line(eval_module: Modul
         other_line_in_library = [
             e
             for e in library_entries
-            if e["manufacturer"] == typed["manufacturer"] and eval_module._group_key(e) != eval_module._group_key(typed)  # noqa: SLF001
+            if e["manufacturer"] == typed["manufacturer"] and not eval_module._same_line(e, typed)  # noqa: SLF001
         ]
         assert other_line_in_library, "a different product line from the same manufacturer must be in the library"
 
@@ -501,8 +540,12 @@ def test_positive_cases_keep_the_same_colour_and_a_nonempty_name(eval_module: Mo
     by_id = {entry["id"]: entry for entry in _TINY_CATALOG}
     for case in cases:
         assert case.draft.name.strip() != ""
+        # Before `_build_filament_dataset` widens it, a fresh positive case's expected id set
+        # holds just the one library row `_positive_cases` itself added.
         assert case.expected is not None
-        source_id = next(eid for eid, fid in library_index.items() if fid == case.expected)
+        assert len(case.expected) == 1
+        filament_id = next(iter(case.expected))
+        source_id = next(eid for eid, fid in library_index.items() if fid == filament_id)
         original_colours = eval_module._entry_colours(by_id[source_id])  # noqa: SLF001
         assert duplicates.colour_relation(case.colours, original_colours) == "same colour"
 
@@ -533,6 +576,69 @@ def test_group_key_ignores_spool_weight(eval_module: ModuleType) -> None:
     same_product_larger_spool = {"manufacturer": "Formfutura", "material": "rPET", "diameter": 1.75, "weight": 1000}
 
     assert eval_module._group_key(same_product_smaller_spool) == eval_module._group_key(same_product_larger_spool)  # noqa: SLF001
+
+
+@pytest.mark.parametrize(
+    ("name_a", "name_b", "expect_same_line"),
+    [
+        ("PolyLite ABS Black", "PolyLite ABS Grey", True),
+        ("PolyTerra PLA Charcoal Black", "PolyTerra PLA Army Red", True),
+        ("Panchroma Matte Black", "Panchroma Silk Gold", False),
+        ("PolyLite PLA Red", "PolyTerra PLA Red", False),
+    ],
+)
+def test_same_line_pairs(
+    eval_module: ModuleType,
+    name_a: str,
+    name_b: str,
+    *,
+    expect_same_line: bool,
+) -> None:
+    entry_a = {"manufacturer": "Polymaker", "material": "PLA", "diameter": 1.75, "name": name_a}
+    entry_b = {"manufacturer": "Polymaker", "material": "PLA", "diameter": 1.75, "name": name_b}
+
+    assert eval_module._same_line(entry_a, entry_b) is expect_same_line  # noqa: SLF001
+
+
+def test_same_line_requires_the_same_group_key(eval_module: ModuleType) -> None:
+    same_name_different_material = (
+        {"manufacturer": "Acme", "material": "PLA", "diameter": 1.75, "name": "Basic PLA Red"},
+        {"manufacturer": "Acme", "material": "PETG", "diameter": 1.75, "name": "Basic PLA Red"},
+    )
+
+    assert eval_module._same_line(*same_name_different_material) is False  # noqa: SLF001
+
+
+def test_colour_siblings_does_not_cross_product_lines(eval_module: ModuleType) -> None:
+    # PolyLite and PolyTerra are both a Polymaker PLA at 1.75 mm (same `_group_key`), but they are
+    # different products, not two colours of one -- the finding this test guards against.
+    catalog = [
+        {
+            "id": "polymaker-polylite-pla-black",
+            "manufacturer": "Polymaker",
+            "name": "PolyLite PLA Black",
+            "material": "PLA",
+            "diameter": 1.75,
+            "weight": 1000,
+            "color_hex": "000000",
+            "color_hexes": None,
+        },
+        {
+            "id": "polymaker-polyterra-pla-army-red",
+            "manufacturer": "Polymaker",
+            "name": "PolyTerra PLA Army Red",
+            "material": "PLA",
+            "diameter": 1.75,
+            "weight": 1000,
+            "color_hex": "FF0000",
+            "color_hexes": None,
+        },
+    ]
+
+    by_group, _ = eval_module._group_catalog(catalog)  # noqa: SLF001
+    siblings = eval_module._colour_siblings(by_group)  # noqa: SLF001
+
+    assert siblings == {}
 
 
 def test_negative_product_cases_never_add_an_excluded_entry_as_entry_a(eval_module: ModuleType) -> None:
@@ -614,7 +720,7 @@ def test_negatives_that_are_duplicates_ignores_positive_cases(eval_module: Modul
         },
     ]
     draft = duplicates.FilamentDraft(vendor_name="Acme", name="RED", material="PLA", color_hex="ff0000", diameter=1.75)
-    case = eval_module.FilamentCase("positive", draft, ("ff0000",), 0, "RED")
+    case = eval_module.FilamentCase("positive", draft, ("ff0000",), frozenset({0}), "RED")
 
     assert eval_module._negatives_that_are_duplicates(rows, [case]) == []  # noqa: SLF001
 
@@ -660,6 +766,84 @@ def test_build_filament_dataset_never_treats_a_weight_variant_as_a_negative(eval
         eval_module._build_filament_dataset(catalog, seed=seed, count=6)  # noqa: SLF001
 
 
+def test_identity_key_ignores_spool_weight_but_nothing_else(eval_module: ModuleType) -> None:
+    row_250g = {
+        "filament_id": 0,
+        "vendor_id": 1,
+        "vendor": "Formfutura",
+        "name": "ReForm - rPET Orange",
+        "material": "rPET",
+        "weight_g": 250,
+        "diameter_mm": 1.75,
+        "colours": ("ff8800",),
+    }
+    row_1000g = {**row_250g, "filament_id": 1, "weight_g": 1000}
+    row_different_colour = {**row_250g, "filament_id": 2, "colours": ("000000",)}
+
+    assert eval_module._identity_key(row_250g) == eval_module._identity_key(row_1000g)  # noqa: SLF001
+    assert eval_module._identity_key(row_250g) != eval_module._identity_key(row_different_colour)  # noqa: SLF001
+
+
+def test_widen_positive_expectations_accepts_every_spool_weight_of_the_same_product(
+    eval_module: ModuleType,
+) -> None:
+    # Two spool weights of the very same product happen to both be in the library (e.g. one added
+    # for this case, the other pulled in as padding), plus an unrelated row.
+    rows = [
+        {
+            "filament_id": 0,
+            "vendor_id": 1,
+            "vendor": "Formfutura",
+            "name": "ReForm - rPET Orange",
+            "material": "rPET",
+            "weight_g": 250,
+            "diameter_mm": 1.75,
+            "colours": ("ff8800",),
+        },
+        {
+            "filament_id": 1,
+            "vendor_id": 1,
+            "vendor": "Formfutura",
+            "name": "ReForm - rPET Orange",
+            "material": "rPET",
+            "weight_g": 1000,
+            "diameter_mm": 1.75,
+            "colours": ("ff8800",),
+        },
+        {
+            "filament_id": 2,
+            "vendor_id": 1,
+            "vendor": "Formfutura",
+            "name": "EasyFil PLA White",
+            "material": "PLA",
+            "weight_g": 1000,
+            "diameter_mm": 1.75,
+            "colours": ("ffffff",),
+        },
+    ]
+    draft = duplicates.FilamentDraft(
+        vendor_name="Formfutura",
+        name="reform rpet orange",
+        material="rPET",
+        color_hex="ff8800",
+        diameter=1.75,
+    )
+    positive_case = eval_module.FilamentCase("positive", draft, ("ff8800",), frozenset({0}), "reform rpet orange")
+    unrelated_case = eval_module.FilamentCase(
+        "positive",
+        draft,
+        ("ffffff",),
+        frozenset({2}),
+        "easyfil pla white",
+    )
+    cases = [positive_case, unrelated_case]
+
+    eval_module._widen_positive_expectations(rows, cases)  # noqa: SLF001
+
+    assert positive_case.expected == frozenset({0, 1}), "both spool weights of the product must count as correct"
+    assert unrelated_case.expected == frozenset({2}), "an unrelated product's expectation must stay a singleton"
+
+
 # --- Filaments: scoring --------------------------------------------------------------------
 
 
@@ -689,7 +873,7 @@ _FILAMENT_LIBRARY = [
 
 async def test_run_filament_case_uses_the_exact_tier_and_skips_the_model(eval_module: ModuleType) -> None:
     draft = duplicates.FilamentDraft(vendor_name="Acme", name="RED", material="PLA", color_hex="ff0000", diameter=1.75)
-    case = eval_module.FilamentCase("positive", draft, ("ff0000",), 0, "RED")
+    case = eval_module.FilamentCase("positive", draft, ("ff0000",), frozenset({0}), "RED")
     config = decision.DecisionConfig(base_url="https://api.typesafe.ai", model="jev-latest")
 
     result = await eval_module._run_filament_case(config, _FILAMENT_LIBRARY, case)  # noqa: SLF001
@@ -730,7 +914,7 @@ async def test_run_filament_case_asks_the_model_when_there_is_no_exact_match(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     draft = duplicates.FilamentDraft(vendor_name="Acme", name="Reed", material="PLA", color_hex="ff0000", diameter=1.75)
-    case = eval_module.FilamentCase("positive", draft, ("ff0000",), 0, "Reed")
+    case = eval_module.FilamentCase("positive", draft, ("ff0000",), frozenset({0}), "Reed")
     config = decision.DecisionConfig(base_url="https://api.typesafe.ai", model="jev-latest")
 
     async def stub_ask(_config: object, _state: object, questions: dict) -> dict:
@@ -763,7 +947,7 @@ async def test_run_filament_case_filters_out_a_different_colour_candidate(
         color_hex="ff0000",
         diameter=1.75,
     )
-    case = eval_module.FilamentCase("positive", draft, ("ff0000",), 0, "Acme Chroma")
+    case = eval_module.FilamentCase("positive", draft, ("ff0000",), frozenset({0}), "Acme Chroma")
     config = decision.DecisionConfig(base_url="https://api.typesafe.ai", model="jev-latest")
 
     async def stub_ask(_config: object, _state: object, questions: dict) -> dict:
@@ -783,7 +967,7 @@ async def test_run_filament_case_records_a_decision_error_without_raising(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     draft = duplicates.FilamentDraft(vendor_name="Acme", name="Reed", material="PLA", color_hex="ff0000", diameter=1.75)
-    case = eval_module.FilamentCase("positive", draft, ("ff0000",), 0, "Reed")
+    case = eval_module.FilamentCase("positive", draft, ("ff0000",), frozenset({0}), "Reed")
     config = decision.DecisionConfig(base_url="https://api.typesafe.ai", model="jev-latest")
 
     async def failing(*_args: object, **_kwargs: object) -> dict:
@@ -804,7 +988,7 @@ def test_print_filament_report_includes_the_other_colour_rate(
 ) -> None:
     candidates = [duplicates.Match(id=0, name="Acme Chroma (PLA)")]
     results = [
-        eval_module.FilamentCaseResult("Reed", 0, "positive", 0, None, None),
+        eval_module.FilamentCaseResult("Reed", frozenset({0}), "positive", 0, None, None),
         eval_module.FilamentCaseResult("Acme Chroma", None, "negative_colour", None, candidates, _answer("f0", 0.65)),
         eval_module.FilamentCaseResult("Speedy", None, "negative_product", None, None, None),
     ]

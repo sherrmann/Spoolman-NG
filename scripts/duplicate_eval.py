@@ -125,14 +125,26 @@ class _Scores:
     wrong: list[str]
 
 
+def _correct(picked: object, expected: object) -> bool:
+    """Whether ``picked`` (a tier's answer) counts as matching ``expected``.
+
+    ``expected`` is usually a single id or name; a filament case instead gives a *set* of library
+    ids when several rows are indistinguishably the same product (its spool-weight variants, see
+    `_identity_key`) -- any one of them counts as correct.
+    """
+    if isinstance(expected, (set, frozenset)):
+        return picked in expected
+    return picked == expected
+
+
 def _score(results: list[CaseResult], pick: "callable[[CaseResult], str | None]") -> _Scores:
     positives = [r for r in results if r.expected is not None]
     negatives = [r for r in results if r.expected is None]
-    tp = sum(1 for r in positives if pick(r) == r.expected)
+    tp = sum(1 for r in positives if _correct(pick(r), r.expected))
     warned = [r for r in results if pick(r) is not None]
-    fp = sum(1 for r in warned if pick(r) != r.expected)
+    fp = sum(1 for r in warned if not _correct(pick(r), r.expected))
     false_warnings = sum(1 for r in negatives if pick(r) is not None)
-    wrong = [r.typed for r in results if pick(r) != r.expected]
+    wrong = [r.typed for r in results if not _correct(pick(r), r.expected)]
     return _Scores(
         precision=tp / (tp + fp) if (tp + fp) else None,
         recall=tp / len(positives) if positives else None,
@@ -226,7 +238,9 @@ class FilamentCase:
     kind: str  # "positive", "negative_colour" or "negative_product"
     draft: duplicates.FilamentDraft
     colours: tuple[str, ...] | None
-    expected: int | None
+    #: The library id(s) this draft is a duplicate of; a positive case gives every library row
+    #: that is the very same product (see `_identity_key`), any of which is a correct pick.
+    expected: frozenset[int] | None
     typed: str
 
 
@@ -235,7 +249,8 @@ class FilamentCaseResult:
     """How one generated filament case went; mirrors `CaseResult` for the filament tier."""
 
     typed: str
-    expected: int | None
+    #: The library id(s) this draft is a duplicate of; see `FilamentCase.expected`.
+    expected: frozenset[int] | None
     kind: str
     #: The code tier's pick (a library filament_id), or None; also the model tier's pick when
     #: this is not None, since `similar_filament` never asks the model once the exact tier answers.
@@ -266,13 +281,90 @@ def _entry_colours(entry: dict) -> tuple[str, ...] | None:
 
 
 def _group_key(entry: dict) -> tuple:
-    """Return the product line an entry belongs to: same manufacturer, material and nominal size.
+    """Return the coarse bucket an entry belongs to: same manufacturer, material and nominal size.
 
     Not spool weight: the backend's own duplicate check never looks at it (`_same_vendor` and
     `_same_size` in `spoolman.duplicates` do not compare weight), so two rows differing only in
     the size sold are the same product -- a genuine duplicate, not a different colour or line.
+
+    This is coarser than a product *line*: a manufacturer can sell more than one PLA line at the
+    same diameter ("PolyLite PLA" and "PolyTerra PLA"), so two entries sharing this key are not
+    necessarily the same line -- see `_same_line`, which also compares the names.
     """
     return (entry["manufacturer"], entry["material"], entry.get("diameter"))
+
+
+def _name_words(name: str | None) -> list[str]:
+    """Split a name into comparable words: NFKC-normalised, casefolded, whitespace-collapsed."""
+    return duplicates.normalize_name(name).split()
+
+
+def _shared_leading_prefix_length(words_a: list[str], words_b: list[str]) -> int:
+    length = 0
+    for word_a, word_b in zip(words_a, words_b, strict=False):
+        if word_a != word_b:
+            break
+        length += 1
+    return length
+
+
+def _same_line(entry_a: dict, entry_b: dict) -> bool:
+    """Whether two catalogue entries are the same product line.
+
+    The catalogue has no separate "line" field, and the name carries the colour ("PolyLite (TM)
+    ABS Black"), so two entries count as the same line only when they share `_group_key` *and*
+    their names agree on a long leading run of words: at least ``max(2, shorter name's word count
+    - 2)``. That survives a trailing colour word or two ("PolyTerra PLA Charcoal Black" / "...
+    Army Red" -- both keep "polyterra pla"), while two different lines of matching length
+    ("Panchroma Matte Black" / "Panchroma Silk Gold") still fail it (only "panchroma" is shared,
+    one word short of the two required).
+
+    An entry is always the same line as itself for any name of two words or more; a one-word name
+    ("Black") narrowly fails its own reflexive check by this formula (`max(2, 1 - 2) == 2 > 1`
+    shared word), so callers that need "this entry's whole line" should union in the entry itself
+    rather than rely on `_same_line(e, e)`.
+    """
+    if _group_key(entry_a) != _group_key(entry_b):
+        return False
+    words_a, words_b = _name_words(entry_a.get("name")), _name_words(entry_b.get("name"))
+    if not words_a or not words_b:
+        return False
+    required = max(2, min(len(words_a), len(words_b)) - 2)
+    return _shared_leading_prefix_length(words_a, words_b) >= required
+
+
+def _line_members(entries: list[dict], representative: dict) -> list[dict]:
+    """Every entry in ``entries`` that is the same product line as ``representative``.
+
+    Always includes ``representative`` itself, even for a one-word name that `_same_line` would
+    not, on its own, call the same line as itself (see `_same_line`'s note).
+    """
+    return [entry for entry in entries if entry is representative or _same_line(entry, representative)]
+
+
+def _has_multiple_lines(entries: list[dict]) -> bool:
+    """Check cheaply whether ``entries`` (one manufacturer) spans more than one product line.
+
+    Compares everything to the first entry rather than every pair: a false negative here (missing
+    a real second line) only costs `_negative_product_cases` one less manufacturer to draw from,
+    never a wrong case, since that function re-checks `_same_line` on the pair it actually picks.
+    """
+    return any(not _same_line(entries[0], other) for other in entries[1:])
+
+
+def _identity_key(row: dict) -> tuple:
+    """Return the identity `_exact_filament` itself would match a row on, minus spool weight.
+
+    Two library rows sharing this key are indistinguishable duplicates to the exact tier: e.g.
+    the very same product sold in two spool weights, however many happen to be in the library.
+    """
+    return (
+        row["vendor_id"],
+        duplicates.exact_key(row["name"]),
+        spoolintake._material_key(row["material"]),  # noqa: SLF001
+        spoolintake._diameter_class(row["diameter_mm"]),  # noqa: SLF001
+        row["colours"],
+    )
 
 
 def _draft_colour_fields(colours: tuple[str, ...] | None) -> tuple[str | None, str | None]:
@@ -362,6 +454,7 @@ def _colour_siblings(by_group: dict[tuple, list[dict]]) -> dict[str, list[dict]]
                 other
                 for other in group
                 if other is not entry
+                and _same_line(entry, other)
                 and duplicates.colour_relation(colours_by_id[entry["id"]], colours_by_id[other["id"]])
                 == "different colour"
             ]
@@ -382,33 +475,30 @@ def _negative_product_cases(
     """Build "different product, same manufacturer" negatives.
 
     Adds each case's other product to the library, and keeps its typed product -- and every other
-    spool weight of that same product (`_group_key` does not distinguish them) -- out of it
-    (`excluded_ids`), so a weight variant can never later slip into the library and quietly turn
-    this "different product" negative into a real duplicate.
+    row of that same product line, whatever its spool weight (`_same_line` does not distinguish
+    them) -- out of it (`excluded_ids`), so a sibling row can never later slip into the library
+    and quietly turn this "different product" negative into a real duplicate.
     """
     cases: list[FilamentCase] = []
     attempts = 0
     while len(cases) < target and multi_line_manufacturers and attempts < target * 10:
         attempts += 1
         manufacturer = rng.choice(multi_line_manufacturers)
-        # dict.fromkeys, not a set: a set's iteration order depends on PYTHONHASHSEED, which would
-        # make the "same seed, same cases" promise only hold within one process.
-        lines = list(dict.fromkeys(_group_key(e) for e in by_manufacturer[manufacturer]))
-        rng.shuffle(lines)
-        line_a, line_b = lines[0], lines[1]
-        line_a_entries = [e for e in by_manufacturer[manufacturer] if _group_key(e) == line_a]
-        line_b_entries = [e for e in by_manufacturer[manufacturer] if _group_key(e) == line_b]
+        entries = by_manufacturer[manufacturer]
+        entry_a, entry_b = rng.sample(entries, 2)
+        if _same_line(entry_a, entry_b):
+            continue  # same product line after all (e.g. two spool weights): try another pair
+        line_a_entries = _line_members(entries, entry_a)
+        line_b_entries = _line_members(entries, entry_b)
         if any(e["id"] in excluded_ids for e in line_a_entries) or any(
             e["id"] in library_index for e in line_b_entries
         ):
-            # line_a: an earlier case already promised this whole product is missing from the
-            # library -- adding any spool weight of it now would undo that. line_b: some spool
-            # weight of it is in the library elsewhere, so typing another is no longer a fair
-            # "missing product" case.
+            # line_a: an earlier case already promised this whole product line is missing from the
+            # library -- adding any row of it now would undo that. line_b: some row of it is in
+            # the library elsewhere, so typing another is no longer a fair "missing product" case.
             continue
         add_to_library(rng.choice(line_a_entries))
-        entry_b = rng.choice(line_b_entries)
-        excluded_ids.update(e["id"] for e in line_b_entries)  # every spool weight of it stays out
+        excluded_ids.update(e["id"] for e in line_b_entries)  # every row of that line stays out
         colours = _entry_colours(entry_b)
         color_hex, multi_color_hexes = _draft_colour_fields(colours)
         draft = duplicates.FilamentDraft(
@@ -430,7 +520,13 @@ def _positive_cases(
     add_to_library: Callable[[dict], int],
     target: int,
 ) -> list[FilamentCase]:
-    """Build "same product, noisy name" positives; adds each one's product to the library."""
+    """Build "same product, noisy name" positives; adds each one's product to the library.
+
+    Each case's `expected` starts as its own single library id; `_build_filament_dataset` widens
+    it afterwards to every library row that turns out to be the same product (see
+    `_identity_key`), once the library's final contents -- including any padding rows that happen
+    to be a spool-weight sibling -- are known.
+    """
     pool = [e for e in catalog if e["id"] not in excluded_ids]
     rng.shuffle(pool)
     cases = []
@@ -449,7 +545,7 @@ def _positive_cases(
             multi_color_hexes=multi_color_hexes,
             diameter=entry.get("diameter"),
         )
-        cases.append(FilamentCase("positive", draft, jittered, filament_id, draft.name or ""))
+        cases.append(FilamentCase("positive", draft, jittered, frozenset({filament_id}), draft.name or ""))
     return cases
 
 
@@ -507,6 +603,23 @@ def _negatives_that_are_duplicates(rows: list[dict], cases: list[FilamentCase]) 
     ]
 
 
+def _widen_positive_expectations(rows: list[dict], cases: list[FilamentCase]) -> None:
+    """Widen each positive case's expected id, in place, to every row that is the same product.
+
+    A positive case starts out pointing at just the one library row it added. A padding row, or
+    another case's own row, can turn out to share its identity anyway (most often a spool-weight
+    sibling, see `_identity_key`), and the exact/model tier is then free to point at any one of
+    them -- so any of them must count as correct, not only the row this particular case added.
+    """
+    identity_groups: dict[tuple, set[int]] = defaultdict(set)
+    for row in rows:
+        identity_groups[_identity_key(row)].add(row["filament_id"])
+    for case in cases:
+        if case.expected is not None:
+            source_id = next(iter(case.expected))
+            case.expected = frozenset(identity_groups[_identity_key(rows[source_id])])
+
+
 def _build_filament_dataset(catalog: list[dict], *, seed: int, count: int) -> tuple[list[dict], list[FilamentCase]]:
     """Build a library of catalogue rows and a mix of positive/negative cases against it.
 
@@ -518,7 +631,9 @@ def _build_filament_dataset(catalog: list[dict], *, seed: int, count: int) -> tu
     by_group, by_manufacturer = _group_catalog(catalog)
     colour_siblings = _colour_siblings(by_group)
     multi_line_manufacturers = [
-        name for name, entries in by_manufacturer.items() if len({_group_key(e) for e in entries}) > 1
+        name
+        for name, entries in by_manufacturer.items()
+        if len(entries) >= 2 and _has_multiple_lines(entries)  # noqa: PLR2004
     ]
 
     library_index: dict[str, int] = {}
@@ -571,6 +686,7 @@ def _build_filament_dataset(catalog: list[dict], *, seed: int, count: int) -> tu
             "colours": _entry_colours(entry),
         }
 
+    _widen_positive_expectations(rows, cases)
     rng.shuffle(cases)
 
     bad = _negatives_that_are_duplicates(rows, cases)
