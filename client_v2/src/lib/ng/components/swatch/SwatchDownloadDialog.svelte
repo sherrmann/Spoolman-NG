@@ -130,7 +130,7 @@
 	}
 	.warn {
 		font-size: 12px;
-		color: var(--warning, var(--danger-soft));
+		color: var(--danger-soft);
 		margin: 0;
 	}
 	fieldset {
