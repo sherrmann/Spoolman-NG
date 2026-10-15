@@ -509,7 +509,7 @@
 		color: #fff;
 	}
 	.side-dot.done {
-		background: var(--success-wash, rgba(74, 158, 110, 0.16));
+		background: color-mix(in srgb, var(--success) 16%, transparent);
 		color: var(--success);
 	}
 	.side-label {

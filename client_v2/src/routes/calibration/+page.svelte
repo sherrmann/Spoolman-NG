@@ -906,7 +906,7 @@
 	}
 	.tag.incomplete {
 		background: var(--danger-wash);
-		color: var(--danger-soft, var(--danger));
+		color: var(--danger-soft);
 		border-color: transparent;
 	}
 	.confidence {
