@@ -50,8 +50,8 @@ export const FEATURES: FeatureDef[] = [
 	{ key: 'ai_feature_chat', needsProvider: true },
 	{ key: 'ai_feature_voice', needsProvider: false, needsStt: true },
 	{ key: 'ai_feature_nl_search', needsProvider: true },
-	// Photo intake: a React-client page with no Svelte equivalent yet.
-	{ key: 'ai_feature_scan_to_spool', needsProvider: true, needsVision: true, absentHere: true },
+	// Photo intake: the Photo button in the scanner (#418).
+	{ key: 'ai_feature_scan_to_spool', needsProvider: true, needsVision: true },
 	// MCP is a server the operator points a client at; it needs no LLM of its own.
 	{ key: 'ai_feature_mcp', needsProvider: false, absentHere: true },
 	// The duplicate-manufacturer check asks the decision model, not the chat provider.

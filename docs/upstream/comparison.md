@@ -178,7 +178,7 @@ already built and proven by the React client, making the work UI-only.
 |---|---|---|---|
 | ~~9~~ | ~~Native login / API-token entry, and `Authorization` plumbing~~ — **done in #420** (`client_v2/src/lib/ng/components/LoginModal.svelte`, `authToken.ts`) | ~~`client/src/components/apiTokenModal.tsx`, `client/src/utils/apiToken.ts`~~ | ~~L~~ |
 | 3 | Resizable and drag-reorder column manager | `client/src/components/columnManager.tsx`, `resizableHeaderCell.tsx` | **L** |
-| 23 | Photo intake / Scan-to-Spool | `client/src/components/photoIntake.tsx` | **L** |
+| ~~23~~ | ~~Photo intake / Scan-to-Spool~~ — **done in #418** (`client_v2/src/lib/ng/components/PhotoIntakeModal.svelte`, `spoolIntake.ts`) | ~~`client/src/components/photoIntake.tsx`~~ | ~~L~~ |
 | 2 | Multi-row selection with bulk edit / archive / weigh-in | `client/src/pages/spools/bulkEdit.tsx`, `bulkWeightUpdate.tsx` | M |
 | 11 | Swatches settings tab | `client/src/pages/settings/swatchSettings.tsx` | M |
 | 12 | Swatch 3MF download | `client/src/components/swatchDownloadModal.tsx` | M |

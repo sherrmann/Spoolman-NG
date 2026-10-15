@@ -19,7 +19,10 @@
 	import ScanPrompt from './ScanPrompt.svelte';
 	import Camera from '@lucide/svelte/icons/camera';
 	import ArrowLeftRight from '@lucide/svelte/icons/arrow-left-right';
+	import ImageIcon from '@lucide/svelte/icons/image';
 	import { handleScan } from '../scanActions';
+	import { scanToSpoolEnabled } from '../aiApi';
+	import { photoIntake } from '../photoIntake.svelte';
 	import { getLocation } from '../api';
 	import type { ScanAction } from '../scanMove';
 
@@ -40,6 +43,22 @@
 
 	let move = $state<{ spoolId: number; locationName: string } | null>(null);
 	let unknownCode = $state<string | null>(null);
+
+	// Photo intake (#418): the button is offered only when an operator has switched the feature on.
+	let photoEnabled = $state(false);
+	$effect(() => {
+		const controller = new AbortController();
+		scanToSpoolEnabled(controller.signal).then((on) => {
+			if (!controller.signal.aborted) photoEnabled = on;
+		});
+		return () => controller.abort();
+	});
+
+	/** Leave the scanner -- closing it is what stops the camera -- and open the photo dialog. */
+	function openPhoto() {
+		onclose();
+		photoIntake.show();
+	}
 
 	function setAction(next: ScanAction) {
 		action = next;
@@ -156,6 +175,9 @@
 	<button class:active={action === 'move'} onclick={() => setAction('move')}>
 		<ArrowLeftRight size={14} />{ng.scan_action_move()}
 	</button>
+	{#if photoEnabled}
+		<button onclick={openPhoto}><ImageIcon size={14} />{ng.scan_photo()}</button>
+	{/if}
 </div>
 
 {#if action === 'move'}
