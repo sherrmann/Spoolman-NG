@@ -160,6 +160,9 @@
 	/** Hand the choice to the Add-spools modal, falling back to the raw extraction. */
 	async function proceed() {
 		if (!result || handingOver) return;
+		// The answer this handover is for. close() clears it and a new photo replaces it, so a
+		// lookup that returns after either must not act on a session that has moved on.
+		const session = result;
 		const extraction = result.extraction;
 		const handoff = handoffFor(choice, extraction);
 		const fallback = { draft: rawDraftFrom(extraction) };
@@ -171,8 +174,8 @@
 				// step as though nothing matched. fetchFilament upserts it, and answers undefined
 				// for one deleted since the photo was read.
 				const found = await spoolSource.fetchFilament(handoff.filamentId).catch(() => undefined);
-				// Closed while the lookup ran: the user has moved on, so open nothing.
-				if (!photoIntake.open) return;
+				// Closed (or reopened on another photo) while the lookup ran: open nothing.
+				if (!photoIntake.open || result !== session) return;
 				close();
 				if (found) ui.openAddModal(handoff.filamentId, handoff.lot ? { lot: handoff.lot } : null);
 				else ui.openAddModal(undefined, fallback);
@@ -180,7 +183,7 @@
 				// Looked up, not imported: the modal imports it on confirmation, so cancelling there
 				// leaves the library untouched.
 				const ext = await lookupCatalogueEntry(handoff.externalId);
-				if (!photoIntake.open) return;
+				if (!photoIntake.open || result !== session) return;
 				close();
 				if (ext) ui.openAddModal(undefined, { external: ext, ...(handoff.lot ? { lot: handoff.lot } : {}) });
 				else ui.openAddModal(undefined, fallback);

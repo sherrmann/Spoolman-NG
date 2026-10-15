@@ -475,3 +475,85 @@ describe('fixes from review', () => {
 		});
 	});
 });
+
+describe('fixes from the second review', () => {
+	it('pairs calls with the results right after them, so a reused id cannot vouch for a later call', () => {
+		const messages: ChatMessage[] = [
+			{ role: 'user', content: 'what do I have?' },
+			{ role: 'assistant', content: null, tool_calls: [{ id: 'call_0' }] },
+			{ role: 'tool', tool_call_id: 'call_0', content: '{}' },
+			{ role: 'assistant', content: 'One spool.' },
+			{ role: 'user', content: 'move it' },
+			{ role: 'assistant', content: null, tool_calls: [{ id: 'call_0' }] }
+		];
+		expect(pairToolCalls(messages)).toEqual(messages.slice(0, 5));
+	});
+
+	it('drops a result that comes before its call', () => {
+		const out = pairToolCalls([
+			{ role: 'tool', tool_call_id: 'z', content: '{}' },
+			{ role: 'user', content: 'q' },
+			{ role: 'assistant', content: null, tool_calls: [{ id: 'z' }] }
+		]);
+		expect(out).toEqual([{ role: 'user', content: 'q' }]);
+	});
+
+	it('keeps the transcript the executed frame sends, without the system prompt', () => {
+		const sent = [
+			{ role: 'system', content: 'You are…' },
+			{ role: 'user', content: 'move it' },
+			{ role: 'assistant', content: null, tool_calls: [{ id: 'w1' }] },
+			{ role: 'tool', tool_call_id: 'w1', content: '{"ok":true}' }
+		];
+		let s = startDecision(
+			run(startTurn(initialChatState(), 'move it'), [
+				[
+					'confirm',
+					{
+						messages: sent.slice(0, 3),
+						cards: [{ tool: 'update_spool', title: 'Move', summary: '', before: {}, after: {} }]
+					}
+				],
+				['done', {}]
+			])
+		);
+		s = run(s, [['executed', { cards: [{ tool: 'update_spool', summary: 'Moved.' }], messages: sent }]]);
+		expect(s.messages).toEqual(sent.slice(1));
+	});
+
+	it('adds no bubble for an executed frame with no cards, but still takes its transcript', () => {
+		const sent = [{ role: 'user', content: 'x' }];
+		const s = run(startDecision(startTurn(initialChatState(), 'x')), [
+			['executed', { cards: [], messages: sent }]
+		]);
+		expect(s.bubbles.map((b) => b.kind)).toEqual(['user']);
+		expect(s.messages).toEqual(sent);
+	});
+
+	it('keeps an executed card when the drawer closes before the reply that follows it', () => {
+		let s = startDecision(
+			run(startTurn(initialChatState(), 'move it'), [
+				[
+					'confirm',
+					{
+						messages: [{ role: 'user', content: 'move it' }],
+						cards: [{ tool: 't', title: 'T', summary: '', before: {}, after: {} }]
+					}
+				],
+				['done', {}]
+			])
+		);
+		s = run(s, [['executed', { cards: [{ tool: 't', summary: 'Moved.', undo: { tool: 'u' } }] }]]);
+		expect(isDeciding(s)).toBe(true);
+		const back = restoreChat(serialiseChat(s));
+		expect(back?.bubbles.at(-1)).toEqual({
+			kind: 'executed',
+			cards: [{ tool: 't', summary: 'Moved.', undo: null }]
+		});
+	});
+
+	it('stops counting as a decision once the turn ends', () => {
+		const s = run(startDecision(startTurn(initialChatState(), 'x')), [['done', {}]]);
+		expect(s.deciding).toBe(false);
+	});
+});

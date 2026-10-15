@@ -219,13 +219,18 @@
 			}
 			// The server always ends a turn with `done`; if the connection dropped before one
 			// arrived, the composer would stay disabled forever without this.
-			if (chat.status === 'streaming') chat = { ...chat, status: 'idle' };
+			if (chat.status === 'streaming') {
+				// A decision whose outcome never arrived may still have run on the server.
+				const bubbles = chat.deciding ? [...chat.bubbles, { kind: 'unknown' as const }] : chat.bubbles;
+				chat = { ...chat, status: 'idle', deciding: false, bubbles };
+			}
 		} catch (e) {
 			if (controller.signal.aborted) return; // our own close, not a failure
 			const text = e instanceof ChatStartError ? startFailureText(e.failure) : ng.chat_error_failed();
 			chat = {
 				...chat,
 				status: 'idle',
+				deciding: false,
 				bubbles: [...chat.bubbles, { kind: 'error', text }]
 			};
 		} finally {
@@ -392,7 +397,7 @@
 				<button
 					class="speak clear"
 					onclick={clearChat}
-					disabled={chat.status === 'awaiting_confirm'}
+					disabled={chat.status === 'awaiting_confirm' || isDeciding(chat)}
 					title={ng.chat_clear()}
 					aria-label={ng.chat_clear()}
 				>

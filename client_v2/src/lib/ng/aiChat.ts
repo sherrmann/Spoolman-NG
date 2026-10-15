@@ -101,10 +101,17 @@ export interface ChatState {
 	 * not an answer at all.
 	 */
 	streaming: string;
+	/**
+	 * Whether the turn in flight answers a confirmation (confirm or cancel) rather than asking
+	 * something new. The server runs confirmed writes before it sends anything back, so such a
+	 * turn must not be stopped or cleared, and closing the drawer mid-way must not later read
+	 * as a cancellation.
+	 */
+	deciding: boolean;
 }
 
 export function initialChatState(): ChatState {
-	return { messages: [], bubbles: [], status: 'idle', pending: [], streaming: '' };
+	return { messages: [], bubbles: [], status: 'idle', pending: [], streaming: '', deciding: false };
 }
 
 /** Add the user's turn and mark a stream as starting. */
@@ -128,7 +135,7 @@ export function startTurn(state: ChatState, text: string): ChatState {
  * request's `decision` field, not as another message.
  */
 export function startDecision(state: ChatState): ChatState {
-	return { ...state, status: 'streaming', pending: [] };
+	return { ...state, status: 'streaming', pending: [], deciding: true };
 }
 
 /**
@@ -156,7 +163,7 @@ export function stopTurn(state: ChatState): ChatState {
 
 /** Whether the turn in flight is a confirm/cancel answer rather than a new question. */
 export function isDeciding(state: ChatState): boolean {
-	return state.status === 'streaming' && state.bubbles[state.bubbles.length - 1]?.kind === 'confirm';
+	return state.status === 'streaming' && state.deciding;
 }
 
 /**
@@ -167,25 +174,37 @@ export function isDeciding(state: ChatState): boolean {
  * Providers reject either half on its own.
  */
 export function pairToolCalls(messages: ChatMessage[]): ChatMessage[] {
-	const answered = new Set(
-		messages.filter((m) => m.role === 'tool' && typeof m.tool_call_id === 'string').map((m) => m.tool_call_id)
-	);
 	const kept: ChatMessage[] = [];
-	const calls = new Set<unknown>();
-	for (const m of messages) {
-		const toolCalls = m.role === 'assistant' && Array.isArray(m.tool_calls) ? m.tool_calls : null;
-		if (toolCalls && toolCalls.length) {
-			const ids = toolCalls.map((c) => (c as { id?: unknown })?.id);
-			if (ids.every((id) => typeof id === 'string' && answered.has(id))) {
-				ids.forEach((id) => calls.add(id));
-				kept.push(m);
-			} else if (typeof m.content === 'string' && m.content.trim()) {
-				kept.push({ role: 'assistant', content: m.content });
-			}
+	for (let i = 0; i < messages.length; i++) {
+		const m = messages[i];
+		const toolCalls = m.role === 'assistant' && Array.isArray(m.tool_calls) ? m.tool_calls : [];
+		if (toolCalls.length === 0) {
+			// A result not directly after its call turn has nothing to answer.
+			if (m.role !== 'tool') kept.push(m);
 			continue;
 		}
-		if (m.role === 'tool' && !calls.has(m.tool_call_id)) continue;
-		kept.push(m);
+		// Pair by position, not by id across the whole transcript: providers that send no ids
+		// get ones numbered per response, so `call_0` can recur in every round.
+		let j = i + 1;
+		const results: ChatMessage[] = [];
+		while (j < messages.length && messages[j].role === 'tool') results.push(messages[j++]);
+		const ids = toolCalls.map((c) => (c as { id?: unknown } | null)?.id);
+		const answered = new Set(results.map((r) => r.tool_call_id));
+		const complete =
+			ids.every((id) => typeof id === 'string' && answered.has(id)) && new Set(ids).size === ids.length;
+		if (complete) {
+			kept.push(m);
+			const seen = new Set<unknown>();
+			for (const r of results) {
+				if (ids.includes(r.tool_call_id) && !seen.has(r.tool_call_id)) {
+					seen.add(r.tool_call_id);
+					kept.push(r);
+				}
+			}
+		} else if (typeof m.content === 'string' && m.content.trim()) {
+			kept.push({ role: 'assistant', content: m.content });
+		}
+		i = j - 1;
 	}
 	return kept;
 }
@@ -215,8 +234,10 @@ export function applyChatEvent(state: ChatState, frame: ChatEvent): ChatState {
 		return { ...state, streaming: state.streaming + piece };
 	}
 	// Every other frame supersedes whatever was streamed before it.
-	const next = foldFrame(state, frame);
-	return next.streaming ? { ...next, streaming: '' } : next;
+	let next = foldFrame(state, frame);
+	if (next.streaming) next = { ...next, streaming: '' };
+	if (next.deciding && next.status !== 'streaming') next = { ...next, deciding: false };
+	return next;
 }
 
 function foldFrame(state: ChatState, frame: ChatEvent): ChatState {
@@ -258,7 +279,7 @@ function foldFrame(state: ChatState, frame: ChatEvent): ChatState {
 				// REPLACED, not appended. See this module's opening comment: this transcript
 				// carries the assistant's pending tool calls, and the server needs it back
 				// verbatim to know what the user is saying yes to.
-				messages: d.messages ?? state.messages,
+				messages: transcriptFrom(d.messages) ?? state.messages,
 				bubbles: [...state.bubbles, { kind: 'confirm', cards }],
 				status: 'awaiting_confirm',
 				pending: cards
@@ -266,12 +287,24 @@ function foldFrame(state: ChatState, frame: ChatEvent): ChatState {
 		}
 
 		case 'executed': {
-			const cards = (frame.data as { cards?: ExecutedCard[] }).cards ?? [];
-			return { ...state, bubbles: [...state.bubbles, { kind: 'executed', cards }] };
+			const d = frame.data as { cards?: ExecutedCard[]; messages?: unknown };
+			const cards = d.cards ?? [];
+			return {
+				...state,
+				// The server sends the transcript with the writes' results; keep it, so the next
+				// turn tells the model what actually ran.
+				messages: transcriptFrom(d.messages) ?? state.messages,
+				// No cards means every confirmed write failed; the transcript still matters.
+				bubbles: cards.length ? [...state.bubbles, { kind: 'executed', cards }] : state.bubbles
+			};
 		}
 
 		case 'cancelled':
-			return { ...state, bubbles: [...state.bubbles, { kind: 'cancelled' }] };
+			return {
+				...state,
+				messages: transcriptFrom((frame.data as { messages?: unknown }).messages) ?? state.messages,
+				bubbles: [...state.bubbles, { kind: 'cancelled' }]
+			};
 
 		case 'error': {
 			const text = String((frame.data as { message?: unknown }).message ?? '');
@@ -302,6 +335,17 @@ export function decodeChatFrame(event: string, data: string): ChatEvent | null {
 	} catch {
 		return null;
 	}
+}
+
+/**
+ * A transcript sent by the server, without its system prompt (the server always replaces it,
+ * so keeping it would only take up the stored conversation), or null if it is not one.
+ */
+function transcriptFrom(value: unknown): ChatMessage[] | null {
+	if (!Array.isArray(value)) return null;
+	return value.filter(
+		(m): m is ChatMessage => typeof m === 'object' && m !== null && (m as ChatMessage).role !== 'system'
+	);
 }
 
 function isUsagePeriod(value: unknown): value is UsagePeriod {
