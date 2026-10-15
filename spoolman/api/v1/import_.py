@@ -7,20 +7,26 @@ nothing is written and the errors are returned. A dry run validates and reports 
 without committing.
 """
 
+import csv
 from datetime import datetime
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel, Field, ValidationError
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from spoolman import externaldb
+from spoolman import import_spoolstock as spoolstock
 from spoolman.api.v1.filament import FilamentParameters
 from spoolman.api.v1.spool import SpoolParameters
 from spoolman.api.v1.vendor import VendorParameters
 from spoolman.database import models
+from spoolman.database import vendor as vendor_db
 from spoolman.database.database import get_db_session
 from spoolman.database.utils import utc_now, utc_timezone_naive
 from spoolman.import_data import ImportFormat, ImportMode, ImportResult, parse_body, unflatten_row
+from spoolman.math import color_hex_to_hue
 
 router = APIRouter(
     prefix="/import",
@@ -50,6 +56,9 @@ _IGNORE: dict[str, set[str]] = {
     "filament": {"registered", "spool_count", "remaining_weight"},
     "spool": {"registered", "remaining_weight", "used_length", "remaining_length"},
 }
+#: The multi_color_hexes column's length; FilamentParameters does not check it.
+MULTI_COLOR_HEXES_MAX = 128
+
 _PARAMS = {
     "vendor": VendorParameters,
     "filament": FilamentParameters,
@@ -131,6 +140,178 @@ _MODELS = {
     "filament": models.Filament,
     "spool": models.Spool,
 }
+
+
+class SpoolstockImportResponse(BaseModel):
+    vendors_created: int = Field(description="Manufacturers created (or that would be, on a dry run).")
+    filaments_created: int = Field(description="Filaments created (or that would be, on a dry run).")
+    filaments_reused: int = Field(description="Filaments that existed before the import and were used as they are.")
+    spools_created: int = Field(description="Spools created (or that would be, on a dry run).")
+    spools_skipped: int = Field(description="Rows skipped because an earlier import already brought that spool in.")
+    dry_run: bool = Field(description="Whether this was a dry run; if true, nothing was committed.")
+    errors: list[str] = Field(description="Per-row errors. Non-empty means nothing was committed.")
+
+
+def _material_densities() -> dict[str, float]:
+    """Densities by material name from the cached SpoolmanDB materials file, or {} without one."""
+    path = externaldb.get_materials_file()
+    try:
+        materials = externaldb.ExternalMaterialsFile.model_validate_json(path.read_bytes())
+    except (OSError, ValueError):
+        return {}
+    return {m.material.strip().casefold(): m.density for m in materials}
+
+
+def _filament_key(vendor_key: str, data: dict[str, Any]) -> tuple:
+    return (
+        vendor_key,
+        (data.get("name") or "").strip().casefold(),
+        (data.get("material") or "").strip().casefold(),
+        data.get("diameter"),
+        data.get("weight"),
+    )
+
+
+# Declared before "/{entity}", which would otherwise take "spoolstock" as an entity name.
+@router.post(
+    "/spoolstock",
+    name="Import a Spoolstock export",
+    description=(
+        "Import a Spoolstock CSV export: one row per spool, with its filament and manufacturer in "
+        "dotted columns. Manufacturers are matched by name and filaments by manufacturer, name, "
+        "material, diameter and weight, so existing records are reused; spools are always created. "
+        "Each spool keeps its Spoolstock id in its comment, and a second import of the same file "
+        "skips the spools it already brought in. A material without a density takes SpoolmanDB's "
+        "value when that catalogue has been downloaded. The import is one all-or-nothing "
+        "transaction; use dry_run=true to see what it would do."
+    ),
+)
+async def import_spoolstock(  # noqa: C901, PLR0912, PLR0915
+    *,
+    request: Request,
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+    dry_run: Annotated[bool, Query(description="Validate and report counts without committing.")] = False,
+) -> SpoolstockImportResponse:
+    def respond(**counts: int) -> SpoolstockImportResponse:
+        zero = {
+            "vendors_created": 0,
+            "filaments_created": 0,
+            "filaments_reused": 0,
+            "spools_created": 0,
+            "spools_skipped": 0,
+        }
+        return SpoolstockImportResponse(**{**zero, **counts}, dry_run=dry_run, errors=errors)
+
+    errors: list[str] = []
+    try:
+        rows = spoolstock.parse_csv((await request.body()).decode("utf-8"))
+    except (ValueError, UnicodeDecodeError, csv.Error) as exc:
+        errors.append(f"Could not read the file: {exc}")
+        return respond()
+
+    comments = await db.execute(
+        select(models.Spool.comment).where(models.Spool.comment.contains(spoolstock.SPOOL_ID_MARKER)),
+    )
+    already = spoolstock.imported_ids([c for (c,) in comments])
+    densities: dict[str, float] | None = None
+    vendors: dict[str, models.Vendor] = {}
+    filaments: dict[tuple, models.Filament] = {}
+    counts = dict.fromkeys(
+        ("vendors_created", "filaments_created", "filaments_reused", "spools_created", "spools_skipped"),
+        0,
+    )
+
+    for index, row in enumerate(rows, start=2):  # row 1 is the header, as a spreadsheet numbers it
+        try:
+            mapped = spoolstock.map_row(row)
+            if mapped.short_id in already:
+                counts["spools_skipped"] += 1
+                continue
+            if mapped.density_missing:
+                if densities is None:
+                    densities = _material_densities()
+                material = (mapped.filament.get("material") or "").strip()
+                density = densities.get(material.casefold())
+                if density is None:
+                    raise ValueError(  # noqa: TRY301 - reported per row like the validation errors
+                        f"no density for material '{material or '(none)'}'; add filament.material.density to the row",
+                    )
+                mapped.filament["density"] = density
+            filament_data = FilamentParameters.model_validate(mapped.filament).model_dump(exclude_unset=True)
+            spool_data = SpoolParameters.model_validate({**mapped.spool, "filament_id": 0}).model_dump(
+                exclude_unset=True,
+            )
+            spool_data.pop("filament_id")
+
+            hexes = filament_data.get("multi_color_hexes")
+            if hexes is not None and len(hexes) > MULTI_COLOR_HEXES_MAX:
+                raise ValueError(  # noqa: TRY301
+                    f"too many colours ({len(hexes.split(','))}) for one filament's colour list "
+                    f"of {MULTI_COLOR_HEXES_MAX} characters",
+                )
+
+            vendor_key = mapped.vendor_name.strip().casefold()
+            vendor = vendors.get(vendor_key)
+            if vendor is None:
+                VendorParameters.model_validate({"name": mapped.vendor_name})
+                vendor_id = await vendor_db.find_id_by_exact_name(db, mapped.vendor_name)
+                vendor = await db.get(models.Vendor, vendor_id) if vendor_id is not None else None
+                if vendor is None:
+                    vendor = models.Vendor(name=mapped.vendor_name, registered=_now(), extra=[])
+                    db.add(vendor)
+                    counts["vendors_created"] += 1
+                vendors[vendor_key] = vendor
+
+            key = _filament_key(vendor_key, filament_data)
+            filament = filaments.get(key)
+            if filament is None and vendor.id is not None:
+                candidates = await db.execute(select(models.Filament).where(models.Filament.vendor_id == vendor.id))
+                filament = next(
+                    (
+                        f
+                        for f in candidates.unique().scalars()
+                        if _filament_key(
+                            vendor_key,
+                            {"name": f.name, "material": f.material, "diameter": f.diameter, "weight": f.weight},
+                        )
+                        == key
+                    ),
+                    None,
+                )
+                if filament is not None:
+                    filaments[key] = filament
+                    counts["filaments_reused"] += 1
+            if filament is None:
+                direction = filament_data.pop("multi_color_direction", None)
+                filament = models.Filament(registered=_now(), tags=[], extra=[], vendor=vendor, **filament_data)
+                filament.multi_color_direction = direction.value if direction is not None else None
+                filament.color_hue = color_hex_to_hue(filament.color_hex, filament.multi_color_hexes)
+                db.add(filament)
+                filaments[key] = filament
+                counts["filaments_created"] += 1
+
+            db.add(
+                models.Spool(
+                    registered=_now(),
+                    tags=[],
+                    extra=[],
+                    filament=filament,
+                    **{"used_weight": 0, **spool_data},
+                ),
+            )
+            already.add(mapped.short_id)
+            counts["spools_created"] += 1
+        except (ValidationError, ValueError) as exc:
+            errors.append(f"Row {index}: {exc}")
+
+    if errors and not dry_run:
+        await db.rollback()
+        return respond()
+    if dry_run:
+        await db.rollback()
+    else:
+        await db.commit()
+    return respond(**counts)
 
 
 @router.post(
