@@ -16,6 +16,7 @@ from typing import NamedTuple
 
 from scheduler.asyncio.scheduler import Scheduler
 from sqlalchemy import URL, event
+from sqlalchemy.engine.interfaces import DBAPIConnection
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 from spoolman import env
@@ -38,18 +39,28 @@ BACKUP_NAME = "spoolman.db"
 BACKUP_LOCK_TIMEOUT_SECONDS = 60
 
 
-def _unicode_lower(value: str | None) -> str | None:
-    """Lower-case text with Python's Unicode rules."""
-    return value.lower() if value is not None else None
+def _unicode_lower(value: object) -> str | None:
+    """Lower-case a value with Python's Unicode rules, otherwise behaving like SQLite's lower().
+
+    SQLite's own lower() takes any value: NULL stays NULL, and a number or blob is read as text
+    first ("123"). A JSON number reaching it -- an extra-field value whose field changed type,
+    say -- must keep working rather than turn a search into an error.
+    """
+    if value is None:
+        return None
+    if isinstance(value, bytes):
+        return value.decode("utf-8", errors="replace").lower()
+    return str(value).lower()
 
 
-def _register_sqlite_functions(connection: sqlite3.Connection, _: object) -> None:
+def _register_sqlite_functions(connection: DBAPIConnection, _: object) -> None:
     """Replace SQLite's ASCII-only lower() on each new pooled connection (upstream 1507f9b3b).
 
     SQLite's own lower() leaves non-ASCII letters alone, so a filter for "ärger" missed "Ärger"
     and sorting put "Ölmann" apart from "ölmann". ilike() compiles to lower() LIKE lower() on
     SQLite, so searches and the case-insensitive sorts both pick this up. No index or constraint
-    in the schema is built on lower(), so swapping the function changes no stored entry.
+    in the schema is built on lower(), so swapping the function changes no stored entry. The
+    connection is SQLAlchemy's aiosqlite adapter, which forwards create_function to sqlite3.
     """
     connection.create_function("lower", 1, _unicode_lower, deterministic=True)
 

@@ -5,9 +5,12 @@ sorted apart from "Ölmann". Each connection now gets a Unicode lower(); ilike()
 case-insensitive sorts both go through it.
 """
 
+import sqlite3
 from typing import Any
 
 from httpx import AsyncClient
+
+from spoolman.database.database import _register_sqlite_functions
 
 FIL = "/api/v1/filament"
 VENDOR = "/api/v1/vendor"
@@ -48,3 +51,16 @@ async def test_sort_folds_case_for_non_ascii_initials(client: AsyncClient):
     # Ö and ö sort after z by code point either way; what changes is that the two now fold to
     # one letter, so "ölfass" comes before "Ölmann". ASCII-only lower() kept them apart.
     assert [v["name"] for v in resp.json()] == ["Zebra", "ölfass", "Ölmann"]
+
+
+def test_unicode_lower_treats_non_text_like_sqlite() -> None:
+    """A number comes back as text and NULL as NULL, as from SQLite's own lower(), rather than raising."""
+    conn = sqlite3.connect(":memory:")
+    _register_sqlite_functions(conn, None)
+    assert conn.execute("SELECT lower('ÄRGER'), lower(123), lower(1.5), lower(NULL)").fetchone() == (
+        "ärger",
+        "123",
+        "1.5",
+        None,
+    )
+    conn.close()
