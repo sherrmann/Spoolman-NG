@@ -10,6 +10,11 @@ A standalone npm/Vite/React project — deliberately **not** sharing the `client
 (no refine/antd). All logic is framework-free under `src/model/`; the UI is a thin render of
 `buildPlan(config)`.
 
+The answers are also kept in the address bar (`src/urlState.ts`, #344), so a filled-in guide can
+be shared as a support link, e.g. `…/install/?db=postgres&klipper=1`. Only answers that differ
+from the defaults appear. A link's free-text answers (sub-path, timezone) are only accepted if they
+use the characters those answers can contain, since they end up in pasted config files.
+
 ## Commands
 
 ```bash
@@ -23,8 +28,8 @@ npm run render-matrix -- --out .matrix   # write every preset's artifacts for ex
 CI (`guide-tests` job in `.github/workflows/ci.yml`) runs lint/typecheck/tests/build, then
 validates the rendered preset matrix with the real tools: `docker compose config` on every
 generated compose file and `helm template charts/spoolman-ng` on every generated values.yaml.
-Deployment happens in `.github/workflows/docs-site.yml`: the built `dist/` is staged into the
-Pages artifact at `docs/install/` (gitignored, like the generated `docs/index.html`).
+Deployment happens in `.github/workflows/docs-site.yml`: the built `dist/` is staged into
+`docs/install/` (gitignored, like the generated `docs/index.html`) and published at `/install/`.
 
 ## Single-source contract
 
@@ -60,6 +65,8 @@ languages; they are pinned indirectly via the doc blocks these tests check.
    matters sometimes).
 2. Put config-mutating rules in `src/model/rules.ts` (`normalizeConfig`), artifact changes in
    the generator, new steps in `src/model/steps.ts`.
-3. Add a focused test next to the module and, if the change creates a new output shape, a
+3. Give a new answer a query parameter in `src/urlState.ts`; its round-trip test fails until
+   you do.
+4. Add a focused test next to the module and, if the change creates a new output shape, a
    preset in `src/model/presets.ts` — presets feed both the snapshot suite and CI's
    compose/helm validation.
