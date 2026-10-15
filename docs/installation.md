@@ -382,6 +382,8 @@ database types.
 | Variable | Default | Description |
 |---|---|---|
 | `SPOOLMAN_METRICS_ENABLED` | `FALSE` | Expose Prometheus metrics at `/metrics` — see [monitoring.md](monitoring.md). |
+| `SPOOLMAN_SERVER_TIMING` | `FALSE` | Add a `Server-Timing` header to responses — see [Request timing](monitoring.md#request-timing). |
+| `SPOOLMAN_SLOW_REQUEST_MS` | unset | Log a warning for requests that take at least this many milliseconds to start responding (`0` logs every request); unset turns it off — see [Request timing](monitoring.md#request-timing). |
 | `SPOOLMAN_AUTOMATIC_BACKUP` | `TRUE` | Nightly SQLite backup at midnight; the 5 most recent backups are kept in the backups directory. |
 | `EXTERNAL_DB_URL` | `https://sherrmann.github.io/SpoolmanDB/` | Source of the community filament catalog ([SpoolmanDB](https://github.com/sherrmann/SpoolmanDB)). Set to an empty string to disable syncing. |
 | `EXTERNAL_DB_SYNC_INTERVAL` | `3600` | Catalog sync interval in seconds; `0` syncs only at startup. |

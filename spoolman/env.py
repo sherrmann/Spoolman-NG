@@ -595,6 +595,46 @@ def is_metrics_enabled() -> bool:
     )
 
 
+def get_server_timing_enabled() -> bool:
+    """Get whether responses carry a ``Server-Timing`` header.
+
+    Returns False if no environment variable was set.
+
+    Returns:
+        bool: Whether the Server-Timing header is enabled.
+
+    """
+    enabled = os.getenv("SPOOLMAN_SERVER_TIMING", "FALSE").upper()
+    if enabled in {"FALSE", "0"}:
+        return False
+    if enabled in {"TRUE", "1"}:
+        return True
+    raise ValueError(
+        f"Failed to parse SPOOLMAN_SERVER_TIMING variable: Unknown value '{enabled}'.",
+    )
+
+
+def get_slow_request_ms() -> int | None:
+    """Get the threshold in milliseconds above which a request is logged as slow.
+
+    Returns None if the variable is unset or empty, which turns the slow-request log off.
+
+    Returns:
+        Optional[int]: The threshold in milliseconds.
+
+    """
+    value = os.getenv("SPOOLMAN_SLOW_REQUEST_MS")
+    if value is None or value.strip() == "":
+        return None
+    try:
+        threshold = int(value)
+    except ValueError as exc:
+        raise ValueError(f"Failed to parse SPOOLMAN_SLOW_REQUEST_MS variable: {exc!s}") from exc
+    if threshold < 0:
+        raise ValueError("Failed to parse SPOOLMAN_SLOW_REQUEST_MS variable: Must not be negative.")
+    return threshold
+
+
 def is_update_check_enabled() -> bool:
     """Get whether the daily "newer release available" check is enabled.
 

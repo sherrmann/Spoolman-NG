@@ -29,6 +29,7 @@ _BOOL_HELPERS: list[tuple[Callable[[], bool], str]] = [
     (env.is_nfc_enabled, "SPOOLMAN_NFC_ENABLED"),
     (env.is_tigertag_enabled, "SPOOLMAN_TIGERTAG_ENABLED"),
     (env.is_ha_ingress, "SPOOLMAN_HA_INGRESS"),
+    (env.get_server_timing_enabled, "SPOOLMAN_SERVER_TIMING"),
 ]
 
 
@@ -273,3 +274,35 @@ def test_can_write_to_data_dir_read_only(monkeypatch: pytest.MonkeyPatch, tmp_pa
         assert env.can_write_to_data_dir() is False
     finally:
         tmp_path.chmod(0o700)
+
+
+# --- get_slow_request_ms ---------------------------------------------------
+
+
+@pytest.mark.parametrize("value", [None, "", "  "])
+def test_slow_request_ms_unset_or_empty_is_none(monkeypatch: pytest.MonkeyPatch, value: str | None) -> None:
+    """Return None (feature off) when the variable is unset or empty."""
+    if value is None:
+        monkeypatch.delenv("SPOOLMAN_SLOW_REQUEST_MS", raising=False)
+    else:
+        monkeypatch.setenv("SPOOLMAN_SLOW_REQUEST_MS", value)
+    assert env.get_slow_request_ms() is None
+
+
+@pytest.mark.parametrize(("value", "expected"), [("0", 0), ("500", 500)])
+def test_slow_request_ms_parses_non_negative_integers(
+    monkeypatch: pytest.MonkeyPatch,
+    value: str,
+    expected: int,
+) -> None:
+    """Parse a non-negative integer, where 0 means every request."""
+    monkeypatch.setenv("SPOOLMAN_SLOW_REQUEST_MS", value)
+    assert env.get_slow_request_ms() == expected
+
+
+@pytest.mark.parametrize("value", ["abc", "1.5", "-1"])
+def test_slow_request_ms_raises_on_invalid_value(monkeypatch: pytest.MonkeyPatch, value: str) -> None:
+    """Reject non-integers and negative numbers with a ValueError naming the variable."""
+    monkeypatch.setenv("SPOOLMAN_SLOW_REQUEST_MS", value)
+    with pytest.raises(ValueError, match="SPOOLMAN_SLOW_REQUEST_MS"):
+        env.get_slow_request_ms()
