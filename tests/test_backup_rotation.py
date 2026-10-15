@@ -221,7 +221,7 @@ def test_backup_needs_no_lock_on_the_target(db: Database, backups: Path, monkeyp
         assert conn.execute("SELECT note FROM spool").fetchall() == [("original",)]
 
 
-def testbackup_target_uri_opens_local_paths_without_locks() -> None:
+def test_backup_target_uri_opens_local_paths_without_locks() -> None:
     """A local target is opened as a file: URI with nolock=1."""
     uri = database.backup_target_uri(PureWindowsPath(r"C:\data\backups\spoolman.db.pending"))
     assert uri == "file:///C:/data/backups/spoolman.db.pending?nolock=1"
@@ -230,6 +230,6 @@ def testbackup_target_uri_opens_local_paths_without_locks() -> None:
     )
 
 
-def testbackup_target_uri_leaves_unc_paths_to_be_opened_by_path() -> None:
+def test_backup_target_uri_leaves_unc_paths_to_be_opened_by_path() -> None:
     """A UNC path would become a URI with an authority, which SQLite refuses; it is opened by path."""
     assert database.backup_target_uri(PureWindowsPath(r"\\nas\share\backups\spoolman.db.pending")) is None
