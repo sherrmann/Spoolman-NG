@@ -775,6 +775,8 @@
       "tab": "Import / Eksport",
       "export_title": "Eksport danych",
       "export_help": "Pobierz producentów, filamenty lub szpule jako CSV lub JSON. Dane producentów i filamentów są dołączane do szpul.",
+      "simplyprint_button": "Pobierz dla SimplyPrint",
+      "simplyprint_hint": "Aktywne szpule w formacie importowanym przez Filament Manager w SimplyPrint.",
       "import_title": "Import danych",
       "import_help": "Prześlij plik CSV lub JSON w tym samym formacie co eksport. Cały plik jest stosowany jako jedna transakcja „wszystko albo nic”; najpierw wykonaj przebieg próbny, aby podejrzeć wynik.",
       "report_title": "Raport magazynowy",
@@ -1351,11 +1353,34 @@
     "thinking": "Myślenie…",
     "empty": "Zapytaj mnie o swoje szpule i filament — na przykład „Ile zostało mi czarnego PETG?” lub „Co powinienem zamówić ponownie?”.",
     "viewInList": "Zobacz na liście szpul",
+    "stop": "Zatrzymaj",
+    "clear": "Wyczyść czat",
+    "more": "+{{count}} więcej",
+    "starters": {
+      "stock": "Ile filamentu mi zostało?",
+      "low": "Czego zaczyna brakować?",
+      "orders": "Co jest zamówione?",
+      "usage": "Jakie było moje zużycie w tym miesiącu?"
+    },
+    "cards": {
+      "spools_one": "{{count}} szpula",
+      "spools_few": "{{count}} szpule",
+      "spools_many": "{{count}} szpul",
+      "filaments_one": "{{count}} filament",
+      "filaments_few": "{{count}} filamenty",
+      "filaments_many": "{{count}} filamentów",
+      "outstanding": "Oczekujące: {{count}}",
+      "arrived": "Dostarczono",
+      "match": "Dopasowanie {{percent}}%",
+      "low_stock": "Niski zapas",
+      "on_order": "Zamówione"
+    },
     "confirm": {
       "confirm": "Potwierdź",
       "cancel": "Anuluj",
       "confirmed": "Potwierdzono",
       "cancelled": "Anulowano",
+      "unknown": "Twoja odpowiedź na tę zmianę została wysłana, ale jej wynik nigdy nie dotarł. Sprawdź element, zanim zapytasz ponownie.",
       "destructive": "Nie można cofnąć",
       "not_set": "nie ustawiono",
       "status_open": "Otwarte",
@@ -1398,6 +1423,14 @@
     "back": "Wstecz",
     "photo_discarded": "Zdjęcie zostało przeanalizowane w pamięci i nie jest przechowywane.",
     "prefilled_banner": "Wypełniono na podstawie zdjęcia etykiety - sprawdź wartości przed zapisaniem.",
+    "title": "Scan-to-Spool",
+    "choices_label": "Dodaj jako",
+    "errors": {
+      "disabled": "Wczytywanie zdjęć jest wyłączone na tym serwerze.",
+      "too_large": "To zdjęcie jest za duże, aby je wysłać. Spróbuj mniejszego.",
+      "bad_image": "Tego pliku nie udało się odczytać jako zdjęcia. Użyj obrazu JPEG, PNG lub WebP.",
+      "failed": "Nie udało się odczytać etykiety. Spróbuj ponownie lub dodaj szpulę ręcznie."
+    },
     "fields": {
       "vendor": "Producent",
       "name": "Nazwa",

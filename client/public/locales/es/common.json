@@ -775,6 +775,8 @@
       "tab": "Importar / Exportar",
       "export_title": "Exportar datos",
       "export_help": "Descarga tus fabricantes, filamentos o bobinas como CSV o JSON. Los datos de fabricante y filamento se incluyen con las bobinas.",
+      "simplyprint_button": "Descargar para SimplyPrint",
+      "simplyprint_hint": "Bobinas activas en el formato que importa el Filament Manager de SimplyPrint.",
       "import_title": "Importar datos",
       "import_help": "Sube un archivo CSV o JSON con la misma estructura que una exportación. Todo el archivo se aplica como una única transacción de todo o nada; usa primero una simulación para previsualizar el resultado.",
       "report_title": "Informe de inventario",
@@ -1351,11 +1353,34 @@
     "thinking": "Pensando…",
     "empty": "Pregúntame sobre tus bobinas y tu filamento — por ejemplo «¿cuánto PETG negro me queda?» o «¿qué debería reponer?».",
     "viewInList": "Ver en la lista de bobinas",
+    "stop": "Detener",
+    "clear": "Borrar chat",
+    "more": "+{{count}} más",
+    "starters": {
+      "stock": "¿Cuánto filamento me queda?",
+      "low": "¿Qué se está agotando?",
+      "orders": "¿Qué está en pedido?",
+      "usage": "¿Cuánto he usado este mes?"
+    },
+    "cards": {
+      "spools_one": "{{count}} bobina",
+      "spools_many": "{{count}} bobinas",
+      "spools_other": "{{count}} bobinas",
+      "filaments_one": "{{count}} filamento",
+      "filaments_many": "{{count}} filamentos",
+      "filaments_other": "{{count}} filamentos",
+      "outstanding": "Pendientes: {{count}}",
+      "arrived": "Llegado",
+      "match": "Coincidencia del {{percent}} %",
+      "low_stock": "Stock bajo",
+      "on_order": "En pedido"
+    },
     "confirm": {
       "confirm": "Confirmar",
       "cancel": "Cancelar",
       "confirmed": "Confirmado",
       "cancelled": "Cancelado",
+      "unknown": "Tu respuesta a este cambio se envió, pero su resultado nunca llegó. Revisa el elemento antes de volver a preguntar.",
       "destructive": "No se puede deshacer",
       "not_set": "sin definir",
       "status_open": "Abierto",
@@ -1398,6 +1423,14 @@
     "back": "Atrás",
     "photo_discarded": "La foto se analizó en memoria y no se almacena.",
     "prefilled_banner": "Rellenado automáticamente a partir de una foto de la etiqueta - revisa los valores antes de guardar.",
+    "title": "Scan-to-Spool",
+    "choices_label": "Añadirlo como",
+    "errors": {
+      "disabled": "El alta por foto está desactivada en este servidor.",
+      "too_large": "Esa foto es demasiado grande para enviarla. Prueba con una más pequeña.",
+      "bad_image": "Ese archivo no se pudo leer como foto. Usa una imagen JPEG, PNG o WebP.",
+      "failed": "No se pudo leer la etiqueta. Inténtalo de nuevo o añade la bobina a mano."
+    },
     "fields": {
       "vendor": "Fabricante",
       "name": "Nombre",

@@ -739,6 +739,8 @@
       "tab": "导入/导出",
       "export_title": "导出数据",
       "export_help": "将您的制造商、耗材或料盘下载为 CSV 或 JSON。导出料盘时会一并包含制造商和耗材数据。",
+      "simplyprint_button": "下载 SimplyPrint 格式",
+      "simplyprint_hint": "使用中的料盘，采用 SimplyPrint 的 Filament Manager 可导入的格式。",
       "import_title": "导入数据",
       "import_help": "上传与导出格式相同的 CSV 或 JSON 文件。整个文件将作为一个“全有或全无”的事务一次性应用；建议先使用试运行预览结果。",
       "report_title": "库存报告",
@@ -1315,11 +1317,30 @@
     "thinking": "思考中…",
     "empty": "问我关于您的料盘和耗材的问题——例如“我还剩多少黑色 PETG？”或“我该补货什么了？”。",
     "viewInList": "在料盘列表中查看",
+    "stop": "停止",
+    "clear": "清空对话",
+    "more": "还有 {{count}} 项",
+    "starters": {
+      "stock": "我还剩多少耗材？",
+      "low": "哪些快用完了？",
+      "orders": "哪些在订购中？",
+      "usage": "我这个月用了多少？"
+    },
+    "cards": {
+      "spools_other": "{{count}} 个料盘",
+      "filaments_other": "{{count}} 种耗材",
+      "outstanding": "{{count}} 件未到货",
+      "arrived": "已到货",
+      "match": "匹配度 {{percent}}%",
+      "low_stock": "库存不足",
+      "on_order": "订购中"
+    },
     "confirm": {
       "confirm": "确认",
       "cancel": "取消",
       "confirmed": "已确认",
       "cancelled": "已取消",
+      "unknown": "您对此更改的回复已发送，但始终未收到结果。请先检查该项目，再重新询问。",
       "destructive": "无法撤销",
       "not_set": "未设置",
       "status_open": "进行中",
@@ -1362,6 +1383,14 @@
     "back": "返回",
     "photo_discarded": "照片仅在内存中分析，不会被保存。",
     "prefilled_banner": "已根据标签照片自动填写 - 保存前请核对各项数值。",
+    "title": "Scan-to-Spool",
+    "choices_label": "添加为",
+    "errors": {
+      "disabled": "此服务器已关闭拍照录入。",
+      "too_large": "照片太大，无法发送。请换一张更小的照片。",
+      "bad_image": "无法将该文件读取为照片。请使用 JPEG、PNG 或 WebP 图片。",
+      "failed": "无法识别标签。请重试，或手动添加料盘。"
+    },
     "fields": {
       "vendor": "制造商",
       "name": "名称",

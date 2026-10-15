@@ -775,6 +775,8 @@
       "tab": "Import / Export",
       "export_title": "Exporter les données",
       "export_help": "Téléchargez vos fabricants, filaments ou bobines au format CSV ou JSON. Les données de fabricant et de filament sont incluses avec les bobines.",
+      "simplyprint_button": "Télécharger pour SimplyPrint",
+      "simplyprint_hint": "Bobines actives au format importé par le Filament Manager de SimplyPrint.",
       "import_title": "Importer des données",
       "import_help": "Téléversez un fichier CSV ou JSON au même format qu'un export. Le fichier entier est appliqué en une seule transaction tout-ou-rien ; faites d'abord une simulation pour prévisualiser le résultat.",
       "report_title": "Rapport d'inventaire",
@@ -1351,11 +1353,34 @@
     "thinking": "Réflexion…",
     "empty": "Posez-moi une question sur vos bobines et filaments — par exemple « combien de PETG noir me reste-t-il ? » ou « qu'est-ce que je dois racheter ? ».",
     "viewInList": "Voir dans la liste des bobines",
+    "stop": "Arrêter",
+    "clear": "Effacer la discussion",
+    "more": "+{{count}} de plus",
+    "starters": {
+      "stock": "Combien de filament me reste-t-il ?",
+      "low": "Qu'est-ce qui commence à manquer ?",
+      "orders": "Qu'est-ce qui est en commande ?",
+      "usage": "Combien ai-je utilisé ce mois-ci ?"
+    },
+    "cards": {
+      "spools_one": "{{count}} bobine",
+      "spools_many": "{{count}} bobines",
+      "spools_other": "{{count}} bobines",
+      "filaments_one": "{{count}} filament",
+      "filaments_many": "{{count}} filaments",
+      "filaments_other": "{{count}} filaments",
+      "outstanding": "{{count}} en attente",
+      "arrived": "Arrivée",
+      "match": "Correspondance à {{percent}} %",
+      "low_stock": "Stock faible",
+      "on_order": "En commande"
+    },
     "confirm": {
       "confirm": "Confirmer",
       "cancel": "Annuler",
       "confirmed": "Confirmé",
       "cancelled": "Annulé",
+      "unknown": "Votre réponse à cette modification a été envoyée, mais son résultat n'est jamais arrivé. Vérifiez l'élément avant de redemander.",
       "destructive": "Ne peut pas être annulé",
       "not_set": "non défini",
       "status_open": "Ouverte",
@@ -1398,6 +1423,14 @@
     "back": "Retour",
     "photo_discarded": "La photo a été analysée en mémoire et n'est pas stockée.",
     "prefilled_banner": "Préremplie à partir d'une photo d'étiquette - vérifiez les valeurs avant d'enregistrer.",
+    "title": "Scan-to-Spool",
+    "choices_label": "Ajouter en tant que",
+    "errors": {
+      "disabled": "La saisie photo est désactivée sur ce serveur.",
+      "too_large": "Cette photo est trop volumineuse pour être envoyée. Essayez-en une plus petite.",
+      "bad_image": "Ce fichier n'a pas pu être lu comme une photo. Utilisez une image JPEG, PNG ou WebP.",
+      "failed": "L'étiquette n'a pas pu être lue. Réessayez, ou ajoutez la bobine manuellement."
+    },
     "fields": {
       "vendor": "Fabricant",
       "name": "Nom",

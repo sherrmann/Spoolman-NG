@@ -729,6 +729,8 @@
       "tab": "Importas / eksportas",
       "export_title": "Eksportuoti duomenis",
       "export_help": "Atsisiųskite savo gamintojus, gijas ar rites CSV arba JSON formatu. Gamintojų ir gijų duomenys įtraukiami kartu su ritėmis.",
+      "simplyprint_button": "Atsisiųsti SimplyPrint programai",
+      "simplyprint_hint": "Aktyvios ritės formatu, kurį importuoja SimplyPrint Filament Manager.",
       "import_title": "Importuoti duomenis",
       "import_help": "Įkelkite CSV arba JSON failą, kurio struktūra tokia pati kaip eksporto. Visas failas taikomas kaip viena „viskas arba nieko“ operacija; pirmiausia naudokite bandomąjį vykdymą rezultatui peržiūrėti.",
       "report_title": "Atsargų ataskaita",
@@ -1339,11 +1341,34 @@
     "thinking": "Mąstoma…",
     "empty": "Klauskite manęs apie savo rites ir gijas — pavyzdžiui, „kiek juodo PETG dar turiu?“ arba „ką turėčiau užsisakyti?“.",
     "viewInList": "Peržiūrėti ričių sąraše",
+    "stop": "Sustabdyti",
+    "clear": "Išvalyti pokalbį",
+    "more": "+{{count}} daugiau",
+    "starters": {
+      "stock": "Kiek gijos man dar liko?",
+      "low": "Kas baigiasi?",
+      "orders": "Kas užsakyta?",
+      "usage": "Kiek sunaudojau šį mėnesį?"
+    },
+    "cards": {
+      "spools_one": "{{count}} ritė",
+      "spools_few": "{{count}} ritės",
+      "spools_other": "{{count}} ričių",
+      "filaments_one": "{{count}} gija",
+      "filaments_few": "{{count}} gijos",
+      "filaments_other": "{{count}} gijų",
+      "outstanding": "Laukiama: {{count}}",
+      "arrived": "Gauta",
+      "match": "Atitikimas {{percent}} %",
+      "low_stock": "Mažas kiekis",
+      "on_order": "Užsakyta"
+    },
     "confirm": {
       "confirm": "Patvirtinti",
       "cancel": "Atšaukti",
       "confirmed": "Patvirtinta",
       "cancelled": "Atšaukta",
+      "unknown": "Jūsų atsakymas į šį pakeitimą išsiųstas, tačiau jo rezultatas taip ir negautas. Prieš klausdami dar kartą, patikrinkite įrašą.",
       "destructive": "Neatšaukiama",
       "not_set": "nenustatyta",
       "status_open": "Atviras",
@@ -1386,6 +1411,14 @@
     "back": "Atgal",
     "photo_discarded": "Nuotrauka buvo analizuota atmintyje ir nesaugoma.",
     "prefilled_banner": "Užpildyta pagal etiketės nuotrauką - prieš išsaugant peržiūrėkite reikšmes.",
+    "title": "Scan-to-Spool",
+    "choices_label": "Pridėti kaip",
+    "errors": {
+      "disabled": "Nuotraukų įvedimas šiame serveryje išjungtas.",
+      "too_large": "Ši nuotrauka per didelė išsiųsti. Pabandykite mažesnę.",
+      "bad_image": "Šio failo nepavyko nuskaityti kaip nuotraukos. Naudokite JPEG, PNG arba WebP vaizdą.",
+      "failed": "Etiketės nepavyko nuskaityti. Bandykite dar kartą arba pridėkite ritę rankiniu būdu."
+    },
     "fields": {
       "vendor": "Gamintojas",
       "name": "Pavadinimas",

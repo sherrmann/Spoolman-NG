@@ -649,6 +649,8 @@
       "tab": "インポート / エクスポート",
       "export_title": "データのエクスポート",
       "export_help": "製造者・フィラメント・スプールをCSVまたはJSONとしてダウンロードします。スプールには製造者とフィラメントのデータも含まれます。",
+      "simplyprint_button": "SimplyPrint用にダウンロード",
+      "simplyprint_hint": "SimplyPrintのFilament Managerがインポートできる形式の使用中スプール。",
       "import_title": "データのインポート",
       "import_help": "エクスポートと同じ形式のCSVまたはJSONファイルをアップロードします。ファイル全体が単一のオール・オア・ナッシングのトランザクションとして適用されます。まずドライランで結果をプレビューしてください。",
       "report_title": "在庫レポート",
@@ -1303,11 +1305,30 @@
     "thinking": "考え中…",
     "empty": "スプールやフィラメントについて何でも聞いてください — 例えば「黒のPETGはあとどれくらい残ってる?」や「そろそろ買い足したほうがいいのは?」など。",
     "viewInList": "スプール一覧で表示",
+    "stop": "停止",
+    "clear": "チャットをクリア",
+    "more": "他{{count}}件",
+    "starters": {
+      "stock": "フィラメントはあとどれくらい残ってる?",
+      "low": "残り少ないのはどれ?",
+      "orders": "注文中のものは?",
+      "usage": "今月はどれくらい使った?"
+    },
+    "cards": {
+      "spools_other": "{{count}}本のスプール",
+      "filaments_other": "{{count}}件のフィラメント",
+      "outstanding": "未着{{count}}件",
+      "arrived": "到着済み",
+      "match": "一致度{{percent}}%",
+      "low_stock": "在庫不足",
+      "on_order": "注文中"
+    },
     "confirm": {
       "confirm": "確認",
       "cancel": "キャンセル",
       "confirmed": "確認済み",
       "cancelled": "キャンセル済み",
+      "unknown": "この変更への回答は送信されましたが、結果が届きませんでした。もう一度尋ねる前に、項目を確認してください。",
       "destructive": "元に戻せません",
       "not_set": "未設定",
       "status_open": "未完了",
@@ -1350,6 +1371,14 @@
     "back": "戻る",
     "photo_discarded": "写真はメモリ上で解析され、保存されません。",
     "prefilled_banner": "ラベル写真から自動入力されました - 保存する前に内容を確認してください。",
+    "title": "Scan-to-Spool",
+    "choices_label": "追加方法",
+    "errors": {
+      "disabled": "このサーバーでは写真からの登録が無効になっています。",
+      "too_large": "写真が大きすぎて送信できません。もっと小さい写真をお試しください。",
+      "bad_image": "このファイルは写真として読み込めませんでした。JPEG、PNG、またはWebP画像を使用してください。",
+      "failed": "ラベルを読み取れませんでした。もう一度試すか、スプールを手動で追加してください。"
+    },
     "fields": {
       "vendor": "製造者",
       "name": "名称",

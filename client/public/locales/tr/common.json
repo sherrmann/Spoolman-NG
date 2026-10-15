@@ -711,6 +711,8 @@
       "tab": "İçe / Dışa Aktar",
       "export_title": "Verileri dışa aktar",
       "export_help": "Üreticilerinizi, filamentlerinizi veya makaralarınızı CSV ya da JSON olarak indirin. Üretici ve filament verileri makaralara dahil edilir.",
+      "simplyprint_button": "SimplyPrint için indir",
+      "simplyprint_hint": "SimplyPrint'in Filament Manager'ının içe aktardığı biçimde etkin makaralar.",
       "import_title": "Verileri içe aktar",
       "import_help": "Dışa aktarmayla aynı biçimde bir CSV veya JSON dosyası yükleyin. Dosyanın tamamı, ya hep ya hiç mantığıyla tek bir işlem olarak uygulanır; sonucu önizlemek için önce deneme çalıştırması yapın.",
       "report_title": "Envanter raporu",
@@ -1321,11 +1323,32 @@
     "thinking": "Düşünüyor…",
     "empty": "Makaralarınız ve filamentiniz hakkında bana soru sorun — örneğin \"elimde ne kadar siyah PETG kaldı?\" veya \"neyi yeniden sipariş etmeliyim?\".",
     "viewInList": "Makaralar listesinde göster",
+    "stop": "Durdur",
+    "clear": "Sohbeti temizle",
+    "more": "+{{count}} daha",
+    "starters": {
+      "stock": "Ne kadar filamentim kaldı?",
+      "low": "Ne azalıyor?",
+      "orders": "Siparişte ne var?",
+      "usage": "Bu ay ne kadar kullandım?"
+    },
+    "cards": {
+      "spools_one": "{{count}} makara",
+      "spools_other": "{{count}} makara",
+      "filaments_one": "{{count}} filament",
+      "filaments_other": "{{count}} filament",
+      "outstanding": "{{count}} bekliyor",
+      "arrived": "Geldi",
+      "match": "%{{percent}} eşleşme",
+      "low_stock": "Düşük stok",
+      "on_order": "Siparişte"
+    },
     "confirm": {
       "confirm": "Onayla",
       "cancel": "İptal et",
       "confirmed": "Onaylandı",
       "cancelled": "İptal edildi",
+      "unknown": "Bu değişikliğe verdiğiniz yanıt gönderildi, ancak sonucu hiç ulaşmadı. Yeniden sormadan önce öğeyi kontrol edin.",
       "destructive": "Geri alınamaz",
       "not_set": "ayarlanmadı",
       "status_open": "Açık",
@@ -1368,6 +1391,14 @@
     "back": "Geri",
     "photo_discarded": "Fotoğraf bellekte analiz edildi ve saklanmadı.",
     "prefilled_banner": "Bir etiket fotoğrafından önceden dolduruldu - kaydetmeden önce değerleri gözden geçirin.",
+    "title": "Scan-to-Spool",
+    "choices_label": "Şu olarak ekle",
+    "errors": {
+      "disabled": "Fotoğraf girişi bu sunucuda kapalı.",
+      "too_large": "Bu fotoğraf göndermek için çok büyük. Daha küçük bir tane deneyin.",
+      "bad_image": "Bu dosya fotoğraf olarak okunamadı. JPEG, PNG veya WebP görüntüsü kullanın.",
+      "failed": "Etiket okunamadı. Tekrar deneyin veya makarayı elle ekleyin."
+    },
     "fields": {
       "vendor": "Üretici",
       "name": "Ad",

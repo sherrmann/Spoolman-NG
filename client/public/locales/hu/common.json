@@ -757,6 +757,8 @@
       "tab": "Importálás / Exportálás",
       "export_title": "Adatok exportálása",
       "export_help": "Töltsd le a gyártókat, filamenteket vagy tekercseket CSV vagy JSON formátumban. A tekercsek exportja a gyártó- és filamentadatokat is tartalmazza.",
+      "simplyprint_button": "Letöltés SimplyPrinthez",
+      "simplyprint_hint": "Aktív tekercsek abban a formátumban, amelyet a SimplyPrint Filament Managere importál.",
       "import_title": "Adatok importálása",
       "import_help": "Tölts fel egy, az exporttal megegyező felépítésű CSV vagy JSON fájlt. A teljes fájl egyetlen, mindent-vagy-semmit tranzakcióként kerül feldolgozásra; előbb futtass próbafuttatást az eredmény megtekintéséhez.",
       "report_title": "Készletjelentés",
@@ -1333,11 +1335,32 @@
     "thinking": "Gondolkodás…",
     "empty": "Kérdezz a tekercseidről és filamentjeidről — például: „mennyi fekete PETG-m maradt?” vagy „mit kellene újrarendelnem?”.",
     "viewInList": "Megnyitás a Tekercsek listában",
+    "stop": "Leállítás",
+    "clear": "Csevegés törlése",
+    "more": "+{{count}} további",
+    "starters": {
+      "stock": "Mennyi filamentem maradt?",
+      "low": "Mi fogy ki?",
+      "orders": "Mi van rendelés alatt?",
+      "usage": "Mennyit használtam ebben a hónapban?"
+    },
+    "cards": {
+      "spools_one": "{{count}} db tekercs",
+      "spools_other": "{{count}} db tekercs",
+      "filaments_one": "{{count}} db filament",
+      "filaments_other": "{{count}} db filament",
+      "outstanding": "{{count}} hátralévő",
+      "arrived": "Megérkezett",
+      "match": "{{percent}}%-os egyezés",
+      "low_stock": "Alacsony készlet",
+      "on_order": "Rendelés alatt"
+    },
     "confirm": {
       "confirm": "Megerősítés",
       "cancel": "Mégse",
       "confirmed": "Megerősítve",
       "cancelled": "Megszakítva",
+      "unknown": "A változtatásra adott válaszodat elküldtük, de az eredménye nem érkezett meg. Ellenőrizd az elemet, mielőtt újra kérdezel.",
       "destructive": "Nem vonható vissza",
       "not_set": "nincs megadva",
       "status_open": "Nyitott",
@@ -1380,6 +1403,14 @@
     "back": "Vissza",
     "photo_discarded": "A fotó elemzése memóriában történt, nincs elmentve.",
     "prefilled_banner": "Előre kitöltve egy címkefotó alapján - mentés előtt ellenőrizd az értékeket.",
+    "title": "Scan-to-Spool",
+    "choices_label": "Hozzáadás mint",
+    "errors": {
+      "disabled": "A fotós felvétel ki van kapcsolva ezen a szerveren.",
+      "too_large": "Ez a fotó túl nagy a küldéshez. Próbálj egy kisebbet.",
+      "bad_image": "Ezt a fájlt nem sikerült fotóként beolvasni. Használj JPEG, PNG vagy WebP képet.",
+      "failed": "A címkét nem sikerült beolvasni. Próbáld újra, vagy add hozzá a tekercset kézzel."
+    },
     "fields": {
       "vendor": "Gyártó",
       "name": "Név",

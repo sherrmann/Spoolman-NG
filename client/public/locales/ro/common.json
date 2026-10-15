@@ -775,6 +775,8 @@
       "tab": "Import / Export",
       "export_title": "Exportare date",
       "export_help": "Descărcați producătorii, filamentele sau bobinele ca CSV sau JSON. Datele despre producător și filament sunt incluse la bobine.",
+      "simplyprint_button": "Descarcă pentru SimplyPrint",
+      "simplyprint_hint": "Bobine active în formatul pe care îl importă Filament Manager din SimplyPrint.",
       "import_title": "Importare date",
       "import_help": "Încărcați un fișier CSV sau JSON cu aceeași structură ca un export. Întregul fișier se aplică într-o singură tranzacție de tip totul-sau-nimic; folosiți mai întâi o simulare pentru a previzualiza rezultatul.",
       "report_title": "Raport de inventar",
@@ -1351,11 +1353,34 @@
     "thinking": "Se gândește…",
     "empty": "Întreabă-mă despre bobinele și filamentele tale — de exemplu „cât PETG negru mai am?” sau „ce ar trebui să reaprovizionez?”.",
     "viewInList": "Vezi în lista de bobine",
+    "stop": "Oprește",
+    "clear": "Șterge conversația",
+    "more": "+{{count}} în plus",
+    "starters": {
+      "stock": "Cât filament mai am?",
+      "low": "Ce se termină?",
+      "orders": "Ce este în comandă?",
+      "usage": "Cât am folosit luna aceasta?"
+    },
+    "cards": {
+      "spools_one": "{{count}} bobină",
+      "spools_few": "{{count}} bobine",
+      "spools_other": "{{count}} de bobine",
+      "filaments_one": "{{count}} filament",
+      "filaments_few": "{{count}} filamente",
+      "filaments_other": "{{count}} de filamente",
+      "outstanding": "Restante: {{count}}",
+      "arrived": "Sosită",
+      "match": "Potrivire {{percent}}%",
+      "low_stock": "Stoc scăzut",
+      "on_order": "În comandă"
+    },
     "confirm": {
       "confirm": "Confirmă",
       "cancel": "Anulează",
       "confirmed": "Confirmat",
       "cancelled": "Anulat",
+      "unknown": "Răspunsul tău la această modificare a fost trimis, dar rezultatul nu a mai sosit. Verifică elementul înainte de a întreba din nou.",
       "destructive": "Nu poate fi revocat",
       "not_set": "nesetat",
       "status_open": "Deschisă",
@@ -1398,6 +1423,14 @@
     "back": "Înapoi",
     "photo_discarded": "Fotografia a fost analizată în memorie și nu este stocată.",
     "prefilled_banner": "Precompletat dintr-o fotografie a etichetei - verifică valorile înainte de a salva.",
+    "title": "Scan-to-Spool",
+    "choices_label": "Adaugă ca",
+    "errors": {
+      "disabled": "Preluarea foto este dezactivată pe acest server.",
+      "too_large": "Fotografia este prea mare pentru a fi trimisă. Încearcă una mai mică.",
+      "bad_image": "Fișierul nu a putut fi citit ca fotografie. Folosește o imagine JPEG, PNG sau WebP.",
+      "failed": "Eticheta nu a putut fi citită. Încearcă din nou sau adaugă bobina manual."
+    },
     "fields": {
       "vendor": "Producător",
       "name": "Nume",

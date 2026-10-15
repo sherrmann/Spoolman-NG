@@ -727,6 +727,8 @@
       "tab": "匯入／匯出",
       "export_title": "匯出資料",
       "export_help": "將您的製造商、線材或料盤下載為 CSV 或 JSON。匯出料盤時會一併包含製造商與線材資料。",
+      "simplyprint_button": "下載 SimplyPrint 格式",
+      "simplyprint_hint": "使用中的料盤，採用 SimplyPrint 的 Filament Manager 可匯入的格式。",
       "import_title": "匯入資料",
       "import_help": "上傳與匯出格式相同的 CSV 或 JSON 檔案。整個檔案會以單一「全有或全無」的交易一次套用；建議先以模擬執行預覽結果。",
       "report_title": "庫存報告",
@@ -1303,11 +1305,30 @@
     "thinking": "思考中…",
     "empty": "詢問我關於您的料盤與線材的問題 — 例如「我還剩多少黑色 PETG？」或「我該補什麼貨？」。",
     "viewInList": "在料盤列表中檢視",
+    "stop": "停止",
+    "clear": "清除對話",
+    "more": "還有 {{count}} 項",
+    "starters": {
+      "stock": "我還剩多少線材？",
+      "low": "哪些快用完了？",
+      "orders": "哪些已在訂購中？",
+      "usage": "我這個月用了多少？"
+    },
+    "cards": {
+      "spools_other": "{{count}} 個料盤",
+      "filaments_other": "{{count}} 種線材",
+      "outstanding": "{{count}} 項未到貨",
+      "arrived": "已到貨",
+      "match": "相符度 {{percent}}%",
+      "low_stock": "庫存不足",
+      "on_order": "訂購中"
+    },
     "confirm": {
       "confirm": "確認",
       "cancel": "取消",
       "confirmed": "已確認",
       "cancelled": "已取消",
+      "unknown": "您對此變更的回覆已送出，但始終未收到結果。請先檢查該項目，再重新詢問。",
       "destructive": "無法復原",
       "not_set": "未設定",
       "status_open": "未結",
@@ -1350,6 +1371,14 @@
     "back": "上一步",
     "photo_discarded": "照片僅在記憶體中分析，不會被儲存。",
     "prefilled_banner": "已根據標籤照片預先填入 - 請在儲存前檢查各欄位數值。",
+    "title": "Scan-to-Spool",
+    "choices_label": "新增為",
+    "errors": {
+      "disabled": "此伺服器已關閉照片輸入。",
+      "too_large": "照片太大，無法傳送。請改用較小的照片。",
+      "bad_image": "無法將此檔案讀取為照片。請使用 JPEG、PNG 或 WebP 圖片。",
+      "failed": "無法讀取標籤。請重試，或手動新增料盤。"
+    },
     "fields": {
       "vendor": "製造商",
       "name": "名稱",

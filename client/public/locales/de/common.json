@@ -757,6 +757,8 @@
       "tab": "Import / Export",
       "export_title": "Daten exportieren",
       "export_help": "Lade deine Hersteller, Filamente oder Spulen als CSV oder JSON herunter. Hersteller- und Filamentdaten sind bei Spulen enthalten.",
+      "simplyprint_button": "Für SimplyPrint herunterladen",
+      "simplyprint_hint": "Aktive Spulen in dem Format, das der Filament Manager von SimplyPrint importiert.",
       "import_title": "Daten importieren",
       "import_help": "Lade eine CSV- oder JSON-Datei im gleichen Format wie ein Export hoch. Die gesamte Datei wird als eine Alles-oder-nichts-Transaktion angewendet; nutze zuerst einen Probelauf, um das Ergebnis vorab zu prüfen.",
       "report_title": "Bestandsbericht",
@@ -1333,11 +1335,32 @@
     "thinking": "Denkt nach…",
     "empty": "Frag mich nach deinen Spulen und deinem Filament — zum Beispiel „Wie viel schwarzes PETG habe ich noch?“ oder „Was sollte ich nachbestellen?“.",
     "viewInList": "In der Spulenliste anzeigen",
+    "stop": "Stopp",
+    "clear": "Chat leeren",
+    "more": "+{{count}} weitere",
+    "starters": {
+      "stock": "Wie viel Filament habe ich noch?",
+      "low": "Was geht zur Neige?",
+      "orders": "Was ist bestellt?",
+      "usage": "Wie viel habe ich diesen Monat verbraucht?"
+    },
+    "cards": {
+      "spools_one": "{{count}} Spule",
+      "spools_other": "{{count}} Spulen",
+      "filaments_one": "{{count}} Filament",
+      "filaments_other": "{{count}} Filamente",
+      "outstanding": "{{count}} ausstehend",
+      "arrived": "Angekommen",
+      "match": "{{percent}} % Übereinstimmung",
+      "low_stock": "Niedriger Bestand",
+      "on_order": "Bestellt"
+    },
     "confirm": {
       "confirm": "Bestätigen",
       "cancel": "Abbrechen",
       "confirmed": "Bestätigt",
       "cancelled": "Abgebrochen",
+      "unknown": "Deine Antwort auf diese Änderung wurde gesendet, aber ihr Ergebnis ist nie angekommen. Prüfe den Eintrag, bevor du erneut fragst.",
       "destructive": "Kann nicht rückgängig gemacht werden",
       "not_set": "nicht gesetzt",
       "status_open": "Offen",
@@ -1380,6 +1403,14 @@
     "back": "Zurück",
     "photo_discarded": "Das Foto wurde im Arbeitsspeicher analysiert und wird nicht gespeichert.",
     "prefilled_banner": "Vorausgefüllt anhand eines Etikettenfotos — prüfe die Werte vor dem Speichern.",
+    "title": "Scan-to-Spool",
+    "choices_label": "Hinzufügen als",
+    "errors": {
+      "disabled": "Die Fotoerfassung ist auf diesem Server ausgeschaltet.",
+      "too_large": "Das Foto ist zu groß zum Senden. Versuche ein kleineres.",
+      "bad_image": "Die Datei konnte nicht als Foto gelesen werden. Verwende ein JPEG-, PNG- oder WebP-Bild.",
+      "failed": "Das Etikett konnte nicht gelesen werden. Versuche es erneut oder füge die Spule manuell hinzu."
+    },
     "fields": {
       "vendor": "Hersteller",
       "name": "Name",

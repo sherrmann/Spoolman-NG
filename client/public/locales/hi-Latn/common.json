@@ -742,6 +742,8 @@
       "tab": "Import / Export",
       "export_title": "Data export karein",
       "export_help": "Apne manufacturers, filaments ya spools ko CSV ya JSON ke roop mein download karein. Spools ke saath manufacturer aur filament ka data shamil hota hai.",
+      "simplyprint_button": "SimplyPrint ke liye download karein",
+      "simplyprint_hint": "Active spools us format mein jise SimplyPrint ka Filament Manager import karta hai.",
       "import_title": "Data import karein",
       "import_help": "Export jaisi hi shape wali CSV ya JSON file upload karein. Poori file ek all-or-nothing transaction ke roop mein apply hoti hai; result ka preview dekhne ke liye pehle dry run istemal karein.",
       "report_title": "Inventory report",
@@ -1321,11 +1323,32 @@
     "thinking": "Soch raha hai…",
     "empty": "Apne spools aur filament ke baare mein mujhse poochein — jaise \"mere paas kitna black PETG bacha hai?\" ya \"mujhe kya reorder karna chahiye?\".",
     "viewInList": "Spools list mein dekhein",
+    "stop": "Rokein",
+    "clear": "Chat saaf karein",
+    "more": "+{{count}} aur",
+    "starters": {
+      "stock": "Mere paas kitna filament bacha hai?",
+      "low": "Kya khatam hone wala hai?",
+      "orders": "Kya order par hai?",
+      "usage": "Is mahine maine kitna use kiya?"
+    },
+    "cards": {
+      "spools_one": "{{count}} spool",
+      "spools_other": "{{count}} spools",
+      "filaments_one": "{{count}} filament",
+      "filaments_other": "{{count}} filaments",
+      "outstanding": "{{count}} baaki",
+      "arrived": "Pahuncha",
+      "match": "{{percent}}% match",
+      "low_stock": "Kam stock",
+      "on_order": "Order par"
+    },
     "confirm": {
       "confirm": "Confirm karein",
       "cancel": "Cancel karein",
       "confirmed": "Confirm ho gaya",
       "cancelled": "Cancel ho gaya",
+      "unknown": "Is badlav par aapka jawab bhej diya gaya, lekin uska nateeja kabhi nahi aaya. Dobara poochne se pehle item check kar lein.",
       "destructive": "Ise undo nahi kiya ja sakta",
       "not_set": "set nahi hai",
       "status_open": "Open",
@@ -1368,6 +1391,14 @@
     "back": "Peeche",
     "photo_discarded": "Photo memory mein analyze ki gayi thi aur store nahi ki gayi hai.",
     "prefilled_banner": "Ek label photo se prefill kiya gaya - save karne se pehle values check kar lein.",
+    "title": "Scan-to-Spool",
+    "choices_label": "Is roop mein jodein",
+    "errors": {
+      "disabled": "Is server par photo intake band hai.",
+      "too_large": "Yeh photo bhejne ke liye bahut badi hai. Koi chhoti photo try karein.",
+      "bad_image": "Yeh file photo ke roop mein padhi nahi ja saki. JPEG, PNG ya WebP image istemal karein.",
+      "failed": "Label padha nahi ja saka. Dobara koshish karein, ya spool ko haath se jodein."
+    },
     "fields": {
       "vendor": "Manufacturer",
       "name": "Naam",
