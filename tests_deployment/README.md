@@ -10,7 +10,7 @@ against the real consumers, not re-implementations of them. Unlike `tests/` and
 
 ```bash
 tests_deployment/run.sh              # all contract suites (~15-25 min cold)
-tests_deployment/run.sh zip          # release contract only (seconds, no docker)
+tests_deployment/run.sh zip          # release contract only: zip, metadata, companion APK (seconds, no docker)
 tests_deployment/run.sh addon        # HA add-on options contract
 tests_deployment/run.sh native       # install.sh matrix + update.sh upgrade path; -k debian for one distro
 tests_deployment/run.sh moonraker    # real Moonraker validates the updater recipe
