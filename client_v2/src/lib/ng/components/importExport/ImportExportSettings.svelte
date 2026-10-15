@@ -23,6 +23,7 @@
 		EXPORT_ENTITIES,
 		IMPORT_MODES,
 		downloadExport,
+		downloadSimplyPrintExport,
 		formatFromFilename,
 		importData,
 		importEntityFor,
@@ -61,6 +62,17 @@
 		exporting = `${entity}.${fmt}`;
 		try {
 			await downloadExport(entity, fmt);
+		} catch (e) {
+			toasts.error(apiErrorMessage(e));
+		} finally {
+			exporting = null;
+		}
+	}
+
+	async function exportForSimplyPrint() {
+		exporting = 'simplyprint';
+		try {
+			await downloadSimplyPrintExport();
 		} catch (e) {
 			toasts.error(apiErrorMessage(e));
 		} finally {
@@ -172,6 +184,13 @@
 					</li>
 				{/each}
 			</ul>
+			<!-- SimplyPrint's Filament Manager imports its own JSON shape, not either of the above (#312). -->
+			<div class="simplyprint">
+				<Button variant="outline" disabled={exporting !== null} onclick={exportForSimplyPrint}
+					><Download size={13} /> {ng.settings_import_export_simplyprint_button()}</Button
+				>
+				<p class="help">{ng.settings_import_export_simplyprint_hint()}</p>
+			</div>
 		</section>
 
 		{#if admin}
@@ -278,6 +297,12 @@
 		align-items: center;
 		gap: 6px 8px;
 		font-size: 13px;
+	}
+	.simplyprint {
+		margin-top: 10px;
+	}
+	.simplyprint .help {
+		margin: 4px 0 0;
 	}
 	.name {
 		min-width: 120px;

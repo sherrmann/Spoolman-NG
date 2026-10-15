@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+	SIMPLYPRINT_FILENAME,
+	downloadSimplyPrintExport,
 	exportFilename,
 	formatFromFilename,
 	importData,
@@ -48,6 +50,36 @@ describe('parseImportResult', () => {
 		expect(r).toEqual({ created: 0, updated: 0, skipped: 0, dryRun: false, errors: [] });
 		expect(importSucceeded(r)).toBe(true);
 		expect(parseImportResult(null).errors).toEqual([]);
+	});
+});
+
+describe('downloadSimplyPrintExport', () => {
+	afterEach(() => vi.unstubAllGlobals());
+
+	it('fetches the SimplyPrint endpoint and saves it under the server’s file name', async () => {
+		const fetch = vi.fn(async () => new Response('[]'));
+		vi.stubGlobal('fetch', fetch);
+		const click = vi.fn();
+		const link = { href: '', download: '', click, remove: vi.fn() };
+		vi.stubGlobal('document', {
+			createElement: () => link,
+			body: { appendChild: vi.fn() }
+		});
+		vi.stubGlobal('URL', { createObjectURL: () => 'blob:x', revokeObjectURL: vi.fn() });
+		await downloadSimplyPrintExport();
+		const [url] = fetch.mock.calls[0] as unknown as [string];
+		expect(url).toMatch(/\/export\/simplyprint$/);
+		expect(link.download).toBe(SIMPLYPRINT_FILENAME);
+		expect(SIMPLYPRINT_FILENAME).toBe('spoolman-export.json');
+		expect(click).toHaveBeenCalledOnce();
+	});
+
+	it('rejects with the server’s message on a refused export', async () => {
+		vi.stubGlobal(
+			'fetch',
+			vi.fn(async () => new Response(JSON.stringify({ message: 'nope' }), { status: 500 }))
+		);
+		await expect(downloadSimplyPrintExport()).rejects.toThrow(/500: nope/);
 	});
 });
 
