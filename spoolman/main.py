@@ -273,7 +273,7 @@ def add_cors_middleware() -> None:
         allow_credentials=allow_credentials,
         allow_methods=["*"],
         allow_headers=["*"],
-        expose_headers=["X-Total-Count"],
+        expose_headers=["X-Total-Count", "X-Total-Spools", "X-Total-Remaining-Weight"],
     )
 
 

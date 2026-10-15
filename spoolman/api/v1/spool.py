@@ -545,7 +545,9 @@ def _parse_group_extra_field_filters(
         "in-use count, total remaining weight and most recent usage. Pagination is over groups, "
         "so a group is never split and its aggregates are always complete. Uses the same "
         "built-in filters as the spool search endpoint (plus filament/vendor extra field "
-        "filters). The total number of matching groups is returned in the x-total-count header."
+        "filters). The total number of matching groups is returned in the x-total-count header, "
+        "and the spool count and remaining weight (grams) summed over all matching groups in the "
+        "x-total-spools and x-total-remaining-weight headers."
     ),
     response_model_exclude_none=True,
     responses={
@@ -627,9 +629,23 @@ async def find_groups(
         Query(
             title="Include Empty",
             description=(
-                "Also return matching filaments that hold no matching spools, as groups of zero. Only "
-                "valid with group_by=filament, and not together with filters on the spools themselves "
-                "(location, lot_nr, spool extra fields), which a filament with no spools has no value for."
+                "Also return matching filaments (group_by=filament) or manufacturers "
+                "(group_by=vendor) that hold no matching spools, as groups of zero. In vendor mode "
+                "the group of filaments with no manufacturer is not listed, since this mode lists "
+                "manufacturers. Not valid with other axes, nor together with filters on the spools "
+                "themselves (location, lot_nr, spool extra fields), which an entity with no spools "
+                "has no value for."
+            ),
+        ),
+    ] = False,
+    preview: Annotated[
+        bool,
+        Query(
+            title="Preview",
+            description=(
+                "Attach a few members to each group: up to 5 spools (id, remaining_weight, "
+                "initial_weight) for group_by=filament, up to 4 filaments (id and colours) for "
+                "group_by=vendor. Ignored for other axes."
             ),
         ),
     ] = False,
@@ -639,8 +655,13 @@ async def find_groups(
             title="Sort",
             description=(
                 'Sort the groups by the given field. Comma-separated "field:direction" items. '
-                "Available fields: group.title, group.total_remaining, group.last_used, "
-                "group.spool_count, group.in_use_count."
+                "Available fields: group.title, group.vendor_name (manufacturer name, groups with "
+                "no manufacturer last), group.total_remaining, group.last_used, "
+                "group.spool_count, group.in_use_count, group.filament_count, any filament column "
+                "as filament.<column> (e.g. filament.material) or manufacturer column as "
+                "filament.vendor.<column> (e.g. filament.vendor.name), and extra fields as "
+                "filament.extra.<key> or filament.vendor.extra.<key>. Empty values sort last; unknown "
+                "fields are ignored."
             ),
             examples=["group.last_used:desc"],
         ),
@@ -665,7 +686,7 @@ async def find_groups(
     spool_extra, filament_extra, vendor_extra = _parse_group_extra_field_filters(request.query_params)
 
     try:
-        groups, total_count = await spool.find_groups(
+        page = await spool.find_groups(
             db=db,
             group_by=group_by,
             filament_name=filament_name,
@@ -678,6 +699,7 @@ async def find_groups(
             lot_nr=lot_nr,
             allow_archived=allow_archived,
             include_empty=include_empty,
+            preview=preview,
             extra_field_filters=spool_extra or None,
             filament_extra_field_filters=filament_extra or None,
             vendor_extra_field_filters=vendor_extra or None,
@@ -698,12 +720,19 @@ async def find_groups(
             last_used=group.last_used,
             filament=Filament.from_db(group.filament) if group.filament is not None else None,
             vendor=Vendor.from_db(group.vendor) if group.vendor is not None else None,
+            filament_count=group.filament_count,
+            spools=group.spools,
+            filaments=group.filaments,
         )
-        for group in groups
+        for group in page.groups
     ]
     return JSONResponse(
         content=jsonable_encoder(content, exclude_none=True),
-        headers={"x-total-count": str(total_count)},
+        headers={
+            "x-total-count": str(page.total_count),
+            "x-total-spools": str(page.total_spools),
+            "x-total-remaining-weight": str(page.total_remaining_weight),
+        },
     )
 
 
