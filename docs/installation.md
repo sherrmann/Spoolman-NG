@@ -274,6 +274,37 @@ location / {
 }
 ```
 
+**Caddy or nginx under a sub-path**, next to other services on the same host. Set
+`SPOOLMAN_BASE_PATH=/spoolman` on Spoolman and pass the path through **unchanged**:
+Spoolman serves everything under `/spoolman/` itself, so a proxy that strips the prefix
+(Caddy's `handle_path`, or nginx's `proxy_pass` with a path such as `http://127.0.0.1:7912/`)
+gets a 404 for every request. Both snippets below were checked with real Caddy and nginx,
+including live updates over WebSocket.
+
+```caddy
+example.com {
+    redir /spoolman /spoolman/
+    handle /spoolman/* {
+        reverse_proxy localhost:7912
+    }
+}
+```
+
+```nginx
+location /spoolman/ {
+    proxy_pass http://127.0.0.1:7912;       # no path after the port: Spoolman needs /spoolman kept
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;      # WebSocket live updates
+    proxy_set_header Connection "upgrade";
+}
+```
+
+nginx answers `/spoolman` (no slash) with a redirect to `/spoolman/` on its own; the Caddy
+`redir` line does the same there.
+
 **Traefik** (docker-compose labels; sub-path variant):
 
 ```yaml
