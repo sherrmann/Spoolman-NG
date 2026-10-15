@@ -5,6 +5,7 @@
 	import LabelDesigner from '$components/labels/LabelDesigner.svelte';
 	import PrintLayoutPanel from '$components/labels/PrintLayoutPanel.svelte';
 	import { labelDesigns } from '$lib/stores/labelDesigns.svelte';
+	import { toasts } from '$lib/stores/toasts.svelte';
 	import { setDesignKind, type LabelDesign } from '$lib/labels/types';
 	import * as m from '$lib/paraglide/messages';
 	import { ng } from '$lib/ng/i18n';
@@ -57,12 +58,14 @@
 	const dirty = $derived(working !== null && JSON.stringify(working) !== savedSnapshot);
 
 	async function newDesign() {
-		// Spoolman NG fork addition (#481): create() refuses while the designs cannot be read.
+		// Spoolman NG fork addition (#481): create() refuses while the designs cannot be read (it
+		// retries the read first), so say why nothing happened; clicking again retries once more.
 		let d: LabelDesign;
 		try {
 			d = await labelDesigns.create();
 		} catch (e) {
 			console.error('Failed to create design', e);
+			toasts.error(m['library.apiError']());
 			return;
 		}
 		selectDesign(d.id);

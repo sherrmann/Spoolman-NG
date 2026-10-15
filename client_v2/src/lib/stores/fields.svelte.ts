@@ -49,6 +49,7 @@ class Fields {
 		if (!this.loaded.includes(entity)) void this.load(entity);
 	}
 
+	/** Read an entity's definitions. A read already in flight is shared, not repeated. */
 	load(entity: EntityType): Promise<void> {
 		const inFlight = this.pending[entity];
 		if (inFlight) return inFlight;
