@@ -5,8 +5,12 @@
 	 * The protocol and its chat live in $lib/ng/{aiChat,aiApi,sse}, tested without a model or a
 	 * server; this file is the screen. What it has to get right on its own:
 	 *
-	 *  - The transcript is never persisted. It is client-held and re-posted whole each turn, so
-	 *    a reload loses the conversation. That is upstream-of-us behaviour, not a shortcut here.
+	 *  - The server keeps nothing between turns, so the conversation is kept in localStorage
+	 *    (aiChat's serialiseChat/restoreChat) and comes back when the drawer reopens or the page
+	 *    reloads. A confirmation that was pending comes back cancelled: confirming a card from
+	 *    yesterday would apply yesterday's numbers. Clear chat and logging out forget it.
+	 *  - Reply text streams in as the model writes it, but it is display only until the final
+	 *    `message` frame; text written before a tool call is replaced by that tool's card.
 	 *  - A turn that stops on a preview is NOT finished. The composer stays shut and the cards
 	 *    wait, because the server is holding writes that only a decision releases.
 	 *  - Closing aborts the turn in flight. A stream left running writes into a chat nobody is
@@ -23,8 +27,11 @@
 	import Volume2 from '@lucide/svelte/icons/volume-2';
 	import Wrench from '@lucide/svelte/icons/wrench';
 	import Undo2 from '@lucide/svelte/icons/undo-2';
+	import Square from '@lucide/svelte/icons/square';
+	import MessageSquareX from '@lucide/svelte/icons/message-square-x';
 	import * as m from '$lib/paraglide/messages';
-	import { ng } from '$lib/ng/i18n';
+	import { ng, plural } from '$lib/ng/i18n';
+	import { libraryHref } from '$lib/library/params';
 	import { toasts } from '$lib/stores/toasts.svelte';
 	import { getLocale } from '$lib/paraglide/runtime';
 	import {
@@ -42,13 +49,18 @@
 	import { startRecording, voiceSupported, VoiceError, MAX_CLIP_MS, type Recording } from '$lib/ng/voice';
 	import {
 		applyChatEvent,
+		clearStoredChat,
 		initialChatState,
+		isDeciding,
+		loadStoredChat,
+		saveStoredChat,
 		startDecision,
 		startTurn,
+		stopTurn,
 		type ChatState,
 		type ExecutedCard
 	} from '$lib/ng/aiChat';
-	import { cardRows } from '$lib/ng/aiCards';
+	import { cardRows, resultCard, usageBars, type CardWords } from '$lib/ng/aiCards';
 
 	interface Props {
 		onclose: () => void;
@@ -58,13 +70,40 @@
 	// Named `chat`, not `state`: Svelte reads `$state` in the initializer of a variable
 	// called `state` as a store subscription to that same variable, and the compile fails
 	// on a use-before-declaration that has nothing to do with the code.
-	let chat = $state<ChatState>(initialChatState());
+	let chat = $state<ChatState>(loadStoredChat() ?? initialChatState());
 	let draft = $state('');
 	let inFlight: AbortController | null = null;
 	let list = $state<HTMLDivElement | null>(null);
 	let input = $state<HTMLInputElement | null>(null);
 	/** Undo descriptors already replayed, so a second press cannot run the same one twice. */
 	let undone = $state(new Set<string>());
+
+	/** The questions offered on an empty chat. Read-only questions, so they suit every user. */
+	const starters = [
+		ng.chat_starters_stock,
+		ng.chat_starters_low,
+		ng.chat_starters_orders,
+		ng.chat_starters_usage
+	];
+
+	const cardWords: CardWords = {
+		spools: (count) => plural('chat_cards_spools', count),
+		filaments: (count) => plural('chat_cards_filaments', count),
+		outstanding: (count) => ng.chat_cards_outstanding({ count }),
+		arrived: ng.chat_cards_arrived(),
+		match: (percent) => ng.chat_cards_match({ percent })
+	};
+	const cardPaths = {
+		spool: (id: number) => libraryHref('spool', String(id)),
+		filament: (id: number) => libraryHref('filament', String(id))
+	};
+
+	// Keep the conversation as it changes. serialiseChat decides what is worth storing: not a
+	// question still being answered, but a confirmation answer still in flight, so that closing
+	// the drawer before its outcome arrives is not later shown as a cancellation.
+	$effect(() => {
+		saveStoredChat(chat);
+	});
 
 	// --- voice ------------------------------------------------------------------
 	// Two independent halves. Dictation needs a speech-to-text endpoint on the server; speaking
@@ -123,13 +162,32 @@
 	$effect(() => {
 		// Reading the count is what subscribes this effect to new turns; it also answers whether
 		// there is anything to scroll to, so it is used rather than discarded.
-		const count = chat.bubbles.length;
+		const count = chat.bubbles.length + chat.streaming.length;
 		if (list && count > 0) list.scrollTop = list.scrollHeight;
 	});
 
 	function close() {
 		inFlight?.abort();
 		onclose();
+	}
+
+	/** Stop the turn in flight, keeping whatever reply text had already arrived. */
+	function stop() {
+		chat = stopTurn(chat);
+		inFlight?.abort();
+	}
+
+	function clearChat() {
+		inFlight?.abort();
+		chat = initialChatState();
+		undone = new Set();
+		clearStoredChat();
+		input?.focus();
+	}
+
+	function ask(question: string) {
+		draft = question;
+		void send();
 	}
 
 	/** Turn a pre-stream HTTP status into something a user can act on. */
@@ -330,12 +388,28 @@
 					<Volume2 size={15} />
 				</button>
 			{/if}
+			{#if chat.bubbles.length > 0}
+				<button
+					class="speak clear"
+					onclick={clearChat}
+					disabled={chat.status === 'awaiting_confirm'}
+					title={ng.chat_clear()}
+					aria-label={ng.chat_clear()}
+				>
+					<MessageSquareX size={15} />
+				</button>
+			{/if}
 			<button class="x" onclick={close} aria-label={m['buttons.close']()}><X size={16} /></button>
 		</div>
 
 		<div class="list" bind:this={list}>
 			{#if chat.bubbles.length === 0}
 				<p class="empty">{ng.chat_empty()}</p>
+				<div class="starters">
+					{#each starters as starter (starter)}
+						<button class="starter" onclick={() => ask(starter())}>{starter()}</button>
+					{/each}
+				</div>
 			{/if}
 
 			{#each chat.bubbles as bubble, i (i)}
@@ -350,6 +424,48 @@
 					<!-- A read the assistant did on its own. Shown so its answer is not
 					     unexplained; the server writes the summary. -->
 					<div class="tool"><Wrench size={12} />{bubble.summary || bubble.name}</div>
+					{@const card = resultCard(bubble.name, bubble.rows, bubble.total, cardWords, cardPaths)}
+					{#if card}
+						<ul class="results">
+							{#each card.rows as row (row.key)}
+								<li>
+									{#if row.swatch}
+										<span class="swatch" style:background={row.swatch}></span>
+									{/if}
+									<span class="r-main">
+										{#if row.href}
+											<!-- row.href comes from libraryHref(), which already resolves the base path. -->
+											<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+											<a href={row.href} onclick={close}>{row.title}</a>
+										{:else}
+											<span class="r-title">{row.title}</span>
+										{/if}
+										{#if row.detail}<span class="r-detail">{row.detail}</span>{/if}
+									</span>
+									{#each row.tags as tag (tag)}
+										<span class="r-tag" class:low={tag === 'low_stock'}>
+											{tag === 'low_stock' ? ng.chat_cards_low_stock() : ng.chat_cards_on_order()}
+										</span>
+									{/each}
+									{#if row.value}<span class="r-value">{row.value}</span>{/if}
+								</li>
+							{/each}
+						</ul>
+						{#if card.more > 0}
+							<div class="r-more">{ng.chat_more({ count: card.more })}</div>
+						{/if}
+					{/if}
+					{#if bubble.periods?.length}
+						<ul class="usage">
+							{#each usageBars(bubble.periods) as bar (bar.period)}
+								<li>
+									<span class="u-period">{bar.period}</span>
+									<span class="u-track"><span class="u-bar" style:width="{bar.width}%"></span></span>
+									<span class="u-value">{bar.value}</span>
+								</li>
+							{/each}
+						</ul>
+					{/if}
 				{:else if bubble.kind === 'confirm'}
 					{#each bubble.cards as card, ci (ci)}
 						<div class="card" class:destructive={card.destructive}>
@@ -406,12 +522,18 @@
 					{/each}
 				{:else if bubble.kind === 'cancelled'}
 					<div class="tool">{ng.chat_confirm_cancelled()}</div>
+				{:else if bubble.kind === 'unknown'}
+					<div class="bubble error" role="status">{ng.chat_confirm_unknown()}</div>
 				{:else if bubble.kind === 'error'}
 					<div class="bubble error" role="alert">{bubble.text}</div>
 				{/if}
 			{/each}
 
-			{#if chat.status === 'streaming'}
+			{#if chat.streaming}
+				<!-- Plain text as it arrives; replaced by the final message, or by a tool's card
+				     when the model goes on to call one. -->
+				<div class="bubble assistant streaming">{chat.streaming}</div>
+			{:else if chat.status === 'streaming'}
 				<div class="tool" role="status">{ng.chat_thinking()}</div>
 			{/if}
 		</div>
@@ -448,14 +570,21 @@
 				disabled={chat.status !== 'idle' || recording || transcribing}
 				aria-label={ng.chat_placeholder()}
 			/>
-			<Button
-				variant="primary"
-				type="submit"
-				disabled={chat.status !== 'idle' || recording || transcribing || !draft.trim()}
-			>
-				<Send size={14} />
-				{ng.chat_send()}
-			</Button>
+			{#if chat.status === 'streaming' && !isDeciding(chat)}
+				<Button variant="outline" onclick={stop}>
+					<Square size={12} />
+					{ng.chat_stop()}
+				</Button>
+			{:else}
+				<Button
+					variant="primary"
+					type="submit"
+					disabled={chat.status !== 'idle' || recording || transcribing || !draft.trim()}
+				>
+					<Send size={14} />
+					{ng.chat_send()}
+				</Button>
+			{/if}
 		</form>
 	</div>
 </div>
@@ -499,6 +628,7 @@
 		flex: none;
 	}
 	.title {
+		flex: 1;
 		font-weight: 700;
 		font-size: 15px;
 	}
@@ -550,6 +680,142 @@
 		max-width: none;
 		color: var(--danger);
 		background: var(--surface-2);
+	}
+	.bubble.streaming {
+		/* Same bubble as the final reply, so the swap to the finished message does not jump. */
+		opacity: 0.9;
+	}
+	.starters {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px;
+	}
+	.starter {
+		font: inherit;
+		font-size: 12px;
+		color: var(--text-2);
+		background: var(--surface-2);
+		border: 1px solid var(--border);
+		border-radius: 999px;
+		padding: 5px 10px;
+		cursor: pointer;
+		text-align: left;
+	}
+	.starter:hover {
+		color: var(--text);
+		background: var(--surface-raised);
+	}
+	.results,
+	.usage {
+		/* The list is a flex column that scrolls; without this a long conversation squeezes
+		   the cards instead of scrolling past them. */
+		flex: none;
+		list-style: none;
+		margin: -4px 0 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-md);
+		overflow: hidden;
+	}
+	.results li {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 6px 10px;
+		font-size: 12.5px;
+		min-width: 0;
+	}
+	.results li + li,
+	.usage li + li {
+		border-top: 1px solid var(--border-soft);
+	}
+	.swatch {
+		flex: none;
+		width: 14px;
+		height: 14px;
+		border-radius: 50%;
+		border: 1px solid var(--swatch-border);
+	}
+	.r-main {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+	}
+	.r-main a,
+	.r-title {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.r-main a {
+		color: var(--accent-link);
+		text-decoration: none;
+	}
+	.r-main a:hover {
+		text-decoration: underline;
+	}
+	.r-detail {
+		font-size: 11.5px;
+		color: var(--text-muted);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.r-tag {
+		flex: none;
+		font-size: 10.5px;
+		color: var(--text-2);
+		border: 1px solid var(--border-strong);
+		border-radius: var(--radius-sm);
+		padding: 1px 5px;
+	}
+	.r-tag.low {
+		color: var(--danger);
+		border-color: var(--danger);
+	}
+	.r-value {
+		flex: none;
+		font-variant-numeric: tabular-nums;
+		color: var(--text-2);
+	}
+	.r-more {
+		margin-top: -6px;
+		font-size: 11.5px;
+		color: var(--text-dim);
+	}
+	.usage li {
+		display: grid;
+		grid-template-columns: 5.5em 1fr auto;
+		align-items: center;
+		gap: 8px;
+		padding: 5px 10px;
+		font-size: 12px;
+	}
+	.u-period {
+		color: var(--text-muted);
+		font-variant-numeric: tabular-nums;
+	}
+	.u-track {
+		height: 8px;
+		border-radius: 4px;
+		background: var(--surface-2);
+		overflow: hidden;
+	}
+	.u-bar {
+		display: block;
+		height: 100%;
+		background: var(--accent);
+	}
+	.u-value {
+		font-variant-numeric: tabular-nums;
+		color: var(--text-2);
+	}
+	.clear:disabled {
+		opacity: 0.4;
+		cursor: not-allowed;
 	}
 	.tool {
 		display: flex;

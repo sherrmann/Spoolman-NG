@@ -15,6 +15,8 @@
 // served from the same origin and a cookie decides which one answers, so a user
 // who logs in and then switches interface would otherwise arrive logged out.
 
+import { clearStoredChat } from './aiChat';
+
 const TOKEN_KEY = 'spoolmanApiToken';
 
 // Mirrors the stored value so the token still works for the life of the page
@@ -47,6 +49,9 @@ export function clearToken(): void {
 	} catch {
 		/* nothing stored to clear */
 	}
+	// The assistant's stored conversation holds inventory answers; the next person to sign in on
+	// this browser must not inherit it.
+	clearStoredChat();
 }
 
 /** `{ Authorization }` when a token is held, or nothing at all when it is not. */

@@ -3,8 +3,14 @@ import {
 	applyChatEvent,
 	decodeChatFrame,
 	initialChatState,
+	isDeciding,
+	pairToolCalls,
+	restoreChat,
+	serialiseChat,
 	startDecision,
 	startTurn,
+	stopTurn,
+	type ChatMessage,
 	type ChatState
 } from './aiChat';
 
@@ -195,5 +201,277 @@ describe('decodeChatFrame', () => {
 	it('returns null for a non-object payload', () => {
 		// `data: "hi"` is valid JSON and not a frame this protocol has any use for.
 		expect(decodeChatFrame('message', '"hi"')).toBeNull();
+	});
+});
+
+describe('streamed reply text (#381)', () => {
+	it('shows deltas while they arrive and replaces them with the final message', () => {
+		let s = startTurn(initialChatState(), 'how much?');
+		s = run(s, [
+			['delta', { content: 'About ' }],
+			['delta', { content: '1.2 kg.' }]
+		]);
+		expect(s.streaming).toBe('About 1.2 kg.');
+		expect(s.bubbles).toHaveLength(1);
+
+		s = run(s, [
+			['message', { content: 'About 1.2 kg.' }],
+			['done', {}]
+		]);
+		expect(s.streaming).toBe('');
+		expect(s.bubbles.at(-1)).toEqual({ kind: 'assistant', text: 'About 1.2 kg.' });
+		// The streamed text never reaches the transcript on its own; only the message does.
+		expect(s.messages.filter((m) => m.role === 'assistant')).toHaveLength(1);
+	});
+
+	it('drops text streamed before a tool call: the tool event supersedes it', () => {
+		let s = startTurn(initialChatState(), 'spools?');
+		s = run(s, [
+			['delta', { content: 'Let me check. ' }],
+			['tool', { name: 'find_spools', summary: 'Found 2 spool(s).' }],
+			['delta', { content: 'You have 2.' }],
+			['message', { content: 'You have 2.' }],
+			['done', {}]
+		]);
+		expect(s.bubbles.map((b) => b.kind)).toEqual(['user', 'tool', 'assistant']);
+		expect(s.bubbles.some((b) => b.kind === 'assistant' && b.text.includes('Let me check'))).toBe(false);
+	});
+
+	it('clears streamed text on an error too', () => {
+		let s = startTurn(initialChatState(), 'x');
+		s = run(s, [
+			['delta', { content: 'Half an ans' }],
+			['error', { message: 'The AI endpoint stopped part-way through its reply.' }]
+		]);
+		expect(s.streaming).toBe('');
+		expect(s.bubbles.at(-1)?.kind).toBe('error');
+	});
+
+	it('ignores deltas when no turn is streaming', () => {
+		const s = run(initialChatState(), [['delta', { content: 'stray' }]]);
+		expect(s.streaming).toBe('');
+	});
+
+	it('keeps the rows, total and usage periods a tool event carries', () => {
+		const s = run(startTurn(initialChatState(), 'x'), [
+			[
+				'tool',
+				{
+					name: 'find_spools',
+					summary: 'Found 7 spool(s).',
+					rows: [{ id: 1 }, 'junk', { id: 2 }],
+					total: 7,
+					filters: { material: 'PLA' }
+				}
+			],
+			[
+				'tool',
+				{
+					name: 'get_usage_stats',
+					summary: 's',
+					periods: [{ period: '2026-09', consumed_weight: 5, cost: 1 }, {}]
+				}
+			]
+		]);
+		expect(s.bubbles[1]).toEqual({
+			kind: 'tool',
+			name: 'find_spools',
+			summary: 'Found 7 spool(s).',
+			rows: [{ id: 1 }, { id: 2 }],
+			total: 7,
+			filters: { material: 'PLA' }
+		});
+		expect(s.bubbles[2]).toMatchObject({ periods: [{ period: '2026-09', consumed_weight: 5, cost: 1 }] });
+	});
+});
+
+describe('stopping a turn', () => {
+	it('keeps what was streamed as a reply, in the bubbles and the transcript', () => {
+		let s = run(startTurn(initialChatState(), 'x'), [['delta', { content: 'Partial answer ' }]]);
+		s = stopTurn(s);
+		expect(s.status).toBe('idle');
+		expect(s.streaming).toBe('');
+		expect(s.bubbles.at(-1)).toEqual({ kind: 'assistant', text: 'Partial answer' });
+		expect(s.messages.at(-1)).toEqual({ role: 'assistant', content: 'Partial answer' });
+	});
+
+	it('just goes idle when nothing was streamed', () => {
+		const s = stopTurn(startTurn(initialChatState(), 'x'));
+		expect(s.status).toBe('idle');
+		expect(s.bubbles).toHaveLength(1);
+	});
+
+	it('leaves a pending confirmation alone', () => {
+		const s = run(startTurn(initialChatState(), 'delete it'), [
+			['confirm', { messages: [{ role: 'user', content: 'delete it' }], cards: [] }],
+			['done', {}]
+		]);
+		expect(stopTurn(s)).toBe(s);
+	});
+});
+
+describe('keeping a conversation across reloads', () => {
+	const settled = () =>
+		run(startTurn(initialChatState(), 'how much?'), [
+			['message', { content: 'About 1.2 kg.' }],
+			['done', {}]
+		]);
+
+	it('round-trips a settled conversation', () => {
+		const s = settled();
+		const back = restoreChat(serialiseChat(s));
+		expect(back?.messages).toEqual(s.messages);
+		expect(back?.bubbles).toEqual(s.bubbles);
+		expect(back?.status).toBe('idle');
+	});
+
+	it('does not store a turn that is still streaming, or an empty chat', () => {
+		expect(serialiseChat(startTurn(initialChatState(), 'x'))).toBeNull();
+		expect(serialiseChat(initialChatState())).toBeNull();
+	});
+
+	it('turns a pending confirmation into a cancellation and drops the pending tool calls', () => {
+		const pendingTranscript = [
+			{ role: 'user', content: 'delete spool 3' },
+			{ role: 'assistant', content: null, tool_calls: [{ id: 'c1', function: { name: 'delete_spool' } }] }
+		];
+		const s = run(startTurn(initialChatState(), 'delete spool 3'), [
+			[
+				'confirm',
+				{
+					messages: pendingTranscript,
+					cards: [{ tool: 'delete_spool', title: 'Delete', summary: '', before: {}, after: {} }]
+				}
+			],
+			['done', {}]
+		]);
+		expect(s.status).toBe('awaiting_confirm');
+
+		const back = restoreChat(serialiseChat(s));
+		expect(back?.status).toBe('idle');
+		expect(back?.pending).toEqual([]);
+		expect(back?.bubbles.at(-1)).toEqual({ kind: 'cancelled' });
+		expect(back?.messages).toEqual([{ role: 'user', content: 'delete spool 3' }]);
+	});
+
+	it('starts a trimmed transcript at a user turn, so no tool result loses its call', () => {
+		let s = settled();
+		const filler = Array.from({ length: 45 }, (_, i) => [
+			{ role: 'user', content: `q${i}` },
+			{ role: 'assistant', content: null, tool_calls: [{ id: `c${i}` }] },
+			{ role: 'tool', tool_call_id: `c${i}`, content: '{}' },
+			{ role: 'assistant', content: `a${i}` }
+		]).flat();
+		s = { ...s, messages: filler };
+		const back = restoreChat(serialiseChat(s));
+		expect(back!.messages.length).toBeLessThanOrEqual(40);
+		expect(back!.messages[0].role).toBe('user');
+	});
+
+	it('rejects junk', () => {
+		expect(restoreChat(null)).toBeNull();
+		expect(restoreChat('not json')).toBeNull();
+		expect(restoreChat('{"messages": 1, "bubbles": []}')).toBeNull();
+		expect(restoreChat('{"messages": [], "bubbles": [1, null]}')).toBeNull();
+	});
+});
+
+describe('fixes from review', () => {
+	const pendingWrite = (extra: ChatMessage[] = []) => [
+		{ role: 'user', content: 'move spool 3 and tell me what is on shelf A' },
+		{
+			role: 'assistant',
+			content: null,
+			tool_calls: [
+				{ id: 'r1', function: { name: 'find_spools' } },
+				{ id: 'w1', function: { name: 'update_spool' } }
+			]
+		},
+		{ role: 'tool', tool_call_id: 'r1', content: '{}' },
+		...extra
+	];
+	const confirmed = () =>
+		run(startTurn(initialChatState(), 'move spool 3'), [
+			[
+				'confirm',
+				{
+					messages: pendingWrite(),
+					cards: [{ tool: 'update_spool', title: 'Move', summary: '', before: {}, after: {} }]
+				}
+			],
+			['done', {}]
+		]);
+
+	it('pairs every tool call with its result and drops the unanswered ones', () => {
+		expect(pairToolCalls(pendingWrite())).toEqual([pendingWrite()[0]]);
+		const answered = pendingWrite([{ role: 'tool', tool_call_id: 'w1', content: '{}' }]);
+		expect(pairToolCalls(answered)).toEqual(answered);
+	});
+
+	it('keeps the text of an assistant turn whose calls are dropped', () => {
+		const out = pairToolCalls([
+			{ role: 'user', content: 'q' },
+			{ role: 'assistant', content: 'Moving it now.', tool_calls: [{ id: 'x' }] }
+		]);
+		expect(out.at(-1)).toEqual({ role: 'assistant', content: 'Moving it now.' });
+	});
+
+	it('sends a valid history after a confirmed write, whose result the client never gets', () => {
+		let s = startDecision(confirmed());
+		s = run(s, [
+			['executed', { cards: [{ tool: 'update_spool', summary: 'Moved spool 3.' }] }],
+			['message', { content: 'Done.' }],
+			['done', {}]
+		]);
+		s = startTurn(s, 'thanks, and spool 4?');
+		const unanswered = s.messages.filter(
+			(m) =>
+				Array.isArray(m.tool_calls) && !s.messages.some((r) => r.role === 'tool' && r.tool_call_id === 'w1')
+		);
+		expect(unanswered).toEqual([]);
+		expect(s.messages.at(-1)).toEqual({ role: 'user', content: 'thanks, and spool 4?' });
+	});
+
+	it('restores a mixed read-and-write round without the unanswered write call', () => {
+		const back = restoreChat(serialiseChat(confirmed()));
+		expect(back?.messages).toEqual([pendingWrite()[0]]);
+		expect(back?.bubbles.at(-1)).toEqual({ kind: 'cancelled' });
+	});
+
+	it('does not let Stop hide a decision in flight', () => {
+		const s = startDecision(confirmed());
+		expect(isDeciding(s)).toBe(true);
+		expect(stopTurn(s)).toBe(s);
+	});
+
+	it('restores a decision sent but never answered as of unknown outcome, not cancelled', () => {
+		const back = restoreChat(serialiseChat(startDecision(confirmed())));
+		expect(back?.bubbles.at(-1)).toEqual({ kind: 'unknown' });
+		expect(back?.status).toBe('idle');
+	});
+
+	it('does not bring back Undo buttons', () => {
+		const s = run(startTurn(initialChatState(), 'x'), [
+			[
+				'executed',
+				{
+					cards: [
+						{
+							tool: 'consume',
+							summary: 'Used 100 g.',
+							undo: { tool: 'set_spool_used_weight', args: { used_weight_g: 200 } }
+						}
+					]
+				}
+			],
+			['message', { content: 'Done.' }],
+			['done', {}]
+		]);
+		const back = restoreChat(serialiseChat(s));
+		const executed = back?.bubbles.find((b) => b.kind === 'executed');
+		expect(executed).toEqual({
+			kind: 'executed',
+			cards: [{ tool: 'consume', summary: 'Used 100 g.', undo: null }]
+		});
 	});
 });
