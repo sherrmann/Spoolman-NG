@@ -1363,7 +1363,7 @@ jobs:
       contents: write
       # packages: write lets this job push the Helm chart to GHCR as an OCI artifact.
       packages: write
-      # actions: write lets this job dispatch ledger.yml below — GITHUB_TOKEN-created
+      # actions: write lets this job dispatch ledger.yml and deployment-harness.yml below — GITHUB_TOKEN-created
       # events (like the release this job just created) don't trigger workflows, but
       # workflow_dispatch is exempt, so we dispatch it explicitly instead of relying
       # on ledger.yml's `release: types: [published]` trigger to fire on its own.
@@ -1471,6 +1471,17 @@ jobs:
           # explicitly. Broke the tail of every tag run (v2026.7.11, v2026.7.12).
           GH_REPO: ${{ github.repository }}
         run: gh workflow run ledger.yml --ref master -f tag="${GITHUB_REF_NAME}"
+
+      # Same reason as above: no `release: published` event reaches deployment-harness.yml
+      # for a release created with GITHUB_TOKEN. Run it from the tag so the harness
+      # matches the release it tests (#301).
+      - name: Trigger deployment harness for this release
+        # Not skipped when the ledger dispatch above fails: the two are independent.
+        if: ${{ !cancelled() }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: gh workflow run deployment-harness.yml --ref "${GITHUB_REF_NAME}" -f tag="${GITHUB_REF_NAME}" -f suites=release
   #
   # Keep the Home Assistant add-on repository (sherrmann/spoolman-ng-addons) in step
   # with each release: HA only offers add-on updates when the add-on's config.yaml
