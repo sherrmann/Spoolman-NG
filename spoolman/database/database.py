@@ -15,7 +15,7 @@ from pathlib import Path, PurePath
 from typing import NamedTuple
 
 from scheduler.asyncio.scheduler import Scheduler
-from sqlalchemy import URL
+from sqlalchemy import URL, event
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 from spoolman import env
@@ -36,6 +36,22 @@ BACKUP_NAME = "spoolman.db"
 # sqlite3's backup() retries forever while the source is locked. Give up after this long, so a lock
 # that never clears fails the backup loudly instead of hanging it (upstream #1191).
 BACKUP_LOCK_TIMEOUT_SECONDS = 60
+
+
+def _unicode_lower(value: str | None) -> str | None:
+    """Lower-case text with Python's Unicode rules."""
+    return value.lower() if value is not None else None
+
+
+def _register_sqlite_functions(connection: sqlite3.Connection, _: object) -> None:
+    """Replace SQLite's ASCII-only lower() on each new pooled connection (upstream 1507f9b3b).
+
+    SQLite's own lower() leaves non-ASCII letters alone, so a filter for "ärger" missed "Ärger"
+    and sorting put "Ölmann" apart from "ölmann". ilike() compiles to lower() LIKE lower() on
+    SQLite, so searches and the case-insensitive sorts both pick this up. No index or constraint
+    in the schema is built on lower(), so swapping the function changes no stored entry.
+    """
+    connection.create_function("lower", 1, _unicode_lower, deterministic=True)
 
 
 def backup_target_uri(path: PurePath) -> str | None:
@@ -166,6 +182,8 @@ class Database:
             pool_pre_ping=True,
             **connection_options,
         )
+        if self.connection_url.drivername == "sqlite+aiosqlite":
+            event.listen(self.engine.sync_engine, "connect", _register_sqlite_functions)
         self.session_maker = async_sessionmaker(self.engine, autocommit=False, autoflush=True, expire_on_commit=False)
 
     def backup(self, target_path: str | PathLike[str]) -> None:
