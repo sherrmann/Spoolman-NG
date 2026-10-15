@@ -31,7 +31,7 @@
 </script>
 
 {#if libraryMode.mode === 'gallery'}
-	<SpoolCard vm={props.vm} context={props.context} />
+	<SpoolCard vm={props.vm} context={props.context} showLotNumbers={props.showLotNumbers} />
 {:else if columnsView.custom && (props.context ?? 'flat') === 'flat'}
 	<SpoolCells vm={props.vm} />
 {:else if librarySelection.on}

@@ -333,11 +333,18 @@
 			font-size: 14px;
 			text-decoration: none;
 		}
+		/* Two lines before an ellipsis, as the bar's labels: on a 320px phone a cell leaves about
+		   86px for text, which cuts "Manufacturers" and many translated page names short. */
 		.page-link span {
 			min-width: 0;
+			display: -webkit-box;
+			-webkit-box-orient: vertical;
+			-webkit-line-clamp: 2;
+			line-clamp: 2;
 			overflow: hidden;
-			text-overflow: ellipsis;
-			white-space: nowrap;
+			line-height: 1.2;
+			overflow-wrap: break-word;
+			hyphens: auto;
 		}
 		.page-link.active {
 			border-color: var(--accent);
