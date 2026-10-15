@@ -26,6 +26,7 @@ import json
 import logging
 import os
 import time
+from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Literal
@@ -177,6 +178,10 @@ class _AIState:
     #: Key attribute -> the last "not using this key" reason logged, so each warning is logged
     #: once per change rather than on every resolve_config call.
     key_warnings: dict[str, str] = field(default_factory=dict)
+    #: (base URL, model) pairs that answered a streaming request with a plain JSON completion,
+    #: so later chat turns ask them for JSON straight away. Only that unambiguous answer is
+    #: remembered: a stream that broke off once says nothing about the next one.
+    no_stream: set[tuple[str, str]] = field(default_factory=set)
 
 
 _state = _AIState()
@@ -748,8 +753,7 @@ async def _post_chat(config: AIConfig, payload: dict, timeout: float) -> dict:
     unexpected shape). The returned dict is the raw ``choices[0].message`` — it carries
     ``content`` and, when the model called tools, ``tool_calls``.
     """
-    headers = {"Authorization": f"Bearer {config.api_key}"} if config.api_key else {}
-    async with httpx.AsyncClient(timeout=timeout, headers=headers) as client:
+    async with httpx.AsyncClient(timeout=timeout, headers=_auth_headers(config)) as client:
         try:
             response = await client.post(f"{config.base_url}/chat/completions", json=payload)
         except httpx.TimeoutException as exc:
@@ -757,6 +761,16 @@ async def _post_chat(config: AIConfig, payload: dict, timeout: float) -> dict:
         except httpx.HTTPError as exc:
             raise AIRequestError(f"The AI endpoint is unreachable: {exc.__class__.__name__}.") from exc
 
+    _raise_for_status(response)
+    return _completion_message(response)
+
+
+def _auth_headers(config: AIConfig) -> dict[str, str]:
+    return {"Authorization": f"Bearer {config.api_key}"} if config.api_key else {}
+
+
+def _raise_for_status(response: httpx.Response) -> None:
+    """Raise AIRequestError for a non-200 answer. The body must already have been read."""
     if response.status_code == httpx.codes.UNAUTHORIZED:
         raise AIRequestError("The AI endpoint rejected the API key (HTTP 401).")
     if response.status_code != httpx.codes.OK:
@@ -767,6 +781,9 @@ async def _post_chat(config: AIConfig, payload: dict, timeout: float) -> dict:
             detail = response.text[:200]
         raise AIRequestError(f"The AI endpoint returned HTTP {response.status_code}. {detail}".strip())
 
+
+def _completion_message(response: httpx.Response) -> dict:
+    """Return ``choices[0].message`` of a plain JSON completion, or raise AIRequestError."""
     try:
         message = response.json()["choices"][0]["message"]
     except (json.JSONDecodeError, KeyError, IndexError, TypeError) as exc:
@@ -828,6 +845,11 @@ async def chat_completion_tools(
     pure-conversation turn — still sends a valid request to endpoints that reject an
     empty tools array.
     """
+    payload = await _tools_payload(config, messages, tools=tools, max_tokens=max_tokens)
+    return await _post_chat(config, payload, timeout)
+
+
+async def _tools_payload(config: AIConfig, messages: list[dict], *, tools: list[dict] | None, max_tokens: int) -> dict:
     if not config.base_url:
         raise AIRequestError("No AI endpoint is configured.")
     if not config.model:
@@ -838,4 +860,203 @@ async def chat_completion_tools(
         payload["tools"] = tools
         payload["tool_choice"] = "auto"
     payload.update(await _ollama_tuning(config, config.model, want_json=False))
-    return await _post_chat(config, payload, timeout)
+    return payload
+
+
+#: How long one streamed reply may take in total. httpx's timeout only bounds the gap between
+#: two reads, so without this an endpoint that keeps trickling bytes would hold a chat slot and
+#: a database session for as long as it liked. Generous, because a CPU-only model writing a long
+#: answer is slow but legitimate.
+_STREAM_DEADLINE = 300.0
+
+#: Answers to a streaming request that may only mean "not with `stream`": OpenAI refuses it with
+#: a 400 for models that need a verified organisation to stream, for instance. 401 and 5xx are
+#: never retried; asking again without `stream` would not change them.
+_STREAM_REFUSED = frozenset({400, 404, 405, 415, 422, 501})
+
+#: One item of stream_chat_completion_tools: ("delta", text) while the reply is being written,
+#: then exactly one ("message", assistant message) at the end.
+ChatStreamItem = tuple[Literal["delta", "message"], str | dict]
+
+
+async def stream_chat_completion_tools(  # noqa: C901, PLR0912
+    config: AIConfig,
+    messages: list[dict],
+    *,
+    tools: list[dict] | None = None,
+    max_tokens: int = 1500,
+    timeout: float = _CHAT_TIMEOUT,
+) -> AsyncIterator[ChatStreamItem]:
+    """Streaming sibling of chat_completion_tools.
+
+    Yields ``("delta", text)`` for each piece of reply text as it arrives, then one
+    ``("message", assistant)`` whose dict has the same shape chat_completion_tools returns, so
+    the agent loop treats both alike. Tool-call fragments are put back together by their index.
+
+    Spoolman talks to any OpenAI-compatible server, and they differ in how well they stream. The
+    choice of how to read the reply is made once per request, before any text is passed on:
+
+    * an endpoint that ignores ``stream`` and answers with plain JSON is read as a normal
+      completion, and remembered so later turns ask it for JSON straight away;
+    * an endpoint that refuses ``stream`` with a client error (see _STREAM_REFUSED) is asked
+      once more without it, and remembered if that works;
+    * a stream that ends before anything arrived is retried once without streaming;
+    * once text has been passed on, a failure is an error, never a silent second request, as
+      the reader has already seen part of the answer.
+    """
+    payload = await _tools_payload(config, messages, tools=tools, max_tokens=max_tokens)
+    if (config.base_url, config.model) in _state.no_stream:
+        yield "message", await _post_chat(config, payload, timeout)
+        return
+
+    reader = _StreamReader()
+    refused = False
+    deadline = time.monotonic() + _STREAM_DEADLINE
+    async with httpx.AsyncClient(timeout=timeout, headers=_auth_headers(config)) as client:
+        try:
+            async with client.stream(
+                "POST",
+                f"{config.base_url}/chat/completions",
+                json={**payload, "stream": True},
+            ) as response:
+                if response.status_code in _STREAM_REFUSED:
+                    # Some endpoints refuse `stream` for some models (HTTP 400 and similar)
+                    # but answer the same request without it; that is handled below.
+                    await response.aread()
+                    refused = True
+                elif response.status_code != httpx.codes.OK:
+                    await response.aread()
+                    _raise_for_status(response)
+                elif "text/event-stream" not in response.headers.get("content-type", ""):
+                    await response.aread()
+                    message = _completion_message(response)
+                    _state.no_stream.add((config.base_url or "", config.model or ""))
+                    yield "message", message
+                    return
+                if not refused:
+                    async for line in response.aiter_lines():
+                        if time.monotonic() > deadline:
+                            raise AIRequestError(
+                                f"The AI endpoint took longer than {int(_STREAM_DEADLINE)} s to reply."
+                            )
+                        text = reader.feed(line)
+                        if text:
+                            yield "delta", text
+                        if reader.done:
+                            break
+        except httpx.TimeoutException as exc:
+            raise AIRequestError(f"The AI endpoint timed out after {int(timeout)} s.") from exc
+        except httpx.HTTPError as exc:
+            if reader.started:
+                raise AIRequestError("The connection to the AI endpoint broke off mid-reply.") from exc
+            raise AIRequestError(f"The AI endpoint is unreachable: {exc.__class__.__name__}.") from exc
+
+    if refused:
+        # Plain request; if this fails too its error is the one worth showing.
+        message = await _post_chat(config, payload, timeout)
+        _state.no_stream.add((config.base_url or "", config.model or ""))
+        yield "message", message
+    elif reader.done:
+        yield "message", reader.message()
+    elif not reader.started:
+        # Nothing arrived and nothing was shown: one plain request costs the reader nothing.
+        yield "message", await _post_chat(config, payload, timeout)
+    else:
+        raise AIRequestError("The AI endpoint stopped part-way through its reply.")
+
+
+class _StreamReader:
+    """Accumulates an OpenAI-style SSE chat stream into one assistant message."""
+
+    def __init__(self) -> None:
+        self.text: list[str] = []
+        self.calls: list[dict] = []
+        self.done = False
+
+    @property
+    def started(self) -> bool:
+        """Whether any reply text or tool call has arrived."""
+        return bool(self.text or self.calls)
+
+    def feed(self, line: str) -> str:  # noqa: C901
+        """Consume one line of the stream; return any reply text it carried."""
+        if not line.startswith("data:"):
+            return ""  # blank separators, comments and event names
+        data = line[len("data:") :].strip()
+        if data == "[DONE]":
+            self.done = True
+            return ""
+        try:
+            chunk = json.loads(data)
+        except json.JSONDecodeError:
+            return ""
+        if not isinstance(chunk, dict):
+            return ""
+        error = chunk.get("error")
+        if error:
+            # vLLM and llama.cpp report a failure as a chunk inside a 200 stream.
+            detail = error.get("message") if isinstance(error, dict) else error
+            raise AIRequestError(f"The AI endpoint reported an error: {str(detail)[:200]}")
+        text = ""
+        for choice in chunk.get("choices") or []:  # empty on a trailing usage-only chunk
+            if not isinstance(choice, dict):
+                continue
+            delta = choice.get("delta") or {}
+            content = delta.get("content")
+            if isinstance(content, str) and content:
+                text += content
+            for fragment in delta.get("tool_calls") or []:
+                if isinstance(fragment, dict):
+                    self._merge_call(fragment)
+            if choice.get("finish_reason"):
+                self.done = True
+        if text:
+            self.text.append(text)
+        return text
+
+    def _merge_call(self, fragment: dict) -> None:
+        index = fragment.get("index")
+        call_id = fragment.get("id")
+        target = None
+        if isinstance(index, int):
+            target = next((c for c in self.calls if c["index"] == index), None)
+        elif call_id:
+            # No index (some Ollama builds): a known id continues its call, a new id starts one.
+            target = next((c for c in self.calls if c["id"] == call_id), None)
+        elif self.calls:
+            target = self.calls[-1]
+        if target is None:
+            target = {
+                "index": index if isinstance(index, int) else len(self.calls),
+                "id": "",
+                "name": "",
+                "arguments": "",
+            }
+            self.calls.append(target)
+        if call_id and not target["id"]:
+            target["id"] = str(call_id)
+        function = fragment.get("function") or {}
+        name = function.get("name")
+        if isinstance(name, str) and name and name != target["name"]:
+            target["name"] += name
+        arguments = function.get("arguments")
+        if isinstance(arguments, dict):  # some servers send the parsed object in one piece
+            target["arguments"] = json.dumps(arguments)
+        elif isinstance(arguments, str):
+            target["arguments"] += arguments
+
+    def message(self) -> dict:
+        """Return the assistant message, shaped like ``choices[0].message`` of a plain completion."""
+        content = "".join(self.text)
+        calls = [
+            {
+                "id": call["id"] or f"call_{n}",
+                "type": "function",
+                "function": {"name": call["name"], "arguments": call["arguments"] or "{}"},
+            }
+            for n, call in enumerate(sorted(self.calls, key=lambda c: c["index"]))
+            if call["name"]
+        ]
+        if calls:
+            return {"role": "assistant", "content": content or None, "tool_calls": calls}
+        return {"role": "assistant", "content": content}

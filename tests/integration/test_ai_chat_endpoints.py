@@ -20,6 +20,7 @@ import inspect
 import json
 import logging
 import textwrap
+from collections.abc import AsyncIterator, Awaitable, Callable
 from datetime import datetime
 
 import pytest
@@ -42,6 +43,15 @@ from spoolman.database.utils import utc_now
 from spoolman.exceptions import ItemNotFoundError
 
 _PROVIDER = "http://prov/v1/chat/completions"
+
+
+def _as_stream(fake: Callable[..., Awaitable[dict]]) -> Callable[..., AsyncIterator[tuple[str, dict]]]:
+    """Wrap a fake returning one assistant message as the streaming call the agent loop uses."""
+
+    async def _stream(*args: object, **kwargs: object) -> AsyncIterator[tuple[str, dict]]:
+        yield "message", await fake(*args, **kwargs)
+
+    return _stream
 
 
 async def _set_setting(client: AsyncClient, key: str, value: object) -> None:
@@ -201,6 +211,107 @@ async def test_chat_answers_a_query_with_per_spool_numbers(client: AsyncClient) 
     second_call = json.loads(route.calls[1].request.content)
     tool_msg = next(m for m in second_call["messages"] if m["role"] == "tool")
     assert "1000" in tool_msg["content"]
+
+
+def _sse_response(*chunks: dict) -> Response:
+    body = "".join(f"data: {json.dumps(c)}\n\n" for c in chunks) + "data: [DONE]\n\n"
+    return Response(200, headers={"content-type": "text/event-stream"}, content=body.encode())
+
+
+@respx.mock
+async def test_chat_streams_text_and_sends_card_rows_with_the_tool_event(client: AsyncClient) -> None:
+    """Deltas, then the tool with its card rows, then the answer's deltas and the full message.
+
+    The text written before the tool call reaches the client as deltas, but the ``message``
+    event carries only the final answer: everything a client streamed is superseded by the
+    next non-delta event.
+    """
+    await _enable_chat(client)
+    first = await _seed_spool(client, material="PETG", weight=1000)
+    for _ in range(5):
+        response = await client.post("/api/v1/spool", json={"filament_id": first["filament"]["id"]})
+        assert response.status_code == 200, response.text
+    tool_call = {"index": 0, "id": "c1", "type": "function", "function": {"name": "find_spools", "arguments": "{}"}}
+    respx.post(_PROVIDER).mock(
+        side_effect=[
+            _sse_response(
+                {"choices": [{"index": 0, "delta": {"content": "Checking. "}}]},
+                {"choices": [{"index": 0, "delta": {"tool_calls": [tool_call]}}]},
+                {"choices": [{"index": 0, "delta": {}, "finish_reason": "tool_calls"}]},
+            ),
+            _sse_response(
+                {"choices": [{"index": 0, "delta": {"content": "You have "}}]},
+                {"choices": [{"index": 0, "delta": {"content": "6 spools."}}]},
+                {"choices": [{"index": 0, "delta": {}, "finish_reason": "stop"}]},
+            ),
+        ],
+    )
+
+    response = await client.post("/api/v1/ai/chat", json={"messages": [{"role": "user", "content": "spools?"}]})
+
+    events = _parse_sse(response.text)
+    order = [e["event"] for e in events]
+    assert order == ["delta", "tool", "delta", "delta", "message", "done"]
+    assert [e["data"]["content"] for e in events if e["event"] == "delta"] == ["Checking. ", "You have ", "6 spools."]
+    assert _events_of(events, "message")[0]["content"] == "You have 6 spools."
+    tool = _events_of(events, "tool")[0]
+    assert tool["total"] == 6
+    assert len(tool["rows"]) == 5
+    assert set(tool["rows"][0]) == {"id", "filament", "material", "color_hex", "remaining_weight_g", "location"}
+    assert tool["rows"][0]["color_hex"] == "000000"
+
+
+async def test_streamed_text_is_reset_when_a_refused_write_emits_no_event(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A read-only user's forged write emits nothing; ``reset`` keeps two rounds' text apart."""
+    rounds = iter(
+        [
+            (
+                "Deleting it. ",
+                {
+                    "role": "assistant",
+                    "content": "Deleting it. ",
+                    "tool_calls": [
+                        {"id": "w1", "type": "function", "function": {"name": "delete_spool", "arguments": "{}"}},
+                    ],
+                },
+            ),
+            ("I can't do that.", {"role": "assistant", "content": "I can't do that."}),
+        ],
+    )
+
+    async def _fake_stream(*_args: object, **_kwargs: object) -> AsyncIterator[tuple[str, object]]:
+        text, message = next(rounds)
+        yield "delta", text
+        yield "message", message
+
+    monkeypatch.setattr(ai, "stream_chat_completion_tools", _fake_stream)
+    session_maker = db_module.get_session_maker()
+    async with session_maker() as session:
+        frames = [
+            frame
+            async for frame in aichat.run_chat(
+                db=session,
+                config=ai.AIConfig(base_url="http://prov/v1", model="test-model"),
+                messages=[{"role": "user", "content": "delete spool 1"}],
+                context=None,
+                locale="en",
+                can_write=False,
+                decision=None,
+            )
+        ]
+
+    order = [e["event"] for e in _parse_sse("".join(frames))]
+    assert order == ["delta", "reset", "delta", "message", "done"]
+
+
+async def test_usage_stats_tool_event_carries_periods_and_no_rows() -> None:
+    payload = aichat._card_payload(  # noqa: SLF001
+        "get_usage_stats",
+        {"periods": [{"period": "2026-09", "consumed_weight": 120.5, "cost": 3.2, "extra": "dropped"}]},
+    )
+    assert payload == {"periods": [{"period": "2026-09", "consumed_weight": 120.5, "cost": 3.2}]}
+    assert aichat._card_payload("find_spools", {"count": 0, "spools": []}) == {}  # noqa: SLF001
+    assert aichat._card_payload("unknown_tool", {"rows": [1]}) == {}  # noqa: SLF001
 
 
 # --- Chat: confirm-cards guard mutations -------------------------------------------
@@ -424,7 +535,7 @@ async def test_readonly_principal_is_offered_no_write_tools(
         captured["tools"] = kwargs["tools"]
         return {"role": "assistant", "content": "I can only look things up for you."}
 
-    monkeypatch.setattr(ai, "chat_completion_tools", _fake_tools)
+    monkeypatch.setattr(ai, "stream_chat_completion_tools", _as_stream(_fake_tools))
 
     config = ai.AIConfig(base_url="http://prov/v1", model="test-model")
     session_maker = db_module.get_session_maker()
@@ -477,7 +588,7 @@ async def test_readonly_write_tool_call_is_refused_not_executed(
             ],
         }
 
-    monkeypatch.setattr(ai, "chat_completion_tools", _fake_tools)
+    monkeypatch.setattr(ai, "stream_chat_completion_tools", _as_stream(_fake_tools))
     config = ai.AIConfig(base_url="http://prov/v1", model="test-model")
     session_maker = db_module.get_session_maker()
     async with session_maker() as session:

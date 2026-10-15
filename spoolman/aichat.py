@@ -10,7 +10,15 @@ client and is round-tripped on every request, so there is no session to hold bet
 One request drives the loop until it reaches a natural stopping point and streams the
 events it produced:
 
-* ``tool``     — a read tool ran (shown for transparency; carries deep-link filters).
+* ``delta``    — a piece of the assistant's reply text, as the endpoint writes it. Display
+                 only: whichever other event comes next (``tool``, ``confirm``, ``message``,
+                 ``error``) supersedes the text streamed so far, so a client must clear it then.
+                 Text written before a tool call is not an answer; the ``message`` event
+                 carries the final answer in full.
+* ``reset``    — discard the text streamed so far. Sent between rounds when nothing else
+                 would supersede it (a write the model asked for was refused or failed).
+* ``tool``     — a read tool ran (shown for transparency; carries deep-link filters and up
+                 to five ``rows`` taken from the tool's own result, plus ``total``).
 * ``confirm``  — the model wants to mutate; the stream ends carrying the pending
                  transcript plus before/after confirm-cards. The client resumes with
                  ``decision: "confirm"`` or ``"cancel"``.
@@ -26,6 +34,7 @@ sanitised (any ``system`` role is dropped and replaced with ours), writes are re
 capped so a misbehaving model can't spin forever.
 """
 
+import contextlib
 import json
 import logging
 from collections.abc import AsyncIterator
@@ -226,7 +235,49 @@ async def _run_read_call(ctx: ToolContext, call: dict) -> tuple[dict, str]:
     event_data = {"name": name, "summary": _read_summary(name, result)}
     if name == "find_spools" and result.get("filters"):
         event_data["filters"] = result["filters"]
+    event_data.update(_card_payload(name, result))
     return result, _sse("tool", event_data)
+
+
+#: Rows a 'tool' event carries for the drawer's result card. Five fit the drawer without
+#: scrolling; ``total`` lets it say how many more there are.
+_CARD_ROWS = 5
+
+#: tool name -> (result key holding the list, fields each card row keeps). Only these fields
+#: leave the server, and only as the tool returned them, so a card can never show a number
+#: the tools did not produce.
+_CARD_FIELDS: dict[str, tuple[str, tuple[str, ...]]] = {
+    "find_spools": ("spools", ("id", "filament", "material", "color_hex", "remaining_weight_g", "location")),
+    "find_filaments": (
+        "filaments",
+        ("id", "name", "vendor", "material", "color_hex", "total_remaining_weight_g", "low_stock", "on_order"),
+    ),
+    "find_orders": ("orders", ("id", "shop", "order_number", "status", "outstanding_units")),
+    "find_locations": ("locations", ("id", "name", "spool_count", "remaining_weight_g")),
+    "find_vendors": ("vendors", ("id", "name", "filament_count", "spool_count")),
+    "catalog_lookup": ("matches", ("external_id", "vendor", "name", "material", "match_percent")),
+}
+
+
+def _card_payload(name: str, result: dict) -> dict:
+    """Return the ``rows``/``total`` (or usage ``periods``) a 'tool' event adds for its card."""
+    if name == "get_usage_stats":
+        periods = [
+            {"period": p.get("period"), "consumed_weight": p.get("consumed_weight"), "cost": p.get("cost")}
+            for p in result.get("periods") or []
+            if isinstance(p, dict)
+        ]
+        return {"periods": periods} if periods else {}
+    spec = _CARD_FIELDS.get(name)
+    if spec is None:
+        return {}
+    key, fields = spec
+    items = [item for item in result.get(key) or [] if isinstance(item, dict)]
+    if not items:
+        return {}
+    rows = [{f: item.get(f) for f in fields} for item in items[:_CARD_ROWS]]
+    total = result.get("count")
+    return {"rows": rows, "total": total if isinstance(total, int) else len(items)}
 
 
 async def _resolve_pending(ctx: ToolContext, convo: list[dict], *, decision: str | None) -> AsyncIterator[str]:
@@ -318,7 +369,7 @@ async def _handle_tool_calls(
         pending_cards.append({"tool_call_id": _call_id(call), **asdict(card)})
 
 
-async def run_chat(
+async def run_chat(  # noqa: C901
     *,
     db: AsyncSession,
     config: ai.AIConfig,
@@ -341,7 +392,19 @@ async def run_chat(
             yield event
 
         for _ in range(_MAX_ITERATIONS):
-            assistant = await ai.chat_completion_tools(config, convo, tools=ai_tools.tool_schemas(can_write=can_write))
+            assistant: dict = {}
+            streamed = False
+            # aclosing: if the client goes away while this generator is paused at a yield, the
+            # provider stream is closed now rather than whenever the generator is collected.
+            async with contextlib.aclosing(
+                ai.stream_chat_completion_tools(config, convo, tools=ai_tools.tool_schemas(can_write=can_write)),
+            ) as stream:
+                async for kind, value in stream:
+                    if kind == "delta":
+                        streamed = True
+                        yield _sse("delta", {"content": value})
+                    elif isinstance(value, dict):
+                        assistant = value
             convo.append(_assistant_entry(assistant))
             tool_calls = [c for c in (assistant.get("tool_calls") or []) if isinstance(c, dict)]
 
@@ -351,8 +414,14 @@ async def run_chat(
                 return
 
             pending_cards: list[dict] = []
+            emitted = False
             async for event in _handle_tool_calls(ctx, convo, tool_calls, pending_cards):
+                emitted = True
                 yield event
+            if streamed and not emitted and not pending_cards:
+                # A refused or failed write emits nothing, and the next round streams new text;
+                # without this the client would run the two rounds' text together.
+                yield _sse("reset", {})
             if pending_cards:
                 yield _sse("confirm", {"messages": convo, "cards": pending_cards})
                 yield _sse("done", {})
