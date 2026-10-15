@@ -11,14 +11,13 @@ from spoolman.database import spool as spool_db
 from spoolman.database import tag as tag_db
 from spoolman.database import vendor as vendor_db
 from spoolman.database.models import Filament, Spool
-from spoolman.exceptions import TagConflictError
 from spoolman.qidi_codec import (
     MATERIAL_CODE_MAP,
     QidiTagData,
     color_code_from_hex,
     material_code_from_name,
 )
-from spoolman.tags import normalize_uid
+from spoolman.tags import normalize_uid, require_whole_bytes
 
 logger = logging.getLogger(__name__)
 
@@ -166,12 +165,31 @@ async def create_spool_from_qidi_tag(
     db: AsyncSession,
     tag_data: QidiTagData,
     tag_uid_hex: str | None = None,
-) -> Spool:
+) -> tuple[Spool, bool]:
     """Create a filament and spool from Qidi tag data.
 
     Creates a Qidi vendor (if needed), filament with the tag's material/color,
     and a spool linked to it. Binds the tag UID if available.
+
+    Returns the spool now holding the tag and whether it was created here: if another spool
+    claimed the UID first, the new one is deleted again and that spool is returned instead.
+
+    Raises:
+        ValueError: If the UID is not a whole number of bytes. Nothing has been created.
+        TagConflictError: If the UID is held by a filament. The new spool has been deleted.
+
     """
+    # Settled before anything is written, so a UID that cannot be bound is refused without
+    # leaving a spool behind. A UID that is not hex at all is skipped as before.
+    uid = None
+    if tag_uid_hex:
+        try:
+            uid = normalize_uid(tag_uid_hex)
+        except ValueError:
+            uid = None
+        if uid is not None:
+            require_whole_bytes(uid)
+
     vendor_id = await vendor_db.find_or_create_by_name(db, QIDI_VENDOR_NAME)
     name = f"Qidi {tag_data.material_name}"
     color_hex = tag_data.color_hex if tag_data.color_hex != "000000" else None
@@ -191,16 +209,12 @@ async def create_spool_from_qidi_tag(
 
     db_spool = await spool_db.create(db=db, filament_id=db_filament.id)
 
-    if tag_uid_hex:
-        try:
-            uid = normalize_uid(tag_uid_hex)
-        except ValueError:
-            uid = None
-        if uid is not None:
-            try:
-                await tag_db.link(db=db, spool_id=db_spool.id, uid=uid, tag_format=QIDI_FORMAT)
-                logger.info("Bound new spool %d to Qidi tag uid %s", db_spool.id, uid)
-            except TagConflictError:
-                logger.warning("Could not bind new spool %d to uid %s: already claimed", db_spool.id, uid)
+    if uid is not None:
+        # The Qidi vendor and filament created above stay if the spool is undone: catalogue
+        # entries, not stock.
+        winner = await tag_db.link_new_spool(db=db, spool_id=db_spool.id, uid=uid, tag_format=QIDI_FORMAT)
+        if winner is not None:
+            return winner, False
+        logger.info("Bound new spool %d to Qidi tag uid %s", db_spool.id, uid)
 
-    return db_spool
+    return db_spool, True

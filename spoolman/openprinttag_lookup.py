@@ -11,9 +11,8 @@ from spoolman.database import spool as spool_db
 from spoolman.database import tag as tag_db
 from spoolman.database import vendor as vendor_db
 from spoolman.database.models import Filament, Spool
-from spoolman.exceptions import TagConflictError
 from spoolman.openprinttag_codec import OpenPrintTagData
-from spoolman.tags import normalize_uid
+from spoolman.tags import normalize_uid, require_whole_bytes
 
 logger = logging.getLogger(__name__)
 
@@ -83,12 +82,32 @@ async def find_spool_by_openprinttag(
     return None
 
 
-async def create_spool_from_openprinttag(db: AsyncSession, tag_data: OpenPrintTagData) -> Spool:
+async def create_spool_from_openprinttag(db: AsyncSession, tag_data: OpenPrintTagData) -> tuple[Spool, bool]:
     """Create a filament and spool from OpenPrintTag data.
 
     Creates or finds the vendor, creates a filament with the tag's material data,
     and creates a spool linked to it. Binds this tag's physical UID if known.
+
+    Returns the spool now holding the tag and whether it was created here: if another spool
+    claimed the UID first, the new one is deleted again and that spool is returned instead.
+
+    Raises:
+        ValueError: If the UID is not a whole number of bytes. Nothing has been created.
+        TagConflictError: If the UID is held by a filament. The new spool has been deleted.
+
     """
+    # Settled before anything is written, so a UID that cannot be bound is refused without
+    # leaving a spool behind.
+    uid = None
+    uid_hex = _uid_hex(tag_data)
+    if uid_hex:
+        try:
+            uid = normalize_uid(uid_hex)
+        except ValueError:
+            uid = None
+        if uid is not None:
+            require_whole_bytes(uid)
+
     instance_uuid = tag_data.effective_instance_uuid
     external_id = f"opt_{instance_uuid}" if instance_uuid else None
 
@@ -138,20 +157,15 @@ async def create_spool_from_openprinttag(db: AsyncSession, tag_data: OpenPrintTa
 
         db_spool = await _create_spool_for_filament(db, db_filament.id, tag_data)
 
-    uid_hex = _uid_hex(tag_data)
-    if uid_hex:
-        try:
-            uid = normalize_uid(uid_hex)
-        except ValueError:
-            uid = None
-        if uid is not None:
-            try:
-                await tag_db.link(db=db, spool_id=db_spool.id, uid=uid, tag_format=OPENPRINTTAG_FORMAT)
-                logger.info("Bound new spool %d to OpenPrintTag uid %s", db_spool.id, uid)
-            except TagConflictError:
-                logger.warning("Could not bind new spool %d to uid %s: already claimed", db_spool.id, uid)
+    if uid is not None:
+        # A filament or vendor created above stays if the spool is undone: catalogue entries,
+        # not stock, and the winning spool may well share them.
+        winner = await tag_db.link_new_spool(db=db, spool_id=db_spool.id, uid=uid, tag_format=OPENPRINTTAG_FORMAT)
+        if winner is not None:
+            return winner, False
+        logger.info("Bound new spool %d to OpenPrintTag uid %s", db_spool.id, uid)
 
-    return db_spool
+    return db_spool, True
 
 
 async def _create_spool_for_filament(db: AsyncSession, filament_id: int, tag_data: OpenPrintTagData) -> Spool:

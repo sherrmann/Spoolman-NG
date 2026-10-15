@@ -87,6 +87,28 @@ def normalize_uid(uid: str) -> str:
     return normalized
 
 
+def require_whole_bytes(uid: str) -> str:
+    """Return an already-normalized UID unchanged if it is a whole number of bytes.
+
+    Kept apart from ``normalize_uid`` on purpose: that function also reads stored rows (the
+    tag re-home migration, every lookup and unlink), and odd-length UIDs were accepted by
+    every link path until this check existed, so some may already be stored. Those must stay
+    findable and removable; only paths that create a new binding call this.
+
+    Raises:
+        ValueError: If the UID has an odd number of hex digits. A tag UID is a byte string,
+            so this almost always means a reader dropped a leading zero.
+
+    """
+    if len(uid) % 2:
+        raise ValueError(
+            f'"{uid}" has an odd number of hex digits, so it is not a whole number of bytes. '
+            "If your reader dropped a leading zero, left-pad the UID to whole bytes "
+            "(NXP tag UIDs start with 04).",
+        )
+    return uid
+
+
 def normalize_format(tag_format: str | None) -> str | None:
     """Normalize a tag format name, or return None if none was given.
 

@@ -32,7 +32,7 @@ from spoolman.api.v1.models import EventType
 from spoolman.database import filament, models, spool
 from spoolman.database.utils import utc_now
 from spoolman.exceptions import ItemNotFoundError, TagConflictError
-from spoolman.tags import TARGET_FILAMENT, TARGET_SPOOL, normalize_format, normalize_uid
+from spoolman.tags import TARGET_FILAMENT, TARGET_SPOOL, normalize_format, normalize_uid, require_whole_bytes
 
 logger = logging.getLogger(__name__)
 
@@ -171,10 +171,12 @@ async def link_spool(
     Raises:
         ItemNotFoundError: If no spool with that ID exists.
         TagConflictError: If the UID is already linked to anything else, spool or filament.
-        ValueError: If the UID or format is not valid.
+        ValueError: If the UID or format is not valid, or the UID is not a whole number of
+            bytes. A UID already stored at odd length stays findable and unlinkable; it just
+            cannot be linked afresh.
 
     """
-    uid = normalize_uid(uid)
+    uid = require_whole_bytes(normalize_uid(uid))
     tag_format = normalize_format(tag_format)
     return await _link(db, await spool.get_by_id(db, spool_id), uid, tag_format)
 
@@ -198,7 +200,7 @@ async def link_filament(
         ValueError: If the UID or format is not valid.
 
     """
-    uid = normalize_uid(uid)
+    uid = require_whole_bytes(normalize_uid(uid))
     tag_format = normalize_format(tag_format)
     return await _link(db, await filament.get_by_id(db, filament_id), uid, tag_format)
 
@@ -233,6 +235,48 @@ async def try_link(
     except TagConflictError:
         logger.debug("Not auto-binding: uid %s is already linked to something else.", uid)
         return None
+
+
+async def link_new_spool(
+    *,
+    db: AsyncSession,
+    spool_id: int,
+    uid: str,
+    tag_format: str | None = None,
+) -> models.Spool | None:
+    """Link a tag to a spool created moments ago from that same tag, or undo the creation.
+
+    For the NFC create-from-tag paths, which check that no spool holds the UID, create one, and
+    then link it. Anything that claims the UID in between -- a manual bind, a second worker --
+    would otherwise leave the new spool unbound: a duplicate that no later scan finds. So on a
+    conflict the new spool is deleted again (its own DELETED event follows its ADDED one) and
+    the spool that won is returned, which is what a retry would have answered.
+
+    This is a compensating delete rather than one transaction around create-and-link because
+    every create the paths go through (vendor, filament, spool) commits and announces itself on
+    its own; folding them into one transaction would mean reworking all of them for a window a
+    lock already closes between Spoolman's own create paths.
+
+    Returns:
+        models.Spool | None: None when the new spool now holds the tag, otherwise the spool
+            that already held it.
+
+    Raises:
+        TagConflictError: If the UID turned out to be held by something other than a spool,
+            such as a filament. The new spool has been deleted by then.
+        ValueError: If the UID or format is not valid, or not a whole number of bytes.
+
+    """
+    try:
+        await link_spool(db=db, spool_id=spool_id, uid=uid, tag_format=tag_format)
+    except TagConflictError:
+        winner = await find_spool_by_uid(db, uid)
+        await spool.delete(db, spool_id)
+        if winner is None:
+            raise
+        logger.info("Tag %s was claimed by spool %d first; deleted duplicate spool %d.", uid, winner.id, spool_id)
+        return winner
+    return None
 
 
 async def unlink_spool(*, db: AsyncSession, spool_id: int, uid: str) -> None:

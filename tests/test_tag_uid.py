@@ -8,7 +8,7 @@ physical tag.
 
 import pytest
 
-from spoolman.tags import UID_MAX_LENGTH, normalize_format, normalize_uid
+from spoolman.tags import UID_MAX_LENGTH, normalize_format, normalize_uid, require_whole_bytes
 
 
 @pytest.mark.parametrize(
@@ -89,3 +89,18 @@ def test_format_is_normalized_but_not_restricted(reported: str | None, expected:
 def test_rejects_format_longer_than_the_column():
     with pytest.raises(ValueError, match="at most"):
         normalize_format("f" * 33)
+
+
+def test_normalize_uid_still_accepts_an_odd_number_of_digits():
+    """Stored odd-length UIDs must stay findable, so normalization alone does not reject them."""
+    assert normalize_uid("4:a2:b") == "4A2B"
+
+
+@pytest.mark.parametrize("odd", ["ABC", "4A2B3", "0"])
+def test_require_whole_bytes_rejects_an_odd_number_of_digits(odd: str):
+    with pytest.raises(ValueError, match="odd number of hex digits"):
+        require_whole_bytes(odd)
+
+
+def test_require_whole_bytes_passes_whole_bytes_through():
+    assert require_whole_bytes("04A2B3") == "04A2B3"
