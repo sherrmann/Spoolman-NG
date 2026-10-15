@@ -4,6 +4,8 @@
 
 ## Unreleased
 
+- **Fixed: creating a label design in the Svelte client before the designs had loaded could wipe the saved ones** (#481) — all designs are stored together, and New design wrote the list it had in memory, which was empty until the first read arrived or if that read failed. Changes now wait for the read, retry it if it failed, and are refused rather than written while the designs cannot be read.
+- **Fixed: a custom field saved in the Svelte client's settings could vanish from the list right after saving** (#482) — a slower list request that had started earlier finished afterwards and put the old list back. The field itself was always saved. An older list no longer replaces a newer one, and the settings page makes one request per entity instead of several.
 - **Added: filament and manufacturer lists in the Svelte library** (upstream) — a menu on the Library tab switches between spools, filaments and manufacturers; the two new lists also open from the search panel and the manufacturer inspector. Both sort by any field, custom fields included, take the same filters as the spool list and page through long results; the filament list can also be sectioned by manufacturer. On phones, where the Library tab's menu is not shown, the More sheet lists them first. Natural-language search and Select stay with the spool list, which is what they act on.
 - **Added: a "Show lot numbers" toggle in the Svelte library's Filter menu** (upstream) — it shows each spool's lot number in the list and on gallery cards, is kept in the URL, and is remembered in this browser like the grouping and page size.
 - **Added: custom QR templates on labels can use label fields** (upstream) — for example `{filament.id}`, and on location labels `{location.name}`.
