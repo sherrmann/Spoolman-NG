@@ -108,10 +108,20 @@ export interface ChatState {
 	 * as a cancellation.
 	 */
 	deciding: boolean;
+	/** Whether the decision in flight has had its `executed` or `cancelled` frame. */
+	outcomeArrived: boolean;
 }
 
 export function initialChatState(): ChatState {
-	return { messages: [], bubbles: [], status: 'idle', pending: [], streaming: '', deciding: false };
+	return {
+		messages: [],
+		bubbles: [],
+		status: 'idle',
+		pending: [],
+		streaming: '',
+		deciding: false,
+		outcomeArrived: false
+	};
 }
 
 /** Add the user's turn and mark a stream as starting. */
@@ -135,7 +145,7 @@ export function startTurn(state: ChatState, text: string): ChatState {
  * request's `decision` field, not as another message.
  */
 export function startDecision(state: ChatState): ChatState {
-	return { ...state, status: 'streaming', pending: [], deciding: true };
+	return { ...state, status: 'streaming', pending: [], deciding: true, outcomeArrived: false };
 }
 
 /**
@@ -173,7 +183,9 @@ export function isDeciding(state: ChatState): boolean {
  * rest of the turn is an ordinary reply.
  */
 export function awaitingOutcome(state: ChatState): boolean {
-	return isDeciding(state) && state.bubbles[state.bubbles.length - 1]?.kind === 'confirm';
+	// A flag rather than the last bubble: an `executed` frame with no cards (every write
+	// failed) adds no bubble but is an outcome all the same.
+	return isDeciding(state) && !state.outcomeArrived;
 }
 
 /** End a turn whose stream broke off; a decision without its outcome is marked as unknown. */
@@ -312,6 +324,7 @@ function foldFrame(state: ChatState, frame: ChatEvent): ChatState {
 				// The server sends the transcript with the writes' results; keep it, so the next
 				// turn tells the model what actually ran.
 				messages: transcriptFrom(d.messages) ?? state.messages,
+				outcomeArrived: true,
 				// No cards means every confirmed write failed; the transcript still matters.
 				bubbles: cards.length ? [...state.bubbles, { kind: 'executed', cards }] : state.bubbles
 			};
@@ -321,6 +334,7 @@ function foldFrame(state: ChatState, frame: ChatEvent): ChatState {
 			return {
 				...state,
 				messages: transcriptFrom((frame.data as { messages?: unknown }).messages) ?? state.messages,
+				outcomeArrived: true,
 				bubbles: [...state.bubbles, { kind: 'cancelled' }]
 			};
 
@@ -397,8 +411,10 @@ const MAX_STORED_CHARS = 200_000;
 export function serialiseChat(state: ChatState): string | null {
 	// A decision in flight is stored, marked as sent, so that a close or reload before its
 	// outcome arrives is not later shown as a cancellation it may not have been.
-	const decisionSent = isDeciding(state);
-	if ((state.status === 'streaming' && !decisionSent) || state.bubbles.length === 0) return null;
+	// Only while its outcome is missing is it marked as sent; after that the outcome (an
+	// executed card, or failed writes that changed nothing) is already in what is stored.
+	const decisionSent = awaitingOutcome(state);
+	if ((state.status === 'streaming' && !isDeciding(state)) || state.bubbles.length === 0) return null;
 	let messages = trimToUserTurn(state.messages.slice(-MAX_STORED_MESSAGES));
 	let bubbles = state.bubbles.slice(-MAX_STORED_BUBBLES);
 	const pack = () =>

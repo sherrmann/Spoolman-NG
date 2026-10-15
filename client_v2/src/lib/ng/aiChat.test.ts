@@ -591,3 +591,29 @@ describe('a decision whose stream breaks off', () => {
 		expect(stopTurn(s).status).toBe('idle');
 	});
 });
+
+describe('a decision whose writes all failed', () => {
+	it('counts the empty executed frame as its outcome', () => {
+		let s = startDecision(
+			run(startTurn(initialChatState(), 'move it'), [
+				[
+					'confirm',
+					{
+						messages: [{ role: 'user', content: 'move it' }],
+						cards: [{ tool: 't', title: 'T', summary: '', before: {}, after: {} }]
+					}
+				],
+				['done', {}]
+			])
+		);
+		s = run(s, [
+			['executed', { cards: [], messages: [{ role: 'user', content: 'move it' }] }],
+			['delta', { content: 'It failed' }]
+		]);
+		expect(awaitingOutcome(s)).toBe(false);
+		expect(stopTurn(s).status).toBe('idle');
+		expect(abandonTurn(s).bubbles.map((b) => b.kind)).toEqual(['user', 'confirm']);
+		// Nothing ran (failed writes are rolled back), so a reload shows it as not done.
+		expect(restoreChat(serialiseChat(s))?.bubbles.at(-1)).toEqual({ kind: 'cancelled' });
+	});
+});
