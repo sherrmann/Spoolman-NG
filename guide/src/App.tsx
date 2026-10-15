@@ -16,7 +16,11 @@ export default function App() {
   useEffect(() => {
     const search = searchFromConfig(config);
     const { pathname, hash } = window.location;
-    window.history.replaceState(window.history.state, "", `${pathname}${search ? `?${search}` : ""}${hash}`);
+    try {
+      window.history.replaceState(window.history.state, "", `${pathname}${search ? `?${search}` : ""}${hash}`);
+    } catch {
+      // Some browsers refuse rapid replaceState calls; the link then lags, the page keeps working.
+    }
   }, [config]);
 
   return (

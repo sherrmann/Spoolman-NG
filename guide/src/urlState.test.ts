@@ -55,6 +55,13 @@ describe("urlState (#344)", () => {
     expect(config.subPath).toBeNull();
     expect(configFromSearch(`?tz=${"A".repeat(65)}`).extras.tz).toBeNull();
     expect(configFromSearch("?path=/spoolman/../admin").subPath).toBeNull();
+    expect(configFromSearch("?tz=-").extras.tz).toBeNull();
+    expect(configFromSearch("?tz=1").extras.tz).toBeNull();
+  });
+
+  it("keeps an answer typed with surrounding spaces", () => {
+    const config = configFromSearch(searchFromConfig({ ...defaultConfig, subPath: "spoolman " }));
+    expect(config.subPath).toBe("spoolman");
   });
 
   it("needs both ids, as plain numbers in range, to set PUID/PGID", () => {

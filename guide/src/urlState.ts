@@ -27,8 +27,9 @@ const DATABASES: readonly Database[] = ["sqlite", "postgres", "mysql"];
 const PROXIES: readonly Proxy[] = ["none", "caddy", "nginx", "traefik"];
 const ARCHES: readonly Arch[] = ["amd64", "arm64", "armv7"];
 
-/** IANA names: "UTC", "Europe/Stockholm", "America/Argentina/Buenos_Aires", "Etc/GMT+1". */
-const TZ_PATTERN = /^[A-Za-z0-9_+-]+(\/[A-Za-z0-9_+-]+)*$/;
+/** IANA names: "UTC", "Europe/Stockholm", "America/Argentina/Buenos_Aires", "Etc/GMT+1". A letter
+ * first, so the value cannot read as a YAML list item or number. */
+const TZ_PATTERN = /^[A-Za-z][A-Za-z0-9_+-]*(\/[A-Za-z0-9_+-]+)*$/;
 /** URL path characters only; normalizeSubPath adds the leading slash later. */
 const SUB_PATH_PATTERN = /^[A-Za-z0-9._~/-]+$/;
 const MAX_TEXT = 64;
@@ -38,7 +39,10 @@ function pick<T extends string>(value: string | null, allowed: readonly T[]): T 
   return allowed.find((item) => item === value);
 }
 
-function text(value: string | null, pattern: RegExp): string | null {
+function text(raw: string | null, pattern: RegExp): string | null {
+  // The form keeps what was typed and trims at plan time; trim here too, so a trailing space
+  // does not cost the link its answer.
+  const value = raw?.trim() ?? null;
   if (value === null || value.length > MAX_TEXT || !pattern.test(value)) return null;
   // Neither answer has "." or ".." segments; a link that does is not one the guide wrote.
   if (value.split("/").some((segment) => segment === "." || segment === "..")) return null;
