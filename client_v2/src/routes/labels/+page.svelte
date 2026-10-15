@@ -57,7 +57,14 @@
 	const dirty = $derived(working !== null && JSON.stringify(working) !== savedSnapshot);
 
 	async function newDesign() {
-		const d = await labelDesigns.create();
+		// Spoolman NG fork addition (#481): create() refuses while the designs cannot be read.
+		let d: LabelDesign;
+		try {
+			d = await labelDesigns.create();
+		} catch (e) {
+			console.error('Failed to create design', e);
+			return;
+		}
 		selectDesign(d.id);
 		tab = 'design';
 	}

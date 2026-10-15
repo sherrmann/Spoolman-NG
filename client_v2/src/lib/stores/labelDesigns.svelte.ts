@@ -14,10 +14,20 @@ function uid(): string {
 
 class LabelDesigns {
 	designs = $state<LabelDesign[]>([]);
+	/** True only once the designs have been read from the server; a failed read leaves it false. */
 	loaded = $state(false);
+	// Spoolman NG fork addition (#481): the read in flight, so concurrent callers share it and a
+	// mutation can wait for it. Every write sends the whole list, so writing before the read has
+	// landed would replace the stored designs with whatever happens to be in memory.
+	private pending: Promise<void> | null = null;
 
-	async load(): Promise<void> {
-		if (this.loaded) return;
+	load(): Promise<void> {
+		if (this.loaded) return Promise.resolve();
+		this.pending ??= this.fetch().finally(() => (this.pending = null));
+		return this.pending;
+	}
+
+	private async fetch(): Promise<void> {
 		try {
 			const { designs, isSet } = await getDesignsSetting();
 			// First run (setting never written): pull the v1 client's print presets
@@ -34,11 +44,16 @@ class LabelDesigns {
 			} else {
 				this.designs = designs;
 			}
+			this.loaded = true;
 		} catch (e) {
 			console.error('Failed to load label designs', e);
-		} finally {
-			this.loaded = true;
 		}
+	}
+
+	/** Wait for (or retry) the read; refuse to write over designs that could not be read. */
+	private async ready(): Promise<void> {
+		await this.load();
+		if (!this.loaded) throw new Error('Label designs could not be loaded, so they will not be overwritten.');
 	}
 
 	private async persist(): Promise<void> {
@@ -47,6 +62,7 @@ class LabelDesigns {
 
 	/** Create and persist a fresh design; returns it. */
 	async create(): Promise<LabelDesign> {
+		await this.ready();
 		const design = newDesign(uid());
 		this.designs = [...this.designs, design];
 		await this.persist();
@@ -55,6 +71,7 @@ class LabelDesigns {
 
 	/** Insert or replace a design by id, then persist. */
 	async save(design: LabelDesign): Promise<void> {
+		await this.ready();
 		const idx = this.designs.findIndex((d) => d.id === design.id);
 		if (idx === -1) this.designs = [...this.designs, design];
 		else this.designs = this.designs.map((d) => (d.id === design.id ? design : d));
@@ -63,6 +80,7 @@ class LabelDesigns {
 
 	/** Duplicate a design under a new id/name; returns the copy. */
 	async duplicate(id: string): Promise<LabelDesign | undefined> {
+		await this.ready();
 		const src = this.designs.find((d) => d.id === id);
 		if (!src) return undefined;
 		const copy: LabelDesign = {
@@ -76,6 +94,7 @@ class LabelDesigns {
 	}
 
 	async remove(id: string): Promise<void> {
+		await this.ready();
 		this.designs = this.designs.filter((d) => d.id !== id);
 		await this.persist();
 	}
