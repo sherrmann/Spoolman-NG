@@ -104,7 +104,7 @@ def require_whole_bytes(uid: str) -> str:
         raise ValueError(
             f'"{uid}" has an odd number of hex digits, so it is not a whole number of bytes. '
             "If your reader dropped a leading zero, left-pad the UID to whole bytes "
-            "(NXP tag UIDs start with 04).",
+            "(NXP tag UIDs usually start with 04).",
         )
     return uid
 
