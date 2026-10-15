@@ -164,3 +164,12 @@ async def test_similar_is_forbidden_for_a_readonly_user(readonly_client: AsyncCl
     response = await readonly_client.post("/api/v1/vendor/similar", json={"name": "Bambu"})
 
     assert response.status_code == 403
+
+
+async def test_similar_vendor_rejects_an_exclude_id_the_database_cannot_hold(client: AsyncClient) -> None:
+    response = await client.post(
+        "/api/v1/vendor/similar",
+        json={"name": "eSUN", "exclude_id": 1180591620717411303424},
+    )
+
+    assert response.status_code == 422

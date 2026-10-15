@@ -164,7 +164,8 @@ async def test_include_empty_applies_filament_extra_field_filters(client: AsyncC
 
 
 async def test_include_empty_rejected_for_other_group_by(client: AsyncClient):
-    for group_by in ("vendor", "material", "location"):
+    """Every axis but filament and vendor is keyed by a value read off the spools, so it has no empty groups."""
+    for group_by in ("material", "location"):
         resp = await client.get(GROUP, params={"group_by": group_by, "include_empty": "true"})
         assert resp.status_code == 400, group_by
 

@@ -29,6 +29,11 @@ class Fields {
 	// Reactive so views can wait for the definitions rather than render against an
 	// empty list and then rearrange themselves once they arrive.
 	private loaded = $state<EntityType[]>([]);
+	// Spoolman NG fork addition (#482): the read in flight per entity, and a count of completed
+	// writes. A read that started before a save or delete returns the list as it was then; applying
+	// it afterwards would undo the write on screen. Neither needs to be reactive.
+	private pending: Partial<Record<EntityType, Promise<void>>> = {};
+	private writes: Partial<Record<EntityType, number>> = {};
 
 	get(entity: EntityType): FieldDef[] {
 		return this.defs[entity] ?? [];
@@ -44,14 +49,27 @@ class Fields {
 		if (!this.loaded.includes(entity)) void this.load(entity);
 	}
 
-	async load(entity: EntityType) {
-		try {
-			const list = await getFields(entity);
-			this.defs = { ...this.defs, [entity]: byOrder(list) };
-			if (!this.loaded.includes(entity)) this.loaded = [...this.loaded, entity];
-		} catch (e) {
-			console.error(`Failed to load ${entity} fields`, e);
-		}
+	/** Read an entity's definitions. A read already in flight is shared, not repeated. */
+	load(entity: EntityType): Promise<void> {
+		const inFlight = this.pending[entity];
+		if (inFlight) return inFlight;
+		const writesAtStart = this.writes[entity] ?? 0;
+		const read = (async () => {
+			try {
+				const list = await getFields(entity);
+				// A save or delete finished meanwhile: its list is newer than this one.
+				if ((this.writes[entity] ?? 0) === writesAtStart) {
+					this.defs = { ...this.defs, [entity]: byOrder(list) };
+				}
+				if (!this.loaded.includes(entity)) this.loaded = [...this.loaded, entity];
+			} catch (e) {
+				console.error(`Failed to load ${entity} fields`, e);
+			} finally {
+				delete this.pending[entity];
+			}
+		})();
+		this.pending[entity] = read;
+		return read;
 	}
 
 	loadAll() {
@@ -60,11 +78,16 @@ class Fields {
 
 	async save(entity: EntityType, key: string, params: FieldParams) {
 		const list = await setField(entity, key, params);
-		this.defs = { ...this.defs, [entity]: byOrder(list) };
+		this.applyWrite(entity, list);
 	}
 
 	async remove(entity: EntityType, key: string) {
 		const list = await deleteField(entity, key);
+		this.applyWrite(entity, list);
+	}
+
+	private applyWrite(entity: EntityType, list: FieldDef[]) {
+		this.writes[entity] = (this.writes[entity] ?? 0) + 1;
 		this.defs = { ...this.defs, [entity]: byOrder(list) };
 	}
 }

@@ -106,3 +106,22 @@ async def test_entity_and_string_location_endpoints_are_independent(client: Asyn
 
     # ...and the entity list holds only the entity row (not the spool's "Shelf X" string).
     assert [item["name"] for item in (await client.get(LOC)).json()] == ["Dry Box 1"]
+
+
+async def test_rename_string_location_containing_a_slash(client: AsyncClient):
+    """PATCH /location/{name} reaches a name with a slash in it, URL-encoded (upstream 3e9c3b68b).
+
+    The path is decoded before routing, so with the default converter "Shelf 1%2F2" arrived as two
+    path segments and 404'd.
+    """
+    filament = await _add_filament(client)
+    moved = [await _add_spool(client, filament["id"], location="Shelf 1/2") for _ in range(2)]
+    other = await _add_spool(client, filament["id"], location="Other shelf")
+
+    resp = await client.patch("/api/v1/location/Shelf%201%2F2", json={"name": "Shelf 3/4"})
+
+    assert resp.status_code == 200, resp.text
+    assert resp.json() == "Shelf 3/4"
+    for spool in moved:
+        assert (await client.get(f"{SPOOL}/{spool['id']}")).json()["location"] == "Shelf 3/4"
+    assert (await client.get(f"{SPOOL}/{other['id']}")).json()["location"] == "Other shelf"

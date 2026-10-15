@@ -62,3 +62,65 @@ export async function similarVendor(
 		return NO_MATCH;
 	}
 }
+
+/**
+ * The fields `POST /filament/similar` (spoolman/api/v1/filament.py, `SimilarFilamentRequest`)
+ * checks a filament-in-progress against. Everything is optional -- the same request is fired
+ * while only some of the new-filament form has been filled in -- and the caller decides which
+ * fields it has to hand: `vendorId` for a manufacturer picked from the catalog, `vendorName` for
+ * one typed fresh.
+ */
+export interface FilamentSimilarityDraft {
+	vendorId?: number;
+	vendorName?: string;
+	name?: string;
+	material?: string;
+	colorHex?: string;
+	multiColorHexes?: string;
+	diameter?: number;
+}
+
+/** Same shape as {@link SimilarVendorMatch}; `name` here is "Manufacturer Name Material". */
+export type SimilarFilamentMatch = SimilarVendorMatch;
+
+export interface SimilarFilamentResult {
+	exact: SimilarFilamentMatch | null;
+	suggestion: SimilarFilamentMatch | null;
+}
+
+const NO_FILAMENT_MATCH: SimilarFilamentResult = { exact: null, suggestion: null };
+
+/**
+ * `excludeId` leaves out the filament being edited, so it is not reported as its own duplicate;
+ * omit it for a brand-new filament with nothing yet to exclude.
+ */
+export async function similarFilament(
+	draft: FilamentSimilarityDraft,
+	excludeId?: number,
+	signal?: AbortSignal
+): Promise<SimilarFilamentResult> {
+	try {
+		const res = await fetch(API_BASE + '/filament/similar', {
+			method: 'POST',
+			headers: { 'content-type': 'application/json', ...authHeaders() },
+			body: JSON.stringify({
+				vendor_id: draft.vendorId ?? undefined,
+				vendor_name: draft.vendorName ?? undefined,
+				name: draft.name ?? undefined,
+				material: draft.material ?? undefined,
+				color_hex: draft.colorHex ?? undefined,
+				multi_color_hexes: draft.multiColorHexes ?? undefined,
+				diameter: draft.diameter ?? undefined,
+				exclude_id: excludeId ?? undefined
+			}),
+			signal
+		});
+		if (!res.ok) return NO_FILAMENT_MATCH;
+		const body = (await res.json()) as Record<string, unknown>;
+		return { exact: mapMatch(body.exact), suggestion: mapMatch(body.suggestion) };
+	} catch {
+		// Same reasoning as similarVendor above: an aborted request is a superseded one, not
+		// a failure, so it degrades to "nothing found" like every other error here.
+		return NO_FILAMENT_MATCH;
+	}
+}

@@ -498,7 +498,7 @@ with its shortlisted/top-1 verdicts, so two runs -- before and after a scoring c
 compared case by case with `--compare OLD.jsonl NEW.jsonl`, which needs neither a catalog nor a
 decision endpoint.
 
-## Duplicate manufacturer check
+## Duplicate check (manufacturers and filaments)
 
 When you create a manufacturer, or type a new one's name while adding a filament,
 Spoolman checks whether it already exists and says so under the name field.
@@ -508,8 +508,8 @@ manufacturer instead. It never blocks saving.
 - **Exact matches are always checked**, with no AI involved: names that are equal
   once case, spacing, punctuation and full-width or other compatibility forms are
   ignored ("eSUN", "e-Sun" and "E SUN").
-- **Other spellings need the decision model.** Turn on *Duplicate manufacturer
-  check* under Settings → AI → Features; it needs a decision model endpoint (see
+- **Other spellings need the decision model.** Turn on *Duplicate check* under
+  Settings → AI → Features; it needs a decision model endpoint (see
   above). On each pause in typing, the typed name and up to 50 of your
   manufacturers' names (the closest spellings, when you have more) go to that
   endpoint as one Choice question, and it answers which existing manufacturer
@@ -520,9 +520,35 @@ manufacturer instead. It never blocks saving.
 The check is `POST /api/v1/vendor/similar` (`{name, exclude_id}`), so an
 integration can use it too. It never creates anything.
 
+**Filaments** get the same two tiers while a new filament is being entered:
+
+- **Exact, always on:** the same manufacturer, the same name (compared as for
+  manufacturers), the same material ("PLA" and "pla"), the same filament size
+  (1.75 mm or 2.85/3 mm; an unknown size matches either) and the same colour.
+  Colours count as the same when every colour of the filament is within a CIE94
+  difference of 3, which is a little above what the eye separates side by side;
+  a multi-colour filament must match colour by colour, in the same order. When
+  neither side has a colour, colour does not decide. Nothing is flagged until a
+  name is typed, so choosing the material first does not match every unnamed
+  filament of that material.
+- **With the decision model:** Spoolman shortlists up to five of your filaments
+  whose manufacturer, name, material and size score as close (the same scoring
+  Scan-to-Spool uses), drops every one whose colour is known to differ or that is
+  the other filament size, and asks
+  the model which remaining one, if any, is the same product. The request
+  carries the typed manufacturer, name, material and size, and the shortlisted
+  filaments' names with "same colour" or "colour unknown"; colour values never
+  leave Spoolman. The same 0.6 threshold applies.
+
+The filament check is `POST /api/v1/filament/similar` (`{vendor_id` or
+`vendor_name, name, material, color_hex, multi_color_hexes, diameter,
+exclude_id}`).
+
 **Evaluating it.** `poe duplicate-eval` scores the exact check alone, and the
-exact check plus the model at several probability thresholds, on handwritten
-cases of real brands:
+exact check plus the model at several probability thresholds: on handwritten
+manufacturer cases of real brands, and with `--filaments --catalog
+filaments.json` on filament cases built from SpoolmanDB, where the same product
+in another colour is the false warning that matters most:
 
 ```bash
 uv run poe duplicate-eval -- --baseline-only        # the exact check alone
@@ -539,8 +565,9 @@ SPOOLMAN_AI_DECISION_BASE_URL=https://api.typesafe.ai SPOOLMAN_AI_DECISION_API_K
 - The **decision model** for Scan-to-Spool matching (prototype, above) is a
   separate cloud endpoint. When configured, it receives the label's text fields
   and the shortlisted filaments' descriptions, never the photo. With the
-  duplicate manufacturer check on, it also receives the manufacturer name you
-  are typing and your manufacturers' names.
+  duplicate check on, it also receives the manufacturer or filament you are
+  typing and the names of similar manufacturers or filaments (which can contain
+  a colour word, such as "Charcoal Black"), never a colour value.
 - Feature toggles are all **off by default** and independent, so you can, for
   example, enable natural-language search against a local model and leave photo
   features off entirely.

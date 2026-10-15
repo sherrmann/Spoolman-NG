@@ -5,6 +5,7 @@
 	import LabelDesigner from '$components/labels/LabelDesigner.svelte';
 	import PrintLayoutPanel from '$components/labels/PrintLayoutPanel.svelte';
 	import { labelDesigns } from '$lib/stores/labelDesigns.svelte';
+	import { toasts } from '$lib/stores/toasts.svelte';
 	import { setDesignKind, type LabelDesign } from '$lib/labels/types';
 	import * as m from '$lib/paraglide/messages';
 	import { ng } from '$lib/ng/i18n';
@@ -57,19 +58,40 @@
 	const dirty = $derived(working !== null && JSON.stringify(working) !== savedSnapshot);
 
 	async function newDesign() {
-		const d = await labelDesigns.create();
+		// Spoolman NG fork addition (#481): create() refuses while the designs cannot be read (it
+		// retries the read first), so say why nothing happened; clicking again retries once more.
+		let d: LabelDesign;
+		try {
+			d = await labelDesigns.create();
+		} catch (e) {
+			console.error('Failed to create design', e);
+			toasts.error(m['library.apiError']());
+			return;
+		}
 		selectDesign(d.id);
 		tab = 'design';
 	}
 	async function duplicate() {
 		if (!selectedId) return;
-		const d = await labelDesigns.duplicate(selectedId);
-		if (d) selectDesign(d.id);
+		// Spoolman NG fork addition (#481): the store refuses changes while the designs cannot be read.
+		try {
+			const d = await labelDesigns.duplicate(selectedId);
+			if (d) selectDesign(d.id);
+		} catch (e) {
+			console.error('Failed to duplicate design', e);
+			toasts.error(m['library.apiError']());
+		}
 	}
 	async function remove() {
 		if (!selectedId) return;
 		if (!confirm(m['labels.deleteConfirm']())) return;
-		await labelDesigns.remove(selectedId);
+		try {
+			await labelDesigns.remove(selectedId);
+		} catch (e) {
+			console.error('Failed to delete design', e);
+			toasts.error(m['library.apiError']());
+			return;
+		}
 		selectedId = null;
 		working = null;
 		if (labelDesigns.designs.length > 0) selectDesign(labelDesigns.designs[0].id);

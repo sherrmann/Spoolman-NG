@@ -14,6 +14,7 @@
 	import X from '@lucide/svelte/icons/x';
 	import Plus from '@lucide/svelte/icons/plus';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import type { SimilarFilamentMatch } from '$lib/ng/similarApi';
 	import type { Extra, Filament, Spool } from '$lib/types';
 	import { inventory } from '$lib/stores/inventory.svelte';
 	import { serverInfo } from '$lib/stores/serverInfo.svelte';
@@ -96,6 +97,34 @@
 	function stopCreate() {
 		creating = false;
 		clearValidation();
+	}
+
+	/**
+	 * FilamentDuplicateHint's "Use" button, on the new-filament form: switch onto the existing
+	 * filament it found, the same way picking it from the search results does (`chosen =
+	 * {source: 'catalog', filament}` with `creating` cleared). The local catalog only holds
+	 * what has already been listed or searched for, so a match found by id alone is fetched
+	 * rather than assumed missing.
+	 *
+	 * Both ways this can fail stay silent otherwise: `fetchFilament` resolves to `undefined` for
+	 * a filament deleted since the hint found it, and rejects on anything else (a dropped
+	 * connection, a 500). Either way the person pressed a button and nothing happened, which
+	 * reads as broken rather than as "no such filament" -- so both get the same toast `apply()`
+	 * already shows for a failed change of filament, just below.
+	 */
+	async function useExistingFilament(match: SimilarFilamentMatch): Promise<void> {
+		try {
+			const id = String(match.id);
+			const f = inventory.filamentById(id) ?? (await spoolSource.fetchFilament(id));
+			if (f) {
+				creating = false;
+				chosen = { source: 'catalog', filament: f };
+			} else {
+				toasts.error(m['changeFilament.failed']());
+			}
+		} catch {
+			toasts.error(m['changeFilament.failed']());
+		}
 	}
 	function clearValidation() {
 		touched = {};
@@ -418,6 +447,8 @@
 						showWeights
 						backLabel={m['changeFilament.useExisting']()}
 						onback={stopCreate}
+						excludeId={Number(current.id)}
+						onuseexisting={useExistingFilament}
 					/>
 				{:else}
 					<input

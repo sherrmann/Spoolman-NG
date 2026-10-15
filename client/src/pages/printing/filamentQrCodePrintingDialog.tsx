@@ -10,6 +10,7 @@ import { useSavedState } from "../../utils/saveload";
 import { buildScanPayload } from "../../utils/scan";
 import { useGetFilamentsByIds } from "../filaments/functions";
 import { IFilament } from "../filaments/model";
+import { linkRoot } from "../../utils/url";
 import {
   SpoolQRCodePrintSettings,
   renderLabelContents,
@@ -41,7 +42,7 @@ const FilamentQRCodePrintingDialog = ({ filamentIds }: FilamentQRCodePrintingDia
   const t = useTranslate();
   const baseUrlSetting = useGetSetting("base_url");
   const baseUrl = parseStringSettingValue(baseUrlSetting.data?.value);
-  const baseUrlRoot = baseUrl !== "" ? baseUrl : window.location.origin;
+  const baseUrlRoot = linkRoot(baseUrl);
   const [messageApi, contextHolder] = message.useMessage();
   const [useHTTPUrl, setUseHTTPUrl] = useSavedState("print-useHTTPUrl-filament", false);
   const { mutate: updateFilament } = useUpdate();

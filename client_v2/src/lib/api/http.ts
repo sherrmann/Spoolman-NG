@@ -11,8 +11,10 @@ import { authHeaders } from '$lib/ng/authToken';
  * Every wrapper below goes through this rather than building headers inline, so
  * there is one place a credential can be forgotten rather than seven (#406).
  */
-function headers(extra: Record<string, string> = {}): Record<string, string> {
-	return { ...extra, ...authHeaders() };
+function headers(extra: Record<string, string> = {}): Record<string, string> | undefined {
+	const all = { ...extra, ...authHeaders() };
+	// None at all -- no credential on a GET -- sends the request exactly as upstream's does.
+	return Object.keys(all).length ? all : undefined;
 }
 
 export type QueryParams = Record<string, string | number | undefined | null>;
@@ -92,6 +94,15 @@ async function ensureOk(res: Response, method: string, path: string): Promise<Re
 export interface RawPage {
 	items: unknown[];
 	total: number;
+	/** The group endpoint's totals across every page, when it sends them. */
+	totalSpools?: number;
+	totalRemaining?: number;
+}
+
+function numberHeader(res: Response, name: string): number | undefined {
+	const header = res.headers.get(name);
+	const n = header != null && header !== '' ? Number(header) : NaN;
+	return Number.isNaN(n) ? undefined : n;
 }
 
 // Reads take an optional AbortSignal so a view can cancel what it no longer needs
@@ -111,9 +122,12 @@ export async function getList(
 		path
 	);
 	const items = (await res.json()) as unknown[];
-	const header = res.headers.get('x-total-count');
-	const total = header != null && header !== '' ? Number(header) : items.length;
-	return { items, total: Number.isNaN(total) ? items.length : total };
+	return {
+		items,
+		total: numberHeader(res, 'x-total-count') ?? items.length,
+		totalSpools: numberHeader(res, 'x-total-spools'),
+		totalRemaining: numberHeader(res, 'x-total-remaining-weight')
+	};
 }
 
 export async function getJson<T = unknown>(

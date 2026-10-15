@@ -24,10 +24,12 @@
 	interface Props {
 		vm: SpoolVM;
 		context?: RowContext;
+		/** The Filter menu's "Show lot numbers", as upstream's row takes it. */
+		showLotNumbers?: boolean;
 	}
-	let { vm, context = 'flat' }: Props = $props();
+	let { vm, context = 'flat', showLotNumbers = false }: Props = $props();
 
-	let identity = $derived(rowIdentity(vm, context));
+	let identity = $derived(rowIdentity(vm, context, showLotNumbers));
 	let id = $derived(String(vm.spool.id));
 	let selected = $derived(params.isSelected(page.url.searchParams, 'spool', id));
 </script>

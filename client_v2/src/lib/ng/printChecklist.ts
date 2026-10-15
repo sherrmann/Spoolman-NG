@@ -44,12 +44,14 @@ export function rememberSkipPrintChecklist(storage: Storage): void {
 }
 
 /**
- * The page size, in mm, that the next print will ask the browser for -- the number the
- * checklist tells the user to select in the print dialog.
+ * The page size, in mm, the next print is laid out for -- the number the checklist tells the
+ * user to select in the print dialog.
  *
- * This has to mirror `printLabels()`: `label` mode emits one page per label at the design's
- * own size, everything else emits the resolved paper (`paperSize` honours a custom size and
- * landscape). `image` mode never reaches here -- it downloads files instead of printing, and
+ * This follows `printLabels()`: `label` mode asks the browser for one page per label at the
+ * design's own size; every other mode lays the labels out on the resolved paper (`paperSize`
+ * honours a custom size and landscape) but, since upstream #1149, asks for `size: auto`, so the
+ * dialog offers the orientation picker and it is the user's paper choice that has to match --
+ * which is exactly what the checklist is for. `image` mode never reaches here -- it downloads files instead of printing, and
  * the panel renders a different button for it -- so it falls in with the sheet case rather
  * than being given a meaningless answer of its own.
  */

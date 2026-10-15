@@ -68,3 +68,22 @@ export function safeHttpUrl(url: string | undefined): string | undefined {
     return undefined;
   }
 }
+
+/**
+ * The root that link-form QR codes are built from.
+ *
+ * A non-empty Base URL setting is used exactly as given. Otherwise the fallback is the page's
+ * origin plus the base path, so a sub-path deploy (SPOOLMAN_BASE_PATH=/spoolman) yields
+ * https://host/spoolman/... rather than a link that misses the app. Under Home Assistant
+ * ingress the base path carries a rotating per-session token, which must not be baked into a
+ * printed code, so the fallback stays the bare origin there.
+ *
+ * @param baseUrl The Base URL setting value ("" when unset).
+ * @return {string} The root to prefix link paths with.
+ */
+export function linkRoot(baseUrl: string): string {
+  if (baseUrl !== "") {
+    return baseUrl;
+  }
+  return window.location.origin + (isHaIngress() ? "" : getBasePath());
+}

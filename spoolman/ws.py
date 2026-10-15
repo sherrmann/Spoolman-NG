@@ -37,9 +37,13 @@ class SubscriptionTree:
             self.children[path[0]].add(path[1:], websocket)
 
     def remove(self, path: tuple[str, ...], websocket: WebSocket) -> None:
-        """Remove a websocket from the subscription tree."""
+        """Remove a websocket from the subscription tree.
+
+        Removing a websocket that is not present is a no-op: send() drops sockets whose write
+        failed, and the endpoint's WebSocketDisconnect handler then removes them a second time.
+        """
         if len(path) == 0:
-            self.subscribers.remove(websocket)
+            self.subscribers.discard(websocket)
         elif path[0] in self.children:
             self.children[path[0]].remove(path[1:], websocket)
 

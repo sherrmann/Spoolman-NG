@@ -260,7 +260,12 @@ async def create(  # noqa: ANN201
 
 class SimilarVendorRequest(BaseModel):
     name: str = Field(max_length=64, description="The vendor name being typed.")
-    exclude_id: int | None = Field(None, description="A vendor to leave out, such as the one being renamed.")
+    exclude_id: int | None = Field(
+        None,
+        ge=1,
+        le=2**31 - 1,
+        description="A vendor to leave out, such as the one being renamed.",
+    )
 
 
 class SimilarVendor(BaseModel):

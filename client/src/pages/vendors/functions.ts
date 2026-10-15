@@ -24,8 +24,9 @@ export function isDuplicateVendorName(name: string, existingNames: string[]): bo
  * Get a vendor given its external ID.
  */
 export async function getVendorByExternalID(external_id: string): Promise<IVendor | null> {
-  // Make a search using GET and query params
-  const response = await apiFetch(`${getAPIURL()}/vendor?${new URLSearchParams({ external_id })}`);
+  // Make a search using GET and query params. The quotes ask the server for an exact match; without
+  // them the filter is a substring match and "Prusa" would also find "Prusament".
+  const response = await apiFetch(`${getAPIURL()}/vendor?${new URLSearchParams({ external_id: `"${external_id}"` })}`);
   if (!response.ok) {
     return null;
   }
@@ -36,6 +37,27 @@ export async function getVendorByExternalID(external_id: string): Promise<IVendo
   }
 
   return data[0];
+}
+
+/**
+ * Get a vendor whose name matches `name` after normalizeVendorName (case and spacing insensitive).
+ * Returns null when there is none.
+ */
+export async function getVendorByName(name: string): Promise<IVendor | null> {
+  const normalized = normalizeVendorName(name);
+  if (!normalized) {
+    return null;
+  }
+
+  // The server's name filter is a case-insensitive substring match that knows nothing about our
+  // whitespace collapsing, so search on the first word only and compare exactly here.
+  const response = await apiFetch(`${getAPIURL()}/vendor?${new URLSearchParams({ name: normalized.split(" ")[0] })}`);
+  if (!response.ok) {
+    return null;
+  }
+
+  const data: IVendor[] = await response.json();
+  return data.find((vendor) => normalizeVendorName(vendor.name) === normalized) ?? null;
 }
 
 /**
@@ -58,13 +80,20 @@ export async function createVendor(name: string): Promise<IVendor> {
 }
 
 /**
- * Create a new internal filament given an external filament object.
- * Returns the created internal filament.
+ * Find the vendor for an external (SpoolmanDB) manufacturer, creating it if needed. A vendor with
+ * the matching external ID wins; failing that, an existing vendor with the same name is reused as
+ * it is (never edited), so a hand-made vendor is not duplicated. Only when neither exists is a new
+ * vendor created, with the manufacturer as both name and external ID.
  */
 export async function getOrCreateVendorFromExternal(vendor_external_id: string): Promise<IVendor> {
   const existingVendor = await getVendorByExternalID(vendor_external_id);
   if (existingVendor) {
     return existingVendor;
+  }
+
+  const sameNameVendor = await getVendorByName(vendor_external_id);
+  if (sameNameVendor) {
+    return sameNameVendor;
   }
 
   const body: Omit<IVendor, "id" | "registered" | "extra"> = {
