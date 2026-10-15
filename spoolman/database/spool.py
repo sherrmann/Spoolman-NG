@@ -341,8 +341,9 @@ async def find(  # noqa: C901, PLR0912, PLR0915
         .join(models.Filament.vendor, isouter=True)
         .options(
             contains_eager(models.Spool.filament).contains_eager(models.Filament.vendor),
-            # Eager-load the optional printer (#75) so the list's Spool.from_db doesn't lazy-load it.
-            joinedload(models.Spool.printer),
+            # Eager-load the optional printer (#75) so the list's Spool.from_db doesn't lazy-load it,
+            # and its extra fields by IN query, for the same reason as the collections below.
+            joinedload(models.Spool.printer).selectinload(models.Printer.extra),
             # The extra-field collections are joined by default (models.py). Joined here they
             # multiply: each spool came back once per spool extra x filament extra x vendor
             # extra, 27 rows with three of each, which made listing and exporting thousands of
