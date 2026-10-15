@@ -181,6 +181,8 @@
 	// aborted on cleanup.
 	$effect(() => {
 		const searchKind = kind;
+		// Spoolman NG fork addition: the location tab filters its own list (lSearch, below).
+		if (searchKind === 'location') return;
 		const q = (searchKind === 'filament' ? fSearch : search).trim();
 		if (!q) {
 			resultIds = null;
@@ -580,7 +582,7 @@
 			</div>
 			<div class="count">{m['printing.spoolSelect.selectedTotal']({ count: selected.size })}</div>
 		{/if}
-		{#if !(kind === 'filament' ? resultFIds : resultIds) && total > pageSize}
+		{#if kind !== 'location' && !(kind === 'filament' ? resultFIds : resultIds) && total > pageSize}
 			<Pagination
 				page={pageNo}
 				{pageSize}
