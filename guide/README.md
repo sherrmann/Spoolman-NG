@@ -23,11 +23,17 @@ npm run dev          # local dev server
 npm test             # unit + snapshot + drift tests (vitest)
 npm run build        # typecheck + production build to dist/
 npm run render-matrix -- --out .matrix   # write every preset's artifacts for external validation
+npm run check-doc-blocks # validate the config blocks in README.md and docs/ with docker, helm, nginx, caddy
 ```
+
+`check-doc-blocks` (#303) checks each fenced compose, Helm values, nginx, Caddy and ini block in
+`README.md` and `docs/*.md` with the real tool, including the blocks no fragment covers. A tool
+that is not installed fails the run; add `-- --skip-missing` to check what you can locally.
 
 CI (`guide-tests` job in `.github/workflows/ci.yml`) runs lint/typecheck/tests/build, then
 validates the rendered preset matrix with the real tools: `docker compose config` on every
 generated compose file and `helm template charts/spoolman-ng` on every generated values.yaml.
+It also runs `check-doc-blocks`.
 Deployment happens in `.github/workflows/docs-site.yml`: the built `dist/` is staged into
 `docs/install/` (gitignored, like the generated `docs/index.html`) and published at `/install/`.
 

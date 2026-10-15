@@ -218,10 +218,11 @@ jobs:
   # lint, typecheck, unit + drift tests, build, then validate the generated
   # artifacts with the real tools — `docker compose config` on every generated
   # compose file and `helm template` (against the repo chart) on every generated
-  # values.yaml. Runs unconditionally rather than path-filtered: the drift tests
-  # exist to fail when docs/installation.md, README.md, docker-compose.yml,
-  # .env.example or charts/ change without guide/fragments/ following, and a
-  # guide/** filter would skip exactly those PRs.
+  # values.yaml — and the config blocks in README.md and docs/ (compose, Helm
+  # values, nginx, Caddy, ini) the same way. Runs unconditionally rather than
+  # path-filtered: the drift tests exist to fail when docs/installation.md,
+  # README.md, docker-compose.yml, .env.example or charts/ change without
+  # guide/fragments/ following, and a guide/** filter would skip exactly those PRs.
   #
   guide-tests:
     needs: [meta]
@@ -276,6 +277,19 @@ jobs:
             helm template charts/spoolman-ng -f "$f" > /dev/null
             echo "::endgroup::"
           done
+
+      - name: Install nginx and Caddy for the docs block check
+        # policy-rc.d stops apt from starting either service, so they cannot clash over port 80.
+        run: |
+          echo 'exit 101' | sudo tee /usr/sbin/policy-rc.d > /dev/null
+          sudo chmod +x /usr/sbin/policy-rc.d
+          sudo apt-get update -q
+          sudo apt-get install -y -q nginx caddy
+
+      - name: Validate the copy-paste config blocks in README.md and docs/ (#303)
+        run: |
+          cd guide
+          npm run check-doc-blocks
 
       - name: Assert the sub-path pairing renders into the probes
         run: |
