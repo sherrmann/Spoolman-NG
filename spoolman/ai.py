@@ -26,6 +26,7 @@ import json
 import logging
 import os
 import time
+import uuid
 from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -1050,11 +1051,13 @@ class _StreamReader:
         content = "".join(self.text)
         calls = [
             {
-                "id": call["id"] or f"call_{n}",
+                # Unique, not numbered: a transcript holds many rounds, and a repeated id would
+                # pair a later call with an earlier round's result.
+                "id": call["id"] or f"call_{uuid.uuid4().hex[:12]}",
                 "type": "function",
                 "function": {"name": call["name"], "arguments": call["arguments"] or "{}"},
             }
-            for n, call in enumerate(sorted(self.calls, key=lambda c: c["index"]))
+            for call in sorted(self.calls, key=lambda c: c["index"])
             if call["name"]
         ]
         if calls:

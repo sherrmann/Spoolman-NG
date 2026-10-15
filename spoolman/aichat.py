@@ -22,8 +22,9 @@ events it produced:
 * ``confirm``  — the model wants to mutate; the stream ends carrying the pending
                  transcript plus before/after confirm-cards. The client resumes with
                  ``decision: "confirm"`` or ``"cancel"``.
-* ``executed`` — confirmed writes ran; each card carries an ``undo`` descriptor.
-* ``cancelled``— the pending writes were declined.
+* ``executed`` — confirmed writes ran; each card carries an ``undo`` descriptor, and
+                 ``messages`` is the transcript with the writes' results added.
+* ``cancelled``— the pending writes were declined; ``messages`` as for ``executed``.
 * ``message``  — the final assistant answer.
 * ``error``    — a user-safe failure.
 * ``done``     — always the last event.
@@ -283,15 +284,20 @@ def _card_payload(name: str, result: dict) -> dict:
 async def _resolve_pending(ctx: ToolContext, convo: list[dict], *, decision: str | None) -> AsyncIterator[str]:
     """Execute or cancel write tool calls left pending by a previous confirm round.
 
-    Pending = a write tool_call in the last assistant turn with no matching tool result
-    yet. On ``confirm`` (and only if the principal may write) each is executed and an
-    ``executed`` event is emitted with undo descriptors; otherwise each is answered with a
-    cancellation so the model can acknowledge it.
+    Pending = a write tool_call in the last assistant turn with no tool result after that turn.
+    The turn need not be the last message: a round that also ran reads ends with their results.
+    Only results after the turn count, because providers that send no call ids get ids
+    numbered per response, so an earlier round's ``call_0`` must not mark this one's as done.
+    On ``confirm`` (and only if the principal may write) each is executed and an ``executed``
+    event is emitted with undo descriptors; otherwise each is answered with a cancellation so
+    the model can acknowledge it. Both events carry the transcript with the results added,
+    which the client keeps in place of its own.
     """
-    if not convo or convo[-1].get("role") != "assistant":
+    last = next((i for i in range(len(convo) - 1, -1, -1) if convo[i].get("role") != "tool"), None)
+    if last is None or convo[last].get("role") != "assistant":
         return
-    calls = convo[-1].get("tool_calls") or []
-    resolved = {m.get("tool_call_id") for m in convo if m.get("role") == "tool"}
+    calls = convo[last].get("tool_calls") or []
+    resolved = {m.get("tool_call_id") for m in convo[last + 1 :]}
     pending = [c for c in calls if ai_tools.is_write_tool(_call_name(c)) and _call_id(c) not in resolved]
     if not pending:
         return
@@ -322,10 +328,12 @@ async def _resolve_pending(ctx: ToolContext, convo: list[dict], *, decision: str
             reason = "The user cancelled this action." if ctx.can_write else "This user is read-only."
             convo.append(_tool_result_entry(call, {"cancelled": True, "reason": reason}))
 
-    if executed_cards:
-        yield _sse("executed", {"cards": executed_cards})
-    elif decision != "confirm":
-        yield _sse("cancelled", {})
+    if executed_cards or decision == "confirm":
+        # Also when every confirmed write failed (no cards): the client still needs the
+        # transcript with the error results, or its next question would carry unanswered calls.
+        yield _sse("executed", {"cards": executed_cards, "messages": convo})
+    else:
+        yield _sse("cancelled", {"messages": convo})
 
 
 async def _handle_tool_calls(

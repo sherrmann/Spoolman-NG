@@ -385,6 +385,94 @@ async def test_confirm_executes_the_mutation(client: AsyncClient) -> None:
 
 
 @respx.mock
+async def test_a_round_with_a_read_and_a_write_can_be_confirmed(client: AsyncClient) -> None:
+    """The confirm transcript then ends with the read's result, not the assistant turn."""
+    await _enable_chat(client)
+    spool_id = (await _seed_spool(client, location="Shelf B"))["id"]
+    respx.post(_PROVIDER).mock(
+        side_effect=[
+            _multi_tool_call_response(
+                [("r1", "find_spools", {}), ("w1", "update_spool", {"spool_id": spool_id, "location": "Shelf C"})],
+            ),
+            _message_response("Moved it to Shelf C."),
+        ],
+    )
+
+    first = await client.post("/api/v1/ai/chat", json={"messages": [{"role": "user", "content": "move it"}]})
+    confirm_messages = _events_of(_parse_sse(first.text), "confirm")[0]["messages"]
+    assert confirm_messages[-1]["role"] == "tool"
+
+    confirmed = await client.post("/api/v1/ai/chat", json={"messages": confirm_messages, "decision": "confirm"})
+    executed = _events_of(_parse_sse(confirmed.text), "executed")
+
+    assert executed
+    assert executed[0]["cards"][0]["tool"] == "update_spool"
+    # The transcript comes back with the write's result, for the client to keep.
+    assert any(m.get("tool_call_id") == "w1" for m in executed[0]["messages"])
+    assert (await client.get(f"/api/v1/spool/{spool_id}")).json()["location"] == "Shelf C"
+
+
+@respx.mock
+async def test_an_earlier_rounds_result_with_the_same_id_does_not_skip_a_confirmed_write(client: AsyncClient) -> None:
+    """Providers without call ids get ones numbered per response, so ids repeat across rounds."""
+    await _enable_chat(client)
+    spool_id = (await _seed_spool(client, location="Shelf B"))["id"]
+    respx.post(_PROVIDER).mock(return_value=_message_response("Moved."))
+    messages = [
+        {"role": "user", "content": "what do I have?"},
+        {
+            "role": "assistant",
+            "content": None,
+            "tool_calls": [
+                {"id": "call_0", "type": "function", "function": {"name": "find_spools", "arguments": "{}"}},
+            ],
+        },
+        {"role": "tool", "tool_call_id": "call_0", "content": "{}"},
+        {"role": "assistant", "content": "One spool."},
+        {"role": "user", "content": "move it to Shelf C"},
+        {
+            "role": "assistant",
+            "content": None,
+            "tool_calls": [
+                {
+                    "id": "call_0",
+                    "type": "function",
+                    "function": {
+                        "name": "update_spool",
+                        "arguments": json.dumps({"spool_id": spool_id, "location": "Shelf C"}),
+                    },
+                },
+            ],
+        },
+    ]
+
+    confirmed = await client.post("/api/v1/ai/chat", json={"messages": messages, "decision": "confirm"})
+
+    assert _events_of(_parse_sse(confirmed.text), "executed")
+    assert (await client.get(f"/api/v1/spool/{spool_id}")).json()["location"] == "Shelf C"
+
+
+@respx.mock
+async def test_cancel_returns_the_transcript_with_the_cancellation(client: AsyncClient) -> None:
+    await _enable_chat(client)
+    spool_id = (await _seed_spool(client))["id"]
+    respx.post(_PROVIDER).mock(
+        side_effect=[
+            _tool_call_response("d1", "delete_spool", {"spool_id": spool_id}),
+            _message_response("Left it alone."),
+        ],
+    )
+    first = await client.post("/api/v1/ai/chat", json={"messages": [{"role": "user", "content": "delete it"}]})
+    confirm_messages = _events_of(_parse_sse(first.text), "confirm")[0]["messages"]
+
+    cancelled = await client.post("/api/v1/ai/chat", json={"messages": confirm_messages, "decision": "cancel"})
+    frame = _events_of(_parse_sse(cancelled.text), "cancelled")[0]
+
+    result = next(m for m in frame["messages"] if m.get("tool_call_id") == "d1")
+    assert json.loads(result["content"])["cancelled"] is True
+
+
+@respx.mock
 async def test_update_confirm_card_shows_before_after_and_undo(client: AsyncClient) -> None:
     await _enable_chat(client)
     spool = await _seed_spool(client, location="Shelf B")

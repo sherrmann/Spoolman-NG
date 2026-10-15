@@ -126,7 +126,8 @@ async def test_a_tool_call_without_an_id_gets_one(respx_mock: respx.MockRouter) 
 
     _, message = await _collect()
 
-    assert message["tool_calls"][0]["id"] == "call_0"
+    assert message["tool_calls"][0]["id"].startswith("call_")
+    assert message["tool_calls"][0]["id"] != "call_0"  # unique, not numbered per response
     assert message["tool_calls"][0]["function"]["arguments"] == "{}"
 
 
