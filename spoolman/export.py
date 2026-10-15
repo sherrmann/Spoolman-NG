@@ -55,10 +55,14 @@ async def flatten_sqlalchemy_object(obj: models.Base, parent_key: str = "", sep:
     """Recursively flattens a SQLAlchemy object into a dictionary with dot-separated keys."""
     fields = {}
     skipped = banned_attrs | _uncollapsed_collections(obj)
+    # Attributes the query has not loaded yet. Only these go through awaitable_attrs, which
+    # starts a greenlet per access: done for every attribute of every row, that was most of the
+    # time an export of thousands of spools took (#300), for values already in memory.
+    unloaded = inspect(obj).unloaded
     for attr in dir(obj):
         # Check if the attribute is a column or a relationship
         if not attr.startswith("_") and attr not in skipped:
-            value = await getattr(obj.awaitable_attrs, attr)
+            value = await getattr(obj.awaitable_attrs, attr) if attr in unloaded else getattr(obj, attr)
 
             if attr == "extra":
                 # Handle extra fields

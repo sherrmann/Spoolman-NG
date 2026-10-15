@@ -80,6 +80,7 @@ asyncio_default_fixture_loop_scope = "function"
 testpaths = ["tests"]
 markers = [
     "slow: builds/boots a real container image (e.g. armv7 under QEMU) -- opt in with -m slow",
+    "perf: seeded performance harness (#300) -- skipped unless SPOOLMAN_PERF=1 is set",
 ]
 
 [tool.coverage.run]

@@ -8,6 +8,7 @@ it pins; these stay red until the corresponding fix ships in a release.
 from __future__ import annotations
 
 import json
+import re
 import zipfile
 from typing import TYPE_CHECKING
 
@@ -17,6 +18,15 @@ if TYPE_CHECKING:
     from tests_deployment.conftest import Release
 
 EXEC_BITS = 0o111
+
+# Both built clients ship in the zip; their JavaScript must not carry test-runner code.
+CLIENT_BUNDLE_PREFIXES = ("client/dist/", "client_v2/build/")
+TEST_RUNNER_SUBSTRINGS = ("vitest", "@testing-library", "expect.extend(")
+# `describe("name", () => {` or `describe('name', function () {`: a test-suite declaration.
+# The string-literal-then-callback shape keeps unrelated uses of the word from matching.
+DESCRIBE_SUITE_RE = re.compile(
+    r"""\bdescribe\(\s*(["'`])[^"'`]*\1\s*,\s*(?:async\s*)?(?:\(\s*\)\s*=>|function\s*\(\s*\))"""
+)
 
 
 def _zip_mode(zf: zipfile.ZipFile, member: str) -> int:
@@ -106,3 +116,21 @@ def test_zip_root_layout(release: Release) -> None:
         "spoolman/main.py",
     ):
         assert member in names, f"expected {member} at the zip root (Moonraker extracts the zip as-is)"
+
+
+def test_client_bundles_contain_no_test_runner_code(release: Release) -> None:
+    """No test code ships in a built client: match on content, since Vite chunk names are hashes."""
+    scanned = 0
+    offenders: list[str] = []
+    with zipfile.ZipFile(release.zip_path) as zf:
+        for member in zf.namelist():
+            if not member.startswith(CLIENT_BUNDLE_PREFIXES) or not member.endswith(".js"):
+                continue
+            scanned += 1
+            text = zf.read(member).decode("utf-8", errors="replace")
+            offenders.extend(f"{member}: {marker!r}" for marker in TEST_RUNNER_SUBSTRINGS if marker in text)
+            match = DESCRIBE_SUITE_RE.search(text)
+            if match:
+                offenders.append(f"{member}: test suite declaration {match.group(0)!r}")
+    assert scanned, f"no .js files found under {CLIENT_BUNDLE_PREFIXES} -- the scan would pass vacuously"
+    assert not offenders, "test-runner code found in a shipped client bundle:\n" + "\n".join(offenders)
