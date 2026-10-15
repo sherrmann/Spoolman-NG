@@ -7,6 +7,7 @@ import {
 	handoffFor,
 	intakeChoices,
 	lookupCatalogueEntry,
+	preparePhoto,
 	rawDraftFrom,
 	type SpoolIntakeExtraction,
 	type SpoolIntakeResult
@@ -203,5 +204,30 @@ describe('extractFromPhoto and lookupCatalogueEntry', () => {
 			vi.fn(async () => new Response('', { status: 500 }))
 		);
 		expect(await lookupCatalogueEntry('abc_1')).toBeNull();
+	});
+});
+
+describe('preparePhoto', () => {
+	afterEach(() => vi.unstubAllGlobals());
+
+	it('sends an image the browser cannot decode with its own type, so the server can refuse it', async () => {
+		vi.stubGlobal('createImageBitmap', () => Promise.reject(new Error('unsupported')));
+		vi.stubGlobal(
+			'FileReader',
+			class {
+				result: string | null = null;
+				onload: (() => void) | null = null;
+				onerror: (() => void) | null = null;
+				readAsDataURL() {
+					this.result = 'data:image/heic;base64,AQID';
+					queueMicrotask(() => this.onload?.());
+				}
+			}
+		);
+		const heic = new File([new Uint8Array([1, 2, 3])], 'label.heic', { type: 'image/heic' });
+		const out = await preparePhoto(heic);
+		expect(out.mime).toBe('image/heic');
+		expect(out.preview).toBe(heic);
+		expect(out.base64).toBe('AQID');
 	});
 });

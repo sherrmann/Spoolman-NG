@@ -220,7 +220,9 @@
 			void loadMaterials()
 				.then(({ specs }) => {
 					const spec = specs[d.material.trim().toLowerCase()];
-					if (!spec || !creating) return;
+					// Only the form this preset opened: one opened later (after a close and reopen
+					// while the specs loaded) must not get this photo's values.
+					if (!spec || !creating || !open || presetIntake !== p) return;
 					if (!nf.density) nf.density = String(spec.density);
 					if (!nf.nozzleTemp && spec.nozzle != null) nf.nozzleTemp = String(spec.nozzle);
 					if (!nf.bedTemp && spec.bed != null) nf.bedTemp = String(spec.bed);

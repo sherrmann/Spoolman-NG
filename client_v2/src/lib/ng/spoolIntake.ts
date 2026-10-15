@@ -16,8 +16,6 @@ import { fitWithin } from './filamentImage';
 /** The longest edge sent to the model. Bigger buys no extra legibility and risks the 413. */
 export const MAX_EDGE = 1568;
 export const JPEG_QUALITY = 0.85;
-/** The only types the server accepts (`_ALLOWED_IMAGE_MIMES`). */
-const ALLOWED_MIMES = ['image/jpeg', 'image/png', 'image/webp'];
 
 export interface SpoolIntakeExtraction {
 	vendor: string | null;
@@ -293,7 +291,8 @@ export async function preparePhoto(file: File): Promise<PreparedPhoto> {
 			bitmap.close();
 		}
 	} catch {
-		const mime = ALLOWED_MIMES.includes(file.type) ? file.type : 'image/jpeg';
-		return { base64: await blobToBase64(file), mime, preview: file };
+		// Send the file's own type, even one the server does not take (HEIC, say): it then answers
+		// with its clear bad-image error rather than the model getting bytes labelled as JPEG.
+		return { base64: await blobToBase64(file), mime: file.type || 'application/octet-stream', preview: file };
 	}
 }

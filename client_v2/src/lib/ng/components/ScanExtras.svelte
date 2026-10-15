@@ -22,6 +22,7 @@
 	import ImageIcon from '@lucide/svelte/icons/image';
 	import { handleScan } from '../scanActions';
 	import { scanToSpoolEnabled } from '../aiApi';
+	import { whoAmI } from '../me';
 	import { photoIntake } from '../photoIntake.svelte';
 	import { getLocation } from '../api';
 	import type { ScanAction } from '../scanMove';
@@ -44,12 +45,13 @@
 	let move = $state<{ spoolId: number; locationName: string } | null>(null);
 	let unknownCode = $state<string | null>(null);
 
-	// Photo intake (#418): the button is offered only when an operator has switched the feature on.
+	// Photo intake (#418): offered only when an operator has switched the feature on, and not to
+	// a read-only account, whose request the server refuses (it ends in creating a spool anyway).
 	let photoEnabled = $state(false);
 	$effect(() => {
 		const controller = new AbortController();
-		scanToSpoolEnabled(controller.signal).then((on) => {
-			if (!controller.signal.aborted) photoEnabled = on;
+		Promise.all([scanToSpoolEnabled(controller.signal), whoAmI()]).then(([on, me]) => {
+			if (!controller.signal.aborted) photoEnabled = on && me !== null && me.role !== 'readonly';
 		});
 		return () => controller.abort();
 	});
