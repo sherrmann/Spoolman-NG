@@ -108,4 +108,27 @@ describe('labelDesigns', () => {
 		expect(v1.presets).toHaveBeenCalledTimes(1);
 		expect(api.save.mock.calls.at(-1)?.[0]).toEqual([{ id: 'imp1', name: 'Edited' }]);
 	});
+
+	it('makes a change made while the v1 import is being saved wait for that save', async () => {
+		api.get.mockResolvedValue({ designs: [], isSet: false });
+		v1.presets.mockResolvedValue([{ id: 'imp1', name: 'Imported' } as LabelDesign]);
+		const importSave = deferred<void>();
+		api.save.mockReturnValueOnce(importSave.promise);
+		const store = await freshStore();
+
+		const loading = store.load();
+		await vi.waitFor(() => expect(api.save).toHaveBeenCalledTimes(1));
+		const creating = store.create();
+		// Let every microtask run: without the wait, create() would already have written by now.
+		await new Promise((r) => setTimeout(r, 0));
+		expect(api.save).toHaveBeenCalledTimes(1);
+
+		importSave.resolve();
+		await loading;
+		const created = await creating;
+
+		expect(api.save).toHaveBeenCalledTimes(2);
+		const written = api.save.mock.calls[1][0] as LabelDesign[];
+		expect(written.map((d) => d.id)).toEqual(['imp1', created.id]);
+	});
 });

@@ -22,8 +22,11 @@ class LabelDesigns {
 	private pending: Promise<void> | null = null;
 
 	load(): Promise<void> {
+		// The pending read first: on first run it also covers saving the v1 import, and a change
+		// that skipped it because `loaded` is already true could be overwritten by that save.
+		if (this.pending) return this.pending;
 		if (this.loaded) return Promise.resolve();
-		this.pending ??= this.fetch().finally(() => (this.pending = null));
+		this.pending = this.fetch().finally(() => (this.pending = null));
 		return this.pending;
 	}
 
