@@ -6,12 +6,15 @@ from enum import Enum
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, Response
+from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from spoolman.api.v1.models import Spool
 from spoolman.database import filament, spool, vendor
 from spoolman.database.database import get_db_session
 from spoolman.database.models import Base
 from spoolman.export import dump_as_csv, dump_as_json
+from spoolman.export_simplyprint import simplyprint_row
 from spoolman.slicer_profiles import SlicerFormat, generate_slicer_profile
 
 # ruff: noqa: D103
@@ -70,6 +73,26 @@ async def export_vendors(
 ) -> Response:
     all_vendors, _ = await vendor.find(db=db)
     return await _export(all_vendors, fmt, "vendors")
+
+
+@router.get(
+    "/simplyprint",
+    name="Export spools for SimplyPrint",
+    description=(
+        "Export the non-archived spools as a JSON array in the format SimplyPrint's Filament Manager "
+        "imports (#312). Multi-colour spools export their single colour only (none when the filament has just a "
+        "colour list), and extra fields and tags are not included."
+    ),
+)
+async def export_simplyprint(
+    *,
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+) -> Response:
+    active_spools, _ = await spool.find(db=db, allow_archived=False)
+    return JSONResponse(
+        content=[simplyprint_row(Spool.from_db(item)) for item in active_spools],
+        headers={"Content-Disposition": 'attachment; filename="spoolman-export.json"'},
+    )
 
 
 @router.get(
