@@ -58,7 +58,8 @@ test("the current page's tab stays in view when the tab row is too narrow", asyn
     await page.goto(path, { waitUntil: "networkidle" });
     // The badge renders after first paint and pushes the later tabs right; the row must follow.
     await expect(page.locator(".nav-desktop a.tab[href='/lowstock'] .badge")).toBeVisible();
-    const active = page.locator(".nav-desktop a.tab.active");
+    // The Library tab is a split pill (label + views menu) whose wrapper carries `active`.
+    const active = page.locator(".nav-desktop a.tab.active, .nav-desktop .split.active");
     await expect(active).toHaveCount(1);
     await expect(active).toBeInViewport({ ratio: 1 });
   }

@@ -1,13 +1,15 @@
 import QRCode from 'qrcode';
 import type { QrElement, LabelKind } from './types';
 import { linkRoot } from '$lib/ng/linkRoot';
+import { resolveTemplate, type LabelBinding } from './template';
 
 // QR content + geometry. The QR encodes a link back to the label's subject — a
 // spool for spool labels, a filament for filament labels. The first two forms are
 // understood by Spoolman's scanner ($lib/utils/spoolCode.ts):
 //   scheme → WEB+SPOOLMAN:S-<id> / F-<id> / L-<id>     (compact custom URI)
 //   url    → <base_url>/{spool,filament,location}/show/<id>     (opens in a browser)
-//   custom → the element's urlTemplate                 (user-supplied, {id} substituted)
+//   custom → the element's urlTemplate                 (user-supplied, {id} and
+//            label fields like {filament.id} substituted)
 // A custom target is meant for a third-party app or host and won't scan back
 // into Spoolman.
 
@@ -18,8 +20,16 @@ export interface QrContext {
 }
 
 /** Build the string encoded in a QR element for a given subject id. */
-export function qrContent(el: QrElement, id: number | string, ctx: QrContext): string {
-	return qrTemplate(el, ctx).replace('{id}', String(id));
+export function qrContent(
+	el: QrElement,
+	id: number | string,
+	ctx: QrContext,
+	binding?: LabelBinding
+): string {
+	const content = qrTemplate(el, ctx).replace('{id}', String(id));
+	// A custom target can also reference label fields, e.g. a spool label whose QR
+	// opens the filament page via {filament.id} (#1152).
+	return el.encoding === 'custom' && binding ? resolveTemplate(content, binding) : content;
 }
 
 /**

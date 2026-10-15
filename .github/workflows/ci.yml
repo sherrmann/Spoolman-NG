@@ -439,7 +439,9 @@ jobs:
           SPOOLMAN_BASE_URL: http://127.0.0.1:8001
         run: |
           cd tests_frontend_v2
-          npx playwright test --grep-invert "filtering the library by a date range"
+          # chromium only: upstream's screenshots project seeds a fixed dataset into an empty
+          # database for its visual snapshots, and would collide with these tests' data here.
+          npx playwright test --project=chromium --grep-invert "filtering the library by a date range"
 
       - name: Dump Spoolman backend log
         if: ${{ failure() }}

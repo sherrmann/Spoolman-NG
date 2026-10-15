@@ -16,12 +16,12 @@
 // cache, one URL per distinct view — depends on the address bar being the whole
 // truth about what's on screen.
 //
-// Only grouping and sort are remembered, plus the one toggle that ADDS rows
-// (showEmpty). Filters, search and archived-visibility hide spools, and a hidden
-// filter silently restored days later reads as missing data rather than as a
-// preference. Showing filaments you own no spools of cannot produce that
-// confusion -- restoring it can only put more on screen, never less -- so it is
-// remembered while the hiding toggles still are not.
+// Only grouping and sort are remembered, plus toggles that ADD information
+// (showEmpty adds rows, showLotNumbers adds text). Filters, search and archived-
+// visibility hide spools, and a hidden filter silently restored days later reads
+// as missing data rather than as a preference. Showing empty filaments or lot
+// numbers cannot produce that confusion -- restoring them can only put more on
+// screen, never less -- so they are remembered while the hiding toggles are not.
 //
 // Spoolman NG fork addition: the page size is remembered too (upstream issues 1145
 // and 1154). Like the grouping it only changes how much is on screen at once, never
@@ -39,6 +39,7 @@ export interface StoredView {
 	sortKey: string;
 	sortAsc: boolean;
 	showEmpty: boolean;
+	showLotNumbers: boolean;
 	/** Spoolman NG fork addition. Null when the entry predates it, or holds no usable size. */
 	pageSize: number | null;
 }
@@ -49,17 +50,24 @@ export function parseStoredView(raw: string | null): StoredView | null {
 	try {
 		const parsed: unknown = JSON.parse(raw);
 		if (typeof parsed !== 'object' || parsed === null) return null;
-		const { group, sort, asc, empty, size } = parsed as Record<string, unknown>;
+		const { group, sort, asc, empty, lots, size } = parsed as Record<string, unknown>;
 		if (typeof group !== 'string' || typeof sort !== 'string' || typeof asc !== 'boolean') {
 			return null;
 		}
-		// `empty` arrived after this key shipped, so an entry written by an older
-		// build simply has no such field. Treating that as "off" keeps those
+		// `empty` and `lots` arrived after this key shipped, so an entry written
+		// by an older build simply has no such fields. Treating that as "off" keeps those
 		// entries valid; rejecting them would throw away a grouping the user
 		// picked long ago the first time they loaded a new version.
 		// Spoolman NG fork addition: `size` is newer still, so it gets the same leniency.
 		const pageSize = typeof size === 'number' && Number.isInteger(size) && size > 0 ? size : null;
-		return { group, sortKey: sort, sortAsc: asc, showEmpty: empty === true, pageSize };
+		return {
+			group,
+			sortKey: sort,
+			sortAsc: asc,
+			showEmpty: empty === true,
+			showLotNumbers: lots === true,
+			pageSize
+		};
 	} catch {
 		// Corrupt entry: the shipped view is no worse than what a first-time
 		// visitor gets.
@@ -89,6 +97,7 @@ export function rememberView(view: StoredView): void {
 		prev.sortKey === view.sortKey &&
 		prev.sortAsc === view.sortAsc &&
 		prev.showEmpty === view.showEmpty &&
+		prev.showLotNumbers === view.showLotNumbers &&
 		prev.pageSize === view.pageSize
 	) {
 		// Selecting a spool or turning a page navigates too; only the changes that
@@ -119,6 +128,7 @@ function write(view: StoredView): void {
 				sort: view.sortKey,
 				asc: view.sortAsc,
 				empty: view.showEmpty,
+				lots: view.showLotNumbers,
 				size: view.pageSize
 			})
 		);

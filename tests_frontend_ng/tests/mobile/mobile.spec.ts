@@ -192,8 +192,14 @@ test.describe("navigation", () => {
       .locator("a[href^='/']")
       .evaluateAll((els) => els.map((e) => e.getAttribute("href")!));
 
-    expect([...inBar, ...inSheet].sort()).toEqual([...desktop].sort());
+    // The Library's filament and manufacturer lists hang off the Library tab's menu on a desktop,
+    // which a phone does not show, so the sheet offers them as links with a view in the query.
+    const pages = inSheet.filter((href) => !href.includes("?"));
+    const catalogs = inSheet.filter((href) => href.includes("?"));
+    expect([...inBar, ...pages].sort()).toEqual([...desktop].sort());
     expect(inBar.length, "four pages in the bar, the rest under More").toBe(4);
+    expect(catalogs.some((href) => href.includes("view=filaments"))).toBe(true);
+    expect(catalogs.some((href) => href.includes("view=manufacturers"))).toBe(true);
   });
 
   test("tapping a bottom-bar page navigates and marks it current", async ({ page }) => {
