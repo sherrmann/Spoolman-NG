@@ -13,6 +13,7 @@ import pytest
 from spoolman.extra_fields import (
     ExtraFieldParameters,
     ExtraFieldType,
+    validate_extra_field,
     validate_extra_field_value,
 )
 
@@ -54,6 +55,37 @@ def test_integer_rejects_string():
     field = make_field(ExtraFieldType.integer)
     with pytest.raises(ValueError):
         validate_extra_field_value(field, json.dumps("42"))
+
+
+@pytest.mark.parametrize("value", [True, False])
+def test_integer_rejects_bool(value: bool):  # noqa: FBT001
+    # bool is a subclass of int; JSON true/false must not pass as an integer (upstream #1213).
+    field = make_field(ExtraFieldType.integer)
+    with pytest.raises(ValueError, match="not an integer"):
+        validate_extra_field_value(field, json.dumps(value))
+
+
+# --- integer_range ---
+
+
+def test_integer_range_accepts_ints_and_null():
+    field = make_field(ExtraFieldType.integer_range)
+    validate_extra_field_value(field, json.dumps([1, 5]))
+    validate_extra_field_value(field, json.dumps([None, 5]))
+    validate_extra_field_value(field, json.dumps([1, None]))
+
+
+@pytest.mark.parametrize("value", [[True, 5], [1, False], [True, False]])
+def test_integer_range_rejects_bool_elements(value: list[bool | int]):
+    field = make_field(ExtraFieldType.integer_range)
+    with pytest.raises(ValueError, match="only integers or null"):
+        validate_extra_field_value(field, json.dumps(value))
+
+
+def test_integer_default_value_rejects_bool():
+    field = make_field(ExtraFieldType.integer, default_value="true")
+    with pytest.raises(ValueError, match="Default value is not valid"):
+        validate_extra_field(field)
 
 
 # --- float ---
