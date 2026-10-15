@@ -51,7 +51,8 @@
 		applyChatEvent,
 		clearStoredChat,
 		initialChatState,
-		isDeciding,
+		abandonTurn,
+		awaitingOutcome,
 		loadStoredChat,
 		saveStoredChat,
 		startDecision,
@@ -219,20 +220,23 @@
 			}
 			// The server always ends a turn with `done`; if the connection dropped before one
 			// arrived, the composer would stay disabled forever without this.
-			if (chat.status === 'streaming') {
-				// A decision whose outcome never arrived may still have run on the server.
-				const bubbles = chat.deciding ? [...chat.bubbles, { kind: 'unknown' as const }] : chat.bubbles;
-				chat = { ...chat, status: 'idle', deciding: false, bubbles };
-			}
+			// A decision whose outcome never arrived may still have run on the server; abandonTurn
+			// says so.
+			if (chat.status === 'streaming') chat = abandonTurn(chat);
 		} catch (e) {
 			if (controller.signal.aborted) return; // our own close, not a failure
-			const text = e instanceof ChatStartError ? startFailureText(e.failure) : ng.chat_error_failed();
-			chat = {
-				...chat,
-				status: 'idle',
-				deciding: false,
-				bubbles: [...chat.bubbles, { kind: 'error', text }]
-			};
+			if (e instanceof ChatStartError) {
+				// Refused before the stream opened (404/409/503): nothing ran on the server.
+				chat = {
+					...chat,
+					status: 'idle',
+					deciding: false,
+					bubbles: [...chat.bubbles, { kind: 'error', text: startFailureText(e.failure) }]
+				};
+			} else {
+				// Broke off mid-stream; a decision's writes may already have run.
+				chat = abandonTurn(chat, ng.chat_error_failed());
+			}
 		} finally {
 			if (inFlight === controller) inFlight = null;
 		}
@@ -397,7 +401,7 @@
 				<button
 					class="speak clear"
 					onclick={clearChat}
-					disabled={chat.status === 'awaiting_confirm' || isDeciding(chat)}
+					disabled={chat.status === 'awaiting_confirm' || awaitingOutcome(chat)}
 					title={ng.chat_clear()}
 					aria-label={ng.chat_clear()}
 				>
@@ -575,7 +579,7 @@
 				disabled={chat.status !== 'idle' || recording || transcribing}
 				aria-label={ng.chat_placeholder()}
 			/>
-			{#if chat.status === 'streaming' && !isDeciding(chat)}
+			{#if chat.status === 'streaming' && !awaitingOutcome(chat)}
 				<Button variant="outline" onclick={stop}>
 					<Square size={12} />
 					{ng.chat_stop()}

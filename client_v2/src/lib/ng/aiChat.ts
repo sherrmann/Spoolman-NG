@@ -119,8 +119,8 @@ export function startTurn(state: ChatState, text: string): ChatState {
 	return {
 		...state,
 		// A new question never resolves anything pending, so every tool call must already have
-		// its result. One may not: the `executed` frame carries no transcript, so a confirmed
-		// write's call stays without its result. Strict endpoints refuse such a history (HTTP 400).
+		// its result. One may not after a decision whose outcome never arrived, or in a restored
+		// or trimmed transcript; strict endpoints refuse such a history (HTTP 400).
 		messages: [...pairToolCalls(state.messages), { role: 'user', content: text }],
 		bubbles: [...state.bubbles, { kind: 'user', text }],
 		status: 'streaming',
@@ -147,23 +147,41 @@ export function startDecision(state: ChatState): ChatState {
  * to keep. A turn waiting on a confirmation is not a turn in flight and is left alone.
  */
 export function stopTurn(state: ChatState): ChatState {
-	// A decision in flight cannot be stopped: the server runs the confirmed writes before it
-	// sends anything back, so stopping would only hide what happened.
-	if (state.status !== 'streaming' || isDeciding(state)) return state;
+	// A decision whose outcome has not arrived cannot be stopped: the server runs the confirmed
+	// writes before it sends anything back, so stopping would only hide what happened.
+	if (state.status !== 'streaming' || awaitingOutcome(state)) return state;
 	const text = state.streaming.trim();
-	if (!text) return { ...state, status: 'idle', streaming: '' };
+	if (!text) return { ...state, status: 'idle', streaming: '', deciding: false };
 	return {
 		...state,
 		messages: [...state.messages, { role: 'assistant', content: text }],
 		bubbles: [...state.bubbles, { kind: 'assistant', text }],
 		status: 'idle',
-		streaming: ''
+		streaming: '',
+		deciding: false
 	};
 }
 
 /** Whether the turn in flight is a confirm/cancel answer rather than a new question. */
 export function isDeciding(state: ChatState): boolean {
 	return state.status === 'streaming' && state.deciding;
+}
+
+/**
+ * Whether a decision is in flight and its outcome (`executed` or `cancelled`) has not arrived:
+ * the only time the confirmed writes may or may not have run. Once the outcome is shown, the
+ * rest of the turn is an ordinary reply.
+ */
+export function awaitingOutcome(state: ChatState): boolean {
+	return isDeciding(state) && state.bubbles[state.bubbles.length - 1]?.kind === 'confirm';
+}
+
+/** End a turn whose stream broke off; a decision without its outcome is marked as unknown. */
+export function abandonTurn(state: ChatState, error?: string): ChatState {
+	const bubbles: Bubble[] = [...state.bubbles];
+	if (error) bubbles.push({ kind: 'error', text: error });
+	if (awaitingOutcome(state)) bubbles.push({ kind: 'unknown' });
+	return { ...state, status: 'idle', deciding: false, streaming: '', bubbles };
 }
 
 /**

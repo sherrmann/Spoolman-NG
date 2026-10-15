@@ -304,6 +304,29 @@ async def test_streamed_text_is_reset_when_a_refused_write_emits_no_event(monkey
     assert order == ["delta", "reset", "delta", "message", "done"]
 
 
+def test_a_long_transcript_is_cut_at_a_user_turn() -> None:
+    """The 40-message cut must not leave a tool result whose call was cut off."""
+    turn = [
+        {"role": "user", "content": "q"},
+        {
+            "role": "assistant",
+            "content": None,
+            "tool_calls": [{"id": "c", "type": "function", "function": {"name": "find_spools", "arguments": "{}"}}],
+        },
+        {"role": "tool", "tool_call_id": "c", "content": "{}"},
+        {"role": "assistant", "content": "a"},
+    ]
+    messages = [
+        *turn * 15,
+        {"role": "user", "content": "x"},
+        {"role": "assistant", "content": "y"},
+    ]  # last 40 start at a tool result
+    assert messages[-40]["role"] == "tool"
+    clean = aichat._sanitize_messages(messages)  # noqa: SLF001
+    assert clean[0]["role"] == "user"
+    assert len(clean) <= 40
+
+
 async def test_usage_stats_tool_event_carries_periods_and_no_rows() -> None:
     payload = aichat._card_payload(  # noqa: SLF001
         "get_usage_stats",

@@ -3,6 +3,8 @@ import {
 	applyChatEvent,
 	decodeChatFrame,
 	initialChatState,
+	abandonTurn,
+	awaitingOutcome,
 	isDeciding,
 	pairToolCalls,
 	restoreChat,
@@ -555,5 +557,37 @@ describe('fixes from the second review', () => {
 	it('stops counting as a decision once the turn ends', () => {
 		const s = run(startDecision(startTurn(initialChatState(), 'x')), [['done', {}]]);
 		expect(s.deciding).toBe(false);
+	});
+});
+
+describe('a decision whose stream breaks off', () => {
+	const deciding = () =>
+		startDecision(
+			run(startTurn(initialChatState(), 'move it'), [
+				[
+					'confirm',
+					{
+						messages: [{ role: 'user', content: 'move it' }],
+						cards: [{ tool: 't', title: 'T', summary: '', before: {}, after: {} }]
+					}
+				],
+				['done', {}]
+			])
+		);
+
+	it('is marked as of unknown outcome when nothing came back', () => {
+		const s = abandonTurn(deciding(), 'The assistant could not be reached.');
+		expect(s.bubbles.slice(-2).map((b) => b.kind)).toEqual(['error', 'unknown']);
+		expect(s.deciding).toBe(false);
+	});
+
+	it('is not marked unknown once the outcome arrived, and Stop works again', () => {
+		const s = run(deciding(), [
+			['executed', { cards: [{ tool: 't', summary: 'Moved.' }] }],
+			['delta', { content: 'Done' }]
+		]);
+		expect(awaitingOutcome(s)).toBe(false);
+		expect(abandonTurn(s).bubbles.at(-1)?.kind).toBe('executed');
+		expect(stopTurn(s).status).toBe('idle');
 	});
 });

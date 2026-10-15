@@ -121,7 +121,13 @@ def _sanitize_messages(messages: list[dict]) -> list[dict]:
     ``tool_call_id``.
     """
     clean: list[dict] = []
-    for raw in messages[-_MAX_CLIENT_MESSAGES:]:
+    recent = messages[-_MAX_CLIENT_MESSAGES:]
+    # The cut can land between a tool call and its results; start at the first user turn after
+    # it, so no tool result reaches the provider without its call (strict ones answer 400).
+    first_user = next((i for i, m in enumerate(recent) if isinstance(m, dict) and m.get("role") == "user"), None)
+    if len(messages) > _MAX_CLIENT_MESSAGES and first_user is not None:
+        recent = recent[first_user:]
+    for raw in recent:
         if not isinstance(raw, dict):
             continue
         role = raw.get("role")
