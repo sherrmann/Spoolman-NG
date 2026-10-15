@@ -1397,11 +1397,16 @@ async def _entity_sort_exprs(
                 attr = parse_nested_field(models.Spool, key)
             except ValueError:
                 continue
-            # parse_nested_field also resolves relationships (filament.extra, filament.vendor's
-            # own relationships); only a plain column can be aggregated and ordered by.
-            if not isinstance(attr.property, ColumnProperty):
+            # parse_nested_field resolves any attribute -- relationships (filament.extra) and plain
+            # class attributes (filament.metadata) too; only a column can be aggregated and ordered by.
+            if not isinstance(getattr(attr, "property", None), ColumnProperty):
                 continue
-            exprs[key] = [func.min(attr)]
+            # PostgreSQL has no MIN(boolean), and this fork's filaments have boolean columns
+            # (translucent, glow); as an integer it sorts false, true on every backend.
+            if isinstance(attr.type, sqlalchemy.Boolean):
+                exprs[key] = [func.min(sqlalchemy.cast(attr, sqlalchemy.Integer))]
+            else:
+                exprs[key] = [func.min(attr)]
             continue
         prefix, entity_type = extra
         extra_key = key.removeprefix(prefix)

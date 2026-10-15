@@ -8,7 +8,7 @@ cross-origin form post.
 
 import sqlite3
 from contextlib import closing
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 
 import pytest
 from sqlalchemy import URL
@@ -181,7 +181,7 @@ def test_backup_gives_up_on_a_lock_that_never_clears(
     backups: Path,
     monkeypatch: pytest.MonkeyPatch,
 ):
-    """sqlite3's backup() retries a locked source forever, which hung the server (#1191)."""
+    """sqlite3's backup() retries a locked source forever, which hung the server (upstream #1191)."""
     monkeypatch.setattr(database, "BACKUP_LOCK_TIMEOUT_SECONDS", 0.5)
     with closing(sqlite3.connect(db_path, isolation_level=None)) as holder:
         holder.execute("BEGIN EXCLUSIVE")
@@ -192,7 +192,7 @@ def test_backup_gives_up_on_a_lock_that_never_clears(
 
 
 def test_backup_needs_no_lock_on_the_target(db: Database, backups: Path, monkeypatch: pytest.MonkeyPatch):
-    """Backup folders on network shares often refuse file locks, which failed every backup (#1246).
+    """Backup folders on network shares often refuse file locks, which failed every backup (upstream #1246).
 
     Simulate that by holding an exclusive lock on the target from the moment it is created.
     """
@@ -219,3 +219,17 @@ def test_backup_needs_no_lock_on_the_target(db: Database, backups: Path, monkeyp
     assert result.created is True
     with closing(real_connect(backups / BACKUP_NAME)) as conn:
         assert conn.execute("SELECT note FROM spool").fetchall() == [("original",)]
+
+
+def testbackup_target_uri_opens_local_paths_without_locks() -> None:
+    """A local target is opened as a file: URI with nolock=1."""
+    uri = database.backup_target_uri(PureWindowsPath(r"C:\data\backups\spoolman.db.pending"))
+    assert uri == "file:///C:/data/backups/spoolman.db.pending?nolock=1"
+    assert database.backup_target_uri(PurePosixPath("/data/backups/spoolman.db.pending")) == (
+        "file:///data/backups/spoolman.db.pending?nolock=1"
+    )
+
+
+def testbackup_target_uri_leaves_unc_paths_to_be_opened_by_path() -> None:
+    """A UNC path would become a URI with an authority, which SQLite refuses; it is opened by path."""
+    assert database.backup_target_uri(PureWindowsPath(r"\\nas\share\backups\spoolman.db.pending")) is None

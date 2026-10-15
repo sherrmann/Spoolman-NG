@@ -11,7 +11,7 @@ import time
 from collections.abc import AsyncGenerator
 from contextlib import closing
 from os import PathLike
-from pathlib import Path
+from pathlib import Path, PurePath
 from typing import NamedTuple
 
 from scheduler.asyncio.scheduler import Scheduler
@@ -34,8 +34,24 @@ MIN_SECONDS_BETWEEN_ROTATIONS = 5 * 60
 BACKUP_NAME = "spoolman.db"
 
 # sqlite3's backup() retries forever while the source is locked. Give up after this long, so a lock
-# that never clears fails the backup loudly instead of hanging it (#1191).
+# that never clears fails the backup loudly instead of hanging it (upstream #1191).
 BACKUP_LOCK_TIMEOUT_SECONDS = 60
+
+
+def backup_target_uri(path: PurePath) -> str | None:
+    """Return the URI that opens a backup target without file locks, or None to open it by path.
+
+    The target is a scratch file nothing else opens, so it needs no file locks. Backup folders on
+    network shares often refuse SQLite's locks (CIFS without nobrl, NFS without lockd), which
+    failed every backup with a "locked" database that was not locked at all (upstream #1246).
+
+    A Windows UNC path is the exception: as a URI it becomes file://server/share/..., and SQLite
+    refuses a URI authority other than localhost unless built to allow one. Those keep being
+    opened by path, as before.
+    """
+    if path.drive.startswith(("\\\\", "//")):
+        return None
+    return f"{path.as_uri()}?nolock=1"
 
 
 class BackupResult(NamedTuple):
@@ -185,12 +201,12 @@ class Database:
         # handles open leaks two per backup, and on Windows it keeps the file we just wrote open so
         # _rotate()'s move of it fails with "used by another process". POSIX allows moving an open
         # file, which is why nothing on Linux notices.
-        # nolock=1: the target is a scratch file nothing else opens, so it needs no file locks. Backup
-        # folders on network shares often refuse SQLite's locks (CIFS without nobrl, NFS without
-        # lockd), which failed every backup with a "locked" database that was not locked at all (#1246).
+        target_uri = backup_target_uri(Path(target_path).absolute())
         with (
             closing(sqlite3.connect(self.connection_url.database)) as src,
-            closing(sqlite3.connect(f"{Path(target_path).absolute().as_uri()}?nolock=1", uri=True)) as dst,
+            closing(
+                sqlite3.connect(target_uri, uri=True) if target_uri is not None else sqlite3.connect(target_path),
+            ) as dst,
         ):
             src.backup(dst, pages=1, progress=progress)
 

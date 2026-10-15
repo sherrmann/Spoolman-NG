@@ -505,3 +505,42 @@ def test_sort_composes_vendor_name_then_field(sort_fixture: SortFixture):
     a, b, c = sort_fixture.filament_ids  # vendors B-, A-, A-
     sort = "group.vendor_name:asc,filament.settings_extruder_temp:desc,group.title:asc"
     assert _group_keys(_fil_params(sort_fixture, sort)) == _ids([b, c, a])
+
+
+def test_sort_by_boolean_filament_column():
+    """A boolean column sorts false, true, then unset, either way round (fork: glow, translucent).
+
+    PostgreSQL has no MIN(boolean), so the group query aggregates the column as an integer.
+    """
+    tag = uuid.uuid4().hex[:8]
+    filament_ids: dict[str, int] = {}
+    spool_ids: list[int] = []
+    try:
+        for name, glow in (("Glows", True), ("Plain", False), ("Unknown", None)):
+            payload: dict[str, Any] = {"name": f"{name}-{tag}", "density": 1.24, "diameter": 1.75, "weight": 1000}
+            if glow is not None:
+                payload["glow"] = glow
+            result = httpx.post(f"{URL}/api/v1/filament", json=payload)
+            result.raise_for_status()
+            filament_ids[name] = result.json()["id"]
+            result = httpx.post(f"{URL}/api/v1/spool", json={"filament_id": filament_ids[name]})
+            result.raise_for_status()
+            spool_ids.append(result.json()["id"])
+        id_filter = ",".join(str(i) for i in filament_ids.values())
+        by_id = {v: k for k, v in filament_ids.items()}
+
+        def order(direction: str) -> list[str]:
+            result = httpx.get(
+                f"{URL}/api/v1/spool/group",
+                params={"group_by": "filament", "filament.id": id_filter, "sort": f"filament.glow:{direction}"},
+            )
+            result.raise_for_status()
+            return [by_id[int(g["key"])] for g in result.json()]
+
+        assert order("asc") == ["Plain", "Glows", "Unknown"]
+        assert order("desc") == ["Glows", "Plain", "Unknown"]
+    finally:
+        for spool_id in spool_ids:
+            httpx.delete(f"{URL}/api/v1/spool/{spool_id}").raise_for_status()
+        for filament_id in filament_ids.values():
+            httpx.delete(f"{URL}/api/v1/filament/{filament_id}").raise_for_status()

@@ -495,6 +495,8 @@ async def test_unknown_extra_key_is_ignored(client: AsyncClient):
         "filament.vendor.nope:desc",
         "filament.extra:asc",
         "filament.vendor:asc",
+        "filament.metadata:asc",
+        "filament.__init__:asc",
     ],
 )
 async def test_sort_by_unknown_path_is_ignored(client: AsyncClient, sort: str):
@@ -509,3 +511,32 @@ async def test_sort_composes_vendor_name_then_field(client: AsyncClient):
     a, b, c = fx.filament_ids  # vendors B-, A-, A-
     sort = "group.vendor_name:asc,filament.settings_extruder_temp:desc,group.title:asc"
     assert await _group_keys(client, _fil_params(fx, sort)) == _ids([b, c, a])
+
+
+async def test_sort_by_boolean_filament_column(client: AsyncClient):
+    """A boolean column sorts false, true, then unset, either way round, on every backend.
+
+    PostgreSQL has no MIN(boolean), so the column is aggregated as an integer.
+    """
+    ids = {}
+    for name, glow in (("Glows", True), ("Plain", False), ("Unknown", None)):
+        payload = {"name": name, "density": 1.24, "diameter": 1.75, "weight": 1000}
+        if glow is not None:
+            payload["glow"] = glow
+        resp = await client.post("/api/v1/filament", json=payload)
+        assert resp.status_code == 200, resp.text
+        ids[name] = resp.json()["id"]
+        resp = await client.post("/api/v1/spool", json={"filament_id": ids[name]})
+        assert resp.status_code == 200, resp.text
+    id_filter = ",".join(str(i) for i in ids.values())
+
+    async def order(direction: str) -> list[str]:
+        resp = await client.get(
+            "/api/v1/spool/group",
+            params={"group_by": "filament", "filament.id": id_filter, "sort": f"filament.glow:{direction}"},
+        )
+        assert resp.status_code == 200, resp.text
+        return [g["filament"]["name"] for g in resp.json()]
+
+    assert await order("asc") == ["Plain", "Glows", "Unknown"]
+    assert await order("desc") == ["Glows", "Plain", "Unknown"]
