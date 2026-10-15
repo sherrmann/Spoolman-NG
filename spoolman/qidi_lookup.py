@@ -11,6 +11,7 @@ from spoolman.database import spool as spool_db
 from spoolman.database import tag as tag_db
 from spoolman.database import vendor as vendor_db
 from spoolman.database.models import Filament, Spool
+from spoolman.exceptions import TagConflictError
 from spoolman.qidi_codec import (
     MATERIAL_CODE_MAP,
     QidiTagData,
@@ -210,10 +211,16 @@ async def create_spool_from_qidi_tag(
     db_spool = await spool_db.create(db=db, filament_id=db_filament.id)
 
     if uid is not None:
-        # The Qidi vendor and filament created above stay if the spool is undone: catalogue
-        # entries, not stock.
-        winner = await tag_db.link_new_spool(db=db, spool_id=db_spool.id, uid=uid, tag_format=QIDI_FORMAT)
+        # The filament above was made for this spool alone (Qidi filaments carry no external_id
+        # to be found again by), so if the spool is undone it goes too. The Qidi vendor stays.
+        filament_id = db_filament.id
+        try:
+            winner = await tag_db.link_new_spool(db=db, spool_id=db_spool.id, uid=uid, tag_format=QIDI_FORMAT)
+        except TagConflictError:
+            await filament_db.delete(db, filament_id)
+            raise
         if winner is not None:
+            await filament_db.delete(db, filament_id)
             return winner, False
         logger.info("Bound new spool %d to Qidi tag uid %s", db_spool.id, uid)
 

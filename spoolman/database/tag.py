@@ -107,6 +107,9 @@ async def _link(db: AsyncSession, target: Target, uid: str, tag_format: str | No
             await _changed(db, target)
         return existing
 
+    # Only a binding that does not exist yet has to be whole bytes. One stored at odd length
+    # before the check existed still re-links idempotently and still reports a conflict above.
+    require_whole_bytes(uid)
     tag = models.Tag(
         uid=uid,
         target_type=_target_type(target),
@@ -171,12 +174,12 @@ async def link_spool(
     Raises:
         ItemNotFoundError: If no spool with that ID exists.
         TagConflictError: If the UID is already linked to anything else, spool or filament.
-        ValueError: If the UID or format is not valid, or the UID is not a whole number of
-            bytes. A UID already stored at odd length stays findable and unlinkable; it just
-            cannot be linked afresh.
+        ValueError: If the UID or format is not valid, or a new binding's UID is not a whole
+            number of bytes. A UID already stored at odd length stays findable, unlinkable and
+            idempotently re-linkable to what holds it; it just cannot be bound anew.
 
     """
-    uid = require_whole_bytes(normalize_uid(uid))
+    uid = normalize_uid(uid)
     tag_format = normalize_format(tag_format)
     return await _link(db, await spool.get_by_id(db, spool_id), uid, tag_format)
 
@@ -200,7 +203,7 @@ async def link_filament(
         ValueError: If the UID or format is not valid.
 
     """
-    uid = require_whole_bytes(normalize_uid(uid))
+    uid = normalize_uid(uid)
     tag_format = normalize_format(tag_format)
     return await _link(db, await filament.get_by_id(db, filament_id), uid, tag_format)
 
@@ -270,6 +273,10 @@ async def link_new_spool(
     try:
         await link_spool(db=db, spool_id=spool_id, uid=uid, tag_format=tag_format)
     except TagConflictError:
+        # When the unique index caught the clash, _link rolled the session back and every loaded
+        # object expired; spool.delete would then reuse the stale spool from the identity map and
+        # its DELETED event could not read the filament. Start from a clean session instead.
+        db.expunge_all()
         winner = await find_spool_by_uid(db, uid)
         await spool.delete(db, spool_id)
         if winner is None:

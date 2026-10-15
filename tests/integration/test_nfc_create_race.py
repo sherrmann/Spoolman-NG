@@ -47,6 +47,10 @@ async def _spool_ids(client: AsyncClient) -> set[int]:
     return {s["id"] for s in (await client.get(SPOOL)).json()}
 
 
+async def _filament_ids(client: AsyncClient) -> set[int]:
+    return {f["id"] for f in (await client.get(FIL)).json()}
+
+
 async def _holder(uid: str) -> models.Spool | models.Filament | None:
     async for db in get_db_session():
         return await tag_db.find_by_uid(db, uid)
@@ -97,6 +101,7 @@ async def test_a_spool_claiming_the_tag_first_wins_and_no_duplicate_is_left(
 ):
     _, winner_id = await _make_spool(client)
     spools_before = await _spool_ids(client)
+    filaments_before = await _filament_ids(client)
 
     async def bind_to_winner(db, uid):  # noqa: ANN001, ANN202
         await tag_db._link(db, await tag_db.spool.get_by_id(db, winner_id), uid, None)  # noqa: SLF001
@@ -110,6 +115,10 @@ async def test_a_spool_claiming_the_tag_first_wins_and_no_duplicate_is_left(
     assert resp.json()["spool_id"] == winner_id
     assert "created" not in resp.json()["message"]
     assert await _spool_ids(client) == spools_before
+    if kind == "qidi":
+        # A Qidi filament is made for the one spool and has nothing to be found again by, so it
+        # goes with the undone spool rather than staying behind as an orphan.
+        assert await _filament_ids(client) == filaments_before
     holder = await _holder(UID)
     assert isinstance(holder, models.Spool)
     assert holder.id == winner_id
@@ -175,6 +184,7 @@ async def test_concurrent_create_from_tag_submits_make_one_spool(
 async def test_a_claim_caught_only_by_the_unique_index_is_resolved_the_same_way(
     client: AsyncClient,
     monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
 ):
     """The competitor commits after the link's own read, so the insert itself fails.
 
@@ -211,3 +221,6 @@ async def test_a_claim_caught_only_by_the_unique_index_is_resolved_the_same_way(
     assert resp.json()["spool_id"] == winner_id
     assert await _spool_ids(client) == spools_before
     assert state["missed"]
+    # The undone spool's DELETED event must actually go out, or a client keeps showing it. After
+    # the rollback it used to fail on the expired spool and only log this.
+    assert "Failed to send websocket message" not in caplog.text

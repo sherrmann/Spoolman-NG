@@ -96,6 +96,20 @@ async def test_a_stored_odd_spool_uid_is_still_found_and_can_be_unlinked(client:
     assert (await client.get(f"{SPOOL}/{spool_id}")).json()["tags"] == []
 
 
+async def test_a_stored_odd_uid_still_relinks_to_its_holder_and_still_reports_a_conflict(client: AsyncClient):
+    """Only a new binding has to be whole bytes; an existing one keeps its old behaviour."""
+    _, holder_id = await _make_spool(client)
+    _, other_id = await _make_spool(client)
+    await _seed_tag(uid="4A2B3", spool_id=holder_id)
+
+    same = await client.post(f"{SPOOL}/{holder_id}/tag", json={"uid": "4a2b3", "format": "ntag"})
+    assert same.status_code == 201, same.text
+    assert same.json()["format"] == "ntag"
+
+    other = await client.post(f"{SPOOL}/{other_id}/tag", json={"uid": "4a2b3"})
+    assert other.status_code == 409, other.text
+
+
 async def test_a_stored_odd_filament_uid_is_still_found_and_can_be_unlinked(client: AsyncClient):
     filament_id, _ = await _make_spool(client)
     await _seed_tag(uid="ABC", filament_id=filament_id)
