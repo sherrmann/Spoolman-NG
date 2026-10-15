@@ -37,13 +37,19 @@ class LabelDesigns {
 				const imported = await importV1Presets();
 				if (imported.length > 0) {
 					this.designs = imported;
-					await this.persist();
-				} else {
-					this.designs = designs;
+					// The read itself succeeded, so the list in memory is the right one to write later
+					// even if saving the import fails now. Leaving the store unloaded would re-run the
+					// import on the next change and hand out fresh ids, duplicating every design.
+					this.loaded = true;
+					try {
+						await this.persist();
+					} catch (e) {
+						console.error('Failed to save the imported label designs', e);
+					}
+					return;
 				}
-			} else {
-				this.designs = designs;
 			}
+			this.designs = designs;
 			this.loaded = true;
 		} catch (e) {
 			console.error('Failed to load label designs', e);

@@ -11,7 +11,8 @@ vi.mock('$lib/api/labelDesigns', () => ({
 	getDesignsSetting: api.get,
 	saveDesigns: api.save
 }));
-vi.mock('$lib/labels/migrateV1', () => ({ importV1Presets: async () => [] }));
+const v1 = vi.hoisted(() => ({ presets: vi.fn() }));
+vi.mock('$lib/labels/migrateV1', () => ({ importV1Presets: v1.presets }));
 
 const stored = [{ id: 'kept', name: 'Kept' } as LabelDesign];
 
@@ -34,6 +35,7 @@ describe('labelDesigns', () => {
 	beforeEach(() => {
 		api.get.mockReset();
 		api.save.mockReset().mockResolvedValue(undefined);
+		v1.presets.mockReset().mockResolvedValue([]);
 	});
 
 	it('waits for a slow first read before creating, and keeps the stored designs', async () => {
@@ -87,5 +89,23 @@ describe('labelDesigns', () => {
 
 		expect(api.get).toHaveBeenCalledTimes(1);
 		expect(store.designs).toEqual([{ id: 'kept', name: 'Renamed' }]);
+	});
+
+	it('keeps the imported v1 presets, ids and all, when saving the import fails', async () => {
+		// First run: nothing stored yet, so the v1 presets are imported. Their ids are fresh on each
+		// import, so a second import would duplicate every design the page is already showing.
+		api.get.mockResolvedValue({ designs: [], isSet: false });
+		let n = 0;
+		v1.presets.mockImplementation(async () => [{ id: `imp${++n}`, name: 'Imported' } as LabelDesign]);
+		api.save.mockRejectedValueOnce(new Error('offline'));
+		const store = await freshStore();
+		vi.spyOn(console, 'error').mockImplementation(() => {});
+
+		await store.load();
+		expect(store.loaded).toBe(true);
+		await store.save({ id: 'imp1', name: 'Edited' } as LabelDesign);
+
+		expect(v1.presets).toHaveBeenCalledTimes(1);
+		expect(api.save.mock.calls.at(-1)?.[0]).toEqual([{ id: 'imp1', name: 'Edited' }]);
 	});
 });
