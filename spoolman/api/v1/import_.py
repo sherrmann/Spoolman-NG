@@ -147,7 +147,11 @@ class SpoolstockImportResponse(BaseModel):
     filaments_created: int = Field(description="Filaments created (or that would be, on a dry run).")
     filaments_reused: int = Field(description="Filaments that existed before the import and were used as they are.")
     spools_created: int = Field(description="Spools created (or that would be, on a dry run).")
-    spools_skipped: int = Field(description="Rows skipped because an earlier import already brought that spool in.")
+    spools_skipped: int = Field(
+        description=(
+            "Rows skipped because an earlier import, or an earlier row of this file, already brought that spool in."
+        ),
+    )
     dry_run: bool = Field(description="Whether this was a dry run; if true, nothing was committed.")
     errors: list[str] = Field(description="Per-row errors. Non-empty means nothing was committed.")
 

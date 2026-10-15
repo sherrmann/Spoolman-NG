@@ -38,6 +38,11 @@ _HEX = re.compile(r"^#?([0-9a-fA-F]{6}(?:[0-9a-fA-F]{2})?)$")
 #: A column every Spoolstock export has; a file without it is not one.
 REQUIRED_COLUMN = "short_id"
 
+#: Bounds for a value to be taken as meant. They keep a typo out of the database (and inside the
+#: column types: integer temperatures, single-precision floats on MySQL), as a row error.
+MAX_TEMPERATURE = 1000
+MAX_AMOUNT = 1e9
+
 
 @dataclass
 class SpoolstockRow:
@@ -65,7 +70,8 @@ def _text(row: dict[str, str], key: str) -> str | None:
     return value or None
 
 
-def _number(row: dict[str, str], key: str) -> float | None:
+def _number(row: dict[str, str], key: str, limit: float = MAX_AMOUNT) -> float | None:
+    """Read a number; None when empty or unreadable, ValueError when beyond ``limit``."""
     value = _text(row, key)
     if value is None:
         return None
@@ -74,20 +80,23 @@ def _number(row: dict[str, str], key: str) -> float | None:
     except ValueError:
         # Not guessed at: "1,000" may be a thousand or one, depending on where the file came from.
         return None
-    return number if math.isfinite(number) else None
+    if not math.isfinite(number):
+        return None
+    if abs(number) > limit:
+        raise ValueError(f"{key} is {value}, more than the {limit:g} it can plausibly be")
+    return number
 
 
-def _rounded(row: dict[str, str], key: str) -> int | None:
-    value = _number(row, key)
-    return round(value) if value is not None else None
-
-
-def _temperature(row: dict[str, str], low_key: str, high_key: str) -> int | None:
-    low, high = _number(row, low_key), _number(row, high_key)
+def _temperatures(row: dict[str, str], low_key: str, high_key: str) -> tuple[int | None, int | None, int | None]:
+    """Return (temperature to print at, range low, range high); the first is the range's midpoint."""
+    low, high = _number(row, low_key, MAX_TEMPERATURE), _number(row, high_key, MAX_TEMPERATURE)
+    if low is not None and high is not None and low > high:
+        raise ValueError(f"{low_key} ({low:g}) is above {high_key} ({high:g})")
     if low is not None and high is not None:
-        return round((low + high) / 2)
-    value = low if low is not None else high
-    return round(value) if value is not None else None
+        middle = (low + high) / 2
+    else:
+        middle = low if low is not None else high
+    return tuple(round(v) if v is not None else None for v in (middle, low, high))  # type: ignore[return-value]
 
 
 def colours(value: str | None) -> list[str]:
@@ -118,7 +127,8 @@ def _is_true(value: str | None) -> bool:
 def map_row(row: dict[str, str]) -> SpoolstockRow:
     """Map one Spoolstock row to vendor name, filament parameters and spool parameters.
 
-    Raises ValueError when the row cannot be imported at all (no Spoolstock id).
+    Raises ValueError when the row cannot be imported: no Spoolstock id, a temperature range whose
+    low end is above its high end, or a number beyond what it can plausibly be.
     """
     short_id = _text(row, "short_id")
     if short_id is None:
@@ -129,6 +139,12 @@ def map_row(row: dict[str, str]) -> SpoolstockRow:
     spool_weight = _number(row, "empty_spool.weight")
     density = _number(row, "filament.material.density")
 
+    extruder, extruder_min, extruder_max = _temperatures(
+        row,
+        "filament.material.low_temp",
+        "filament.material.high_temp",
+    )
+    bed, bed_min, bed_max = _temperatures(row, "filament.material.low_bed_temp", "filament.material.high_bed_temp")
     filament: dict[str, Any] = {
         "name": _text(row, "filament.name"),
         "material": _text(row, "filament.material.name"),
@@ -137,12 +153,12 @@ def map_row(row: dict[str, str]) -> SpoolstockRow:
         "weight": net_weight,
         "spool_weight": spool_weight,
         "article_number": _text(row, "filament.upc"),
-        "settings_extruder_temp": _temperature(row, "filament.material.low_temp", "filament.material.high_temp"),
-        "settings_bed_temp": _temperature(row, "filament.material.low_bed_temp", "filament.material.high_bed_temp"),
-        "settings_extruder_temp_min": _rounded(row, "filament.material.low_temp"),
-        "settings_extruder_temp_max": _rounded(row, "filament.material.high_temp"),
-        "settings_bed_temp_min": _rounded(row, "filament.material.low_bed_temp"),
-        "settings_bed_temp_max": _rounded(row, "filament.material.high_bed_temp"),
+        "settings_extruder_temp": extruder,
+        "settings_bed_temp": bed,
+        "settings_extruder_temp_min": extruder_min,
+        "settings_extruder_temp_max": extruder_max,
+        "settings_bed_temp_min": bed_min,
+        "settings_bed_temp_max": bed_max,
     }
     found = colours(row.get("filament.color_hex_codes"))
     if len(found) == 1:

@@ -52,7 +52,10 @@ Other columns (ratings, favourites, totals Spoolstock calculates) are not import
   reused when manufacturer, name, material, diameter and weight all match; otherwise a new one is
   created. Spools are always new.
 - **Importing again is safe.** Each spool remembers its Spoolstock id, and a second import of the same
-  file skips the spools already brought in. Spools you added in Spoolstock since are created.
+  file skips the spools already brought in. Spools you added in Spoolstock since are created. A
+  spool that appears twice in one file is imported once.
+- **Implausible values are refused.** A temperature above 1000 °C, a range whose low end is above
+  its high end, or a weight, price, density or diameter above a billion makes that row an error.
 - **Density.** Spoolman needs a density for every filament. When a row has none, the value from the
   SpoolmanDB catalogue is used if the catalogue has been downloaded (it is, after the first sync on a
   server with internet access); otherwise that row is reported as an error.

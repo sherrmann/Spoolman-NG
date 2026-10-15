@@ -138,3 +138,27 @@ def test_a_row_without_an_id_is_refused():
 def test_imported_ids_reads_the_marker_lines():
     comments = ["Opened\nSpoolstock ID: AB12", None, "no marker", "Spoolstock ID: CD34"]
     assert ss.imported_ids(comments) == {"AB12", "CD34"}
+
+
+def test_huge_temperatures_are_refused_not_overflowed():
+    row = _row(**{"filament.material.low_temp": "1e308", "filament.material.high_temp": "1.7e308"})
+    with pytest.raises(ValueError, match="low_temp"):
+        ss.map_row(row)
+
+
+def test_a_temperature_range_upside_down_is_refused():
+    with pytest.raises(ValueError, match="above"):
+        ss.map_row(_row(**{"filament.material.low_temp": "250", "filament.material.high_temp": "190"}))
+
+
+def test_one_end_of_a_range_is_the_temperature_and_the_other_stays_empty():
+    mapped = ss.map_row(_row(**{"filament.material.low_temp": "", "filament.material.high_temp": "230"}))
+    assert mapped.filament["settings_extruder_temp"] == 230
+    assert mapped.filament["settings_extruder_temp_max"] == 230
+    assert "settings_extruder_temp_min" not in mapped.filament
+
+
+@pytest.mark.parametrize("column", ["size", "price", "filament.material.density", "empty_spool.weight"])
+def test_amounts_beyond_a_billion_are_refused(column: str) -> None:
+    with pytest.raises(ValueError, match=column):
+        ss.map_row(_row(**{column: "1e39"}))

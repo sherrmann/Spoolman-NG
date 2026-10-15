@@ -240,3 +240,11 @@ async def test_without_a_readable_catalogue_a_missing_density_is_a_row_error(
 
     assert len(result["errors"]) == 1
     assert "density" in result["errors"][0]
+
+
+async def test_an_implausible_number_is_a_row_error_not_a_server_error(client: AsyncClient) -> None:
+    result = await _post(client, _csv(_spool("A1", size="1e39"), _spool("A2")))
+
+    assert len(result["errors"]) == 1
+    assert result["errors"][0].startswith("Row 2:")
+    assert (await client.get("/api/v1/spool")).json() == []
