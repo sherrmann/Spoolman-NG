@@ -174,7 +174,8 @@ export function ChatDrawer() {
         } else if (event.event === "confirm") {
           push({ kind: "confirm", cards: event.data.cards, messages: event.data.messages });
         } else if (event.event === "executed") {
-          push({ kind: "executed", cards: event.data.cards });
+          // No cards means every confirmed write failed; the model's reply explains.
+          if (event.data.cards?.length) push({ kind: "executed", cards: event.data.cards });
         } else if (event.event === "error") {
           push({ kind: "error", text: event.data.message });
         }

@@ -19,7 +19,7 @@ from sqlalchemy import URL, event
 from sqlalchemy.engine.interfaces import DBAPIConnection
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
-from spoolman import env
+from spoolman import env, timing
 from spoolman.prometheus.metrics import filament_metrics, spool_metrics
 
 logger = logging.getLogger(__name__)
@@ -195,6 +195,8 @@ class Database:
         )
         if self.connection_url.drivername == "sqlite+aiosqlite":
             event.listen(self.engine.sync_engine, "connect", _register_sqlite_functions)
+        if env.get_server_timing_enabled() or env.get_slow_request_ms() is not None:
+            timing.install_query_timer(self.engine)
         self.session_maker = async_sessionmaker(self.engine, autocommit=False, autoflush=True, expire_on_commit=False)
 
     def backup(self, target_path: str | PathLike[str]) -> None:

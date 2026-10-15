@@ -1,0 +1,277 @@
+name: Deployment harness
+
+# Runs tests_deployment/ (#277) against the *published* release artefacts and image:
+# after every release (dispatched from ci.yml, see publish-release) and weekly, to catch
+# third-party drift (Moonraker, Home Assistant, distro images, ...) between releases.
+# Issue #301.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to test, e.g. v2026.7.12 (empty = latest release)"
+        type: string
+        default: ""
+      suites:
+        description: "Suite set, or a single suite to run alone"
+        type: choice
+        default: weekly
+        options:
+          - release
+          - weekly
+          - zip
+          - addon
+          - native
+          - moonraker
+          - helm
+          - octoprint
+          - hacs
+          - upgrade
+          - guide
+  schedule:
+    - cron: "15 6 * * 1" # Mondays 06:15 UTC, after mutation (04:00), upstream-watch (05:00) and ledger (05:30)
+
+permissions:
+  contents: read
+
+# One group per tag and suite set. A single shared group would let a later dispatch silently
+# replace a release run still waiting behind the weekly one; only an identical request queued
+# behind itself is replaced here.
+concurrency:
+  group: deployment-harness-${{ inputs.tag || 'latest' }}-${{ inputs.suites || 'weekly' }}
+  cancel-in-progress: false
+
+env:
+  HELM_VERSION: v3.19.0
+  HELM_SHA256: a7f81ce08007091b86d8bd696eb4d86b8d0f2e1b9f6c714be62f82f96a594496
+  K3D_VERSION: v5.8.3
+  K3D_SHA256: dbaa79a76ace7f4ca230a1ff41dc7d8a5036a8ad0309e9c54f9bf3836dbe853e
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      tag: ${{ steps.plan.outputs.tag }}
+      version: ${{ steps.plan.outputs.version }}
+      matrix: ${{ steps.plan.outputs.matrix }}
+      report: ${{ steps.plan.outputs.report }}
+    steps:
+      - name: Resolve tag and suite matrix
+        id: plan
+        env:
+          # This job never checks out the repo, so name the repository for gh explicitly.
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          INPUT_TAG: ${{ inputs.tag }}
+          INPUT_SUITES: ${{ inputs.suites }}
+        run: |
+          set -euo pipefail
+          tag="${INPUT_TAG:-}"
+          if [ -z "$tag" ]; then
+            tag="$(gh release view --json tagName -q .tagName)"
+          fi
+          if ! [[ "$tag" =~ ^v[0-9A-Za-z._-]+$ ]]; then
+            echo "::error::unexpected release tag: $tag"
+            exit 1
+          fi
+          version="${tag#v}"
+
+          # Scheduled runs have no inputs: they run the weekly set.
+          suites="${INPUT_SUITES:-weekly}"
+          release_set='[
+            {"suite":"zip","args":"","timeout":60},
+            {"suite":"moonraker","args":"","timeout":60},
+            {"suite":"native","args":"-k \"debian and not arm64\"","timeout":60},
+            {"suite":"upgrade","args":"","timeout":60}
+          ]'
+          weekly_set='[
+            {"suite":"zip","args":"","timeout":60},
+            {"suite":"addon","args":"","timeout":60},
+            {"suite":"native","args":"","timeout":60},
+            {"suite":"moonraker","args":"","timeout":60},
+            {"suite":"helm","args":"","timeout":60},
+            {"suite":"octoprint","args":"","timeout":60},
+            {"suite":"hacs","args":"","timeout":90},
+            {"suite":"upgrade","args":"","timeout":60},
+            {"suite":"guide","args":"-m \"not slow\"","timeout":60}
+          ]'
+          case "$suites" in
+            release) matrix="$release_set"; report=true ;;
+            weekly)  matrix="$weekly_set"; report=true ;;
+            *)
+              # A single suite runs alone, with the weekly set's arguments.
+              matrix="$(jq -c --arg s "$suites" '[.[] | select(.suite == $s)]' <<<"$weekly_set")"
+              report=false
+              if [ "$(jq length <<<"$matrix")" -eq 0 ]; then
+                echo "::error::unknown suite: $suites"
+                exit 1
+              fi
+              ;;
+          esac
+
+          {
+            echo "tag=$tag"
+            echo "version=$version"
+            echo "matrix=$(jq -c . <<<"$matrix")"
+            echo "report=$report"
+          } >> "$GITHUB_OUTPUT"
+          echo "Testing $tag with suite set '$suites'" >> "$GITHUB_STEP_SUMMARY"
+
+  harness:
+    needs: plan
+    runs-on: ubuntu-latest
+    name: harness (${{ matrix.suite }})
+    timeout-minutes: ${{ matrix.timeout }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.plan.outputs.tag }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.2.0
+        with:
+          version: "0.11.26"
+          enable-cache: true
+
+      - name: Install node
+        if: matrix.suite == 'guide'
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: '22'
+
+      # kubectl is preinstalled on the runner image; helm and k3d are pinned and checked
+      # against the digests published with the official releases.
+      - name: Install helm and k3d
+        if: matrix.suite == 'helm'
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          curl -fsSLO "https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz"
+          echo "${HELM_SHA256}  helm-${HELM_VERSION}-linux-amd64.tar.gz" | sha256sum -c -
+          tar -xzf "helm-${HELM_VERSION}-linux-amd64.tar.gz" linux-amd64/helm
+          sudo install -m 0755 linux-amd64/helm /usr/local/bin/helm
+          curl -fsSL -o k3d "https://github.com/k3d-io/k3d/releases/download/${K3D_VERSION}/k3d-linux-amd64"
+          echo "${K3D_SHA256}  k3d" | sha256sum -c -
+          sudo install -m 0755 k3d /usr/local/bin/k3d
+          helm version --short
+          k3d version
+
+      - name: Free disk space
+        if: matrix.suite == 'hacs'
+        run: sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android
+
+      - name: Run suite
+        env:
+          SPOOLMAN_RELEASE_TAG: ${{ needs.plan.outputs.tag }}
+          SPOOLMAN_IMAGE: ghcr.io/${{ github.repository_owner }}/spoolman-ng:${{ needs.plan.outputs.version }}
+          GITHUB_TOKEN: ${{ github.token }}
+          SUITE: ${{ matrix.suite }}
+          SUITE_ARGS: ${{ matrix.args }}
+        run: |
+          # Third-party hosts (registries, distro mirrors, PyPI) are flaky, so a failed
+          # suite is retried once within the job before the job is allowed to fail.
+          # SUITE_ARGS holds shell-quoted pytest arguments, hence the eval.
+          for attempt in 1 2; do
+            if eval "tests_deployment/run.sh \"$SUITE\" $SUITE_ARGS --junitxml=\"report-$SUITE.xml\""; then
+              exit 0
+            fi
+            if [ "$attempt" -eq 1 ]; then
+              echo "::warning::suite $SUITE failed; retrying once"
+              docker ps -aq --filter label=spoolman-deploy-test | xargs -r docker rm -f
+            fi
+          done
+          exit 1
+
+      - name: Collect diagnostics
+        if: failure()
+        run: |
+          mkdir -p diagnostics
+          docker ps -a > diagnostics/docker-ps.txt 2>&1 || true
+          for id in $(docker ps -aq --filter label=spoolman-deploy-test); do
+            docker logs "$id" > "diagnostics/container-$id.log" 2>&1 || true
+          done
+
+      - name: Upload failure report
+        if: failure()
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: harness-failure-${{ matrix.suite }}
+          path: |
+            report-${{ matrix.suite }}.xml
+            diagnostics/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Remove leaked containers
+        if: always()
+        run: docker ps -aq --filter label=spoolman-deploy-test | xargs -r docker rm -f
+
+  report:
+    needs: [plan, harness]
+    # Only scheduled and release runs report; a single-suite manual run is a one-off.
+    if: ${{ always() && needs.plan.outputs.report == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+      issues: write
+    steps:
+      - name: Open, update or close the tracking issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          TAG: ${{ needs.plan.outputs.tag }}
+          HARNESS_RESULT: ${{ needs.harness.result }}
+        run: |
+          set -euo pipefail
+          title="Deployment harness failing"
+          label="deployment-harness"
+
+          # Matrix job names look like "harness (zip)".
+          failed="$(gh run view "$RUN_ID" --json jobs \
+            --jq '[.jobs[] | select(.name | startswith("harness (")) | select(.conclusion == "failure" or .conclusion == "timed_out") | .name | sub("^harness \\("; "") | sub("\\)$"; "")] | sort | join(", ")')"
+
+          number="$(gh issue list --label "$label" --state open --search "\"$title\" in:title" \
+            --json number --jq '.[0].number // empty')"
+
+          if [ -n "$failed" ]; then
+            body="Failing suites: ${failed}.
+
+          Release under test: ${TAG}. Run: ${RUN_URL}
+
+          A red suite means a published artefact is broken or a third-party dependency has drifted. The junit report and container logs are attached to the run as artefacts."
+            if [ -z "$number" ]; then
+              gh label create "$label" --color D93F0B \
+                --description "Failing deployment-channel tests (tests_deployment/)" 2>/dev/null || true
+              gh issue create --title "$title" --label "$label" --body "$body"
+              exit 0
+            fi
+            # Comment only when the failing set differs from the last comment, so a
+            # persistent failure does not produce a comment every week.
+            # The issue body counts as the first report.
+            last="$(gh issue view "$number" --json body,comments \
+              --jq '([.comments[] | select(.body | startswith("Failing suites: "))] | last | .body) // .body')"
+            last_set="$(printf '%s\n' "$last" | sed -n '1s/^Failing suites: //; 1s/\.$//p')"
+            if [ "$last_set" = "$failed" ]; then
+              echo "failing set unchanged ($failed); not commenting"
+              exit 0
+            fi
+            gh issue comment "$number" --body "Failing suites: ${failed}.
+
+          Release under test: ${TAG}. Run: ${RUN_URL}"
+            exit 0
+          fi
+
+          # Nothing failed. Close only after a fully green run, not a cancelled one.
+          if [ -n "$number" ] && [ "$HARNESS_RESULT" = "success" ]; then
+            gh issue close "$number" --reason completed \
+              --comment "All suites passed for ${TAG}. Run: ${RUN_URL}"
+          fi

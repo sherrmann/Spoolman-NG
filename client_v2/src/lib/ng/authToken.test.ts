@@ -28,6 +28,14 @@ beforeEach(() => vi.stubGlobal('localStorage', fakeStorage()));
 afterEach(() => vi.unstubAllGlobals());
 
 describe('storage', () => {
+	it('forgets the assistant conversation when the token is cleared, so the next user cannot read it', async () => {
+		const { clearToken, setToken } = await load();
+		setToken('abc');
+		localStorage.setItem('spoolman.chat.v1', '{"messages":[],"bubbles":[{"kind":"user","text":"hi"}]}');
+		clearToken();
+		expect(localStorage.getItem('spoolman.chat.v1')).toBeNull();
+	});
+
 	it('round-trips a token', async () => {
 		const { getToken, setToken } = await load();
 		expect(getToken()).toBeNull();

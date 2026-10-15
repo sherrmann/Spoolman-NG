@@ -17,6 +17,7 @@ Three endpoints, all inert until the user configures an endpoint:
 import asyncio
 import base64
 import binascii
+import contextlib
 import json
 import logging
 import time
@@ -513,7 +514,10 @@ _chat_slots = asyncio.Semaphore(_MAX_CONCURRENT_CHATS)
     "/chat",
     name="Chat with the assistant",
     description=(
-        "Stream one turn of the chat agent as Server-Sent Events. Read tools run automatically; a "
+        "Stream one turn of the chat agent as Server-Sent Events. The reply text arrives as 'delta' "
+        "events while the model writes it, and in full in the closing 'message' event; any other event "
+        "supersedes the deltas before it. 'tool' events carry up to five result rows and the total. "
+        "Read tools run automatically; a "
         "mutation stops the stream with a confirm-card carrying before/after values, which the client "
         "resolves by re-posting with decision='confirm' or 'cancel'. Read-only callers are offered no "
         "write tools. 404 until the feature is enabled; 409 until an endpoint is configured; "
@@ -543,16 +547,23 @@ async def chat(request: Request, body: ChatRequest) -> StreamingResponse:
 
     async def stream() -> AsyncIterator[str]:
         try:
-            async with session_maker() as session:
-                async for frame in aichat.run_chat(
-                    db=session,
-                    config=config,
-                    messages=body.messages,
-                    context=context,
-                    locale=locale,
-                    can_write=can_write,
-                    decision=body.decision,
-                ):
+            async with (
+                session_maker() as session,
+                contextlib.aclosing(
+                    aichat.run_chat(
+                        db=session,
+                        config=config,
+                        messages=body.messages,
+                        context=context,
+                        locale=locale,
+                        can_write=can_write,
+                        decision=body.decision,
+                    ),
+                ) as frames,
+            ):
+                # aclosing: a client that disconnects mid-turn closes the agent loop (and its
+                # provider stream) at once, before the session above is released.
+                async for frame in frames:
                     yield frame
         finally:
             # Released however the stream ends, including a client disconnect mid-turn.

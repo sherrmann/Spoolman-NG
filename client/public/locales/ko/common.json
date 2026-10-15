@@ -693,6 +693,8 @@
       "tab": "가져오기 / 내보내기",
       "export_title": "데이터 내보내기",
       "export_help": "제조사, 필라멘트 또는 스풀을 CSV나 JSON으로 다운로드합니다. 스풀에는 제조사와 필라멘트 데이터가 포함됩니다.",
+      "simplyprint_button": "SimplyPrint용 다운로드",
+      "simplyprint_hint": "SimplyPrint의 Filament Manager가 가져올 수 있는 형식의 사용 중인 스풀.",
       "import_title": "데이터 가져오기",
       "import_help": "내보내기와 같은 형식의 CSV 또는 JSON 파일을 업로드하세요. 파일 전체가 전부 적용되거나 전부 취소되는 하나의 트랜잭션으로 처리됩니다. 먼저 시험 실행으로 결과를 미리 확인하세요.",
       "report_title": "재고 보고서",
@@ -1303,11 +1305,30 @@
     "thinking": "생각 중…",
     "empty": "스풀과 필라멘트에 대해 무엇이든 물어보세요 — 예를 들어 \"검은색 PETG가 얼마나 남았어?\" 또는 \"뭘 재주문해야 해?\".",
     "viewInList": "스풀 목록에서 보기",
+    "stop": "중지",
+    "clear": "채팅 지우기",
+    "more": "+{{count}}개 더",
+    "starters": {
+      "stock": "필라멘트가 얼마나 남았어?",
+      "low": "뭐가 부족해지고 있어?",
+      "orders": "주문 중인 건 뭐야?",
+      "usage": "이번 달에 얼마나 썼어?"
+    },
+    "cards": {
+      "spools_other": "스풀 {{count}}개",
+      "filaments_other": "필라멘트 {{count}}개",
+      "outstanding": "{{count}}개 미도착",
+      "arrived": "도착완료",
+      "match": "{{percent}}% 일치",
+      "low_stock": "재고 부족",
+      "on_order": "주문 중"
+    },
     "confirm": {
       "confirm": "확인",
       "cancel": "취소",
       "confirmed": "확인됨",
       "cancelled": "취소됨",
+      "unknown": "이 변경에 대한 응답은 전송되었지만 결과가 도착하지 않았습니다. 다시 요청하기 전에 항목을 확인하세요.",
       "destructive": "되돌릴 수 없음",
       "not_set": "설정 안 됨",
       "status_open": "진행 중",
@@ -1350,6 +1371,14 @@
     "back": "이전",
     "photo_discarded": "사진은 메모리에서 분석된 후 저장되지 않습니다.",
     "prefilled_banner": "라벨 사진에서 값을 자동으로 채웠습니다 - 저장하기 전에 값을 확인하세요.",
+    "title": "Scan-to-Spool",
+    "choices_label": "다음으로 추가",
+    "errors": {
+      "disabled": "이 서버에서는 사진 등록이 꺼져 있습니다.",
+      "too_large": "사진이 너무 커서 보낼 수 없습니다. 더 작은 사진을 사용해 보세요.",
+      "bad_image": "이 파일을 사진으로 읽을 수 없습니다. JPEG, PNG 또는 WebP 이미지를 사용하세요.",
+      "failed": "라벨을 읽을 수 없습니다. 다시 시도하거나 스풀을 직접 추가하세요."
+    },
     "fields": {
       "vendor": "제조사",
       "name": "이름",

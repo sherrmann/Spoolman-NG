@@ -101,6 +101,16 @@ export async function downloadExport(entity: ExportEntity, fmt: DataFormat): Pro
 	saveBlob(await res.blob(), exportFilename(entity, fmt));
 }
 
+/** The file name SimplyPrint's Filament Manager export is saved under; the server sends the same one. */
+export const SIMPLYPRINT_FILENAME = 'spoolman-export.json';
+
+/** Fetch the SimplyPrint export (#312) with the caller's credentials and hand it over as a download. */
+export async function downloadSimplyPrintExport(): Promise<void> {
+	const res = await fetch(`${API_BASE}/export/simplyprint`, { headers: authHeaders() });
+	if (!res.ok) throw await failure(res, 'export');
+	saveBlob(await res.blob(), SIMPLYPRINT_FILENAME);
+}
+
 /** Send a file's text to the import endpoint as the raw body the server expects. */
 export async function importData(
 	entity: ImportEntity,

@@ -80,7 +80,7 @@ describe('the feature list', () => {
 	it('marks the features this client has no UI for', () => {
 		// Not a reason to block them: the setting is server-wide and the React client does
 		// implement them, so enabling one here is legitimate -- it just changes nothing here.
-		expect(feature('ai_feature_scan_to_spool').absentHere).toBe(true);
+		expect(feature('ai_feature_scan_to_spool').absentHere).toBeUndefined();
 		expect(feature('ai_feature_mcp').absentHere).toBe(true);
 		expect(feature('ai_feature_chat').absentHere).toBeUndefined();
 		expect(feature('ai_feature_voice').absentHere).toBeUndefined();

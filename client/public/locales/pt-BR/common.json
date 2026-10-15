@@ -729,6 +729,8 @@
       "tab": "Importar / Exportar",
       "export_title": "Exportar dados",
       "export_help": "Baixe seus fabricantes, filamentos ou carretéis como CSV ou JSON. Os dados de fabricante e filamento são incluídos com os carretéis.",
+      "simplyprint_button": "Baixar para SimplyPrint",
+      "simplyprint_hint": "Carretéis ativos no formato que o Filament Manager do SimplyPrint importa.",
       "import_title": "Importar dados",
       "import_help": "Envie um arquivo CSV ou JSON no mesmo formato de uma exportação. O arquivo inteiro é aplicado como uma única transação tudo-ou-nada; use primeiro uma simulação para pré-visualizar o resultado.",
       "report_title": "Relatório de inventário",
@@ -1339,11 +1341,34 @@
     "thinking": "Pensando…",
     "empty": "Pergunte-me sobre seus carretéis e filamentos — por exemplo \"quanto de PETG preto ainda tenho?\" ou \"o que eu preciso repor?\".",
     "viewInList": "Ver na lista de Carretéis",
+    "stop": "Parar",
+    "clear": "Limpar conversa",
+    "more": "+{{count}} mais",
+    "starters": {
+      "stock": "Quanto filamento ainda tenho?",
+      "low": "O que está acabando?",
+      "orders": "O que está em pedido?",
+      "usage": "Quanto usei este mês?"
+    },
+    "cards": {
+      "spools_one": "{{count}} carretel",
+      "spools_many": "{{count}} carretéis",
+      "spools_other": "{{count}} carretéis",
+      "filaments_one": "{{count}} filamento",
+      "filaments_many": "{{count}} filamentos",
+      "filaments_other": "{{count}} filamentos",
+      "outstanding": "{{count}} pendente(s)",
+      "arrived": "Chegou",
+      "match": "Correspondência de {{percent}}%",
+      "low_stock": "Estoque baixo",
+      "on_order": "Em pedido"
+    },
     "confirm": {
       "confirm": "Confirmar",
       "cancel": "Cancelar",
       "confirmed": "Confirmado",
       "cancelled": "Cancelado",
+      "unknown": "Sua resposta a esta alteração foi enviada, mas o resultado nunca chegou. Verifique o item antes de perguntar novamente.",
       "destructive": "Não pode ser desfeito",
       "not_set": "não definido",
       "status_open": "Aberto",
@@ -1386,6 +1411,14 @@
     "back": "Voltar",
     "photo_discarded": "A foto foi analisada em memória e não é armazenada.",
     "prefilled_banner": "Preenchido automaticamente a partir de uma foto do rótulo - revise os valores antes de salvar.",
+    "title": "Scan-to-Spool",
+    "choices_label": "Adicionar como",
+    "errors": {
+      "disabled": "A captura de foto está desativada neste servidor.",
+      "too_large": "Essa foto é grande demais para enviar. Tente uma menor.",
+      "bad_image": "Não foi possível ler esse arquivo como foto. Use uma imagem JPEG, PNG ou WebP.",
+      "failed": "Não foi possível ler o rótulo. Tente novamente ou adicione o carretel manualmente."
+    },
     "fields": {
       "vendor": "Fabricante",
       "name": "Nome",

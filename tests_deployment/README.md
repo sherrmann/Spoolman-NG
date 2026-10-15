@@ -44,19 +44,41 @@ labelled: `docker ps -aq --filter label=spoolman-deploy-test | xargs -r docker r
 
 ## What red means
 
-These are **contract tests pinned to open issues** — they are expected to stay red until
-the corresponding fix ships in a release:
+A failure means one of two things: a published artefact (release zip, image, installer,
+add-on or chart) really is broken, or a third party the harness runs against (Moonraker,
+Home Assistant, OctoPrint, a distro image or mirror) has changed underneath us. Either
+way it is worth a look; the failing assertion says which. The earlier known gaps
+(#261-#264 and #272) were fixed in #278 and #289, so a clean run is the expected state.
 
-| Failing assertion | Issue |
-|---|---|
-| `release_info.json` project name ≠ `Spoolman-NG` | #261 |
-| Release title ≠ installed version (phantom update) | #262 |
-| No root `requirements.txt` / no pip in `.venv` / updater section rejected | #263 |
-| `scripts/*.sh` not executable inside the zip | #264 |
-| Fedora installer gaps | #272 |
+## Runs in CI
 
-When a fix lands, its test goes green with no harness change: the harness always tests
-the latest (or pinned) release.
+`.github/workflows/deployment-harness.yml` runs the harness on GitHub-hosted runners
+against the published release and its pinned image (`ghcr.io/<owner>/spoolman-ng:<version>`):
+
+- **Release set**, dispatched by `publish-release` in `ci.yml` after each release:
+  `zip`, `moonraker`, `native` (Debian amd64 only) and `upgrade`.
+- **Weekly set**, Mondays at 06:15 UTC: `zip`, `addon`, `native`, `moonraker`, `helm`,
+  `octoprint`, `hacs`, `upgrade` and `guide` (without the `slow` Ollama test).
+
+`runtime` is not run in CI (it needs a 5.4 GB simulavr build), and `native` skips its
+Debian arm64 case on runners without qemu binfmt. Each suite is retried once within its
+job, since third-party hosts are flaky. When a suite still fails, its junit report and
+container logs are attached to the run for 14 days.
+
+A failing release or weekly run opens (or updates) a single issue titled "Deployment
+harness failing", labelled `deployment-harness`. It lists the failing suites and links
+the run, gets a new comment only when that set changes, and is closed by the first fully
+green run afterwards.
+
+To run it by hand, from the Actions tab or with the GitHub CLI:
+
+```bash
+gh workflow run deployment-harness.yml -f tag=vX -f suites=release
+gh workflow run deployment-harness.yml -f suites=helm    # one suite, latest release
+```
+
+`tag` defaults to the latest release; `suites` takes `release`, `weekly` or one suite name.
+A single-suite run does not touch the tracking issue.
 
 ## Roadmap (#277)
 

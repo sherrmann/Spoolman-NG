@@ -81,3 +81,22 @@ Low-stock alert (below 15% remaining):
 Note that gauges only exist for spools present in the database; archived or
 deleted spools stop being exported, so use `increase()`/`rate()` windows rather
 than raw counters when aggregating history.
+
+## Request timing
+
+Two optional settings show where the time goes when a page feels slow. Both are
+off by default and add nothing to requests while off.
+
+- `SPOOLMAN_SERVER_TIMING=TRUE` adds a `Server-Timing: app;dur=12.3, db;dur=4.5`
+  header to responses, in milliseconds: `app` is the time until the response
+  starts, `db` the part of it spent in SQL. Browsers show it in the developer
+  tools' Network tab. It is never sent on 401 or 403 responses or for anything
+  under `/api/v1/auth/`, because an exact time on a failed login would reveal
+  which usernames exist.
+- `SPOOLMAN_SLOW_REQUEST_MS=500` logs a warning for each request that takes at
+  least that many milliseconds to start responding, with the method, path
+  (without the query string), status, total and database time and the number of
+  queries. `0` logs every request. Streams (AI chat, MCP) are not logged.
+
+The clock stops when the response starts, so sending a large body to a slow
+client is not included.

@@ -14,7 +14,7 @@ from prometheus_client import generate_latest
 from scheduler.asyncio.scheduler import Scheduler
 from starlette.routing import Route
 
-from spoolman import ai, env, externaldb, mcp_server, security, tigertagdb, updatecheck
+from spoolman import ai, env, externaldb, mcp_server, security, tigertagdb, timing, updatecheck
 from spoolman.api.v1.router import app as v1_app
 from spoolman.assetlinks import register_assetlinks_route
 from spoolman.auth import auth_state, initialize_auth_state
@@ -283,6 +283,13 @@ def add_cors_middleware() -> None:
 add_trusted_origin_middleware()
 add_trusted_host_middleware()
 add_cors_middleware()
+
+# Request timing (#300) is added last so it is the outermost user middleware: it then also covers the
+# guards and CORS above, and sits around the API mount and the SPA alike. Starlette's own error handler
+# still sits outside it, so a crash in the top-level app is logged as an exception rather than as slow.
+# It is installed only when a setting asks for it, so the default request path has no extra layer.
+if env.get_server_timing_enabled() or env.get_slow_request_ms() is not None:
+    app.add_middleware(timing.TimingMiddleware)
 
 
 def add_file_logging() -> None:

@@ -8,6 +8,7 @@
 	import AddSpoolModal from '$components/AddSpoolModal.svelte';
 	import QrScannerModal from '$components/QrScannerModal.svelte';
 	import AiChatLauncher from '$lib/ng/components/AiChatLauncher.svelte';
+	import PhotoIntakeModal from '$lib/ng/components/PhotoIntakeModal.svelte';
 	import UpdateNotice from '$lib/ng/components/UpdateNotice.svelte';
 	import ErrorFallback from '$lib/ng/components/ErrorFallback.svelte';
 	import LoginModal from '$lib/ng/components/LoginModal.svelte';
@@ -192,6 +193,7 @@
 	presetFilamentId={ui.addModalFilamentId}
 	duplicateFilamentId={ui.addModalDuplicateId}
 	presetArticleNumber={ui.addModalArticleNumber}
+	presetIntake={ui.addModalIntake}
 	onclose={() => ui.closeAddModal()}
 />
 
@@ -200,6 +202,10 @@
 <!-- Spoolman NG fork addition: the assistant. Renders nothing at all -- not even its button --
      unless an operator has switched the feature on; see AiChatLauncher. -->
 <AiChatLauncher />
+
+<!-- Spoolman NG fork addition: Scan-to-Spool photo intake (#418). Renders nothing until the scanner's
+     Photo button opens it. -->
+<PhotoIntakeModal />
 
 <!-- Spoolman NG fork addition: the once-per-release update notice (#293). Renders nothing until
      /info has answered, and nothing at all unless that answer names a newer version the user has

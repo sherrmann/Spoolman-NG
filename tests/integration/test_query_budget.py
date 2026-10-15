@@ -8,9 +8,11 @@ from httpx import AsyncClient
 
 from tests.integration.conftest import QueryCounter
 
-# Observed today: spool list = 2, filament list = 4 (flat in row count). Budgets carry
-# headroom for legitimate additions; the equality assertions below are the hard guard.
-SPOOL_LIST_BUDGET = 6
+# Observed today: spool list = 7, filament list = 4 (flat in row count). Budgets carry
+# headroom for legitimate additions; the equality assertions below are the hard guard. The spool
+# list loads its three extra-field collections with one IN query each rather than joining them,
+# because joined they multiplied the rows (#300).
+SPOOL_LIST_BUDGET = 9
 FILAMENT_LIST_BUDGET = 8
 
 

@@ -713,6 +713,8 @@
       "tab": "Import / Export",
       "export_title": "Exportera data",
       "export_help": "Ladda ner dina tillverkare, filament eller spolar som CSV eller JSON. Tillverkar- och filamentdata följer med spolarna.",
+      "simplyprint_button": "Ladda ner för SimplyPrint",
+      "simplyprint_hint": "Aktiva spolar i det format som SimplyPrints Filament Manager importerar.",
       "import_title": "Importera data",
       "import_help": "Ladda upp en CSV- eller JSON-fil i samma form som en export. Hela filen tillämpas som en enda allt-eller-inget-transaktion; gör först en testkörning för att förhandsgranska resultatet.",
       "report_title": "Lagerrapport",
@@ -1333,11 +1335,32 @@
     "thinking": "Tänker…",
     "empty": "Fråga mig om dina spolar och ditt filament — till exempel \"hur mycket svart PETG har jag kvar?\" eller \"vad borde jag beställa mer av?\".",
     "viewInList": "Visa i spollistan",
+    "stop": "Stoppa",
+    "clear": "Rensa chatten",
+    "more": "+{{count}} till",
+    "starters": {
+      "stock": "Hur mycket filament har jag kvar?",
+      "low": "Vad håller på att ta slut?",
+      "orders": "Vad är beställt?",
+      "usage": "Hur mycket har jag använt den här månaden?"
+    },
+    "cards": {
+      "spools_one": "{{count}} spole",
+      "spools_other": "{{count}} spolar",
+      "filaments_one": "{{count}} filament",
+      "filaments_other": "{{count}} filament",
+      "outstanding": "{{count}} utestående",
+      "arrived": "Anlänt",
+      "match": "{{percent}} % matchning",
+      "low_stock": "Lågt lager",
+      "on_order": "Beställt"
+    },
     "confirm": {
       "confirm": "Bekräfta",
       "cancel": "Avbryt",
       "confirmed": "Bekräftad",
       "cancelled": "Avbruten",
+      "unknown": "Ditt svar på den här ändringen skickades, men resultatet kom aldrig fram. Kontrollera objektet innan du frågar igen.",
       "destructive": "Kan inte ångras",
       "not_set": "inte angivet",
       "status_open": "Öppen",
@@ -1380,6 +1403,14 @@
     "back": "Tillbaka",
     "photo_discarded": "Fotot analyserades i minnet och sparas inte.",
     "prefilled_banner": "Förifyllt från ett etikettfoto - granska värdena innan du sparar.",
+    "title": "Scan-to-Spool",
+    "choices_label": "Lägg till som",
+    "errors": {
+      "disabled": "Fotoinmatning är avstängd på den här servern.",
+      "too_large": "Fotot är för stort för att skickas. Prova ett mindre.",
+      "bad_image": "Filen kunde inte läsas som ett foto. Använd en JPEG-, PNG- eller WebP-bild.",
+      "failed": "Etiketten kunde inte läsas. Försök igen, eller lägg till spolen manuellt."
+    },
     "fields": {
       "vendor": "Tillverkare",
       "name": "Namn",

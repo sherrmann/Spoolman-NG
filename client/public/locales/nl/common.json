@@ -757,6 +757,8 @@
       "tab": "Import / Export",
       "export_title": "Gegevens exporteren",
       "export_help": "Download uw fabrikanten, filamenten of spoelen als CSV of JSON. Fabrikant- en filamentgegevens worden bij spoelen meegeleverd.",
+      "simplyprint_button": "Downloaden voor SimplyPrint",
+      "simplyprint_hint": "Actieve spoelen in het formaat dat de Filament Manager van SimplyPrint importeert.",
       "import_title": "Gegevens importeren",
       "import_help": "Upload een CSV- of JSON-bestand in dezelfde vorm als een export. Het hele bestand wordt toegepast als één alles-of-niets-transactie; doe eerst een proefrun om het resultaat te bekijken.",
       "report_title": "Voorraadrapport",
@@ -1333,11 +1335,32 @@
     "thinking": "Denkt na…",
     "empty": "Vraag me iets over uw spoelen en filament — bijvoorbeeld \"hoeveel zwart PETG heb ik nog over?\" of \"wat moet ik bijbestellen?\".",
     "viewInList": "Bekijken in spoelenlijst",
+    "stop": "Stoppen",
+    "clear": "Chat wissen",
+    "more": "+{{count}} meer",
+    "starters": {
+      "stock": "Hoeveel filament heb ik nog over?",
+      "low": "Wat raakt op?",
+      "orders": "Wat staat er in bestelling?",
+      "usage": "Hoeveel heb ik deze maand gebruikt?"
+    },
+    "cards": {
+      "spools_one": "{{count}} spoel",
+      "spools_other": "{{count}} spoelen",
+      "filaments_one": "{{count}} filament",
+      "filaments_other": "{{count}} filamenten",
+      "outstanding": "{{count}} openstaand",
+      "arrived": "Aangekomen",
+      "match": "{{percent}}% overeenkomst",
+      "low_stock": "Lage voorraad",
+      "on_order": "In bestelling"
+    },
     "confirm": {
       "confirm": "Bevestigen",
       "cancel": "Annuleren",
       "confirmed": "Bevestigd",
       "cancelled": "Geannuleerd",
+      "unknown": "Uw antwoord op deze wijziging is verzonden, maar de uitkomst is nooit aangekomen. Controleer het item voordat u het opnieuw vraagt.",
       "destructive": "Kan niet ongedaan worden gemaakt",
       "not_set": "niet ingesteld",
       "status_open": "Open",
@@ -1380,6 +1403,14 @@
     "back": "Terug",
     "photo_discarded": "De foto is in het geheugen geanalyseerd en wordt niet opgeslagen.",
     "prefilled_banner": "Vooraf ingevuld op basis van een labelfoto - controleer de waarden voordat u opslaat.",
+    "title": "Scan-to-Spool",
+    "choices_label": "Toevoegen als",
+    "errors": {
+      "disabled": "Foto-intake is uitgeschakeld op deze server.",
+      "too_large": "Die foto is te groot om te verzenden. Probeer een kleinere.",
+      "bad_image": "Dat bestand kon niet als foto worden gelezen. Gebruik een JPEG-, PNG- of WebP-afbeelding.",
+      "failed": "Het label kon niet worden gelezen. Probeer het opnieuw, of voeg de spoel handmatig toe."
+    },
     "fields": {
       "vendor": "Fabrikant",
       "name": "Naam",

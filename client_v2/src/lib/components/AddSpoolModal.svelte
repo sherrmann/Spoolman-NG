@@ -35,6 +35,9 @@
 		type FilamentDraft
 	} from '$lib/filament/draft';
 	import * as m from '$lib/paraglide/messages';
+	import { ng } from '$lib/ng/i18n';
+	import { loadMaterials } from '$lib/data/materials';
+	import type { IntakePreset } from '$lib/ng/spoolIntake';
 
 	interface Props {
 		open: boolean;
@@ -45,6 +48,9 @@
 		// Spoolman NG fork addition: opens a blank new-filament form carrying this article
 		// number, for a scanned retail barcode no filament claims yet (#97b).
 		presetArticleNumber?: string | null;
+		// Spoolman NG fork addition: what a label photo read (#418) -- a lot number, a SpoolmanDB
+		// entry to choose, or a draft for a blank new-filament form.
+		presetIntake?: IntakePreset | null;
 		onclose?: () => void;
 	}
 	let {
@@ -52,6 +58,7 @@
 		presetFilamentId = null,
 		duplicateFilamentId = null,
 		presetArticleNumber = null,
+		presetIntake = null,
 		onclose
 	}: Props = $props();
 
@@ -172,10 +179,58 @@
 				// behind a collapsed heading is one the user cannot check or correct.
 				showAdvanced = true;
 			}
+			// Spoolman NG fork addition (#418): see applyIntakePreset.
+			if (presetIntake) applyIntakePreset(presetIntake);
 		} else if (!open) {
 			initialized = false;
 		}
 	});
+
+	// Spoolman NG fork addition (#418): shown on the new-filament form a label photo pre-filled.
+	let intakeBanner = $state(false);
+
+	/**
+	 * Apply what a label photo read, after the preset chain above has run. A filament id has
+	 * already been chosen by then and only needs the lot; a catalogue entry is chosen here, and
+	 * is imported by the ordinary submit, never before the user confirms; a draft opens the
+	 * blank new-filament form with the values in it.
+	 */
+	function applyIntakePreset(p: IntakePreset) {
+		if (!presetFilamentId && p.external) {
+			choose({ source: 'external', ext: p.external });
+		} else if (!presetFilamentId && p.draft) {
+			const d = p.draft;
+			startCreate();
+			nf.vendorName = d.vendorName;
+			nf.name = d.name;
+			nf.material = d.material;
+			if (d.diameter) nf.diameter = d.diameter;
+			nf.nozzleTemp = d.nozzleTemp;
+			nf.bedTemp = d.bedTemp;
+			if (d.colorHex) nf.colors = [d.colorHex];
+			nf.articleNumber = d.articleNumber;
+			if (d.weight) netWeight = d.weight;
+			spoolWeight = d.spoolWeight;
+			lot = d.lot;
+			showAdvanced = true;
+			intakeBanner = true;
+			// Density is required and the material is not typed here, so the cards' own
+			// material-to-density step never runs. Fill the blanks from the known specs once
+			// they arrive; anything the photo or the user has already put in is left alone.
+			void loadMaterials()
+				.then(({ specs }) => {
+					const spec = specs[d.material.trim().toLowerCase()];
+					// Only the form this preset opened: one opened later (after a close and reopen
+					// while the specs loaded) must not get this photo's values.
+					if (!spec || !creating || !open || presetIntake !== p) return;
+					if (!nf.density) nf.density = String(spec.density);
+					if (!nf.nozzleTemp && spec.nozzle != null) nf.nozzleTemp = String(spec.nozzle);
+					if (!nf.bedTemp && spec.bed != null) nf.bedTemp = String(spec.bed);
+				})
+				.catch(() => {});
+		}
+		if (p.lot && step === 2) lot = p.lot;
+	}
 
 	// Focus the search box whenever the search step is showing, so you can open
 	// the modal and start typing immediately. Re-runs when the input remounts
@@ -334,6 +389,7 @@
 	}
 
 	function startCreate() {
+		intakeBanner = false;
 		creating = true;
 		cloneSource = null;
 		chosen = null;
@@ -386,6 +442,7 @@
 		chosen = null;
 		creating = false;
 		cloneSource = null;
+		intakeBanner = false;
 		clearValidation();
 		submitting = false;
 	}
@@ -658,6 +715,9 @@
 					     new-record blocks are accent-bordered cards; the spool block is the
 					     plain remainder of the form, since a spool is always being created and
 					     needs no such emphasis. -->
+					{#if creating && intakeBanner}
+						<p class="intake-banner" role="status">{ng.intake_prefilled_banner()}</p>
+					{/if}
 					{#if creating}
 						<NewFilamentCards
 							bind:draft={nf}
@@ -1436,5 +1496,16 @@
 			padding: 3px 14px;
 			font-size: 12.5px;
 		}
+	}
+	/* Spoolman NG fork addition (#418). */
+	.intake-banner {
+		margin: 0 0 12px;
+		padding: 8px 10px;
+		font-size: 12.5px;
+		line-height: 1.5;
+		color: var(--text);
+		background: var(--accent-wash);
+		border-left: 2px solid var(--accent);
+		border-radius: var(--radius-sm);
 	}
 </style>

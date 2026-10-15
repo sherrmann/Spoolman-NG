@@ -775,6 +775,8 @@
       "tab": "Import / Export",
       "export_title": "Export dat",
       "export_help": "Stáhněte své výrobce, filamenty nebo cívky jako CSV nebo JSON. Data výrobců a filamentů jsou součástí exportu cívek.",
+      "simplyprint_button": "Stáhnout pro SimplyPrint",
+      "simplyprint_hint": "Aktivní cívky ve formátu, který importuje Filament Manager v SimplyPrint.",
       "import_title": "Import dat",
       "import_help": "Nahrajte soubor CSV nebo JSON ve stejné podobě jako export. Celý soubor se použije jako jedna transakce „všechno, nebo nic“; nejprve si výsledek prohlédněte pomocí zkušebního běhu.",
       "report_title": "Přehled zásob",
@@ -1351,11 +1353,34 @@
     "thinking": "Přemýšlím…",
     "empty": "Zeptejte se mě na vaše cívky a filament — například „kolik mi zbývá černého PETG?“ nebo „co bych měl doobjednat?“.",
     "viewInList": "Zobrazit v seznamu cívek",
+    "stop": "Zastavit",
+    "clear": "Vymazat chat",
+    "more": "+{{count}} dalších",
+    "starters": {
+      "stock": "Kolik filamentu mi zbývá?",
+      "low": "Čeho mi dochází?",
+      "orders": "Co je objednáno?",
+      "usage": "Jaká byla moje spotřeba tento měsíc?"
+    },
+    "cards": {
+      "spools_one": "{{count}} cívka",
+      "spools_few": "{{count}} cívky",
+      "spools_other": "{{count}} cívek",
+      "filaments_one": "{{count}} filament",
+      "filaments_few": "{{count}} filamenty",
+      "filaments_other": "{{count}} filamentů",
+      "outstanding": "{{count}} nedoručeno",
+      "arrived": "Doručeno",
+      "match": "Shoda {{percent}} %",
+      "low_stock": "Nízký stav",
+      "on_order": "Objednáno"
+    },
     "confirm": {
       "confirm": "Potvrdit",
       "cancel": "Zrušit",
       "confirmed": "Potvrzeno",
       "cancelled": "Zrušeno",
+      "unknown": "Vaše odpověď na tuto změnu byla odeslána, ale její výsledek nedorazil. Než se zeptáte znovu, zkontrolujte položku.",
       "destructive": "Nelze vrátit zpět",
       "not_set": "nenastaveno",
       "status_open": "Otevřeno",
@@ -1398,6 +1423,14 @@
     "back": "Zpět",
     "photo_discarded": "Fotografie byla analyzována v paměti a není uložena.",
     "prefilled_banner": "Předvyplněno z fotografie štítku - před uložením zkontrolujte hodnoty.",
+    "title": "Scan-to-Spool",
+    "choices_label": "Přidat jako",
+    "errors": {
+      "disabled": "Příjem z fotografie je na tomto serveru vypnutý.",
+      "too_large": "Fotografie je příliš velká na odeslání. Zkuste menší.",
+      "bad_image": "Soubor nelze přečíst jako fotografii. Použijte obrázek JPEG, PNG nebo WebP.",
+      "failed": "Štítek se nepodařilo přečíst. Zkuste to znovu, nebo přidejte cívku ručně."
+    },
     "fields": {
       "vendor": "Výrobce",
       "name": "Název",

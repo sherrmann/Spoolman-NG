@@ -71,6 +71,11 @@ export function nlSearchEnabled(signal?: AbortSignal): Promise<boolean> {
 	return flag('ai_feature_nl_search', signal);
 }
 
+/** Whether Scan-to-Spool photo intake is switched on (#418). */
+export function scanToSpoolEnabled(signal?: AbortSignal): Promise<boolean> {
+	return flag('ai_feature_scan_to_spool', signal);
+}
+
 export interface AiStatus {
 	/** An endpoint and a model are both configured. Without this, /ai/chat answers 409. */
 	configured: boolean;

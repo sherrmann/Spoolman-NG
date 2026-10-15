@@ -65,7 +65,7 @@ Flashing an OS from the Raspberry Pi Imager **3D printing** menu? Here is how ea
 | OctoKlipperPi | OctoPrint → Klipper | ✅ | [OctoPrint-Spoolman plugin](https://github.com/mdziekon/octoprint-spoolman) |
 | Mainsail OS | Klipper/Moonraker | ✅ first-class | Moonraker [`[spoolman]`](https://moonraker.readthedocs.io/en/latest/configuration/#spoolman) + Mainsail/Fluidd/KlipperScreen panels |
 | PrintWatch OS | OctoPrint | ✅ | [OctoPrint-Spoolman plugin](https://github.com/mdziekon/octoprint-spoolman) (PrintWatch adds failure detection only) |
-| SimplyPrint | Cloud (OctoPrint/Bambu) | ⚠️ one-way import | Export → SimplyPrint Filament Manager (see #312) |
+| SimplyPrint | Cloud (OctoPrint/Bambu) | ⚠️ one-way import | [Export file](docs/simplyprint.md) for SimplyPrint's Filament Manager: a one-off copy of active spools, no live sync (see #312) |
 | DuetPi | RepRapFirmware/DWC | ❌ none | Proposed DWC plugin (see #313) |
 | Repetier-Server | Repetier | ❌ none | Has its own filament manager (see #314) |
 | 3DPrinterOS | Cloud (commercial) | ❌ out of scope | Closed ecosystem |

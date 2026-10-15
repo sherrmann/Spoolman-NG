@@ -788,6 +788,8 @@
       "tab": "Import / eksport",
       "export_title": "Eksporter data",
       "export_help": "Last ned leverandørene, filamentene eller spolene dine som CSV eller JSON. Leverandør- og filamentdata følger med spolene.",
+      "simplyprint_button": "Last ned for SimplyPrint",
+      "simplyprint_hint": "Aktive spoler i formatet som SimplyPrints Filament Manager importerer.",
       "import_title": "Importer data",
       "import_help": "Last opp en CSV- eller JSON-fil med samme oppbygning som en eksport. Hele filen behandles som én alt-eller-ingenting-transaksjon; bruk en prøvekjøring først for å forhåndsvise resultatet.",
       "report_title": "Lagerrapport",
@@ -1333,11 +1335,32 @@
     "thinking": "Tenker…",
     "empty": "Spør meg om spolene og filamentet ditt — for eksempel «hvor mye svart PETG har jeg igjen?» eller «hva bør jeg etterbestille?».",
     "viewInList": "Vis i spolelisten",
+    "stop": "Stopp",
+    "clear": "Tøm chat",
+    "more": "+{{count}} til",
+    "starters": {
+      "stock": "Hvor mye filament har jeg igjen?",
+      "low": "Hva er i ferd med å gå tomt?",
+      "orders": "Hva er på bestilling?",
+      "usage": "Hvor mye har jeg brukt denne måneden?"
+    },
+    "cards": {
+      "spools_one": "{{count}} spole",
+      "spools_other": "{{count}} spoler",
+      "filaments_one": "{{count}} filament",
+      "filaments_other": "{{count}} filamenter",
+      "outstanding": "{{count}} utestående",
+      "arrived": "Ankommet",
+      "match": "{{percent}} % treff",
+      "low_stock": "Lavt lager",
+      "on_order": "På bestilling"
+    },
     "confirm": {
       "confirm": "Bekreft",
       "cancel": "Avbryt",
       "confirmed": "Bekreftet",
       "cancelled": "Avbrutt",
+      "unknown": "Svaret ditt på denne endringen ble sendt, men resultatet kom aldri frem. Sjekk elementet før du spør igjen.",
       "destructive": "Kan ikke angres",
       "not_set": "ikke angitt",
       "status_open": "Åpen",
@@ -1380,6 +1403,14 @@
     "back": "Tilbake",
     "photo_discarded": "Bildet ble analysert i minnet og lagres ikke.",
     "prefilled_banner": "Forhåndsutfylt fra et etikettbilde - se over verdiene før du lagrer.",
+    "title": "Scan-to-Spool",
+    "choices_label": "Legg til som",
+    "errors": {
+      "disabled": "Fotoregistrering er slått av på denne serveren.",
+      "too_large": "Bildet er for stort til å sendes. Prøv et mindre.",
+      "bad_image": "Filen kunne ikke leses som et bilde. Bruk et JPEG-, PNG- eller WebP-bilde.",
+      "failed": "Etiketten kunne ikke leses. Prøv igjen, eller legg til spolen manuelt."
+    },
     "fields": {
       "vendor": "Leverandør",
       "name": "Navn",

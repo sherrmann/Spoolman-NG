@@ -742,6 +742,8 @@
       "tab": "Import / eksport",
       "export_title": "Ekspordi andmed",
       "export_help": "Laadi oma tootjad, filamendid või poolid alla CSV- või JSON-failina. Tootja- ja filamendiandmed sisalduvad poolides.",
+      "simplyprint_button": "Laadi alla SimplyPrinti jaoks",
+      "simplyprint_hint": "Aktiivsed poolid vormingus, mida SimplyPrinti Filament Manager impordib.",
       "import_title": "Impordi andmed",
       "import_help": "Laadi üles CSV- või JSON-fail, mis on samasuguse ülesehitusega nagu eksport. Kogu fail rakendatakse ühe kõik-või-mitte-midagi tehinguna; kasuta kõigepealt proovikäivitust, et tulemust eelvaadata.",
       "report_title": "Laoseisu aruanne",
@@ -1321,11 +1323,32 @@
     "thinking": "Mõtlemine…",
     "empty": "Küsi minult oma poolide ja filamendi kohta — näiteks \"kui palju musta PETG-d mul veel alles on?\" või \"mida peaksin juurde tellima?\".",
     "viewInList": "Vaata poolide loendis",
+    "stop": "Peata",
+    "clear": "Tühjenda vestlus",
+    "more": "+{{count}} veel",
+    "starters": {
+      "stock": "Kui palju filamenti mul veel alles on?",
+      "low": "Mis on otsa lõppemas?",
+      "orders": "Mis on tellimisel?",
+      "usage": "Kui palju ma sel kuul kasutasin?"
+    },
+    "cards": {
+      "spools_one": "{{count}} pool",
+      "spools_other": "{{count}} pooli",
+      "filaments_one": "{{count}} filament",
+      "filaments_other": "{{count}} filamenti",
+      "outstanding": "{{count}} ootel",
+      "arrived": "Saabunud",
+      "match": "Vastavus {{percent}}%",
+      "low_stock": "Madal varu",
+      "on_order": "Tellimisel"
+    },
     "confirm": {
       "confirm": "Kinnita",
       "cancel": "Tühista",
       "confirmed": "Kinnitatud",
       "cancelled": "Tühistatud",
+      "unknown": "Sinu vastus sellele muudatusele saadeti, kuid selle tulemust ei saabunud. Kontrolli kirjet enne uuesti küsimist.",
       "destructive": "Ei saa tagasi võtta",
       "not_set": "määramata",
       "status_open": "Avatud",
@@ -1368,6 +1391,14 @@
     "back": "Tagasi",
     "photo_discarded": "Fotot analüüsiti mälus ja seda ei salvestata.",
     "prefilled_banner": "Eeltäidetud sildifoto põhjal - vaata väärtused enne salvestamist üle.",
+    "title": "Scan-to-Spool",
+    "choices_label": "Lisa kui",
+    "errors": {
+      "disabled": "Fotolt sisestamine on selles serveris välja lülitatud.",
+      "too_large": "See foto on saatmiseks liiga suur. Proovi väiksemat.",
+      "bad_image": "Seda faili ei õnnestunud fotona lugeda. Kasuta JPEG-, PNG- või WebP-pilti.",
+      "failed": "Silti ei õnnestunud lugeda. Proovi uuesti või lisa pool käsitsi."
+    },
     "fields": {
       "vendor": "Tootja",
       "name": "Nimi",

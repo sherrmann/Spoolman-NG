@@ -118,7 +118,9 @@ reason shown inline.
 Turn on **Scan-to-Spool** under Settings → AI (it needs a vision-capable model —
 `qwen2.5vl:7b`, `llama3.2-vision`, `gpt-4o-mini`, Claude, ... — set as the vision or
 chat model). The scan dialog on the Spools page then gains a **Photo** tab next to
-QR and barcode scanning.
+QR and barcode scanning; in the new interface, the QR scanner gains a **Photo** button
+instead, and the choice you make at the end opens the usual **Add spools** dialog
+(#418).
 
 For a local setup, **`qwen2.5vl:7b` is the one to use**: measured on real label photos it
 read every one, and it was the only local model that never put a wrong value in the
@@ -202,6 +204,23 @@ first place — it looks them up in the SpoolmanDB catalog or asks you.
 The assistant replies in the interface language and never uses emoji. Each turn sends the
 current conversation and a short note of which page you are on to the configured endpoint;
 as always, with a local endpoint nothing leaves your network.
+
+In the new interface (#381) the answer appears as the model writes it, and **Stop** ends a
+reply early, keeping what was already written. What the assistant looked up is shown as a
+small card under the step that found it: spools and filaments with their colour and the
+amount left, linked to their page, and orders, locations, vendors and catalogue matches,
+up to five rows with a count of the rest; usage statistics appear as bars. The cards show
+only what the lookup returned, so a number on a card is never one the model made up. On an
+empty chat, a few starter questions are offered.
+
+The conversation is kept in this browser, so it is still there after a reload or when the
+drawer is reopened, until you press **Clear chat** or log out. A change that was waiting for
+**Confirm** when the page closed comes back cancelled, and **Undo** buttons do not come back:
+an undo puts the earlier values back, which is only safe straight after the change. On a
+shared computer without accounts, use **Clear chat** when you are done.
+
+Replies stream from any OpenAI-compatible endpoint. One that does not support streaming, or
+refuses it for a model, is detected on the first request and asked without it from then on.
 
 ## Natural-language search
 

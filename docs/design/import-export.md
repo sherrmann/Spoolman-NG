@@ -121,3 +121,11 @@ Each with the answer this design assumes if nobody objects.
    since an export is most often a backup. A checkbox to leave them out would be one line.
 3. **PrusaSlicer 3MF files in the matcher?** Default: not now. The classic client supports
    Bambu/Orca only, and so will the port; the error message says so.
+
+## 4. SimplyPrint export (#312)
+
+`GET /export/simplyprint` is a fourth export, separate from the three above: a JSON array of
+flat rows in the format SimplyPrint's Filament Manager imports, for active spools only. The
+mapping lives in `spoolman/export_simplyprint.py` as a pure function over the API's `Spool`, so
+`remaining_weight` is the API's own figure. It is a download, not a round trip, and the import
+endpoints do not read it. The user-facing description is in [`../simplyprint.md`](../simplyprint.md).

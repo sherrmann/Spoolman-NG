@@ -4,6 +4,8 @@
 // +page.ts load. What remains here is the transient add-spools modal, which has
 // no place in the address bar.
 
+import type { IntakePreset } from '$lib/ng/spoolIntake';
+
 class UiState {
 	/** "Add spools" modal. `addModalFilamentId` pre-seeds it with a filament. */
 	addModalOpen = $state(false);
@@ -15,15 +17,23 @@ class UiState {
 	// (#97b), and retyping thirteen digits off a toast is the friction that flow exists to
 	// remove.
 	addModalArticleNumber = $state<string | null>(null);
+	// Spoolman NG fork addition: what a label photo read (#418) -- a lot number, a SpoolmanDB
+	// entry to open with chosen, or a draft for a blank new-filament form.
+	addModalIntake = $state<IntakePreset | null>(null);
 
 	/** QR-code scanner modal (camera). */
 	scannerOpen = $state(false);
 
-	/** Open the Add-spools modal, optionally pre-seeded with a filament. */
-	openAddModal(filamentId?: string) {
+	/**
+	 * Open the Add-spools modal, optionally pre-seeded with a filament. `intake` is the
+	 * Spoolman NG fork addition (#418): what a label photo read, which rides along with
+	 * `filamentId` (a lot number) or stands alone (a catalogue entry, or a new-filament draft).
+	 */
+	openAddModal(filamentId?: string, intake: IntakePreset | null = null) {
 		this.addModalFilamentId = filamentId ?? null;
 		this.addModalDuplicateId = null;
 		this.addModalArticleNumber = null;
+		this.addModalIntake = intake;
 		this.addModalOpen = true;
 	}
 	/** Spoolman NG fork addition: open on a new filament that remembers a scanned barcode. */
@@ -31,6 +41,7 @@ class UiState {
 		this.addModalFilamentId = null;
 		this.addModalDuplicateId = null;
 		this.addModalArticleNumber = articleNumber;
+		this.addModalIntake = null;
 		this.addModalOpen = true;
 	}
 	/**
@@ -42,6 +53,7 @@ class UiState {
 		this.addModalFilamentId = null;
 		this.addModalDuplicateId = filamentId;
 		this.addModalArticleNumber = null;
+		this.addModalIntake = null;
 		this.addModalOpen = true;
 	}
 	closeAddModal() {
@@ -49,6 +61,7 @@ class UiState {
 		this.addModalFilamentId = null;
 		this.addModalDuplicateId = null;
 		this.addModalArticleNumber = null;
+		this.addModalIntake = null;
 	}
 
 	openScanner() {

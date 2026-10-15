@@ -118,6 +118,9 @@ const KEYS = [
 	// something it has no counterpart for -- including the warning that a browser NDEF write
 	// produces a tag the real TigerTag app will not recognise.
 	{ prefix: 'nfc.' },
+	// Scan-to-Spool photo intake (#418): the Photo button's dialog and the banner on the form it
+	// pre-fills. Upstream's client has no photo flow, so everything under here is fork-only.
+	{ prefix: 'intake.' },
 	'buttons.save',
 	'buttons.cancel',
 	'buttons.delete',
@@ -418,6 +421,8 @@ const KEYS = [
 	'settings.import_export.tab',
 	'settings.import_export.export_title',
 	'settings.import_export.export_help',
+	'settings.import_export.simplyprint_button',
+	'settings.import_export.simplyprint_hint',
 	'settings.import_export.import_title',
 	'settings.import_export.import_help',
 	'settings.import_export.report_title',

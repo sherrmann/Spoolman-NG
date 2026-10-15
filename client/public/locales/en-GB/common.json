@@ -763,6 +763,8 @@
       "tab": "Import / Export",
       "export_title": "Export data",
       "export_help": "Download your vendors, filaments or spools as CSV or JSON. Vendor and filament data is included with spools.",
+      "simplyprint_button": "Download for SimplyPrint",
+      "simplyprint_hint": "Active spools in the format SimplyPrint's Filament Manager imports.",
       "import_title": "Import data",
       "import_help": "Upload a CSV or JSON file in the same shape as an export. The whole file is applied as one all-or-nothing transaction; use a dry run first to preview the result.",
       "report_title": "Inventory report",
@@ -1319,11 +1321,32 @@
     "thinking": "Thinking…",
     "empty": "Ask me about your spools and filament — for example \"how much black PETG do I have left?\" or \"what should I reorder?\".",
     "viewInList": "View in Spools list",
+    "stop": "Stop",
+    "clear": "Clear chat",
+    "more": "+{{count}} more",
+    "starters": {
+      "stock": "How much filament do I have left?",
+      "low": "What is running low?",
+      "orders": "What is on order?",
+      "usage": "How much did I use this month?"
+    },
+    "cards": {
+      "spools_one": "{{count}} spool",
+      "spools_other": "{{count}} spools",
+      "filaments_one": "{{count}} filament",
+      "filaments_other": "{{count}} filaments",
+      "outstanding": "{{count}} outstanding",
+      "arrived": "Arrived",
+      "match": "{{percent}}% match",
+      "low_stock": "Low stock",
+      "on_order": "On order"
+    },
     "confirm": {
       "confirm": "Confirm",
       "cancel": "Cancel",
       "confirmed": "Confirmed",
       "cancelled": "Cancelled",
+      "unknown": "Your answer to this change was sent, but its outcome never arrived. Check the item before asking again.",
       "destructive": "Cannot be undone",
       "not_set": "not set",
       "status_open": "Open",
@@ -1366,6 +1389,14 @@
     "back": "Back",
     "photo_discarded": "The photo was analysed in memory and is not stored.",
     "prefilled_banner": "Prefilled from a label photo - review the values before saving.",
+    "title": "Scan to Spool",
+    "choices_label": "Add it as",
+    "errors": {
+      "disabled": "Photo intake is switched off on this server.",
+      "too_large": "That photo is too large to send. Try a smaller one.",
+      "bad_image": "That file could not be read as a photo. Use a JPEG, PNG or WebP image.",
+      "failed": "The label could not be read. Try again, or add the spool by hand."
+    },
     "fields": {
       "vendor": "Vendor",
       "name": "Name",
