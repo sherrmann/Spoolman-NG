@@ -3,6 +3,7 @@ import { parseStringSettingValue, useGetSetting } from "../../utils/querySetting
 import { useSavedState } from "../../utils/saveload";
 import { useGetLocationsByIds } from "../locations/functions";
 import { ILocation } from "../locations/model";
+import { linkRoot } from "../../utils/url";
 import { QRCodePrintSettings } from "./printing";
 import QRCodePrintingDialog from "./qrCodePrintingDialog";
 
@@ -17,7 +18,7 @@ const LocationQRCodePrintingDialog = ({ locationIds }: { locationIds: number[] }
   const t = useTranslate();
   const baseUrlSetting = useGetSetting("base_url");
   const baseUrl = parseStringSettingValue(baseUrlSetting.data?.value);
-  const baseUrlRoot = baseUrl !== "" ? baseUrl : window.location.origin;
+  const baseUrlRoot = linkRoot(baseUrl);
   const [useHTTPUrl, setUseHTTPUrl] = useSavedState("print-useHTTPUrl", false);
   const [labelSettings, setLabelSettings] = useSavedState<QRCodePrintSettings>("locationPrintSettings", {
     printSettings: { id: "location-default", name: t("locations.location") },

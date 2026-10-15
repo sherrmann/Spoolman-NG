@@ -1,5 +1,6 @@
 import QRCode from 'qrcode';
 import type { QrElement, LabelKind } from './types';
+import { linkRoot } from '$lib/ng/linkRoot';
 
 // QR content + geometry. The QR encodes a link back to the label's subject — a
 // spool for spool labels, a filament for filament labels. The first two forms are
@@ -42,8 +43,7 @@ export function defaultUrlTemplate(ctx: QrContext): string {
 }
 
 function webRoot(ctx: QrContext): string {
-	const root = ctx.baseUrl || (typeof window !== 'undefined' ? window.location.origin : '');
-	return root.replace(/\/$/, '');
+	return linkRoot(ctx.baseUrl);
 }
 // Both helpers are switches rather than the two-way tests they replace: LabelKind has
 // three members now, and `kind === 'filament' ? x : y` quietly hands a location label the
