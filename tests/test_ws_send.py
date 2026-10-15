@@ -116,6 +116,24 @@ async def test_failing_write_is_swallowed_and_drops_the_subscriber():
     assert m.has_subscribers(("spool", "5")) is False  # and it does not fail again next time
 
 
+async def test_disconnect_after_failed_write_does_not_raise():
+    """The endpoint's WebSocketDisconnect handler removes a socket send() already dropped."""
+    m = WebsocketManager()
+    failing = _FakeWS(fail=True)
+    live = _FakeWS()
+    m.connect(("spool", "5"), failing)
+    m.connect(("spool", "5"), live)
+
+    await m.send(("spool", "5"), _FakeEvent())  # drops `failing` from the tree
+
+    m.disconnect(("spool", "5"), failing)  # old code: KeyError from set.remove
+    m.disconnect(("spool", "9"), failing)  # a path that was never subscribed is also a no-op
+
+    assert m.has_subscribers(("spool", "5")) is True  # the live sibling is untouched
+    m.disconnect(("spool", "5"), live)
+    assert m.has_subscribers(("spool", "5")) is False
+
+
 async def test_failing_write_does_not_starve_deeper_subscribers():
     """The descent into child nodes happens after the loop, so an escaping error skipped it."""
     m = WebsocketManager()

@@ -32,6 +32,7 @@
 	import { encodeTigerTag, mapSpoolToTigerTag } from '$lib/ng/tigertagCodec';
 	import { nfcSupported, NfcError } from '$lib/utils/nfc';
 	import type { Spool, Filament } from '$lib/types';
+	import { scanner } from '$lib/stores/scanner.svelte';
 
 	interface Props {
 		spool: Spool;
@@ -39,6 +40,11 @@
 		onclose: () => void;
 	}
 	let { spool, filament, onclose }: Props = $props();
+
+	// The phone's own NFC also reads the tag being written here; with auto-navigate on, the
+	// layout would treat that as a scan and open whatever holds the tag mid-write. Hold it off
+	// for as long as this dialog is mounted, as upstream's AddTagModal does.
+	$effect(() => scanner.suppress());
 
 	type Mode = 'server' | 'browser';
 

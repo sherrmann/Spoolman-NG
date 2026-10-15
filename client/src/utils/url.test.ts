@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { getBasePath, isHaIngress, safeHttpUrl } from "./url";
+import { afterEach, describe, expect, it } from "vitest";
+import { getBasePath, isHaIngress, linkRoot, safeHttpUrl } from "./url";
 
 // Regression tests for the sub-path service-worker / deep-link fixes (PRs #26/#29):
 // the SW URL, manifest scope and print links are all built by prefixing getBasePath().
@@ -97,5 +97,42 @@ describe("safeHttpUrl", () => {
 
   it("passes through undefined unchanged", () => {
     expect(safeHttpUrl(undefined)).toBeUndefined();
+  });
+});
+
+// Link-form QR codes are scanned from paper, possibly long after printing. Oracle: the issue
+// contract — a set Base URL wins verbatim; otherwise origin plus base path, except under HA
+// ingress where the rotating session token must not be printed (bare origin).
+describe("linkRoot", () => {
+  afterEach(() => {
+    window.SPOOLMAN_BASE_PATH = "";
+    window.SPOOLMAN_HA_INGRESS = undefined;
+  });
+
+  it("uses a non-empty Base URL exactly as given", () => {
+    window.SPOOLMAN_BASE_PATH = "/spoolman";
+    expect(linkRoot("https://spools.example.com/custom/")).toBe("https://spools.example.com/custom/");
+  });
+
+  it("falls back to the bare origin when no base path is set", () => {
+    window.SPOOLMAN_BASE_PATH = "";
+    expect(linkRoot("")).toBe(window.location.origin);
+  });
+
+  it("appends the base path to the origin under a sub-path deploy", () => {
+    window.SPOOLMAN_BASE_PATH = "/spoolman";
+    expect(linkRoot("")).toBe(`${window.location.origin}/spoolman`);
+  });
+
+  it("keeps the bare origin under HA ingress, ignoring the session-token base path", () => {
+    window.SPOOLMAN_BASE_PATH = "/api/hassio_ingress/abc123";
+    window.SPOOLMAN_HA_INGRESS = true;
+    expect(linkRoot("")).toBe(window.location.origin);
+  });
+
+  it("still prefers a Base URL under HA ingress", () => {
+    window.SPOOLMAN_BASE_PATH = "/api/hassio_ingress/abc123";
+    window.SPOOLMAN_HA_INGRESS = true;
+    expect(linkRoot("https://spools.example.com")).toBe("https://spools.example.com");
   });
 });

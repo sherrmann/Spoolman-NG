@@ -241,3 +241,26 @@ test("Select works on cards, with the checkbox outside the link", async ({
   await expect(bar(page)).toContainText("1 selected");
   await expect(page.locator("a.card input")).toHaveCount(0);
 });
+
+test("Show lot numbers puts each spool's lot number on its card", async ({
+  page,
+  request,
+}) => {
+  const location = unique("GalleryLots");
+  const filament = await seedFilament(request, "GalleryLot");
+  const lot = unique("LOT");
+  const res = await request.post("/api/v1/spool", {
+    data: { filament_id: filament.id, location, lot_nr: lot, used_weight: 10 },
+  });
+  expect(res.ok()).toBeTruthy();
+  await setStoredMode(page, "gallery");
+
+  // Upstream's toggle (the `lots` URL parameter) reaches its own rows; the fork's cards have to
+  // honour it too, or the Filter menu offers a switch that does nothing in this view.
+  await openAt(page, location);
+  await expect(page.locator(".ng-card")).toHaveCount(1);
+  await expect(page.locator(".ng-card")).not.toContainText(lot);
+
+  await openAt(page, location, "&lots=1");
+  await expect(page.locator(".ng-card")).toContainText(lot);
+});

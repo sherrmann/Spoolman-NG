@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { buildScanPayload } from "../utils/scan";
 import { parseStringSettingValue, useGetSetting } from "../utils/querySettings";
 import { useSavedState } from "../utils/saveload";
+import { linkRoot } from "../utils/url";
 import {
   SWATCH_STYLES,
   SwatchFilamentFields,
@@ -35,7 +36,7 @@ const SwatchDownloadModal = ({ filament, vendorName, onClose }: SwatchDownloadMo
   const t = useTranslate();
   const baseUrlSetting = useGetSetting("base_url");
   const baseUrl = parseStringSettingValue(baseUrlSetting.data?.value);
-  const baseUrlRoot = baseUrl !== "" ? baseUrl : window.location.origin;
+  const baseUrlRoot = linkRoot(baseUrl);
   const [useHTTPUrl, setUseHTTPUrl] = useSavedState("swatch-useHTTPUrl", false);
 
   // The server-wide default style (settings page); the select below can

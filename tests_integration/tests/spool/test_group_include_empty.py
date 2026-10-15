@@ -245,8 +245,8 @@ def test_include_empty_applies_filament_extra_field_filters():
 
 
 def test_include_empty_rejected_for_other_group_by():
-    """Every other axis is keyed by a value read off the spools, so it has no empty groups."""
-    for group_by in ("vendor", "material", "location"):
+    """Every axis but filament and vendor is keyed by a value read off the spools, so it has no empty groups."""
+    for group_by in ("material", "location"):
         result = httpx.get(
             f"{URL}/api/v1/spool/group",
             params={"group_by": group_by, "include_empty": "true"},

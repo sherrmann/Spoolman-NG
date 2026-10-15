@@ -245,7 +245,7 @@ Spoolman instance.
 | Field | Description |
 |---|---|
 | `raw_data_b64` | Base64 of the raw tag memory. Required unless `id_product` is given; the tag format is auto-detected. |
-| `nfc_tag_uid` | Hex-encoded tag UID, used to match a spool bound by UID. |
+| `nfc_tag_uid` | Hex-encoded tag UID, used to match a spool bound by UID. It must be a whole number of bytes (an even number of hex digits): a UID with an odd number, usually from a reader that dropped a leading zero, is refused wherever it would create a binding, though it still matches one already stored. |
 | `id_product` | A TigerTag product id, as an alternative to sending raw data. |
 | `tag_type` | `tigertag` / `openprinttag` / `qidi`, or omit to auto-detect. |
 | `auto_create` | Create a spool if none matches (default `false`). |

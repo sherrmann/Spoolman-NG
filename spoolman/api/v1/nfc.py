@@ -17,6 +17,7 @@ from spoolman.database import vendor as vendor_db
 from spoolman.database.database import get_db_session
 from spoolman.database.models import Filament
 from spoolman.env import is_nfc_enabled
+from spoolman.exceptions import TagConflictError
 
 if TYPE_CHECKING:
     from spoolman.database.models import Spool
@@ -465,7 +466,7 @@ async def _create_spool_from_tigertag(  # noqa: C901, PLR0912, PLR0915
     db: AsyncSession,
     tag_data: "TigerTagData",
     nfc_tag_uid: str | None = None,
-) -> "Spool":
+) -> tuple["Spool", bool]:
     """Create a filament and spool from decoded TigerTag data.
 
     Resolution order for filament data:
@@ -474,7 +475,29 @@ async def _create_spool_from_tigertag(  # noqa: C901, PLR0912, PLR0915
     3. TigerTag product cache (by internal API id)
     4. Brand/material name resolution from cached lookup tables
     5. Fallback to raw tag data with generic name
+
+    Returns the spool now holding the tag and whether it was created here: if another spool
+    claimed the UID first, the new one is deleted again and that spool is returned instead.
+
+    Raises:
+        ValueError: If the UID is not a whole number of bytes. Nothing has been created.
+        TagConflictError: If the UID is held by a filament. The new spool has been deleted.
+
     """
+    from spoolman.database import tag as tag_db
+    from spoolman.tags import normalize_uid, require_whole_bytes
+
+    # Settled before anything is written, so a UID that cannot be bound is refused without
+    # leaving a spool behind. A UID that is not hex at all is skipped as before.
+    uid = None
+    if nfc_tag_uid:
+        try:
+            uid = normalize_uid(nfc_tag_uid)
+        except ValueError:
+            uid = None
+        if uid is not None:
+            require_whole_bytes(uid)
+
     external_id = f"tigertag_{tag_data.id_product}" if tag_data.id_product > 0 else None
 
     existing_filament = None
@@ -555,23 +578,15 @@ async def _create_spool_from_tigertag(  # noqa: C901, PLR0912, PLR0915
 
     db_spool = await spool_db.create(db=db, filament_id=filament_id)
 
-    if nfc_tag_uid:
-        from spoolman.database import tag as tag_db
-        from spoolman.exceptions import TagConflictError
-        from spoolman.tags import normalize_uid
+    if uid is not None:
+        # A filament or vendor created above stays if the spool is undone: catalogue entries,
+        # not stock, and the winning spool may well share them.
+        winner = await tag_db.link_new_spool(db=db, spool_id=db_spool.id, uid=uid, tag_format="tigertag")
+        if winner is not None:
+            return winner, False
+        logger.info("Bound new spool %d to TigerTag uid %s", db_spool.id, uid)
 
-        try:
-            uid = normalize_uid(nfc_tag_uid)
-        except ValueError:
-            uid = None
-        if uid is not None:
-            try:
-                await tag_db.link(db=db, spool_id=db_spool.id, uid=uid, tag_format="tigertag")
-                logger.info("Bound new spool %d to TigerTag uid %s", db_spool.id, uid)
-            except TagConflictError:
-                logger.warning("Could not bind new spool %d to uid %s: already claimed", db_spool.id, uid)
-
-    return db_spool
+    return db_spool, True
 
 
 @router.post(
@@ -630,12 +645,12 @@ async def _auto_create_refusal(db: AsyncSession, nfc_tag_uid: str | None) -> Nfc
                 "auto_create requires nfc_tag_uid: without the tag's UID the created spool could not be found again."
             ),
         )
-    from spoolman.tags import normalize_uid
+    from spoolman.tags import normalize_uid, require_whole_bytes
 
     try:
-        normalize_uid(nfc_tag_uid)
+        require_whole_bytes(normalize_uid(nfc_tag_uid))
     except ValueError as e:
-        # Not a UID any tag could be stored under, so the spool could not be bound to it either.
+        # Not a UID a new tag could be linked under, so the spool could not be bound to it either.
         return NfcLookupResponse(success=False, message=f"auto_create refused: {e}")
     refusal = await _filament_tag_refusal(db, nfc_tag_uid)
     if refusal is not None:
@@ -702,8 +717,9 @@ async def _lookup_tigertag(
         spool = await find_spool_by_tigertag(db, tag_data, uid_hex=nfc_tag_uid)
 
         if spool is None and auto_create:
-            spool = await _create_spool_from_tigertag(db, tag_data, nfc_tag_uid=nfc_tag_uid)
-            msg = f"Spool auto-created with ID {spool.id}."
+            spool, created = await _create_spool_from_tigertag(db, tag_data, nfc_tag_uid=nfc_tag_uid)
+            # Not created when another spool claimed the tag first; that one is the answer.
+            msg = f"Spool auto-created with ID {spool.id}." if created else "Spool found."
         elif spool is not None:
             msg = "Spool found."
         else:
@@ -738,6 +754,9 @@ async def _lookup_tigertag(
             tag_data=tag_response,
             message=msg,
         )
+    except TagConflictError as e:
+        # Something other than a spool holds the tag, a filament say; a spool would have been returned.
+        return NfcLookupResponse(success=False, tag_format="tigertag", message=f"auto_create refused: {e}")
     except Exception:
         logger.exception("Error in TigerTag lookup")
         return NfcLookupResponse(success=False, tag_format="tigertag", message="Failed to decode TigerTag data.")
@@ -784,8 +803,9 @@ async def _lookup_openprinttag(
         spool = await find_spool_by_openprinttag(db, tag_data)
 
         if spool is None and auto_create:
-            spool = await create_spool_from_openprinttag(db, tag_data)
-            msg = f"Spool auto-created with ID {spool.id}."
+            spool, created = await create_spool_from_openprinttag(db, tag_data)
+            # Not created when another spool claimed the tag first; that one is the answer.
+            msg = f"Spool auto-created with ID {spool.id}." if created else "Spool found."
         elif spool is not None:
             msg = "Spool found."
         else:
@@ -824,6 +844,9 @@ async def _lookup_openprinttag(
             openprinttag_data=opt_response,
             message=msg,
         )
+    except TagConflictError as e:
+        # Something other than a spool holds the tag, a filament say; a spool would have been returned.
+        return NfcLookupResponse(success=False, tag_format="openprinttag", message=f"auto_create refused: {e}")
     except Exception:
         logger.exception("Error in OpenPrintTag lookup")
         return NfcLookupResponse(
@@ -846,8 +869,9 @@ async def _lookup_qidi(
         spool = await find_spool_by_qidi_tag(db, tag_data, tag_uid_hex=nfc_tag_uid_hex)
 
         if spool is None and auto_create:
-            spool = await create_spool_from_qidi_tag(db, tag_data, tag_uid_hex=nfc_tag_uid_hex)
-            msg = f"Spool auto-created with ID {spool.id}."
+            spool, created = await create_spool_from_qidi_tag(db, tag_data, tag_uid_hex=nfc_tag_uid_hex)
+            # Not created when another spool claimed the tag first; that one is the answer.
+            msg = f"Spool auto-created with ID {spool.id}." if created else "Spool found."
         elif spool is not None:
             msg = "Spool found."
         else:
@@ -872,6 +896,9 @@ async def _lookup_qidi(
             qidi_data=qidi_response,
             message=msg,
         )
+    except TagConflictError as e:
+        # Something other than a spool holds the tag, a filament say; a spool would have been returned.
+        return NfcLookupResponse(success=False, tag_format="qidi", message=f"auto_create refused: {e}")
     except Exception:
         logger.exception("Error in Qidi tag lookup")
         return NfcLookupResponse(success=False, tag_format="qidi", message="Failed to decode Qidi tag data.")
@@ -1149,17 +1176,43 @@ async def nfc_create_from_tag(
 
     Supports both TigerTag and Qidi tag formats.
     """
-    refusal = await _filament_tag_refusal(db, request.nfc_tag_uid)
+    refusal = _odd_length_uid_refusal(request.nfc_tag_uid) or await _filament_tag_refusal(db, request.nfc_tag_uid)
     if refusal is not None:
         return NfcCreateFromTagResponse(success=False, message=f"Not created: {refusal}")
     try:
-        if request.tag_type == "qidi":
-            return await _create_from_qidi_tag(db, request)
-        return await _create_from_tigertag_tag(db, request)
-
+        # The same lock as auto-creating lookups: a double-tapped submit sends two of these at
+        # once, and both would pass the existing-spool check before either had linked the tag.
+        async with _AUTO_CREATE_LOCK:
+            if request.tag_type == "qidi":
+                return await _create_from_qidi_tag(db, request)
+            return await _create_from_tigertag_tag(db, request)
+    except TagConflictError as e:
+        # The tag was linked to a filament after the check above; the new spool is already gone.
+        return NfcCreateFromTagResponse(success=False, message=f"Not created: {e}")
     except Exception:
         logger.exception("Error creating spool from tag data")
         return NfcCreateFromTagResponse(success=False, message="Failed to create spool from tag data.")
+
+
+def _odd_length_uid_refusal(uid_hex: str | None) -> str | None:
+    """Say why a spool must not be created for a UID that is not whole bytes, or None.
+
+    The created spool could never be linked to it, so every retry would create another. A UID
+    that is not hex at all is left to the create helpers, which skip binding it as before.
+    """
+    if not uid_hex:
+        return None
+    from spoolman.tags import normalize_uid, require_whole_bytes
+
+    try:
+        uid = normalize_uid(uid_hex)
+    except ValueError:
+        return None
+    try:
+        require_whole_bytes(uid)
+    except ValueError as e:
+        return str(e)
+    return None
 
 
 async def _existing_spool_for_uid(db: AsyncSession, uid_hex: str | None) -> "Spool | None":
@@ -1212,12 +1265,12 @@ async def _create_from_tigertag_tag(
             message=f"Spool {existing.id} is already bound to this tag.",
         )
 
-    db_spool = await _create_spool_from_tigertag(db, tag_data, nfc_tag_uid=request.nfc_tag_uid)
+    db_spool, created = await _create_spool_from_tigertag(db, tag_data, nfc_tag_uid=request.nfc_tag_uid)
 
     return NfcCreateFromTagResponse(
         success=True,
         spool_id=db_spool.id,
-        message="Spool created successfully.",
+        message="Spool created successfully." if created else f"Spool {db_spool.id} is already bound to this tag.",
     )
 
 
@@ -1242,10 +1295,14 @@ async def _create_from_qidi_tag(
             message=f"Spool {existing.id} is already bound to this tag.",
         )
 
-    db_spool = await create_spool_from_qidi_tag(db, tag_data, tag_uid_hex=request.nfc_tag_uid)
+    db_spool, created = await create_spool_from_qidi_tag(db, tag_data, tag_uid_hex=request.nfc_tag_uid)
 
     return NfcCreateFromTagResponse(
         success=True,
         spool_id=db_spool.id,
-        message="Spool created from Qidi tag successfully.",
+        message=(
+            "Spool created from Qidi tag successfully."
+            if created
+            else f"Spool {db_spool.id} is already bound to this tag."
+        ),
     )

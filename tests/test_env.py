@@ -10,7 +10,9 @@ Oracle strategy (see TESTING_STRATEGY.md §0):
     there is no import-time caching to work around.
 """
 
+import os
 from collections.abc import Callable
+from pathlib import Path
 
 import pytest
 
@@ -250,3 +252,24 @@ def test_get_allowed_hosts_normalises_its_entries(monkeypatch: pytest.MonkeyPatc
     """Trim, lower-case, drop the trailing root dot, and keep each hostname only once."""
     monkeypatch.setenv("SPOOLMAN_ALLOWED_HOSTS", " spoolman.example.com , SPOOLS.example.com. ,,spoolman.example.com")
     assert env.get_allowed_hosts() == ["spoolman.example.com", "spools.example.com"]
+
+
+def test_can_write_to_data_dir_leaves_existing_files_alone(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """The write check must not touch a file of the user's, even one named like a probe file."""
+    monkeypatch.setenv("SPOOLMAN_DIR_DATA", str(tmp_path))
+    (tmp_path / "test.txt").write_text("mine")
+    assert env.can_write_to_data_dir() is True
+    assert [p.name for p in tmp_path.iterdir()] == ["test.txt"]
+    assert (tmp_path / "test.txt").read_text() == "mine"
+
+
+def test_can_write_to_data_dir_read_only(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """A directory the process cannot write to is reported as not writable."""
+    if os.name == "nt" or os.geteuid() == 0:
+        pytest.skip("directory permissions are not enforced here")
+    monkeypatch.setenv("SPOOLMAN_DIR_DATA", str(tmp_path))
+    tmp_path.chmod(0o500)
+    try:
+        assert env.can_write_to_data_dir() is False
+    finally:
+        tmp_path.chmod(0o700)

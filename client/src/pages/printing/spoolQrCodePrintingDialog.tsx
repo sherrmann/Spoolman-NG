@@ -10,6 +10,7 @@ import { useSavedState } from "../../utils/saveload";
 import { getSpoolEffectiveColor } from "../../utils/spoolColor";
 import { useGetSpoolsByIds } from "../spools/functions";
 import { ISpool } from "../spools/model";
+import { linkRoot } from "../../utils/url";
 import {
   SpoolQRCodePrintSettings,
   renderLabelContents,
@@ -35,7 +36,7 @@ const SpoolQRCodePrintingDialog = ({ spoolIds }: SpoolQRCodePrintingDialog) => {
   const t = useTranslate();
   const baseUrlSetting = useGetSetting("base_url");
   const baseUrl = parseStringSettingValue(baseUrlSetting.data?.value);
-  const baseUrlRoot = baseUrl !== "" ? baseUrl : window.location.origin;
+  const baseUrlRoot = linkRoot(baseUrl);
   const [messageApi, contextHolder] = message.useMessage();
   const [useHTTPUrl, setUseHTTPUrl] = useSavedState("print-useHTTPUrl", false);
   const { mutate: updateSpool } = useUpdate();

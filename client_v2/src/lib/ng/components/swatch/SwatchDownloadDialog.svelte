@@ -25,6 +25,7 @@
 		swatchInputFromFilament
 	} from '$lib/ng/swatch';
 	import { loadSwatchStyle } from '$lib/ng/swatchStyleSetting';
+	import { linkRoot } from '$lib/ng/linkRoot';
 	import { swatchStyleName } from '$lib/ng/swatchText';
 
 	let { filament, onclose }: { filament: Filament; onclose: () => void } = $props();
@@ -58,7 +59,7 @@
 		return () => ctrl.abort();
 	});
 
-	let root = $derived((settings.baseUrl || window.location.origin).replace(/\/+$/, ''));
+	let root = $derived(linkRoot(settings.baseUrl));
 	let payload = $derived(useUrl ? `${root}/filament/show/${filament.id}` : `WEB+SPOOLMAN:F-${filament.id}`);
 	let input = $derived(
 		swatchInputFromFilament(filament, {

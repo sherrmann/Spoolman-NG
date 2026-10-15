@@ -14,12 +14,15 @@
 	import { page } from '$app/stores';
 	import Menu from '@lucide/svelte/icons/menu';
 	import X from '@lucide/svelte/icons/x';
+	import SwatchBook from '@lucide/svelte/icons/swatch-book';
+	import Factory from '@lucide/svelte/icons/factory';
 	import * as m from '$lib/paraglide/messages';
 	import { ng } from '$lib/ng/i18n';
 	import { NAV_PAGES, isActivePath } from '$lib/ng/nav';
 	import LowStockBadge from '$lib/ng/components/LowStockBadge.svelte';
 	import CustomNavLinks from '$lib/ng/components/CustomNavLinks.svelte';
 	import AboutLinks from '$lib/ng/components/AboutLinks.svelte';
+	import { catalogHref, parseLibraryState } from '$lib/library/params';
 
 	const primary = NAV_PAGES.filter((p) => p.primary);
 	const secondary = NAV_PAGES.filter((p) => !p.primary);
@@ -30,6 +33,19 @@
 	let open = $state(false);
 	let moreButton: HTMLButtonElement;
 	let sheetEl = $state<HTMLDivElement>();
+
+	// The Library's filament and manufacturer lists. On a desktop they hang off the Library tab's
+	// menu, which the phone layout does not show, so the sheet offers them here.
+	const catalogs = [
+		{ view: 'filaments', href: catalogHref('filaments'), label: m['filament.filament'], icon: SwatchBook },
+		{
+			view: 'manufacturers',
+			href: catalogHref('manufacturers'),
+			label: m['search.section.vendors'],
+			icon: Factory
+		}
+	] as const;
+	let libraryView = $derived(isActive('/') ? parseLibraryState($page.url.searchParams).view : null);
 
 	// "More" reads as the current place while you are on one of the pages it holds.
 	let moreActive = $derived(secondary.some((p) => isActive(p.href)));
@@ -121,6 +137,24 @@
 			<h2>{ng.mobile_nav_more_pages()}</h2>
 			<button class="close" onclick={() => close()} aria-label={m['buttons.close']()}><X size={20} /></button>
 		</div>
+		<ul class="pages" aria-label={m['library.viewMenu.browse']()}>
+			<!-- eslint-disable svelte/no-navigation-without-resolve -- catalogHref() already resolves the base path. -->
+			{#each catalogs as item (item.view)}
+				{@const Icon = item.icon}
+				<li>
+					<a
+						href={item.href}
+						class="page-link"
+						class:active={libraryView === item.view}
+						aria-current={libraryView === item.view ? 'page' : undefined}
+					>
+						<Icon size={20} />
+						<span>{item.label()}</span>
+					</a>
+				</li>
+			{/each}
+			<!-- eslint-enable svelte/no-navigation-without-resolve -->
+		</ul>
 		<ul class="pages">
 			{#each secondary as item (item.href)}
 				{@const Icon = item.icon}
@@ -280,6 +314,12 @@
 			grid-template-columns: repeat(2, minmax(0, 1fr));
 			gap: 8px;
 		}
+		/* The browse pair (filaments, manufacturers) sits apart from the page list below it. */
+		.pages + .pages {
+			margin-top: 8px;
+			padding-top: 8px;
+			border-top: 1px solid var(--border);
+		}
 		.page-link {
 			display: flex;
 			align-items: center;
@@ -293,11 +333,18 @@
 			font-size: 14px;
 			text-decoration: none;
 		}
+		/* Two lines before an ellipsis, as the bar's labels: on a 320px phone a cell leaves about
+		   86px for text, which cuts "Manufacturers" and many translated page names short. */
 		.page-link span {
 			min-width: 0;
+			display: -webkit-box;
+			-webkit-box-orient: vertical;
+			-webkit-line-clamp: 2;
+			line-clamp: 2;
 			overflow: hidden;
-			text-overflow: ellipsis;
-			white-space: nowrap;
+			line-height: 1.2;
+			overflow-wrap: break-word;
+			hyphens: auto;
 		}
 		.page-link.active {
 			border-color: var(--accent);

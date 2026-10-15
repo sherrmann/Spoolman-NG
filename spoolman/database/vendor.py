@@ -143,8 +143,9 @@ async def find_id_by_exact_name(db: AsyncSession, name: str) -> int | None:
     """Return the id of the vendor whose name equals ``name``, ignoring case and surrounding whitespace.
 
     ``find(name=...)`` is a comma-split substring search, so it cannot answer "is there a vendor
-    called X": "Poly" would hit "Polymaker". Compared in Python rather than with SQL ``lower()``,
-    which is ASCII-only on SQLite. The vendor table is small. The oldest vendor wins if several match.
+    called X": "Poly" would hit "Polymaker". Compared in Python with ``casefold()``, so every
+    backend answers alike whatever its collation. The vendor table is small. The oldest vendor wins
+    if several match.
     """
     wanted = name.strip().casefold()
     rows = await db.execute(select(models.Vendor.id, models.Vendor.name).order_by(models.Vendor.id))

@@ -68,6 +68,15 @@ async def test_invalid_integer_range_returns_400(client: AsyncClient):
     assert resp.status_code == 400, resp.text
 
 
+@pytest.mark.parametrize(("field_type", "value"), [("integer", True), ("integer", False), ("integer_range", [True, 5])])
+async def test_boolean_value_rejected_for_integer_fields(client: AsyncClient, field_type: str, value: object):
+    # bool is a subclass of int in Python; JSON true/false must not be stored as an integer (upstream #1213).
+    await _define(client, "count", field_type)
+    body = {"density": 1.24, "diameter": 1.75, "name": "Bad", "extra": {"count": json.dumps(value)}}
+    resp = await client.post(FIL, json=body)
+    assert resp.status_code == 400, resp.text
+
+
 async def test_boolean_field_filters_by_true_and_false(client: AsyncClient):
     await _define(client, "available", "boolean")
     await _add(client, "InStock", "available", value=True)
