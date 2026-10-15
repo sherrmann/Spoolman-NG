@@ -30,6 +30,13 @@ RUN npm run build
 
 FROM python:3.14-slim-trixie AS python-builder
 
+# A multi-platform build runs this stage once per platform in parallel. Each gets
+# its own uv cache: wheels are per-platform anyway, and one shared cache made the
+# platforms queue on uv's cache lock until the slow emulated armv7 sync pushed the
+# others past uv's 300 s lock timeout whenever uv.lock changed.
+ARG TARGETARCH
+ARG TARGETVARIANT
+
 ENV UV_COMPILE_BYTECODE=1
 ENV UV_LINK_MODE=copy
 ENV UV_NO_DEV=1
@@ -56,7 +63,7 @@ ENV CBOR2_BUILD_C_EXTENSION=false
 
 # Install dependencies
 WORKDIR /home/app/spoolman
-RUN --mount=type=cache,target=/root/.cache/uv \
+RUN --mount=type=cache,id=uv-${TARGETARCH}${TARGETVARIANT},target=/root/.cache/uv \
     --mount=type=bind,source=uv.lock,target=uv.lock \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
     uv sync --locked --no-install-project --extra nfc
@@ -65,7 +72,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 COPY migrations /home/app/spoolman/migrations
 COPY spoolman /home/app/spoolman/spoolman
 COPY alembic.ini README.md uv.lock pyproject.toml /home/app/spoolman/
-RUN --mount=type=cache,target=/root/.cache/uv \
+RUN --mount=type=cache,id=uv-${TARGETARCH}${TARGETVARIANT},target=/root/.cache/uv \
     uv sync --locked --extra nfc
 
 FROM python:3.14-slim-trixie AS python-runner
