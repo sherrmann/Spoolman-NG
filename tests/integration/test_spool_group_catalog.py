@@ -540,3 +540,30 @@ async def test_sort_by_boolean_filament_column(client: AsyncClient):
 
     assert await order("asc") == ["Plain", "Glows", "Unknown"]
     assert await order("desc") == ["Glows", "Plain", "Unknown"]
+
+
+async def test_text_sorts_ignore_case(client: AsyncClient):
+    """Names sort as a dictionary would, not by SQLite's binary collation ("Zoo" before "alpha")."""
+    vendor_ids = {}
+    for name in ("Zoo", "alpha", "Mid"):
+        resp = await client.post("/api/v1/vendor", json={"name": name})
+        assert resp.status_code == 200, resp.text
+        vendor_ids[name] = resp.json()["id"]
+        resp = await client.post(
+            "/api/v1/filament",
+            json={"name": name.swapcase(), "vendor_id": vendor_ids[name], "density": 1.24, "diameter": 1.75},
+        )
+        assert resp.status_code == 200, resp.text
+    vendor_filter = ",".join(str(i) for i in vendor_ids.values())
+
+    async def titles(params: dict[str, str]) -> list[str]:
+        resp = await client.get(
+            "/api/v1/spool/group",
+            params={"filament.vendor.id": vendor_filter, "include_empty": "true", **params},
+        )
+        assert resp.status_code == 200, resp.text
+        return [g["vendor"]["name"] if "vendor" in g else g["filament"]["name"] for g in resp.json()]
+
+    assert await titles({"group_by": "vendor", "sort": "group.title:asc"}) == ["alpha", "Mid", "Zoo"]
+    assert await titles({"group_by": "filament", "sort": "group.vendor_name:asc"}) == ["ALPHA", "mID", "zOO"]
+    assert await titles({"group_by": "filament", "sort": "filament.name:asc"}) == ["ALPHA", "mID", "zOO"]

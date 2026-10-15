@@ -1421,6 +1421,16 @@ async def _entity_sort_exprs(
     return stmt, exprs
 
 
+def _case_folded(exprs: list[ColumnElement]) -> list[ColumnElement]:
+    """Lower-case the text expressions among a sort's, as order_by_expression does for lists (#63).
+
+    order_by_clauses only places NULLs; on its own, SQLite's binary collation would sort "Zoo"
+    before "alpha". The group sorts are aggregates (MIN of a name, of a filament column, of an
+    extra-field value), which keep their argument's type, so the text ones are recognisable here.
+    """
+    return [func.lower(e) if isinstance(getattr(e, "type", None), sqlalchemy.String) else e for e in exprs]
+
+
 def _order_groups(
     stmt: sqlalchemy.Select,
     order_exprs: dict[str, list[ColumnElement]],
@@ -1436,10 +1446,10 @@ def _order_groups(
             exprs = order_exprs.get(fieldstr)
             if exprs is None:
                 continue
-            stmt = stmt.order_by(*order_by_clauses(exprs, order))
+            stmt = stmt.order_by(*order_by_clauses(_case_folded(exprs), order))
             applied_sort = True
     if not applied_sort:
-        stmt = stmt.order_by(*order_by_clauses([default_expr], SortOrder.ASC))
+        stmt = stmt.order_by(*order_by_clauses(_case_folded([default_expr]), SortOrder.ASC))
     # Break ties on the grouped column itself, so paging partitions the groups instead of
     # dropping or repeating one.
     return stmt.order_by(group_col.asc())
