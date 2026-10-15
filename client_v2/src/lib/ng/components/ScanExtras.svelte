@@ -211,7 +211,7 @@
 		padding: 6px 10px;
 		font-size: 12.5px;
 		color: var(--text-muted);
-		background: var(--bg-subtle);
+		background: var(--surface-2);
 		border: 1px solid var(--border);
 		border-radius: var(--radius);
 		cursor: pointer;
@@ -221,7 +221,7 @@
 	}
 	.modes button.active {
 		color: var(--text);
-		background: var(--bg-hover);
+		background: var(--surface-raised);
 		border-color: var(--border-strong);
 	}
 	.prompt {
