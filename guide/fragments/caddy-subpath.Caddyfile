@@ -1,0 +1,6 @@
+{{HOSTNAME}} {
+    redir {{SUB_PATH}} {{SUB_PATH}}/
+    handle {{SUB_PATH}}/* {
+        reverse_proxy {{UPSTREAM}}
+    }
+}

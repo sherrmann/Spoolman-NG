@@ -28,6 +28,16 @@ beforeEach(() => vi.stubGlobal('localStorage', fakeStorage()));
 afterEach(() => vi.unstubAllGlobals());
 
 describe('storage', () => {
+	it('forgets the assistant conversation when a different user signs in, not on the same token', async () => {
+		const { setToken } = await load();
+		setToken('alice');
+		localStorage.setItem('spoolman.chat.v1', '{}');
+		setToken('alice');
+		expect(localStorage.getItem('spoolman.chat.v1')).toBe('{}');
+		setToken('bob');
+		expect(localStorage.getItem('spoolman.chat.v1')).toBeNull();
+	});
+
 	it('forgets the assistant conversation when the token is cleared, so the next user cannot read it', async () => {
 		const { clearToken, setToken } = await load();
 		setToken('abc');

@@ -24,6 +24,8 @@ const DOC_ANCHORS: Record<string, Array<[string, string, string]>> = {
   "moonraker-spoolman.ini": [["docs/installation.md", installationMd, "[spoolman]"]],
   "caddy.Caddyfile": [["docs/installation.md", installationMd, "reverse_proxy localhost:7912"]],
   "nginx-location.conf": [["docs/installation.md", installationMd, "proxy_set_header Upgrade"]],
+  "caddy-subpath.Caddyfile": [["docs/installation.md", installationMd, "handle /spoolman/*"]],
+  "nginx-subpath-location.conf": [["docs/installation.md", installationMd, "location /spoolman/"]],
   "native-install.sh": [
     ["docs/installation.md", installationMd, "releases/latest/download/spoolman.zip"],
     ["README.md", readmeMd, "releases/latest/download/spoolman.zip"],

@@ -327,6 +327,19 @@ def test_a_long_transcript_is_cut_at_a_user_turn() -> None:
     assert len(clean) <= 40
 
 
+def test_a_long_single_turn_cut_drops_results_whose_call_was_cut_off() -> None:
+    """With no user turn in the last 40, the window must still not start with a tool result."""
+    call = {"id": "c", "type": "function", "function": {"name": "find_spools", "arguments": "{}"}}
+    rounds = [
+        {"role": "assistant", "content": None, "tool_calls": [call]},
+        {"role": "tool", "tool_call_id": "c", "content": "{}"},
+    ]
+    messages = [{"role": "user", "content": "q"}, *rounds * 20, {"role": "tool", "tool_call_id": "c", "content": "{}"}]
+    assert messages[-40]["role"] == "tool"
+    clean = aichat._sanitize_messages(messages)  # noqa: SLF001
+    assert clean[0]["role"] != "tool"
+
+
 async def test_usage_stats_tool_event_carries_periods_and_no_rows() -> None:
     payload = aichat._card_payload(  # noqa: SLF001
         "get_usage_stats",

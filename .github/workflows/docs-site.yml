@@ -1,7 +1,7 @@
 name: Build and deploy docs site
 
 # One Pages site, one deploy: the ReDoc API reference (docs/index.html, generated
-# by `poe generate-docs`), the committed docs/*.md guides, and the interactive
+# by `poe generate-docs`), the user-facing docs/*.md guides, and the interactive
 # install guide (guide/ → docs/install/, see #297) all ship in a single artifact,
 # so every deploy rebuilds everything and no trigger can drop part of the site.
 on:
@@ -70,12 +70,26 @@ jobs:
         run: |
           mkdir -p docs/install
           cp -r guide/dist/. docs/install/
+      - name: Stage the published tree
+        # Only what is meant for readers goes on the site (#340). docs/ also holds internal
+        # notes (design/, archive/, upstream/ automation state, triage and migration notes),
+        # which stay on GitHub only. Paths keep their docs/ names, so existing links to
+        # …/installation.md and …/install/ still work. A guide listed here that has been
+        # renamed or removed fails this step rather than vanishing from the site silently.
+        # A new user-facing guide has to be added here to be published.
+        run: |
+          mkdir -p _site
+          cp docs/index.html _site/
+          cp -r docs/install _site/
+          for guide in installation nfc monitoring dockerhub ai simplyprint spoolstock mobile-companion-app; do
+            cp "docs/$guide.md" _site/
+          done
       - name: Setup Pages
         uses: actions/configure-pages@v6.0.0
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5.0.0
         with:
-          path: "docs/"
+          path: "_site/"
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5.0.0

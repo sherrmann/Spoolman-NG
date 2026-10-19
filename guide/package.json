@@ -15,7 +15,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format-check": "prettier --check .",
-    "render-matrix": "node scripts/run-render-matrix.mjs"
+    "render-matrix": "node scripts/run-render-matrix.mjs",
+    "check-doc-blocks": "node scripts/check-doc-blocks.mjs"
   },
   "dependencies": {
     "react": "^19.2.0",

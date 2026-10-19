@@ -34,6 +34,10 @@ export function getToken(): string | null {
 }
 
 export function setToken(token: string): void {
+	// A different credential is a different person (a new sign-in after an expired one, say): the
+	// previous user's assistant conversation must not carry over to them.
+	const previous = getToken();
+	if (previous !== null && previous !== token) clearStoredChat();
 	memoryToken = token;
 	try {
 		globalThis.localStorage?.setItem(TOKEN_KEY, token);

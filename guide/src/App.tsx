@@ -1,15 +1,27 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { QuestionForm } from "./components/QuestionForm";
 import { PlanView } from "./components/PlanView";
-import { defaultConfig, type WizardConfig } from "./model/config";
+import { type WizardConfig } from "./model/config";
 import { buildPlan } from "./model/plan";
+import { configFromSearch, searchFromConfig } from "./urlState";
 
 const DOCS_URL = "https://github.com/sherrmann/Spoolman-NG/blob/master/docs/installation.md";
 const REPO_URL = "https://github.com/sherrmann/Spoolman-NG";
 
 export default function App() {
-  const [config, setConfig] = useState<WizardConfig>(defaultConfig);
+  // The answers live in the address bar too, so the page can be shared as a support link (#344).
+  const [config, setConfig] = useState<WizardConfig>(() => configFromSearch(window.location.search));
   const plan = useMemo(() => buildPlan(config), [config]);
+
+  useEffect(() => {
+    const search = searchFromConfig(config);
+    const { pathname, hash } = window.location;
+    try {
+      window.history.replaceState(window.history.state, "", `${pathname}${search ? `?${search}` : ""}${hash}`);
+    } catch {
+      // Some browsers refuse rapid replaceState calls; the link then lags, the page keeps working.
+    }
+  }, [config]);
 
   return (
     <div className="app">

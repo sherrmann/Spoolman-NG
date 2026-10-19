@@ -6,6 +6,10 @@ import { create } from "zustand";
 // the websocket `?token=` query, since browsers can't set headers on a WS handshake).
 
 const TOKEN_KEY = "spoolmanApiToken";
+// The new interface keeps its assistant conversation under this key (client_v2, aiChat.ts). Both
+// clients share the origin and the token, so logging out, or signing in as someone else, must
+// forget that conversation too, or the next person on this browser could read it there.
+const SVELTE_CHAT_KEY = "spoolman.chat.v1";
 
 export function getApiToken(): string | null {
   try {
@@ -17,6 +21,8 @@ export function getApiToken(): string | null {
 
 export function setApiToken(token: string): void {
   try {
+    const previous = localStorage.getItem(TOKEN_KEY);
+    if (previous !== null && previous !== token) localStorage.removeItem(SVELTE_CHAT_KEY);
     localStorage.setItem(TOKEN_KEY, token);
   } catch {
     /* storage unavailable */
@@ -26,6 +32,7 @@ export function setApiToken(token: string): void {
 export function clearApiToken(): void {
   try {
     localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(SVELTE_CHAT_KEY);
   } catch {
     /* storage unavailable */
   }
