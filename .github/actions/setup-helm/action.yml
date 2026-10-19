@@ -1,0 +1,26 @@
+name: Set up Helm
+description: >
+  Install a pinned, checksum-verified Helm into the job's temp directory and put it on PATH.
+  GitHub's hosted runners ship a Helm of their own; the self-hosted arm64 runner does not, and
+  installing into RUNNER_TEMP leaves a long-lived runner host unchanged.
+
+runs:
+  using: composite
+  steps:
+    - name: Install Helm v3.19.0
+      shell: bash
+      run: |
+        set -euo pipefail
+        version=v3.19.0
+        case "$(uname -m)" in
+          x86_64)  arch=amd64; sha=a7f81ce08007091b86d8bd696eb4d86b8d0f2e1b9f6c714be62f82f96a594496 ;;
+          aarch64) arch=arm64; sha=440cf7add0aee27ebc93fada965523c1dc2e0ab340d4348da2215737fc0d76ad ;;
+          *) echo "::error::no pinned Helm build for $(uname -m)"; exit 1 ;;
+        esac
+        dir="$RUNNER_TEMP/helm-$version"
+        mkdir -p "$dir"
+        curl -fsSL -o "$dir/helm.tgz" "https://get.helm.sh/helm-${version}-linux-${arch}.tar.gz"
+        echo "$sha  $dir/helm.tgz" | sha256sum -c -
+        tar -xzf "$dir/helm.tgz" -C "$dir" --strip-components=1 "linux-${arch}/helm"
+        echo "$dir" >> "$GITHUB_PATH"
+        "$dir/helm" version --short
