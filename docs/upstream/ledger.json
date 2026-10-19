@@ -1848,6 +1848,20 @@
   ],
   "upstream_commits": [
     {
+      "sha": "022285d64",
+      "verdict": "skipped",
+      "reason": "Argos visual snapshots need an Argos token the fork does not have",
+      "pr": 480,
+      "released_in": null
+    },
+    {
+      "sha": "073bf1510",
+      "verdict": "skipped",
+      "reason": "React client Weblate",
+      "pr": 480,
+      "released_in": null
+    },
+    {
       "sha": "09953643d",
       "verdict": "ported",
       "reason": "merge of a6512da59",
@@ -1869,6 +1883,20 @@
       "released_in": "v2026.9.0"
     },
     {
+      "sha": "0c4caa527",
+      "verdict": "skipped",
+      "reason": "already in the fork (quoted comma filters, 272c847e)",
+      "pr": 480,
+      "released_in": null
+    },
+    {
+      "sha": "15f0124a4",
+      "verdict": "skipped",
+      "reason": "React client Weblate",
+      "pr": 480,
+      "released_in": null
+    },
+    {
       "sha": "179fc0a1",
       "verdict": "ported",
       "reason": "",
@@ -1881,6 +1909,27 @@
       "reason": "",
       "pr": 397,
       "released_in": "v2026.8.2"
+    },
+    {
+      "sha": "1c87bb9c0",
+      "verdict": "skipped",
+      "reason": "merge of a3977509e",
+      "pr": 480,
+      "released_in": null
+    },
+    {
+      "sha": "1e9d74cd6",
+      "verdict": "skipped",
+      "reason": "merge of master into a worktree branch",
+      "pr": 480,
+      "released_in": null
+    },
+    {
+      "sha": "25d25e370",
+      "verdict": "skipped",
+      "reason": "merge of a353983f8",
+      "pr": 480,
+      "released_in": null
     },
     {
       "sha": "29f0f362",
@@ -1918,6 +1967,13 @@
       "released_in": "v2026.8.2"
     },
     {
+      "sha": "3f8cb8f1d",
+      "verdict": "skipped",
+      "reason": "merge of 89fba3f4a",
+      "pr": 480,
+      "released_in": null
+    },
+    {
       "sha": "404b0317",
       "verdict": "ported",
       "reason": "",
@@ -1930,6 +1986,13 @@
       "reason": "the vendoring point; already in the tree",
       "pr": 429,
       "released_in": "v2026.9.0"
+    },
+    {
+      "sha": "45cc8246d",
+      "verdict": "skipped",
+      "reason": "merge of 0c4caa527",
+      "pr": 480,
+      "released_in": null
     },
     {
       "sha": "46beda22",
@@ -1960,11 +2023,46 @@
       "released_in": "v2026.9.1"
     },
     {
+      "sha": "57ef303c9",
+      "verdict": "skipped",
+      "reason": "merge of React client Weblate",
+      "pr": 480,
+      "released_in": null
+    },
+    {
+      "sha": "5b93b3b37",
+      "verdict": "skipped",
+      "reason": "merge of React client Weblate",
+      "pr": 480,
+      "released_in": null
+    },
+    {
+      "sha": "629b8228d",
+      "verdict": "skipped",
+      "reason": "sponsors image; the fork has no .github/media",
+      "pr": 480,
+      "released_in": null
+    },
+    {
       "sha": "6520ce6d",
       "verdict": "ported",
       "reason": "backend by hand, fork names kept; client via the subtree pull",
       "pr": 447,
       "released_in": "v2026.9.1"
+    },
+    {
+      "sha": "69e541ce6",
+      "verdict": "skipped",
+      "reason": "React client is fork-maintained; it is already on i18next-http-backend ^4",
+      "pr": 480,
+      "released_in": null
+    },
+    {
+      "sha": "6b1e01ecd",
+      "verdict": "skipped",
+      "reason": "sponsors image",
+      "pr": 480,
+      "released_in": null
     },
     {
       "sha": "6bcda3d30",
@@ -1988,11 +2086,39 @@
       "released_in": "v2026.9.1"
     },
     {
+      "sha": "72031f0ea",
+      "verdict": "skipped",
+      "reason": "merge of bb0bcc1b5",
+      "pr": 480,
+      "released_in": null
+    },
+    {
       "sha": "72daa29c",
       "verdict": "ported",
       "reason": "",
       "pr": 397,
       "released_in": "v2026.8.2"
+    },
+    {
+      "sha": "7a1114f8f",
+      "verdict": "skipped",
+      "reason": "sponsors image",
+      "pr": 480,
+      "released_in": null
+    },
+    {
+      "sha": "7b82f2afb",
+      "verdict": "skipped",
+      "reason": "merge of 9ae9827f4",
+      "pr": 480,
+      "released_in": null
+    },
+    {
+      "sha": "7c4dcc7da",
+      "verdict": "skipped",
+      "reason": "sponsors image",
+      "pr": 480,
+      "released_in": null
     },
     {
       "sha": "7d4728ae",
@@ -2016,6 +2142,13 @@
       "released_in": "v2026.8.2"
     },
     {
+      "sha": "7e98987b8",
+      "verdict": "skipped",
+      "reason": "React client Weblate",
+      "pr": 480,
+      "released_in": null
+    },
+    {
       "sha": "7ea89dc3",
       "verdict": "ported",
       "reason": "",
@@ -2030,11 +2163,39 @@
       "released_in": "v2026.9.0"
     },
     {
+      "sha": "8656e0405",
+      "verdict": "skipped",
+      "reason": "sponsorkit image decoder; the fork has no .github/sponsorkit",
+      "pr": 480,
+      "released_in": null
+    },
+    {
+      "sha": "89fba3f4a",
+      "verdict": "skipped",
+      "reason": "Argos screenshot wait; the spec itself arrives with the tests_frontend_v2 mirror",
+      "pr": 480,
+      "released_in": null
+    },
+    {
+      "sha": "8badd5170",
+      "verdict": "skipped",
+      "reason": "merge of master into a worktree branch",
+      "pr": 480,
+      "released_in": null
+    },
+    {
       "sha": "92be2975b",
       "verdict": "skipped",
       "reason": "React client catalogue is fork-maintained and the client is frozen",
       "pr": 429,
       "released_in": "v2026.9.0"
+    },
+    {
+      "sha": "958d5bd9e",
+      "verdict": "skipped",
+      "reason": "React client Weblate",
+      "pr": 480,
+      "released_in": null
     },
     {
       "sha": "97524b11",
@@ -2049,6 +2210,27 @@
       "reason": "",
       "pr": 397,
       "released_in": "v2026.8.2"
+    },
+    {
+      "sha": "9ae9827f4",
+      "verdict": "skipped",
+      "reason": "already in the fork (vendor tare in measure, 5722cd36)",
+      "pr": 480,
+      "released_in": null
+    },
+    {
+      "sha": "a353983f8",
+      "verdict": "skipped",
+      "reason": "armv7 build speed; build-time only, needs a CI run to validate; propose separately",
+      "pr": 480,
+      "released_in": null
+    },
+    {
+      "sha": "a3977509e",
+      "verdict": "skipped",
+      "reason": "dependency bumps within ranges; the fork audited its own lock instead (c7c70a5e)",
+      "pr": 480,
+      "released_in": null
     },
     {
       "sha": "a4c749ad",
@@ -2079,6 +2261,13 @@
       "released_in": "v2026.9.0"
     },
     {
+      "sha": "aae2b4df5",
+      "verdict": "skipped",
+      "reason": "upstream CI tweak; the fork's ci.yml has diverged",
+      "pr": 480,
+      "released_in": null
+    },
+    {
       "sha": "ac7865ec",
       "verdict": "ported",
       "reason": "",
@@ -2098,6 +2287,27 @@
       "reason": "backend half; #397 carried only the client half, via the subtree",
       "pr": 446,
       "released_in": "v2026.9.1"
+    },
+    {
+      "sha": "bb0bcc1b5",
+      "verdict": "skipped",
+      "reason": "upstream CI for bot PRs and Weblate auto-merge; the fork has no such workflows",
+      "pr": 480,
+      "released_in": null
+    },
+    {
+      "sha": "bd4b9351a",
+      "verdict": "skipped",
+      "reason": "merge of React client Weblate",
+      "pr": 480,
+      "released_in": null
+    },
+    {
+      "sha": "bed3f14ee",
+      "verdict": "skipped",
+      "reason": "upstream version bump",
+      "pr": 480,
+      "released_in": null
     },
     {
       "sha": "c33f6524",
@@ -2121,6 +2331,13 @@
       "released_in": "v2026.9.0"
     },
     {
+      "sha": "d1f3401b3",
+      "verdict": "skipped",
+      "reason": "merge of React client Weblate",
+      "pr": 480,
+      "released_in": null
+    },
+    {
       "sha": "d43552bd",
       "verdict": "ported",
       "reason": "",
@@ -2133,6 +2350,20 @@
       "reason": "the lookup_path base-path line (backend half)",
       "pr": 446,
       "released_in": "v2026.9.1"
+    },
+    {
+      "sha": "d848ddef9",
+      "verdict": "skipped",
+      "reason": "React client Weblate; the client is fork-maintained",
+      "pr": 480,
+      "released_in": null
+    },
+    {
+      "sha": "dcb461839",
+      "verdict": "skipped",
+      "reason": "sponsors image",
+      "pr": 480,
+      "released_in": null
     },
     {
       "sha": "dd16672a",
@@ -2154,6 +2385,13 @@
       "reason": "",
       "pr": 397,
       "released_in": "v2026.8.2"
+    },
+    {
+      "sha": "e1ad9feb3",
+      "verdict": "skipped",
+      "reason": "upstream's branch images on GHCR; the fork has its own image pipeline",
+      "pr": 480,
+      "released_in": null
     },
     {
       "sha": "e37045dcd",
@@ -2189,6 +2427,13 @@
       "reason": "React client catalogue is fork-maintained and the client is frozen",
       "pr": 429,
       "released_in": "v2026.9.0"
+    },
+    {
+      "sha": "f8642bedd",
+      "verdict": "skipped",
+      "reason": "merge of 69e541ce6",
+      "pr": 480,
+      "released_in": null
     },
     {
       "sha": "feb67ab5",
