@@ -50,6 +50,15 @@ def test_parse_csv_reads_rows_and_drops_blank_ones():
     assert [r["short_id"] for r in rows] == ["X1"]
 
 
+def test_parse_csv_refuses_a_row_with_more_fields_than_the_header():
+    with pytest.raises(ValueError, match="row 3 has more fields"):
+        ss.parse_csv("short_id,notes\nA1,ok\nA2,too,many\n")
+
+
+def test_parse_csv_accepts_a_row_with_fewer_fields_than_the_header():
+    assert ss.parse_csv("short_id,notes\nA1\n") == [{"short_id": "A1", "notes": None}]
+
+
 def test_parse_csv_refuses_a_file_that_is_not_a_spoolstock_export():
     with pytest.raises(ValueError, match="short_id"):
         ss.parse_csv("name,material\nGalaxy Black,PLA\n")

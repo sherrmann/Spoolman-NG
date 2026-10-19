@@ -248,3 +248,13 @@ async def test_an_implausible_number_is_a_row_error_not_a_server_error(client: A
     assert len(result["errors"]) == 1
     assert result["errors"][0].startswith("Row 2:")
     assert (await client.get("/api/v1/spool")).json() == []
+
+
+async def test_a_row_with_surplus_fields_is_a_file_error_not_a_server_error(client: AsyncClient) -> None:
+    body = _csv(_spool("A1")) + "A2,1000,700,200,false,x,y,PLA,1.24,,1.75,,surplus\n"
+
+    result = await _post(client, body)
+
+    assert len(result["errors"]) == 1
+    assert "more fields" in result["errors"][0]
+    assert (await client.get("/api/v1/spool")).json() == []

@@ -62,7 +62,14 @@ def parse_csv(body: str) -> list[dict[str, str]]:
     reader = csv.DictReader(io.StringIO(text))
     if reader.fieldnames is None or REQUIRED_COLUMN not in reader.fieldnames:
         raise ValueError(f"This does not look like a Spoolstock export: it has no '{REQUIRED_COLUMN}' column.")
-    return [row for row in reader if any((value or "").strip() for value in row.values())]
+    rows = []
+    for row in reader:
+        # csv.DictReader keeps the values beyond the header's last column as a list under None.
+        if None in row:
+            raise ValueError(f"row {reader.line_num} has more fields than the header has columns")
+        if any((value or "").strip() for value in row.values()):
+            rows.append(row)
+    return rows
 
 
 def _text(row: dict[str, str], key: str) -> str | None:

@@ -139,13 +139,16 @@ def test_apk_filename_carries_the_release_tag(release: Release, apk: tuple[str, 
 
 #: What the Android project's manifest said before CI stamped the release version into it.
 _UNSTAMPED = ("0.1.0", 1)
+#: The releases that shipped such an APK. Only these are excused: a later release with an
+#: unstamped APK is the updater regression this test exists to catch.
+_UNSTAMPED_RELEASES = frozenset({"v2026.7.6", "v2026.7.7", "v2026.7.8"})
 
 
 def test_apk_manifest_version_name_equals_the_tag(release: Release, apk: tuple[str, Path]) -> None:
     _, path = apk
     manifest = _manifest(path)
     version_name = manifest.get("versionName")
-    if (version_name, manifest.get("versionCode")) == _UNSTAMPED:
+    if release.tag in _UNSTAMPED_RELEASES and (version_name, manifest.get("versionCode")) == _UNSTAMPED:
         pytest.skip(f"{release.tag} predates version stamping: its APK still says 0.1.0 (code 1)")
     assert version_name == _bare(release.tag), (
         f"manifest versionName {version_name!r} != release tag {release.tag!r} — the in-app updater "
