@@ -15,7 +15,8 @@ permissions:
 
 jobs:
   python-mutation:
-    runs-on: ubuntu-latest
+    # The self-hosted arm64 runner when SELF_HOSTED_RUNNER is set (see ci.yml's meta job).
+    runs-on: ${{ fromJSON(vars.SELF_HOSTED_RUNNER || '"ubuntu-latest"') }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -51,7 +52,8 @@ jobs:
         run: uv run --with 'mutmut<3' mutmut results || true
 
   client-mutation:
-    runs-on: ubuntu-latest
+    # The self-hosted arm64 runner when SELF_HOSTED_RUNNER is set (see ci.yml's meta job).
+    runs-on: ${{ fromJSON(vars.SELF_HOSTED_RUNNER || '"ubuntu-latest"') }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7

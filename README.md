@@ -83,6 +83,7 @@ config files — including the conditional gotchas a generic guide can't flag, l
 incompatibility. It also covers updates, migrating from upstream Spoolman, and switching between native
 and Docker. The sections below stay as at-a-glance quick starts; the full reference is
 [docs/installation.md](docs/installation.md).
+Coming from Spoolstock? [docs/spoolstock.md](docs/spoolstock.md) imports its CSV export.
 
 Spoolman NG ships Docker images for `amd64`, `arm64`, and `armv7`. `amd64` and
 `arm64` are the recommended targets for new installs; `armv7` (32-bit ARM) is

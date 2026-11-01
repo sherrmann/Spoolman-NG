@@ -34,6 +34,17 @@ pre-commit:
             root: "client_v2/"
             run: ./node_modules/.bin/prettier --write .
             stage_fixed: true
+    - group: # Install guide (guide/) checks -- CI enforces the same in the guide-tests job
+        parallel: false
+        jobs:
+          - name: Run lint check on install guide files
+            root: "guide/"
+            run: ./node_modules/.bin/eslint --fix . # Hardcoded path because Windows messes up if we use npx
+            stage_fixed: true
+          - name: Run format check on install guide files
+            root: "guide/"
+            run: ./node_modules/.bin/prettier --write .
+            stage_fixed: true
 
 # No pre-push test gate: CI runs the full suites on every PR, and running them twice
 # (locally on push + in the workflows) buys little. Tried and deliberately removed —

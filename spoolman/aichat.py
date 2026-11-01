@@ -113,7 +113,7 @@ def _coerce_content(value: object) -> str:
     return text[:_MAX_CONTENT_CHARS]
 
 
-def _sanitize_messages(messages: list[dict]) -> list[dict]:
+def _sanitize_messages(messages: list[dict]) -> list[dict]:  # noqa: C901
     """Keep only well-formed user/assistant/tool turns, preserving tool-call round-trips.
 
     Any ``system`` turn is dropped — the server owns the system prompt. Assistant turns
@@ -125,8 +125,14 @@ def _sanitize_messages(messages: list[dict]) -> list[dict]:
     # The cut can land between a tool call and its results; start at the first user turn after
     # it, so no tool result reaches the provider without its call (strict ones answer 400).
     first_user = next((i for i, m in enumerate(recent) if isinstance(m, dict) and m.get("role") == "user"), None)
-    if len(messages) > _MAX_CLIENT_MESSAGES and first_user is not None:
-        recent = recent[first_user:]
+    if len(messages) > _MAX_CLIENT_MESSAGES:
+        if first_user is not None:
+            recent = recent[first_user:]
+        else:
+            # One very long turn with no user message in the window: at least drop the results
+            # whose call was cut off.
+            while recent and isinstance(recent[0], dict) and recent[0].get("role") == "tool":
+                recent = recent[1:]
     for raw in recent:
         if not isinstance(raw, dict):
             continue

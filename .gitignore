@@ -75,6 +75,8 @@ docs/_build/
 docs/index.html
 # Built interactive install guide (guide/ → docs-site.yml stages it into the Pages tree)
 docs/install/
+# Pages staging directory (docs-site.yml)
+_site/
 # CI render-matrix output (guide-tests job in ci.yml)
 .guide-matrix/
 

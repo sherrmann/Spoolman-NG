@@ -3,7 +3,10 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import App from "./App";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  window.history.replaceState(null, "", "/");
+});
 
 describe("App (jsdom smoke)", () => {
   it("renders the default plan and reacts to a database change", () => {
@@ -26,5 +29,16 @@ describe("App (jsdom smoke)", () => {
     screen.getByLabelText(/Klipper printer\(s\) report/).click();
     expect(document.body.textContent).toContain("API token omitted");
     expect(document.body.textContent).not.toContain("SPOOLMAN_API_TOKEN=");
+  });
+
+  it("opens on the answers in the link and keeps the link up to date", () => {
+    window.history.replaceState(null, "", "/install/?db=postgres#steps");
+    render(<App />);
+    expect(document.body.textContent).toContain("SPOOLMAN_DB_TYPE=postgres");
+
+    screen.getByLabelText(/Klipper printer\(s\) report/).click();
+    expect(window.location.pathname).toBe("/install/");
+    expect(window.location.search).toBe("?klipper=1&db=postgres");
+    expect(window.location.hash).toBe("#steps");
   });
 });

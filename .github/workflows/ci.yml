@@ -32,7 +32,36 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       skip_build: ${{ steps.check.outputs.skip_build }}
+      runner: ${{ steps.runner.outputs.runner }}
     steps:
+      # The test and lint jobs below run on the self-hosted arm64 runner when the repository
+      # variable SELF_HOSTED_RUNNER holds its labels as a JSON array, e.g.
+      # ["self-hosted","linux","ARM64"]; delete the variable to send them back to GitHub's
+      # runners (if the instance is down, say). Pull requests from any other repository always
+      # use GitHub's runners, so code from outside the repository never runs on the instance. Image builds,
+      # the APK, CodeQL and everything that publishes or holds release secrets stay on GitHub.
+      # See docs/ci-runner.md.
+      - name: Choose the runner for the test and lint jobs
+        id: runner
+        env:
+          SELF_HOSTED: ${{ vars.SELF_HOSTED_RUNNER }}
+          # Not head.repo.fork: this repository is itself a GitHub fork, so that is true for its own
+          # branches too. A pull request whose head is any other repository (or a deleted one) is
+          # treated as outside code.
+          FROM_OTHER_REPO: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+        run: |
+          if [ -n "$SELF_HOSTED" ] && [ "$FROM_OTHER_REPO" != "true" ]; then
+            if ! jq -se 'length == 1 and (.[0] | type == "array" and length > 0 and all(type == "string"))' <<<"$SELF_HOSTED" > /dev/null; then
+              echo "::error::SELF_HOSTED_RUNNER must be a JSON array of runner labels, e.g. [\"self-hosted\",\"linux\",\"ARM64\"]"
+              exit 1
+            fi
+            runner="$(jq -sc '.[0]' <<<"$SELF_HOSTED")"
+          else
+            runner='"ubuntu-latest"'
+          fi
+          echo "runner=$runner" >> "$GITHUB_OUTPUT"
+          echo "Test and lint jobs run on: $runner"
+
       - name: Checkout
         uses: actions/checkout@v7
         with:
@@ -53,7 +82,7 @@ jobs:
   style:
     needs: [meta]
     if: ${{ needs.meta.outputs.skip_build != 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(needs.meta.outputs.runner) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -86,6 +115,9 @@ jobs:
       - name: Run pre-commit
         run: uv run lefthook run ci
 
+      - name: Set up Helm
+        uses: ./.github/actions/setup-helm
+
       - name: Lint Helm chart
         run: |
           helm lint charts/spoolman-ng
@@ -96,7 +128,7 @@ jobs:
   unit-tests:
     needs: [meta]
     if: ${{ needs.meta.outputs.skip_build != 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(needs.meta.outputs.runner) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -119,7 +151,7 @@ jobs:
   client-tests:
     needs: [meta]
     if: ${{ needs.meta.outputs.skip_build != 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(needs.meta.outputs.runner) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -147,7 +179,7 @@ jobs:
   client-v2-tests:
     needs: [meta]
     if: ${{ needs.meta.outputs.skip_build != 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(needs.meta.outputs.runner) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -189,7 +221,7 @@ jobs:
   mobile-tests:
     needs: [meta]
     if: ${{ needs.meta.outputs.skip_build != 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(needs.meta.outputs.runner) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -218,15 +250,16 @@ jobs:
   # lint, typecheck, unit + drift tests, build, then validate the generated
   # artifacts with the real tools — `docker compose config` on every generated
   # compose file and `helm template` (against the repo chart) on every generated
-  # values.yaml. Runs unconditionally rather than path-filtered: the drift tests
-  # exist to fail when docs/installation.md, README.md, docker-compose.yml,
-  # .env.example or charts/ change without guide/fragments/ following, and a
-  # guide/** filter would skip exactly those PRs.
+  # values.yaml — and the config blocks in README.md and docs/ (compose, Helm
+  # values, nginx, Caddy, ini) the same way. Runs unconditionally rather than
+  # path-filtered: the drift tests exist to fail when docs/installation.md,
+  # README.md, docker-compose.yml, .env.example or charts/ change without
+  # guide/fragments/ following, and a guide/** filter would skip exactly those PRs.
   #
   guide-tests:
     needs: [meta]
     if: ${{ needs.meta.outputs.skip_build != 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(needs.meta.outputs.runner) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -268,6 +301,9 @@ jobs:
             echo "::endgroup::"
           done
 
+      - name: Set up Helm
+        uses: ./.github/actions/setup-helm
+
       - name: Validate generated Helm values against the chart (helm template)
         run: |
           set -eu
@@ -276,6 +312,22 @@ jobs:
             helm template charts/spoolman-ng -f "$f" > /dev/null
             echo "::endgroup::"
           done
+
+      - name: Install nginx and Caddy for the docs block check
+        # Only on GitHub's throwaway runners: the self-hosted runner has both installed once
+        # (docs/ci-runner.md), and a job must not change that host. policy-rc.d stops apt from
+        # starting either service, so they cannot clash over port 80.
+        if: runner.environment == 'github-hosted'
+        run: |
+          echo 'exit 101' | sudo tee /usr/sbin/policy-rc.d > /dev/null
+          sudo chmod +x /usr/sbin/policy-rc.d
+          sudo apt-get update -q
+          sudo apt-get install -y -q nginx caddy
+
+      - name: Validate the copy-paste config blocks in README.md and docs/ (#303)
+        run: |
+          cd guide
+          npm run check-doc-blocks
 
       - name: Assert the sub-path pairing renders into the probes
         run: |
@@ -290,7 +342,7 @@ jobs:
   e2e:
     needs: [meta]
     if: ${{ needs.meta.outputs.skip_build != 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(needs.meta.outputs.runner) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -329,7 +381,7 @@ jobs:
         # Fetches the Chromium build matched to the pinned @playwright/test version.
         run: |
           cd client
-          npx playwright install --with-deps chromium
+          npx playwright install ${{ runner.environment == 'github-hosted' && '--with-deps' || '' }} chromium
 
       - name: Run Playwright e2e
         run: |
@@ -365,7 +417,7 @@ jobs:
   tests-frontend-v2:
     needs: [meta]
     if: ${{ needs.meta.outputs.skip_build != 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(needs.meta.outputs.runner) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -408,12 +460,19 @@ jobs:
 
       - name: Start the Spoolman backend (client_v2, SQLite)
         run: |
+          # On a long-lived runner a server left over from an earlier job could answer instead.
+          if curl -s -o /dev/null --max-time 2 http://127.0.0.1:8001/; then
+            echo "::error::something already listens on port 8001; stop it before running this job" >&2
+            exit 1
+          fi
           SPOOLMAN_DB_TYPE=sqlite \
           SPOOLMAN_DIR_DATA=.tests-frontend-v2-data \
           SPOOLMAN_LEGACY_CLIENT=FALSE \
           SPOOLMAN_LOGGING_LEVEL=INFO \
             nohup uv run uvicorn spoolman.main:app --host 127.0.0.1 --port 8001 > spoolman.log 2>&1 &
+          pid=$!
           for _ in $(seq 1 60); do
+            kill -0 "$pid" 2>/dev/null || { echo "Spoolman exited before it was healthy." >&2; cat spoolman.log; exit 1; }
             if curl -sf http://127.0.0.1:8001/api/v1/health > /dev/null; then
               echo "Spoolman is up."
               exit 0
@@ -432,7 +491,7 @@ jobs:
       - name: Install Playwright browser
         run: |
           cd tests_frontend_v2
-          npx playwright install --with-deps chromium
+          npx playwright install ${{ runner.environment == 'github-hosted' && '--with-deps' || '' }} chromium
 
       - name: Run Playwright tests_frontend_v2
         env:
@@ -468,7 +527,7 @@ jobs:
   tests-frontend-ng:
     needs: [meta]
     if: ${{ needs.meta.outputs.skip_build != 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(needs.meta.outputs.runner) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -527,12 +586,19 @@ jobs:
 
       - name: Start the Spoolman backend (client_v2, SQLite)
         run: |
+          # On a long-lived runner a server left over from an earlier job could answer instead.
+          if curl -s -o /dev/null --max-time 2 http://127.0.0.1:8002/; then
+            echo "::error::something already listens on port 8002; stop it before running this job" >&2
+            exit 1
+          fi
           SPOOLMAN_DB_TYPE=sqlite \
           SPOOLMAN_DIR_DATA=.tests-frontend-ng-data \
           SPOOLMAN_LEGACY_CLIENT=FALSE \
           SPOOLMAN_LOGGING_LEVEL=INFO \
             nohup uv run uvicorn spoolman.main:app --host 127.0.0.1 --port 8002 > spoolman-ng.log 2>&1 &
+          pid=$!
           for _ in $(seq 1 60); do
+            kill -0 "$pid" 2>/dev/null || { echo "Spoolman exited before it was healthy." >&2; cat spoolman-ng.log; exit 1; }
             if curl -sf http://127.0.0.1:8002/api/v1/health > /dev/null; then
               echo "Spoolman is up."
               exit 0
@@ -553,7 +619,7 @@ jobs:
         # browser build that suite already downloaded into the shared cache.
         run: |
           cd tests_frontend_ng
-          npx playwright install --with-deps chromium
+          npx playwright install ${{ runner.environment == 'github-hosted' && '--with-deps' || '' }} chromium
 
       - name: Start two backends with authentication on
         # The tests-auth specs need a server that actually wants credentials, and the one above
@@ -566,6 +632,11 @@ jobs:
           start_auth() {
             port="$1"; data="$2"; log="$3"
             rm -rf "$data"; mkdir -p "$data"
+            # On a long-lived runner a server left over from an earlier job could answer instead.
+            if curl -s -o /dev/null --max-time 2 "http://127.0.0.1:$port/"; then
+              echo "::error::something already listens on port $port; stop it before running this job" >&2
+              return 1
+            fi
             SPOOLMAN_DB_TYPE=sqlite SPOOLMAN_DIR_DATA="$data" uv run alembic upgrade head
             SPOOLMAN_DB_TYPE=sqlite \
             SPOOLMAN_DIR_DATA="$data" \
@@ -574,7 +645,9 @@ jobs:
             SPOOLMAN_API_TOKEN=spoolman-e2e-token \
             SPOOLMAN_AUTH_SECRET=spoolman-e2e-secret \
               nohup uv run uvicorn spoolman.main:app --host 127.0.0.1 --port "$port" > "$log" 2>&1 &
+            pid=$!
             for _ in $(seq 1 60); do
+              kill -0 "$pid" 2>/dev/null || { echo "Spoolman on $port exited before it was healthy." >&2; cat "$log"; return 1; }
               if curl -sf "http://127.0.0.1:$port/api/v1/health" > /dev/null; then
                 echo "Authenticated Spoolman is up on $port."
                 return 0

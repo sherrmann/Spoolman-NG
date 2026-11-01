@@ -4,12 +4,14 @@ import { fragmentNames, fragmentPlaceholders, renderFragment } from "./fragments
 /** Documented example values, matching docs/installation.md exactly (drift-tested there). */
 export const DOCS_DEFAULTS: Record<string, Record<string, string>> = {
   "caddy.Caddyfile": { HOSTNAME: "spoolman.example.com", UPSTREAM: "localhost:7912" },
+  "caddy-subpath.Caddyfile": { HOSTNAME: "example.com", SUB_PATH: "/spoolman", UPSTREAM: "localhost:7912" },
   "kiauh-install.sh": {},
   "moonraker-spoolman.ini": { SPOOLMAN_URL: "http://<spoolman-host>:7912" },
   "moonraker-update-manager.ini": {},
   "native-install.sh": {},
   "native-update.sh": {},
   "nginx-location.conf": { UPSTREAM: "127.0.0.1:7912" },
+  "nginx-subpath-location.conf": { SUB_PATH: "/spoolman", UPSTREAM: "127.0.0.1:7912" },
   "release-info-fix.sh": {},
 };
 

@@ -13,6 +13,22 @@ describe("apiToken", () => {
     expect(getApiToken()).toBeNull();
   });
 
+  it("forgets the new interface's stored assistant conversation on logout", () => {
+    setApiToken("abc");
+    localStorage.setItem("spoolman.chat.v1", '{"messages":[],"bubbles":[]}');
+    clearApiToken();
+    expect(localStorage.getItem("spoolman.chat.v1")).toBeNull();
+  });
+
+  it("forgets the stored conversation when a different token is stored, not when the same one is", () => {
+    setApiToken("alice");
+    localStorage.setItem("spoolman.chat.v1", "{}");
+    setApiToken("alice");
+    expect(localStorage.getItem("spoolman.chat.v1")).toBe("{}");
+    setApiToken("bob");
+    expect(localStorage.getItem("spoolman.chat.v1")).toBeNull();
+  });
+
   it("builds an Authorization header only when a token is set", () => {
     expect(apiAuthHeader()).toEqual({});
     setApiToken("abc");

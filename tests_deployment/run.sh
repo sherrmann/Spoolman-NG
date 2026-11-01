@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Deployment-channel test harness (#277) — run from anywhere:
 #   tests_deployment/run.sh              # all contract suites
-#   tests_deployment/run.sh zip          # release-zip + release-metadata contract (fast, no docker)
+#   tests_deployment/run.sh zip          # release-zip + release-metadata + companion-APK contract (fast, no docker)
 #   tests_deployment/run.sh addon        # Home Assistant add-on options contract
 #   tests_deployment/run.sh native       # install.sh matrix (debian/fedora/arch containers)
 #   tests_deployment/run.sh moonraker    # real Moonraker validates the update_manager recipe
@@ -20,7 +20,7 @@ target="${1:-all}"
 
 case "$target" in
   all)       paths=(tests_deployment) ;;
-  zip)       paths=(tests_deployment/test_release_zip.py) ;;
+  zip)       paths=(tests_deployment/test_release_zip.py tests_deployment/test_release_apk.py) ;;
   addon)     paths=(tests_deployment/test_ha_addon.py) ;;
   native)    paths=(tests_deployment/test_native_install.py tests_deployment/test_native_update.py) ;;
   moonraker) paths=(tests_deployment/test_moonraker_updater.py) ;;

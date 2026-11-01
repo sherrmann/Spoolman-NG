@@ -106,8 +106,12 @@ def download(url: str, dest: Path, *, timeout: float = 300) -> None:
         raise ValueError(f"refusing non-https download: {url}")
     dest.parent.mkdir(parents=True, exist_ok=True)
     request = urllib.request.Request(url, headers=_github_headers())  # noqa: S310 - checked https above
-    with urllib.request.urlopen(request, timeout=timeout) as resp, dest.open("wb") as out:  # noqa: S310
+    # Written beside the target and moved into place once complete: the callers cache by "the file
+    # exists", so a transfer cut off half-way must not leave a truncated file behind.
+    partial = dest.with_name(dest.name + ".part")
+    with urllib.request.urlopen(request, timeout=timeout) as resp, partial.open("wb") as out:  # noqa: S310
         shutil.copyfileobj(resp, out)
+    partial.replace(dest)
 
 
 def http_get(url: str, *, headers: dict[str, str] | None = None, timeout: float = 10) -> tuple[int, str]:
